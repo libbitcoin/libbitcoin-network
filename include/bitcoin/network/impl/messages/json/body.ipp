@@ -100,7 +100,7 @@ void CLASS::writer::init(error_code& ec) NOEXCEPT
     if (!value_.buffer)
     {
         // Caller controls max_size and other buffer behavior by assigning it.
-        value_.buffer = std::make_shared<http::flat_buffer>(4096);
+        value_.buffer = std::make_shared<http::flat_buffer>(default_buffer);
     }
     else
     {

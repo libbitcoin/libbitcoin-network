@@ -77,6 +77,7 @@ struct body
         out_buffer get(error_code& ec) NOEXCEPT;
 
     private:
+        static constexpr size_t default_buffer = 4096;
         const value_type& value_;
         Serializer serializer_;
     };

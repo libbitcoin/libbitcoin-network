@@ -22,6 +22,10 @@
 #include <unordered_map>
 #include <bitcoin/network/define.hpp>
 
+// TODO: rename to media_type.
+// TODO: pass in fields vs. string_view.
+// TODO: formalize parsing, include priority sort.
+
 namespace libbitcoin {
 namespace network {
 namespace http {

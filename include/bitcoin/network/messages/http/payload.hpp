@@ -24,6 +24,8 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
 
+// TODO: rename to value_type.
+
 namespace libbitcoin {
 namespace network {
 namespace http {
