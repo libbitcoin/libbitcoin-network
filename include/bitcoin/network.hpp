@@ -75,8 +75,7 @@
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/json/messages.hpp>
 #include <bitcoin/network/messages/json/payload.hpp>
-#include <bitcoin/network/messages/json/tags.hpp>
-#include <bitcoin/network/messages/json/types.hpp>
+#include <bitcoin/network/messages/json/rpc.hpp>
 #include <bitcoin/network/messages/json/enums/version.hpp>
 #include <bitcoin/network/messages/peer/address.hpp>
 #include <bitcoin/network/messages/peer/address_item.hpp>

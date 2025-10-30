@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_TYPES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_JSON_TYPES_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_RPC_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_RPC_HPP
 
 #include <optional>
 #include <unordered_map>
@@ -102,7 +102,11 @@ struct request_t
     params_option params{};
 };
 
-typedef boost::system::error_code error_code;
+DECLARE_JSON_TAG_INVOKE(version);
+DECLARE_JSON_TAG_INVOKE(value_t);
+DECLARE_JSON_TAG_INVOKE(identity_t);
+DECLARE_JSON_TAG_INVOKE(request_t);
+DECLARE_JSON_TAG_INVOKE(response_t);
 
 } // namespace json
 } // namespace network

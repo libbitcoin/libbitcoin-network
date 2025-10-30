@@ -59,7 +59,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/http/body.cpp \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
-    src/messages/json/tags.cpp \
+    src/messages/json/rpc.cpp \
     src/messages/peer/address.cpp \
     src/messages/peer/address_item.cpp \
     src/messages/peer/alert.cpp \
@@ -375,8 +375,7 @@ include_bitcoin_network_messages_json_HEADERS = \
     include/bitcoin/network/messages/json/body.hpp \
     include/bitcoin/network/messages/json/messages.hpp \
     include/bitcoin/network/messages/json/payload.hpp \
-    include/bitcoin/network/messages/json/tags.hpp \
-    include/bitcoin/network/messages/json/types.hpp
+    include/bitcoin/network/messages/json/rpc.hpp
 
 include_bitcoin_network_messages_json_enumsdir = ${includedir}/bitcoin/network/messages/json/enums
 include_bitcoin_network_messages_json_enums_HEADERS = \

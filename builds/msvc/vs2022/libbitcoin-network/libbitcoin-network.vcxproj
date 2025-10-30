@@ -145,7 +145,7 @@
     <ClCompile Include="..\..\..\..\src\messages\http\body.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\json\tags.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\json\rpc.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_peer_address.obj</ObjectFileName>
     </ClCompile>
@@ -280,8 +280,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\payload.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\tags.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\types.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\rpc.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\alert.hpp" />

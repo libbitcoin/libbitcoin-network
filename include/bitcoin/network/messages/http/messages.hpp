@@ -27,6 +27,7 @@
 #include <bitcoin/network/messages/http/enums/verb.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
 #include <bitcoin/network/messages/http/method.hpp>
+#include <bitcoin/network/messages/http/payload.hpp>
 #include <bitcoin/network/messages/http/types.hpp>
 
 #endif

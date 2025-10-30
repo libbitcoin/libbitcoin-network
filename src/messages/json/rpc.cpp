@@ -16,12 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/json/tags.hpp>
+#include <bitcoin/network/messages/json/rpc.hpp>
 
 #include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/enums/version.hpp>
-#include <bitcoin/network/messages/json/types.hpp>
 
 // boost::json parse/seralize is not exception safe.
 
@@ -61,7 +60,7 @@ DEFINE_JSON_FROM_TAG(value_t)
 {
     std::visit(overload
     {
-        [&] (null_t) NOEXCEPT
+        [&](null_t) NOEXCEPT
         {
             value = nullptr;
         },
@@ -73,15 +72,15 @@ DEFINE_JSON_FROM_TAG(value_t)
         {
             value = visit;
         },
-        [&](const string_t& visit) NOEXCEPT
+        [&](const string_t& visit)
         {
             value = visit;
         },
-        [&](const array_t& visit) NOEXCEPT
+        [&](const array_t& visit)
         {
             value = value_from(visit);
         },
-        [&](const object_t& visit) NOEXCEPT
+        [&](const object_t& visit)
         {
             value = value_from(visit);
         }
@@ -125,7 +124,7 @@ DEFINE_JSON_FROM_TAG(identity_t)
 {
     std::visit(overload
     {
-        [&] (null_t) NOEXCEPT
+        [&](null_t) NOEXCEPT
         {
             value = boost::json::value{};
         },
@@ -133,7 +132,7 @@ DEFINE_JSON_FROM_TAG(identity_t)
         {
             value = visit;
         },
-        [&](const string_t& visit) NOEXCEPT
+        [&](const string_t& visit)
         {
             value = visit;
         }

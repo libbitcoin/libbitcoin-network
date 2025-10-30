@@ -22,11 +22,14 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/payload.hpp>
-#include <bitcoin/network/messages/json/types.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
+
+using parser = boost::json::stream_parser;
+using serializer = boost::json::serializer;
+using error_code = boost::system::error_code;
 
 /// boost::beast::http body template for JSON messages.
 /// Because of the parser and serializer members, neither the reader nor writer
@@ -82,9 +85,6 @@ struct body
         Serializer serializer_;
     };
 };
-
-using parser = boost::json::stream_parser;
-using serializer = boost::json::serializer;
 
 } // namespace json
 } // namespace network

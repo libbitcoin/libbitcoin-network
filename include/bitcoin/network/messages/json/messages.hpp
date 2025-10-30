@@ -19,12 +19,9 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_MESSAGES_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_MESSAGES_HPP
 
-#include <bitcoin/network/messages/json/enums/version.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
-#include <bitcoin/network/messages/json/tags.hpp>
-#include <bitcoin/network/messages/json/types.hpp>
-
- ////request_t BCT_API to_native(const boost::json::value& value) NOEXCEPT;
- ////boost::json::value BCT_API from_native(const response_t& response) NOEXCEPT;
+#include <bitcoin/network/messages/json/enums/version.hpp>
+#include <bitcoin/network/messages/json/payload.hpp>
+#include <bitcoin/network/messages/json/rpc.hpp>
 
 #endif

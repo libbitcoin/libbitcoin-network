@@ -22,7 +22,6 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/json/types.hpp>
 
 namespace libbitcoin {
 namespace network {
