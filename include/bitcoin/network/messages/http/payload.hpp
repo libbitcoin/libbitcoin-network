@@ -48,9 +48,36 @@ using variant_value = std::variant
 /// The pass-thru body(), reader populates in construct.
 struct payload
 {
-    std::optional<variant_value> inner{};
-};
+    /// Allow default construct (empty optional).
+    payload() NOEXCEPT = default;
 
+    /// Forwarding constructors for in-place variant construction.
+    FORWARD_VARIANT_CONSTRUCT(payload, inner_)
+    FORWARD_VARIANT_ASSIGNMENT(payload, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(payload, empty_value, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(payload, json_value, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(payload, data_value, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(payload, file_value, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(payload, string_value, inner_)
+
+    bool has_value() NOEXCEPT
+    {
+        return inner_.has_value();
+    }
+
+    variant_value& value() NOEXCEPT
+    {
+        return inner_.value();
+    }
+
+    const variant_value& value() const NOEXCEPT
+    {
+        return inner_.value();
+    }
+
+private:
+    std::optional<variant_value> inner_{};
+};
 
 } // namespace http
 } // namespace network

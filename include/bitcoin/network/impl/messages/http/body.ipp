@@ -43,19 +43,19 @@ variant_reader body::reader::to_reader(Header& header,
     switch (content_mime_type(header))
     {
         case mime_type::application_json:
-            value.inner = json_value{};
+            value = json_value{};
             break;
         case mime_type::text_plain:
-            value.inner = string_value{};
+            value = string_value{};
             break;
         case mime_type::application_octet_stream:
             if (has_attachment(header))
-                value.inner = file_value{};
+                value = file_value{};
             else
-                value.inner = data_value{};
+                value = data_value{};
             break;
         default:
-            value.inner = empty_value{};
+            value = empty_value{};
     }
 
     return std::visit(overload
@@ -83,7 +83,7 @@ variant_reader body::reader::to_reader(Header& header,
         {
             return variant_reader{ string_reader{ header, value } };
         }
-    }, value.inner.value());
+    }, value.value());
 }
 
 template <bool IsRequest, class Fields>
@@ -97,14 +97,14 @@ body::reader::reader(header<IsRequest, Fields>& header,
 // ----------------------------------------------------------------------------
 
 // static
-// Create writer matching the caller-defined body.inner (variant) type.
+// Create writer matching the caller-defined body.inner_ (variant) type.
 template <class Header>
 variant_writer body::writer::to_writer(Header& header,
     payload& value) NOEXCEPT
 {
-    // Caller should have set inner, otherwise set it to empty.
-    if (!value.inner.has_value())
-        value.inner = empty_value{};
+    // Caller should have set optional<>, otherwise set it to empty_value.
+    if (!value.has_value())
+        value = empty_value{};
 
     return std::visit(overload
     {
@@ -131,7 +131,7 @@ variant_writer body::writer::to_writer(Header& header,
         {
             return variant_writer{ string_writer{ header, value } };
         }
-    }, value.inner.value());
+    }, value.value());
 }
 
 template <bool IsRequest, class Fields>

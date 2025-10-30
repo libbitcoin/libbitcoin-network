@@ -148,7 +148,7 @@ void protocol_http::send_method_not_allowed(const request& request,
     const auto mime = to_mime_type(request[field::accept]);
     response out{ status::bad_request, request.version() };
     add_common_headers(out, request, true);
-    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), mime, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::method_not_allowed);
 }
@@ -161,7 +161,7 @@ void protocol_http::send_not_implemented(const request& request) NOEXCEPT
     const auto mime = to_mime_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request);
-    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), mime, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::not_implemented);
 }
@@ -175,7 +175,7 @@ void protocol_http::send_not_found(const request& request) NOEXCEPT
     const auto mime = to_mime_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request);
-    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), mime, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::success);
 }
@@ -190,7 +190,7 @@ void protocol_http::send_forbidden(const request& request) NOEXCEPT
     const auto mime = to_mime_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request, true);
-    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), mime, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::forbidden);
 }
@@ -205,7 +205,7 @@ void protocol_http::send_bad_host(const request& request) NOEXCEPT
     const auto mime = to_mime_type(request[field::accept]);
     response out{ status::bad_request, request.version() };
     add_common_headers(out, request, true);
-    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), mime, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::bad_request);
 }
@@ -220,7 +220,7 @@ void protocol_http::send_bad_target(const request& request) NOEXCEPT
     const auto mime = to_mime_type(request[field::accept]);
     response out{ status::bad_request, request.version() };
     add_common_headers(out, request, true);
-    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), mime, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::bad_request);
 }
