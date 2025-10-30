@@ -29,8 +29,6 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
-// These are the templated construction methods, for passthrough see body.cpp.
-
 // reader
 // ----------------------------------------------------------------------------
 
@@ -38,7 +36,7 @@ namespace http {
 // Select reader based on content-type header.
 template <class Header>
 variant_reader body::reader::to_reader(Header& header,
-    payload& value) NOEXCEPT
+    value_type& value) NOEXCEPT
 {
     switch (content_mime_type(header))
     {
@@ -86,21 +84,14 @@ variant_reader body::reader::to_reader(Header& header,
     }, value.value());
 }
 
-template <bool IsRequest, class Fields>
-body::reader::reader(header<IsRequest, Fields>& header,
-    value_type& value) NOEXCEPT
-  : reader_{ to_reader(header, value) }
-{
-}
-
 // writer
 // ----------------------------------------------------------------------------
 
 // static
-// Create writer matching the caller-defined body.inner_ (variant) type.
+// Create writer matching the caller-defined body inner variant type.
 template <class Header>
 variant_writer body::writer::to_writer(Header& header,
-    payload& value) NOEXCEPT
+    value_type& value) NOEXCEPT
 {
     // Caller should have set optional<>, otherwise set it to empty_value.
     if (!value.has_value())
@@ -132,13 +123,6 @@ variant_writer body::writer::to_writer(Header& header,
             return variant_writer{ string_writer{ header, value } };
         }
     }, value.value());
-}
-
-template <bool IsRequest, class Fields>
-body::writer::writer(header<IsRequest, Fields>& header,
-    value_type& value) NOEXCEPT
-  : writer_{ to_writer(header, value) }
-{
 }
 
 } // namespace http

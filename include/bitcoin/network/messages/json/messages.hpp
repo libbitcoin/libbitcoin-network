@@ -21,7 +21,6 @@
 
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/json/enums/version.hpp>
-#include <bitcoin/network/messages/json/payload.hpp>
 #include <bitcoin/network/messages/json/rpc.hpp>
 
 #endif

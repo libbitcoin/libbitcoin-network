@@ -65,9 +65,26 @@ struct value_t
     >;
 
     /// Forwarding constructors for in-place variant construction.
-    FORWARD_VARIANT_CONSTRUCT(value_t, inner)
+    FORWARD_VARIANT_CONSTRUCT(value_t, inner_)
+    FORWARD_VARIANT_ASSIGNMENT(value_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, boolean_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, number_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, string_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, array_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, object_t, inner_)
+        
+    inner_t& value() NOEXCEPT
+    {
+        return inner_;
+    }
 
-    inner_t inner{};
+    const inner_t& value() const NOEXCEPT
+    {
+        return inner_;
+    }
+
+private:
+    inner_t inner_;
 };
 using value_option = std::optional<value_t>;
 

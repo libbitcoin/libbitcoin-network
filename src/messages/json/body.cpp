@@ -33,7 +33,7 @@ using namespace network::error;
 // ----------------------------------------------------------------------------
 
 void body::reader::init(const http::length_type& length,
-    error_code& ec) NOEXCEPT
+    http::error_code& ec) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto value = length.get_value_or(zero);
@@ -54,7 +54,8 @@ void body::reader::init(const http::length_type& length,
     ec.clear();
 }
 
-size_t body::reader::put(const buffer_type& buffer, error_code& ec) NOEXCEPT
+size_t body::reader::put(const buffer_type& buffer,
+    http::error_code& ec) NOEXCEPT
 {
     try
     {
@@ -74,7 +75,7 @@ size_t body::reader::put(const buffer_type& buffer, error_code& ec) NOEXCEPT
     }
 }
 
-void body::reader::finish(error_code& ec) NOEXCEPT
+void body::reader::finish(http::error_code& ec) NOEXCEPT
 {
     try
     {
@@ -92,7 +93,7 @@ void body::reader::finish(error_code& ec) NOEXCEPT
 // writer
 // ----------------------------------------------------------------------------
 
-void body::writer::init(error_code& ec) NOEXCEPT
+void body::writer::init(http::error_code& ec) NOEXCEPT
 {
     if (!value_.buffer)
     {
@@ -109,7 +110,7 @@ void body::writer::init(error_code& ec) NOEXCEPT
     serializer_.reset(&value_.model);
 }
 
-body::writer::out_buffer body::writer::get(error_code& ec) NOEXCEPT
+body::writer::out_buffer body::writer::get(http::error_code& ec) NOEXCEPT
 {
     ec.clear();
     if (serializer_.done())

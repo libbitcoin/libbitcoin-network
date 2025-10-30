@@ -572,9 +572,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\payload.hpp">
-      <Filter>include\bitcoin\network\messages\http</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\types.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
@@ -585,9 +582,6 @@
       <Filter>include\bitcoin\network\messages\json\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\messages.hpp">
-      <Filter>include\bitcoin\network\messages\json</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\payload.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\rpc.hpp">

@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__bogus__constructs_empty_reader
 {
     header<false, fields> header{};
     header.set(http::field::content_type, "bogus");
-    payload value{};
+    body::value_type value{};
     value = empty_body::value_type{};
     const auto variant = accessor::to_reader(header, value);
     BOOST_REQUIRE(std::holds_alternative<empty_reader>(variant));
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__json__constructs_json_reader)
 {
     header<false, fields> header{};
     header.set(http::field::content_type, "application/json");
-    payload value{};
+    body::value_type value{};
     value = json_body::value_type{};
     const auto variant = accessor::to_reader(header, value);
     BOOST_REQUIRE(std::holds_alternative<json_reader>(variant));
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__application_octet_stream__cons
     header<false, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "bogus");
-    payload value{};
+    body::value_type value{};
     value = data_body::value_type{};
     const auto variant = accessor::to_reader(header, value);
     BOOST_REQUIRE(std::holds_alternative<data_reader>(variant));
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__application_octet_stream_with_
     header<false, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "filename=somenonsense.jpg");
-    payload value{};
+    body::value_type value{};
     value = file_body::value_type{};
     const auto variant = accessor::to_reader(header, value);
     BOOST_REQUIRE(std::holds_alternative<file_reader>(variant));
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__application_octet_stream_with_
     header<false, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "dirty 42; filename* = somenonsense.jpg; some other nonsense");
-    payload value{};
+    body::value_type value{};
     value = file_body::value_type{};
     const auto variant = accessor::to_reader(header, value);
     BOOST_REQUIRE(std::holds_alternative<file_reader>(variant));
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__text_plain__constructs_string_
 {
     header<false, fields> header{};
     header.set(http::field::content_type, "text/plain");
-    payload value{};
+    body::value_type value{};
     value = string_body::value_type{};
     const auto variant = accessor::to_reader(header, value);
     BOOST_REQUIRE(std::holds_alternative<string_reader>(variant));

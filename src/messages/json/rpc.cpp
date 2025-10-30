@@ -84,7 +84,7 @@ DEFINE_JSON_FROM_TAG(value_t)
         {
             value = value_from(visit);
         }
-    }, instance.inner);
+    }, instance.value());
 }
 
 DEFINE_JSON_TO_TAG(value_t)

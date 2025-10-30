@@ -19,10 +19,10 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
 
+#include <optional>
 #include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
-#include <bitcoin/network/messages/http/payload.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -56,12 +56,59 @@ using variant_writer = std::variant
     string_writer
 >;
 
+using empty_value = empty_body::value_type;
+using json_value = json_body::value_type;
+using data_value = data_body::value_type;
+using file_value = file_body::value_type;
+using string_value = string_body::value_type;
+using variant_value = std::variant
+<
+    empty_value,
+    json_value,
+    data_value,
+    file_value,
+    string_value
+>;
+
 /// boost::beast::http body template for all known message types.
 /// This encapsulates a variant of supported body types, selects a type upon
 /// reader or writer construction, and then passes all calls through to it.
 struct BCT_API body
 {
-    using value_type = payload;
+    /// No size(), forces chunked encoding for all types.
+    /// The pass-thru body(), reader populates in construct.
+    struct value_type
+    {
+        /// Allow default construct (empty optional).
+        value_type() NOEXCEPT = default;
+
+        /// Forwarding constructors for in-place variant construction.
+        FORWARD_VARIANT_CONSTRUCT(value_type, inner_)
+        FORWARD_VARIANT_ASSIGNMENT(value_type, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, empty_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, json_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, data_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, file_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, string_value, inner_)
+
+        bool has_value() NOEXCEPT
+        {
+            return inner_.has_value();
+        }
+
+        variant_value& value() NOEXCEPT
+        {
+            return inner_.value();
+        }
+
+        const variant_value& value() const NOEXCEPT
+        {
+            return inner_.value();
+        }
+
+    private:
+        std::optional<variant_value> inner_{};
+    };
 
     class reader
     {
@@ -69,8 +116,11 @@ struct BCT_API body
         using buffer_type = asio::const_buffer;
 
         template <bool IsRequest, class Fields>
-        explicit reader(header<IsRequest, Fields>& header,
-            value_type& payload) NOEXCEPT;
+        inline explicit reader(header<IsRequest, Fields>& header,
+            value_type& value) NOEXCEPT
+          : reader_{ to_reader(header, value) }
+        {
+        }
 
         void init(const length_type& length, error_code& ec) NOEXCEPT;
         size_t put(const buffer_type& buffer, error_code& ec) NOEXCEPT;
@@ -79,7 +129,7 @@ struct BCT_API body
     protected:
         template <class Header>
         static variant_reader to_reader(Header& header,
-            http::payload& value) NOEXCEPT;
+            value_type& value) NOEXCEPT;
 
     private:
         variant_reader reader_;
@@ -92,8 +142,11 @@ struct BCT_API body
         using out_buffer = get_buffer<const_buffers_type>;
 
         template <bool IsRequest, class Fields>
-        explicit writer(header<IsRequest, Fields>& header,
-            value_type& value) NOEXCEPT;
+        inline explicit writer(header<IsRequest, Fields>& header,
+            value_type& value) NOEXCEPT
+          : writer_{ to_writer(header, value) }
+        {
+        }
 
         void init(error_code& ec) NOEXCEPT;
         out_buffer get(error_code& ec) NOEXCEPT;
@@ -101,7 +154,7 @@ struct BCT_API body
     protected:
         template <class Header>
         static variant_writer to_writer(Header& header,
-            http::payload& value) NOEXCEPT;
+            value_type& value) NOEXCEPT;
 
     private:
         variant_writer writer_;

@@ -25,6 +25,8 @@
 namespace libbitcoin {
 namespace network {
 namespace http {
+
+using namespace network::error;
     
 // body::reader
 // ----------------------------------------------------------------------------
@@ -42,7 +44,7 @@ void body::reader::init(const length_type& length,
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
             }
         }
     }, reader_);
@@ -61,7 +63,7 @@ size_t body::reader::put(const buffer_type& buffer,
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
                 return size_t{};
             }
         }
@@ -80,7 +82,7 @@ void body::reader::finish(error_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
             }
         }
     }, reader_);
@@ -101,7 +103,7 @@ void body::writer::init(error_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
             }
         }
     }, writer_);
@@ -119,7 +121,7 @@ body::writer::out_buffer body::writer::get(error_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
                 return out_buffer{};
             }
         }

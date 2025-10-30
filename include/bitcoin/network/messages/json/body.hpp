@@ -26,8 +26,6 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
-using error_code = boost::system::error_code;
-
 /// boost::beast::http body for JSON messages.
 /// Because of the parser and serializer members, neither the reader nor writer
 /// is movable and as such must be in-place contructed (e.g. variant contruct).
@@ -60,9 +58,9 @@ struct BCT_API body
         {
         }
 
-        void init(const http::length_type& length, error_code& ec) NOEXCEPT;
-        size_t put(const buffer_type& buffer, error_code& ec) NOEXCEPT;
-        void finish(error_code& ec) NOEXCEPT;
+        void init(const http::length_type& length, http::error_code& ec) NOEXCEPT;
+        size_t put(const buffer_type& buffer, http::error_code& ec) NOEXCEPT;
+        void finish(http::error_code& ec) NOEXCEPT;
 
     private:
         value_type& value_;
@@ -85,8 +83,8 @@ struct BCT_API body
         {
         }
 
-        void init(error_code& ec) NOEXCEPT;
-        out_buffer get(error_code& ec) NOEXCEPT;
+        void init(http::error_code& ec) NOEXCEPT;
+        out_buffer get(http::error_code& ec) NOEXCEPT;
 
     private:
         static constexpr size_t default_buffer = 4096;
