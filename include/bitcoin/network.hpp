@@ -63,7 +63,7 @@
 #include <bitcoin/network/log/tracker.hpp>
 #include <bitcoin/network/messages/http/body.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
-#include <bitcoin/network/messages/http/messages.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/messages/http/method.hpp>
 #include <bitcoin/network/messages/http/types.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
@@ -72,7 +72,7 @@
 #include <bitcoin/network/messages/http/enums/target.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
-#include <bitcoin/network/messages/json/messages.hpp>
+#include <bitcoin/network/messages/json/json.hpp>
 #include <bitcoin/network/messages/json/rpc.hpp>
 #include <bitcoin/network/messages/json/enums/version.hpp>
 #include <bitcoin/network/messages/peer/address.hpp>

@@ -26,7 +26,7 @@
 #include <bitcoin/network/distributors/distributors.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/http/messages.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
