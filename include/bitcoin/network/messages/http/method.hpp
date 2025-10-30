@@ -30,7 +30,7 @@ namespace network {
 namespace http {
 namespace method {
 
-struct BCT_API method_ptr
+struct method_ptr
 {
     /// Overload structure -> to obtain .ptr.
     const request* operator->() const NOEXCEPT
