@@ -98,7 +98,9 @@ void body::writer::init(http::error_code& ec) NOEXCEPT
     if (!value_.buffer)
     {
         // Caller controls max_size and other buffer behavior by assigning it.
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         value_.buffer = std::make_shared<http::flat_buffer>(default_buffer);
+        BC_POP_WARNING()
     }
     else
     {
