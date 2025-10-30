@@ -22,6 +22,8 @@
 #include <optional>
 #include <variant>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/http/enums/mime_type.hpp>
+#include <bitcoin/network/messages/http/fields.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
 
 namespace libbitcoin {
@@ -127,9 +129,56 @@ struct BCT_API body
         void finish(error_code& ec) NOEXCEPT;
 
     protected:
+        /// Select reader based on content-type header.
         template <class Header>
-        static variant_reader to_reader(Header& header,
-            value_type& value) NOEXCEPT;
+        inline static variant_reader to_reader(Header& header,
+            value_type& value) NOEXCEPT
+        {
+            switch (content_mime_type(header))
+            {
+                case mime_type::application_json:
+                    value = json_value{};
+                    break;
+                case mime_type::text_plain:
+                    value = string_value{};
+                    break;
+                case mime_type::application_octet_stream:
+                    if (has_attachment(header))
+                        value = file_value{};
+                    else
+                        value = data_value{};
+                    break;
+                default:
+                    value = empty_value{};
+            }
+
+            return std::visit(overload
+            {
+                [&](empty_value& value) NOEXCEPT
+                {
+                    return variant_reader{ empty_reader{ header, value } };
+                },
+                [&](json_value& value) NOEXCEPT
+                {
+                    // json_reader not copy or assignable (by contained parser).
+                    // So *requires* in-place construction for variant populate.
+                    return variant_reader{ std::in_place_type<json_reader>,
+                        header, value };
+                },
+                [&](data_value& value) NOEXCEPT
+                {
+                    return variant_reader{ data_reader{ header, value } };
+                },
+                [&](file_value& value) NOEXCEPT
+                {
+                    return variant_reader{ file_reader{ header, value } };
+                },
+                [&](string_value& value) NOEXCEPT
+                {
+                    return variant_reader{ string_reader{ header, value } };
+                }
+            }, value.value());
+        }
 
     private:
         variant_reader reader_;
@@ -152,9 +201,42 @@ struct BCT_API body
         out_buffer get(error_code& ec) NOEXCEPT;
 
     protected:
+        /// Create writer matching the caller-defined body inner variant type.
         template <class Header>
-        static variant_writer to_writer(Header& header,
-            value_type& value) NOEXCEPT;
+        inline static variant_writer to_writer(Header& header,
+            value_type& value) NOEXCEPT
+        {
+            // Caller should have set optional<>, otherwise set to empty_value.
+            if (!value.has_value())
+                value = empty_value{};
+
+            return std::visit(overload
+            {
+                [&](empty_value& value) NOEXCEPT
+                {
+                    return variant_writer{ empty_writer{ header, value } };
+                },
+                [&](json_value& value) NOEXCEPT
+                {
+                    // json_writer is not movable (by contained serializer).
+                    // So *requires* in-place construction for variant populate.
+                    return variant_writer{ std::in_place_type<json_writer>,
+                        header, value };
+                },
+                [&](data_value& value) NOEXCEPT
+                {
+                    return variant_writer{ data_writer{ header, value } };
+                },
+                [&](file_value& value) NOEXCEPT
+                {
+                    return variant_writer{ file_writer{ header, value } };
+                },
+                [&](string_value& value) NOEXCEPT
+                {
+                    return variant_writer{ string_writer{ header, value } };
+                }
+            }, value.value());
+        }
 
     private:
         variant_writer writer_;
@@ -164,7 +246,5 @@ struct BCT_API body
 } // namespace http
 } // namespace network
 } // namespace libbitcoin
-
-#include <bitcoin/network/impl/messages/http/body.ipp>
 
 #endif

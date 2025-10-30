@@ -28,7 +28,7 @@ namespace http {
 
 using namespace network::error;
     
-// body::reader
+// http::body::reader
 // ----------------------------------------------------------------------------
 
 void body::reader::init(const length_type& length,
@@ -88,7 +88,7 @@ void body::reader::finish(error_code& ec) NOEXCEPT
     }, reader_);
 }
 
-// body::writer
+// http::body::writer
 // ----------------------------------------------------------------------------
     
 void body::writer::init(error_code& ec) NOEXCEPT

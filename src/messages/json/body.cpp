@@ -29,7 +29,7 @@ namespace json {
 using namespace system;
 using namespace network::error;
 
-// reader
+// json::body::reader
 // ----------------------------------------------------------------------------
 
 void body::reader::init(const http::length_type& length,
@@ -90,7 +90,7 @@ void body::reader::finish(http::error_code& ec) NOEXCEPT
     }
 }
 
-// writer
+// json::body::writer
 // ----------------------------------------------------------------------------
 
 void body::writer::init(http::error_code& ec) NOEXCEPT

@@ -49,7 +49,7 @@ protected:
 
 private:
     // These are thread safe.
-    static inline std::atomic<size_t> instances_{};
+    inline static std::atomic<size_t> instances_{};
     const logger& log_;
 
 #else // HAVE_LOGO
