@@ -93,19 +93,32 @@ struct BCT_API body
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, file_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, string_value, inner_)
 
-        bool has_value() NOEXCEPT
+        inline bool has_value() const NOEXCEPT
         {
             return inner_.has_value();
         }
 
-        variant_value& value() NOEXCEPT
+        inline variant_value& value() NOEXCEPT
         {
             return inner_.value();
         }
 
-        const variant_value& value() const NOEXCEPT
+        inline const variant_value& value() const NOEXCEPT
         {
             return inner_.value();
+        }
+
+        template <typename Inner>
+        inline bool contains() const NOEXCEPT
+        {
+            return has_value() && std::holds_alternative<Inner>(value());
+        }
+
+        template <typename Inner>
+        inline const Inner& get() const NOEXCEPT
+        {
+            BC_ASSERT(contains<Inner>());
+            return std::get<Inner>(value());
         }
 
     private:

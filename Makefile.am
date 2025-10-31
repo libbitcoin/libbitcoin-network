@@ -317,7 +317,6 @@ include_bitcoin_network_config_HEADERS = \
 include_bitcoin_network_distributorsdir = ${includedir}/bitcoin/network/distributors
 include_bitcoin_network_distributors_HEADERS = \
     include/bitcoin/network/distributors/distributor_http.hpp \
-    include/bitcoin/network/distributors/distributor_json.hpp \
     include/bitcoin/network/distributors/distributor_peer.hpp \
     include/bitcoin/network/distributors/distributors.hpp
 

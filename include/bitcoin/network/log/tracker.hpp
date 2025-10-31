@@ -36,13 +36,13 @@ protected:
 
 #if defined(HAVE_LOGO)
 
-    tracker(const logger& log) NOEXCEPT
+    inline tracker(const logger& log) NOEXCEPT
       : log_(log)
     {
         LOGO(typeid(Class).name() << "(" << ++instances_ << ")");
     }
 
-    ~tracker() NOEXCEPT
+    inline ~tracker() NOEXCEPT
     {
         LOGO(typeid(Class).name() << "(" << --instances_ << ")~");
     }
@@ -54,11 +54,11 @@ private:
 
 #else // HAVE_LOGO
 
-    tracker(const logger&) NOEXCEPT
+    inline tracker(const logger&) NOEXCEPT
     {
     }
 
-    ~tracker() NOEXCEPT
+    inline ~tracker() NOEXCEPT
     {
     }
 

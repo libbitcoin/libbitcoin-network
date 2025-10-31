@@ -20,7 +20,4 @@
 
 BOOST_AUTO_TEST_SUITE(magic_numbers_tests)
 
-static_assert(network::http::max_head == system::power2(12u));
-static_assert(network::http::max_body == system::power2(22u));
-
 BOOST_AUTO_TEST_SUITE_END()

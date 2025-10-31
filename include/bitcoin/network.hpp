@@ -51,7 +51,6 @@
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/network/distributors/distributor_http.hpp>
-#include <bitcoin/network/distributors/distributor_json.hpp>
 #include <bitcoin/network/distributors/distributor_peer.hpp>
 #include <bitcoin/network/distributors/distributors.hpp>
 #include <bitcoin/network/log/capture.hpp>

@@ -42,46 +42,40 @@ public:
 
     /// Subscribe to messages from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Message, typename Handler =
-        distributor_peer::handler<Message>>
-    void subscribe(Handler&& handler) NOEXCEPT
+    template <class Message>
+    inline void subscribe(auto&& handler) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
-        distributor_.subscribe(std::forward<Handler>(handler));
+        BC_ASSERT(stranded());
+        using message_handler = distributor_peer::handler<Message>;
+        distributor_.subscribe(std::forward<message_handler>(handler));
     }
 
     /// Serialize and write message to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
-    void send(const Message& message, result_handler&& handler) NOEXCEPT
+    inline void send(const Message& message, result_handler&& handler) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
+        BC_ASSERT(stranded());
 
-        using namespace messages::peer;
+        // TODO: move to serializer.
         const auto id = settings().identifier;
-        const auto ptr = serialize(message, id, negotiated_version());
+        const auto version = negotiated_version();
+        const auto ptr = messages::peer::serialize(message, id, version);
 
-        // Capture message in intermediate completion handler.
-        auto complete = [self = shared_from_base<channel_peer>(), ptr,
-            handle = std::move(handler)](const code& ec, size_t) NOEXCEPT
-        {
-            if (ec) self->stop(ec);
-            handle(ec);
-        };
+        using namespace std::placeholders;
+        count_handler complete = std::bind(&channel_peer::handle_send,
+            shared_from_base<channel_peer>(),  _1, _2, ptr, std::move(handler));
 
         if (!ptr)
-        {
-            complete(error::bad_alloc, zero);
-            return;
-        }
-
-        const asio::const_buffer buffer{ ptr->data(), ptr->size() };
-        write(buffer, std::move(complete));
+            complete(error::bad_alloc, {});
+        else
+            write({ ptr->data(), ptr->size() }, std::move(complete));
     }
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.
-    channel_peer(memory& memory, const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero) NOEXCEPT
+    inline channel_peer(memory& memory, const logger& log,
+        const socket::ptr& socket, const network::settings& settings,
+        uint64_t identifier={}) NOEXCEPT
       : channel(log, socket, settings, identifier,
           settings.channel_inactivity(),
           system::pseudo_random::duration(settings.channel_expiration())),
@@ -136,6 +130,13 @@ protected:
     bool is_handshaked() const NOEXCEPT;
 
 private:
+    inline void handle_send(const code& ec, size_t, const system::chunk_cptr&,
+        const result_handler& handler) NOEXCEPT
+    {
+        if (ec) stop(ec);
+        handler(ec);
+    }
+
     // These are protected by strand/order.
 
     bool quiet_{};

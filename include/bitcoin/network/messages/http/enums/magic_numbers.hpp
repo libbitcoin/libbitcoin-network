@@ -29,8 +29,6 @@ namespace http {
 ///----------------------------------------------------------------------------
 
 constexpr size_t max_url  = 1 * 1024;
-constexpr size_t max_head = 4 * 1024;
-constexpr size_t max_body = 4 * 1024 * 1024;
 constexpr uint16_t default_http = 80;
 constexpr uint16_t default_tls = 443;
 

@@ -33,19 +33,19 @@ namespace method {
 struct method_ptr
 {
     /// Overload structure -> to obtain .ptr.
-    const request* operator->() const NOEXCEPT
+    inline const request* operator->() const NOEXCEPT
     {
         return ptr.get();
     }
 
     /// Overload structure * to obtain *ptr.
-    const request& operator*() const NOEXCEPT
+    inline const request& operator*() const NOEXCEPT
     {
         return *ptr;
     }
 
     /// Test before pointer dereference.
-    operator bool() const NOEXCEPT
+    inline operator bool() const NOEXCEPT
     {
         return !!ptr;
     }

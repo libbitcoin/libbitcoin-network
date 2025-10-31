@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_HPP
 
+#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -41,6 +42,9 @@ struct BCT_API body
     {
         /// JSON DOM.
         boost::json::value model{};
+
+        /// Used by channel to resize reusable buffer.
+        size_t size_hint{};
 
         /// Writer serialization buffer (max size, allocated on write).
         mutable http::flat_buffer_ptr buffer{};

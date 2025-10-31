@@ -503,9 +503,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_http.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_json.hpp">
-      <Filter>include\bitcoin\network\distributors</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_peer.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>

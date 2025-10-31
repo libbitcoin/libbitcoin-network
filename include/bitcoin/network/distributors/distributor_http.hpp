@@ -34,7 +34,7 @@ namespace network {
 #define DEFINE_SUBSCRIBER(name) \
     using SUBSCRIBER_TYPE(name) = subscriber<const http::method::name&>
 #define SUBSCRIBER_OVERLOAD(name) \
-    code do_subscribe(HANDLER(name)&& handler) NOEXCEPT \
+    inline code do_subscribe(HANDLER(name)&& handler) NOEXCEPT \
     { return SUBSCRIBER(name).subscribe(std::forward<HANDLER(name)>(handler)); }
 
 /// Not thread safe.
@@ -64,7 +64,7 @@ public:
     /// If key exists, handler is invoked with error::subscriber_exists.
     /// Otherwise handler retained. Subscription code is also returned here.
     template <typename Handler>
-    code subscribe(Handler&& handler) NOEXCEPT
+    inline code subscribe(Handler&& handler) NOEXCEPT
     {
         return do_subscribe(std::forward<Handler>(handler));
     }
@@ -80,7 +80,7 @@ public:
 private:
     // Deserialize a stream into a message instance and notify subscribers.
     template <typename Subscriber, class Method>
-    void do_notify(const code& ec, Subscriber& subscriber,
+    inline void do_notify(const code& ec, Subscriber& subscriber,
         const Method& method) const NOEXCEPT
     {
         BC_ASSERT_MSG(ec || method, "success with null request");

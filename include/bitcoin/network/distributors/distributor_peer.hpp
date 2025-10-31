@@ -33,7 +33,7 @@ namespace network {
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
 #define DEFINE_SUBSCRIBER(name) using SUBSCRIBER_TYPE(name) = \
     unsubscriber<const messages::peer::name::cptr&>
-#define SUBSCRIBER_OVERLOAD(name) code do_subscribe( \
+#define SUBSCRIBER_OVERLOAD(name) inline code do_subscribe( \
     distributor_peer::handler<messages::peer::name>&& handler) NOEXCEPT \
     { return SUBSCRIBER(name).subscribe(std::forward< \
         distributor_peer::handler<messages::peer::name>>(handler)); }
@@ -92,7 +92,7 @@ public:
     /// If key exists, handler is invoked with error::subscriber_exists.
     /// Otherwise handler retained. Subscription code is also returned here.
     template <typename Handler>
-    code subscribe(Handler&& handler) NOEXCEPT
+    inline code subscribe(Handler&& handler) NOEXCEPT
     {
         return do_subscribe(std::forward<Handler>(handler));
     }
@@ -110,7 +110,7 @@ public:
 private:
     // Deserialize a stream into a message instance and notify subscribers.
     template <typename Message, typename Subscriber>
-    code do_notify(Subscriber& subscriber, uint32_t version,
+    inline code do_notify(Subscriber& subscriber, uint32_t version,
         const system::data_chunk& data) NOEXCEPT
     {
         // Avoid deserialization if there are no subscribers for the type.
