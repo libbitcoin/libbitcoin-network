@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__file__constructs_file_writer)
 {
     // In dubug builds boost asserts that the file is open.
     // BOOST_ASSERT(body_.file_.is_open());
-    error::boost_code ec{};
+    boost_code ec{};
     file_body::value_type file{};
     file.open((TEST_PATH).c_str(), boost::beast::file_mode::write, ec);
     BOOST_REQUIRE(!ec);

@@ -22,7 +22,6 @@ BOOST_AUTO_TEST_SUITE(json_body_reader_tests)
 
 using namespace network::http;
 using namespace network::json;
-using namespace network::error;
 using value = boost::json::value;
 
 BOOST_AUTO_TEST_CASE(json_body_reader__construct__default__null_model)
@@ -89,11 +88,11 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__over_length__protocol_error)
     request_header header{};
     json::body::value_type body{};
     json::body::reader reader(header, body);
-    error_code ec{};
+    boost_code ec{};
     reader.init(10, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE_EQUAL(ec, boost_error_t::protocol_error);
+    BOOST_REQUIRE(ec == error::http_error_t::body_limit);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

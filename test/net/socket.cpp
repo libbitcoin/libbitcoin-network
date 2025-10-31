@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
 
-    error::boost_code ec;
+    boost_code ec;
     const asio::endpoint endpoint(asio::tcp::v6(), 42);
 
     acceptor.open(endpoint.protocol(), ec);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     // This has the same effect as network::acceptor::stop.
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        error::boost_code ignore;
+        boost_code ignore;
         acceptor.cancel(ignore);
     });
 

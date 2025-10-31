@@ -84,7 +84,7 @@ void socket::stop() NOEXCEPT
 void socket::do_stop() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    error::boost_code ignore;
+    boost_code ignore;
 
     // Disable future sends or receives on the socket, for graceful close.
     socket_.shutdown(asio::socket::shutdown_both, ignore);
@@ -469,7 +469,7 @@ void socket::do_http_write_file(
 // ----------------------------------------------------------------------------
 // These are invoked on strand upon failure, socket cancel, or completion.
 
-void socket::handle_accept(const error::boost_code& ec,
+void socket::handle_accept(const boost_code& ec,
     const result_handler& handler) NOEXCEPT
 {
     // This is running in the acceptor (not socket) execution context.
@@ -497,7 +497,7 @@ void socket::handle_accept(const error::boost_code& ec,
     handler(code);
 }
 
-void socket::handle_connect(const error::boost_code& ec,
+void socket::handle_connect(const boost_code& ec,
     const asio::endpoint& peer, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -526,7 +526,7 @@ void socket::handle_connect(const error::boost_code& ec,
     handler(code);
 }
 
-void socket::handle_io(const error::boost_code& ec, size_t size,
+void socket::handle_io(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -549,7 +549,7 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
     handler(code, size);
 }
 
-void socket::handle_http_read(const error::boost_code& ec, size_t size,
+void socket::handle_http_read(const boost_code& ec, size_t size,
     const std::reference_wrapper<http::flat_buffer>& buffer,
     const count_handler& handler) NOEXCEPT
 {
@@ -576,7 +576,7 @@ void socket::handle_http_read(const error::boost_code& ec, size_t size,
     handler(code, size);
 }
 
-void socket::handle_http_write(const error::boost_code& ec, size_t size,
+void socket::handle_http_write(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");

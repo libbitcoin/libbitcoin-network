@@ -136,7 +136,7 @@ void connector::start(const std::string& hostname, uint16_t port,
 }
 
 // private
-void connector::handle_resolve(const error::boost_code& ec,
+void connector::handle_resolve(const boost_code& ec,
     const asio::endpoints& range, const finish_ptr& finish,
     const socket::ptr& socket) NOEXCEPT
 {

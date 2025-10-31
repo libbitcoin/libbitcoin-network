@@ -31,8 +31,7 @@ using namespace network::error;
 // http::body::reader
 // ----------------------------------------------------------------------------
 
-void body::reader::init(const length_type& length,
-    error_code& ec) NOEXCEPT
+void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
 {
     std::visit(overload
     {
@@ -51,7 +50,7 @@ void body::reader::init(const length_type& length,
 }
 
 size_t body::reader::put(const buffer_type& buffer,
-    error_code& ec) NOEXCEPT
+    boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -70,7 +69,7 @@ size_t body::reader::put(const buffer_type& buffer,
     }, reader_);
 }
 
-void body::reader::finish(error_code& ec) NOEXCEPT
+void body::reader::finish(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -91,7 +90,7 @@ void body::reader::finish(error_code& ec) NOEXCEPT
 // http::body::writer
 // ----------------------------------------------------------------------------
     
-void body::writer::init(error_code& ec) NOEXCEPT
+void body::writer::init(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -109,7 +108,7 @@ void body::writer::init(error_code& ec) NOEXCEPT
     }, writer_);
 }
 
-body::writer::out_buffer body::writer::get(error_code& ec) NOEXCEPT
+body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {

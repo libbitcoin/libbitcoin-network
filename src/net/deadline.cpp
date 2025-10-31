@@ -78,7 +78,7 @@ seconds deadline::remaining() const NOEXCEPT
 }
 
 // Callback always (cancel or otherwise) fired with the normalized error code.
-void deadline::handle_timer(const error::boost_code& ec,
+void deadline::handle_timer(const boost_code& ec,
     const result_handler& handle) NOEXCEPT
 {
     BC_DEBUG_ONLY(timer_.expires_at(epoch);)

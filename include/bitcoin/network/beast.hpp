@@ -111,7 +111,6 @@ using fields = boost::beast::http::fields;
 using flat_buffer = boost::beast::flat_buffer;
 using flat_buffer_ptr = std::shared_ptr<flat_buffer>;
 using flat_buffer_cptr = std::shared_ptr<const flat_buffer>;
-using error_code = boost::system::error_code;
 
 /// Required types for custom beast::http::body definition.
 template <bool IsRequest, class Fields>

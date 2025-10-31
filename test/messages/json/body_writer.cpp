@@ -22,7 +22,6 @@ BOOST_AUTO_TEST_SUITE(json_body_writer_tests)
 
 using namespace network::http;
 using namespace network::json;
-using namespace network::error;
 using value = boost::json::value;
 using object = boost::json::object;
 
@@ -50,7 +49,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__init__default__success)
     response_header header{};
     json::body::value_type body{};
     json::body::writer writer(header, body);
-    error_code ec{};
+    boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 }
@@ -62,7 +61,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more
     response_header header{};
     json::body::value_type body{};
     json::body::writer writer(header, body);
-    error_code ec{};
+    boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 
@@ -81,7 +80,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_m
     json::body::value_type body{};
     body.model = object{ { "key", "value" } };
     json::body::writer writer(header, body);
-    error_code ec{};
+    boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 

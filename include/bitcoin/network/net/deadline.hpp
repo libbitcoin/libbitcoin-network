@@ -62,7 +62,7 @@ public:
     seconds remaining() const NOEXCEPT;
 
 private:
-    void handle_timer(const error::boost_code& ec,
+    void handle_timer(const boost_code& ec,
         const result_handler& handle) NOEXCEPT;
 
     // This is thread safe.

@@ -29,18 +29,19 @@ namespace network {
 /// std::error_code "network" category holds network::error::error_t.
 typedef std::error_code code;
 
-namespace error {
-
-/// Alias asio code.
+/// Alias boost code.
 /// Asio implements an equivalent to std::error_code.
 /// boost::system::error_code "system" category holds boost::asio::basic_errors.
 typedef boost::system::error_code boost_code;
+
+namespace error {
 
 /// Alias asio code error enumeration.
 /// boost::system::error_code "system" category holds boost::asio::basic_errors.
 /// These are platform-specific error codes, for which we have seen variance.
 /// boost::system::errc::errc_t is the boost::system error condition enum.
 /// By comparing against conditions we obtain platform-independent error codes.
+typedef boost::beast::http::error http_error_t;
 typedef boost::system::errc::errc_t boost_error_t;
 typedef boost::asio::error::misc_errors asio_misc_error_t;
 typedef boost::asio::error::netdb_errors asio_netdb_error_t;
@@ -205,8 +206,14 @@ inline boost_code to_boost_code(boost_error_t ec) NOEXCEPT
     return boost_code{ ec, boost::system::generic_category() };
 }
 
+/// Unfortunately boost_code does not have this std::error_code construction.
+inline boost_code to_http_code(http_error_t ec) NOEXCEPT
+{
+    return boost::beast::http::make_error_code(ec);
+}
+
 /// Shortcircuit common boost code mapping.
-BCT_API bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT;
+BCT_API bool asio_is_canceled(const boost_code& ec) NOEXCEPT;
 
 /// Unfortunately std::error_code and boost::system::error_code are distinct
 /// types, so they do not compare as would be expected across distinct
@@ -217,10 +224,10 @@ BCT_API bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT;
 /// codes to network::error_t codes. This cannot be done using the equivalence
 /// operator overloads of either, since the error_code types are distinct,
 /// despite being effectively identical. So we provide this explicit mapping.
-BCT_API code asio_to_error_code(const error::boost_code& ec) NOEXCEPT;
+BCT_API code asio_to_error_code(const boost_code& ec) NOEXCEPT;
 
 /// 1:1 mapping of boost::beast:http::error to network (or error::unknown).
-BCT_API code beast_to_error_code(const error::boost_code& ec) NOEXCEPT;
+BCT_API code beast_to_error_code(const boost_code& ec) NOEXCEPT;
 
 } // namespace error
 } // namespace network

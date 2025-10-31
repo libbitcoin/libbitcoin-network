@@ -58,9 +58,9 @@ struct BCT_API body
         {
         }
 
-        void init(const http::length_type& length, http::error_code& ec) NOEXCEPT;
-        size_t put(const buffer_type& buffer, http::error_code& ec) NOEXCEPT;
-        void finish(http::error_code& ec) NOEXCEPT;
+        void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
+        size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
+        void finish(boost_code& ec) NOEXCEPT;
 
     private:
         value_type& value_;
@@ -83,8 +83,8 @@ struct BCT_API body
         {
         }
 
-        void init(http::error_code& ec) NOEXCEPT;
-        out_buffer get(http::error_code& ec) NOEXCEPT;
+        void init(boost_code& ec) NOEXCEPT;
+        out_buffer get(boost_code& ec) NOEXCEPT;
 
     private:
         static constexpr size_t default_buffer = 4096;

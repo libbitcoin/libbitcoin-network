@@ -173,7 +173,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
 
-bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT
+bool asio_is_canceled(const boost_code& ec) NOEXCEPT
 {
     // self termination
     return ec == boost_error_t::operation_canceled
@@ -183,7 +183,7 @@ bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT
 // The success and operation_canceled codes are the only expected in normal
 // operation, so these are first, to optimize the case where asio_is_canceled
 // is not used.
-code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
+code asio_to_error_code(const boost_code& ec) NOEXCEPT
 {
     if (ec == boost_error_t::success)
         return error::success;
@@ -305,7 +305,7 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
     return error::unknown;
 }
 
-code beast_to_error_code(const error::boost_code& ec) NOEXCEPT
+code beast_to_error_code(const boost_code& ec) NOEXCEPT
 {
     namespace beast = boost::beast::http;
 

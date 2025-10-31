@@ -124,9 +124,9 @@ struct BCT_API body
         {
         }
 
-        void init(const length_type& length, error_code& ec) NOEXCEPT;
-        size_t put(const buffer_type& buffer, error_code& ec) NOEXCEPT;
-        void finish(error_code& ec) NOEXCEPT;
+        void init(const length_type& length, boost_code& ec) NOEXCEPT;
+        size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
+        void finish(boost_code& ec) NOEXCEPT;
 
     protected:
         /// Select reader based on content-type header.
@@ -197,8 +197,8 @@ struct BCT_API body
         {
         }
 
-        void init(error_code& ec) NOEXCEPT;
-        out_buffer get(error_code& ec) NOEXCEPT;
+        void init(boost_code& ec) NOEXCEPT;
+        out_buffer get(boost_code& ec) NOEXCEPT;
 
     protected:
         /// Create writer matching the caller-defined body inner variant type.
