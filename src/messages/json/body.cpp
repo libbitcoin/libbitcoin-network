@@ -157,6 +157,7 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
         }
 
         value_.buffer->commit(view.size());
+        value_.buffer->consume(view.size());
         const auto more = !serializer_.done();
         return out_buffer{ std::make_pair(boost::asio::buffer(view), more) };
     }
