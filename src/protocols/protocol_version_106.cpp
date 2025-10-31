@@ -300,15 +300,22 @@ bool protocol_version_106::handle_receive_version(const code& ec,
         return false;
     }
 
+    // Filter out user agent spam.
+    auto user_agent = system::replace_copy(message->user_agent,
+        "(not-your-file-server)/Knots:", "/Sybil:");
+    system::replace(user_agent, "(FutureBit-Apollo-Node)", "/FutureBit");
+    system::replace(user_agent, "/Satoshi-BTF(BitcoinFinance)-Main-vSeventeen:",
+        "/BitcoinFinance:");
+
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
     LOGN(prefix << " [" << authority() << "] version ("
-        << message->value << ") " << message->user_agent);
+        << message->value << ") " << user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {
         LOGR("Unsupported services (" << message->services << ") by ["
             << authority() << "] showing (" << outbound().services() << ") "
-            << message->user_agent);
+            << user_agent);
 
         rejection(error::peer_unsupported);
         return false;
@@ -319,7 +326,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     {
         LOGR("Insufficient services (" << message->services << ") by ["
             << authority() << "] showing (" << outbound().services() << ") "
-            << message->user_agent);
+            << user_agent);
 
         rejection(error::peer_insufficient);
         return false;
@@ -328,7 +335,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     if (message->value < minimum_version_)
     {
         LOGP("Insufficient peer protocol version (" << message->value << ") "
-            "for [" << authority() << "] " << message->user_agent);
+            "for [" << authority() << "] " << user_agent);
 
         rejection(error::peer_insufficient);
         return false;
@@ -339,7 +346,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     if (absolute(deviation.count()) > maximum_skew_minutes_)
     {
         LOGR("Skewed time (" << deviation.count() << ") minutes "
-            "for [" << authority() << "] " << message->user_agent);
+            "for [" << authority() << "] " << user_agent);
 
         rejection(error::peer_timestamp);
         return false;
