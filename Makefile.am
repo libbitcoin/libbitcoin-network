@@ -59,7 +59,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/http/body.cpp \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
-    src/messages/json/tags.cpp \
+    src/messages/json/body.cpp \
+    src/messages/json/rpc.cpp \
     src/messages/peer/address.cpp \
     src/messages/peer/address_item.cpp \
     src/messages/peer/alert.cpp \
@@ -316,7 +317,6 @@ include_bitcoin_network_config_HEADERS = \
 include_bitcoin_network_distributorsdir = ${includedir}/bitcoin/network/distributors
 include_bitcoin_network_distributors_HEADERS = \
     include/bitcoin/network/distributors/distributor_http.hpp \
-    include/bitcoin/network/distributors/distributor_json.hpp \
     include/bitcoin/network/distributors/distributor_peer.hpp \
     include/bitcoin/network/distributors/distributors.hpp
 
@@ -335,14 +335,6 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
 
-include_bitcoin_network_impl_messages_httpdir = ${includedir}/bitcoin/network/impl/messages/http
-include_bitcoin_network_impl_messages_http_HEADERS = \
-    include/bitcoin/network/impl/messages/http/body.ipp
-
-include_bitcoin_network_impl_messages_jsondir = ${includedir}/bitcoin/network/impl/messages/json
-include_bitcoin_network_impl_messages_json_HEADERS = \
-    include/bitcoin/network/impl/messages/json/body.ipp
-
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \
     include/bitcoin/network/log/capture.hpp \
@@ -357,9 +349,8 @@ include_bitcoin_network_messages_httpdir = ${includedir}/bitcoin/network/message
 include_bitcoin_network_messages_http_HEADERS = \
     include/bitcoin/network/messages/http/body.hpp \
     include/bitcoin/network/messages/http/fields.hpp \
-    include/bitcoin/network/messages/http/messages.hpp \
+    include/bitcoin/network/messages/http/http.hpp \
     include/bitcoin/network/messages/http/method.hpp \
-    include/bitcoin/network/messages/http/payload.hpp \
     include/bitcoin/network/messages/http/types.hpp
 
 include_bitcoin_network_messages_http_enumsdir = ${includedir}/bitcoin/network/messages/http/enums
@@ -373,10 +364,8 @@ include_bitcoin_network_messages_http_enums_HEADERS = \
 include_bitcoin_network_messages_jsondir = ${includedir}/bitcoin/network/messages/json
 include_bitcoin_network_messages_json_HEADERS = \
     include/bitcoin/network/messages/json/body.hpp \
-    include/bitcoin/network/messages/json/messages.hpp \
-    include/bitcoin/network/messages/json/payload.hpp \
-    include/bitcoin/network/messages/json/tags.hpp \
-    include/bitcoin/network/messages/json/types.hpp
+    include/bitcoin/network/messages/json/json.hpp \
+    include/bitcoin/network/messages/json/rpc.hpp
 
 include_bitcoin_network_messages_json_enumsdir = ${includedir}/bitcoin/network/messages/json/enums
 include_bitcoin_network_messages_json_enums_HEADERS = \

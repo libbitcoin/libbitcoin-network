@@ -16,25 +16,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_TAGS_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_JSON_TAGS_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_HTTP_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_HTTP_HPP
 
-#include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/json/enums/version.hpp>
-#include <bitcoin/network/messages/json/types.hpp>
-
-namespace libbitcoin {
-namespace network {
-namespace json {
-
-DECLARE_JSON_TAG_INVOKE(version);
-DECLARE_JSON_TAG_INVOKE(value_t);
-DECLARE_JSON_TAG_INVOKE(identity_t);
-DECLARE_JSON_TAG_INVOKE(request_t);
-DECLARE_JSON_TAG_INVOKE(response_t);
-
-} // namespace json
-} // namespace network
-} // namespace libbitcoin
+#include <bitcoin/network/messages/http/body.hpp>
+#include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
+#include <bitcoin/network/messages/http/enums/mime_type.hpp>
+#include <bitcoin/network/messages/http/enums/status.hpp>
+#include <bitcoin/network/messages/http/enums/target.hpp>
+#include <bitcoin/network/messages/http/enums/verb.hpp>
+#include <bitcoin/network/messages/http/fields.hpp>
+#include <bitcoin/network/messages/http/method.hpp>
+#include <bitcoin/network/messages/http/types.hpp>
 
 #endif

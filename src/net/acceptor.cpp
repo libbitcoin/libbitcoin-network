@@ -82,7 +82,7 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
     if (!stopped_)
         return error::operation_failed;
 
-    error::boost_code ec{};
+    boost_code ec{};
     const auto isv6 = point.address().is_v6();
 
     // Open the socket.
@@ -107,7 +107,7 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
     }
     else
     {
-        error::boost_code ignore;
+        boost_code ignore;
         acceptor_.cancel(ignore);
     }
 
@@ -119,7 +119,7 @@ void acceptor::stop() NOEXCEPT
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     // Posts handle_accept to strand (if not already posted).
-    error::boost_code ignore;
+    boost_code ignore;
     acceptor_.cancel(ignore);
     stopped_ = true;
 }

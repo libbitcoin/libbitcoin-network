@@ -101,7 +101,7 @@ protected:
 private:
     typedef std::shared_ptr<bool> finish_ptr;
 
-    void handle_resolve(const error::boost_code& ec,
+    void handle_resolve(const boost_code& ec,
         const asio::endpoints& range, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
     void do_handle_connect(const code& ec, const finish_ptr& finish,

@@ -22,15 +22,13 @@ BOOST_AUTO_TEST_SUITE(json_body_reader_tests)
 
 using namespace network::http;
 using namespace network::json;
-using namespace network::error;
-using body = json::body<json::parser, json::serializer>;
 using value = boost::json::value;
 
 BOOST_AUTO_TEST_CASE(json_body_reader__construct__default__null_model)
 {
-    json::payload body{};
     request_header header{};
-    body::reader reader(header, body);
+    json::body::value_type body{};
+    json::body::reader reader(header, body);
     BOOST_REQUIRE(boost::get<value>(body.model).is_null());
 }
 
@@ -38,9 +36,9 @@ BOOST_AUTO_TEST_CASE(json_body_reader__init__simple_object__success)
 {
     const std::string_view text{ R"({"key":"value"})" };
     const asio::const_buffer buffer{ text.data(), text.size() };
-    json::payload body{};
     request_header header{};
-    body::reader reader(header, body);
+    json::body::value_type body{};
+    json::body::reader reader(header, body);
     boost_code ec{};
     reader.init(text.size(), ec);
     BOOST_REQUIRE(!ec);
@@ -50,9 +48,9 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__simple_object__success_expected_cons
 {
     const std::string_view text{ R"({"key":"value"})" };
     const asio::const_buffer buffer{ text.data(), text.size() };
-    json::payload body{};
     request_header header{};
-    body::reader reader(header, body);
+    json::body::value_type body{};
+    json::body::reader reader(header, body);
     boost_code ec{};
     reader.init(text.size(), ec);
     BOOST_REQUIRE(!ec);
@@ -66,9 +64,9 @@ BOOST_AUTO_TEST_CASE(json_body_reader__finish__simple_object__success_expected_m
     const std::string_view text{ R"({"key":"value"})" };
     const asio::const_buffer buffer{ text.data(), text.size() };
 
-    json::payload body{};
     request_header header{};
-    body::reader reader(header, body);
+    json::body::value_type body{};
+    json::body::reader reader(header, body);
     boost_code ec{};
     reader.init(text.size(), ec);
     BOOST_REQUIRE(!ec);
@@ -87,14 +85,14 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__over_length__protocol_error)
 {
     const std::string_view text{ R"({"key":"value"})" };
     const asio::const_buffer buffer{ text.data(), text.size() };
-    json::payload body{};
     request_header header{};
-    body::reader reader(header, body);
-    error_code ec{};
+    json::body::value_type body{};
+    json::body::reader reader(header, body);
+    boost_code ec{};
     reader.init(10, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE_EQUAL(ec, boost_error_t::protocol_error);
+    BOOST_REQUIRE(ec == error::http_error_t::body_limit);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

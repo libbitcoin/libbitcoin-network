@@ -37,7 +37,7 @@ public:
     typedef std::shared_ptr<channel_websocket> ptr;
     using options_t = settings::websocket_server;
 
-    channel_websocket(const logger& log, const socket::ptr& socket,
+    inline channel_websocket(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero,
         const options_t& options={}) NOEXCEPT
       : channel_http(log, socket, settings, identifier, options),

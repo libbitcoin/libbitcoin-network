@@ -36,29 +36,29 @@ protected:
 
 #if defined(HAVE_LOGO)
 
-    tracker(const logger& log) NOEXCEPT
+    inline tracker(const logger& log) NOEXCEPT
       : log_(log)
     {
         LOGO(typeid(Class).name() << "(" << ++instances_ << ")");
     }
 
-    ~tracker() NOEXCEPT
+    inline ~tracker() NOEXCEPT
     {
         LOGO(typeid(Class).name() << "(" << --instances_ << ")~");
     }
 
 private:
     // These are thread safe.
-    static inline std::atomic<size_t> instances_{};
+    inline static std::atomic<size_t> instances_{};
     const logger& log_;
 
 #else // HAVE_LOGO
 
-    tracker(const logger&) NOEXCEPT
+    inline tracker(const logger&) NOEXCEPT
     {
     }
 
-    ~tracker() NOEXCEPT
+    inline ~tracker() NOEXCEPT
     {
     }
 

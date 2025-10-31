@@ -25,12 +25,13 @@
 namespace libbitcoin {
 namespace network {
 namespace http {
+
+using namespace network::error;
     
-// body::reader
+// http::body::reader
 // ----------------------------------------------------------------------------
 
-void body::reader::init(const length_type& length,
-    error_code& ec) NOEXCEPT
+void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
 {
     std::visit(overload
     {
@@ -42,14 +43,14 @@ void body::reader::init(const length_type& length,
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
             }
         }
     }, reader_);
 }
 
 size_t body::reader::put(const buffer_type& buffer,
-    error_code& ec) NOEXCEPT
+    boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -61,14 +62,14 @@ size_t body::reader::put(const buffer_type& buffer,
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
                 return size_t{};
             }
         }
     }, reader_);
 }
 
-void body::reader::finish(error_code& ec) NOEXCEPT
+void body::reader::finish(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -80,16 +81,16 @@ void body::reader::finish(error_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
             }
         }
     }, reader_);
 }
 
-// body::writer
+// http::body::writer
 // ----------------------------------------------------------------------------
     
-void body::writer::init(error_code& ec) NOEXCEPT
+void body::writer::init(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -101,13 +102,13 @@ void body::writer::init(error_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
             }
         }
     }, writer_);
 }
 
-body::writer::out_buffer body::writer::get(error_code& ec) NOEXCEPT
+body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -119,7 +120,7 @@ body::writer::out_buffer body::writer::get(error_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
+                ec = to_boost_code(boost_error_t::io_error);
                 return out_buffer{};
             }
         }

@@ -36,7 +36,7 @@ public:
     void fire(uint8_t event, size_t count=zero) const NOEXCEPT;
 
     template <typename Time = milliseconds>
-    void span(uint8_t event, const logger::time& started) const NOEXCEPT
+    inline void span(uint8_t event, const logger::time& started) const NOEXCEPT
     {
         log.span<Time>(event, started);
     }

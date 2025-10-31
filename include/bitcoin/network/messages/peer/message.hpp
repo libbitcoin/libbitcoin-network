@@ -39,7 +39,7 @@ inline uint32_t network_checksum(const system::hash_digest& hash) NOEXCEPT
 /// Deserialize message payload from the wire protocol encoding.
 /// Returns nullptr if serialization fails for any reason (expected).
 template <typename Message>
-typename Message::cptr deserialize(const system::data_chunk& body,
+inline typename Message::cptr deserialize(const system::data_chunk& body,
     uint32_t version) NOEXCEPT
 {
     return Message::deserialize(version, body);
@@ -48,7 +48,7 @@ typename Message::cptr deserialize(const system::data_chunk& body,
 /// Serialize message object to the wire protocol encoding.
 /// Returns nullptr if serialization fails for any reason (unexpected).
 template <typename Message>
-system::chunk_ptr serialize(const Message& message, uint32_t magic,
+inline system::chunk_ptr serialize(const Message& message, uint32_t magic,
     uint32_t version) NOEXCEPT
 {
     using namespace system;

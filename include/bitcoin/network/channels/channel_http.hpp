@@ -21,12 +21,13 @@
 
 #include <memory>
 #include <utility>
+#include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/distributors/distributors.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/http/messages.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -43,47 +44,43 @@ public:
 
     /// Subscribe to request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Message, typename Handler =
-        distributor_http::handler<Message>>
-    void subscribe(Handler&& handler) NOEXCEPT
+    template <class Message>
+    inline void subscribe(auto&& handler) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
-        distributor_.subscribe(std::forward<Handler>(handler));
+        BC_ASSERT(stranded());
+        using message_handler = distributor_http::handler<Message>;
+        distributor_.subscribe(std::forward<message_handler>(handler));
     }
 
     /// Serialize and write response to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
-    void send(Message&& response, result_handler&& handler) NOEXCEPT
+    inline void send(Message&& response, result_handler&& handler) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
+        BC_ASSERT(stranded());
+ 
+        set_buffer(response);
+        const auto ptr = system::move_shared(std::forward<Message>(response));
 
-        const auto ptr = system::make_shared(std::forward<Message>(response));
-
-        // Capture response in intermediate completion handler.
-        auto complete = [self = shared_from_base<channel_http>(), ptr,
-            handle = std::move(handler)](const code& ec, size_t) NOEXCEPT
-        {
-            if (ec) self->stop(ec);
-            handle(ec);
-        };
+        using namespace std::placeholders;
+        count_handler complete = std::bind(&channel_http::handle_send<Message>,
+            shared_from_base<channel_http>(), _1, _2, ptr, std::move(handler));
 
         if (!ptr)
-        {
-            complete(error::bad_alloc, zero);
-            return;
-        }
-
-        write(*ptr, std::move(complete));
+            complete(error::bad_alloc, {});
+        else
+            write(*ptr, std::move(complete));
     }
 
+    /// response_buffer_ is initialized to default size, see set_buffer().
     /// Uses peer config for timeouts if not specified via other construct.
     /// Construct client channel to encapsulate and communicate on the socket.
-    channel_http(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero,
+    inline channel_http(const logger& log, const socket::ptr& socket,
+        const network::settings& settings, uint64_t identifier={},
         const options_t& options={}) NOEXCEPT
       : channel(log, socket, settings, identifier, options.timeout()),
-        request_buffer_(system::ceilinged_add(http::max_head, http::max_body)),
+        response_buffer_(system::to_shared<http::flat_buffer>()),
+        request_buffer_(settings.minimum_buffer),
         distributor_(socket->strand()),
         tracker<channel_http>(log)
     {
@@ -106,15 +103,54 @@ protected:
     void stopping(const code& ec) NOEXCEPT override;
 
 private:
+    template <class Message>
+    inline void set_buffer(Message&&) NOEXCEPT {}
+
+    template <class Message>
+    inline void handle_send(const code& ec, size_t,
+        const std::shared_ptr<Message>&,
+        const result_handler& handler) NOEXCEPT
+    {
+        if (ec) stop(ec);
+        handler(ec);
+    }
+
     void do_stop(const code& ec) NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read,
         const http::request_cptr& request) NOEXCEPT;
 
     // These are protected by strand.
+    http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
     distributor_http distributor_;
     bool reading_{};
 };
+
+// Member template specialization must be defined outside of class.
+// `size_hint` is wire size for chain objects. json serialization is 2.5x
+// wire serialization. json::body always prepares buffer at max_size().
+
+template <>
+inline void channel_http::set_buffer<http::json_response>(
+    http::json_response&& response) NOEXCEPT
+{
+    const auto& value = response.body();
+    response_buffer_->max_size(value.size_hint);
+    value.buffer = response_buffer_;
+}
+
+template <>
+inline void channel_http::set_buffer<http::response>(
+    http::response&& response) NOEXCEPT
+{
+    if (const auto& body = response.body();
+        body.contains<http::json_value>())
+    {
+        const auto& value = body.get<http::json_value>();
+        response_buffer_->max_size(value.size_hint);
+        body.get<http::json_value>().buffer = response_buffer_;
+    }
+}
 
 } // namespace network
 } // namespace libbitcoin

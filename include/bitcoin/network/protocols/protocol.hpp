@@ -55,8 +55,9 @@ public:
 
 private:
     template <class Message, typename Handler>
-    bool handle_broadcast(const code& ec, const typename Message::cptr& message,
-        uint64_t sender, const Handler& handler) NOEXCEPT
+    inline bool handle_broadcast(const code& ec,
+        const typename Message::cptr& message, uint64_t sender,
+        const Handler& handler) NOEXCEPT
     {
         if (stopped(ec))
             return false;
@@ -74,14 +75,14 @@ protected:
 
     /// Bind a method in base or derived class (use BIND).
     template <class Derived, typename Method, typename... Args>
-    auto bind(Method&& method, Args&&... args) NOEXCEPT
+    inline auto bind(Method&& method, Args&&... args) NOEXCEPT
     {
         return BIND_SHARED(method, args);
     }
 
     /// Post a method in base or derived class to channel strand (use POST).
     template <class Derived, typename Method, typename... Args>
-    auto post(Method&& method, Args&&... args) NOEXCEPT
+    inline auto post(Method&& method, Args&&... args) NOEXCEPT
     {
         return boost::asio::post(channel_->strand(),
             BIND_SHARED(method, args));
@@ -90,7 +91,7 @@ protected:
     /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST).
     /// Method is invoked with error::subscriber_stopped if already stopped.
     template <class Derived, class Message, typename Method, typename... Args>
-    void subscribe_broadcast(Method&& method, Args&&... args) NOEXCEPT
+    inline void subscribe_broadcast(Method&& method, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
@@ -107,7 +108,7 @@ protected:
     /// Unsubscribe to messages broadcasts by type (use UNSUBSCRIBE_BROADCAST).
     /// Unsubscribes ALL subscribers using subscribe_broadcast for the channel.
     template <class Derived>
-    void unsubscribe_broadcast() NOEXCEPT
+    inline void unsubscribe_broadcast() NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
         session_->unsubscribe(channel_->identifier());
@@ -116,7 +117,7 @@ protected:
     /// Broadcast a message instance to peers (use BROADCAST).
     /// Channel identifier allows recipient-sender to self-identify.
     template <class Message>
-    void broadcast(const typename Message::cptr& message) NOEXCEPT
+    inline void broadcast(const typename Message::cptr& message) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
         session_->broadcast<Message>(message, channel_->identifier());

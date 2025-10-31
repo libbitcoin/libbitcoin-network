@@ -26,7 +26,7 @@ namespace network {
 
 // Utility to convert a const reference instance to moveable.
 template <typename Type>
-Type move_copy(const Type& instance) NOEXCEPT
+inline Type move_copy(const Type& instance) NOEXCEPT
 {
     auto copy = instance;
     return copy;
