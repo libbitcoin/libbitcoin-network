@@ -61,17 +61,6 @@ using data_request_cptr = std::shared_ptr<const data_request>;
 using data_response_ptr = std::shared_ptr<data_response>;
 using data_request_ptr = std::shared_ptr<data_request>;
 
-/// beast::http::string_body
-using string_body = boost::beast::http::string_body;
-using string_request = boost::beast::http::request<string_body>;
-using string_response = boost::beast::http::response<string_body>;
-using string_parser = boost::beast::http::request_parser<string_body>;
-using string_serializer = boost::beast::http::serializer<false, string_body>;
-using string_request_cptr = std::shared_ptr<const string_request>;
-using string_response_cptr = std::shared_ptr<const string_response>;
-using string_response_ptr = std::shared_ptr<string_response>;
-using string_request_ptr = std::shared_ptr<string_request>;
-
 /// beast::http::file_body
 using file_body = boost::beast::http::file_body;
 using file_request = boost::beast::http::request<file_body>;
@@ -82,6 +71,39 @@ using file_response_cptr = std::shared_ptr<const file_response>;
 using file_request_cptr = std::shared_ptr<const file_request>;
 using file_response_ptr = std::shared_ptr<file_response>;
 using file_request_ptr = std::shared_ptr<file_request>;
+
+/// beast::http::span_body<uint8_t>
+using span_body = boost::beast::http::span_body<uint8_t>;
+using span_request = boost::beast::http::request<span_body>;
+using span_response = boost::beast::http::response<span_body>;
+using span_parser = boost::beast::http::request_parser<span_body>;
+using span_serializer = boost::beast::http::serializer<false, span_body>;
+using span_response_cptr = std::shared_ptr<const span_response>;
+using span_request_cptr = std::shared_ptr<const span_request>;
+using span_response_ptr = std::shared_ptr<span_response>;
+using span_request_ptr = std::shared_ptr<span_request>;
+
+/// beast::http::buffer_body
+using buffer_body = boost::beast::http::buffer_body;
+using buffer_request = boost::beast::http::request<buffer_body>;
+using buffer_response = boost::beast::http::response<buffer_body>;
+using buffer_parser = boost::beast::http::request_parser<buffer_body>;
+using buffer_serializer = boost::beast::http::serializer<false, buffer_body>;
+using buffer_response_cptr = std::shared_ptr<const buffer_response>;
+using buffer_request_cptr = std::shared_ptr<const buffer_request>;
+using buffer_response_ptr = std::shared_ptr<buffer_response>;
+using buffer_request_ptr = std::shared_ptr<buffer_request>;
+
+/// beast::http::string_body
+using string_body = boost::beast::http::string_body;
+using string_request = boost::beast::http::request<string_body>;
+using string_response = boost::beast::http::response<string_body>;
+using string_parser = boost::beast::http::request_parser<string_body>;
+using string_serializer = boost::beast::http::serializer<false, string_body>;
+using string_request_cptr = std::shared_ptr<const string_request>;
+using string_response_cptr = std::shared_ptr<const string_response>;
+using string_response_ptr = std::shared_ptr<string_response>;
+using string_request_ptr = std::shared_ptr<string_request>;
 
 /////// http::json::body
 ////using json_request = boost::beast::http::request<json_body>;

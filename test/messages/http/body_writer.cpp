@@ -66,6 +66,24 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__data__constructs_data_writer)
     BOOST_REQUIRE(std::holds_alternative<data_writer>(variant));
 }
 
+BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__span__constructs_span_writer)
+{
+    header<false, fields> header{};
+    body::value_type value{};
+    value = span_body::value_type{};
+    const auto variant = accessor::to_writer(header, value);
+    BOOST_REQUIRE(std::holds_alternative<span_writer>(variant));
+}
+
+BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__buffer__constructs_buffer_writer)
+{
+    header<false, fields> header{};
+    body::value_type value{};
+    value = buffer_body::value_type{};
+    const auto variant = accessor::to_writer(header, value);
+    BOOST_REQUIRE(std::holds_alternative<buffer_writer>(variant));
+}
+
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__string__constructs_string_writer)
 {
     header<false, fields> header{};

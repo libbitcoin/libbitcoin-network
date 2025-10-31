@@ -34,6 +34,8 @@ using empty_reader = empty_body::reader;
 using json_reader = json_body::reader;
 using data_reader = data_body::reader;
 using file_reader = file_body::reader;
+using span_reader = span_body::reader;
+using buffer_reader = buffer_body::reader;
 using string_reader = string_body::reader;
 using variant_reader = std::variant
 <
@@ -41,6 +43,8 @@ using variant_reader = std::variant
     json_reader,
     data_reader,
     file_reader,
+    span_reader,
+    buffer_reader,
     string_reader
 >;
 
@@ -48,6 +52,8 @@ using empty_writer = empty_body::writer;
 using json_writer = json_body::writer;
 using data_writer = data_body::writer;
 using file_writer = file_body::writer;
+using span_writer = span_body::writer;
+using buffer_writer = buffer_body::writer;
 using string_writer = string_body::writer;
 using variant_writer = std::variant
 <
@@ -55,6 +61,8 @@ using variant_writer = std::variant
     json_writer,
     data_writer,
     file_writer,
+    span_writer,
+    buffer_writer,
     string_writer
 >;
 
@@ -62,6 +70,8 @@ using empty_value = empty_body::value_type;
 using json_value = json_body::value_type;
 using data_value = data_body::value_type;
 using file_value = file_body::value_type;
+using span_value = span_body::value_type;
+using buffer_value = buffer_body::value_type;
 using string_value = string_body::value_type;
 using variant_value = std::variant
 <
@@ -69,6 +79,8 @@ using variant_value = std::variant
     json_value,
     data_value,
     file_value,
+    span_value,
+    buffer_value,
     string_value
 >;
 
@@ -91,6 +103,8 @@ struct BCT_API body
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, json_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, data_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, file_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, span_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, buffer_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, string_value, inner_)
 
         inline bool has_value() const NOEXCEPT
@@ -186,6 +200,14 @@ struct BCT_API body
                 {
                     return variant_reader{ file_reader{ header, value } };
                 },
+                [&](span_value& value) NOEXCEPT
+                {
+                    return variant_reader{ span_reader{ header, value } };
+                },
+                [&](buffer_value& value) NOEXCEPT
+                {
+                    return variant_reader{ buffer_reader{ header, value } };
+                },
                 [&](string_value& value) NOEXCEPT
                 {
                     return variant_reader{ string_reader{ header, value } };
@@ -243,6 +265,14 @@ struct BCT_API body
                 [&](file_value& value) NOEXCEPT
                 {
                     return variant_writer{ file_writer{ header, value } };
+                },
+                [&](span_value& value) NOEXCEPT
+                {
+                    return variant_writer{ span_writer{ header, value } };
+                },
+                [&](buffer_value& value) NOEXCEPT
+                {
+                    return variant_writer{ buffer_writer{ header, value } };
                 },
                 [&](string_value& value) NOEXCEPT
                 {
