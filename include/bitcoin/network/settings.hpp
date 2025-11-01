@@ -33,6 +33,10 @@ struct BCT_API settings
 {
     struct tcp_server
     {
+        DEFAULT_COPY_MOVE_DESTRUCT(tcp_server);
+        tcp_server() = default;
+        tcp_server(const std::string_view& logging_name) NOEXCEPT;
+
         /// For logging only.
         std::string name{};
 
@@ -42,13 +46,15 @@ struct BCT_API settings
         uint32_t timeout_seconds{ 60 };
 
         /// Helpers.
-        steady_clock::duration timeout() const NOEXCEPT;
-        bool enabled() const NOEXCEPT;
+        virtual steady_clock::duration timeout() const NOEXCEPT;
+        virtual bool enabled() const NOEXCEPT;
     };
 
     struct http_server
       : public tcp_server
     {
+        using tcp_server::tcp_server;
+
         /// Sent via responses if configured (recommended).
         std::string server{ "libbitcoin/4.0" };
 
@@ -56,19 +62,20 @@ struct BCT_API settings
         config::endpoints hosts{};
 
         /// Normalized hosts helper.
-        system::string_list host_names() const NOEXCEPT;
+        virtual system::string_list host_names() const NOEXCEPT;
     };
 
     struct websocket_server
       : public http_server
     {
+        using http_server::http_server;
+
         // TODO: settings unique to the websocket aspect.
     };
 
     // ----------------------------------------------------------------------------
 
     DEFAULT_COPY_MOVE_DESTRUCT(settings);
-
     settings() NOEXCEPT;
     settings(system::chain::selection context) NOEXCEPT;
 

@@ -271,6 +271,11 @@ bool settings::excluded(const address_item& item) const NOEXCEPT
 // tcp_server
 // ----------------------------------------------------------------------------
 
+settings::tcp_server::tcp_server(const std::string_view& logging_name) NOEXCEPT
+  : name(logging_name)
+{
+}
+
 steady_clock::duration settings::tcp_server::timeout() const NOEXCEPT
 {
     return seconds{ timeout_seconds };

@@ -54,7 +54,6 @@ void session_tcp::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Path is also currently required for admin and explore.
     if (!options_.enabled())
     {
         LOGN("Not configured for " << name_ << " connections.");
