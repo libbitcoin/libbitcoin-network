@@ -72,6 +72,7 @@ using file_request_cptr = std::shared_ptr<const file_request>;
 using file_response_ptr = std::shared_ptr<file_response>;
 using file_request_ptr = std::shared_ptr<file_request>;
 
+/// HACK: must cast writer to non-const.
 /// beast::http::span_body<uint8_t>
 using span_body = boost::beast::http::span_body<uint8_t>;
 using span_request = boost::beast::http::request<span_body>;

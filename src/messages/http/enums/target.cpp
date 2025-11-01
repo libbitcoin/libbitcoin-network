@@ -202,6 +202,11 @@ std::filesystem::path to_canonical(const std::filesystem::path& root,
     return {};
 }
 
+std::string to_extension(const std::string& target) NOEXCEPT
+{
+    return std::filesystem::path{ target }.extension().string();
+}
+
 // sanitize out to ensure it remains strictly within base, empty if failed. 
 std::filesystem::path sanitize_origin(const std::filesystem::path& base,
     const std::string& target) NOEXCEPT
