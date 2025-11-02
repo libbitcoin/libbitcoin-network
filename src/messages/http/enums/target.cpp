@@ -99,7 +99,7 @@ bool is_asterisk_form(const std::string& target) NOEXCEPT
     return target == "*";
 }
 
-// common http verbs or unknown
+// Common http verbs or unknown.
 target to_target(const std::string& value, verb method) NOEXCEPT
 {
     switch (method)
@@ -200,11 +200,6 @@ std::filesystem::path to_canonical(const std::filesystem::path& root,
     }
 
     return {};
-}
-
-std::string to_extension(const std::string& target) NOEXCEPT
-{
-    return std::filesystem::path{ target }.extension().string();
 }
 
 // sanitize out to ensure it remains strictly within base, empty if failed. 

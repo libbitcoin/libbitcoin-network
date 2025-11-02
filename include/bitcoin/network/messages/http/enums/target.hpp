@@ -61,9 +61,6 @@ BCT_API bool is_safe_target(const std::string& target) NOEXCEPT;
 BCT_API std::filesystem::path to_canonical(const std::filesystem::path& root,
     const std::string& target) NOEXCEPT;
 
-/// Get the target file extension (or empty).
-BCT_API std::string to_extension(const std::string& target) NOEXCEPT;
-
 /// Sanitize base/target to ensure it remains strictly within base.
 BCT_API std::filesystem::path sanitize_origin(
     const std::filesystem::path& base, const std::string& target) NOEXCEPT;
