@@ -66,8 +66,8 @@ void channel_http::read_request() NOEXCEPT
     // Both terminate read loop, paused can be resumed, stopped cannot.
     // Pause only prevents start of the read loop, it does not prevent messages
     // from being issued for sockets already past that point (e.g. waiting).
-    // This is mainly for startup coordination, preventing missed messages.
-    if (stopped() || paused())
+    // Pause is mainly for startup coordination, preventing missed messages.
+    if (stopped() || paused() || reading_)
         return;
 
     // HTTP is half duplex.
