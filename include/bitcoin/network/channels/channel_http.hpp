@@ -67,9 +67,13 @@ public:
             shared_from_base<channel_http>(), _1, _2, ptr, std::move(handler));
 
         if (!ptr)
+        {
             complete(error::bad_alloc, {});
-        else
-            write(*ptr, std::move(complete));
+            return;
+        }
+
+        log_message(*ptr);
+        write(*ptr, std::move(complete));
     }
 
     /// response_buffer_ is initialized to default size, see set_buffer().
@@ -118,6 +122,9 @@ private:
     void do_stop(const code& ec) NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read,
         const http::request_cptr& request) NOEXCEPT;
+
+    void log_message(const http::request& request) const NOEXCEPT;
+    void log_message(const http::response& response) const NOEXCEPT;
 
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;

@@ -28,6 +28,13 @@ namespace http {
 /// Status is aliased to beast boost define.
 using status = boost::beast::http::status;
 
+inline std::string status_string(status code) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return boost::beast::http::obsolete_reason(code);
+    BC_POP_WARNING()
+}
+
 } // namespace http
 } // namespace network
 } // namespace libbitcoin
