@@ -67,7 +67,7 @@ void channel_http::read_request() NOEXCEPT
     // Pause only prevents start of the read loop, it does not prevent messages
     // from being issued for sockets already past that point (e.g. waiting).
     // This is mainly for startup coordination, preventing missed messages.
-    if (stopped() || paused() || reading_)
+    if (stopped() || paused())
         return;
 
     // HTTP is half duplex.
@@ -84,6 +84,9 @@ void channel_http::handle_read_request(const code& ec, size_t,
     const http::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // HTTP is half duplex.
+    reading_ = false;
 
     if (stopped())
     {
@@ -104,8 +107,6 @@ void channel_http::handle_read_request(const code& ec, size_t,
         return;
     }
 
-    // HTTP is half duplex.
-    reading_ = false;
     distributor_.notify(request);
 }
 
