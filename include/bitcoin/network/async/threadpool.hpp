@@ -38,7 +38,7 @@ public:
 
     /// Threadpool constructor, initializes the specified number of threads.
     threadpool(size_t number_threads=one,
-        thread_priority priority=thread_priority::normal) NOEXCEPT;
+        processing_priority priority=processing_priority::medium) NOEXCEPT;
 
     /// Stop and join threads.
     ~threadpool() NOEXCEPT;

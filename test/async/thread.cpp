@@ -36,7 +36,7 @@
 
 BOOST_AUTO_TEST_SUITE(thread_tests)
 
-static int get_thread_priority_test()
+static int get_processing_priority_test()
 {
 #if defined(HAVE_MSC)
     return GetThreadPriority(GetCurrentThread());
@@ -47,7 +47,7 @@ static int get_thread_priority_test()
 #endif
 }
 
-void set_thread_priority_test(int priority)
+void set_processing_priority_test(int priority)
 {
 #if defined(HAVE_MSC)
     SetThreadPriority(GetCurrentThread(), priority);
@@ -63,22 +63,22 @@ void set_thread_priority_test(int priority)
 BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 {
     // Save so we can restore at the end of this test case.
-    const int save = get_thread_priority_test();
+    const int save = get_processing_priority_test();
 
-    set_priority(thread_priority::highest);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_HIGHEST, get_thread_priority_test());
-    set_priority(thread_priority::high);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_ABOVE_NORMAL, get_thread_priority_test());
-    set_priority(thread_priority::normal);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_NORMAL, get_thread_priority_test());
-    set_priority(thread_priority::low);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_BELOW_NORMAL, get_thread_priority_test());
-    set_priority(thread_priority::lowest);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_LOWEST, get_thread_priority_test());
+    set_processing_priority(processing_priority::highest);
+    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_HIGHEST, get_processing_priority_test());
+    set_processing_priority(processing_priority::high);
+    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_ABOVE_NORMAL, get_processing_priority_test());
+    set_processing_priority(processing_priority::medium);
+    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_NORMAL, get_processing_priority_test());
+    set_processing_priority(processing_priority::low);
+    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_BELOW_NORMAL, get_processing_priority_test());
+    set_processing_priority(processing_priority::lowest);
+    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_LOWEST, get_processing_priority_test());
 
     // Restore and verify test execution thread priority to minimize side effect.
-    set_thread_priority_test(save);
-    BOOST_REQUIRE_EQUAL(save, get_thread_priority_test());
+    set_processing_priority_test(save);
+    BOOST_REQUIRE_EQUAL(save, get_processing_priority_test());
 }
 
 #else
@@ -86,17 +86,17 @@ BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 {
     // Save so we can restore at the end of this test case.
-    const int save = get_thread_priority_test();
+    const int save = get_processing_priority_test();
 
     // Haven't had any luck matching the set and get priority calls as in win.
-    BOOST_REQUIRE_NO_THROW(set_priority(thread_priority::highest));
-    BOOST_REQUIRE_NO_THROW(set_priority(thread_priority::high));
-    BOOST_REQUIRE_NO_THROW(set_priority(thread_priority::normal));
-    BOOST_REQUIRE_NO_THROW(set_priority(thread_priority::low));
-    BOOST_REQUIRE_NO_THROW(set_priority(thread_priority::lowest));
+    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::highest));
+    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::high));
+    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::medium));
+    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::low));
+    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::lowest));
 
     // Restore and verify test execution thread priority to minimize side effect.
-    set_thread_priority_test(save);
+    set_processing_priority_test(save);
 }
 
 #endif
