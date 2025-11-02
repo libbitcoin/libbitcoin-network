@@ -19,9 +19,10 @@
 #include <bitcoin/network/channels/channel_http.hpp>
 
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/channels/channel.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -107,7 +108,35 @@ void channel_http::handle_read_request(const code& ec, size_t,
         return;
     }
 
+    log_message(*request);
     distributor_.notify(request);
+}
+
+// log helpers
+// ----------------------------------------------------------------------------
+
+void channel_http::log_message(const http::request& request) const NOEXCEPT
+{
+    LOG_ONLY(const auto payload = system::serialize(request.payload_size()
+        .has_value() ? request.payload_size().value() : zero);)
+        
+    LOGP("Request [" << request.method_string() << "]"
+        << " v" << (request.version() == 11 ? "1.1" : "1.0")
+        << " (" << (request.chunked() ? "c" : payload)
+        << ") " << (request.keep_alive() ? "keep" : "drop")
+        << " [" << authority() << "] " << request.target());
+}
+
+void channel_http::log_message(const http::response& response) const NOEXCEPT
+{
+    LOG_ONLY(const auto payload = system::serialize(response.payload_size()
+        .has_value() ? response.payload_size().value() : zero);)
+
+    LOGP("Response [" << http::status_string(response.result()) << "]"
+        << " v" << (response.version() == 11 ? "1.1" : "1.0")
+        << " (" << (response.chunked() ? "c" : payload)
+        << ") " << (response.keep_alive() ? "keep" : "drop")
+        << " [" << authority() << "].");
 }
 
 BC_POP_WARNING()
