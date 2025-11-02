@@ -117,26 +117,33 @@ void channel_http::handle_read_request(const code& ec, size_t,
 
 void channel_http::log_message(const http::request& request) const NOEXCEPT
 {
-    LOG_ONLY(const auto payload = system::serialize(request.payload_size()
+    LOG_ONLY(const auto size = serialize(request.payload_size()
         .has_value() ? request.payload_size().value() : zero);)
+
+    LOG_ONLY(const auto version = "http/" + serialize(request.version() / 10) +
+        "." + serialize(request.version() % 10);)
         
-    LOGP("Request [" << request.method_string() << "]"
-        << " v" << (request.version() == 11 ? "1.1" : "1.0")
-        << " (" << (request.chunked() ? "c" : payload)
+    LOGP("Request [" << request.method_string()
+        << "] " << version << " (" << (request.chunked() ? "c" : size)
         << ") " << (request.keep_alive() ? "keep" : "drop")
-        << " [" << authority() << "] " << request.target());
+        << " [" << authority() << "]"
+        << " {" << (split(request[http::field::accept], ",").front()) << "...}"
+        << " "  << request.target());
 }
 
 void channel_http::log_message(const http::response& response) const NOEXCEPT
 {
-    LOG_ONLY(const auto payload = system::serialize(response.payload_size()
+    LOG_ONLY(const auto size = serialize(response.payload_size()
         .has_value() ? response.payload_size().value() : zero);)
 
-    LOGP("Response [" << http::status_string(response.result()) << "]"
-        << " v" << (response.version() == 11 ? "1.1" : "1.0")
-        << " (" << (response.chunked() ? "c" : payload)
+    LOG_ONLY(const auto version = "http/" + serialize(response.version() / 10)
+        + "." + serialize(response.version() % 10);)
+        
+    LOGP("Response [" << http::status_string(response.result())
+        << "] " << version << " (" << (response.chunked() ? "c" : size)
         << ") " << (response.keep_alive() ? "keep" : "drop")
-        << " [" << authority() << "].");
+        << " [" << authority() << "]"
+        << " {" << (response[http::field::content_type]) << "}");
 }
 
 BC_POP_WARNING()
