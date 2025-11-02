@@ -22,61 +22,109 @@
 
 #ifdef HAVE_MSC
     #include <windows.h>
-    // #define THREAD_PRIORITY_IDLE            -15
-    // #define THREAD_PRIORITY_LOWEST          -2
-    // #define THREAD_PRIORITY_BELOW_NORMAL    -1
-    // #define THREAD_PRIORITY_NORMAL           0
-    // #define THREAD_PRIORITY_ABOVE_NORMAL     1
-    // #define THREAD_PRIORITY_HIGHEST          2
-    // #define THREAD_PRIORITY_TIME_CRITICAL    15
-    // #define THREAD_PRIORITY_ERROR_RETURN    (MAXLONG)
 #else
     #include <unistd.h>
     #include <pthread.h>
     #include <sys/resource.h>
     #include <sys/types.h>
+#endif
+
+#ifdef HAVE_MSC
+    // A few more extreme values are not mapped.
+    // #define THREAD_PRIORITY_LOWEST          -2
+    // #define THREAD_PRIORITY_BELOW_NORMAL    -1
+    // #define THREAD_PRIORITY_NORMAL           0
+    // #define THREAD_PRIORITY_ABOVE_NORMAL     1
+    // #define THREAD_PRIORITY_HIGHEST          2
+
+    // The extreme "lowest" value is not mapped.
+    // #define MEMORY_PRIORITY_VERY_LOW         1
+    // #define MEMORY_PRIORITY_LOW              2
+    // #define MEMORY_PRIORITY_MEDIUM           3
+    // #define MEMORY_PRIORITY_BELOW_NORMAL     4
+    // #define MEMORY_PRIORITY_NORMAL           5
+#else
     #define THREAD_PRIORITY_HIGHEST             -20
     #define THREAD_PRIORITY_ABOVE_NORMAL        -2
     #define THREAD_PRIORITY_NORMAL               0
     #define THREAD_PRIORITY_BELOW_NORMAL         2
     #define THREAD_PRIORITY_LOWEST               20
+
+    // no equivalent
+    #define MEMORY_PRIORITY_NORMAL               0
+    #define MEMORY_PRIORITY_BELOW_NORMAL         0
+    #define MEMORY_PRIORITY_MEDIUM               0
+    #define MEMORY_PRIORITY_LOW                  0
+    #define MEMORY_PRIORITY_VERY_LOW             0
 #endif
 
 namespace libbitcoin {
 namespace network {
 
-// Privately map the class enum thread priority value to an integer.
-static int get_priority(thread_priority priority) NOEXCEPT
+#if defined (HAVE_MEMORY_PRIORITY)
+// Privately map the class enum memory priority value to an integer.
+static unsigned long get_memory_priority(memory_priority priority) NOEXCEPT
 {
     switch (priority)
     {
-        case thread_priority::lowest:
+        case memory_priority::lowest:
+            return MEMORY_PRIORITY_VERY_LOW;
+        case memory_priority::low:
+            return MEMORY_PRIORITY_LOW;
+        case memory_priority::medium:
+            return MEMORY_PRIORITY_MEDIUM;
+        case memory_priority::high:
+            return MEMORY_PRIORITY_BELOW_NORMAL;
+        default:
+        case memory_priority::highest:
+            return MEMORY_PRIORITY_NORMAL;
+    }
+}
+void set_memory_priority(memory_priority priority) NOEXCEPT
+{
+    const auto prioritization = get_memory_priority(priority);
+
+    // TODO: handle error conditions.
+    MEMORY_PRIORITY_INFORMATION information{ prioritization };
+    SetProcessInformation(GetCurrentProcess(), ProcessMemoryPriority,
+        &information, sizeof(information));
+}
+#else
+static int get_memory_priority(memory_priority) NOEXCEPT {}
+void set_memory_priority(memory_priority) NOEXCEPT {}
+#endif
+
+// Privately map the class enum processing priority value to an integer.
+static int get_processing_priority(processing_priority priority) NOEXCEPT
+{
+    switch (priority)
+    {
+        case processing_priority::lowest:
             return THREAD_PRIORITY_LOWEST;
-        case thread_priority::low:
+        case processing_priority::low:
             return THREAD_PRIORITY_BELOW_NORMAL;
-        case thread_priority::high:
+        case processing_priority::high:
             return THREAD_PRIORITY_ABOVE_NORMAL;
-        case thread_priority::highest:
+        case processing_priority::highest:
             return THREAD_PRIORITY_HIGHEST;
         default:
-        case thread_priority::normal:
+        case processing_priority::medium:
             return THREAD_PRIORITY_NORMAL;
     }
 }
 
-// Set the thread priority.
-// TODO: handle error conditions.
-// TODO: handle potential lack of PRIO_THREAD
-// TODO: use proper non-win32 priority levels.
-// TODO: Linux: pthread_setschedprio()
-// TOOD: macOS: somethign else.
-void set_priority(thread_priority priority) NOEXCEPT
+// Set the thread processing priority.
+void set_processing_priority(processing_priority priority) NOEXCEPT
 {
-    const auto prioritization = get_priority(priority);
+    // TODO: handle error conditions.
+    // TODO: handle potential lack of PRIO_THREAD
+    // TODO: use proper non-win32 priority levels.
+    // TODO: Linux: pthread_setschedprio()
+    // TOOD: macOS: somethign else.
+
+    const auto prioritization = get_processing_priority(priority);
 
 #if defined(HAVE_MSC)
-    // learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/
-    // nf-processthreadsapi-getthreadpriority
     SetThreadPriority(GetCurrentThread(), prioritization);
 
 #elif defined(PRIO_THREAD)

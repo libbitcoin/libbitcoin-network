@@ -27,7 +27,8 @@ namespace libbitcoin {
 namespace network {
 
 // Work keeps the threadpool alive when there are no threads running.
-threadpool::work_guard threadpool::keep_alive(asio::io_context& service) NOEXCEPT
+threadpool::work_guard threadpool::keep_alive(
+    asio::io_context& service) NOEXCEPT
 {
     // If make_work_guard throws, application will abort at startup.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -37,14 +38,15 @@ threadpool::work_guard threadpool::keep_alive(asio::io_context& service) NOEXCEP
 
 // The run() function blocks until all work has finished and there are no
 // more handlers to be dispatched, or until the io_context has been stopped.
-threadpool::threadpool(size_t number_threads, thread_priority priority) NOEXCEPT
+threadpool::threadpool(size_t number_threads,
+    processing_priority priority) NOEXCEPT
   : work_(keep_alive(service_))
 {
     for (size_t thread = 0; thread < number_threads; ++thread)
     {
         threads_.push_back(std::thread([this, priority]() NOEXCEPT
         {
-            set_priority(priority);
+            set_processing_priority(priority);
 
             // If service.run throws, application will abort at startup.
             BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)

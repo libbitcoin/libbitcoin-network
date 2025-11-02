@@ -139,7 +139,7 @@ private:
         uint8_t level) NOEXCEPT;
 
     // This is protected by strand.
-    threadpool pool_{ one, thread_priority::low };
+    threadpool pool_{ one, processing_priority::low };
 
     // These are thread safe.
     std::atomic_bool stopped_{ false };
