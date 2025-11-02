@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected__expected)
     BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send<http::string_response>({}, handler);
+        channel_ptr->send<http::response>({}, handler);
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected_move__expected)
     BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send(http::string_response{}, [&](code ec)
+        channel_ptr->send(http::response{}, [&](code ec)
         {
             result &= channel_ptr->stopped();
             promise.set_value(ec);
