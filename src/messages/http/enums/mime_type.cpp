@@ -115,6 +115,26 @@ std::string from_mime_types(const mime_types& types,
     return join(out, ",");
 }
 
+mime_type content_mime_type(const std::string_view& content_type,
+    mime_type default_) NOEXCEPT
+{
+    if (content_type.empty())
+        return default_;
+
+    const auto parts = system::split(content_type, ";");
+    if (parts.empty())
+        return default_;
+
+    const auto type = system::ascii_to_lower(parts.front());
+    const auto found = mime_map().right.find(type);
+    return found == mime_map().right.end() ? default_ : found->second;
+}
+
+mime_type content_mime_type(const fields& fields, mime_type default_) NOEXCEPT
+{
+    return content_mime_type(fields[field::content_type], default_);
+}
+
 mime_type extension_mime_type(const std::string_view& extension,
     mime_type default_) NOEXCEPT
 {
@@ -156,24 +176,11 @@ mime_type file_mime_type(const std::filesystem::path& path,
     return extension_mime_type(extension, default_);
 }
 
-mime_type content_mime_type(const std::string_view& content_type,
+mime_type target_mime_type(const std::string& target,
     mime_type default_) NOEXCEPT
 {
-    if (content_type.empty())
-        return default_;
-
-    const auto parts = system::split(content_type, ";");
-    if (parts.empty())
-        return default_;
-
-    const auto type = system::ascii_to_lower(parts.front());
-    const auto found = mime_map().right.find(type);
-    return found == mime_map().right.end() ? default_ : found->second;
-}
-
-mime_type content_mime_type(const fields& fields, mime_type default_) NOEXCEPT
-{
-    return content_mime_type(fields[field::content_type], default_);
+    // request.target() is a boost::string_view, which requres path conversion.
+    return file_mime_type(target, default_);
 }
 
 BC_POP_WARNING()
