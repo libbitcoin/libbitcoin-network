@@ -316,9 +316,9 @@ bool proxy::websocket() const NOEXCEPT
     return socket_->websocket();
 }
 
-void proxy::set_websocket() NOEXCEPT
+void proxy::set_websocket(const http::request_cptr& request) NOEXCEPT
 {
-    return socket_->set_websocket();
+    return socket_->set_websocket(request);
 }
 
 uint64_t proxy::backlog() const NOEXCEPT

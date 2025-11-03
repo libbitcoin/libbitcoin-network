@@ -75,7 +75,7 @@ public:
     bool websocket() const NOEXCEPT;
 
     /// Upgrade the socket to a websocket.
-    void set_websocket() NOEXCEPT;
+    void set_websocket(const http::request_cptr& request) NOEXCEPT;
 
     /// The proxy (socket) is stopped.
     bool stopped() const NOEXCEPT;

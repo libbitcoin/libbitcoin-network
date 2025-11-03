@@ -126,7 +126,7 @@ public:
     virtual bool websocket() const NOEXCEPT;
 
     /// Upgrade the socket to a websocket.
-    virtual void set_websocket() NOEXCEPT;
+    virtual void set_websocket(const http::request_cptr& request) NOEXCEPT;
 
     /// The strand is running in this thread.
     virtual bool stranded() const NOEXCEPT;
@@ -151,7 +151,7 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // http
-    void do_http_read(http::flat_buffer buffer,
+    void do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
         const std::reference_wrapper<http::request>& request,
         const count_handler& handler) NOEXCEPT;
     void do_http_write(
@@ -159,14 +159,14 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // ws
-    void do_ws_read(http::flat_buffer out,
+    void do_ws_read(std::reference_wrapper<http::flat_buffer> out,
         const count_handler& handler) NOEXCEPT;
     void do_ws_write(const asio::const_buffer& in,
         const count_handler& handler) NOEXCEPT;
     void do_ws_event(ws::frame_type kind,
         const std::string_view& data) NOEXCEPT;
 
-    void do_set_websocket() NOEXCEPT;
+    void do_set_websocket(const http::request_cptr& request) NOEXCEPT;
 
     // completion
     // ------------------------------------------------------------------------
@@ -183,7 +183,7 @@ private:
 
     // http
     void handle_http_read(const boost_code& ec, size_t size,
-        http::flat_buffer buffer,
+        std::reference_wrapper<http::flat_buffer> buffer,
         const count_handler& handler) NOEXCEPT;
     void handle_http_write(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;

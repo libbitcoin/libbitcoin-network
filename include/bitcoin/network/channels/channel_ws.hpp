@@ -87,13 +87,14 @@ public:
     void read_request() NOEXCEPT override;
 
 protected:
-    void send_websocket_accept(const http::request& request) NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes,
         const http::request_cptr& request) NOEXCEPT override;
     virtual void handle_read_websocket(const code& ec, size_t bytes) NOEXCEPT;
 
+    void send_websocket_accept(const http::request_cptr& request) NOEXCEPT;
     void handle_upgrade(const http::request& request) NOEXCEPT;
-    void handle_upgrade_complete(const code& ec) NOEXCEPT;
+    void handle_upgrade_complete(const code& ec,
+        const http::request_cptr& request) NOEXCEPT;
 
 private:
     inline void handle_send(const code& ec, size_t, const auto&,

@@ -97,27 +97,28 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
         return;
     }
 
-    send_websocket_accept(*request);
+    send_websocket_accept(request);
 }
 
-void channel_ws::send_websocket_accept(const request& request) NOEXCEPT
+void channel_ws::send_websocket_accept(const request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    response out{ status::switching_protocols, request.version() };
+    response out{ status::switching_protocols, request->version() };
     out.set(field::upgrade, "websocket");
     out.set(field::connection, "upgrade");
-    out.set(field::sec_websocket_accept, to_websocket_accept(request));
+    out.set(field::sec_websocket_accept, to_websocket_accept(*request));
     out.prepare_payload();
 
     result_handler complete =
         std::bind(&channel_ws::handle_upgrade_complete,
-            shared_from_base<channel_ws>(), _1);
+            shared_from_base<channel_ws>(), _1, request);
 
     channel_http::send(std::move(out), std::move(complete));
 }
 
-void channel_ws::handle_upgrade_complete(const code& ec) NOEXCEPT
+void channel_ws::handle_upgrade_complete(const code& ec,
+    const request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -137,7 +138,7 @@ void channel_ws::handle_upgrade_complete(const code& ec) NOEXCEPT
     }
 
     upgraded_ = true;
-    set_websocket();
+    set_websocket(request);
     LOGP("Websocket upgraded [" << authority() << "]");
 
     resume();
