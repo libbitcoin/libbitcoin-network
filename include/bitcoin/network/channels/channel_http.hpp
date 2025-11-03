@@ -80,11 +80,12 @@ protected:
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
 
+    virtual http::flat_buffer& request_buffer() NOEXCEPT;
+    virtual void handle_read_request(const code& ec, size_t bytes,
+        const http::request_cptr& request) NOEXCEPT;
+
 private:
     void do_stop(const code& ec) NOEXCEPT;
-
-    void handle_read_request(const code& ec, size_t bytes_read,
-        const http::request_cptr& request) NOEXCEPT;
 
     void set_buffer(http::response& response) NOEXCEPT;
     void handle_send(const code& ec, size_t bytes, http::response_ptr&,

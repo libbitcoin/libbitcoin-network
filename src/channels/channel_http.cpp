@@ -119,6 +119,13 @@ void channel_http::handle_read_request(const code& ec, size_t,
     distributor_.notify(request);
 }
 
+/// Expose to derivatives, always fully consumed.
+flat_buffer& channel_http::request_buffer() NOEXCEPT
+{
+    request_buffer_.consume(request_buffer_.size());
+    return request_buffer_;
+}
+
 // Send.
 // ----------------------------------------------------------------------------
 
