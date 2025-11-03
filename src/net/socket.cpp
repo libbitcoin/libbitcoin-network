@@ -61,6 +61,7 @@ socket::~socket() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "socket is not stopped");
     if (!stopped()) { LOGF("~socket is not stopped."); }
+    if (websocket()) { LOGF("~socket websocket is not reset."); }
 }
 
 // Stop.
@@ -84,16 +85,43 @@ void socket::stop() NOEXCEPT
 void socket::do_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    boost_code ignore;
+
+    if (!websocket())
+    {
+        handle_async_close();
+        return;
+    }
+
+    using namespace boost::beast;
+    websocket_->async_close(websocket::close_code::normal,
+        std::bind(&socket::handle_async_close,
+            shared_from_this()));
+}
+
+void socket::handle_async_close() NOEXCEPT
+{
+    boost_code ignore{};
+    auto& socket = get_transport();
 
     // Disable future sends or receives on the socket, for graceful close.
-    socket_.shutdown(asio::socket::shutdown_both, ignore);
+    socket.shutdown(asio::socket::shutdown_both, ignore);
 
     // Cancel asynchronous I/O operations and close socket.
     // The underlying descriptor is closed regardless of error return.
-    // Any asynchronous send, receive or connect operations will be canceled
+    // Any asynchronous send, receive or connect operations are canceled
     // immediately, and will complete with the operation_aborted error.
-    socket_.close(ignore);
+    socket.close(ignore);
+
+    // Discard the optional.
+    websocket_.reset();
+}
+
+asio::socket& socket::get_transport() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    using namespace boost::beast;
+    return websocket() ? get_lowest_layer(*websocket_) : socket_;
 }
 
 // Connection.
@@ -104,6 +132,7 @@ void socket::do_stop() NOEXCEPT
 void socket::accept(asio::acceptor& acceptor,
     result_handler&& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(!websocket(), "socket is upgraded");
     BC_ASSERT_MSG(!socket_.is_open(), "accept on open socket");
 
     // Closure of the acceptor, not the socket, releases this handler.
@@ -215,6 +244,7 @@ void socket::do_connect(const asio::endpoints& range,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT_MSG(!websocket(), "socket is upgraded");
     BC_ASSERT_MSG(!socket_.is_open(), "connect on open socket");
 
     try
@@ -240,6 +270,12 @@ void socket::do_read(const asio::mutable_buffer& out,
 {
     BC_ASSERT(stranded());
 
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     try
     {
         // This composed operation posts all intermediate handlers to the strand.
@@ -258,6 +294,12 @@ void socket::do_write(const asio::const_buffer& in,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
 
     try
     {
@@ -282,6 +324,12 @@ void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
 {
     BC_ASSERT(stranded());
 
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     try
     {
         // This operation posts handler to the strand.
@@ -301,6 +349,12 @@ void socket::do_http_write(
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
 
     try
     {
@@ -324,6 +378,7 @@ void socket::do_ws_read(std::reference_wrapper<http::flat_buffer> out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT(websocket());
 
     try
     {
@@ -342,9 +397,7 @@ void socket::do_ws_write(const asio::const_buffer& in,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // TODO: caller must indicate this somehow (parameter or override).
-    ////websocket_->binary(true);
+    BC_ASSERT(websocket());
 
     try
     {
@@ -497,6 +550,7 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT(websocket());
 
     if (error::asio_is_canceled(ec))
     {
@@ -518,6 +572,7 @@ void socket::handle_ws_write(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT(websocket());
 
     if (error::asio_is_canceled(ec))
     {
@@ -539,6 +594,7 @@ void socket::handle_ws_event(ws::frame_type kind,
     const std::string& data) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT(websocket());
 
     switch (kind)
     {
