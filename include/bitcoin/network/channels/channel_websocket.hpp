@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBSOCKET_HPP
 
 #include <memory>
+#include <optional>
 #include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -37,13 +38,74 @@ public:
     typedef std::shared_ptr<channel_websocket> ptr;
     using options_t = settings::websocket_server;
 
+    /// Subscribe to WS messages post-upgrade (requires strand).
+    /// Event handler is always invoked on the channel strand.
+    template <class Message>
+    inline void subscribe(auto&& ) NOEXCEPT
+    {
+        BC_ASSERT(stranded());
+        ////using message_handler = distributor_ws::handler<Message>;
+        ////ws_distributor_.subscribe(std::forward<message_handler>(handler));
+    }
+
+    /// Serialize and write WS message to peer (requires strand).
+    /// Completion handler is always invoked on the channel strand.
+    template <class Message>
+    inline void send(Message&& message, result_handler&& handler) NOEXCEPT
+    {
+        BC_ASSERT(stranded());
+        BC_ASSERT(websocket());
+        using namespace std::placeholders;
+
+        // TODO: Serialize ws message.
+        const auto ptr = system::move_shared(std::forward<Message>(message));
+        count_handler complete = std::bind(&channel_websocket::handle_send,
+            shared_from_base<channel_websocket>(), _1, _2, ptr,
+            std::move(handler));
+
+        if (!ptr)
+        {
+            handler(error::bad_alloc);
+            return;
+        }
+
+        // TODO: serialize websocket message to send.
+        // TODO: websocket is full duplex, so writes must be queued.
+        ws_write({}, std::move(complete));
+    }
+
     inline channel_websocket(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero,
+        const network::settings& settings, uint64_t identifier={},
         const options_t& options={}) NOEXCEPT
       : channel_http(log, socket, settings, identifier, options),
+        ////distributor_(socket->strand()),
         tracker<channel_websocket>(log)
     {
     }
+
+    /// Half-duplex http until upgraded to full-duplex websockets.
+    void read_request() NOEXCEPT override;
+
+protected:
+    void send_websocket_accept(const http::request& request) NOEXCEPT;
+    void handle_read_request(const code& ec, size_t bytes,
+        const http::request_cptr& request) NOEXCEPT override;
+    virtual void handle_read_websocket(const code& ec, size_t bytes) NOEXCEPT;
+
+    void handle_upgrade(const http::request& request) NOEXCEPT;
+    void handle_upgrade_complete(const code& ec) NOEXCEPT;
+
+private:
+    inline void handle_send(const code& ec, size_t bytes, const auto&,
+        const result_handler& handler) NOEXCEPT
+    {
+        if (ec) stop(ec);
+        handler(ec);
+    }
+
+    // These are protected by strand.
+    ////distributor_rest distributor_;
+    bool upgraded_{ false };
 };
 
 } // namespace network
