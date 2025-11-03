@@ -666,8 +666,15 @@ void socket::do_set_websocket(const http::request_cptr& request) NOEXCEPT
     BC_ASSERT(!websocket());
 
     websocket_.emplace(std::move(socket_));
+    websocket_->set_option(ws::decorator{[](http::fields& header) NOEXCEPT
+    {
+        // Customize the response header.
+        header.set(http::field::server, "libbitcoin/4.0");
+    }});
     websocket_->accept(*request);
     websocket_->binary(true);
+
+    // Handle ping, pong, close.
     websocket_->control_callback(std::bind(&socket::do_ws_event,
         shared_from_this(), _1, _2));
 }
