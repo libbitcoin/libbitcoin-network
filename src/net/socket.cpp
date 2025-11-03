@@ -96,7 +96,7 @@ void socket::do_stop() NOEXCEPT
     socket_.close(ignore);
 }
 
-// TCP.
+// Accept/Connect.
 // ----------------------------------------------------------------------------
 // Boost async functions are NOT THREAD SAFE for the same socket object.
 // This clarifies boost documentation: svn.boost.org/trac10/ticket/10009
@@ -136,6 +136,9 @@ void socket::connect(const asio::endpoints& range,
             shared_from_this(), range, std::move(handler)));
 }
 
+// TCP.
+// ----------------------------------------------------------------------------
+
 void socket::read(const asio::mutable_buffer& out,
     count_handler&& handler) NOEXCEPT
 {
@@ -154,7 +157,7 @@ void socket::write(const asio::const_buffer& in,
             shared_from_this(), in, std::move(handler)));
 }
 
-// HTTP Readers.
+// HTTP.
 // ----------------------------------------------------------------------------
 
 void socket::http_read(http::flat_buffer& buffer,
@@ -165,25 +168,6 @@ void socket::http_read(http::flat_buffer& buffer,
             std::ref(buffer), std::ref(request), std::move(handler)));
 }
 
-void socket::http_read(http::flat_buffer& buffer,
-    http::string_request& request, count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_read_string, shared_from_this(),
-            std::ref(buffer), std::ref(request), std::move(handler)));
-}
-
-void socket::http_read(http::flat_buffer& buffer,
-    http::json_request& request, count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_read_json, shared_from_this(),
-            std::ref(buffer), std::ref(request), std::move(handler)));
-}
-
-// HTTP Writers.
-// ----------------------------------------------------------------------------
-
 void socket::http_write(http::response& response,
     count_handler&& handler) NOEXCEPT
 {
@@ -192,39 +176,7 @@ void socket::http_write(http::response& response,
             std::ref(response), std::move(handler)));
 }
 
-void socket::http_write(http::string_response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_write_string,
-            shared_from_this(), std::ref(response), std::move(handler)));
-}
-
-void socket::http_write(http::json_response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_write_json,
-            shared_from_this(), std::ref(response), std::move(handler)));
-}
-
-void socket::http_write(http::data_response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_write_data,
-            shared_from_this(), std::ref(response), std::move(handler)));
-}
-
-void socket::http_write(http::file_response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_write_file,
-            shared_from_this(), std::ref(response), std::move(handler)));
-}
-
-// tcp (private).
+// connect (private).
 // ----------------------------------------------------------------------------
 // These execute on the strand to protect the member socket.
 
@@ -247,6 +199,10 @@ void socket::do_connect(const asio::endpoints& range,
         handler(error::connect_failed);
     }
 }
+
+// tcp (private).
+// ----------------------------------------------------------------------------
+// These execute on the strand to protect the member socket.
 
 void socket::do_read(const asio::mutable_buffer& out,
     const count_handler& handler) NOEXCEPT
@@ -310,48 +266,6 @@ void socket::do_http_read(
     }
 }
 
-void socket::do_http_read_string(
-    const std::reference_wrapper<http::flat_buffer>& buffer,
-    const std::reference_wrapper<http::string_request>& request,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    try
-    {
-        // This operation posts handler to the strand.
-        boost::beast::http::async_read(socket_, buffer.get(), request.get(),
-            std::bind(&socket::handle_http_read,
-                shared_from_this(), _1, _2, buffer, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_read_string: " << e.what());
-        handler(error::operation_failed, zero);
-    }
-}
-
-void socket::do_http_read_json(
-    const std::reference_wrapper<http::flat_buffer>& buffer,
-    const std::reference_wrapper<http::json_request>& request,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    try
-    {
-        // This operation posts handler to the strand.
-        boost::beast::http::async_read(socket_, buffer.get(), request.get(),
-            std::bind(&socket::handle_http_read,
-                shared_from_this(), _1, _2, buffer, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_read_json: " << e.what());
-        handler(error::operation_failed, zero);
-    }
-}
-
 // http writers (private).
 // ----------------------------------------------------------------------------
 
@@ -373,94 +287,6 @@ void socket::do_http_write(
     catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ do_http_write: " << e.what());
-        handler(error::operation_failed, zero);
-    }
-}
-
-void socket::do_http_write_string(
-    const std::reference_wrapper<http::string_response>& response,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    try
-    {
-        // This operation posts handler to the strand.
-        boost::beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http_write,
-                shared_from_this(), _1, _2, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_write_string: " << e.what());
-        handler(error::operation_failed, zero);
-    }
-}
-
-void socket::do_http_write_json(
-    const std::reference_wrapper<http::json_response>& response,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // TODO: set json 'buffer' onto body payload.
-
-    try
-    {
-        // This operation posts handler to the strand.
-        boost::beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http_write,
-                shared_from_this(), _1, _2, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_write_json: " << e.what());
-        handler(error::operation_failed, zero);
-    }
-}
-
-void socket::do_http_write_data(
-    const std::reference_wrapper<http::data_response>& response,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    try
-    {
-        // This operation posts handler to the strand.
-        boost::beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http_write,
-                shared_from_this(), _1, _2, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_write_data: " << e.what());
-        handler(error::operation_failed, zero);
-    }
-}
-
-void socket::do_http_write_file(
-    const std::reference_wrapper<http::file_response>& response,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    const auto writer = std::make_shared<http::file_serializer>(response.get());
-    auto complete = [writer, handler](const code& ec, size_t size) NOEXCEPT
-    {
-        handler(ec, size);
-    };
-
-    try
-    {
-        // This operation posts handler to the strand.
-        boost::beast::http::async_write(socket_, *writer,
-            std::bind(&socket::handle_http_write,
-                shared_from_this(), _1, _2, std::move(complete)));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_write_file: " << e.what());
         handler(error::operation_failed, zero);
     }
 }
