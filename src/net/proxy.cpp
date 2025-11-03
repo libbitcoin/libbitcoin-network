@@ -198,10 +198,10 @@ void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
     socket_->ws_read(out, std::move(handler));
 }
 
-void proxy::ws_write(const asio::const_buffer& in,
+void proxy::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
-    socket_->ws_write(in, std::move(handler));
+    socket_->ws_write(in, binary, std::move(handler));
 }
 
 // Send cycle (send continues until queue is empty).

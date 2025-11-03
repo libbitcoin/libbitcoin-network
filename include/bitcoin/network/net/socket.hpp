@@ -106,8 +106,8 @@ public:
     virtual void ws_read(http::flat_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write full buffer to the websocket (post-upgrade).
-    virtual void ws_write(const asio::const_buffer& in,
+    /// Write full buffer to the websocket (post-upgrade), specify binary/text.
+    virtual void ws_write(const asio::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
     /// Properties.
@@ -135,7 +135,12 @@ public:
     virtual asio::strand& strand() NOEXCEPT;
 
 private:
+    // stop
+    // ------------------------------------------------------------------------
+
     void do_stop() NOEXCEPT;
+    void handle_async_close() NOEXCEPT;
+    asio::socket& get_transport() NOEXCEPT;
 
     // stranded
     // ------------------------------------------------------------------------
@@ -161,7 +166,7 @@ private:
     // ws
     void do_ws_read(std::reference_wrapper<http::flat_buffer> out,
         const count_handler& handler) NOEXCEPT;
-    void do_ws_write(const asio::const_buffer& in,
+    void do_ws_write(const asio::const_buffer& in, bool binary,
         const count_handler& handler) NOEXCEPT;
     void do_ws_event(ws::frame_type kind,
         const std::string_view& data) NOEXCEPT;

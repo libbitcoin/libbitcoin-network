@@ -222,7 +222,7 @@ void socket::ws_read(http::flat_buffer& out,
             shared_from_this(), std::ref(out), std::move(handler)));
 }
 
-void socket::ws_write(const asio::const_buffer& in,
+void socket::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
     if (!websocket())
@@ -233,7 +233,7 @@ void socket::ws_write(const asio::const_buffer& in,
 
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_ws_write,
-            shared_from_this(), in, std::move(handler)));
+            shared_from_this(), in, binary, std::move(handler)));
 }
 
 // connect (private).
@@ -393,7 +393,7 @@ void socket::do_ws_read(std::reference_wrapper<http::flat_buffer> out,
     }
 }
 
-void socket::do_ws_write(const asio::const_buffer& in,
+void socket::do_ws_write(const asio::const_buffer& in, bool binary,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -401,6 +401,11 @@ void socket::do_ws_write(const asio::const_buffer& in,
 
     try
     {
+        if (binary)
+            websocket_->binary(true);
+        else
+            websocket_->text(true);
+
         websocket_->async_write(in,
             std::bind(&socket::handle_ws_write,
                 shared_from_this(), _1, _2, handler));

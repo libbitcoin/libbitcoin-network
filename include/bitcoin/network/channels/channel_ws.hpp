@@ -71,7 +71,7 @@ public:
 
         // TODO: serialize message to send.
         // TODO: websocket is full duplex, so writes must be queued.
-        ws_write({}, std::move(complete));
+        ws_write({}, {}, std::move(complete));
     }
 
     inline channel_ws(const logger& log, const socket::ptr& socket,

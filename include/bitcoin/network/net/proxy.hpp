@@ -136,8 +136,8 @@ protected:
     virtual void ws_read(http::flat_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write full buffer to the websocket (post-upgrade).
-    virtual void ws_write(const asio::const_buffer& in,
+    /// Write full buffer to the websocket (post-upgrade), specify binary/text.
+    virtual void ws_write(const asio::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
 private:
