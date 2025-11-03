@@ -153,7 +153,6 @@ template <class Socket>
 using stream = boost::beast::websocket::stream<Socket>;
 using websocket = stream<boost::asio::ip::tcp::socket>;
 using frame_type = boost::beast::websocket::frame_type;
-using decorator = boost::beast::websocket::stream_base::decorator;
 
 } // namespace ws
 } // namespace network
