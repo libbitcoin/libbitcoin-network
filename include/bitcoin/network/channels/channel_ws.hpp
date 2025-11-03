@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBSOCKET_HPP
-#define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBSOCKET_HPP
+#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WS_HPP
+#define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WS_HPP
 
 #include <memory>
 #include <optional>
@@ -31,14 +31,14 @@ namespace libbitcoin {
 namespace network {
 
 /// Websocket tcp/ip channel, uses channel_http for upgrade/multiplex.
-class BCT_API channel_websocket
-  : public channel_http, protected tracker<channel_websocket>
+class BCT_API channel_ws
+  : public channel_http, protected tracker<channel_ws>
 {
 public:
-    typedef std::shared_ptr<channel_websocket> ptr;
+    typedef std::shared_ptr<channel_ws> ptr;
     using options_t = settings::websocket_server;
 
-    /// Subscribe to WS messages post-upgrade (requires strand).
+    /// Subscribe to messages post-upgrade (requires strand).
     /// Event handler is always invoked on the channel strand.
     template <class Message>
     inline void subscribe(auto&& ) NOEXCEPT
@@ -48,7 +48,7 @@ public:
         ////ws_distributor_.subscribe(std::forward<message_handler>(handler));
     }
 
-    /// Serialize and write WS message to peer (requires strand).
+    /// Serialize and write websocket message to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
     inline void send(Message&& message, result_handler&& handler) NOEXCEPT
@@ -57,10 +57,10 @@ public:
         BC_ASSERT(websocket());
         using namespace std::placeholders;
 
-        // TODO: Serialize ws message.
+        // TODO: Serialize message.
         const auto ptr = system::move_shared(std::forward<Message>(message));
-        count_handler complete = std::bind(&channel_websocket::handle_send,
-            shared_from_base<channel_websocket>(), _1, _2, ptr,
+        count_handler complete = std::bind(&channel_ws::handle_send,
+            shared_from_base<channel_ws>(), _1, _2, ptr,
             std::move(handler));
 
         if (!ptr)
@@ -69,17 +69,17 @@ public:
             return;
         }
 
-        // TODO: serialize websocket message to send.
+        // TODO: serialize message to send.
         // TODO: websocket is full duplex, so writes must be queued.
         ws_write({}, std::move(complete));
     }
 
-    inline channel_websocket(const logger& log, const socket::ptr& socket,
+    inline channel_ws(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier={},
         const options_t& options={}) NOEXCEPT
       : channel_http(log, socket, settings, identifier, options),
         ////distributor_(socket->strand()),
-        tracker<channel_websocket>(log)
+        tracker<channel_ws>(log)
     {
     }
 
@@ -96,7 +96,7 @@ protected:
     void handle_upgrade_complete(const code& ec) NOEXCEPT;
 
 private:
-    inline void handle_send(const code& ec, size_t bytes, const auto&,
+    inline void handle_send(const code& ec, size_t, const auto&,
         const result_handler& handler) NOEXCEPT
     {
         if (ec) stop(ec);

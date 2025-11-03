@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/channels/channel_websocket.hpp>
+#include <bitcoin/network/channels/channel_ws.hpp>
 
 #include <optional>
 #include <bitcoin/network/define.hpp>
@@ -25,7 +25,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define CLASS channel_websocket
+#define CLASS channel_ws
 
 using namespace system;
 using namespace network::http;
@@ -36,7 +36,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // public/virtual
 // ----------------------------------------------------------------------------
 
-void channel_websocket::read_request() NOEXCEPT
+void channel_ws::read_request() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -47,14 +47,14 @@ void channel_websocket::read_request() NOEXCEPT
     }
 
     ws_read(request_buffer(),
-        std::bind(&channel_websocket::handle_read_websocket,
-            shared_from_base<channel_websocket>(), _1, _2));
+        std::bind(&channel_ws::handle_read_websocket,
+            shared_from_base<channel_ws>(), _1, _2));
 }
 
 // upgraded
 // ----------------------------------------------------------------------------
 
-void channel_websocket::handle_read_websocket(const code& ec,
+void channel_ws::handle_read_websocket(const code& ec,
     size_t) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -78,7 +78,7 @@ void channel_websocket::handle_read_websocket(const code& ec,
         return;
     }
 
-    // TODO: deserialize websocket message from request_buffer and dispatch.
+    // TODO: deserialize message from request_buffer and dispatch.
     ////distributor_.notify(message);
     resume();
 }
@@ -86,7 +86,7 @@ void channel_websocket::handle_read_websocket(const code& ec,
 // pre-upgrade
 // ----------------------------------------------------------------------------
 
-void channel_websocket::handle_read_request(const code& ec, size_t bytes,
+void channel_ws::handle_read_request(const code& ec, size_t bytes,
     const http::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -100,7 +100,7 @@ void channel_websocket::handle_read_request(const code& ec, size_t bytes,
     send_websocket_accept(*request);
 }
 
-void channel_websocket::send_websocket_accept(const request& request) NOEXCEPT
+void channel_ws::send_websocket_accept(const request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -111,13 +111,13 @@ void channel_websocket::send_websocket_accept(const request& request) NOEXCEPT
     out.prepare_payload();
 
     result_handler complete =
-        std::bind(&channel_websocket::handle_upgrade_complete,
-            shared_from_base<channel_websocket>(), _1);
+        std::bind(&channel_ws::handle_upgrade_complete,
+            shared_from_base<channel_ws>(), _1);
 
     channel_http::send(std::move(out), std::move(complete));
 }
 
-void channel_websocket::handle_upgrade_complete(const code& ec) NOEXCEPT
+void channel_ws::handle_upgrade_complete(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
 

@@ -43,7 +43,7 @@
 #include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/channels/channel_peer.hpp>
 #include <bitcoin/network/channels/channel_tcp.hpp>
-#include <bitcoin/network/channels/channel_websocket.hpp>
+#include <bitcoin/network/channels/channel_ws.hpp>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/config/authority.hpp>
@@ -143,8 +143,7 @@
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/protocols/protocol_version_70016.hpp>
-#include <bitcoin/network/protocols/protocol_websocket.hpp>
-#include <bitcoin/network/protocols/protocol_websocket_shake.hpp>
+#include <bitcoin/network/protocols/protocol_ws.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>

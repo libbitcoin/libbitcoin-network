@@ -16,34 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_WEBSOCKET_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_WEBSOCKET_HPP
+#include "../test.hpp"
 
-#include <memory>
-#include <bitcoin/network/channels/channels.hpp>
-#include <bitcoin/network/define.hpp>
-#include <bitcoin/network/protocols/protocol.hpp>
+BOOST_AUTO_TEST_SUITE(channel_ws_tests)
 
-namespace libbitcoin {
-namespace network {
-
-class BCT_API protocol_websocket
- : public protocol
+BOOST_AUTO_TEST_CASE(channel_ws_tests)
 {
-public:
-    typedef std::shared_ptr<protocol_websocket> ptr;
-    using channel_t = channel_websocket;
-    using options_t = channel_t::options_t;
+    BOOST_REQUIRE(true);
+}
 
-protected:
-    protocol_websocket(const session::ptr& session,
-        const channel::ptr& channel, const options_t&) NOEXCEPT
-      : protocol(session, channel)
-    {
-    }
-};
-
-} // namespace network
-} // namespace libbitcoin
-
-#endif
+BOOST_AUTO_TEST_SUITE_END()
