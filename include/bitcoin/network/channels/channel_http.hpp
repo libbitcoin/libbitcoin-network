@@ -70,7 +70,7 @@ public:
 
     /// http is half-duplex, so reads must wait until send is completed.
     /// Must be called (only once) from protocol message handler (if no stop).
-    void read_request() NOEXCEPT;
+    virtual void read_request() NOEXCEPT;
 
     /// Serialize and write response to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
