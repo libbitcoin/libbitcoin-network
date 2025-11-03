@@ -122,7 +122,7 @@ public:
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
 
-    /// Upgrade the socket to a websocket.
+    /// Upgrade the socket to a websocket (synchronous if called from strand).
     virtual void set_websocket(const http::request_cptr& request) NOEXCEPT;
 
     /// The strand is running in this thread.
