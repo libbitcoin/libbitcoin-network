@@ -32,6 +32,7 @@ namespace network {
 #define CLASS channel_http
 
 using namespace system;
+using namespace network::http;
 using namespace std::placeholders;
 
 // Shared pointers required in handler parameters so closures control lifetime.
@@ -45,14 +46,14 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // This should not be called internally, as derived rely on stop() override.
 void channel_http::stopping(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     channel::stopping(ec);
     distributor_.stop(ec);
 }
 
 void channel_http::resume() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     channel::resume();
     read_request();
 }
@@ -67,7 +68,7 @@ void channel_http::resume() NOEXCEPT
 // one and only one completion handler to invoke read continuation.
 void channel_http::read_request() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     BC_ASSERT_MSG(!reading_, "already reading");
 
     // Both terminate read loop, paused can be resumed, stopped cannot.
@@ -79,18 +80,18 @@ void channel_http::read_request() NOEXCEPT
 
     // HTTP is half duplex.
     reading_ = true;
-    const auto request = to_shared<http::request>();
+    const auto in = to_shared<request>();
 
     // Post handle_read_request to strand upon stop, error, or buffer full.
-    read(request_buffer_, *request,
+    read(request_buffer_, *in,
         std::bind(&channel_http::handle_read_request,
-            shared_from_base<channel_http>(), _1, _2, request));
+            shared_from_base<channel_http>(), _1, _2, in));
 }
 
 void channel_http::handle_read_request(const code& ec, size_t,
-    const http::request_cptr& request) NOEXCEPT
+    const request_cptr& request) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // HTTP is half duplex.
     reading_ = false;
@@ -121,8 +122,7 @@ void channel_http::handle_read_request(const code& ec, size_t,
 // Send.
 // ----------------------------------------------------------------------------
 
-void channel_http::send(http::response&& response,
-    result_handler&& handler) NOEXCEPT
+void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -141,18 +141,18 @@ void channel_http::send(http::response&& response,
     write(*ptr, std::move(complete));
 }
 
-void channel_http::set_buffer(http::response& response) NOEXCEPT
+void channel_http::set_buffer(response& response) NOEXCEPT
 {
     if (const auto& body = response.body();
-        body.contains<http::json_value>())
+        body.contains<json_value>())
     {
-        const auto& value = body.get<http::json_value>();
+        const auto& value = body.get<json_value>();
         response_buffer_->max_size(value.size_hint);
-        body.get<http::json_value>().buffer = response_buffer_;
+        body.get<json_value>().buffer = response_buffer_;
     }
 }
 
-void channel_http::handle_send(const code& ec, size_t, http::response_ptr&,
+void channel_http::handle_send(const code& ec, size_t, response_ptr&,
     const result_handler& handler) NOEXCEPT
 {
     if (ec) stop(ec);
@@ -162,7 +162,7 @@ void channel_http::handle_send(const code& ec, size_t, http::response_ptr&,
 // log helpers
 // ----------------------------------------------------------------------------
 
-void channel_http::log_message(const http::request& request) const NOEXCEPT
+void channel_http::log_message(const request& request) const NOEXCEPT
 {
     LOG_ONLY(const auto size = serialize(request.payload_size()
         .has_value() ? request.payload_size().value() : zero);)
@@ -174,11 +174,11 @@ void channel_http::log_message(const http::request& request) const NOEXCEPT
         << "] " << version << " (" << (request.chunked() ? "c" : size)
         << ") " << (request.keep_alive() ? "keep" : "drop")
         << " [" << authority() << "]"
-        << " {" << (split(request[http::field::accept], ",").front()) << "...}"
+        << " {" << (split(request[field::accept], ",").front()) << "...}"
         << " "  << request.target());
 }
 
-void channel_http::log_message(const http::response& response) const NOEXCEPT
+void channel_http::log_message(const response& response) const NOEXCEPT
 {
     LOG_ONLY(const auto size = serialize(response.payload_size()
         .has_value() ? response.payload_size().value() : zero);)
@@ -186,11 +186,11 @@ void channel_http::log_message(const http::response& response) const NOEXCEPT
     LOG_ONLY(const auto version = "http/" + serialize(response.version() / 10)
         + "." + serialize(response.version() % 10);)
         
-    LOGP("Response [" << http::status_string(response.result())
+    LOGP("Response [" << status_string(response.result())
         << "] " << version << " (" << (response.chunked() ? "c" : size)
         << ") " << (response.keep_alive() ? "keep" : "drop")
         << " [" << authority() << "]"
-        << " {" << (response[http::field::content_type]) << "}");
+        << " {" << (response[field::content_type]) << "}");
 }
 
 BC_POP_WARNING()
