@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -64,7 +65,7 @@ public:
     /// Block on threadpool.join() to ensure termination of the connection.
     virtual void stop() NOEXCEPT;
 
-    /// Accept/Connect.
+    /// Connection.
     /// -----------------------------------------------------------------------
 
     /// Accept an incoming connection, handler posted to *acceptor* strand.
@@ -98,6 +99,17 @@ public:
     virtual void http_write(http::response& response,
         count_handler&& handler) NOEXCEPT;
 
+    /// WS.
+    /// -----------------------------------------------------------------------
+
+    /// Read full buffer from the websocket (post-upgrade).
+    virtual void ws_read(http::flat_buffer& out,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full buffer to the websocket (post-upgrade).
+    virtual void ws_write(const asio::const_buffer& in,
+        count_handler&& handler) NOEXCEPT;
+
     /// Properties.
     /// -----------------------------------------------------------------------
 
@@ -110,26 +122,25 @@ public:
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
 
+    /// The socket was upgraded to a websocket.
+    virtual bool websocket() const NOEXCEPT;
+
+    /// Upgrade the socket to a websocket.
+    virtual void set_websocket() NOEXCEPT;
+
     /// The strand is running in this thread.
     virtual bool stranded() const NOEXCEPT;
 
     /// Get the strand of the socket.
     virtual asio::strand& strand() NOEXCEPT;
 
-protected:
-    // These are thread safe.
-    asio::strand strand_;
-    std::atomic_bool stopped_{};
-
-    // These are protected by strand (see also handle_accept).
-    asio::socket socket_;
-    config::address address_;
-    config::authority authority_{};
-
 private:
     void do_stop() NOEXCEPT;
 
-    // accept/connect
+    // stranded
+    // ------------------------------------------------------------------------
+
+    // connection
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
 
@@ -140,26 +151,61 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // http
-    void do_http_read(
-        const std::reference_wrapper<http::flat_buffer>& buffer,
+    void do_http_read(http::flat_buffer buffer,
         const std::reference_wrapper<http::request>& request,
         const count_handler& handler) NOEXCEPT;
     void do_http_write(
         const std::reference_wrapper<http::response>& response,
         const count_handler& handler) NOEXCEPT;
 
+    // ws
+    void do_ws_read(http::flat_buffer out,
+        const count_handler& handler) NOEXCEPT;
+    void do_ws_write(const asio::const_buffer& in,
+        const count_handler& handler) NOEXCEPT;
+    void do_ws_event(ws::frame_type kind,
+        const std::string_view& data) NOEXCEPT;
+
+    void do_set_websocket() NOEXCEPT;
+
     // completion
+    // ------------------------------------------------------------------------
+
+    // connection
     void handle_accept(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
-    void handle_connect(const boost_code& ec,
-        const asio::endpoint& peer, const result_handler& handler) NOEXCEPT;
+    void handle_connect(const boost_code& ec, const asio::endpoint& peer,
+        const result_handler& handler) NOEXCEPT;
+
+    // tcp
     void handle_io(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
+
+    // http
     void handle_http_read(const boost_code& ec, size_t size,
-        const std::reference_wrapper<http::flat_buffer>& buffer,
+        http::flat_buffer buffer,
         const count_handler& handler) NOEXCEPT;
     void handle_http_write(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
+
+    // ws
+    void handle_ws_read(const boost_code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
+    void handle_ws_write(const boost_code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
+    void handle_ws_event(ws::frame_type kind,
+        const std::string& data) NOEXCEPT;
+
+protected:
+    // These are thread safe.
+    asio::strand strand_;
+    std::atomic_bool stopped_{};
+
+    // These are protected by strand (see also handle_accept).
+    asio::socket socket_;
+    config::address address_;
+    config::authority authority_{};
+    std::optional<ws::websocket> websocket_{};
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;

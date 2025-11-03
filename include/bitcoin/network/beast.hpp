@@ -146,6 +146,15 @@ using request_header = header<true, fields>;
 using response_header = header<false, fields>;
 
 } // namespace http
+
+namespace ws {
+    
+template <class Socket>
+using stream = boost::beast::websocket::stream<Socket>;
+using websocket = stream<boost::asio::ip::tcp::socket>;
+using frame_type = boost::beast::websocket::frame_type;
+
+} // namespace ws
 } // namespace network
 } // namespace libbitcoin
 

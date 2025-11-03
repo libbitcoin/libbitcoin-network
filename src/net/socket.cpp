@@ -83,7 +83,7 @@ void socket::stop() NOEXCEPT
 // private
 void socket::do_stop() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     boost_code ignore;
 
     // Disable future sends or receives on the socket, for graceful close.
@@ -96,7 +96,7 @@ void socket::do_stop() NOEXCEPT
     socket_.close(ignore);
 }
 
-// Accept/Connect.
+// Connection.
 // ----------------------------------------------------------------------------
 // Boost async functions are NOT THREAD SAFE for the same socket object.
 // This clarifies boost documentation: svn.boost.org/trac10/ticket/10009
@@ -164,8 +164,8 @@ void socket::http_read(http::flat_buffer& buffer,
     http::request& request, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_read, shared_from_this(),
-            std::ref(buffer), std::ref(request), std::move(handler)));
+        std::bind(&socket::do_http_read, shared_from_this(), buffer,
+            std::ref(request), std::move(handler)));
 }
 
 void socket::http_write(http::response& response,
@@ -176,6 +176,37 @@ void socket::http_write(http::response& response,
             std::ref(response), std::move(handler)));
 }
 
+// WS.
+// ----------------------------------------------------------------------------
+
+void socket::ws_read(http::flat_buffer& out,
+    count_handler&& handler) NOEXCEPT
+{
+    if (!websocket())
+    {
+        handler(error::operation_failed, {});
+        return;
+    }
+
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_ws_read,
+            shared_from_this(), std::ref(out), std::move(handler)));
+}
+
+void socket::ws_write(const asio::const_buffer& in,
+    count_handler&& handler) NOEXCEPT
+{
+    if (!websocket())
+    {
+        handler(error::operation_failed, {});
+        return;
+    }
+
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_ws_write,
+            shared_from_this(), in, std::move(handler)));
+}
+
 // connect (private).
 // ----------------------------------------------------------------------------
 // These execute on the strand to protect the member socket.
@@ -183,7 +214,7 @@ void socket::http_write(http::response& response,
 void socket::do_connect(const asio::endpoints& range,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     BC_ASSERT_MSG(!socket_.is_open(), "connect on open socket");
 
     try
@@ -207,7 +238,7 @@ void socket::do_connect(const asio::endpoints& range,
 void socket::do_read(const asio::mutable_buffer& out,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     try
     {
@@ -219,14 +250,14 @@ void socket::do_read(const asio::mutable_buffer& out,
     catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ do_read: " << e.what());
-        handler(error::operation_failed, zero);
+        handler(error::operation_failed, {});
     }
 }
 
 void socket::do_write(const asio::const_buffer& in,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     try
     {
@@ -238,44 +269,38 @@ void socket::do_write(const asio::const_buffer& in,
     catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ do_write: " << e.what());
-        handler(error::operation_failed, zero);
+        handler(error::operation_failed, {});
     }
 }
 
-// http readers (private).
+// http (private).
 // ----------------------------------------------------------------------------
 
-void socket::do_http_read(
-    const std::reference_wrapper<http::flat_buffer>& buffer,
+void socket::do_http_read(http::flat_buffer buffer,
     const std::reference_wrapper<http::request>& request,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     try
     {
         // This operation posts handler to the strand.
-        boost::beast::http::async_read(socket_, buffer.get(), request.get(),
+        boost::beast::http::async_read(socket_, buffer, request.get(),
             std::bind(&socket::handle_http_read,
                 shared_from_this(), _1, _2, buffer, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ do_http_read: " << e.what());
-        handler(error::operation_failed, zero);
+        handler(error::operation_failed, {});
     }
 }
-
-// http writers (private).
-// ----------------------------------------------------------------------------
 
 void socket::do_http_write(
     const std::reference_wrapper<http::response>& response,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // TODO: set json 'buffer' onto body payload.
+    BC_ASSERT(stranded());
 
     try
     {
@@ -287,8 +312,60 @@ void socket::do_http_write(
     catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ do_http_write: " << e.what());
-        handler(error::operation_failed, zero);
+        handler(error::operation_failed, {});
     }
+}
+
+// ws (private).
+// ----------------------------------------------------------------------------
+
+// flat_buffer is copied to allow it to be non-const.
+void socket::do_ws_read(http::flat_buffer out,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    try
+    {
+        websocket_->async_read(out,
+            std::bind(&socket::handle_ws_read,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_ws_read: " << e.what());
+        handler(error::operation_failed, {});
+    }
+}
+
+void socket::do_ws_write(const asio::const_buffer& in,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // TODO: caller must indicate this somehow (parameter or override).
+    ////websocket_->binary(true);
+
+    try
+    {
+        websocket_->async_write(in,
+            std::bind(&socket::handle_ws_write,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_ws_write: " << e.what());
+        handler(error::operation_failed, {});
+    }
+}
+
+void socket::do_ws_event(ws::frame_type kind,
+    const std::string_view& data) NOEXCEPT
+{
+    // Takes ownership of the string.
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::handle_ws_event,
+            shared_from_this(), kind, std::string{ data }));
 }
 
 // completion (private).
@@ -311,9 +388,7 @@ void socket::handle_accept(const boost_code& ec,
         return;
     }
 
-    // Translate other boost error code and invoke caller handler.
     const auto code = error::asio_to_error_code(ec);
-
     if (code == error::unknown)
     {
         LOGX("Raw accept code (" << ec.value() << ") " << ec.category().name()
@@ -326,7 +401,7 @@ void socket::handle_accept(const boost_code& ec,
 void socket::handle_connect(const boost_code& ec,
     const asio::endpoint& peer, const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     authority_ = peer;
 
@@ -340,9 +415,7 @@ void socket::handle_connect(const boost_code& ec,
         return;
     }
 
-    // Translate other boost error code and invoke caller handler.
     const auto code = error::asio_to_error_code(ec);
-
     if (code == error::unknown)
     {
         LOGX("Raw connect code (" << ec.value() << ") " << ec.category().name()
@@ -355,7 +428,7 @@ void socket::handle_connect(const boost_code& ec,
 void socket::handle_io(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (error::asio_is_canceled(ec))
     {
@@ -363,9 +436,7 @@ void socket::handle_io(const boost_code& ec, size_t size,
         return;
     }
 
-    // Translate other boost error code and invoke caller handler.
     const auto code = error::asio_to_error_code(ec);
-
     if (code == error::unknown)
     {
         LOGX("Raw io code (" << ec.value() << ") " << ec.category().name()
@@ -376,13 +447,12 @@ void socket::handle_io(const boost_code& ec, size_t size,
 }
 
 void socket::handle_http_read(const boost_code& ec, size_t size,
-    const std::reference_wrapper<http::flat_buffer>& buffer,
-    const count_handler& handler) NOEXCEPT
+    http::flat_buffer buffer, const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Always consume all of the buffer as the request is fully read.
-    buffer.get().consume(buffer.get().size());
+    buffer.consume(buffer.size());
 
     if (error::asio_is_canceled(ec))
     {
@@ -390,9 +460,7 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
         return;
     }
 
-    // Translate other beast error codes and invoke caller handler.
     const auto code = error::beast_to_error_code(ec);
-
     if (code == error::unknown)
     {
         LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
@@ -405,7 +473,7 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
 void socket::handle_http_write(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (error::asio_is_canceled(ec))
     {
@@ -413,9 +481,7 @@ void socket::handle_http_write(const boost_code& ec, size_t size,
         return;
     }
 
-    // Translate other beast error codes and invoke caller handler.
     const auto code = error::beast_to_error_code(ec);
-
     if (code == error::unknown)
     {
         LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
@@ -423,6 +489,69 @@ void socket::handle_http_write(const boost_code& ec, size_t size,
     }
 
     handler(code, size);
+}
+
+// ws
+void socket::handle_ws_read(const boost_code& ec, size_t size,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, size);
+        return;
+    }
+
+    const auto code = error::beast_to_error_code(ec);
+    if (code == error::unknown)
+    {
+        LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
+            << ":" << ec.message());
+    }
+
+    handler(code, size /*, websocket_->got_binary() */);
+}
+
+void socket::handle_ws_write(const boost_code& ec, size_t size,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, size);
+        return;
+    }
+
+    const auto code = error::beast_to_error_code(ec);
+    if (code == error::unknown)
+    {
+        LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
+            << ":" << ec.message());
+    }
+
+    handler(code, size /*, websocket_->got_binary() */);
+}
+
+void socket::handle_ws_event(ws::frame_type kind,
+    const std::string& data) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    switch (kind)
+    {
+        case ws::frame_type::ping:
+            LOGX("WS ping [" << authority() << "] size: " << data.size());
+            break;
+        case ws::frame_type::pong:
+            LOGX("WS pong [" << authority() << "] size: " << data.size());
+            break;
+        case ws::frame_type::close:
+            LOGX("WS close [" << authority() << "] " << websocket_->reason());
+            stop();
+            break;
+    }
 }
 
 // Properties.
@@ -449,6 +578,9 @@ bool socket::stopped() const NOEXCEPT
     return stopped_.load();
 }
 
+// Strand properties.
+// ----------------------------------------------------------------------------
+
 bool socket::stranded() const NOEXCEPT
 {
     return strand_.running_in_this_thread();
@@ -457,6 +589,31 @@ bool socket::stranded() const NOEXCEPT
 asio::strand& socket::strand() NOEXCEPT
 {
     return strand_;
+}
+
+// Websocket properties.
+// ----------------------------------------------------------------------------
+
+bool socket::websocket() const NOEXCEPT
+{
+    return websocket_.has_value();
+}
+
+void socket::set_websocket() NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_set_websocket,
+            shared_from_this()));
+}
+
+void socket::do_set_websocket() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    BC_ASSERT(!websocket());
+    websocket_.emplace(std::move(socket_));
+    websocket_->binary(true);
+    websocket_->control_callback(std::bind(&socket::do_ws_event,
+        shared_from_this(), _1, _2));
 }
 
 BC_POP_WARNING()

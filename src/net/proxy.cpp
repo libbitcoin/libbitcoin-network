@@ -190,6 +190,20 @@ void proxy::write(http::response& response,
     socket_->http_write(response, std::move(handler));
 }
 
+// WS.
+// ----------------------------------------------------------------------------
+
+void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
+{
+    socket_->ws_read(out, std::move(handler));
+}
+
+void proxy::ws_write(const asio::const_buffer& in,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->ws_write(in, std::move(handler));
+}
+
 // Send cycle (send continues until queue is empty).
 // ----------------------------------------------------------------------------
 // stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
@@ -204,7 +218,7 @@ void proxy::do_write(const asio::const_buffer& payload,
     if (stopped())
     {
         LOGQ("Payload write abort [" << authority() << "]");
-        handler(error::channel_stopped, zero);
+        handler(error::channel_stopped, {});
         return;
     }
 
@@ -272,7 +286,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
             ////    << ec.message());
         }
 
-        handler(ec, zero);
+        handler(ec, {});
         return;
     }
 
@@ -295,6 +309,16 @@ asio::strand& proxy::strand() NOEXCEPT
 bool proxy::stranded() const NOEXCEPT
 {
     return socket_->stranded();
+}
+
+bool proxy::websocket() const NOEXCEPT
+{
+    return socket_->websocket();
+}
+
+void proxy::set_websocket() NOEXCEPT
+{
+    return socket_->set_websocket();
 }
 
 uint64_t proxy::backlog() const NOEXCEPT

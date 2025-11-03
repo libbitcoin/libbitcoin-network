@@ -71,6 +71,12 @@ public:
     /// The strand is running in this thread.
     bool stranded() const NOEXCEPT;
 
+    /// The socket was upgraded to a websocket.
+    bool websocket() const NOEXCEPT;
+
+    /// Upgrade the socket to a websocket.
+    void set_websocket() NOEXCEPT;
+
     /// The proxy (socket) is stopped.
     bool stopped() const NOEXCEPT;
 
@@ -121,6 +127,17 @@ protected:
 
     /// Write full http variant response to the socket (json buffer in body).
     virtual void write(http::response& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// WS.
+    /// -----------------------------------------------------------------------
+
+    /// Read full buffer from the websocket (post-upgrade).
+    virtual void ws_read(http::flat_buffer& out,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full buffer to the websocket (post-upgrade).
+    virtual void ws_write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
 private:
