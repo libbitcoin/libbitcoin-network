@@ -170,10 +170,10 @@ void proxy::write(const asio::const_buffer& payload,
             shared_from_this(), payload, std::move(handler)));
 }
 
-// HTTP Readers.
+// HTTP.
 // ----------------------------------------------------------------------------
-// Method waiting() is invoked directly if read() is called from strand().
 
+// Method waiting() is invoked directly if read() is called from strand().
 void proxy::read(http::flat_buffer& buffer, http::request& request,
     count_handler&& handler) NOEXCEPT
 {
@@ -183,53 +183,8 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
     socket_->http_read(buffer, request, std::move(handler));
 }
 
-void proxy::read(http::flat_buffer& buffer, http::string_request& request,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::waiting, shared_from_this()));
-
-    socket_->http_read(buffer, request, std::move(handler));
-}
-
-void proxy::read(http::flat_buffer& buffer, http::json_request& request,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::waiting, shared_from_this()));
-
-    socket_->http_read(buffer, request, std::move(handler));
-}
-
-// HTTP Writers.
-// ----------------------------------------------------------------------------
 // Writes are composed but http is half duplex so there is no interleave risk.
-
 void proxy::write(http::response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    socket_->http_write(response, std::move(handler));
-}
-
-void proxy::write(http::string_response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    socket_->http_write(response, std::move(handler));
-}
-
-void proxy::write(http::json_response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    socket_->http_write(response, std::move(handler));
-}
-
-void proxy::write(http::data_response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    socket_->http_write(response, std::move(handler));
-}
-
-void proxy::write(http::file_response& response,
     count_handler&& handler) NOEXCEPT
 {
     socket_->http_write(response, std::move(handler));
