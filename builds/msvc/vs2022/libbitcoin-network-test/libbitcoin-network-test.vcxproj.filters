@@ -105,6 +105,9 @@
     <ClCompile Include="..\..\..\..\test\channels\channel_tcp.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_ws.cpp">
+      <Filter>src\channels</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <Filter>src\config</Filter>
     </ClCompile>

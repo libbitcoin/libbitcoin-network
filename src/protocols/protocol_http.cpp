@@ -57,7 +57,7 @@ protocol_http::protocol_http(const session::ptr& session,
 
 void protocol_http::start() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (started())
         return;
@@ -138,7 +138,7 @@ void protocol_http::handle_receive_unknown(const code& ec,
 void protocol_http::send_method_not_allowed(const request& request,
     const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     if (stopped(ec))
         return;
 
@@ -155,7 +155,7 @@ void protocol_http::send_method_not_allowed(const request& request,
 
 void protocol_http::send_not_implemented(const request& request) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     std::string details{ "server configuration" };
     const auto code = status::not_implemented;
     const auto mime = to_mime_type(request[field::accept]);
@@ -168,7 +168,7 @@ void protocol_http::send_not_implemented(const request& request) NOEXCEPT
 
 void protocol_http::send_not_found(const request& request) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     std::string details{ "path:" };
     details += request.target();
     const auto code = status::not_found;
@@ -183,7 +183,7 @@ void protocol_http::send_not_found(const request& request) NOEXCEPT
 // Closes channel.
 void protocol_http::send_forbidden(const request& request) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     std::string details{ "origin:" };
     details += request[field::origin];
     const auto code = status::forbidden;
@@ -198,7 +198,7 @@ void protocol_http::send_forbidden(const request& request) NOEXCEPT
 // Closes channel.
 void protocol_http::send_bad_host(const request& request) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     std::string details{ "host=" };
     details += request[field::host];
     const auto code = status::bad_request;
@@ -213,7 +213,7 @@ void protocol_http::send_bad_host(const request& request) NOEXCEPT
 // Closes channel.
 void protocol_http::send_bad_target(const request& request) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     std::string details{ "target=" };
     details += request.target();
     const auto code = status::bad_request;
@@ -231,7 +231,7 @@ void protocol_http::send_bad_target(const request& request) NOEXCEPT
 void protocol_http::handle_complete(const code& ec,
     const code& reason) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped(ec))
         return;
@@ -252,7 +252,7 @@ void protocol_http::handle_complete(const code& ec,
 bool protocol_http::is_allowed_host(const fields& fields,
     size_t version) const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Disallow unspecified host.
     // Host header field is mandatory at http 1.1.
@@ -268,7 +268,7 @@ bool protocol_http::is_allowed_host(const fields& fields,
 void protocol_http::add_common_headers(fields& fields,
     const request& request, bool closing) const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // date (current)
     // ------------------------------------------------------------------------

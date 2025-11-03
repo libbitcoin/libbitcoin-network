@@ -198,10 +198,10 @@ void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
     socket_->ws_read(out, std::move(handler));
 }
 
-void proxy::ws_write(const asio::const_buffer& in,
+void proxy::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
-    socket_->ws_write(in, std::move(handler));
+    socket_->ws_write(in, binary, std::move(handler));
 }
 
 // Send cycle (send continues until queue is empty).
@@ -311,14 +311,9 @@ bool proxy::stranded() const NOEXCEPT
     return socket_->stranded();
 }
 
-bool proxy::websocket() const NOEXCEPT
+void proxy::set_websocket(const http::request_cptr& request) NOEXCEPT
 {
-    return socket_->websocket();
-}
-
-void proxy::set_websocket() NOEXCEPT
-{
-    return socket_->set_websocket();
+    return socket_->set_websocket(request);
 }
 
 uint64_t proxy::backlog() const NOEXCEPT

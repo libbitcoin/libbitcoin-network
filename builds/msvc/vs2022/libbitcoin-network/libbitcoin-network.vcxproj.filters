@@ -141,7 +141,7 @@
     <ClCompile Include="..\..\..\..\src\channels\channel_tcp.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\channels\channel_websocket.cpp">
+    <ClCompile Include="..\..\..\..\src\channels\channel_ws.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\config\address.cpp">
@@ -185,6 +185,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp">
       <Filter>src\messages\http\enums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\http\fields.cpp">
+      <Filter>src\messages\http</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\json\body.cpp">
       <Filter>src\messages\json</Filter>
@@ -476,7 +479,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_tcp.hpp">
       <Filter>include\bitcoin\network\channels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_websocket.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_ws.hpp">
       <Filter>include\bitcoin\network\channels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channels.hpp">
@@ -788,10 +791,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70016.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_websocket.hpp">
-      <Filter>include\bitcoin\network\protocols</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_websocket_shake.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ws.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp">

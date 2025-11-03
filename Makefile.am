@@ -46,7 +46,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/channels/channel_http.cpp \
     src/channels/channel_peer.cpp \
     src/channels/channel_tcp.cpp \
-    src/channels/channel_websocket.cpp \
+    src/channels/channel_ws.cpp \
     src/config/address.cpp \
     src/config/authority.cpp \
     src/config/endpoint.cpp \
@@ -57,6 +57,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/logger.cpp \
     src/log/reporter.cpp \
     src/messages/http/body.cpp \
+    src/messages/http/fields.cpp \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
     src/messages/json/body.cpp \
@@ -164,6 +165,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/channels/channel_http.cpp \
     test/channels/channel_peer.cpp \
     test/channels/channel_tcp.cpp \
+    test/channels/channel_ws.cpp \
     test/config/address.cpp \
     test/config/authority.cpp \
     test/config/endpoint.cpp \
@@ -303,7 +305,7 @@ include_bitcoin_network_channels_HEADERS = \
     include/bitcoin/network/channels/channel_http.hpp \
     include/bitcoin/network/channels/channel_peer.hpp \
     include/bitcoin/network/channels/channel_tcp.hpp \
-    include/bitcoin/network/channels/channel_websocket.hpp \
+    include/bitcoin/network/channels/channel_ws.hpp \
     include/bitcoin/network/channels/channels.hpp
 
 include_bitcoin_network_configdir = ${includedir}/bitcoin/network/config
@@ -451,8 +453,7 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_version_70001.hpp \
     include/bitcoin/network/protocols/protocol_version_70002.hpp \
     include/bitcoin/network/protocols/protocol_version_70016.hpp \
-    include/bitcoin/network/protocols/protocol_websocket.hpp \
-    include/bitcoin/network/protocols/protocol_websocket_shake.hpp \
+    include/bitcoin/network/protocols/protocol_ws.hpp \
     include/bitcoin/network/protocols/protocols.hpp
 
 include_bitcoin_network_sessionsdir = ${includedir}/bitcoin/network/sessions

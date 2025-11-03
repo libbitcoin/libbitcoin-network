@@ -61,6 +61,7 @@ socket::~socket() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "socket is not stopped");
     if (!stopped()) { LOGF("~socket is not stopped."); }
+    if (websocket()) { LOGF("~socket websocket is not reset."); }
 }
 
 // Stop.
@@ -84,16 +85,45 @@ void socket::stop() NOEXCEPT
 void socket::do_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    boost_code ignore;
+
+    if (!websocket())
+    {
+        handle_async_close();
+        return;
+    }
+
+    using namespace boost::beast;
+    websocket_->async_close(websocket::close_code::normal,
+        std::bind(&socket::handle_async_close,
+            shared_from_this()));
+}
+
+void socket::handle_async_close() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    boost_code ignore{};
+    auto& socket = get_transport();
 
     // Disable future sends or receives on the socket, for graceful close.
-    socket_.shutdown(asio::socket::shutdown_both, ignore);
+    socket.shutdown(asio::socket::shutdown_both, ignore);
 
     // Cancel asynchronous I/O operations and close socket.
     // The underlying descriptor is closed regardless of error return.
-    // Any asynchronous send, receive or connect operations will be canceled
+    // Any asynchronous send, receive or connect operations are canceled
     // immediately, and will complete with the operation_aborted error.
-    socket_.close(ignore);
+    socket.close(ignore);
+
+    // Discard the optional.
+    websocket_.reset();
+}
+
+asio::socket& socket::get_transport() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    using namespace boost::beast;
+    return websocket() ? get_lowest_layer(*websocket_) : socket_;
 }
 
 // Connection.
@@ -104,6 +134,7 @@ void socket::do_stop() NOEXCEPT
 void socket::accept(asio::acceptor& acceptor,
     result_handler&& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(!websocket(), "socket is upgraded");
     BC_ASSERT_MSG(!socket_.is_open(), "accept on open socket");
 
     // Closure of the acceptor, not the socket, releases this handler.
@@ -164,7 +195,7 @@ void socket::http_read(http::flat_buffer& buffer,
     http::request& request, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_read, shared_from_this(), buffer,
+        std::bind(&socket::do_http_read, shared_from_this(), std::ref(buffer),
             std::ref(request), std::move(handler)));
 }
 
@@ -182,29 +213,17 @@ void socket::http_write(http::response& response,
 void socket::ws_read(http::flat_buffer& out,
     count_handler&& handler) NOEXCEPT
 {
-    if (!websocket())
-    {
-        handler(error::operation_failed, {});
-        return;
-    }
-
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_ws_read,
             shared_from_this(), std::ref(out), std::move(handler)));
 }
 
-void socket::ws_write(const asio::const_buffer& in,
+void socket::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
-    if (!websocket())
-    {
-        handler(error::operation_failed, {});
-        return;
-    }
-
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_ws_write,
-            shared_from_this(), in, std::move(handler)));
+            shared_from_this(), in, binary, std::move(handler)));
 }
 
 // connect (private).
@@ -215,6 +234,7 @@ void socket::do_connect(const asio::endpoints& range,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT_MSG(!websocket(), "socket is upgraded");
     BC_ASSERT_MSG(!socket_.is_open(), "connect on open socket");
 
     try
@@ -240,6 +260,12 @@ void socket::do_read(const asio::mutable_buffer& out,
 {
     BC_ASSERT(stranded());
 
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     try
     {
         // This composed operation posts all intermediate handlers to the strand.
@@ -259,6 +285,12 @@ void socket::do_write(const asio::const_buffer& in,
 {
     BC_ASSERT(stranded());
 
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     try
     {
         // This composed operation posts all intermediate handlers to the strand.
@@ -276,16 +308,22 @@ void socket::do_write(const asio::const_buffer& in,
 // http (private).
 // ----------------------------------------------------------------------------
 
-void socket::do_http_read(http::flat_buffer buffer,
+void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
     const std::reference_wrapper<http::request>& request,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     try
     {
         // This operation posts handler to the strand.
-        boost::beast::http::async_read(socket_, buffer, request.get(),
+        boost::beast::http::async_read(socket_, buffer.get(), request.get(),
             std::bind(&socket::handle_http_read,
                 shared_from_this(), _1, _2, buffer, handler));
     }
@@ -301,6 +339,12 @@ void socket::do_http_write(
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
 
     try
     {
@@ -320,14 +364,15 @@ void socket::do_http_write(
 // ----------------------------------------------------------------------------
 
 // flat_buffer is copied to allow it to be non-const.
-void socket::do_ws_read(http::flat_buffer out,
+void socket::do_ws_read(std::reference_wrapper<http::flat_buffer> out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT(websocket());
 
     try
     {
-        websocket_->async_read(out,
+        websocket_->async_read(out.get(),
             std::bind(&socket::handle_ws_read,
                 shared_from_this(), _1, _2, handler));
     }
@@ -338,16 +383,19 @@ void socket::do_ws_read(http::flat_buffer out,
     }
 }
 
-void socket::do_ws_write(const asio::const_buffer& in,
+void socket::do_ws_write(const asio::const_buffer& in, bool binary,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // TODO: caller must indicate this somehow (parameter or override).
-    ////websocket_->binary(true);
+    BC_ASSERT(websocket());
 
     try
     {
+        if (binary)
+            websocket_->binary(true);
+        else
+            websocket_->text(true);
+
         websocket_->async_write(in,
             std::bind(&socket::handle_ws_write,
                 shared_from_this(), _1, _2, handler));
@@ -447,12 +495,13 @@ void socket::handle_io(const boost_code& ec, size_t size,
 }
 
 void socket::handle_http_read(const boost_code& ec, size_t size,
-    http::flat_buffer buffer, const count_handler& handler) NOEXCEPT
+    std::reference_wrapper<http::flat_buffer> buffer,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     // Always consume all of the buffer as the request is fully read.
-    buffer.consume(buffer.size());
+    buffer.get().consume(buffer.get().size());
 
     if (error::asio_is_canceled(ec))
     {
@@ -496,6 +545,7 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT(websocket());
 
     if (error::asio_is_canceled(ec))
     {
@@ -517,6 +567,7 @@ void socket::handle_ws_write(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT(websocket());
 
     if (error::asio_is_canceled(ec))
     {
@@ -538,6 +589,7 @@ void socket::handle_ws_event(ws::frame_type kind,
     const std::string& data) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT(websocket());
 
     switch (kind)
     {
@@ -594,23 +646,27 @@ asio::strand& socket::strand() NOEXCEPT
 // Websocket properties.
 // ----------------------------------------------------------------------------
 
+// protected (requires strand)
 bool socket::websocket() const NOEXCEPT
 {
+    BC_ASSERT(stranded());
     return websocket_.has_value();
 }
 
-void socket::set_websocket() NOEXCEPT
+void socket::set_websocket(const http::request_cptr& request) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_set_websocket,
-            shared_from_this()));
+            shared_from_this(), request));
 }
 
-void socket::do_set_websocket() NOEXCEPT
+void socket::do_set_websocket(const http::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT(!websocket());
+
     websocket_.emplace(std::move(socket_));
+    websocket_->accept(*request);
     websocket_->binary(true);
     websocket_->control_callback(std::bind(&socket::do_ws_event,
         shared_from_this(), _1, _2));
