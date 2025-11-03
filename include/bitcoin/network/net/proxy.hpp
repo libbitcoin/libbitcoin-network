@@ -112,42 +112,15 @@ protected:
     virtual void write(const asio::const_buffer& payload,
         count_handler&& handler) NOEXCEPT;
 
-    /// HTTP Readers.
+    /// HTTP.
     /// -----------------------------------------------------------------------
 
     /// Read full http variant request from the socket, using provided buffer.
     virtual void read(http::flat_buffer& buffer, http::request& request,
         count_handler&& handler) NOEXCEPT;
 
-    /// Read full http string request from the socket, using provided buffer.
-    virtual void read(http::flat_buffer& buffer, http::string_request& request,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Read full http json request from the socket, using provided buffer.
-    virtual void read(http::flat_buffer& buffer, http::json_request& request,
-        count_handler&& handler) NOEXCEPT;
-
-    /// HTTP Writers.
-    /// -----------------------------------------------------------------------
-
     /// Write full http variant response to the socket (json buffer in body).
     virtual void write(http::response& response,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write full http string response to the socket.
-    virtual void write(http::string_response& response,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write full http json response to the socket (serialize buffer in body).
-    virtual void write(http::json_response& response,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write full http data response to the socket.
-    virtual void write(http::data_response& response,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write full http file response to the socket.
-    virtual void write(http::file_response& response,
         count_handler&& handler) NOEXCEPT;
 
 private:
