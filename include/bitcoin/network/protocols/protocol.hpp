@@ -199,7 +199,7 @@ private:
 #define DECLARE_SEND() \
     template <class Derived, class Message, typename Method, typename... Args> \
     void send(Message&& message, Method&& method, Args&&... args) NOEXCEPT \
-    { channel_->send<Message>(std::forward<Message>(message), BIND_SHARED(method, args)); }
+    { channel_->send(std::forward<Message>(message), BIND_SHARED(method, args)); }
 
 #define DECLARE_SUBSCRIBE_CHANNEL() \
     template <class Derived, class Message, typename Method, typename... Args> \

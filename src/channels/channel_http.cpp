@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/channels/channel_http.hpp>
 
+#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -59,6 +60,11 @@ void channel_http::resume() NOEXCEPT
 // Read cycle (read continues until stop called, call only once).
 // ----------------------------------------------------------------------------
 
+// Calling more than once is safe but implies a protocol problem. Failure to
+// call after successful message handling results in stalled channel. This can
+// be buried in the common send completion hander, conditioned on the result
+// code. This is simpler and more performant than having the distributor isssue
+// a completion handler to invoke read continuation.
 void channel_http::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -110,6 +116,49 @@ void channel_http::handle_read_request(const code& ec, size_t,
 
     log_message(*request);
     distributor_.notify(request);
+}
+
+// Send.
+// ----------------------------------------------------------------------------
+
+void channel_http::send(http::response&& response,
+    result_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    set_buffer(response);
+    const auto ptr = system::move_shared(std::move(response));
+    count_handler complete = std::bind(&channel_http::handle_send,
+        shared_from_base<channel_http>(), _1, _2, ptr, std::move(handler));
+
+    if (!ptr)
+    {
+        complete(error::bad_alloc, {});
+        return;
+    }
+
+    log_message(*ptr);
+    write(*ptr, std::move(complete));
+}
+
+void channel_http::set_buffer(http::response& response) NOEXCEPT
+{
+    if (const auto& body = response.body();
+        body.contains<http::json_value>())
+    {
+        const auto& value = body.get<http::json_value>();
+        response_buffer_->max_size(value.size_hint);
+        body.get<http::json_value>().buffer = response_buffer_;
+    }
+}
+
+void channel_http::handle_send(const code& ec, size_t, http::response_ptr&,
+    const result_handler& handler) NOEXCEPT
+{
+    if (ec)
+        stop(ec);
+
+    handler(ec);
 }
 
 // log helpers
