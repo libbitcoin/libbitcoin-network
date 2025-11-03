@@ -97,6 +97,8 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
         return;
     }
 
+    // TODO: connection is not stopping on close after websocket connection.
+    // TODO: handle error result ws.accept(req, ec); (use callback, no throw). 
     LOGP("Websocket upgraded [" << authority() << "]");
     set_websocket(request);
     upgraded_ = true;
