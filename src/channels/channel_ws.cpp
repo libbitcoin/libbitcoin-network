@@ -97,23 +97,9 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
         return;
     }
 
-    accept_upgrade(request);
-}
-
-void channel_ws::accept_upgrade(const request_cptr& request) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    response out{ status::switching_protocols, request->version() };
-    out.set(field::upgrade, "websocket");
-    out.set(field::connection, "upgrade");
-    out.set(field::sec_websocket_accept, to_websocket_accept(*request));
-    out.prepare_payload();
-
-    upgraded_ = true;
-    set_websocket(request);
     LOGP("Websocket upgraded [" << authority() << "]");
-
+    set_websocket(request);
+    upgraded_ = true;
     resume();
 }
 

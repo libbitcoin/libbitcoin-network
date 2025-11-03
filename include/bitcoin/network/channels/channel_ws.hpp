@@ -90,7 +90,6 @@ protected:
     void handle_read_request(const code& ec, size_t bytes,
         const http::request_cptr& request) NOEXCEPT override;
     virtual void handle_read_websocket(const code& ec, size_t bytes) NOEXCEPT;
-    virtual void accept_upgrade(const http::request_cptr& request) NOEXCEPT;
 
 private:
     inline void handle_send(const code& ec, size_t, const auto&,
