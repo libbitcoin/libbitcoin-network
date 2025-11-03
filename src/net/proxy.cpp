@@ -218,7 +218,7 @@ void proxy::do_write(const asio::const_buffer& payload,
     if (stopped())
     {
         LOGQ("Payload write abort [" << authority() << "]");
-        handler(error::channel_stopped, zero);
+        handler(error::channel_stopped, {});
         return;
     }
 
@@ -286,7 +286,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
             ////    << ec.message());
         }
 
-        handler(ec, zero);
+        handler(ec, {});
         return;
     }
 
