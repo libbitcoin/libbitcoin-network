@@ -90,7 +90,6 @@ void set_memory_priority(memory_priority priority) NOEXCEPT
         &information, sizeof(information));
 }
 #else
-static int get_memory_priority(memory_priority) NOEXCEPT {}
 void set_memory_priority(memory_priority) NOEXCEPT {}
 #endif
 
