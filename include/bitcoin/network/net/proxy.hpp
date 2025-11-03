@@ -71,9 +71,6 @@ public:
     /// The strand is running in this thread.
     bool stranded() const NOEXCEPT;
 
-    /// The socket was upgraded to a websocket.
-    bool websocket() const NOEXCEPT;
-
     /// Upgrade the socket to a websocket.
     void set_websocket(const http::request_cptr& request) NOEXCEPT;
 

@@ -100,6 +100,8 @@ void socket::do_stop() NOEXCEPT
 
 void socket::handle_async_close() NOEXCEPT
 {
+    BC_ASSERT(stranded());
+
     boost_code ignore{};
     auto& socket = get_transport();
 
@@ -211,12 +213,6 @@ void socket::http_write(http::response& response,
 void socket::ws_read(http::flat_buffer& out,
     count_handler&& handler) NOEXCEPT
 {
-    if (!websocket())
-    {
-        handler(error::operation_failed, {});
-        return;
-    }
-
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_ws_read,
             shared_from_this(), std::ref(out), std::move(handler)));
@@ -225,12 +221,6 @@ void socket::ws_read(http::flat_buffer& out,
 void socket::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
-    if (!websocket())
-    {
-        handler(error::operation_failed, {});
-        return;
-    }
-
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_ws_write,
             shared_from_this(), in, binary, std::move(handler)));
@@ -656,8 +646,10 @@ asio::strand& socket::strand() NOEXCEPT
 // Websocket properties.
 // ----------------------------------------------------------------------------
 
+// protected (requires strand)
 bool socket::websocket() const NOEXCEPT
 {
+    BC_ASSERT(stranded());
     return websocket_.has_value();
 }
 

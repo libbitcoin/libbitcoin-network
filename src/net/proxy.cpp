@@ -311,11 +311,6 @@ bool proxy::stranded() const NOEXCEPT
     return socket_->stranded();
 }
 
-bool proxy::websocket() const NOEXCEPT
-{
-    return socket_->websocket();
-}
-
 void proxy::set_websocket(const http::request_cptr& request) NOEXCEPT
 {
     return socket_->set_websocket(request);

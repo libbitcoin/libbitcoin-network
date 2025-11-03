@@ -122,9 +122,6 @@ public:
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
 
-    /// The socket was upgraded to a websocket.
-    virtual bool websocket() const NOEXCEPT;
-
     /// Upgrade the socket to a websocket.
     virtual void set_websocket(const http::request_cptr& request) NOEXCEPT;
 
@@ -133,6 +130,10 @@ public:
 
     /// Get the strand of the socket.
     virtual asio::strand& strand() NOEXCEPT;
+
+protected:
+    /// The socket was upgraded to a websocket (requires strand).
+    virtual bool websocket() const NOEXCEPT;
 
 private:
     // stop
