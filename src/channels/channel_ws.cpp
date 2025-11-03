@@ -97,10 +97,10 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
         return;
     }
 
-    send_websocket_accept(request);
+    accept_upgrade(request);
 }
 
-void channel_ws::send_websocket_accept(const request_cptr& request) NOEXCEPT
+void channel_ws::accept_upgrade(const request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -109,33 +109,6 @@ void channel_ws::send_websocket_accept(const request_cptr& request) NOEXCEPT
     out.set(field::connection, "upgrade");
     out.set(field::sec_websocket_accept, to_websocket_accept(*request));
     out.prepare_payload();
-
-    result_handler complete =
-        std::bind(&channel_ws::handle_upgrade_complete,
-            shared_from_base<channel_ws>(), _1, request);
-
-    channel_http::send(std::move(out), std::move(complete));
-}
-
-void channel_ws::handle_upgrade_complete(const code& ec,
-    const request_cptr& request) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (stopped())
-    {
-        LOGQ("Websocket read abort [" << authority() << "]");
-        return;
-    }
-
-    if (ec)
-    {
-        LOGP("Websocket upgrade failed [" << authority() << "] "
-            << ec.message());
-
-        stop(ec);
-        return;
-    }
 
     upgraded_ = true;
     set_websocket(request);
