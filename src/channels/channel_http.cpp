@@ -64,7 +64,7 @@ void channel_http::resume() NOEXCEPT
 // call after successful message handling results in stalled channel. This can
 // be buried in the common send completion hander, conditioned on the result
 // code. This is simpler and more performant than having the distributor isssue
-// a completion handler to invoke read continuation.
+// one and only one completion handler to invoke read continuation.
 void channel_http::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -155,9 +155,7 @@ void channel_http::set_buffer(http::response& response) NOEXCEPT
 void channel_http::handle_send(const code& ec, size_t, http::response_ptr&,
     const result_handler& handler) NOEXCEPT
 {
-    if (ec)
-        stop(ec);
-
+    if (ec) stop(ec);
     handler(ec);
 }
 
