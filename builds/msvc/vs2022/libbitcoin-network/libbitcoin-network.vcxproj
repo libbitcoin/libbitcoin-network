@@ -147,6 +147,7 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\fields.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\json\body.cpp">
       <ObjectFileName>$(IntDir)src_messages_json_body.obj</ObjectFileName>
     </ClCompile>

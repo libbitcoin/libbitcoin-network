@@ -57,6 +57,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/logger.cpp \
     src/log/reporter.cpp \
     src/messages/http/body.cpp \
+    src/messages/http/fields.cpp \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
     src/messages/json/body.cpp \

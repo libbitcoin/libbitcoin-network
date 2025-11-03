@@ -26,27 +26,17 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
+/// http header fields: OWS is SP and HTAB (less than ascii).
+const system::string_list http_whitespace{ " ", "\t" };
+
 /// Does the request have an attachment.
-/// Simple test for leading "filename" assumes not other token starts with
-/// "filename" unless it is also an attachment (such as "filename*"). Otherwise
-/// the request is not valid anyway, so we can assume it has an attachment.
-inline bool has_attachment(const http::fields& header) NOEXCEPT
-{
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    const auto disposition = header[field::content_disposition];
-    BC_POP_WARNING()
+BCT_API bool has_attachment(const fields& header) NOEXCEPT;
 
-    const auto lower = system::ascii_to_lower(disposition);
+/// Does the header include the required websocket upgrade request values.
+BCT_API bool is_websocket_upgrade(const http::fields& header) NOEXCEPT;
 
-    // http header fields: OWS is SP and HTAB (less than ascii).
-    return std::ranges::any_of(system::split(lower, { ";" }, { " ", "\t" }),
-        [](auto& token) NOEXCEPT
-        {
-            return token.starts_with("filename");
-        });
-
-    return false;
-}
+/// Generate the required sec_websocket_key response value.
+BCT_API std::string to_websocket_accept(const http::fields& header) NOEXCEPT;
 
 } // namespace http
 } // namespace network
