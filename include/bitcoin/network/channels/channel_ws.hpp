@@ -54,7 +54,7 @@ public:
     inline void send(Message&& message, result_handler&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());
-        BC_ASSERT(websocket());
+        BC_ASSERT(upgraded_);
         using namespace std::placeholders;
 
         // TODO: Serialize message.

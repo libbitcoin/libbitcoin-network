@@ -60,8 +60,8 @@ socket::socket(const logger& log, asio::io_context& service,
 socket::~socket() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "socket is not stopped");
-    if (!stopped()) { LOGF("~socket is not stopped."); }
-    if (websocket()) { LOGF("~socket websocket is not reset."); }
+    if (!stopped_.load()) { LOGF("~socket is not stopped."); }
+    if (!websocket_.has_value()) { LOGF("~socket websocket is not reset."); }
 }
 
 // Stop.
@@ -134,7 +134,7 @@ asio::socket& socket::get_transport() NOEXCEPT
 void socket::accept(asio::acceptor& acceptor,
     result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(!websocket(), "socket is upgraded");
+    BC_ASSERT_MSG(!websocket_.has_value(), "socket is upgraded");
     BC_ASSERT_MSG(!socket_.is_open(), "accept on open socket");
 
     // Closure of the acceptor, not the socket, releases this handler.
