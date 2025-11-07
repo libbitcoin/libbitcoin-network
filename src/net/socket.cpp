@@ -93,8 +93,7 @@ void socket::do_stop() NOEXCEPT
         return;
     }
 
-    using namespace beast;
-    websocket_->async_close(websocket::close_code::normal,
+    websocket_->async_close(beast::websocket::close_code::normal,
         std::bind(&socket::handle_async_close,
             shared_from_this()));
 }
