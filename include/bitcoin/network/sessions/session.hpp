@@ -175,13 +175,13 @@ protected:
     /// Factories.
     /// -----------------------------------------------------------------------
 
-    /// Call to create channel acceptor, owned by caller.
+    /// Call to create channel acceptor.
     virtual acceptor::ptr create_acceptor() NOEXCEPT;
 
-    /// Call to create channel connector, owned by caller.
-    virtual connector::ptr create_connector() NOEXCEPT;
+    /// Call to create channel connector (option for seed connection timeout).
+    virtual connector::ptr create_connector(bool seed=false) NOEXCEPT;
 
-    /// Call to create a set of channel connectors, owned by caller.
+    /// Call to create a set of channel connectors.
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     /// Create a channel from the started socket.

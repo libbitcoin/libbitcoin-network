@@ -61,7 +61,7 @@ settings::settings() NOEXCEPT
     connect_batch_size(5),
     retry_timeout_seconds(1),
     connect_timeout_seconds(5),
-    handshake_timeout_seconds(30),
+    handshake_timeout_seconds(15),
     seeding_timeout_seconds(30),
     channel_heartbeat_minutes(5),
     channel_inactivity_minutes(10),

@@ -77,10 +77,10 @@ acceptor::ptr net::create_acceptor() NOEXCEPT
         accept_suspended_);
 }
 
-connector::ptr net::create_connector() NOEXCEPT
+connector::ptr net::create_connector(bool seed) NOEXCEPT
 {
     return std::make_shared<connector>(log, strand(), service(), settings_,
-        connect_suspended_);
+        connect_suspended_, seed);
 }
 
 connectors_ptr net::create_connectors(size_t count) NOEXCEPT

@@ -122,9 +122,9 @@ public:
         return session_peer::create_acceptor();
     }
 
-    connector::ptr create_connector() NOEXCEPT override
+    connector::ptr create_connector(bool seed=false) NOEXCEPT override
     {
-        return session_peer::create_connector();
+        return session_peer::create_connector(seed);
     }
 
     connectors_ptr create_connectors(size_t count) NOEXCEPT override
@@ -212,10 +212,10 @@ public:
         return acceptors_;
     }
 
-    connector::ptr create_connector() NOEXCEPT override
+    connector::ptr create_connector(bool seed=false) NOEXCEPT override
     {
         ++connectors_;
-        return net::create_connector();
+        return net::create_connector(seed);
     }
 
     size_t connectors() const NOEXCEPT

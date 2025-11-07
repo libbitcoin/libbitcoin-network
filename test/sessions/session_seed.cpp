@@ -228,10 +228,10 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() NOEXCEPT override
+    connector::ptr create_connector(bool seed=false) NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings(), suspended_)));
+            service(), network_settings(), suspended_, seed)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -320,9 +320,10 @@ public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
 
     mock_connector_stop_connect(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings,
+        asio::io_context& service, const settings& settings, bool seed,
         mock_session_seed::ptr session) NOEXCEPT
-      : mock_connector_connect_success(log, strand, service, settings, suspended_),
+      : mock_connector_connect_success(log, strand, service, settings,
+          suspended_, seed),
         session_(session)
     {
     }
@@ -363,13 +364,13 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() NOEXCEPT override
+    connector::ptr create_connector(bool seed=false) NOEXCEPT override
     {
         if (connector_)
             return connector_;
 
         return ((connector_ = std::make_shared<mock_connector_stop_connect>(
-            log, strand(), service(), network_settings(), session_)));
+            log, strand(), service(), network_settings(), seed, session_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override

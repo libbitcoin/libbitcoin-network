@@ -230,10 +230,10 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() NOEXCEPT override
+    connector::ptr create_connector(bool seed=false) NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings(), suspended_)));
+            service(), network_settings(), suspended_, seed)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
