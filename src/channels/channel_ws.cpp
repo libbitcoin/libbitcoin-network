@@ -80,7 +80,14 @@ void channel_ws::handle_read_websocket(const code& ec,
 
     // TODO: deserialize message from request_buffer and dispatch.
     ////distributor_.notify(message);
-    resume();
+    send(data_chunk{ 0x42 }, [this](const code& ec) NOEXCEPT
+    {
+        // handle_send alread stops channel on ec.
+        // One and only one handler of the message must restart the read loop.
+        // In half duplex this should happen only after send (ws full duplex).
+        if (!ec)
+            read_request();
+    });
 }
 
 // pre-upgrade
@@ -91,18 +98,22 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
 {
     BC_ASSERT(stranded());
 
-    if (ec || stopped() || !is_websocket_upgrade(*request))
+    if (upgraded_)
     {
-        channel_http::handle_read_request(ec, bytes, request);
+        LOGP("Websocket is in upgraded state [" << authority() << "]");
+        stop(network::error::operation_failed);
         return;
     }
 
-    // TODO: connection is not stopping on close after websocket connection.
-    // TODO: handle error result ws.accept(req, ec); (use callback, no throw). 
-    LOGP("Websocket upgraded [" << authority() << "]");
-    set_websocket(request);
-    upgraded_ = true;
-    resume();
+    if (ec == error::upgraded)
+    {
+        LOGP("Websocket upgraded [" << authority() << "]");
+        upgraded_ = true;
+        resume();
+        return;
+    }
+
+    channel_http::handle_read_request(ec, bytes, request);
 }
 
 BC_POP_WARNING()

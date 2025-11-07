@@ -50,15 +50,15 @@ public:
 
     /// Serialize and write websocket message to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
-    template <class Message>
-    inline void send(Message&& message, result_handler&& handler) NOEXCEPT
+    inline void send(system::data_chunk&& message,
+        result_handler&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());
         BC_ASSERT(upgraded_);
         using namespace std::placeholders;
 
         // TODO: Serialize message.
-        const auto ptr = system::move_shared(std::forward<Message>(message));
+        const auto ptr = system::move_shared(std::move(message));
         count_handler complete = std::bind(&channel_ws::handle_send,
             shared_from_base<channel_ws>(), _1, _2, ptr,
             std::move(handler));
@@ -71,7 +71,8 @@ public:
 
         // TODO: serialize message to send.
         // TODO: websocket is full duplex, so writes must be queued.
-        ws_write({}, {}, std::move(complete));
+        ws_write(asio::const_buffer{ message.data(), message.size() },
+            true, std::move(complete));
     }
 
     inline channel_ws(const logger& log, const socket::ptr& socket,
@@ -92,7 +93,7 @@ protected:
     virtual void handle_read_websocket(const code& ec, size_t bytes) NOEXCEPT;
 
 private:
-    inline void handle_send(const code& ec, size_t, const auto&,
+    inline void handle_send(const code& ec, size_t, const system::chunk_ptr&,
         const result_handler& handler) NOEXCEPT
     {
         if (ec) stop(ec);
