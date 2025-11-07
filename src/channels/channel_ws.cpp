@@ -109,7 +109,7 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
     {
         LOGP("Websocket upgraded [" << authority() << "]");
         upgraded_ = true;
-        resume();
+        read_request();
         return;
     }
 
