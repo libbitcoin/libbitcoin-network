@@ -122,9 +122,6 @@ public:
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
 
-    /// Upgrade the socket to a websocket (synchronous if called from strand).
-    virtual void set_websocket(const http::request_cptr& request) NOEXCEPT;
-
     /// The strand is running in this thread.
     virtual bool stranded() const NOEXCEPT;
 
@@ -172,7 +169,7 @@ private:
     void do_ws_event(ws::frame_type kind,
         const std::string_view& data) NOEXCEPT;
 
-    void do_set_websocket(const http::request_cptr& request) NOEXCEPT;
+    void set_websocket(const http::request& request) NOEXCEPT;
 
     // completion
     // ------------------------------------------------------------------------
@@ -187,8 +184,9 @@ private:
     void handle_io(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
-    // http
+    // http (request reference enables websocket upgrade)
     void handle_http_read(const boost_code& ec, size_t size,
+        const std::reference_wrapper<http::request>& request,
         std::reference_wrapper<http::flat_buffer> buffer,
         const count_handler& handler) NOEXCEPT;
     void handle_http_write(const boost_code& ec, size_t size,

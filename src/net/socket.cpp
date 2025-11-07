@@ -30,6 +30,7 @@ namespace network {
 
 using namespace system;
 using namespace std::placeholders;
+namespace beast = boost::beast;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
@@ -92,7 +93,7 @@ void socket::do_stop() NOEXCEPT
         return;
     }
 
-    using namespace boost::beast;
+    using namespace beast;
     websocket_->async_close(websocket::close_code::normal,
         std::bind(&socket::handle_async_close,
             shared_from_this()));
@@ -122,8 +123,7 @@ asio::socket& socket::get_transport() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    using namespace boost::beast;
-    return websocket() ? get_lowest_layer(*websocket_) : socket_;
+    return websocket() ? beast::get_lowest_layer(*websocket_) : socket_;
 }
 
 // Connection.
@@ -323,9 +323,9 @@ void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
     try
     {
         // This operation posts handler to the strand.
-        boost::beast::http::async_read(socket_, buffer.get(), request.get(),
+        beast::http::async_read(socket_, buffer.get(), request.get(),
             std::bind(&socket::handle_http_read,
-                shared_from_this(), _1, _2, buffer, handler));
+                shared_from_this(), _1, _2, request, buffer, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
     {
@@ -349,7 +349,7 @@ void socket::do_http_write(
     try
     {
         // This operation posts handler to the strand.
-        boost::beast::http::async_write(socket_, response.get(),
+        beast::http::async_write(socket_, response.get(),
             std::bind(&socket::handle_http_write,
                 shared_from_this(), _1, _2, handler));
     }
@@ -495,6 +495,7 @@ void socket::handle_io(const boost_code& ec, size_t size,
 }
 
 void socket::handle_http_read(const boost_code& ec, size_t size,
+    const std::reference_wrapper<http::request>& request,
     std::reference_wrapper<http::flat_buffer> buffer,
     const count_handler& handler) NOEXCEPT
 {
@@ -506,6 +507,13 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
     if (error::asio_is_canceled(ec))
     {
         handler(error::channel_stopped, size);
+        return;
+    }
+
+    if (!ec && beast::websocket::is_upgrade(request.get()))
+    {
+        set_websocket(request.get());
+        handler(error::upgraded, size);
         return;
     }
 
@@ -653,14 +661,7 @@ bool socket::websocket() const NOEXCEPT
     return websocket_.has_value();
 }
 
-void socket::set_websocket(const http::request_cptr& request) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_set_websocket,
-            shared_from_this(), request));
-}
-
-void socket::do_set_websocket(const http::request_cptr& request) NOEXCEPT
+void socket::set_websocket(const http::request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT(!websocket());
@@ -671,7 +672,7 @@ void socket::do_set_websocket(const http::request_cptr& request) NOEXCEPT
         // Customize the response header.
         header.set(http::field::server, "libbitcoin/4.0");
     }});
-    websocket_->accept(*request);
+    websocket_->accept(request);
     websocket_->binary(true);
 
     // Handle ping, pong, close.
