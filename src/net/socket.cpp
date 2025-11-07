@@ -62,7 +62,7 @@ socket::~socket() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "socket is not stopped");
     if (!stopped_.load()) { LOGF("~socket is not stopped."); }
-    if (!websocket_.has_value()) { LOGF("~socket websocket is not reset."); }
+    if (websocket_.has_value()) { LOGF("~socket websocket is not reset."); }
 }
 
 // Stop.
