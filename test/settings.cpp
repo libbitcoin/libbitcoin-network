@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
     BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
     BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
     BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
     BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);

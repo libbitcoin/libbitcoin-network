@@ -121,7 +121,7 @@ void session_seed::handle_started(const code& ec,
 
     for (const auto& seed: settings().seeds)
     {
-        const auto connector = create_connector();
+        const auto connector = create_connector(true);
         subscribe_stop([=](const code&) NOEXCEPT
         {
             connector->stop();

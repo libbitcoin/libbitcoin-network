@@ -166,7 +166,7 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() NOEXCEPT override
+    connector::ptr create_connector(bool =false) NOEXCEPT override
     {
         return std::make_shared<mock_connector>(log, strand(), service(),
             network_settings());

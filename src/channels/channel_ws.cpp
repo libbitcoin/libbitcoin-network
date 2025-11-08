@@ -80,7 +80,6 @@ void channel_ws::handle_read_websocket(const code& ec,
 
     // TODO: deserialize message from request_buffer and dispatch.
     ////distributor_.notify(message);
-    resume();
 }
 
 // pre-upgrade
@@ -91,30 +90,30 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
 {
     BC_ASSERT(stranded());
 
-    if (ec || stopped() || !is_websocket_upgrade(*request))
+    if (upgraded_)
+    {
+        LOGP("Websocket is in upgraded state [" << authority() << "]");
+        stop(network::error::operation_failed);
+        return;
+    }
+
+    if (ec != error::upgraded)
     {
         channel_http::handle_read_request(ec, bytes, request);
         return;
     }
 
-    accept_upgrade(request);
-}
-
-void channel_ws::accept_upgrade(const request_cptr& request) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    response out{ status::switching_protocols, request->version() };
-    out.set(field::upgrade, "websocket");
-    out.set(field::connection, "upgrade");
-    out.set(field::sec_websocket_accept, to_websocket_accept(*request));
-    out.prepare_payload();
-
     upgraded_ = true;
-    set_websocket(request);
     LOGP("Websocket upgraded [" << authority() << "]");
 
-    resume();
+    const std::string welcome{ "Websocket libbitcoin/4.0" };
+    send(to_chunk(welcome), false, [this](const code& ec) NOEXCEPT
+    {
+        // handle_send alread stops channel on ec.
+        // One and only one handler of message must restart read loop.
+        // In half duplex this happens only after send (ws full duplex).
+        if (!ec) read_request();
+    });
 }
 
 BC_POP_WARNING()

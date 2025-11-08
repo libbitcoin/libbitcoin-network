@@ -213,7 +213,7 @@ protected:
 
     /// I/O factories.
     virtual acceptor::ptr create_acceptor() NOEXCEPT;
-    virtual connector::ptr create_connector() NOEXCEPT;
+    virtual connector::ptr create_connector(bool seed=false) NOEXCEPT;
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     /// Sequences.

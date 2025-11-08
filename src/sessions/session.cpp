@@ -348,9 +348,9 @@ acceptor::ptr session::create_acceptor() NOEXCEPT
     return network_.create_acceptor();
 }
 
-connector::ptr session::create_connector() NOEXCEPT
+connector::ptr session::create_connector(bool seed) NOEXCEPT
 {
-    return network_.create_connector();
+    return network_.create_connector(seed);
 }
 
 connectors_ptr session::create_connectors(size_t count) NOEXCEPT

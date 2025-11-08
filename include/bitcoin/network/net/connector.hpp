@@ -52,7 +52,7 @@ public:
     /// Construct an instance.
     connector(const logger& log, asio::strand& strand,
         asio::io_context& service, const settings& settings,
-        std::atomic_bool& suspended) NOEXCEPT;
+        std::atomic_bool& suspended, bool seed=false) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~connector() NOEXCEPT;

@@ -58,7 +58,12 @@ public:
     virtual bool paused() const NOEXCEPT;
 
     /// Idempotent, may be called multiple times.
+    /// Stop socket, no delay, called by stop notify when iocontext is closing.
     virtual void stop(const code& ec) NOEXCEPT;
+
+    /// Idempotent, may be called multiple times.
+    /// Same as stop but provides graceful shutdown for websocket connections.
+    virtual void async_stop(const code& ec) NOEXCEPT;
 
     /// Subscribe to stop notification with completion handler.
     /// Completion and event handlers are always invoked on the channel strand.
@@ -70,9 +75,6 @@ public:
 
     /// The strand is running in this thread.
     bool stranded() const NOEXCEPT;
-
-    /// Upgrade the socket to a websocket.
-    void set_websocket(const http::request_cptr& request) NOEXCEPT;
 
     /// The proxy (socket) is stopped.
     bool stopped() const NOEXCEPT;
