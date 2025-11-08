@@ -148,7 +148,7 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
         return;
     }
 
-    stop(error::channel_expired);
+    async_stop(error::channel_expired);
 }
 
 void channel::stop_inactivity() NOEXCEPT
@@ -187,7 +187,7 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
         return;
     }
 
-    stop(error::channel_inactive);
+    async_stop(error::channel_inactive);
 }
 
 // Properties.

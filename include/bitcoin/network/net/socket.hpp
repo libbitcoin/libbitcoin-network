@@ -65,6 +65,9 @@ public:
     /// Block on threadpool.join() to ensure termination of the connection.
     virtual void stop() NOEXCEPT;
 
+    /// Same as stop but provides graceful shutdown for websocket connections.
+    virtual void async_stop() NOEXCEPT;
+
     /// Connection.
     /// -----------------------------------------------------------------------
 
@@ -137,7 +140,7 @@ private:
     // ------------------------------------------------------------------------
 
     void do_stop() NOEXCEPT;
-    void handle_async_close() NOEXCEPT;
+    void do_async_stop() NOEXCEPT;
     asio::socket& get_transport() NOEXCEPT;
 
     // stranded

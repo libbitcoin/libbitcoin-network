@@ -105,6 +105,24 @@ void proxy::stop(const code& ec) NOEXCEPT
         std::bind(&proxy::stopping, shared_from_this(), ec));
 }
 
+void proxy::async_stop(const code& ec) NOEXCEPT
+{
+    if (stopped())
+        return;
+
+    // Stop the read loop, stop accepting new work, cancel pending work.
+    // Allows for graceful websocket::close, which would hang the threadpool if
+    // attempted within socket::stop(), as it issues a follow-on iocontext job.
+    // A subsequent call to socket::stop() will terminate any websocket::close.
+    socket_->async_stop();
+
+    // Overruled by stop, set only for consistency.
+    paused_.store(true);
+
+    boost::asio::post(strand(),
+        std::bind(&proxy::stopping, shared_from_this(), ec));
+}
+
 // protected
 // This should not be called internally, as derived rely on stop() override.
 void proxy::stopping(const code& ec) NOEXCEPT

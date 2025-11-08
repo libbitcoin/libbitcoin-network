@@ -80,14 +80,6 @@ void channel_ws::handle_read_websocket(const code& ec,
 
     // TODO: deserialize message from request_buffer and dispatch.
     ////distributor_.notify(message);
-    send(data_chunk{ 0x42 }, [this](const code& ec) NOEXCEPT
-    {
-        // handle_send alread stops channel on ec.
-        // One and only one handler of the message must restart the read loop.
-        // In half duplex this should happen only after send (ws full duplex).
-        if (!ec)
-            read_request();
-    });
 }
 
 // pre-upgrade
@@ -105,15 +97,23 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
         return;
     }
 
-    if (ec == error::upgraded)
+    if (ec != error::upgraded)
     {
-        LOGP("Websocket upgraded [" << authority() << "]");
-        upgraded_ = true;
-        read_request();
+        channel_http::handle_read_request(ec, bytes, request);
         return;
     }
 
-    channel_http::handle_read_request(ec, bytes, request);
+    upgraded_ = true;
+    LOGP("Websocket upgraded [" << authority() << "]");
+
+    const std::string welcome{ "Websocket libbitcoin/4.0" };
+    send(to_chunk(welcome), false, [this](const code& ec) NOEXCEPT
+    {
+        // handle_send alread stops channel on ec.
+        // One and only one handler of message must restart read loop.
+        // In half duplex this happens only after send (ws full duplex).
+        if (!ec) read_request();
+    });
 }
 
 BC_POP_WARNING()

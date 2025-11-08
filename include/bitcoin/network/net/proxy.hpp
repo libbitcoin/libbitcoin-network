@@ -58,7 +58,12 @@ public:
     virtual bool paused() const NOEXCEPT;
 
     /// Idempotent, may be called multiple times.
+    /// Stop socket, no delay, called by stop notify when iocontext is closing.
     virtual void stop(const code& ec) NOEXCEPT;
+
+    /// Idempotent, may be called multiple times.
+    /// Same as stop but provides graceful shutdown for websocket connections.
+    virtual void async_stop(const code& ec) NOEXCEPT;
 
     /// Subscribe to stop notification with completion handler.
     /// Completion and event handlers are always invoked on the channel strand.

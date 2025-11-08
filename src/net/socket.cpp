@@ -87,21 +87,6 @@ void socket::do_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (!websocket())
-    {
-        handle_async_close();
-        return;
-    }
-
-    websocket_->async_close(beast::websocket::close_code::normal,
-        std::bind(&socket::handle_async_close,
-            shared_from_this()));
-}
-
-void socket::handle_async_close() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
     boost_code ignore{};
     auto& socket = get_transport();
 
@@ -116,6 +101,34 @@ void socket::handle_async_close() NOEXCEPT
 
     // Discard the optional.
     websocket_.reset();
+}
+
+void socket::async_stop() NOEXCEPT
+{
+    // Async stop is dispatched to strand to protect the socket.
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_async_stop, shared_from_this()));
+}
+
+// Called in internally, from handle_ws_event, when peer closes websocket. 
+void socket::do_async_stop() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (!websocket())
+    {
+        do_stop();
+        return;
+    }
+
+    // TODO: requires a timer (use connection timeout) to prevent socket leak.
+    // TODO: this is the same type of timout race as in the connector/acceptor.
+    // TODO: so this should be wrapped in an object called a "disconnector".
+    // This will repost to the strand, but the iocontext is alive because this
+    // is not initiated by session callback invoking stop(). Any subsequent
+    // stop() call will terminate this listener by invoking socket.shutdown().
+    websocket_->async_close(beast::websocket::close_code::normal,
+        std::bind(&socket::do_stop, shared_from_this()));
 }
 
 asio::socket& socket::get_transport() NOEXCEPT
@@ -552,7 +565,7 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(websocket());
+    ////BC_ASSERT(websocket());
 
     if (error::asio_is_canceled(ec))
     {
@@ -574,7 +587,7 @@ void socket::handle_ws_write(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(websocket());
+    ////BC_ASSERT(websocket());
 
     if (error::asio_is_canceled(ec))
     {
@@ -596,7 +609,7 @@ void socket::handle_ws_event(ws::frame_type kind,
     const std::string& data) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(websocket());
+    ////BC_ASSERT(websocket());
 
     switch (kind)
     {
@@ -608,7 +621,7 @@ void socket::handle_ws_event(ws::frame_type kind,
             break;
         case ws::frame_type::close:
             LOGX("WS close [" << authority() << "] " << websocket_->reason());
-            stop();
+            do_async_stop();
             break;
     }
 }
