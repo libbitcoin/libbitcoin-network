@@ -341,10 +341,6 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
 
-include_bitcoin_network_impl_distributorsdir = ${includedir}/bitcoin/network/impl/distributors
-include_bitcoin_network_impl_distributors_HEADERS = \
-    include/bitcoin/network/impl/distributors/distributor_rpc.ipp
-
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \
     include/bitcoin/network/log/capture.hpp \
