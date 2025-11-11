@@ -27,6 +27,9 @@
 namespace libbitcoin {
 namespace network {
 
+// do_notify_[name] is a closure over container mode and names tuple. It
+/// is static so the dispatch map can be statically defined, which in turn
+/// requires self referential invocation for dispatch to the unsubscriber.
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define NAMES(...) std::make_tuple(__VA_ARGS__)
@@ -38,9 +41,8 @@ private: \
     SUBSCRIBER_TYPE(name) SUBSCRIBER(name); \
     inline code do_subscribe(SUBSCRIBER_TYPE(name)::handler&& handler) NOEXCEPT \
         { return SUBSCRIBER(name).subscribe(std::move(handler)); } \
-    template <> \
-    inline code do_notify<SUBSCRIBER_TYPE(name)>(distributor_rpc& self, \
-        const optional_t& params) NOEXCEPT \
+    static inline code do_notify_##name( \
+        distributor_rpc& self, const optional_t& params) \
         { return notifier<name, SUBSCRIBER_TYPE(name) __VA_OPT__(,) __VA_ARGS__>( \
           self.SUBSCRIBER(name), params, container::mode, tuple); }
 
@@ -85,16 +87,6 @@ private:
     static code notifier(Subscriber& subscriber, const optional_t& parameters,
         container mode, auto&& tuple) NOEXCEPT;
     static bool has_params(const optional_t& parameters) NOEXCEPT;
-
-    // A specialized template closure over container mode and names tuple. It
-    // is static so the dispatch map can be statically defined, which in turn
-    // requires self referential invocation for dispatch to the unsubscriber.
-    template <typename Subscriber>
-    static inline code do_notify(distributor_rpc& self,
-        const optional_t& params) NOEXCEPT
-    {
-        return error::not_found;
-    }
     
     // These are thread safe.
     DECLARE_SUBSCRIBER(get_version, either, NAMES())

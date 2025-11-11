@@ -34,7 +34,7 @@ namespace network {
 #define SUBSCRIBER(name) name##_subscriber_
 #define MAKE_SUBSCRIBER(name) SUBSCRIBER(name){ strand }
 #define STOP_SUBSCRIBER(name) SUBSCRIBER(name).stop_default(ec)
-#define DEFINE_DISPATCH(name) { #name, &do_notify<name##_subscriber> }
+#define DEFINE_DISPATCH(name) { #name, &do_notify_##name }
 
 // private/static
 // ----------------------------------------------------------------------------
