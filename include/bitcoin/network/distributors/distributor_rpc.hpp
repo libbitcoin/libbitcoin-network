@@ -96,12 +96,12 @@ private:
     static const dispatch_t dispatch_;
 };
 
-} // namespace network
-} // namespace libbitcoin
-
 #undef SUBSCRIBER
 #undef SUBSCRIBER_TYPE
 #undef NAMES
 #undef DECLARE_SUBSCRIBER
+
+} // namespace network
+} // namespace libbitcoin
 
 #endif
