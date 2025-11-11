@@ -18,6 +18,48 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(distributor_tests)
+#include <future>
+#include <memory>
+
+BOOST_AUTO_TEST_SUITE(distributor_rpc_tests)
+
+using namespace json;
+
+BOOST_AUTO_TEST_CASE(distributor_rpc__construct__stop__stops)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    distributor_rpc instance(strand);
+
+    std::promise<bool> promise{};
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        instance.stop(error::service_stopped);
+        promise.set_value(true);
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(promise.get_future().get());
+}
+
+BOOST_AUTO_TEST_CASE(distributor_rpc__notify__unknown_method__returns_not_found)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    distributor_rpc instance(strand);
+
+    std::promise<code> promise{};
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        request_t request{};
+        request.method = "unknown_method";
+        promise.set_value(instance.notify(request));
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(promise.get_future().get() == error::not_found);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -27,17 +27,23 @@
 namespace libbitcoin {
 namespace network {
 
-// Macro for declaring method subscribers.
-#define DECLARE_METHOD(name_, ...) \
-using name_##_handler = std::function<bool( \
-    const code& __VA_OPT__(,) __VA_ARGS__)>; \
-using name_##_subscriber_type = unsubscriber<__VA_ARGS__>; \
-name_##_subscriber_type name_##_subscriber_; \
-static code notify_##name_(distributor_rpc& self, \
-    const json::params_option& params); \
-code subscribe_##name_(name_##_handler&& handler) NOEXCEPT \
-{ return name_##_subscriber_.subscribe(std::move(handler)); }
-    
+#define SUBSCRIBER(name) name##_subscriber_
+#define SUBSCRIBER_TYPE(name) name##_subscriber
+#define NAMES(...) std::make_tuple(__VA_ARGS__)
+#define DECLARE_SUBSCRIBER(name, mode, tuple, ...) \
+public: \
+    struct name##_t{}; \
+private: \
+    using SUBSCRIBER_TYPE(name) = unsubscriber<name##_t __VA_OPT__(,) __VA_ARGS__>; \
+    SUBSCRIBER_TYPE(name) SUBSCRIBER(name); \
+    inline code do_subscribe(SUBSCRIBER_TYPE(name)::handler&& handler) NOEXCEPT \
+        { return SUBSCRIBER(name).subscribe(std::move(handler)); } \
+    template <> \
+    inline code do_notify<SUBSCRIBER_TYPE(name)>(distributor_rpc& self, \
+        const json::params_option& params) NOEXCEPT \
+        { return notifier<name##_t, SUBSCRIBER_TYPE(name) __VA_OPT__(,) __VA_ARGS__>( \
+          self.SUBSCRIBER(name), params, container::mode, tuple); }
+
 /// Not thread safe.
 class BCT_API distributor_rpc
 {
@@ -47,20 +53,24 @@ public:
     /// Create an instance of this class.
     distributor_rpc(asio::strand& strand) NOEXCEPT;
 
-    /// Stop all unsubscribers with the given code.
-    virtual void stop(const code& ec) NOEXCEPT;
+    /// If stopped, handler is invoked with error::subscriber_stopped.
+    /// If key exists, handler is invoked with error::subscriber_exists.
+    /// Otherwise handler retained. Subscription code is also returned here.
+    template <typename Handler>
+    inline code subscribe(Handler&& handler) NOEXCEPT
+    {
+        return do_subscribe(std::forward<Handler>(handler));
+    }
 
     /// Dispatch the request to the appropriate method's unsubscriber.
     virtual code notify(const json::request_t& request) NOEXCEPT;
 
-protected:
-    /// Example methods.
-    DECLARE_METHOD(get_version)
-    DECLARE_METHOD(add_element, int, int)
+    /// Stop all unsubscribers with the given code.
+    virtual void stop(const code& ec) NOEXCEPT;
 
 private:
     template <typename ...Args>
-    using names_t = std::array<std::string_view, sizeof...(Args)>;
+    using names_t = std::array<std::string, sizeof...(Args)>;
     using optional_t = json::params_option;
     using functor_t = std::function<code(distributor_rpc&, const optional_t&)>;
     using dispatch_t = std::unordered_map<std::string, functor_t>;
@@ -69,12 +79,26 @@ private:
     template <typename Type>
     static Type extract(const json::value_t& value) THROWS;
     template <typename ...Args>
-    static std::tuple<Args...> extractor(const optional_t& aparameters,
+    static std::tuple<Args...> extractor(const optional_t& parameters,
         container mode, const names_t<Args...>& names) THROWS;
-    template <typename ...Args>
-    static code notifier(auto& subscriber, const optional_t& parameters,
+    template <typename Method, typename Subscriber, typename ...Args>
+    static code notifier(Subscriber& subscriber, const optional_t& parameters,
         container mode, auto&& tuple) NOEXCEPT;
     static bool has_params(const optional_t& parameters) NOEXCEPT;
+
+    // A specialized template closure over container mode and names tuple. It
+    // is static so the dispatch map can be statically defined, which in turn
+    // requires self referential invocation for dispatch to the unsubscriber.
+    template <typename Subscriber>
+    static inline code do_notify(distributor_rpc& self,
+        const json::params_option& params) NOEXCEPT
+    {
+        return error::not_found;
+    }
+    
+    // These are thread safe.
+    DECLARE_SUBSCRIBER(get_version, either, NAMES())
+    DECLARE_SUBSCRIBER(add_element, either, NAMES("a", "b"), int, int)
 
     // Function map, find name and dispatch with request.
     static const dispatch_t dispatch_;
@@ -83,6 +107,9 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#undef DECLARE_METHOD
+#undef SUBSCRIBER
+#undef SUBSCRIBER_TYPE
+#undef NAMES
+#undef DECLARE_SUBSCRIBER
 
 #endif

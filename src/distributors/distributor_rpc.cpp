@@ -31,16 +31,13 @@ namespace network {
 
 // macros
 // ----------------------------------------------------------------------------
-#define DISPATCH(name) { #name, &notify_##name }
-#define PARAMS(...) std::make_tuple(__VA_ARGS__)
-#define DEFINE_METHOD(name, mode, names, ...) \
-code distributor_rpc::notify_##name(distributor_rpc& self, \
-    const optional_t& params) { return notifier<__VA_ARGS__>( \
-    self.name##_subscriber_, params, container::mode, names); }
+#define SUBSCRIBER(name) name##_subscriber_
+#define MAKE_SUBSCRIBER(name) SUBSCRIBER(name){ strand }
+#define STOP_SUBSCRIBER(name) SUBSCRIBER(name).stop_default(ec)
+#define DEFINE_DISPATCH(name) { #name, &do_notify<name##_subscriber> }
 
-// extract/invoke
-// ----------------------------------------------------------------------------
 // private/static
+// ----------------------------------------------------------------------------
 
 template <typename Type>
 Type distributor_rpc::extract(const json::value_t&) THROWS
@@ -108,8 +105,7 @@ std::tuple<Args...> distributor_rpc::extractor(
         if (object.size() != count) throw std::invalid_argument{ "count" };
         return [&]<size_t... Index>(std::index_sequence<Index...>)
         {
-            return std::make_tuple(extract<Args>(
-                object.at(std::string{ names.at(Index) }))...);
+            return std::make_tuple(extract<Args>(object.at(names.at(Index)))...);
         }(std::make_index_sequence<count>{});
     };
 
@@ -134,20 +130,23 @@ std::tuple<Args...> distributor_rpc::extractor(
     throw std::invalid_argument{ "container" };
 }
 
-template <typename ...Args>
-code distributor_rpc::notifier(auto& subscriber, const optional_t& parameters,
-    container mode, auto&& tuple) NOEXCEPT
+template <typename Method, typename Subscriber, typename ...Args>
+code distributor_rpc::notifier(Subscriber& subscriber,
+    const optional_t& parameters, container mode, auto&& tuple) NOEXCEPT
 {
     static auto names = std::apply([](auto&&... args) NOEXCEPT
     {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         return names_t<Args...>{ std::forward<decltype(args)>(args)... };
+        BC_POP_WARNING()
     }, std::forward<decltype(tuple)>(tuple));
 
     try
     {
         std::apply([&](auto&&... args) THROWS
         {
-           subscriber.notify({}, std::forward<decltype(args)>(args)...);
+           subscriber.notify({}, Method{},
+               std::forward<decltype(args)>(args)...);
         }, extractor<Args...>(parameters, mode, names));
 
         return error::success;
@@ -176,35 +175,25 @@ bool distributor_rpc::has_params(const optional_t& parameters) NOEXCEPT
     }, parameters.value());
 }
 
-// define map
-// ----------------------------------------------------------------------------
-
-// Example methods.
-
-// protected methods with parameter names and types
-DEFINE_METHOD(get_version, either, PARAMS())
-DEFINE_METHOD(add_element, either, PARAMS("a", "b"), int, int)
-
-// private map
 const distributor_rpc::dispatch_t distributor_rpc::dispatch_
 {
-    DISPATCH(get_version),
-    DISPATCH(add_element)
+    DEFINE_DISPATCH(get_version),
+    DEFINE_DISPATCH(add_element)
 };
 
 // public
 // ----------------------------------------------------------------------------
 
 distributor_rpc::distributor_rpc(asio::strand& strand) NOEXCEPT
-  : get_version_subscriber_{ strand },
-    add_element_subscriber_{ strand }
+  : MAKE_SUBSCRIBER(get_version),
+    MAKE_SUBSCRIBER(add_element)
 {
 }
 
 void distributor_rpc::stop(const code& ec) NOEXCEPT
 {
-    get_version_subscriber_.stop_default(ec);
-    add_element_subscriber_.stop_default(ec);
+    STOP_SUBSCRIBER(get_version);
+    STOP_SUBSCRIBER(add_element);
 }
 
 code distributor_rpc::notify(const json::request_t& request) NOEXCEPT
@@ -217,6 +206,11 @@ code distributor_rpc::notify(const json::request_t& request) NOEXCEPT
     return it->second(*this, request.params);
     BC_POP_WARNING()
 }
+
+#undef SUBSCRIBER
+#undef MAKE_SUBSCRIBER
+#undef STOP_SUBSCRIBER
+#undef DEFINE_DISPATCH
 
 } // namespace network
 } // namespace libbitcoin
