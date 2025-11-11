@@ -143,6 +143,7 @@
     <ClCompile Include="..\..\..\..\test\config\utilities.cpp" />
     <ClCompile Include="..\..\..\..\test\distributors\distributor_http.cpp" />
     <ClCompile Include="..\..\..\..\test\distributors\distributor_peer.cpp" />
+    <ClCompile Include="..\..\..\..\test\distributors\distributor_rpc.cpp" />
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />

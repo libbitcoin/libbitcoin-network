@@ -126,6 +126,9 @@
     <ClCompile Include="..\..\..\..\test\distributors\distributor_peer.cpp">
       <Filter>src\distributors</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\distributors\distributor_rpc.cpp">
+      <Filter>src\distributors</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\error.cpp">
       <Filter>src</Filter>
     </ClCompile>

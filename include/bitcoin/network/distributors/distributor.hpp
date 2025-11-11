@@ -16,12 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTORS_HPP
-#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTORS_HPP
+#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_HPP
+#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_HPP
 
-#include <bitcoin/network/distributors/distributor.hpp>
-#include <bitcoin/network/distributors/distributor_http.hpp>
-#include <bitcoin/network/distributors/distributor_peer.hpp>
-#include <bitcoin/network/distributors/distributor_rpc.hpp>
+#include <bitcoin/network/define.hpp>
+
+namespace libbitcoin {
+namespace network {
+
+} // namespace network
+} // namespace libbitcoin
 
 #endif

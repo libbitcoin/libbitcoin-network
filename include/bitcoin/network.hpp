@@ -50,8 +50,10 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
+#include <bitcoin/network/distributors/distributor.hpp>
 #include <bitcoin/network/distributors/distributor_http.hpp>
 #include <bitcoin/network/distributors/distributor_peer.hpp>
+#include <bitcoin/network/distributors/distributor_rpc.hpp>
 #include <bitcoin/network/distributors/distributors.hpp>
 #include <bitcoin/network/log/capture.hpp>
 #include <bitcoin/network/log/levels.hpp>
