@@ -200,8 +200,8 @@ BC_POP_WARNING()
 
 #undef SUBSCRIBER
 #undef MAKE_SUBSCRIBER
-#undef CASE_NOTIFY
 #undef STOP_SUBSCRIBER
+#undef CASE_NOTIFY
 
 } // namespace network
 } // namespace libbitcoin

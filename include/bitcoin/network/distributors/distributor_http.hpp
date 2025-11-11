@@ -30,13 +30,11 @@ namespace network {
 
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
-#define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
-#define HANDLER(name) distributor_http::handler<http::method::name>
-#define DEFINE_SUBSCRIBER(name) \
-    using SUBSCRIBER_TYPE(name) = subscriber<const http::method::name&>
-#define SUBSCRIBER_OVERLOAD(name) \
-    inline code do_subscribe(HANDLER(name)&& handler) NOEXCEPT \
-    { return SUBSCRIBER(name).subscribe(std::forward<HANDLER(name)>(handler)); }
+#define DECLARE_SUBSCRIBER(name) \
+    using SUBSCRIBER_TYPE(name) = subscriber<const http::method::name&>; \
+    SUBSCRIBER_TYPE(name) SUBSCRIBER(name); \
+    inline code do_subscribe(SUBSCRIBER_TYPE(name)::handler&& handler) NOEXCEPT \
+    { return SUBSCRIBER(name).subscribe(std::move(handler)); }
 
 /// Not thread safe.
 class BCT_API distributor_http
@@ -47,16 +45,6 @@ public:
     using handler = std::function<void(const code&, const Method&)>;
 
     DELETE_COPY_MOVE_DESTRUCT(distributor_http);
-
-    DEFINE_SUBSCRIBER(get);
-    DEFINE_SUBSCRIBER(head);
-    DEFINE_SUBSCRIBER(post);
-    DEFINE_SUBSCRIBER(put);
-    DEFINE_SUBSCRIBER(delete_);
-    DEFINE_SUBSCRIBER(trace);
-    DEFINE_SUBSCRIBER(options);
-    DEFINE_SUBSCRIBER(connect);
-    DEFINE_SUBSCRIBER(unknown);
 
     /// Create an instance of this class.
     distributor_http(asio::strand& strand) NOEXCEPT;
@@ -88,34 +76,21 @@ private:
         subscriber.notify(ec, method);
     }
 
-    SUBSCRIBER_OVERLOAD(get);
-    SUBSCRIBER_OVERLOAD(head);
-    SUBSCRIBER_OVERLOAD(post);
-    SUBSCRIBER_OVERLOAD(put);
-    SUBSCRIBER_OVERLOAD(delete_);
-    SUBSCRIBER_OVERLOAD(trace);
-    SUBSCRIBER_OVERLOAD(options);
-    SUBSCRIBER_OVERLOAD(connect);
-    SUBSCRIBER_OVERLOAD(unknown);
-
     // These are thread safe.
-    DECLARE_SUBSCRIBER(get);
-    DECLARE_SUBSCRIBER(head);
-    DECLARE_SUBSCRIBER(post);
-    DECLARE_SUBSCRIBER(put);
-    DECLARE_SUBSCRIBER(delete_);
-    DECLARE_SUBSCRIBER(trace);
-    DECLARE_SUBSCRIBER(options);
-    DECLARE_SUBSCRIBER(connect);
-    DECLARE_SUBSCRIBER(unknown);
+    DECLARE_SUBSCRIBER(get)
+    DECLARE_SUBSCRIBER(head)
+    DECLARE_SUBSCRIBER(post)
+    DECLARE_SUBSCRIBER(put)
+    DECLARE_SUBSCRIBER(delete_)
+    DECLARE_SUBSCRIBER(trace)
+    DECLARE_SUBSCRIBER(options)
+    DECLARE_SUBSCRIBER(connect)
+    DECLARE_SUBSCRIBER(unknown)
 };
 
 #undef SUBSCRIBER
 #undef SUBSCRIBER_TYPE
 #undef DECLARE_SUBSCRIBER
-#undef HANDLER
-#undef DEFINE_SUBSCRIBER
-#undef SUBSCRIBER_OVERLOAD
 
 } // namespace network
 } // namespace libbitcoin
