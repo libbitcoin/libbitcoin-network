@@ -40,7 +40,7 @@ private: \
         { return SUBSCRIBER(name).subscribe(std::move(handler)); } \
     template <> \
     inline code do_notify<SUBSCRIBER_TYPE(name)>(distributor_rpc& self, \
-        const json::params_option& params) NOEXCEPT \
+        const optional_t& params) NOEXCEPT \
         { return notifier<name##_t, SUBSCRIBER_TYPE(name) __VA_OPT__(,) __VA_ARGS__>( \
           self.SUBSCRIBER(name), params, container::mode, tuple); }
 
@@ -91,7 +91,7 @@ private:
     // requires self referential invocation for dispatch to the unsubscriber.
     template <typename Subscriber>
     static inline code do_notify(distributor_rpc& self,
-        const json::params_option& params) NOEXCEPT
+        const optional_t& params) NOEXCEPT
     {
         return error::not_found;
     }
