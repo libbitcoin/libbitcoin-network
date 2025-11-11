@@ -64,6 +64,14 @@ struct value_t
         object_t
     >;
 
+    /// Explicit initialization constructors.
+    value_t(null_t) NOEXCEPT : inner_{ null_t{} } {}
+    value_t(boolean_t value) NOEXCEPT : inner_{ value } {}
+    value_t(number_t value) NOEXCEPT : inner_{ value } {}
+    value_t(string_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(array_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(object_t value) NOEXCEPT : inner_{ std::move(value) } {}
+
     /// Forwarding constructors for in-place variant construction.
     FORWARD_VARIANT_CONSTRUCT(value_t, inner_)
     FORWARD_VARIANT_ASSIGNMENT(value_t, inner_)
