@@ -32,16 +32,16 @@ namespace network {
 #define NAMES(...) std::make_tuple(__VA_ARGS__)
 #define DECLARE_SUBSCRIBER(name, mode, tuple, ...) \
 public: \
-    struct name##_t{}; \
+    struct name{}; \
 private: \
-    using SUBSCRIBER_TYPE(name) = unsubscriber<name##_t __VA_OPT__(,) __VA_ARGS__>; \
+    using SUBSCRIBER_TYPE(name) = unsubscriber<name __VA_OPT__(,) __VA_ARGS__>; \
     SUBSCRIBER_TYPE(name) SUBSCRIBER(name); \
     inline code do_subscribe(SUBSCRIBER_TYPE(name)::handler&& handler) NOEXCEPT \
         { return SUBSCRIBER(name).subscribe(std::move(handler)); } \
     template <> \
     inline code do_notify<SUBSCRIBER_TYPE(name)>(distributor_rpc& self, \
         const optional_t& params) NOEXCEPT \
-        { return notifier<name##_t, SUBSCRIBER_TYPE(name) __VA_OPT__(,) __VA_ARGS__>( \
+        { return notifier<name, SUBSCRIBER_TYPE(name) __VA_OPT__(,) __VA_ARGS__>( \
           self.SUBSCRIBER(name), params, container::mode, tuple); }
 
 /// Not thread safe.
