@@ -53,6 +53,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/config/utilities.cpp \
     src/distributors/distributor_http.cpp \
     src/distributors/distributor_peer.cpp \
+    src/distributors/distributor_rpc.cpp \
     src/log/capture.cpp \
     src/log/logger.cpp \
     src/log/reporter.cpp \
@@ -172,6 +173,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/config/utilities.cpp \
     test/distributors/distributor_http.cpp \
     test/distributors/distributor_peer.cpp \
+    test/distributors/distributor_rpc.cpp \
     test/log/timer.cpp \
     test/log/tracker.cpp \
     test/messages/http/body_reader.cpp \
@@ -318,8 +320,10 @@ include_bitcoin_network_config_HEADERS = \
 
 include_bitcoin_network_distributorsdir = ${includedir}/bitcoin/network/distributors
 include_bitcoin_network_distributors_HEADERS = \
+    include/bitcoin/network/distributors/distributor.hpp \
     include/bitcoin/network/distributors/distributor_http.hpp \
     include/bitcoin/network/distributors/distributor_peer.hpp \
+    include/bitcoin/network/distributors/distributor_rpc.hpp \
     include/bitcoin/network/distributors/distributors.hpp
 
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
@@ -336,6 +340,10 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_speed.ipp \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
+
+include_bitcoin_network_impl_distributorsdir = ${includedir}/bitcoin/network/impl/distributors
+include_bitcoin_network_impl_distributors_HEADERS = \
+    include/bitcoin/network/impl/distributors/distributor_rpc.ipp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \

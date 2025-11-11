@@ -16,12 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTORS_HPP
-#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTORS_HPP
+#include "../test.hpp"
 
-#include <bitcoin/network/distributors/distributor.hpp>
-#include <bitcoin/network/distributors/distributor_http.hpp>
-#include <bitcoin/network/distributors/distributor_peer.hpp>
-#include <bitcoin/network/distributors/distributor_rpc.hpp>
+BOOST_AUTO_TEST_SUITE(distributor_tests)
 
-#endif
+BOOST_AUTO_TEST_SUITE_END()
