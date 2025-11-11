@@ -69,7 +69,7 @@ private:
     template <typename Type>
     static Type extract(const json::value_t& value) THROWS;
     template <typename ...Args>
-    static std::tuple<Args...> extractor(const optional_t& parameters,
+    static std::tuple<Args...> extractor(const optional_t& aparameters,
         container mode, const names_t<Args...>& names) THROWS;
     template <typename ...Args>
     static code notifier(auto& subscriber, const optional_t& parameters,
@@ -84,7 +84,5 @@ private:
 } // namespace libbitcoin
 
 #undef DECLARE_METHOD
-
-#include <bitcoin/network/impl/distributors/distributor_rpc.ipp>
 
 #endif
