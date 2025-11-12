@@ -33,7 +33,8 @@ template <typename Key, typename... Args>
 class desubscriber final
 {
 public:
-    DELETE_COPY_MOVE(desubscriber);
+    DELETE_COPY(desubscriber);
+    DEFAULT_MOVE(desubscriber);
 
     using key = Key;
     typedef std::function<bool(const code&, Args...)> handler;

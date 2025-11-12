@@ -21,7 +21,6 @@
 
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/distributors/distributor.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
 

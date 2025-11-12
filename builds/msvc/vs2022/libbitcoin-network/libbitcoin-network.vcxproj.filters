@@ -38,6 +38,9 @@
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C1}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\impl\async\races">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\impl\distributors">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D1}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\log">
@@ -47,22 +50,22 @@
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\http">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\messages\http\enums">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\messages\json">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages\json\enums">
+    <Filter Include="include\bitcoin\network\messages\http\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages\peer">
+    <Filter Include="include\bitcoin\network\messages\json">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages\peer\enums">
+    <Filter Include="include\bitcoin\network\messages\json\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\messages\peer">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\messages\peer\enums">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
@@ -74,7 +77,7 @@
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000A1}</UniqueIdentifier>
     </Filter>
     <Filter Include="resource">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000000}</UniqueIdentifier>
@@ -509,6 +512,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_bitcoind.hpp">
+      <Filter>include\bitcoin\network\distributors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_electrum.hpp">
+      <Filter>include\bitcoin\network\distributors</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_http.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
@@ -516,6 +525,9 @@
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_rpc.hpp">
+      <Filter>include\bitcoin\network\distributors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_stratum_v1.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributors.hpp">
@@ -864,6 +876,9 @@
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\distributors\distributor_rpc.ipp">
+      <Filter>include\bitcoin\network\impl\distributors</Filter>
     </None>
     <None Include="packages.config" />
   </ItemGroup>

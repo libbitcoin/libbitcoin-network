@@ -34,7 +34,8 @@ template <typename... Args>
 class unsubscriber final
 {
 public:
-    DELETE_COPY_MOVE(unsubscriber);
+    DELETE_COPY(unsubscriber);
+    DEFAULT_MOVE(unsubscriber);
 
     typedef std::function<bool(const code&, Args...)> handler;
 

@@ -16,17 +16,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTORS_HPP
-#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTORS_HPP
+#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_BITCOIND_HPP
+#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_BITCOIND_HPP
 
-#include <bitcoin/network/distributors/distributor_http.hpp>
-#include <bitcoin/network/distributors/distributor_peer.hpp>
-#include <bitcoin/network/distributors/distributor_rpc.hpp>
-
-// json-rpc
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/distributors/distributor.hpp>
-#include <bitcoin/network/distributors/distributor_bitcoind.hpp>
-#include <bitcoin/network/distributors/distributor_electrum.hpp>
-#include <bitcoin/network/distributors/distributor_stratum_v1.hpp>
+
+namespace libbitcoin {
+namespace network {
+
+struct bitcoind
+{
+    static constexpr std::tuple methods
+    {
+        rpc::method<"get_version">{},
+        rpc::method<"add_element", int, int>{ "a", "b" },
+    };
+
+    using type = decltype(methods);
+    static constexpr auto size = std::tuple_size_v<type>;
+    static constexpr rpc::group mode = rpc::group::either;
+};
+
+} // namespace network
+} // namespace libbitcoin
 
 #endif

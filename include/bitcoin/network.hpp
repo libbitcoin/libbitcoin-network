@@ -51,9 +51,12 @@
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/network/distributors/distributor.hpp>
+#include <bitcoin/network/distributors/distributor_bitcoind.hpp>
+#include <bitcoin/network/distributors/distributor_electrum.hpp>
 #include <bitcoin/network/distributors/distributor_http.hpp>
 #include <bitcoin/network/distributors/distributor_peer.hpp>
 #include <bitcoin/network/distributors/distributor_rpc.hpp>
+#include <bitcoin/network/distributors/distributor_stratum_v1.hpp>
 #include <bitcoin/network/distributors/distributors.hpp>
 #include <bitcoin/network/log/capture.hpp>
 #include <bitcoin/network/log/levels.hpp>
