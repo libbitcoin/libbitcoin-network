@@ -321,9 +321,12 @@ include_bitcoin_network_config_HEADERS = \
 include_bitcoin_network_distributorsdir = ${includedir}/bitcoin/network/distributors
 include_bitcoin_network_distributors_HEADERS = \
     include/bitcoin/network/distributors/distributor.hpp \
+    include/bitcoin/network/distributors/distributor_bitcoind.hpp \
+    include/bitcoin/network/distributors/distributor_electrum.hpp \
     include/bitcoin/network/distributors/distributor_http.hpp \
     include/bitcoin/network/distributors/distributor_peer.hpp \
     include/bitcoin/network/distributors/distributor_rpc.hpp \
+    include/bitcoin/network/distributors/distributor_stratum_v1.hpp \
     include/bitcoin/network/distributors/distributors.hpp
 
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async

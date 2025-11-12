@@ -90,9 +90,9 @@ void distributor_http::stop(const code& ec) NOEXCEPT
 
 #undef SUBSCRIBER
 #undef MAKE_SUBSCRIBER
+#undef STOP_SUBSCRIBER
 #undef DO_NOTIFY
 #undef CASE_NOTIFY
-#undef STOP_SUBSCRIBER
 
 } // namespace network
 } // namespace libbitcoin

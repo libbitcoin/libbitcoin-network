@@ -260,9 +260,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_bitcoind.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_electrum.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_rpc.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_stratum_v1.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributors.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp" />

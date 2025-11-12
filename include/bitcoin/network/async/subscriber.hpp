@@ -31,7 +31,8 @@ template <typename... Args>
 class subscriber final
 {
 public:
-    DELETE_COPY_MOVE(subscriber);
+    DELETE_COPY(subscriber);
+    DEFAULT_MOVE(subscriber);
 
     typedef std::function<void(const code&, Args...)> handler;
 

@@ -512,6 +512,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_bitcoind.hpp">
+      <Filter>include\bitcoin\network\distributors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_electrum.hpp">
+      <Filter>include\bitcoin\network\distributors</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_http.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
@@ -519,6 +525,9 @@
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_rpc.hpp">
+      <Filter>include\bitcoin\network\distributors</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_stratum_v1.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributors.hpp">

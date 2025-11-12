@@ -22,69 +22,135 @@
 #include <tuple>
 #include <unordered_map>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/distributors/distributor.hpp>
 #include <bitcoin/network/messages/json/json.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-// Macro for declaring method subscribers.
-#define DECLARE_METHOD(name_, ...) \
-using name_##_handler = std::function<bool( \
-    const code& __VA_OPT__(,) __VA_ARGS__)>; \
-using name_##_subscriber_type = unsubscriber<__VA_ARGS__>; \
-name_##_subscriber_type name_##_subscriber_; \
-static code notify_##name_(distributor_rpc& self, \
-    const json::params_option& params); \
-code subscribe_##name_(name_##_handler&& handler) NOEXCEPT \
-{ return name_##_subscriber_.subscribe(std::move(handler)); }
-    
 /// Not thread safe.
-class BCT_API distributor_rpc
+template <typename Interface>
+class distributor_rpc
 {
 public:
-    DELETE_COPY_MOVE_DESTRUCT(distributor_rpc);
+    DELETE_COPY(distributor_rpc);
+    DEFAULT_MOVE(distributor_rpc);
+
+    /// If stopped, handler is invoked with error::subscriber_stopped.
+    /// If key exists, handler is invoked with error::subscriber_exists.
+    /// Otherwise handler retained. Subscription code is also returned here.
+    template <typename Handler>
+    inline code subscribe(Handler&& handler) NOEXCEPT;
 
     /// Create an instance of this class.
-    distributor_rpc(asio::strand& strand) NOEXCEPT;
-
-    /// Stop all unsubscribers with the given code.
-    virtual void stop(const code& ec) NOEXCEPT;
+    inline distributor_rpc(asio::strand& strand) NOEXCEPT;
+    virtual ~distributor_rpc() = default;
 
     /// Dispatch the request to the appropriate method's unsubscriber.
-    virtual code notify(const json::request_t& request) NOEXCEPT;
+    virtual inline code notify(const json::request_t& request) NOEXCEPT;
 
-protected:
-    /// Example methods.
-    DECLARE_METHOD(get_version)
-    DECLARE_METHOD(add_element, int, int)
+    /// Stop all unsubscribers with the given code.
+    virtual inline void stop(const code& ec) NOEXCEPT;
 
 private:
+    // make_subscribers
+    // ------------------------------------------------------------------------
+
+    template <typename Method>
+    struct subscriber_type;
+
+    template <rpc::method_name Unique, typename... Args>
+    struct subscriber_type<rpc::method<Unique, Args...>>
+    {
+        // The subscriber signature/handler includes the tag.
+        using tag = typename rpc::method<Unique, Args...>::tag;
+        using type = network::unsubscriber<tag, Args...>;
+    };
+
+    template <typename Method>
+    using subscriber_t = typename subscriber_type<Method>::type;
+
+    template <typename Method>
+    struct subscribers_type;
+
+    template <typename ...Method>
+    struct subscribers_type<std::tuple<Method...>>
+    {
+        using type = std::tuple<subscriber_t<Method>...>;
+    };
+
+    using methods_t = std::remove_const_t<typename Interface::type>;
+    using subscribers_t = typename subscribers_type<methods_t>::type;
+
+    template <size_t ...Index>
+    static inline subscribers_t make_subscribers(asio::strand& strand,
+        std::index_sequence<Index...>) NOEXCEPT;
+
+    subscribers_t subscribers_;
+
+    // make_dispatchers
+    // ------------------------------------------------------------------------
+
     template <typename ...Args>
     using names_t = std::array<std::string_view, sizeof...(Args)>;
     using optional_t = json::params_option;
     using functor_t = std::function<code(distributor_rpc&, const optional_t&)>;
     using dispatch_t = std::unordered_map<std::string, functor_t>;
-    enum class container{ positional, named, either };
+    using sequence_t = std::make_index_sequence<Interface::size>;
+
+    static inline bool has_params(const optional_t& parameters) NOEXCEPT;
 
     template <typename Type>
-    static Type extract(const json::value_t& value) THROWS;
-    template <typename ...Args>
-    static std::tuple<Args...> extractor(const optional_t& parameters,
-        container mode, const names_t<Args...>& names) THROWS;
-    template <typename ...Args>
-    static code notifier(auto& subscriber, const optional_t& parameters,
-        container mode, auto&& tuple) NOEXCEPT;
-    static bool has_params(const optional_t& parameters) NOEXCEPT;
+    static inline Type extract(const json::value_t& value) THROWS;
 
-    // Function map, find name and dispatch with request.
+    template <typename Tuple>
+    static inline Tuple extractor(const optional_t& parameters,
+        const std::array<std::string_view, std::tuple_size_v<Tuple>>& names) THROWS;
+
+    template <typename Method>
+    static inline code notifier(subscriber_t<Method>& subscriber,
+        const optional_t& parameters, const typename Method::names_t& names) NOEXCEPT;
+
+    template <size_t Index>
+    static inline code do_notify(distributor_rpc& self,
+        const optional_t& params) NOEXCEPT;
+
+    template <size_t ...Index>
+    static inline constexpr dispatch_t make_dispatchers(
+        std::index_sequence<Index...>) NOEXCEPT;
+
     static const dispatch_t dispatch_;
+
+    // subscribe helpers
+    // ------------------------------------------------------------------------
+
+    template <typename Handler, typename = void>
+    struct traits;
+
+    template <typename Handler>
+    struct traits<Handler, std::void_t<decltype(&Handler::operator())>>
+      : traits<decltype(&Handler::operator())> {};
+
+    template <typename Return, typename Class, typename Tag, typename ...Args>
+    struct traits<Return (Class::*)(const code&, Tag, Args...) const NOEXCEPT>
+    {
+        using tag = Tag;
+        using args = std::tuple<Args...>;
+    };
+    
+    template <typename Methods, typename Tag, size_t Index = zero>
+    static inline constexpr size_t find_tag_index() NOEXCEPT;
 };
 
 } // namespace network
 } // namespace libbitcoin
 
-#undef DECLARE_METHOD
+#define TEMPLATE template <typename Interface>
+#define CLASS distributor_rpc<Interface>
 
 #include <bitcoin/network/impl/distributors/distributor_rpc.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif
