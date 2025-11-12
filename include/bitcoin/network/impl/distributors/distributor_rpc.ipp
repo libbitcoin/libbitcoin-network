@@ -71,7 +71,7 @@ TEMPLATE
 template <typename Tuple>
 inline Tuple CLASS::extractor(
     const optional_t& parameters,
-    const std::array<std::string_view, std::tuple_size_v<Tuple>>& names) THROWS
+    const std::array<std::string, std::tuple_size_v<Tuple>>& names) THROWS
 {
     constexpr auto count = std::tuple_size_v<Tuple>;
     if (is_zero(count) && !has_params(parameters))
@@ -96,7 +96,7 @@ inline Tuple CLASS::extractor(
         return [&]<size_t... Index>(std::index_sequence<Index...>)
         {
             return std::make_tuple(extract<std::tuple_element_t<Index, Tuple>>(
-                object.at(std::string{ names.at(Index) }))...);
+                object.at(names.at(Index)))...);
         }(std::make_index_sequence<count>{});
     };
 
@@ -170,7 +170,7 @@ inline constexpr CLASS::dispatch_t CLASS::make_dispatchers(
     {
         std::make_pair
         (
-            std::string{ std::tuple_element_t<Index, methods_t>::name },
+            std::tuple_element_t<Index, methods_t>::name,
             &do_notify<Index>
         )...
     };

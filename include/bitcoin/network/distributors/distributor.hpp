@@ -50,11 +50,11 @@ struct method_name
 template <method_name Unique, typename... Args>
 struct method
 {
-    static constexpr std::string_view name{ Unique.name, Unique.length };
+    static constexpr std::string name{ Unique.name, Unique.length };
 
     using tag = method;
     using args = std::tuple<Args...>;
-    using names_t = std::array<std::string_view, sizeof...(Args)>;
+    using names_t = std::array<std::string, sizeof...(Args)>;
 
     /// Required for construction of tag{}.
     constexpr method() NOEXCEPT

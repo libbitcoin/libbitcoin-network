@@ -92,7 +92,7 @@ private:
     // ------------------------------------------------------------------------
 
     template <typename ...Args>
-    using names_t = std::array<std::string_view, sizeof...(Args)>;
+    using names_t = std::array<std::string, sizeof...(Args)>;
     using optional_t = json::params_option;
     using functor_t = std::function<code(distributor_rpc&, const optional_t&)>;
     using dispatch_t = std::unordered_map<std::string, functor_t>;
@@ -105,7 +105,7 @@ private:
 
     template <typename Tuple>
     static inline Tuple extractor(const optional_t& parameters,
-        const std::array<std::string_view, std::tuple_size_v<Tuple>>& names) THROWS;
+        const std::array<std::string, std::tuple_size_v<Tuple>>& names) THROWS;
 
     template <typename Method>
     static inline code notifier(subscriber_t<Method>& subscriber,
