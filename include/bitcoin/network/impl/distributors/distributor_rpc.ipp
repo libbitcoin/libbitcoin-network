@@ -115,25 +115,30 @@ inline Tuple CLASS::extractor(
 
     const auto& params = parameters.value();
 
-    // TODO: use if constexpr() as mode is constexpr.
-    switch (Interface::mode)
+    if constexpr (Interface::mode == rpc::group::positional)
     {
-        case rpc::group::positional:
-            if (!std::holds_alternative<json::array_t>(params))
-                throw std::invalid_argument{ "positional" };
-            return get_array(std::get<json::array_t>(params));
-        case rpc::group::named:
-            if (!std::holds_alternative<json::object_t>(params))
-                throw std::invalid_argument{ "named" };
-            return get_object(std::get<json::object_t>(params));
-        case rpc::group::either:
-            if (std::holds_alternative<json::array_t>(params))
-                return get_array(std::get<json::array_t>(params));
-            if (std::holds_alternative<json::object_t>(params))
-                return get_object(std::get<json::object_t>(params));
-    }
+        if (!std::holds_alternative<json::array_t>(params))
+            throw std::invalid_argument{ "positional" };
 
-    throw std::invalid_argument{ "rpc::group" };
+        return get_array(std::get<json::array_t>(params));
+    }
+    else if constexpr (Interface::mode == rpc::group::named)
+    {
+        if (!std::holds_alternative<json::object_t>(params))
+            throw std::invalid_argument{ "named" };
+
+        return get_object(std::get<json::object_t>(params));
+    }
+    else // if constexpr (Interface::mode == rpc::group::either)
+    {
+        if (std::holds_alternative<json::array_t>(params))
+            return get_array(std::get<json::array_t>(params));
+
+        if (std::holds_alternative<json::object_t>(params))
+            return get_object(std::get<json::object_t>(params));
+
+        throw std::invalid_argument{ "either" };
+    }
 }
 
 TEMPLATE
