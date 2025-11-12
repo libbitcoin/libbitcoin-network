@@ -169,10 +169,8 @@ inline code CLASS::do_notify(distributor_rpc& self,
     const optional_t& params) NOEXCEPT
 {
     using method_t = std::tuple_element_t<Index, methods_t>;
-    using tag = typename method_t::tag;
     auto& subscriber = std::get<Index>(self.subscribers_);
     const auto& names = std::get<Index>(Interface::methods).names();
-
     return notifier<method_t>(subscriber, params, names);
 }
 
