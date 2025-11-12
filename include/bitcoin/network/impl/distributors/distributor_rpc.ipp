@@ -64,20 +64,7 @@ inline Type CLASS::extract(const json::value_t& value) THROWS
     if constexpr (is_same_type<Type, double>)
         return std::get<json::number_t>(value.value());
 
-    // Hack: this is not a native json-rpc type.
-    if constexpr (is_same_type<Type, int>)
-    {
-        const auto& number = std::get<json::number_t>(value.value());
-        if (number != std::floor(number) ||
-            number < std::numeric_limits<int>::min() ||
-            number > std::numeric_limits<int>::max()) {
-            throw std::invalid_argument{ "int" };
-        }
-
-        return system::to_integer<int>(number);
-    }
-
-    ////throw std::bad_variant_access{};
+    throw std::invalid_argument{ "json" };
 }
 
 TEMPLATE
