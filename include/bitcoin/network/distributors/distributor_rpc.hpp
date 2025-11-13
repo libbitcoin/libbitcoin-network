@@ -91,29 +91,41 @@ private:
     // make_dispatchers
     // ------------------------------------------------------------------------
 
-    template <typename ...Args>
-    using names_t = std::array<std::string, sizeof...(Args)>;
+    template <typename Type>
+    using names_t = typename rpc::parameter_names<Type>::type;
+
+    template <typename Method>
+    using args_t = typename Method::args;
+
+    template <typename Method>
+    using tag_t = typename Method::tag;
+
+    template <size_t Index, typename Methods>
+    using method_t = std::tuple_element_t<Index, methods_t>;
+
+    template <size_t Size>
+    using sequence_t = std::make_index_sequence<Size>;
+
     using optional_t = json::params_option;
     using functor_t = std::function<code(distributor_rpc&, const optional_t&)>;
     using dispatch_t = std::unordered_map<std::string, functor_t>;
-    using sequence_t = std::make_index_sequence<Interface::size>;
 
     static inline bool has_params(const optional_t& parameters) NOEXCEPT;
 
     template <typename Type>
     static inline Type extract(const json::value_t& value) THROWS;
 
-    template <typename Tuple>
-    static inline Tuple extractor(const optional_t& parameters,
-        const std::array<std::string, std::tuple_size_v<Tuple>>& names) THROWS;
+    template <typename Arguments>
+    static inline Arguments extractor(const optional_t& parameters,
+        const names_t<Arguments>& names) THROWS;
 
     template <typename Method>
     static inline code notifier(subscriber_t<Method>& subscriber,
-        const optional_t& parameters, const typename Method::names_t& names) NOEXCEPT;
+        const optional_t& parameters, const names_t<Method>& names) NOEXCEPT;
 
     template <size_t Index>
     static inline code do_notify(distributor_rpc& self,
-        const optional_t& params) NOEXCEPT;
+        const optional_t& parameters) NOEXCEPT;
 
     template <size_t ...Index>
     static inline constexpr dispatch_t make_dispatchers(
@@ -121,7 +133,7 @@ private:
 
     static const dispatch_t dispatch_;
 
-    // subscribe helpers
+    // find_tag_index
     // ------------------------------------------------------------------------
 
     template <typename Handler, typename = void>

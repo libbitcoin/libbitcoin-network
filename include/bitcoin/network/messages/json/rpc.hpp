@@ -19,7 +19,9 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_RPC_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_RPC_HPP
 
+#include <algorithm>
 #include <optional>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -134,6 +136,93 @@ DECLARE_JSON_TAG_INVOKE(request_t);
 DECLARE_JSON_TAG_INVOKE(response_t);
 
 } // namespace json
+
+/// ---------------------------------------------------------------------------
+
+namespace rpc {
+
+BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
+BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
+
+enum class group { positional, named, either };
+
+/// Non-type template parameter (NTTP) dynamically defines a name for type.
+template <size_t Length>
+struct method_name
+{
+    inline constexpr method_name(const char (&text)[Length])
+    {
+        std::copy_n(text, Length, name);
+    }
+
+    char name[Length]{};
+    static constexpr auto length = sub1(Length);
+};
+
+/// Defines methods assignable to an rpc interface.
+template <method_name Unique, typename... Args>
+struct method
+{
+    static constexpr std::string name{ Unique.name, Unique.length };
+
+    static constexpr auto size = sizeof...(Args);
+    using names = std::array<std::string, size>;
+    using args = std::tuple<Args...>;
+    using tag = method;
+
+    /// Required for construction of tag{}.
+    inline constexpr method() NOEXCEPT
+      : names_{}
+    {
+    }
+
+    /// Defines a method assignable to an rpc interface.
+    template <typename ...Names, if_equal<sizeof...(Names), size> = true>
+    inline constexpr method(Names&&... names) NOEXCEPT
+      : names_{ std::forward<Names>(names)... }
+    {
+    }
+
+    inline constexpr const names& parameter_names() const NOEXCEPT
+    {
+        return names_;
+    }
+
+private:
+    const names names_;
+};
+
+BC_POP_WARNING()
+BC_POP_WARNING()
+
+/// Type helpers for determining the type of method::parameter_names().
+/// ---------------------------------------------------------------------------
+
+template <typename Type, typename = bool>
+struct parameter_names {};
+
+template <typename Type>
+struct parameter_names<Type, bool_if<!is_tuple<Type>>>
+{
+    using type = typename Type::names;
+};
+
+template <typename Type>
+struct parameter_names<Type, bool_if<is_tuple<Type>>>
+{
+    template <typename Tuple>
+    struct unpack;
+
+    template <typename ...Args>
+    struct unpack<std::tuple<Args...>>
+    {
+        using type = typename method<"", Args...>::names;
+    };
+
+    using type = typename unpack<Type>::type;
+};
+
+} // namespace rpc
 } // namespace network
 } // namespace libbitcoin
 

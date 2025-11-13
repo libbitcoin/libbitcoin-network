@@ -25,12 +25,13 @@
 namespace libbitcoin {
 namespace network {
 
+/// rpc interface requires methods, type, size, and mode.
 struct bitcoind
 {
     static constexpr std::tuple methods
     {
         rpc::method<"get_version">{},
-        rpc::method<"add_element", int, int>{ "a", "b" },
+        rpc::method<"add_element", bool, double>{ "a", "b" },
     };
 
     using type = decltype(methods);
