@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__valid_nonced_ping__expected_notif
     {
         instance.subscribe([&](const code& ec, const messages::peer::ping::cptr& ping) NOEXCEPT
         {
-            // Handle stop notification (unavoidable test condition).
+            // Avoid stop notification (unavoidable test condition).
             if (!ping)
             {
                 promise.set_value(ec);

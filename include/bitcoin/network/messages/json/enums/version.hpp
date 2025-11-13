@@ -23,7 +23,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace json {
+namespace rpc {
 
 /// Enumeration of JSON-RPC protocol versions.
 enum class version
@@ -44,7 +44,7 @@ enum class version
     invalid
 };
 
-} // namespace json
+} // namespace rpc
 } // namespace network
 } // namespace libbitcoin
 

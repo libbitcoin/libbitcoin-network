@@ -19,69 +19,11 @@
 #ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_HPP
 #define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_HPP
 
-#include <algorithm>
-#include <tuple>
 #include <bitcoin/network/define.hpp>
-
-// TODO: move this.
 
 namespace libbitcoin {
 namespace network {
-namespace rpc {
 
-BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
-BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
-
-enum class group { positional, named, either };
-
-/// Non-type template parameter (NTTP) dynamically defines a name for type.
-template <size_t Length>
-struct method_name
-{
-    constexpr method_name(const char (&text)[Length])
-    {
-        std::copy_n(text, Length, name);
-    }
-
-    char name[Length]{};
-    static constexpr auto length = sub1(Length);
-};
-
-template <method_name Unique, typename... Args>
-struct method
-{
-    static constexpr std::string_view name{ Unique.name, Unique.length };
-
-    using tag = method;
-    using args = std::tuple<Args...>;
-    using names_t = std::array<std::string_view, sizeof...(Args)>;
-
-    /// Required for construction of tag{}.
-    constexpr method() NOEXCEPT
-      : names_{}
-    {
-    }
-
-    template <typename ...ParameterNames,
-        if_equal<sizeof...(ParameterNames), sizeof...(Args)> = true>
-    constexpr method(ParameterNames&&... names) NOEXCEPT
-      : names_{ std::forward<ParameterNames>(names)... }
-    {
-    }
-
-    constexpr const names_t& names() const NOEXCEPT
-    {
-        return names_;
-    }
-
-private:
-    const names_t names_;
-};
-
-BC_POP_WARNING()
-BC_POP_WARNING()
-
-} // namespace rpc
 } // namespace network
 } // namespace libbitcoin
 

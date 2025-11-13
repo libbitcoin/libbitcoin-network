@@ -19,7 +19,9 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_RPC_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_RPC_HPP
 
+#include <algorithm>
 #include <optional>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -28,7 +30,10 @@
 
 namespace libbitcoin {
 namespace network {
-namespace json {
+namespace rpc {
+
+/// Types.
+/// ---------------------------------------------------------------------------
 
 /// Forward declaration for array_t/object_t. 
 struct value_t;
@@ -133,7 +138,125 @@ DECLARE_JSON_TAG_INVOKE(identity_t);
 DECLARE_JSON_TAG_INVOKE(request_t);
 DECLARE_JSON_TAG_INVOKE(response_t);
 
-} // namespace json
+/// Methods.
+/// ---------------------------------------------------------------------------
+
+BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
+BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
+
+enum class group { positional, named, either };
+
+/// Non-type template parameter (NTTP) dynamically defines a name for type.
+template <size_t Length>
+struct method_name
+{
+    inline constexpr method_name(const char (&text)[Length])
+    {
+        std::copy_n(text, Length, name);
+    }
+
+    char name[Length]{};
+    static constexpr auto length = sub1(Length);
+};
+
+/// Defines methods assignable to an rpc interface.
+template <method_name Unique, typename... Args>
+struct method
+{
+    // TODO: std::string_view/std::string switch with extractor change (gcc14).
+    static constexpr std::string_view name{ Unique.name, Unique.length };
+
+    // TODO: std::string_view/std::string switch with extractor change (gcc14).
+    static constexpr auto size = sizeof...(Args);
+    using names = std::array<std::string_view, size>;
+    using args = std::tuple<Args...>;
+    using tag = method;
+
+    /// Required for construction of tag{}.
+    inline constexpr method() NOEXCEPT
+      : names_{}
+    {
+    }
+
+    /// Defines a method assignable to an rpc interface.
+    template <typename ...Names, if_equal<sizeof...(Names), size> = true>
+    inline constexpr method(Names&&... names) NOEXCEPT
+      : names_{ std::forward<Names>(names)... }
+    {
+    }
+
+    inline constexpr const names& parameter_names() const NOEXCEPT
+    {
+        return names_;
+    }
+
+private:
+    const names names_;
+};
+
+BC_POP_WARNING()
+BC_POP_WARNING()
+
+/// Type helpers.
+/// ---------------------------------------------------------------------------
+
+/// method extraction
+
+template <typename Type, typename = bool>
+struct parameter_names {};
+
+template <typename Type>
+struct parameter_names<Type, bool_if<!is_tuple<Type>>>
+{
+    using type = typename Type::names;
+};
+
+template <typename Type>
+struct parameter_names<Type, bool_if<is_tuple<Type>>>
+{
+    template <typename Tuple>
+    struct unpack;
+
+    template <typename ...Args>
+    struct unpack<std::tuple<Args...>>
+    {
+        using type = typename method<"", Args...>::names;
+    };
+
+    using type = typename unpack<Type>::type;
+};
+
+template <typename Type>
+using names_t = typename parameter_names<Type>::type;
+
+template <typename Method>
+using args_t = typename Method::args;
+
+template <typename Method>
+using tag_t = typename Method::tag;
+
+template <size_t Index, typename Methods>
+using method_t = std::tuple_element_t<Index, Methods>;
+
+/// handler traits extraction
+
+template <typename Handler, typename = void>
+struct traits;
+
+template <typename Handler>
+struct traits<Handler, std::void_t<decltype(&Handler::operator())>>
+  : traits<decltype(&Handler::operator())>
+{
+};
+
+template <typename Return, typename Class, typename Tag, typename ...Args>
+struct traits<Return(Class::*)(const code&, Tag, Args...) const NOEXCEPT>
+{
+    using tag = Tag;
+    using args = std::tuple<Args...>;
+};
+
+} // namespace rpc
 } // namespace network
 } // namespace libbitcoin
 

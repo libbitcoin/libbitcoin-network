@@ -47,7 +47,7 @@ public:
     virtual ~distributor_rpc() = default;
 
     /// Dispatch the request to the appropriate method's unsubscriber.
-    virtual inline code notify(const json::request_t& request) NOEXCEPT;
+    virtual inline code notify(const rpc::request_t& request) NOEXCEPT;
 
     /// Stop all unsubscribers with the given code.
     virtual inline void stop(const code& ec) NOEXCEPT;
@@ -59,10 +59,9 @@ private:
     template <typename Method>
     struct subscriber_type;
 
-    template <rpc::method_name Unique, typename... Args>
+    template <rpc::method_name Unique, typename ... Args>
     struct subscriber_type<rpc::method<Unique, Args...>>
     {
-        // The subscriber signature/handler includes the tag.
         using tag = typename rpc::method<Unique, Args...>::tag;
         using type = network::unsubscriber<tag, Args...>;
     };
@@ -82,6 +81,9 @@ private:
     using methods_t = std::remove_const_t<typename Interface::type>;
     using subscribers_t = typename subscribers_type<methods_t>::type;
 
+    template <typename Tag, size_t Index = zero>
+    static inline constexpr size_t find_tag_index() NOEXCEPT;
+
     template <size_t ...Index>
     static inline subscribers_t make_subscribers(asio::strand& strand,
         std::index_sequence<Index...>) NOEXCEPT;
@@ -91,55 +93,33 @@ private:
     // make_dispatchers
     // ------------------------------------------------------------------------
 
-    template <typename ...Args>
-    using names_t = std::array<std::string_view, sizeof...(Args)>;
-    using optional_t = json::params_option;
+    using optional_t = rpc::params_option;
     using functor_t = std::function<code(distributor_rpc&, const optional_t&)>;
     using dispatch_t = std::unordered_map<std::string, functor_t>;
-    using sequence_t = std::make_index_sequence<Interface::size>;
 
     static inline bool has_params(const optional_t& parameters) NOEXCEPT;
 
     template <typename Type>
-    static inline Type extract(const json::value_t& value) THROWS;
+    static inline Type extract(const rpc::value_t& value) THROWS;
 
-    template <typename Tuple>
-    static inline Tuple extractor(const optional_t& parameters,
-        const std::array<std::string_view, std::tuple_size_v<Tuple>>& names) THROWS;
+    template <typename Arguments>
+    static inline Arguments extractor(const optional_t& parameters,
+        const rpc::names_t<Arguments>& names) THROWS;
 
     template <typename Method>
     static inline code notifier(subscriber_t<Method>& subscriber,
-        const optional_t& parameters, const typename Method::names_t& names) NOEXCEPT;
+        const optional_t& parameters,
+        const rpc::names_t<Method>& names) NOEXCEPT;
 
     template <size_t Index>
     static inline code do_notify(distributor_rpc& self,
-        const optional_t& params) NOEXCEPT;
+        const optional_t& parameters) NOEXCEPT;
 
     template <size_t ...Index>
     static inline constexpr dispatch_t make_dispatchers(
         std::index_sequence<Index...>) NOEXCEPT;
 
-    static const dispatch_t dispatch_;
-
-    // subscribe helpers
-    // ------------------------------------------------------------------------
-
-    template <typename Handler, typename = void>
-    struct traits;
-
-    template <typename Handler>
-    struct traits<Handler, std::void_t<decltype(&Handler::operator())>>
-      : traits<decltype(&Handler::operator())> {};
-
-    template <typename Return, typename Class, typename Tag, typename ...Args>
-    struct traits<Return (Class::*)(const code&, Tag, Args...) const NOEXCEPT>
-    {
-        using tag = Tag;
-        using args = std::tuple<Args...>;
-    };
-    
-    template <typename Methods, typename Tag, size_t Index = zero>
-    static inline constexpr size_t find_tag_index() NOEXCEPT;
+    static const dispatch_t dispatch_;    
 };
 
 } // namespace network
