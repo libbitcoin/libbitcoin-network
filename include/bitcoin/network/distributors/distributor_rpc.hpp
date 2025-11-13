@@ -47,7 +47,7 @@ public:
     virtual ~distributor_rpc() = default;
 
     /// Dispatch the request to the appropriate method's unsubscriber.
-    virtual inline code notify(const json::request_t& request) NOEXCEPT;
+    virtual inline code notify(const rpc::request_t& request) NOEXCEPT;
 
     /// Stop all unsubscribers with the given code.
     virtual inline void stop(const code& ec) NOEXCEPT;
@@ -106,14 +106,14 @@ private:
     template <size_t Size>
     using sequence_t = std::make_index_sequence<Size>;
 
-    using optional_t = json::params_option;
+    using optional_t = rpc::params_option;
     using functor_t = std::function<code(distributor_rpc&, const optional_t&)>;
     using dispatch_t = std::unordered_map<std::string, functor_t>;
 
     static inline bool has_params(const optional_t& parameters) NOEXCEPT;
 
     template <typename Type>
-    static inline Type extract(const json::value_t& value) THROWS;
+    static inline Type extract(const rpc::value_t& value) THROWS;
 
     template <typename Arguments>
     static inline Arguments extractor(const optional_t& parameters,

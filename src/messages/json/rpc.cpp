@@ -26,7 +26,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace json {
+namespace rpc {
 
 // version
 // ----------------------------------------------------------------------------
@@ -350,6 +350,6 @@ DEFINE_JSON_TO_TAG(response_t)
 
 BC_POP_WARNING()
 
-} // namespace json
+} // namespace rpc
 } // namespace network
 } // namespace libbitcoin

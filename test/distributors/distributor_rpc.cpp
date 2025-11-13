@@ -22,33 +22,35 @@
 
 BOOST_AUTO_TEST_SUITE(distributor_rpc_tests)
 
-using namespace json;
+using namespace rpc;
 
+// TODO: move to messages/json/rpc tests.
 template <typename Type>
-using names_t = typename rpc::parameter_names<Type>::type;
-static_assert(is_same_type<names_t<rpc::method<"foo", bool, double>>, std::array<std::string, 2>>);
-static_assert(is_same_type<names_t<rpc::method<"bar">>, std::array<std::string, 0>>);
+using names_t = typename parameter_names<Type>::type;
+static_assert(is_same_type<names_t<method<"foo", bool, double>>, std::array<std::string, 2>>);
+static_assert(is_same_type<names_t<method<"bar">>, std::array<std::string, 0>>);
 static_assert(is_same_type<names_t<std::tuple<bool, double>>, std::array<std::string, 2>>);
 static_assert(is_same_type<names_t<std::tuple<>>, std::array<std::string, 0>>);
 
-static_assert( is_same_type<rpc::method<"test2">, rpc::method<"test2">>);
-static_assert(!is_same_type<rpc::method<"test1">, rpc::method<"test2">>);
-static_assert(!is_same_type<rpc::method<"test1", bool>, rpc::method<"test1", int>>);
-static_assert(!is_same_type<rpc::method<"test1", bool>, rpc::method<"test2", bool>>);
-static_assert( is_same_type<rpc::method<"test1", bool>, rpc::method<"test1", bool>>);
+// TODO: move to messages/json/rpc tests.
+static_assert( is_same_type<method<"test2">, method<"test2">>);
+static_assert(!is_same_type<method<"test1">, method<"test2">>);
+static_assert(!is_same_type<method<"test1", bool>, method<"test1", int>>);
+static_assert(!is_same_type<method<"test1", bool>, method<"test2", bool>>);
+static_assert( is_same_type<method<"test1", bool>, method<"test1", bool>>);
 
 // interface requires `type` (type) and `methods`, `size`, `mode` (value).
 struct mock
 {
     static constexpr std::tuple methods
     {
-        rpc::method<"get_version">{},
-        rpc::method<"add_element", bool, double, std::string>{ "a", "b", "c" }
+        method<"get_version">{},
+        method<"add_element", bool, double, std::string>{ "a", "b", "c" }
     };
 
     using type = decltype(methods);
     static constexpr auto size = std::tuple_size_v<type>;
-    static constexpr rpc::group mode = rpc::group::either;
+    static constexpr group mode = group::either;
 };
 
 using get_version = std::tuple_element_t<0, decltype(mock::methods)>::tag;

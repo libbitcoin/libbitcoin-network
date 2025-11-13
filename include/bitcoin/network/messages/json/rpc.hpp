@@ -30,7 +30,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace json {
+namespace rpc {
 
 /// Forward declaration for array_t/object_t. 
 struct value_t;
@@ -135,11 +135,7 @@ DECLARE_JSON_TAG_INVOKE(identity_t);
 DECLARE_JSON_TAG_INVOKE(request_t);
 DECLARE_JSON_TAG_INVOKE(response_t);
 
-} // namespace json
-
 /// ---------------------------------------------------------------------------
-
-namespace rpc {
 
 BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
 BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)

@@ -39,11 +39,11 @@ inline bool CLASS::has_params(const optional_t& parameters) NOEXCEPT
 
     return std::visit(overload
     {
-        [](const json::array_t& param) NOEXCEPT
+        [](const rpc::array_t& param) NOEXCEPT
         {
             return !param.empty();
         },
-        [](const json::object_t& param) NOEXCEPT
+        [](const rpc::object_t& param) NOEXCEPT
         {
             return !param.empty();
         }
@@ -52,16 +52,16 @@ inline bool CLASS::has_params(const optional_t& parameters) NOEXCEPT
 
 TEMPLATE
 template <typename Type>
-inline Type CLASS::extract(const json::value_t& value) THROWS
+inline Type CLASS::extract(const rpc::value_t& value) THROWS
 {
     if constexpr (is_same_type<Type, bool>)
-        return std::get<json::boolean_t>(value.value());
+        return std::get<rpc::boolean_t>(value.value());
 
     if constexpr (is_same_type<Type, std::string>)
-        return std::get<json::string_t>(value.value());
+        return std::get<rpc::string_t>(value.value());
 
     if constexpr (is_same_type<Type, double>)
-        return std::get<json::number_t>(value.value());
+        return std::get<rpc::number_t>(value.value());
 
     throw std::invalid_argument{ "type" };
 }
@@ -78,7 +78,7 @@ inline Arguments CLASS::extractor(const optional_t& parameters,
     if (!parameters.has_value())
         throw std::invalid_argument{ "count" };
 
-    const auto get_array = [&](const json::array_t& array) THROWS
+    const auto get_array = [&](const rpc::array_t& array) THROWS
     {
         if (array.size() != count)
             throw std::invalid_argument{ "count" };
@@ -93,7 +93,7 @@ inline Arguments CLASS::extractor(const optional_t& parameters,
         }(sequence_t<count>{});
     };
 
-    const auto get_object = [&](const json::object_t& object) THROWS
+    const auto get_object = [&](const rpc::object_t& object) THROWS
     {
         if (object.size() != count)
             throw std::invalid_argument{ "count" };
@@ -113,25 +113,25 @@ inline Arguments CLASS::extractor(const optional_t& parameters,
 
     if constexpr (mode == rpc::group::positional)
     {
-        if (!std::holds_alternative<json::array_t>(params))
+        if (!std::holds_alternative<rpc::array_t>(params))
             throw std::invalid_argument{ "positional" };
 
-        return get_array(std::get<json::array_t>(params));
+        return get_array(std::get<rpc::array_t>(params));
     }
     else if constexpr (mode == rpc::group::named)
     {
-        if (!std::holds_alternative<json::object_t>(params))
+        if (!std::holds_alternative<rpc::object_t>(params))
             throw std::invalid_argument{ "named" };
 
-        return get_object(std::get<json::object_t>(params));
+        return get_object(std::get<rpc::object_t>(params));
     }
     else // if constexpr (mode == rpc::group::either)
     {
-        if (std::holds_alternative<json::array_t>(params))
-            return get_array(std::get<json::array_t>(params));
+        if (std::holds_alternative<rpc::array_t>(params))
+            return get_array(std::get<rpc::array_t>(params));
 
-        if (std::holds_alternative<json::object_t>(params))
-            return get_object(std::get<json::object_t>(params));
+        if (std::holds_alternative<rpc::object_t>(params))
+            return get_object(std::get<rpc::object_t>(params));
 
         throw std::invalid_argument{ "either" };
     }
@@ -245,7 +245,7 @@ inline CLASS::distributor_rpc(asio::strand& strand) NOEXCEPT
 }
 
 TEMPLATE
-inline code CLASS::notify(const json::request_t& request) NOEXCEPT
+inline code CLASS::notify(const rpc::request_t& request) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto it = dispatch_.find(request.method);
