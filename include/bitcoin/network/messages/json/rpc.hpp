@@ -163,10 +163,12 @@ struct method_name
 template <method_name Unique, typename... Args>
 struct method
 {
-    static constexpr std::string name{ Unique.name, Unique.length };
+    // TODO: std::string_view/std::string switch with extractor change (gcc14).
+    static constexpr std::string_view name{ Unique.name, Unique.length };
 
+    // TODO: std::string_view/std::string switch with extractor change (gcc14).
     static constexpr auto size = sizeof...(Args);
-    using names = std::array<std::string, size>;
+    using names = std::array<std::string_view, size>;
     using args = std::tuple<Args...>;
     using tag = method;
 
@@ -243,7 +245,7 @@ struct traits;
 
 template <typename Handler>
 struct traits<Handler, std::void_t<decltype(&Handler::operator())>>
-    : traits<decltype(&Handler::operator())>
+  : traits<decltype(&Handler::operator())>
 {
 };
 

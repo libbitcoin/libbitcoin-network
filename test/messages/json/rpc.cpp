@@ -27,10 +27,10 @@ using namespace rpc;
 template <typename Type>
 using names_t = typename parameter_names<Type>::type;
 
-static_assert(is_same_type<names_t<method<"foo", bool, double>>, std::array<std::string, 2>>);
-static_assert(is_same_type<names_t<method<"bar">>, std::array<std::string, 0>>);
-static_assert(is_same_type<names_t<std::tuple<bool, double>>, std::array<std::string, 2>>);
-static_assert(is_same_type<names_t<std::tuple<>>, std::array<std::string, 0>>);
+static_assert(is_same_type<names_t<method<"foo", bool, double>>, std::array<std::string_view, 2>>);
+static_assert(is_same_type<names_t<method<"bar">>, std::array<std::string_view, 0>>);
+static_assert(is_same_type<names_t<std::tuple<bool, double>>, std::array<std::string_view, 2>>);
+static_assert(is_same_type<names_t<std::tuple<>>, std::array<std::string_view, 0>>);
 
 static_assert( is_same_type<method<"test2">, method<"test2">>);
 static_assert(!is_same_type<method<"test1">, method<"test2">>);

@@ -105,8 +105,9 @@ inline Arguments CLASS::extractor(const optional_t& parameters,
         {
             return std::make_tuple
             (
+                // TODO: std::string removal with rpc::method change (gcc14).
                 extract<std::tuple_element_t<Index, Arguments>>(
-                    object.at(names.at(Index)))...
+                    object.at(std::string{ names.at(Index) }))...
             );
         }(to_sequence<count>{});
     };
@@ -185,7 +186,9 @@ inline constexpr CLASS::dispatch_t CLASS::make_dispatchers(
     {
         std::make_pair
         (
-            rpc::method_t<Index, methods_t>::name, &do_notify<Index>
+            // TODO: std::string removal with rpc::method change (gcc14).
+            std::string{ rpc::method_t<Index, methods_t>::name },
+            &do_notify<Index>
         )...
     };
 }
@@ -217,8 +220,6 @@ inline constexpr size_t CLASS::find_tag_index() NOEXCEPT
 {
     static_assert(Index < std::tuple_size_v<methods_t>);
     using tag = rpc::tag_t<rpc::method_t<Index, methods_t>>;
-
-    // is_same_type decays individual types.
     if constexpr (!is_same_type<tag, Tag>)
         return find_tag_index<Tag, add1(Index)>();
 
