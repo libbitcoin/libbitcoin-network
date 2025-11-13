@@ -185,6 +185,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/http/enums/target.cpp \
     test/messages/json/body_reader.cpp \
     test/messages/json/body_writer.cpp \
+    test/messages/json/rpc.cpp \
     test/messages/peer/address.cpp \
     test/messages/peer/address_item.cpp \
     test/messages/peer/alert.cpp \

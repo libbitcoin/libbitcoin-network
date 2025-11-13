@@ -24,21 +24,6 @@ BOOST_AUTO_TEST_SUITE(distributor_rpc_tests)
 
 using namespace rpc;
 
-// TODO: move to messages/json/rpc tests.
-template <typename Type>
-using names_t = typename parameter_names<Type>::type;
-static_assert(is_same_type<names_t<method<"foo", bool, double>>, std::array<std::string, 2>>);
-static_assert(is_same_type<names_t<method<"bar">>, std::array<std::string, 0>>);
-static_assert(is_same_type<names_t<std::tuple<bool, double>>, std::array<std::string, 2>>);
-static_assert(is_same_type<names_t<std::tuple<>>, std::array<std::string, 0>>);
-
-// TODO: move to messages/json/rpc tests.
-static_assert( is_same_type<method<"test2">, method<"test2">>);
-static_assert(!is_same_type<method<"test1">, method<"test2">>);
-static_assert(!is_same_type<method<"test1", bool>, method<"test1", int>>);
-static_assert(!is_same_type<method<"test1", bool>, method<"test2", bool>>);
-static_assert( is_same_type<method<"test1", bool>, method<"test1", bool>>);
-
 // interface requires `type` (type) and `methods`, `size`, `mode` (value).
 struct mock
 {

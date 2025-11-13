@@ -59,10 +59,9 @@ private:
     template <typename Method>
     struct subscriber_type;
 
-    template <rpc::method_name Unique, typename... Args>
+    template <rpc::method_name Unique, typename ... Args>
     struct subscriber_type<rpc::method<Unique, Args...>>
     {
-        // The subscriber signature/handler includes the tag.
         using tag = typename rpc::method<Unique, Args...>::tag;
         using type = network::unsubscriber<tag, Args...>;
     };
@@ -82,6 +81,9 @@ private:
     using methods_t = std::remove_const_t<typename Interface::type>;
     using subscribers_t = typename subscribers_type<methods_t>::type;
 
+    template <typename Tag, size_t Index = zero>
+    static inline constexpr size_t find_tag_index() NOEXCEPT;
+
     template <size_t ...Index>
     static inline subscribers_t make_subscribers(asio::strand& strand,
         std::index_sequence<Index...>) NOEXCEPT;
@@ -90,21 +92,6 @@ private:
 
     // make_dispatchers
     // ------------------------------------------------------------------------
-
-    template <typename Type>
-    using names_t = typename rpc::parameter_names<Type>::type;
-
-    template <typename Method>
-    using args_t = typename Method::args;
-
-    template <typename Method>
-    using tag_t = typename Method::tag;
-
-    template <size_t Index, typename Methods>
-    using method_t = std::tuple_element_t<Index, methods_t>;
-
-    template <size_t Size>
-    using sequence_t = std::make_index_sequence<Size>;
 
     using optional_t = rpc::params_option;
     using functor_t = std::function<code(distributor_rpc&, const optional_t&)>;
@@ -117,11 +104,12 @@ private:
 
     template <typename Arguments>
     static inline Arguments extractor(const optional_t& parameters,
-        const names_t<Arguments>& names) THROWS;
+        const rpc::names_t<Arguments>& names) THROWS;
 
     template <typename Method>
     static inline code notifier(subscriber_t<Method>& subscriber,
-        const optional_t& parameters, const names_t<Method>& names) NOEXCEPT;
+        const optional_t& parameters,
+        const rpc::names_t<Method>& names) NOEXCEPT;
 
     template <size_t Index>
     static inline code do_notify(distributor_rpc& self,
@@ -131,27 +119,7 @@ private:
     static inline constexpr dispatch_t make_dispatchers(
         std::index_sequence<Index...>) NOEXCEPT;
 
-    static const dispatch_t dispatch_;
-
-    // find_tag_index
-    // ------------------------------------------------------------------------
-
-    template <typename Handler, typename = void>
-    struct traits;
-
-    template <typename Handler>
-    struct traits<Handler, std::void_t<decltype(&Handler::operator())>>
-      : traits<decltype(&Handler::operator())> {};
-
-    template <typename Return, typename Class, typename Tag, typename ...Args>
-    struct traits<Return (Class::*)(const code&, Tag, Args...) const NOEXCEPT>
-    {
-        using tag = Tag;
-        using args = std::tuple<Args...>;
-    };
-    
-    template <typename Methods, typename Tag, size_t Index = zero>
-    static inline constexpr size_t find_tag_index() NOEXCEPT;
+    static const dispatch_t dispatch_;    
 };
 
 } // namespace network

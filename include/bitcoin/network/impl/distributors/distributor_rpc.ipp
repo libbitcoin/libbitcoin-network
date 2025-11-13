@@ -28,6 +28,9 @@
 namespace libbitcoin {
 namespace network {
 
+template <size_t Size>
+using to_sequence = std::make_index_sequence<Size>;
+
 // make_dispatchers
 // ----------------------------------------------------------------------------
 
@@ -69,7 +72,7 @@ inline Type CLASS::extract(const rpc::value_t& value) THROWS
 TEMPLATE
 template <typename Arguments>
 inline Arguments CLASS::extractor(const optional_t& parameters,
-    const names_t<Arguments>& names) THROWS
+    const rpc::names_t<Arguments>& names) THROWS
 {
     constexpr auto count = std::tuple_size_v<Arguments>;
     if (is_zero(count) && !has_params(parameters))
@@ -90,7 +93,7 @@ inline Arguments CLASS::extractor(const optional_t& parameters,
                 extract<std::tuple_element_t<Index, Arguments>>(
                     array.at(Index))...
             );
-        }(sequence_t<count>{});
+        }(to_sequence<count>{});
     };
 
     const auto get_object = [&](const rpc::object_t& object) THROWS
@@ -105,7 +108,7 @@ inline Arguments CLASS::extractor(const optional_t& parameters,
                 extract<std::tuple_element_t<Index, Arguments>>(
                     object.at(names.at(Index)))...
             );
-        }(sequence_t<count>{});
+        }(to_sequence<count>{});
     };
 
     const auto& params = parameters.value();
@@ -140,7 +143,7 @@ inline Arguments CLASS::extractor(const optional_t& parameters,
 TEMPLATE
 template <typename Method>
 inline code CLASS::notifier(subscriber_t<Method>& subscriber,
-    const optional_t& parameters, const names_t<Method>& names) NOEXCEPT
+    const optional_t& parameters, const rpc::names_t<Method>& names) NOEXCEPT
 {
     try
     {
@@ -148,10 +151,10 @@ inline code CLASS::notifier(subscriber_t<Method>& subscriber,
         (
             [&](auto&&... args) NOEXCEPT
             {
-                subscriber.notify({}, tag_t<Method>{},
+                subscriber.notify({}, rpc::tag_t<Method>{},
                     std::forward<decltype(args)>(args)...);
             },
-            extractor<args_t<Method>>(parameters, names)
+            extractor<rpc::args_t<Method>>(parameters, names)
         );
 
         return error::success;
@@ -167,9 +170,10 @@ template <size_t Index>
 inline code CLASS::do_notify(distributor_rpc& self,
     const optional_t& parameters) NOEXCEPT
 {
+    using method = rpc::method_t<Index, methods_t>;
     auto& subscriber = std::get<Index>(self.subscribers_);
     const auto& names = std::get<Index>(Interface::methods).parameter_names();
-    return notifier<method_t<Index, methods_t>>(subscriber, parameters, names);
+    return notifier<method>(subscriber, parameters, names);
 }
 
 TEMPLATE
@@ -179,13 +183,16 @@ inline constexpr CLASS::dispatch_t CLASS::make_dispatchers(
 {
     return
     {
-        std::make_pair(method_t<Index, methods_t>::name, &do_notify<Index>)...
+        std::make_pair
+        (
+            rpc::method_t<Index, methods_t>::name, &do_notify<Index>
+        )...
     };
 }
 
 TEMPLATE
 const typename CLASS::dispatch_t
-CLASS::dispatch_ = make_dispatchers(sequence_t<Interface::size>{});
+CLASS::dispatch_ = make_dispatchers(to_sequence<Interface::size>{});
 
 // make_subscribers
 // ----------------------------------------------------------------------------
@@ -197,7 +204,7 @@ inline CLASS::subscribers_t CLASS::make_subscribers(asio::strand& strand,
 {
     return std::make_tuple
     (
-        subscriber_t<method_t<Index, methods_t>>(strand)...
+        subscriber_t<rpc::method_t<Index, methods_t>>(strand)...
     );
 }
 
@@ -205,14 +212,15 @@ inline CLASS::subscribers_t CLASS::make_subscribers(asio::strand& strand,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-template <typename Methods, typename Tag, size_t Index>
+template <typename Tag, size_t Index>
 inline constexpr size_t CLASS::find_tag_index() NOEXCEPT
 {
-    static_assert(Index < std::tuple_size_v<Methods>);
+    static_assert(Index < std::tuple_size_v<methods_t>);
+    using tag = rpc::tag_t<rpc::method_t<Index, methods_t>>;
 
     // is_same_type decays individual types.
-    if constexpr (!is_same_type<tag_t<method_t<Index, Methods>>, Tag>)
-        return find_tag_index<Methods, Tag, add1(Index)>();
+    if constexpr (!is_same_type<tag, Tag>)
+        return find_tag_index<Tag, add1(Index)>();
 
    return Index;
 }
@@ -224,12 +232,12 @@ TEMPLATE
 template <typename Handler>
 inline code CLASS::subscribe(Handler&& handler) NOEXCEPT
 {
-    using traits = traits<Handler>;
-    constexpr auto index = find_tag_index<methods_t, typename traits::tag>();
+    using traits = rpc::traits<Handler>;
+    constexpr auto index = find_tag_index<typename traits::tag>();
 
     // is_same_type decays individual types but not tuple elements.
     using handle_args = typename traits::args;
-    using method_args = args_t<method_t<index, methods_t>>;
+    using method_args = rpc::args_t<rpc::method_t<index, methods_t>>;
     using decayed_handle_args = typename decay_tuple<handle_args>::type;
     using decayed_method_args = typename decay_tuple<method_args>::type;
     static_assert(is_same_type<decayed_handle_args, decayed_method_args>);
@@ -240,7 +248,7 @@ inline code CLASS::subscribe(Handler&& handler) NOEXCEPT
 
 TEMPLATE
 inline CLASS::distributor_rpc(asio::strand& strand) NOEXCEPT
-  : subscribers_(make_subscribers(strand, sequence_t<Interface::size>{}))
+  : subscribers_(make_subscribers(strand, to_sequence<Interface::size>{}))
 {
 }
 

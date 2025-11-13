@@ -32,6 +32,9 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
+/// Types.
+/// ---------------------------------------------------------------------------
+
 /// Forward declaration for array_t/object_t. 
 struct value_t;
 
@@ -135,6 +138,7 @@ DECLARE_JSON_TAG_INVOKE(identity_t);
 DECLARE_JSON_TAG_INVOKE(request_t);
 DECLARE_JSON_TAG_INVOKE(response_t);
 
+/// Methods.
 /// ---------------------------------------------------------------------------
 
 BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
@@ -191,8 +195,10 @@ private:
 BC_POP_WARNING()
 BC_POP_WARNING()
 
-/// Type helpers for determining the type of method::parameter_names().
+/// Type helpers.
 /// ---------------------------------------------------------------------------
+
+/// method extraction
 
 template <typename Type, typename = bool>
 struct parameter_names {};
@@ -216,6 +222,36 @@ struct parameter_names<Type, bool_if<is_tuple<Type>>>
     };
 
     using type = typename unpack<Type>::type;
+};
+
+template <typename Type>
+using names_t = typename parameter_names<Type>::type;
+
+template <typename Method>
+using args_t = typename Method::args;
+
+template <typename Method>
+using tag_t = typename Method::tag;
+
+template <size_t Index, typename Methods>
+using method_t = std::tuple_element_t<Index, Methods>;
+
+/// handler traits extraction
+
+template <typename Handler, typename = void>
+struct traits;
+
+template <typename Handler>
+struct traits<Handler, std::void_t<decltype(&Handler::operator())>>
+    : traits<decltype(&Handler::operator())>
+{
+};
+
+template <typename Return, typename Class, typename Tag, typename ...Args>
+struct traits<Return(Class::*)(const code&, Tag, Args...) const NOEXCEPT>
+{
+    using tag = Tag;
+    using args = std::tuple<Args...>;
 };
 
 } // namespace rpc
