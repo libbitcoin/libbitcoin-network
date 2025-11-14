@@ -59,10 +59,10 @@ private:
     template <typename Method>
     struct subscriber_type;
 
-    template <rpc::method_name Unique, typename ... Args>
-    struct subscriber_type<rpc::method<Unique, Args...>>
+    template <text_t Text, typename ...Args>
+    struct subscriber_type<rpc::method<Text, Args...>>
     {
-        using tag = typename rpc::method<Unique, Args...>::tag;
+        using tag = typename rpc::method<Text, Args...>::tag;
         using type = network::unsubscriber<tag, Args...>;
     };
 

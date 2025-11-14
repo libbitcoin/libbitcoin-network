@@ -21,6 +21,7 @@
 
 #include <tuple>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/json/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -31,8 +32,12 @@ struct bitcoind
 {
     static constexpr std::tuple methods
     {
-        method<"get_version">{},
-        method<"add_element", bool, double>{ "a", "b" },
+        method<"getbestblockhash">{},
+        method<"getblockhash", double>{ "height" },
+        method<"getblock", string_t, option<1>>{ "blockhash", "verbosity" },
+        method<"getblockheader", string_t, option<true>>{ "blockhash", "verbose" },
+        method<"getblockstats", string_t, array_t>{ "hash_or_height", "stats" },
+        method<"getchaintxstats", option<42.0>, option<"hello"_t>>{ "nblocks", "blockhash" },
     };
 
     using type = decltype(methods);

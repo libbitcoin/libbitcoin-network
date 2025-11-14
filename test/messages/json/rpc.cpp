@@ -38,4 +38,30 @@ static_assert(!is_same_type<method<"test1", bool>, method<"test1", int>>);
 static_assert(!is_same_type<method<"test1", bool>, method<"test2", bool>>);
 static_assert( is_same_type<method<"test1", bool>, method<"test1", bool>>);
 
+using truth = option<true>;
+////using only = option<42>;
+using every = option<4.2>;
+using hello = option<"hello"_t>;
+using world = option<"world!"_t>;
+
+static_assert(truth::value == true);
+////static_assert(only::value == 42);
+static_assert(every::value == 4.2);
+static_assert(hello::value == "hello");
+static_assert(world::value == "world!");
+static_assert(hello::value != world::value);
+
+static_assert(is_same_type<truth::type, boolean_t>);
+static_assert(is_same_type<every::type, number_t>);
+static_assert(is_same_type<hello::type, string_t>);
+static_assert(is_same_type<world::type, string_t>);
+
+static_assert(is_same_type<option<true>::type, boolean_t>);
+static_assert(is_same_type<option<false>::type, boolean_t>);
+////static_assert(is_same_type<option<42>::type, number_t>);
+static_assert(is_same_type<option<4.2>::type, number_t>);
+static_assert(is_same_type<option<-4.2>::type, number_t>);
+static_assert(is_same_type<option<"hello"_t>::type, string_t>);
+static_assert(is_same_type<option<"world!"_t>::type, string_t>);
+
 BOOST_AUTO_TEST_SUITE_END()

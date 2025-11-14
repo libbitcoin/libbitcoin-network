@@ -57,14 +57,21 @@ TEMPLATE
 template <typename Type>
 inline Type CLASS::extract(const rpc::value_t& value) THROWS
 {
-    if constexpr (is_same_type<Type, bool>)
-        return std::get<rpc::boolean_t>(value.value());
+    using namespace rpc;
+    if constexpr (is_same_type<Type, boolean_t>)
+        return std::get<boolean_t>(value.value());
 
-    if constexpr (is_same_type<Type, std::string>)
-        return std::get<rpc::string_t>(value.value());
+    if constexpr (is_same_type<Type, string_t>)
+        return std::get<string_t>(value.value());
 
-    if constexpr (is_same_type<Type, double>)
-        return std::get<rpc::number_t>(value.value());
+    if constexpr (is_same_type<Type, number_t>)
+        return std::get<number_t>(value.value());
+
+    if constexpr (is_same_type<Type, array_t>)
+        return std::get<array_t>(value.value());
+
+    if constexpr (is_same_type<Type, object_t>)
+        return std::get<object_t>(value.value());
 
     throw std::invalid_argument{ "type" };
 }

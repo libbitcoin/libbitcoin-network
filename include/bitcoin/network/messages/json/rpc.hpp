@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_RPC_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_RPC_HPP
 
-#include <algorithm>
+#include <concepts>
 #include <optional>
 #include <tuple>
 #include <unordered_map>
@@ -141,30 +141,16 @@ DECLARE_JSON_TAG_INVOKE(response_t);
 /// Methods.
 /// ---------------------------------------------------------------------------
 
-BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
-BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
-
 enum class group { positional, named, either };
 
-/// Non-type template parameter (NTTP) dynamically defines a name for type.
-template <size_t Length>
-struct method_name
-{
-    inline constexpr method_name(const char (&text)[Length])
-    {
-        std::copy_n(text, Length, name);
-    }
-
-    char name[Length]{};
-    static constexpr auto length = sub1(Length);
-};
+BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
 
 /// Defines methods assignable to an rpc interface.
-template <method_name Unique, typename... Args>
+template <text_t Text, typename ...Args>
 struct method
 {
     // TODO: std::string_view/std::string switch with extractor change (gcc14).
-    static constexpr std::string_view name{ Unique.name, Unique.length };
+    static constexpr std::string_view name{ Text.text.data(), Text.text.size() };
 
     // TODO: std::string_view/std::string switch with extractor change (gcc14).
     static constexpr auto size = sizeof...(Args);
@@ -194,7 +180,6 @@ private:
     const names names_;
 };
 
-BC_POP_WARNING()
 BC_POP_WARNING()
 
 /// Type helpers.
@@ -254,6 +239,32 @@ struct traits<Return(Class::*)(const code&, Tag, Args...) const NOEXCEPT>
 {
     using tag = Tag;
     using args = std::tuple<Args...>;
+};
+
+/// Type helpers (default parameter values).
+/// ---------------------------------------------------------------------------
+/// array_t, and object_t do not have defaults (just empty), null_t is N/A.
+
+template <auto Default>
+struct option;
+
+/// number_t  : option<4.2>
+/// boolean_t : option<true>
+template <auto Default> requires
+    std::same_as<decltype(Default), number_t> ||
+    std::same_as<decltype(Default), boolean_t>
+struct option<Default>
+{
+    using type = decltype(Default);
+    static constexpr type value = Default;
+};
+
+/// string_t : option<"hello world!"_t>
+template <size_t Size, std::array<char, Size> Default>
+struct option<Default>
+{
+    using type = string_t;
+    static constexpr std::string_view value{ Default.data(), Size };
 };
 
 } // namespace rpc
