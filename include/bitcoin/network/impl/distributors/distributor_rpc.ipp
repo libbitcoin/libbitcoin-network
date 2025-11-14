@@ -112,7 +112,6 @@ inline Arguments CLASS::extractor(const optional_t& parameters,
         {
             return std::make_tuple
             (
-                // TODO: std::string removal with rpc::method change (gcc14).
                 extract<std::tuple_element_t<Index, Arguments>>(
                     object.at(std::string{ names.at(Index) }))...
             );
@@ -193,7 +192,6 @@ inline constexpr CLASS::dispatch_t CLASS::make_dispatchers(
     {
         std::make_pair
         (
-            // TODO: std::string removal with rpc::method change (gcc14).
             std::string{ rpc::method_t<Index, methods_t>::name },
             &do_notify<Index>
         )...

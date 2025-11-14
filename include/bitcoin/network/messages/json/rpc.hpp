@@ -149,10 +149,7 @@ BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
 template <text_t Text, typename ...Args>
 struct method
 {
-    // TODO: std::string_view/std::string switch with extractor change (gcc14).
     static constexpr std::string_view name{ Text.text.data(), Text.text.size() };
-
-    // TODO: std::string_view/std::string switch with extractor change (gcc14).
     static constexpr auto size = sizeof...(Args);
     using names = std::array<std::string_view, size>;
     using args = std::tuple<Args...>;
