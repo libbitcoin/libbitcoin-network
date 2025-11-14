@@ -33,11 +33,11 @@ struct bitcoind
     static constexpr std::tuple methods
     {
         method<"getbestblockhash">{},
-        method<"getblockhash", double>{ "height" },
-        method<"getblock", string_t, option<1.0>>{ "blockhash", "verbosity" },
-        method<"getblockheader", string_t, option<true>>{ "blockhash", "verbose" },
+        method<"getblockhash", nullable<double>>{ "height" },
+        method<"getblock", string_t, optional<1.0>>{ "blockhash", "verbosity" },
+        method<"getblockheader", string_t, optional<true>>{ "blockhash", "verbose" },
         method<"getblockstats", string_t, array_t>{ "hash_or_height", "stats" },
-        method<"getchaintxstats", option<42.0>, option<"hello"_t>>{ "nblocks", "blockhash" },
+        method<"getchaintxstats", optional<42.0>, optional<"hello"_t>>{ "nblocks", "blockhash" },
     };
 
     using type = decltype(methods);

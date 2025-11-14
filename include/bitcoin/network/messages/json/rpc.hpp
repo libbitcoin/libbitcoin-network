@@ -240,28 +240,45 @@ struct traits<Return(Class::*)(const code&, Tag, Args...) const NOEXCEPT>
 
 /// Type helpers (default parameter values).
 /// ---------------------------------------------------------------------------
-/// array_t, and object_t do not have defaults (just empty), null_t is N/A.
 
+struct optional_tag {};
+struct nullable_tag {};
+
+/// Parameter will be defaulted if missing or null_t (NOT std::optional).
+/// The value types array_t and object_t do not have defaults (just empty).
 template <auto Default>
-struct option;
+struct optional;
 
-/// number_t  : option<4.2>
-/// boolean_t : option<true>
+/// number_t  : optional<4.2>
+/// boolean_t : optional<true>
 template <auto Default> requires
-    std::same_as<decltype(Default), number_t> ||
-    std::same_as<decltype(Default), boolean_t>
-struct option<Default>
+    std::same_as<decltype(Default), boolean_t> ||
+    std::same_as<decltype(Default), number_t>
+struct optional<Default>
 {
+    using tag = optional_tag;
     using type = decltype(Default);
     static constexpr type value = Default;
 };
 
-/// string_t : option<"hello world!"_t>
+/// string_t : optional<"hello world!"_t>
 template <size_t Size, std::array<char, Size> Default>
-struct option<Default>
+struct optional<Default>
 {
+    using tag = optional_tag;
     using type = string_t;
     static constexpr std::string_view value{ Default.data(), Size };
+};
+
+/// Parameter is typed as std::optional, with no value if missing or null_t.
+template <typename Type> requires
+std::same_as<Type, boolean_t> || std::same_as<Type, number_t> ||
+std::same_as<Type, string_t> || std::same_as<Type, object_t> ||
+std::same_as<Type, array_t>
+struct nullable
+{
+    using tag = nullable_tag;
+    using type = Type;
 };
 
 } // namespace rpc
