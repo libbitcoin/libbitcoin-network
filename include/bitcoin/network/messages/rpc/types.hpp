@@ -131,6 +131,18 @@ template <typename Argument>
 using external_t = iif<is_nullable<Argument>::value,
     std::optional<internal_t<Argument>>, internal_t<Argument>>;
 
+template <typename Arguments>
+    struct externals;
+
+template <typename... Args>
+struct externals<std::tuple<Args...>>
+{
+    using type = std::tuple<external_t<Args>...>;
+};
+
+template <typename Arguments>
+using externals_t = typename externals<Arguments>::type;
+
 /// Detect non-trailing optional positions in methods.
 /// ---------------------------------------------------------------------------
 

@@ -64,7 +64,7 @@ private:
     struct subscriber_type<rpc::method<Text, Args...>>
     {
         using tag = typename rpc::method<Text, Args...>::tag;
-        using type = network::unsubscriber<tag, Args...>;
+        using type = network::unsubscriber<tag, rpc::external_t<Args>...>;
     };
 
     template <typename Method>
@@ -118,14 +118,14 @@ private:
     static inline rpc::object_t get_object(const optional_t& params) THROWS;
 
     template <typename Arguments>
-    static inline Arguments extract_positional(
+    static inline rpc::externals_t<Arguments> extract_positional(
         const optional_t& params) THROWS;
     template <typename Arguments>
-    static inline Arguments extract_named(const optional_t& params,
-        const rpc::names_t<Arguments>& names) THROWS;
+    static inline rpc::externals_t<Arguments> extract_named(
+        const optional_t& params, const rpc::names_t<Arguments>& names) THROWS;
     template <typename Arguments>
-    static inline Arguments extract(const optional_t& params,
-        const rpc::names_t<Arguments>& names) THROWS;
+    static inline rpc::externals_t<Arguments> extract(
+        const optional_t& params, const rpc::names_t<Arguments>& names) THROWS;
 
     template <typename Method>
     static inline code notify(subscriber_t<Method>& subscriber,

@@ -51,11 +51,9 @@ inline rpc::external_t<Argument> CLASS::get_nullable() THROWS
 {
     using namespace rpc;
 
-    if constexpr (is_required<Argument>::value)
+    if constexpr (is_required<Argument>::value || is_optional<Argument>::value)
         throw std::system_error{ error::missing_parameter };
-    else if constexpr (is_optional<Argument>::value)
-        return Argument::value;
-    else
+    else if constexpr (is_nullable<Argument>::value)
         return external_t<Argument>{};
 }
 
@@ -149,13 +147,14 @@ inline rpc::object_t CLASS::get_object(const optional_t& params) THROWS
 
 TEMPLATE
 template <typename Arguments>
-inline Arguments CLASS::extract_positional(const optional_t& params) THROWS
+inline rpc::externals_t<Arguments> CLASS::extract_positional(
+    const optional_t& params) THROWS
 {
     const auto array = get_array(params);
     constexpr auto count = std::tuple_size_v<Arguments>;
 
     size_t position{};
-    Arguments values{};
+    rpc::externals_t<Arguments> values{};
     [&] <size_t... Index>(std::index_sequence<Index...>) THROWS
     {
         // Sequence via comma expansion is required to preserve order.
@@ -173,8 +172,8 @@ inline Arguments CLASS::extract_positional(const optional_t& params) THROWS
 
 TEMPLATE
 template <typename Arguments>
-inline Arguments CLASS::extract_named(const optional_t& params,
-    const rpc::names_t<Arguments>& names) THROWS
+inline rpc::externals_t<Arguments> CLASS::extract_named(
+    const optional_t& params, const rpc::names_t<Arguments>& names) THROWS
 {
     const auto object = get_object(params);
     constexpr auto count = std::tuple_size_v<Arguments>;
@@ -195,7 +194,7 @@ inline Arguments CLASS::extract_named(const optional_t& params,
 
 TEMPLATE
 template <typename Arguments>
-inline Arguments CLASS::extract(const optional_t& params,
+inline rpc::externals_t<Arguments> CLASS::extract(const optional_t& params,
     const rpc::names_t<Arguments>& names) THROWS
 {
     constexpr auto mode = Interface::mode;
@@ -294,9 +293,9 @@ inline consteval bool CLASS::is_handler_type() NOEXCEPT
     // is_same_type decays individual types but not tuple elements.
     using handle_args = typename rpc::traits<Handler>::args;
     using method_args = rpc::args_t<rpc::method_t<Index, methods_t>>;
-    using decayed_handle_args = typename decay_tuple<handle_args>::type;
-    using decayed_method_args = typename decay_tuple<method_args>::type;
-    return is_same_type<decayed_handle_args, decayed_method_args>;
+    using handle = typename decay_tuple<handle_args>::type;
+    using method = typename decay_tuple<rpc::externals_t<method_args>>::type;
+    return is_same_type<handle, method>;
 }
 
 TEMPLATE
