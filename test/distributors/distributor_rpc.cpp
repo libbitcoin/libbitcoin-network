@@ -24,19 +24,16 @@ BOOST_AUTO_TEST_SUITE(distributor_rpc_tests)
 
 using namespace rpc;
 
-// interface requires `type` (type) and `methods`, `size`, `mode` (value).
-struct mock
+struct mock_methods
 {
     static constexpr std::tuple methods
     {
         method<"get_version">{},
         method<"add_element", bool, double, std::string>{ "a", "b", "c" }
     };
-
-    using type = decltype(methods);
-    static constexpr auto size = std::tuple_size_v<type>;
-    static constexpr group mode = group::either;
 };
+
+using mock = interface<mock_methods>;
 
 using get_version = std::tuple_element_t<0, decltype(mock::methods)>::tag;
 using add_element = std::tuple_element_t<1, decltype(mock::methods)>::tag;

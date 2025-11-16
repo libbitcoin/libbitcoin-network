@@ -19,16 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_BITCOIND_HPP
 #define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_BITCOIND_HPP
 
-#include <tuple>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/json/rpc.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// rpc interface requires methods, type, size, and mode.
-struct bitcoind
+struct bitcoind_methods
 {
     static constexpr std::tuple methods
     {
@@ -39,11 +37,9 @@ struct bitcoind
         method<"getblockstats", string_t, array_t>{ "hash_or_height", "stats" },
         method<"getchaintxstats", optional<42.0>, optional<"hello"_t>>{ "nblocks", "blockhash" },
     };
-
-    using type = decltype(methods);
-    static constexpr auto size = std::tuple_size_v<type>;
-    static constexpr group mode = group::either;
 };
+
+using bitcoind = interface<bitcoind_methods>;
 
 } // namespace rpc
 } // namespace network

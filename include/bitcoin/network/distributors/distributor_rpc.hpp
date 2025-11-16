@@ -21,9 +21,10 @@
 
 #include <tuple>
 #include <unordered_map>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/distributors/distributor.hpp>
-#include <bitcoin/network/messages/json/json.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -81,45 +82,70 @@ private:
     using methods_t = std::remove_const_t<typename Interface::type>;
     using subscribers_t = typename subscribers_type<methods_t>::type;
 
+    template <size_t Index, typename Handler>
+    static inline consteval bool is_handler_type() NOEXCEPT;
+
     template <typename Tag, size_t Index = zero>
-    static inline constexpr size_t find_tag_index() NOEXCEPT;
+    static inline consteval size_t find_handler_index() NOEXCEPT;
 
     template <size_t ...Index>
     static inline subscribers_t make_subscribers(asio::strand& strand,
         std::index_sequence<Index...>) NOEXCEPT;
 
-    subscribers_t subscribers_;
-
-    // make_dispatchers
+    // make_notifiers
     // ------------------------------------------------------------------------
 
     using optional_t = rpc::params_option;
-    using functor_t = std::function<code(distributor_rpc&, const optional_t&)>;
-    using dispatch_t = std::unordered_map<std::string, functor_t>;
-
-    static inline bool has_params(const optional_t& parameters) NOEXCEPT;
+    using notifier_t = std::function<code(distributor_rpc&, const optional_t&)>;
+    using notifiers_t = std::unordered_map<std::string, notifier_t>;
 
     template <typename Type>
-    static inline Type extract(const rpc::value_t& value) THROWS;
+    static inline Type get(const rpc::value_t& value) THROWS;
+
+    template <typename Argument>
+    static inline rpc::outer_t<Argument> get_value(
+        const rpc::value_t& value) THROWS;
+
+    template <typename Argument>
+    static inline rpc::outer_t<Argument> get_positional(size_t& position,
+        const rpc::array_t& array) THROWS;
+
+    template <typename Argument>
+    static inline rpc::outer_t<Argument> get_named(
+        const std::string_view& name, const rpc::object_t& object) THROWS;
 
     template <typename Arguments>
-    static inline Arguments extractor(const optional_t& parameters,
+    static inline Arguments extract_positional(
+        const optional_t& parameters) THROWS;
+
+    template <typename Arguments>
+    static inline Arguments extract_named(const optional_t& parameters,
+        const rpc::names_t<Arguments>& names) THROWS;
+
+    static inline void disallow_params(const optional_t& parameters) THROWS;
+
+    template <typename Arguments>
+    static inline Arguments extract(const optional_t& parameters,
         const rpc::names_t<Arguments>& names) THROWS;
 
     template <typename Method>
-    static inline code notifier(subscriber_t<Method>& subscriber,
+    static inline code notify(subscriber_t<Method>& subscriber,
         const optional_t& parameters,
         const rpc::names_t<Method>& names) NOEXCEPT;
 
     template <size_t Index>
-    static inline code do_notify(distributor_rpc& self,
+    static inline code notifier(distributor_rpc& self,
         const optional_t& parameters) NOEXCEPT;
 
     template <size_t ...Index>
-    static inline constexpr dispatch_t make_dispatchers(
+    static inline constexpr notifiers_t make_notifiers(
         std::index_sequence<Index...>) NOEXCEPT;
 
-    static const dispatch_t dispatch_;    
+    /// Static map of handlers to functions.
+    static const notifiers_t notifiers_;
+
+    /// This is not thread safe.
+    subscribers_t subscribers_;
 };
 
 } // namespace network
