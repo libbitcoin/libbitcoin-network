@@ -30,8 +30,6 @@ struct electrum_methods
 {
     static constexpr std::tuple methods
     {
-        ////method<"get_version">{},
-        ////method<"add_element", bool, double>{ "a", "b" },
     };
 };
 

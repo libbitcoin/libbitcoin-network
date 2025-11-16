@@ -37,9 +37,20 @@ struct bitcoind_methods
         method<"getblockstats", string_t, array_t>{ "hash_or_height", "stats" },
         method<"getchaintxstats", optional<42.0>, optional<"hello"_t>>{ "nblocks", "blockhash" },
     };
+
+    // Derive this from above in c++26 using reflection.
+    using getbestblockhash = at<0, decltype(methods)>;
+    using getblockhash = at<1, decltype(methods)>;
+    using getblock = at<2, decltype(methods)>;
+    using getblockheader = at<3, decltype(methods)>;
+    using getblockstats = at<4, decltype(methods)>;
+    using getchaintxstats = at<5, decltype(methods)>;
 };
 
 using bitcoind = interface<bitcoind_methods>;
+
+static_assert(bitcoind::getblock::name == "getblock");
+static_assert(bitcoind::getblock::size == 2u);
 
 } // namespace rpc
 } // namespace network

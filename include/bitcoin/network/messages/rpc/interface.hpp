@@ -29,12 +29,15 @@ namespace rpc {
     
 template <typename Methods, grouping Mode = grouping::either>
 struct interface
+  : public Methods
 {
     using type = decltype(Methods::methods);
     static constexpr auto size = std::tuple_size_v<type>;
-    static constexpr auto methods = Methods::methods;
     static constexpr grouping mode = Mode;
 };
+
+template <size_t Index, typename Methods>
+using at = typename std::tuple_element_t<Index, Methods>::tag;
 
 } // namespace rpc
 } // namespace network
