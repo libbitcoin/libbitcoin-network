@@ -77,8 +77,6 @@
 #include <bitcoin/network/messages/http/enums/verb.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/json/json.hpp>
-#include <bitcoin/network/messages/json/rpc.hpp>
-#include <bitcoin/network/messages/json/enums/version.hpp>
 #include <bitcoin/network/messages/peer/address.hpp>
 #include <bitcoin/network/messages/peer/address_item.hpp>
 #include <bitcoin/network/messages/peer/alert.hpp>
@@ -125,6 +123,13 @@
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>
+#include <bitcoin/network/messages/rpc/interface.hpp>
+#include <bitcoin/network/messages/rpc/method.hpp>
+#include <bitcoin/network/messages/rpc/model.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/rpc/types.hpp>
+#include <bitcoin/network/messages/rpc/enums/grouping.hpp>
+#include <bitcoin/network/messages/rpc/enums/version.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/connector.hpp>

@@ -16,9 +16,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_JSON_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_JSON_JSON_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACE_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACE_HPP
 
-#include <bitcoin/network/messages/json/body.hpp>
+#include <tuple>
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/rpc/enums/grouping.hpp>
+
+namespace libbitcoin {
+namespace network {
+namespace rpc {
+    
+template <typename Methods, grouping Mode = grouping::either>
+struct interface
+{
+    using type = decltype(Methods::methods);
+    static constexpr auto size = std::tuple_size_v<type>;
+    static constexpr auto methods = Methods::methods;
+    static constexpr grouping mode = Mode;
+};
+
+} // namespace rpc
+} // namespace network
+} // namespace libbitcoin
 
 #endif

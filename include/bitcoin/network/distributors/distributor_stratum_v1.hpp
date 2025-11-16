@@ -19,26 +19,23 @@
 #ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_STRATUM_V1_HPP
 #define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_STRATUM_V1_HPP
 
-#include <tuple>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// rpc interface requires methods, type, size, and mode.
-struct stratum_v1
+struct stratum_v1_methods
 {
     static constexpr std::tuple methods
     {
         ////method<"get_version">{},
         ////method<"add_element", bool, double>{ "a", "b" },
     };
-
-    using type = decltype(methods);
-    static constexpr auto size = std::tuple_size_v<type>;
-    static constexpr group mode = group::either;
 };
+
+using stratum_v1 = interface<stratum_v1_methods>;
 
 } // namespace rpc
 } // namespace network
