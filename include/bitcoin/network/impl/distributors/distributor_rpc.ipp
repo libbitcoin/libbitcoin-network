@@ -32,118 +32,133 @@ namespace network {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-template <typename Type>
-inline Type CLASS::get(const rpc::value_t& value) THROWS
-{
-    const auto& inner = value.value();
-    if (!std::holds_alternative<Type>(inner))
-        throw std::system_error{ error::not_found, "invalid type" };
-
-    return std::get<Type>(inner);
-}
-
-TEMPLATE
 template <typename Argument>
-inline rpc::outer_t<Argument> CLASS::get_value(const rpc::value_t& value) THROWS
+inline rpc::external_t<Argument> CLASS::get_optional() THROWS
 {
-    if constexpr (rpc::is_nullable<Argument>::value)
-    {
-        return { get<rpc::inner_t<Argument>>(value) };
-    }
+    using namespace rpc;
+
+    if constexpr (is_required<Argument>::value)
+        throw std::system_error{ error::not_found, "missing optional" };
+    else if constexpr (is_optional<Argument>::value)
+        return Argument::value;
     else
-    {
-        return get<rpc::inner_t<Argument>>(value);
-    }
+        return external_t<Argument>{};
 }
 
 TEMPLATE
 template <typename Argument>
-inline rpc::outer_t<Argument> CLASS::get_positional(size_t& position,
+inline rpc::external_t<Argument> CLASS::get_nullable() THROWS
+{
+    using namespace rpc;
+
+    if constexpr (is_required<Argument>::value)
+        throw std::system_error{ error::not_found, "missing nullable" };
+    else if constexpr (is_optional<Argument>::value)
+        return Argument::value;
+    else
+        return external_t<Argument>{};
+}
+
+TEMPLATE
+template <typename Argument>
+inline rpc::external_t<Argument> CLASS::get_required(
+    const rpc::value_t& value) THROWS
+{
+    using namespace rpc;
+    using type = internal_t<Argument>;
+
+    // Get contained variant value_t(inner_t).
+    const auto& internal = value.value();
+
+    if (!std::holds_alternative<type>(internal))
+        throw std::system_error{ error::not_found, "unexpected type" };
+    else if constexpr (is_nullable<Argument>::value)
+        return { std::get<type>(internal) };
+    else
+        return std::get<type>(internal);
+}
+
+TEMPLATE
+template <typename Argument>
+inline rpc::external_t<Argument> CLASS::get_positional(size_t& position,
     const rpc::array_t& array) THROWS
 {
     using namespace rpc;
+
+    // Only optional can be missing.
     if (position >= array.size())
-    {
-        if constexpr (is_required<Argument>::value)
-            throw std::system_error{ error::not_found, "missing positional" };
+        return get_optional<Argument>();
 
-        if constexpr (is_optional<Argument>::value)
-            return Argument::value;
-        else
-            return outer_t<Argument>{};
-    }
+    // Get contained variant value_t(inner_t).
+    const auto& internal = array.at(position++);
 
-    const auto& value = array.at(position++);
-    if (std::holds_alternative<null_t>(value.value()))
-    {
-        if constexpr (is_required<Argument>::value)
-            throw std::system_error{ error::not_found, "null positional" };
+    // value_t(null_t) implies nullable.
+    if (std::holds_alternative<null_t>(internal.value()))
+        return get_nullable<Argument>();
 
-        if constexpr (is_optional<Argument>::value)
-            return Argument::value;
-        else
-            return outer_t<Argument>{};
-    }
-
-    return get_value<Argument>(value);
+    // Otherwise value_t(inner_t) is required.
+    return get_required<Argument>(internal);
 }
 
 TEMPLATE
 template <typename Argument>
-inline rpc::outer_t<Argument> CLASS::get_named(
+inline rpc::external_t<Argument> CLASS::get_named(
     const std::string_view& name, const rpc::object_t& object) THROWS
 {
     using namespace rpc;
+
+    // Only optional can be missing.
     const auto it = object.find(std::string{ name });
     if (it == object.end())
-    {
-        if constexpr (is_required<Argument>::value)
-            throw std::system_error{ error::not_found, "missing named" };
+        return get_optional<Argument>();
 
-        if constexpr (is_optional<Argument>::value)
-            return Argument::value;
-        else
-            return outer_t<Argument>{};
-    }
+    // Get contained variant value_t(inner_t).
+    const auto& internal = it->second;
 
-    const auto& value = it->second;
-    if (std::holds_alternative<null_t>(value.value()))
-    {
-        if constexpr (is_required<Argument>::value)
-            throw std::system_error{ error::not_found, "null named" };
+    // value_t(null_t) implies nullable.
+    if (std::holds_alternative<null_t>(internal.value()))
+        return get_nullable<Argument>();
 
-        if constexpr (is_optional<Argument>::value)
-            return Argument::value;
-        else
-            return outer_t<Argument>{};
-    }
+    // Otherwise value_t(inner_t) is required.
+    return get_required<Argument>(internal);
+}
 
-    return get_value<Argument>(value);
+TEMPLATE
+inline rpc::array_t CLASS::get_array(const optional_t& params) THROWS
+{
+    if (!params.has_value())
+        return {};
+
+    if (!std::holds_alternative<rpc::array_t>(params.value()))
+        throw std::system_error{ error::not_found, "missing array" };
+
+    return std::get<rpc::array_t>(params.value());
+}
+
+TEMPLATE
+inline rpc::object_t CLASS::get_object(const optional_t& params) THROWS
+{
+    if (!params.has_value())
+        return {};
+
+    if (!std::holds_alternative<rpc::object_t>(params.value()))
+        throw std::system_error{ error::not_found, "missing object" };
+
+    return std::get<rpc::object_t>(params.value());
 }
 
 TEMPLATE
 template <typename Arguments>
-inline Arguments CLASS::extract_positional(const optional_t& parameters) THROWS
+inline Arguments CLASS::extract_positional(const optional_t& params) THROWS
 {
-    using namespace rpc;
-
-    array_t array{};
-    if (parameters.has_value())
-    {
-        const auto& params = parameters.value();
-        if (!std::holds_alternative<array_t>(params))
-            throw std::system_error{ error::not_found, "missing array" };
-
-        array = std::get<array_t>(params);
-    }
+    const auto array = get_array(params);
+    constexpr auto count = std::tuple_size_v<Arguments>;
 
     size_t position{};
     Arguments values{};
-    constexpr auto count = std::tuple_size_v<Arguments>;
-
-    // Sequence via comma expansion to preseve order.
-    [&] <size_t... Index>(std::index_sequence<Index...>)
+    [&] <size_t... Index>(std::index_sequence<Index...>) THROWS
     {
+        // Sequence via comma expansion is required to preserve order.
         ((
             std::get<Index>(values) = get_positional<std::tuple_element_t<
             Index, Arguments>>(position, array)
@@ -158,26 +173,16 @@ inline Arguments CLASS::extract_positional(const optional_t& parameters) THROWS
 
 TEMPLATE
 template <typename Arguments>
-inline Arguments CLASS::extract_named(const optional_t& parameters,
+inline Arguments CLASS::extract_named(const optional_t& params,
     const rpc::names_t<Arguments>& names) THROWS
 {
-    using namespace rpc;
-
-    object_t object{};
-    if (parameters.has_value())
-    {
-        const auto& params = parameters.value();
-        if (!std::holds_alternative<object_t>(params))
-            throw std::system_error{ error::not_found, "missing object" };
-
-        object = std::get<object_t>(params);
-    }
-
+    const auto object = get_object(params);
     constexpr auto count = std::tuple_size_v<Arguments>;
-     if (object.size() > count)
-         throw std::system_error{ error::not_found, "extra named" };
 
-    return [&]<size_t... Index>(std::index_sequence<Index...>)
+    if (object.size() > count)
+        throw std::system_error{ error::not_found, "extra named" };
+
+    return [&]<size_t... Index>(std::index_sequence<Index...>) THROWS
     {
         return std::make_tuple
         (
@@ -188,9 +193,9 @@ inline Arguments CLASS::extract_named(const optional_t& parameters,
 }
 
 TEMPLATE
-inline void CLASS::disallow_params(const optional_t& parameters) THROWS
+inline void CLASS::require_empty(const optional_t& params) THROWS
 {
-    if (!parameters.has_value())
+    if (!params.has_value())
         return;
 
     std::visit(overload
@@ -207,47 +212,47 @@ inline void CLASS::disallow_params(const optional_t& parameters) THROWS
                 throw std::system_error{ error::not_found,
                     "extra named params" };
         }
-    }, parameters.value());
+    }, params.value());
 }
 
 TEMPLATE
 template <typename Arguments>
-inline Arguments CLASS::extract(const optional_t& parameters,
+inline Arguments CLASS::extract(const optional_t& params,
     const rpc::names_t<Arguments>& names) THROWS
 {
+    constexpr auto mode = Interface::mode;
     constexpr auto count = std::tuple_size_v<Arguments>;
+
     if constexpr (is_zero(count))
     {
-        disallow_params(parameters);
+        require_empty(params);
         return {};
     }
-
-    constexpr auto mode = Interface::mode;
-    if constexpr (mode == rpc::grouping::positional)
+    else if constexpr (mode == rpc::grouping::positional)
     {
-        return extract_positional<Arguments>(parameters);
+        return extract_positional<Arguments>(params);
     }
     else if constexpr (mode == rpc::grouping::named)
     {
-        return extract_named<Arguments>(parameters, names);
+        return extract_named<Arguments>(params, names);
     }
     else // rpc::grouping::either
     {
-        const auto specified_params = parameters.has_value();
-        const auto positional_params = specified_params && 
-            std::holds_alternative<rpc::array_t>(parameters.value());
+        const auto has_params = params.has_value();
+        const auto has_positional_params = has_params &&
+            std::holds_alternative<rpc::array_t>(params.value());
 
-        if (!specified_params || positional_params)
-            return extract_positional<Arguments>(parameters);
+        if (!has_params || has_positional_params)
+            return extract_positional<Arguments>(params);
         else
-            return extract_named<Arguments>(parameters, names);
+            return extract_named<Arguments>(params, names);
     }
 }
 
 TEMPLATE
 template <typename Method>
 inline code CLASS::notify(subscriber_t<Method>& subscriber,
-    const optional_t& parameters, const rpc::names_t<Method>& names) NOEXCEPT
+    const optional_t& params, const rpc::names_t<Method>& names) NOEXCEPT
 {
     try
     {
@@ -258,7 +263,7 @@ inline code CLASS::notify(subscriber_t<Method>& subscriber,
                 subscriber.notify({}, rpc::tag_t<Method>{},
                     std::forward<decltype(args)>(args)...);
             },
-            extract<rpc::args_t<Method>>(parameters, names)
+            extract<rpc::args_t<Method>>(params, names)
         );
 
         return error::success;
@@ -281,12 +286,12 @@ inline code CLASS::notify(subscriber_t<Method>& subscriber,
 TEMPLATE
 template <size_t Index>
 inline code CLASS::notifier(distributor_rpc& self,
-    const optional_t& parameters) NOEXCEPT
+    const optional_t& params) NOEXCEPT
 {
     using method = rpc::method_t<Index, methods_t>;
     auto& subscriber = std::get<Index>(self.subscribers_);
     const auto& names = std::get<Index>(Interface::methods).parameter_names();
-    return notify<method>(subscriber, parameters, names);
+    return notify<method>(subscriber, params, names);
 }
 
 TEMPLATE

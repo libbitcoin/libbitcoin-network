@@ -30,6 +30,7 @@ struct mock_methods
     {
         method<"get_version">{},
         method<"add_element", bool, double, std::string>{ "a", "b", "c" }
+        ////method<"foobar", std::string, optional<4.2>, nullable<bool>>{ "a", "b", "c" }
     };
 };
 

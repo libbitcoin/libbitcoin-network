@@ -113,23 +113,23 @@ struct is_required
         !is_nullable<Type>::value> {};
 
 template <typename Argument, typename = void>
-struct inner
+struct internal
 {
     using type = Argument;
 };
 
 template <typename Argument>
-struct inner<Argument, std::void_t<typename Argument::type>>
+struct internal<Argument, std::void_t<typename Argument::type>>
 {
     using type = typename Argument::type;
 };
 
 template <typename Argument>
-using inner_t = typename inner<Argument>::type;
+using internal_t = typename internal<Argument>::type;
 
 template <typename Argument>
-using outer_t = iif<is_nullable<Argument>::value,
-    std::optional<inner_t<Argument>>, inner_t<Argument>>;
+using external_t = iif<is_nullable<Argument>::value,
+    std::optional<internal_t<Argument>>, internal_t<Argument>>;
 
 /// Detect non-trailing optional positions in methods.
 /// ---------------------------------------------------------------------------
