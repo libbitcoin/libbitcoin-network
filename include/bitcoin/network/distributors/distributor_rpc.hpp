@@ -123,8 +123,6 @@ private:
     template <typename Arguments>
     static inline Arguments extract_named(const optional_t& params,
         const rpc::names_t<Arguments>& names) THROWS;
-
-    static inline void require_empty(const optional_t& params) THROWS;
     template <typename Arguments>
     static inline Arguments extract(const optional_t& params,
         const rpc::names_t<Arguments>& names) THROWS;

@@ -38,7 +38,7 @@ inline rpc::external_t<Argument> CLASS::get_optional() THROWS
     using namespace rpc;
 
     if constexpr (is_required<Argument>::value)
-        throw std::system_error{ error::not_found, "missing optional" };
+        throw std::system_error{ error::missing_parameter };
     else if constexpr (is_optional<Argument>::value)
         return Argument::value;
     else
@@ -52,7 +52,7 @@ inline rpc::external_t<Argument> CLASS::get_nullable() THROWS
     using namespace rpc;
 
     if constexpr (is_required<Argument>::value)
-        throw std::system_error{ error::not_found, "missing nullable" };
+        throw std::system_error{ error::missing_parameter };
     else if constexpr (is_optional<Argument>::value)
         return Argument::value;
     else
@@ -71,7 +71,7 @@ inline rpc::external_t<Argument> CLASS::get_required(
     const auto& internal = value.value();
 
     if (!std::holds_alternative<type>(internal))
-        throw std::system_error{ error::not_found, "unexpected type" };
+        throw std::system_error{ error::unexpected_type };
     else if constexpr (is_nullable<Argument>::value)
         return { std::get<type>(internal) };
     else
@@ -130,7 +130,7 @@ inline rpc::array_t CLASS::get_array(const optional_t& params) THROWS
         return {};
 
     if (!std::holds_alternative<rpc::array_t>(params.value()))
-        throw std::system_error{ error::not_found, "missing array" };
+        throw std::system_error{ error::missing_array };
 
     return std::get<rpc::array_t>(params.value());
 }
@@ -142,7 +142,7 @@ inline rpc::object_t CLASS::get_object(const optional_t& params) THROWS
         return {};
 
     if (!std::holds_alternative<rpc::object_t>(params.value()))
-        throw std::system_error{ error::not_found, "missing object" };
+        throw std::system_error{ error::missing_object };
 
     return std::get<rpc::object_t>(params.value());
 }
@@ -166,7 +166,7 @@ inline Arguments CLASS::extract_positional(const optional_t& params) THROWS
     }(std::make_index_sequence<count>{});
 
     if (position < array.size())
-        throw std::system_error{ error::not_found, "extra positional" };
+        throw std::system_error{ error::extra_positional };
 
     return values;
 }
@@ -179,8 +179,9 @@ inline Arguments CLASS::extract_named(const optional_t& params,
     const auto object = get_object(params);
     constexpr auto count = std::tuple_size_v<Arguments>;
 
+    // This doesn't catch duplicate names (allowed by json-rpc).
     if (object.size() > count)
-        throw std::system_error{ error::not_found, "extra named" };
+        throw std::system_error{ error::extra_named };
 
     return [&]<size_t... Index>(std::index_sequence<Index...>) THROWS
     {
@@ -193,42 +194,13 @@ inline Arguments CLASS::extract_named(const optional_t& params,
 }
 
 TEMPLATE
-inline void CLASS::require_empty(const optional_t& params) THROWS
-{
-    if (!params.has_value())
-        return;
-
-    std::visit(overload
-    {
-        [](const rpc::array_t& params) THROWS
-        {
-            if (!params.empty())
-                throw std::system_error{ error::not_found,
-                    "extra positional params" };
-        },
-        [](const rpc::object_t& params) THROWS
-        {
-            if (!params.empty())
-                throw std::system_error{ error::not_found,
-                    "extra named params" };
-        }
-    }, params.value());
-}
-
-TEMPLATE
 template <typename Arguments>
 inline Arguments CLASS::extract(const optional_t& params,
     const rpc::names_t<Arguments>& names) THROWS
 {
     constexpr auto mode = Interface::mode;
-    constexpr auto count = std::tuple_size_v<Arguments>;
 
-    if constexpr (is_zero(count))
-    {
-        require_empty(params);
-        return {};
-    }
-    else if constexpr (mode == rpc::grouping::positional)
+    if constexpr (mode == rpc::grouping::positional)
     {
         return extract_positional<Arguments>(params);
     }
@@ -238,11 +210,8 @@ inline Arguments CLASS::extract(const optional_t& params,
     }
     else // rpc::grouping::either
     {
-        const auto has_params = params.has_value();
-        const auto has_positional_params = has_params &&
-            std::holds_alternative<rpc::array_t>(params.value());
-
-        if (!has_params || has_positional_params)
+        if (!params.has_value() ||
+            std::holds_alternative<rpc::array_t>(params.value()))
             return extract_positional<Arguments>(params);
         else
             return extract_named<Arguments>(params, names);
@@ -270,16 +239,11 @@ inline code CLASS::notify(subscriber_t<Method>& subscriber,
     }
     catch (const std::system_error& e)
     {
-        // TODO: pass specific codes above.
         return e.code();
-    }
-    catch (const std::bad_variant_access&)
-    {
-        return error::operation_failed;
     }
     catch (...)
     {
-        return error::not_found;
+        return error::undefined_type;
     }
 }
 
@@ -381,7 +345,7 @@ inline code CLASS::notify(const rpc::request_t& request) NOEXCEPT
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto it = notifiers_.find(request.method);
     if (it == notifiers_.end())
-        return error::not_found;
+        return error::unexpected_method;
 
     return it->second(*this, request.params);
     BC_POP_WARNING()

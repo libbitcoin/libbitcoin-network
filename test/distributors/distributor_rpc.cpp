@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__no_subscriber__success)
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__unknown_method__returns_not_found)
+BOOST_AUTO_TEST_CASE(distributor_rpc__notify__unknown_method__unexpected_method)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__unknown_method__returns_not_found)
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::not_found);
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::unexpected_method);
 }
 
 BOOST_AUTO_TEST_CASE(distributor_rpc__subscribe__stopped__subscriber_stopped)
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__get_version_empty_array_params__su
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__get_version_with_params__not_found)
+BOOST_AUTO_TEST_CASE(distributor_rpc__notify__get_version_with_params__extra_positional)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__get_version_with_params__not_found
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::not_found);
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::extra_positional);
     BOOST_REQUIRE_EQUAL(result, error::service_stopped);
 }
 
@@ -418,6 +418,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__add_element_positional_params__exp
     std::promise<code> promise2{};
     std::promise<code> promise3{};
     std::promise<code> promise4{};
+    std::promise<code> promise5{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
@@ -431,7 +432,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__add_element_positional_params__exp
                 result_a = a;
                 result_b = b;
                 result_c = c;
-                promise4.set_value(ec);
+                promise5.set_value(ec);
                 return true;
             });
 
@@ -450,14 +451,20 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__add_element_positional_params__exp
         promise3.set_value(instance.notify(
         {
             .method = "add_element",
+            .params = { array_t{ string_t{ "42" }, number_t{ 24.0 }, boolean_t{ true }, boolean_t{ true } } }
+        }));
+
+        promise4.set_value(instance.notify(
+        {
+            .method = "add_element",
             .params = { array_t{ boolean_t{ true }, number_t{ 24.0 }, string_t{ "42" } } }
         }));
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::not_found);
-    BOOST_REQUIRE_EQUAL(promise2.get_future().get(), error::not_found);
-    BOOST_REQUIRE(!promise3.get_future().get());
+    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
+    BOOST_REQUIRE_EQUAL(promise2.get_future().get(), error::unexpected_type);
     BOOST_REQUIRE(!promise4.get_future().get());
+    BOOST_REQUIRE(!promise5.get_future().get());
     BOOST_REQUIRE_EQUAL(result_a, true);
     BOOST_REQUIRE_EQUAL(result_b, 24.0);
     BOOST_REQUIRE_EQUAL(result_c, "42");
@@ -487,6 +494,8 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__add_element_named_params__expected
     std::promise<code> promise4{};
     std::promise<code> promise5{};
     std::promise<code> promise6{};
+    std::promise<code> promise7{};
+    std::promise<code> promise8{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
@@ -500,50 +509,74 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__add_element_named_params__expected
                 result_a = a;
                 result_b = b;
                 result_c = c;
-                promise6.set_value(ec);
+                promise8.set_value(ec);
                 return true;
             });
 
         promise1.set_value(instance.notify(
         {
+            // missing_parameter (absent)
             .method = "add_element",
             .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } } } }
         }));
 
         promise2.set_value(instance.notify(
         {
-            .method = "add_element",
-            .params = { object_t{ { "a", number_t{ 24.0 } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
+            // missing_parameter (misnamed/absent)
             .method = "add_element",
             .params = { object_t{ { "fu", boolean_t{ true } }, { "ga", number_t{ 24.0 } }, { "zi", string_t{ "42" } } } }
         }));
 
+        promise3.set_value(instance.notify(
+        {
+            // unexpected_type (named but wrong type)
+            .method = "add_element",
+            .params = { object_t{ { "a", number_t{ 24.0 } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
+        }));
+
         promise4.set_value(instance.notify(
         {
+            // extra_named
             .method = "add_element",
-            .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
+            .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } }, { "d", string_t{ "42" } } } }
         }));
 
         promise5.set_value(instance.notify(
         {
+            // success – duplicate keys are allowed (real JSON input)
+            // Boost.JSON parser resolves duplicates using last-writer-wins,
+            // before object_t conversion occurs, so map never sees duplicates.
+            // Test construction uses initializer_list -> first-writer-wins.
             .method = "add_element",
-            .params = { object_t{ { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } }, { "a", boolean_t{ true } } } }
+            .params = { object_t{ { "a", boolean_t{ false } }, { "b", number_t{ 42.0 } }, { "c", string_t{ "24" } }, { "c", string_t{ "42" } } } }
+        }));
+
+        promise6.set_value(instance.notify(
+        {
+            // success, in order
+            .method = "add_element",
+            .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
+        }));
+
+        promise7.set_value(instance.notify(
+        {
+            // success, out of order
+            .method = "add_element",
+            .params = { object_t{ { "b", number_t{ 24.0 } }, { "c", string_t{ "24" } }, { "a", boolean_t{ false } } } }
         }));
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::not_found);
-    BOOST_REQUIRE_EQUAL(promise2.get_future().get(), error::not_found);
-    BOOST_REQUIRE_EQUAL(promise3.get_future().get(), error::not_found);
-    BOOST_REQUIRE(!promise4.get_future().get());
+    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
+    BOOST_REQUIRE_EQUAL(promise2.get_future().get(), error::missing_parameter);
+    BOOST_REQUIRE_EQUAL(promise3.get_future().get(), error::unexpected_type);
+    BOOST_REQUIRE_EQUAL(promise4.get_future().get(), error::extra_named);
     BOOST_REQUIRE(!promise5.get_future().get());
     BOOST_REQUIRE(!promise6.get_future().get());
-    BOOST_REQUIRE_EQUAL(result_a, true);
-    BOOST_REQUIRE_EQUAL(result_b, 24.0);
-    BOOST_REQUIRE_EQUAL(result_c, "42");
+    BOOST_REQUIRE(!promise7.get_future().get());
+    BOOST_REQUIRE(!promise8.get_future().get());
+    BOOST_REQUIRE_EQUAL(result_a, false);
+    BOOST_REQUIRE_EQUAL(result_b, 42.0);
+    BOOST_REQUIRE_EQUAL(result_c, "24");
 
     boost::asio::post(strand, [&]() NOEXCEPT
     {

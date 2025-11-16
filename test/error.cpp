@@ -1100,4 +1100,77 @@ BOOST_AUTO_TEST_CASE(error_t__code__short_read__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "short read");
 }
 
+// rpc error
+
+BOOST_AUTO_TEST_CASE(error_t__code__undefined_type__true_exected_message)
+{
+    constexpr auto value = error::undefined_type;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "undefined type");
+}
+BOOST_AUTO_TEST_CASE(error_t__code__unexpected_method__true_exected_message)
+{
+    constexpr auto value = error::unexpected_method;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unexpected method");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__unexpected_type__true_exected_message)
+{
+    constexpr auto value = error::unexpected_type;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unexpected type");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__extra_positional__true_exected_message)
+{
+    constexpr auto value = error::extra_positional;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "extra positional");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__extra_named__true_exected_message)
+{
+    constexpr auto value = error::extra_named;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "extra named");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__missing_array__true_exected_message)
+{
+    constexpr auto value = error::missing_array;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing array");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__missing_object__true_exected_message)
+{
+    constexpr auto value = error::missing_object;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing object");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__missing_parameter__true_exected_message)
+{
+    constexpr auto value = error::missing_parameter;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing optional");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
