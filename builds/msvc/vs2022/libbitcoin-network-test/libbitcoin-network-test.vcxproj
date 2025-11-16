@@ -118,8 +118,137 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\races\race_all.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\races\race_quality.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\races\race_speed.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\races\race_unity.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\races\race_volume.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\thread.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\time.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel_tcp.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel_ws.cpp" />
+    <ClCompile Include="..\..\..\..\test\config\address.cpp">
+      <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\authority.cpp" />
+    <ClCompile Include="..\..\..\..\test\config\endpoint.cpp" />
+    <ClCompile Include="..\..\..\..\test\config\utilities.cpp" />
+    <ClCompile Include="..\..\..\..\test\distributors\distributor_http.cpp" />
+    <ClCompile Include="..\..\..\..\test\distributors\distributor_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\distributors\distributor_rpc.cpp" />
+    <ClCompile Include="..\..\..\..\test\error.cpp" />
+    <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
+    <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
+    <ClCompile Include="..\..\..\..\test\memory.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_body_writer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_enums_magic_numbers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\mime_type.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\method.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_json_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\json\body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_json_body_writer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\address.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_address.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\address_item.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\alert.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\alert_item.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\block.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\bloom_filter_add.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\bloom_filter_clear.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\bloom_filter_load.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\client_filter.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\client_filter_checkpoint.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\client_filter_headers.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\compact_block.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\compact_block_item.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\compact_transactions.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\identifier.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\level.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\magic_numbers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_enums_magic_numbers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\service.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\fee_filter.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\get_address.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\get_blocks.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\get_client_filter_checkpoint.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\get_client_filter_headers.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\get_client_filters.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\get_compact_transactions.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\get_data.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\get_headers.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\headers.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\inventory.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\inventory_item.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\memory_pool.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\merkle_block.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\not_found.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\ping.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\pong.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\reject.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\send_address_v2.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\send_compact.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\send_headers.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\transaction.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\version.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\version_acknowledge.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\witness_tx_id_relay.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\rpc.cpp" />
+    <ClCompile Include="..\..\..\..\test\net.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\socket.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_209.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_311.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_http.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_peer.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_106.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_tcp.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session_inbound.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session_manual.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session_outbound.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session_seed.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session_tcp.cpp" />
+    <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>

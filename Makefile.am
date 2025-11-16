@@ -103,7 +103,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/peer/version.cpp \
     src/messages/peer/version_acknowledge.cpp \
     src/messages/peer/witness_tx_id_relay.cpp \
-    src/messages/rpc/rpc.cpp \
+    src/messages/rpc/model.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
     src/net/connector.cpp \
