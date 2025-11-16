@@ -320,9 +320,11 @@ inline code CLASS::subscribe(Handler&& handler) NOEXCEPT
     using tag = typename rpc::traits<Handler>::tag;
     constexpr auto index = find_handler_index<tag>();
     static_assert(is_handler_type<index, Handler>());
-
     auto& subscriber = std::get<index>(subscribers_);
+
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return subscriber.subscribe(std::forward<Handler>(handler));
+    BC_POP_WARNING()
 }
 
 // private/static
