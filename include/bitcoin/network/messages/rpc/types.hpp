@@ -58,10 +58,10 @@ template <auto Default>
 struct optional;
 
 /// array_t : optional<array>
-template <auto Default>
-    requires std::same_as<decltype(Default), empty> &&
-        (Default == empty::array)
-struct optional<Default> {
+template <auto Default> requires
+    is_same_type<decltype(Default), empty> && (Default == empty::array)
+struct optional<Default>
+{
     using tag = optional_tag;
     using type = array_t;
 
@@ -70,10 +70,10 @@ struct optional<Default> {
 };
 
 /// object_t : optional<object>
-template <auto Default>
-    requires std::same_as<decltype(Default), empty> &&
-        (Default == empty::object)
-struct optional<Default> {
+template <auto Default> requires
+    is_same_type<decltype(Default), empty> && (Default == empty::object)
+struct optional<Default>
+ {
     using tag = optional_tag;
     using type = object_t;
 
@@ -82,11 +82,31 @@ struct optional<Default> {
     static const type default_value() NOEXCEPT  { return {}; }
 };
 
-/// number_t  : optional<4.2>
+/// number_t : optional<42> (integer literals)
+template <auto Default> requires 
+    is_integer<decltype(Default)>
+struct optional<Default> {
+    using tag = optional_tag;
+    using type = number_t;
+    static constexpr type value = static_cast<type>(Default);
+    static consteval type default_value() NOEXCEPT { return Default; }
+};
+
+/// number_t : optional<4.2> (double or float literals)
+template <auto Default> requires
+    is_same_type<decltype(Default), number_t> ||
+    is_same_type<decltype(Default), float>
+struct optional<Default>
+{
+    using tag = optional_tag;
+    using type = decltype(Default);
+    static constexpr type value = Default;
+    static consteval type default_value() NOEXCEPT { return Default; }
+};
+
 /// boolean_t : optional<true>
 template <auto Default> requires
-    std::same_as<decltype(Default), boolean_t> ||
-    std::same_as<decltype(Default), number_t>
+    is_same_type<decltype(Default), boolean_t>
 struct optional<Default>
 {
     using tag = optional_tag;
@@ -110,9 +130,9 @@ struct optional<Default>
 
 /// Parameter is typed as std::optional<Type> with !has_value() when null_t.
 template <typename Type> requires
-    std::same_as<Type, boolean_t> || std::same_as<Type, number_t> ||
-    std::same_as<Type, string_t> || std::same_as<Type, object_t> ||
-    std::same_as<Type, array_t>
+    is_same_type<Type, object_t> || is_same_type<Type, array_t> ||
+    is_same_type<Type, string_t> || is_same_type<Type, boolean_t> ||
+    is_same_type<Type, number_t>
 struct nullable
 {
     using tag = nullable_tag;
