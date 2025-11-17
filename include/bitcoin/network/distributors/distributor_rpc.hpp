@@ -64,7 +64,7 @@ private:
     struct subscriber_type<rpc::method<Text, Args...>>
     {
         using tag = typename rpc::method<Text, Args...>::tag;
-        using type = network::unsubscriber<tag, Args...>;
+        using type = network::unsubscriber<tag, rpc::external_t<Args>...>;
     };
 
     template <typename Method>
@@ -99,44 +99,40 @@ private:
     using notifier_t = std::function<code(distributor_rpc&, const optional_t&)>;
     using notifiers_t = std::unordered_map<std::string, notifier_t>;
 
-    template <typename Type>
-    static inline Type get(const rpc::value_t& value) THROWS;
-
     template <typename Argument>
-    static inline rpc::outer_t<Argument> get_value(
+    static inline rpc::external_t<Argument> get_required(
         const rpc::value_t& value) THROWS;
+    template <typename Argument>
+    static inline rpc::external_t<Argument> get_optional() THROWS;
+    template <typename Argument>
+    static inline rpc::external_t<Argument> get_nullable() THROWS;
 
     template <typename Argument>
-    static inline rpc::outer_t<Argument> get_positional(size_t& position,
+    static inline rpc::external_t<Argument> get_positional(size_t& position,
         const rpc::array_t& array) THROWS;
-
     template <typename Argument>
-    static inline rpc::outer_t<Argument> get_named(
+    static inline rpc::external_t<Argument> get_named(
         const std::string_view& name, const rpc::object_t& object) THROWS;
 
-    template <typename Arguments>
-    static inline Arguments extract_positional(
-        const optional_t& parameters) THROWS;
+    static inline rpc::array_t get_array(const optional_t& params) THROWS;
+    static inline rpc::object_t get_object(const optional_t& params) THROWS;
 
     template <typename Arguments>
-    static inline Arguments extract_named(const optional_t& parameters,
-        const rpc::names_t<Arguments>& names) THROWS;
-
-    static inline void disallow_params(const optional_t& parameters) THROWS;
-
+    static inline rpc::externals_t<Arguments> extract_positional(
+        const optional_t& params) THROWS;
     template <typename Arguments>
-    static inline Arguments extract(const optional_t& parameters,
-        const rpc::names_t<Arguments>& names) THROWS;
+    static inline rpc::externals_t<Arguments> extract_named(
+        const optional_t& params, const rpc::names_t<Arguments>& names) THROWS;
+    template <typename Arguments>
+    static inline rpc::externals_t<Arguments> extract(
+        const optional_t& params, const rpc::names_t<Arguments>& names) THROWS;
 
     template <typename Method>
     static inline code notify(subscriber_t<Method>& subscriber,
-        const optional_t& parameters,
-        const rpc::names_t<Method>& names) NOEXCEPT;
-
+        const optional_t& params, const rpc::names_t<Method>& names) NOEXCEPT;
     template <size_t Index>
     static inline code notifier(distributor_rpc& self,
-        const optional_t& parameters) NOEXCEPT;
-
+        const optional_t& params) NOEXCEPT;
     template <size_t ...Index>
     static inline constexpr notifiers_t make_notifiers(
         std::index_sequence<Index...>) NOEXCEPT;

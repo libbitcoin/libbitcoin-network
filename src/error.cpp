@@ -169,7 +169,17 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { bad_obs_fold, "bad obs fold" },
     { multiple_content_length, "multiple content length" },
     { stale_parser, "stale parser" },
-    { short_read, "short read" }
+    { short_read, "short read" },
+
+    // rpc error
+    { undefined_type, "undefined type" },
+    { unexpected_method, "unexpected method" },
+    { unexpected_type, "unexpected type" },
+    { extra_positional, "extra positional" },
+    { extra_named, "extra named" },
+    { missing_array, "missing array" },
+    { missing_object, "missing object" },
+    { missing_parameter, "missing optional" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")

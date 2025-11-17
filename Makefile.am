@@ -103,7 +103,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/peer/version.cpp \
     src/messages/peer/version_acknowledge.cpp \
     src/messages/peer/witness_tx_id_relay.cpp \
-    src/messages/rpc/rpc.cpp \
+    src/messages/rpc/model.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
     src/net/connector.cpp \
@@ -230,7 +230,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/peer/enums/level.cpp \
     test/messages/peer/enums/magic_numbers.cpp \
     test/messages/peer/enums/service.cpp \
-    test/messages/rpc/rpc.cpp \
+    test/messages/rpc/method.cpp \
+    test/messages/rpc/types.cpp \
     test/net/acceptor.cpp \
     test/net/broadcaster.cpp \
     test/net/connector.cpp \

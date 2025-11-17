@@ -194,7 +194,17 @@ enum error_t : uint8_t
     bad_obs_fold,
     multiple_content_length,
     stale_parser,
-    short_read
+    short_read,
+
+    // rpc error
+    undefined_type,
+    unexpected_method,
+    unexpected_type,
+    extra_positional,
+    extra_named,
+    missing_array,
+    missing_object,
+    missing_parameter
 };
 
 // No current need for error_code equivalence mapping.

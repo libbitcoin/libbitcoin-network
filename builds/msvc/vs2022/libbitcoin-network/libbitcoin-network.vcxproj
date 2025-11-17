@@ -195,7 +195,7 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\witness_tx_id_relay.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\rpc\rpc.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\rpc\model.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
