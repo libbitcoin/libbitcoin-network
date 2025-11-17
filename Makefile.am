@@ -230,7 +230,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/peer/enums/level.cpp \
     test/messages/peer/enums/magic_numbers.cpp \
     test/messages/peer/enums/service.cpp \
-    test/messages/rpc/rpc.cpp \
+    test/messages/rpc/method.cpp \
+    test/messages/rpc/types.cpp \
     test/net/acceptor.cpp \
     test/net/broadcaster.cpp \
     test/net/connector.cpp \

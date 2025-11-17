@@ -51,11 +51,36 @@ struct traits<Return(Class::*)(const code&, Tag, Args...) const NOEXCEPT>
 
 struct optional_tag {};
 struct nullable_tag {};
+enum class empty { array, object };
 
-/// Parameter will be defaulted if missing or null_t (NOT std::optional).
-/// The value types array_t and object_t do not have defaults (just empty).
+/// Partial specializations for optional (values).
 template <auto Default>
 struct optional;
+
+/// array_t : optional<array>
+template <auto Default>
+    requires std::same_as<decltype(Default), empty> &&
+        (Default == empty::array)
+struct optional<Default> {
+    using tag = optional_tag;
+    using type = array_t;
+
+    /// array_t optional default is only/always empty.
+    static constexpr type default_value() NOEXCEPT { return {}; }
+};
+
+/// object_t : optional<object>
+template <auto Default>
+    requires std::same_as<decltype(Default), empty> &&
+        (Default == empty::object)
+struct optional<Default> {
+    using tag = optional_tag;
+    using type = object_t;
+
+    /// std::unordered_map{} is not constexpr (ok).
+    /// object_t optional default is only/always empty.
+    static const type default_value() NOEXCEPT  { return {}; }
+};
 
 /// number_t  : optional<4.2>
 /// boolean_t : optional<true>
@@ -66,7 +91,7 @@ struct optional<Default>
 {
     using tag = optional_tag;
     using type = decltype(Default);
-    static constexpr type value = Default;
+    static consteval type default_value() NOEXCEPT { return Default; }
 };
 
 /// string_t : optional<"hello world!"_t>
@@ -75,10 +100,15 @@ struct optional<Default>
 {
     using tag = optional_tag;
     using type = string_t;
-    static constexpr std::string_view value{ Default.data(), Size };
+
+    /// NTTPs of structural types have static storage duration.
+    static constexpr type default_value() NOEXCEPT
+    {
+        return type{ std::string_view{ Default.data(), Size } };
+    }
 };
 
-/// Parameter is typed as std::optional, with no value if missing or null_t.
+/// Parameter is typed as std::optional<Type> with !has_value() when null_t.
 template <typename Type> requires
     std::same_as<Type, boolean_t> || std::same_as<Type, number_t> ||
     std::same_as<Type, string_t> || std::same_as<Type, object_t> ||

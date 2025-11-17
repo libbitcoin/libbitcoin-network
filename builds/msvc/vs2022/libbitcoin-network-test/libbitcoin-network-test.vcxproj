@@ -161,7 +161,9 @@
     <ClCompile Include="..\..\..\..\test\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\http\method.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_method.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
       <ObjectFileName>$(IntDir)test_messages_json_body_reader.obj</ObjectFileName>
     </ClCompile>
@@ -217,7 +219,10 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\version.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\witness_tx_id_relay.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\rpc.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\method.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_method.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />

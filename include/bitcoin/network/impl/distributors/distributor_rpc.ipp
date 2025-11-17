@@ -40,7 +40,7 @@ inline rpc::external_t<Argument> CLASS::get_optional() THROWS
     if constexpr (is_required<Argument>::value)
         throw std::system_error{ error::missing_parameter };
     else if constexpr (is_optional<Argument>::value)
-        return Argument::value;
+        return Argument::default_value();
     else
         return external_t<Argument>{};
 }
