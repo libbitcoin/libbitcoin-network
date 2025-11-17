@@ -704,10 +704,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\message.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\messages.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\not_found.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\not_found.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\peer.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\ping.hpp">

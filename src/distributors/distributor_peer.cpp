@@ -20,7 +20,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/peer/messages.hpp>
+#include <bitcoin/network/messages/peer/peer.hpp>
 
 // Set false to use default block allocation.
 constexpr bool use_block_allocator = true;

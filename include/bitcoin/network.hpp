@@ -107,8 +107,8 @@
 #include <bitcoin/network/messages/peer/memory_pool.hpp>
 #include <bitcoin/network/messages/peer/merkle_block.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
-#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/messages/peer/not_found.hpp>
+#include <bitcoin/network/messages/peer/peer.hpp>
 #include <bitcoin/network/messages/peer/ping.hpp>
 #include <bitcoin/network/messages/peer/pong.hpp>
 #include <bitcoin/network/messages/peer/reject.hpp>

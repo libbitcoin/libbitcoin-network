@@ -322,8 +322,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\memory_pool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\merkle_block.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\message.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\not_found.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\ping.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\pong.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\reject.hpp" />
