@@ -25,6 +25,7 @@
 #include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
+#include <bitcoin/network/messages/peer/peer.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -61,7 +62,8 @@ struct value_t
         number_t,
         string_t,
         array_t,
-        object_t
+        object_t,
+        messages::peer::ping::cptr
     >;
 
     /// Explicit initialization constructors.
@@ -71,6 +73,7 @@ struct value_t
     value_t(string_t value) NOEXCEPT : inner_{ std::move(value) } {}
     value_t(array_t value) NOEXCEPT : inner_{ std::move(value) } {}
     value_t(object_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(messages::peer::ping::cptr value) NOEXCEPT : inner_{ std::move(value) } {}
 
     /// Forwarding constructors for in-place variant construction.
     FORWARD_VARIANT_CONSTRUCT(value_t, inner_)
@@ -80,6 +83,7 @@ struct value_t
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, string_t, inner_)
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, array_t, inner_)
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, object_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, messages::peer::ping::cptr, inner_)
         
     inner_t& value() NOEXCEPT
     {

@@ -20,6 +20,121 @@
 
 BOOST_AUTO_TEST_SUITE(distributor_peer_tests)
 
+using namespace rpc;
+using namespace messages::peer;
+
+struct mock_methods
+{
+    static constexpr std::tuple methods
+    {
+        method<"ping", ping::cptr>{ "message" }
+    };
+
+    using ping = at<0, decltype(methods)>;
+};
+
+using mock = interface<mock_methods>;
+using distributor_mock = distributor_rpc<mock>;
+
+BOOST_AUTO_TEST_CASE(distributor_peer__notify__ping_positional__expected)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    distributor_mock instance(strand);
+
+    bool called{};
+    ping::cptr result{};
+    std::promise<code> promise1{};
+    std::promise<code> promise2{};
+    constexpr auto expected = 42u;
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        instance.subscribe(
+            [&](const code& ec, mock::ping, const ping::cptr& ptr) NOEXCEPT
+            {
+                // Avoid stop notification (unavoidable test condition).
+                if (called)
+                    return false;
+
+                result = ptr;
+                called = true;
+                promise2.set_value(ec);
+                return true;
+            });
+
+        promise1.set_value(instance.notify(
+        {
+            .method = "ping",
+            .params = { array_t{ system::to_shared<ping>(expected) } }
+        }));
+    });
+
+    BOOST_REQUIRE(!promise1.get_future().get());
+    BOOST_REQUIRE(!promise2.get_future().get());
+    BOOST_REQUIRE(result);
+    BOOST_REQUIRE(result->id == identifier::ping);
+    BOOST_REQUIRE_EQUAL(result->nonce, expected);
+
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        instance.stop(error::service_stopped);
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
+BOOST_AUTO_TEST_CASE(distributor_peer__notify__ping_named__expected)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    distributor_mock instance(strand);
+
+    bool called{};
+    ping::cptr result{};
+    std::promise<code> promise1{};
+    std::promise<code> promise2{};
+    constexpr auto expected = 42u;
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        instance.subscribe(
+            [&](const code& ec, mock::ping, const ping::cptr& ptr) NOEXCEPT
+            {
+                // Avoid stop notification (unavoidable test condition).
+                if (called)
+                    return false;
+
+                result = ptr;
+                called = true;
+                promise2.set_value(ec);
+                return true;
+            });
+
+        promise1.set_value(instance.notify(
+        {
+            .method = "ping",
+            .params = { object_t{ { "message", system::to_shared<ping>(expected) } } }
+        }));
+    });
+
+    BOOST_REQUIRE(!promise1.get_future().get());
+    BOOST_REQUIRE(!promise2.get_future().get());
+    BOOST_REQUIRE(result);
+    BOOST_REQUIRE(result->id == identifier::ping);
+    BOOST_REQUIRE_EQUAL(result->nonce, expected);
+
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        instance.stop(error::service_stopped);
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
+// old school peer
+// ----------------------------------------------------------------------------
+
 BOOST_AUTO_TEST_CASE(distributor_peer__construct__stop__stops)
 {
     default_memory memory{};
