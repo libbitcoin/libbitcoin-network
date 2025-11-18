@@ -21,13 +21,12 @@
 BOOST_AUTO_TEST_SUITE(distributor_peer_tests)
 
 using namespace rpc;
-using namespace messages::peer;
 
 struct mock_methods
 {
     static constexpr std::tuple methods
     {
-        method<"ping", ping::cptr>{ "message" }
+        method<"ping", messages::peer::ping::cptr>{ "message" }
     };
 
     using ping = at<0, decltype(methods)>;
@@ -43,14 +42,14 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__ping_positional__expected)
     distributor_mock instance(strand);
 
     bool called{};
-    ping::cptr result{};
+    messages::peer::ping::cptr result{};
     std::promise<code> promise1{};
     std::promise<code> promise2{};
     constexpr auto expected = 42u;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](code ec, ping::cptr ptr) NOEXCEPT
+            [&](code ec, messages::peer::ping::cptr ptr) NOEXCEPT
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -65,14 +64,14 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__ping_positional__expected)
         promise1.set_value(instance.notify(
         {
             .method = "ping",
-            .params = { array_t{ system::to_shared<ping>(expected) } }
+            .params = { array_t{ system::to_shared<messages::peer::ping>(expected) } }
         }));
     });
 
     BOOST_REQUIRE(!promise1.get_future().get());
     BOOST_REQUIRE(!promise2.get_future().get());
     BOOST_REQUIRE(result);
-    BOOST_REQUIRE(result->id == identifier::ping);
+    BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
     BOOST_REQUIRE_EQUAL(result->nonce, expected);
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -91,14 +90,14 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__ping_named__expected)
     distributor_mock instance(strand);
 
     bool called{};
-    ping::cptr result{};
+    messages::peer::ping::cptr result{};
     std::promise<code> promise1{};
     std::promise<code> promise2{};
     constexpr auto expected = 42u;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, const ping::cptr& ptr) NOEXCEPT
+            [&](const code& ec, const messages::peer::ping::cptr& ptr) NOEXCEPT
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -113,14 +112,14 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__ping_named__expected)
         promise1.set_value(instance.notify(
         {
             .method = "ping",
-            .params = { object_t{ { "message", system::to_shared<ping>(expected) } } }
+            .params = { object_t{ { "message", system::to_shared<messages::peer::ping>(expected) } } }
         }));
     });
 
     BOOST_REQUIRE(!promise1.get_future().get());
     BOOST_REQUIRE(!promise2.get_future().get());
     BOOST_REQUIRE(result);
-    BOOST_REQUIRE(result->id == identifier::ping);
+    BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
     BOOST_REQUIRE_EQUAL(result->nonce, expected);
 
     boost::asio::post(strand, [&]() NOEXCEPT
