@@ -60,7 +60,7 @@ private:
     // ------------------------------------------------------------------------
 
     using methods_t = typename Interface::type;
-    using subscribers_t = subscribers_t<methods_t>;
+    using registry_t = subscribers_t<methods_t>;
 
     template <typename Handler, size_t Index>
     static inline consteval bool subscriber_matches_handler() NOEXCEPT;
@@ -69,7 +69,7 @@ private:
     static inline consteval size_t find_subscriber_for_handler() NOEXCEPT;
 
     template <size_t ...Index>
-    static inline subscribers_t make_subscribers(asio::strand& strand,
+    static inline registry_t make_subscribers(asio::strand& strand,
         std::index_sequence<Index...>) NOEXCEPT;
 
     // make_notifiers
@@ -108,6 +108,8 @@ private:
         const parameters_t& params, const names_t<Arguments>& names) THROWS;
 
     template <typename Method>
+    static inline auto preamble() NOEXCEPT;
+    template <typename Method>
     static inline code notify(subscriber_t<Method>& subscriber,
         const parameters_t& params, const names_t<Method>& names) NOEXCEPT;
     template <size_t Index>
@@ -121,7 +123,7 @@ private:
     static const notifiers_t notifiers_;
 
     /// This is not thread safe.
-    subscribers_t subscribers_;
+    registry_t subscribers_;
 };
 
 } // namespace rpc

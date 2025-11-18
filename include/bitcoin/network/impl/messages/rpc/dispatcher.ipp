@@ -223,26 +223,26 @@ inline externals_t<Arguments> CLASS::extract(const parameters_t& params,
 
 TEMPLATE
 template <typename Method>
+inline auto CLASS::preamble() NOEXCEPT
+{
+    if constexpr (Method::native)
+        return std::make_tuple(code{});
+    else
+        return std::make_tuple(code{}, Method{});
+}
+
+TEMPLATE
+template <typename Method>
 inline code CLASS::notify(subscriber_t<Method>& subscriber,
     const parameters_t& params, const names_t<Method>& names) NOEXCEPT
 {
     try
     {
-        if constexpr (Method::native)
+        using native = args_native_t<Method>;
+        std::apply([&](auto&&... args) NOEXCEPT
         {
-            std::apply([&](auto&&... args) NOEXCEPT
-            {
-                subscriber.notify({}, std::forward<decltype(args)>(args)...);
-            }, extract<args_native_t<Method>>(params, names));
-        }
-        else
-        {
-            std::apply([&](auto&&... args) NOEXCEPT
-            {
-                subscriber.notify({}, Method{},
-                    std::forward<decltype(args)>(args)...);
-            }, extract<args_native_t<Method>>(params, names));
-        }
+            subscriber.notify(std::forward<decltype(args)>(args)...);
+        }, std::tuple_cat(preamble<Method>(), extract<native>(params, names)));
 
         return error::success;
     }
@@ -295,7 +295,7 @@ CLASS::notifiers_ = make_notifiers(std::make_index_sequence<Interface::size>{});
 
 TEMPLATE
 template <size_t ...Index>
-inline CLASS::subscribers_t CLASS::make_subscribers(asio::strand& strand,
+inline CLASS::registry_t CLASS::make_subscribers(asio::strand& strand,
     std::index_sequence<Index...>) NOEXCEPT
 {
     // Subscribers declared dynamically (tuple for each distributor/channel).
