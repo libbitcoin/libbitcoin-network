@@ -16,26 +16,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_RPC_HPP
-#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_RPC_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_DISPATCHER_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_DISPATCHER_HPP
 
 #include <tuple>
 #include <unordered_map>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/distributors/distributor.hpp>
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/rpc/method.hpp>
+#include <bitcoin/network/messages/rpc/types.hpp>
 
 namespace libbitcoin {
 namespace network {
+namespace rpc {
 
 /// Not thread safe.
 template <typename Interface>
-class distributor_rpc
+class dispatcher
 {
 public:
-    DELETE_COPY(distributor_rpc);
-    DEFAULT_MOVE(distributor_rpc);
+    DELETE_COPY(dispatcher);
+    DEFAULT_MOVE(dispatcher);
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
     /// If key exists, handler is invoked with error::subscriber_exists.
@@ -44,11 +46,11 @@ public:
     inline code subscribe(Handler&& handler) NOEXCEPT;
 
     /// Create an instance of this class.
-    inline distributor_rpc(asio::strand& strand) NOEXCEPT;
-    virtual ~distributor_rpc() = default;
+    inline dispatcher(asio::strand& strand) NOEXCEPT;
+    virtual ~dispatcher() = default;
 
     /// Dispatch the request to the appropriate method's unsubscriber.
-    virtual inline code notify(const rpc::request_t& request) NOEXCEPT;
+    virtual inline code notify(const request_t& request) NOEXCEPT;
 
     /// Stop all unsubscribers with the given code.
     virtual inline void stop(const code& ec) NOEXCEPT;
@@ -58,7 +60,7 @@ private:
     // ------------------------------------------------------------------------
 
     using methods_t = typename Interface::type;
-    using subscribers_t = rpc::subscribers_t<methods_t>;
+    using subscribers_t = subscribers_t<methods_t>;
 
     template <typename Handler, size_t Index>
     static inline consteval bool subscriber_matches_handler() NOEXCEPT;
@@ -73,43 +75,43 @@ private:
     // make_notifiers
     // ------------------------------------------------------------------------
 
-    using parameters_t = rpc::params_option;
-    using notifier_t = std::function<code(distributor_rpc&, const parameters_t&)>;
+    using parameters_t = params_option;
+    using notifier_t = std::function<code(dispatcher&, const parameters_t&)>;
     using notifiers_t = std::unordered_map<std::string, notifier_t>;
 
     template <typename Argument>
-    static inline rpc::external_t<Argument> get_required(
-        const rpc::value_t& value) THROWS;
+    static inline external_t<Argument> get_required(
+        const value_t& value) THROWS;
     template <typename Argument>
-    static inline rpc::external_t<Argument> get_optional() THROWS;
+    static inline external_t<Argument> get_optional() THROWS;
     template <typename Argument>
-    static inline rpc::external_t<Argument> get_nullable() THROWS;
+    static inline external_t<Argument> get_nullable() THROWS;
 
     template <typename Argument>
-    static inline rpc::external_t<Argument> get_positional(size_t& position,
-        const rpc::array_t& array) THROWS;
+    static inline external_t<Argument> get_positional(size_t& position,
+        const array_t& array) THROWS;
     template <typename Argument>
-    static inline rpc::external_t<Argument> get_named(
-        const std::string_view& name, const rpc::object_t& object) THROWS;
+    static inline external_t<Argument> get_named(
+        const std::string_view& name, const object_t& object) THROWS;
 
-    static inline rpc::array_t get_array(const parameters_t& params) THROWS;
-    static inline rpc::object_t get_object(const parameters_t& params) THROWS;
+    static inline array_t get_array(const parameters_t& params) THROWS;
+    static inline object_t get_object(const parameters_t& params) THROWS;
 
     template <typename Arguments>
-    static inline rpc::externals_t<Arguments> extract_positional(
+    static inline externals_t<Arguments> extract_positional(
         const parameters_t& params) THROWS;
     template <typename Arguments>
-    static inline rpc::externals_t<Arguments> extract_named(
-        const parameters_t& params, const rpc::names_t<Arguments>& names) THROWS;
+    static inline externals_t<Arguments> extract_named(
+        const parameters_t& params, const names_t<Arguments>& names) THROWS;
     template <typename Arguments>
-    static inline rpc::externals_t<Arguments> extract(
-        const parameters_t& params, const rpc::names_t<Arguments>& names) THROWS;
+    static inline externals_t<Arguments> extract(
+        const parameters_t& params, const names_t<Arguments>& names) THROWS;
 
     template <typename Method>
-    static inline code notify(rpc::subscriber_t<Method>& subscriber,
-        const parameters_t& params, const rpc::names_t<Method>& names) NOEXCEPT;
+    static inline code notify(subscriber_t<Method>& subscriber,
+        const parameters_t& params, const names_t<Method>& names) NOEXCEPT;
     template <size_t Index>
-    static inline code functor(distributor_rpc& self,
+    static inline code functor(dispatcher& self,
         const parameters_t& params) NOEXCEPT;
     template <size_t ...Index>
     static inline constexpr notifiers_t make_notifiers(
@@ -122,13 +124,14 @@ private:
     subscribers_t subscribers_;
 };
 
+} // namespace rpc
 } // namespace network
 } // namespace libbitcoin
 
 #define TEMPLATE template <typename Interface>
-#define CLASS distributor_rpc<Interface>
+#define CLASS dispatcher<Interface>
 
-#include <bitcoin/network/impl/distributors/distributor_rpc.ipp>
+#include <bitcoin/network/impl/messages/rpc/dispatcher.ipp>
 
 #undef CLASS
 #undef TEMPLATE

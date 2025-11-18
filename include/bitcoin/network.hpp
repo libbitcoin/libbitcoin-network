@@ -55,7 +55,6 @@
 #include <bitcoin/network/distributors/distributor_electrum.hpp>
 #include <bitcoin/network/distributors/distributor_http.hpp>
 #include <bitcoin/network/distributors/distributor_peer.hpp>
-#include <bitcoin/network/distributors/distributor_rpc.hpp>
 #include <bitcoin/network/distributors/distributor_stratum_v1.hpp>
 #include <bitcoin/network/distributors/distributors.hpp>
 #include <bitcoin/network/log/capture.hpp>
@@ -123,6 +122,7 @@
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>
+#include <bitcoin/network/messages/rpc/dispatcher.hpp>
 #include <bitcoin/network/messages/rpc/interface.hpp>
 #include <bitcoin/network/messages/rpc/method.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>

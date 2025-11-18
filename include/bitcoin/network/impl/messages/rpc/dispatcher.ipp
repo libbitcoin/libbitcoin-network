@@ -16,24 +16,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/distributors/distributor_rpc.hpp>
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_DISPATCHER_IPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_DISPATCHER_IPP
 
 #include <tuple>
 #include <utility>
 #include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/rpc/enums/grouping.hpp>
+#include <bitcoin/network/messages/rpc/method.hpp>
+#include <bitcoin/network/messages/rpc/types.hpp>
 
 namespace libbitcoin {
 namespace network {
+namespace rpc {
 
 // make_notifiers
 // ----------------------------------------------------------------------------
 
 TEMPLATE
 template <typename Argument>
-inline rpc::external_t<Argument> CLASS::get_optional() THROWS
+inline external_t<Argument> CLASS::get_optional() THROWS
 {
     using namespace rpc;
 
@@ -47,7 +51,7 @@ inline rpc::external_t<Argument> CLASS::get_optional() THROWS
 
 TEMPLATE
 template <typename Argument>
-inline rpc::external_t<Argument> CLASS::get_nullable() THROWS
+inline external_t<Argument> CLASS::get_nullable() THROWS
 {
     using namespace rpc;
 
@@ -59,8 +63,8 @@ inline rpc::external_t<Argument> CLASS::get_nullable() THROWS
 
 TEMPLATE
 template <typename Argument>
-inline rpc::external_t<Argument> CLASS::get_required(
-    const rpc::value_t& value) THROWS
+inline external_t<Argument> CLASS::get_required(
+    const value_t& value) THROWS
 {
     using namespace rpc;
     using type = internal_t<Argument>;
@@ -78,8 +82,8 @@ inline rpc::external_t<Argument> CLASS::get_required(
 
 TEMPLATE
 template <typename Argument>
-inline rpc::external_t<Argument> CLASS::get_positional(size_t& position,
-    const rpc::array_t& array) THROWS
+inline external_t<Argument> CLASS::get_positional(size_t& position,
+    const array_t& array) THROWS
 {
     using namespace rpc;
 
@@ -100,8 +104,8 @@ inline rpc::external_t<Argument> CLASS::get_positional(size_t& position,
 
 TEMPLATE
 template <typename Argument>
-inline rpc::external_t<Argument> CLASS::get_named(
-    const std::string_view& name, const rpc::object_t& object) THROWS
+inline external_t<Argument> CLASS::get_named(
+    const std::string_view& name, const object_t& object) THROWS
 {
     using namespace rpc;
 
@@ -122,39 +126,39 @@ inline rpc::external_t<Argument> CLASS::get_named(
 }
 
 TEMPLATE
-inline rpc::array_t CLASS::get_array(const parameters_t& params) THROWS
+inline array_t CLASS::get_array(const parameters_t& params) THROWS
 {
     if (!params.has_value())
         return {};
 
-    if (!std::holds_alternative<rpc::array_t>(params.value()))
+    if (!std::holds_alternative<array_t>(params.value()))
         throw std::system_error{ error::missing_array };
 
-    return std::get<rpc::array_t>(params.value());
+    return std::get<array_t>(params.value());
 }
 
 TEMPLATE
-inline rpc::object_t CLASS::get_object(const parameters_t& params) THROWS
+inline object_t CLASS::get_object(const parameters_t& params) THROWS
 {
     if (!params.has_value())
         return {};
 
-    if (!std::holds_alternative<rpc::object_t>(params.value()))
+    if (!std::holds_alternative<object_t>(params.value()))
         throw std::system_error{ error::missing_object };
 
-    return std::get<rpc::object_t>(params.value());
+    return std::get<object_t>(params.value());
 }
 
 TEMPLATE
 template <typename Arguments>
-inline rpc::externals_t<Arguments> CLASS::extract_positional(
+inline externals_t<Arguments> CLASS::extract_positional(
     const parameters_t& params) THROWS
 {
     const auto array = get_array(params);
     constexpr auto count = std::tuple_size_v<Arguments>;
 
     size_t position{};
-    rpc::externals_t<Arguments> values{};
+    externals_t<Arguments> values{};
     [&] <size_t... Index>(std::index_sequence<Index...>) THROWS
     {
         // Sequence via comma expansion is required to preserve order.
@@ -172,8 +176,8 @@ inline rpc::externals_t<Arguments> CLASS::extract_positional(
 
 TEMPLATE
 template <typename Arguments>
-inline rpc::externals_t<Arguments> CLASS::extract_named(
-    const parameters_t& params, const rpc::names_t<Arguments>& names) THROWS
+inline externals_t<Arguments> CLASS::extract_named(
+    const parameters_t& params, const names_t<Arguments>& names) THROWS
 {
     const auto object = get_object(params);
     constexpr auto count = std::tuple_size_v<Arguments>;
@@ -194,23 +198,23 @@ inline rpc::externals_t<Arguments> CLASS::extract_named(
 
 TEMPLATE
 template <typename Arguments>
-inline rpc::externals_t<Arguments> CLASS::extract(const parameters_t& params,
-    const rpc::names_t<Arguments>& names) THROWS
+inline externals_t<Arguments> CLASS::extract(const parameters_t& params,
+    const names_t<Arguments>& names) THROWS
 {
     constexpr auto mode = Interface::mode;
 
-    if constexpr (mode == rpc::grouping::positional)
+    if constexpr (mode == grouping::positional)
     {
         return extract_positional<Arguments>(params);
     }
-    else if constexpr (mode == rpc::grouping::named)
+    else if constexpr (mode == grouping::named)
     {
         return extract_named<Arguments>(params, names);
     }
-    else // rpc::grouping::either
+    else // grouping::either
     {
         if (!params.has_value() ||
-            std::holds_alternative<rpc::array_t>(params.value()))
+            std::holds_alternative<array_t>(params.value()))
             return extract_positional<Arguments>(params);
         else
             return extract_named<Arguments>(params, names);
@@ -219,8 +223,8 @@ inline rpc::externals_t<Arguments> CLASS::extract(const parameters_t& params,
 
 TEMPLATE
 template <typename Method>
-inline code CLASS::notify(rpc::subscriber_t<Method>& subscriber,
-    const parameters_t& params, const rpc::names_t<Method>& names) NOEXCEPT
+inline code CLASS::notify(subscriber_t<Method>& subscriber,
+    const parameters_t& params, const names_t<Method>& names) NOEXCEPT
 {
     try
     {
@@ -229,7 +233,7 @@ inline code CLASS::notify(rpc::subscriber_t<Method>& subscriber,
             std::apply([&](auto&&... args) NOEXCEPT
             {
                 subscriber.notify({}, std::forward<decltype(args)>(args)...);
-            }, extract<rpc::args_native_t<Method>>(params, names));
+            }, extract<args_native_t<Method>>(params, names));
         }
         else
         {
@@ -237,7 +241,7 @@ inline code CLASS::notify(rpc::subscriber_t<Method>& subscriber,
             {
                 subscriber.notify({}, Method{},
                     std::forward<decltype(args)>(args)...);
-            }, extract<rpc::args_native_t<Method>>(params, names));
+            }, extract<args_native_t<Method>>(params, names));
         }
 
         return error::success;
@@ -254,11 +258,11 @@ inline code CLASS::notify(rpc::subscriber_t<Method>& subscriber,
 
 TEMPLATE
 template <size_t Index>
-inline code CLASS::functor(distributor_rpc& self,
+inline code CLASS::functor(dispatcher& self,
     const parameters_t& params) NOEXCEPT
 {
     // Get method (type), suscriber, and parameter names from the index.
-    using method = rpc::method_t<Index, methods_t>;
+    using method = method_t<Index, methods_t>;
     auto& subscriber = std::get<Index>(self.subscribers_);
     const auto& names = std::get<Index>(Interface::methods).parameter_names();
 
@@ -276,7 +280,7 @@ inline constexpr CLASS::notifiers_t CLASS::make_notifiers(
     {
         std::make_pair
         (
-            std::string{ rpc::method_t<Index, methods_t>::name },
+            std::string{ method_t<Index, methods_t>::name },
             &functor<Index>
         )...
     };
@@ -297,7 +301,7 @@ inline CLASS::subscribers_t CLASS::make_subscribers(asio::strand& strand,
     // Subscribers declared dynamically (tuple for each distributor/channel).
     return std::make_tuple
     (
-        rpc::subscriber_t<rpc::method_t<Index, methods_t>>(strand)...
+        subscriber_t<method_t<Index, methods_t>>(strand)...
     );
 }
 
@@ -310,8 +314,8 @@ inline consteval bool CLASS::subscriber_matches_handler() NOEXCEPT
     // This guard limits compilation error noise when a handler is ill-defined.
     if constexpr (Index < std::tuple_size_v<methods_t>)
     {
-        return is_same_tuple<rpc::handler_args_t<Handler>,
-            rpc::externals_t<rpc::args_t<rpc::method_t<Index, methods_t>>>>;
+        return is_same_tuple<handler_args_t<Handler>,
+            externals_t<args_t<method_t<Index, methods_t>>>>;
     }
 }
 
@@ -343,14 +347,14 @@ inline code CLASS::subscribe(Handler&& handler) NOEXCEPT
 }
 
 TEMPLATE
-inline CLASS::distributor_rpc(asio::strand& strand) NOEXCEPT
+inline CLASS::dispatcher(asio::strand& strand) NOEXCEPT
   : subscribers_(make_subscribers(strand,
       std::make_index_sequence<Interface::size>{}))
 {
 }
 
 TEMPLATE
-inline code CLASS::notify(const rpc::request_t& request) NOEXCEPT
+inline code CLASS::notify(const request_t& request) NOEXCEPT
 {
     // Search unordered map by method name for the notifier functor.
     const auto it = notifiers_.find(request.method);
@@ -374,5 +378,8 @@ inline void CLASS::stop(const code& ec) NOEXCEPT
     );
 }
 
+} // namespace rpc
 } // namespace network
 } // namespace libbitcoin
+
+#endif

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_RPC_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_RPC_HPP
 
+#include <bitcoin/network/messages/rpc/dispatcher.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 #include <bitcoin/network/messages/rpc/interface.hpp>

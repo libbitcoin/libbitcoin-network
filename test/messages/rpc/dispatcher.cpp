@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
+#include "../../test.hpp"
 
 #include <future>
 
-BOOST_AUTO_TEST_SUITE(distributor_rpc_tests)
+BOOST_AUTO_TEST_SUITE(dispatcher_tests)
 
 using namespace rpc;
 
@@ -46,9 +46,9 @@ struct mock_methods
 };
 
 using mock = interface<mock_methods>;
-using distributor_mock = distributor_rpc<mock>;
+using distributor_mock = dispatcher<mock>;
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__construct__stop__stops)
+BOOST_AUTO_TEST_CASE(dispatcher__construct__stop__stops)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__construct__stop__stops)
     BOOST_REQUIRE(promise.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__no_subscriber__success)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__no_subscriber__success)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__no_subscriber__success)
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__subscribe__stopped__subscriber_stopped)
+BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stopped__subscriber_stopped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__subscribe__stopped__subscriber_stopped)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__subscribe__stop__service_stopped)
+BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stop__service_stopped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__subscribe__stop__service_stopped)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__subscribe__multiple_stop__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__subscribe__multiple_stop__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__subscribe__multiple_stop__expected)
     BOOST_REQUIRE(second_called);
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__unknown_method__unexpected_method)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__unknown_method__unexpected_method)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__unknown_method__unexpected_method)
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::unexpected_method);
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__multiple_decayable_subscribers__invokes_both)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes_both)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__multiple_decayable_subscribers__in
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__empty_method_no_params__success)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__empty_method_no_params__success)
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__empty_method_empty_array__success)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__empty_method_empty_array__success)
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__empty_method_array_params__extra_positional)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positional)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__empty_method_array_params__extra_p
     BOOST_REQUIRE_EQUAL(result, error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__all_required_positional_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__all_required_positional_params__ex
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__all_required_named_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__all_required_named_params__expecte
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_options_positional_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_options_positional_params__ex
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_options_named_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -748,7 +748,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_options_named_params__expecte
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_nullify_positional_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -823,7 +823,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_nullify_positional_params__ex
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_nullify_named_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -898,7 +898,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_nullify_named_params__expecte
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combine_positional_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -973,7 +973,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combine_positional_params__ex
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combine_named_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -1048,7 +1048,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combine_named_params__expecte
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__not_required_positional_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -1120,7 +1120,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__not_required_positional_params__ex
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__not_required_named_params__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());

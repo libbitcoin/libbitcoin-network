@@ -34,7 +34,7 @@ struct mock_methods
 };
 
 using mock = interface<mock_methods>;
-using distributor_mock = distributor_rpc<mock>;
+using distributor_mock = dispatcher<mock>;
 
 BOOST_AUTO_TEST_CASE(distributor_peer__notify__ping_positional__expected)
 {
