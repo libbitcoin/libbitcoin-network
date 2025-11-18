@@ -32,8 +32,7 @@ struct mock_methods
         method<"all_required", bool, double, std::string>{ "a", "b", "c" },
         method<"with_options", std::string, optional<4.2>, optional<true>>{ "a", "b", "c" },
         method<"with_nullify", std::string, nullable<double>, nullable<bool>>{ "a", "b", "c" },
-        method<"with_combo_a", std::string, optional<4.2>, nullable<bool>>{ "a", "b", "c" },
-        method<"with_combo_b", std::string, nullable<bool>, optional<4.2>>{ "a", "b", "c" },
+        method<"with_combine", std::string, nullable<bool>, optional<4.2>>{ "a", "b", "c" },
         method<"not_required", nullable<bool>, optional<4.2>>{ "a", "b" }
     };
 
@@ -42,9 +41,8 @@ struct mock_methods
     using all_required = at<1, decltype(methods)>;
     using with_options = at<2, decltype(methods)>;
     using with_nullify = at<3, decltype(methods)>;
-    using with_combo_a = at<4, decltype(methods)>;
-    using with_combo_b = at<5, decltype(methods)>;
-    using not_required = at<6, decltype(methods)>;
+    using with_combine = at<4, decltype(methods)>;
+    using not_required = at<5, decltype(methods)>;
 };
 
 using mock = interface<mock_methods>;
@@ -900,158 +898,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_nullify_named_params__expecte
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combo_a_positional_params__expected)
-{
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
-    bool called{};
-    string_t result_a{};
-    number_t result_b{};
-    boolean_t result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.subscribe(
-            [&](const code& ec, mock::with_combo_a, std::string a, double b, std::optional<bool> c) NOEXCEPT
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b;
-                result_c = c.has_value() ? c.value() : true;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "with_combo_a",
-            .params = { array_t{ null_t{}, null_t{}, null_t{} } }
-        }));
-
-        // optional can't be used with positional unless trailing
-        promise2.set_value(instance.notify(
-        {
-            .method = "with_combo_a",
-            .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, null_t{} } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "with_combo_a",
-            .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, boolean_t{ false } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "with_combo_a",
-            .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, null_t{} } }
-        }));
-    });
-
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
-    BOOST_REQUIRE_EQUAL(result_a, "42");
-    BOOST_REQUIRE_EQUAL(result_b, 42.0);
-    BOOST_REQUIRE_EQUAL(result_c, true);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-}
-
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combo_a_named_params__expected)
-{
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
-    bool called{};
-    string_t result_a{};
-    number_t result_b{};
-    boolean_t result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.subscribe(
-            [&](const code& ec, mock::with_combo_a, std::string a, double b, std::optional<bool> c) NOEXCEPT
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b;
-                result_c = c.has_value() ? c.value() : true;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "with_combo_a",
-            .params = { object_t{ { "a", null_t{} }, { "b", null_t{} }, { "c", null_t{} } } }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "with_combo_a",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "c", null_t{} } } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "with_combo_a",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "with_combo_a",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", null_t{} } } }
-        }));
-    });
-
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
-    BOOST_REQUIRE_EQUAL(result_a, "42");
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, true);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-}
-
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combo_b_positional_params__expected)
+BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combine_positional_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -1069,7 +916,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combo_b_positional_params__ex
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::with_combo_b, std::string a, std::optional<bool> b, double c) NOEXCEPT
+            [&](const code& ec, mock::with_combine, std::string a, std::optional<bool> b, double c) NOEXCEPT
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -1085,25 +932,25 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combo_b_positional_params__ex
 
         promise1.set_value(instance.notify(
         {
-            .method = "with_combo_b",
+            .method = "with_combine",
             .params = { array_t{ null_t{}, null_t{}, null_t{} } }
         }));
 
         promise2.set_value(instance.notify(
         {
-            .method = "with_combo_b",
+            .method = "with_combine",
             .params = { array_t{ string_t{ "42" }, null_t{} } }
         }));
 
         promise3.set_value(instance.notify(
         {
-            .method = "with_combo_b",
+            .method = "with_combine",
             .params = { array_t{ string_t{ "42" }, null_t{}, number_t{ 42.0 } } }
         }));
 
         promise4.set_value(instance.notify(
         {
-            .method = "with_combo_b",
+            .method = "with_combine",
             .params = { array_t{ string_t{ "42" }, boolean_t{ false }, number_t{ 42.0 } } }
         }));
     });
@@ -1126,7 +973,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combo_b_positional_params__ex
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combo_b_named_params__expected)
+BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combine_named_params__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -1144,7 +991,7 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combo_b_named_params__expecte
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::with_combo_b, std::string a, std::optional<bool> b, double c) NOEXCEPT
+            [&](const code& ec, mock::with_combine, std::string a, std::optional<bool> b, double c) NOEXCEPT
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -1160,25 +1007,25 @@ BOOST_AUTO_TEST_CASE(distributor_rpc__notify__with_combo_b_named_params__expecte
 
         promise1.set_value(instance.notify(
         {
-            .method = "with_combo_b",
+            .method = "with_combine",
             .params = { object_t{ { "a", null_t{} }, { "b", null_t{} }, { "c", null_t{} } } }
         }));
 
         promise2.set_value(instance.notify(
         {
-            .method = "with_combo_b",
+            .method = "with_combine",
             .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} } } }
         }));
 
         promise3.set_value(instance.notify(
         {
-            .method = "with_combo_b",
+            .method = "with_combine",
             .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} }, { "c", number_t{ 42.0 } } } }
         }));
 
         promise4.set_value(instance.notify(
         {
-            .method = "with_combo_b",
+            .method = "with_combine",
             .params = { object_t{ { "a", string_t{ "42" } }, { "b", boolean_t{ false } }, { "c", number_t{ 42.0 } } } }
         }));
     });

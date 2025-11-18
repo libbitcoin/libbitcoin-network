@@ -21,6 +21,7 @@
 
 #include <tuple>
 #include <utility>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/types.hpp>
 
@@ -34,12 +35,15 @@ BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
 template <text_t Text, typename ...Args>
 struct method
 {
-    static_assert(is_trailing_optionals<Args...>::value);
+    static_assert(only_trailing_optionals<Args...>, "optionals must be last");
     static constexpr std::string_view name{ Text.text.data(), Text.text.size() };
+    static constexpr bool native = is_tagged<std::tuple<Args...>>;
     static constexpr auto size = sizeof...(Args);
-    using names = std::array<std::string_view, size>;
-    using args = std::tuple<Args...>;
+
     using tag = method;
+    using args_native = std::tuple<Args...>;
+    using args = iif<native, args_native, std::tuple<tag, Args...>>;
+    using names = std::array<std::string_view, size>;
 
     /// Required for construction of tag{}.
     inline constexpr method() NOEXCEPT
@@ -54,6 +58,7 @@ struct method
     {
     }
 
+    /// The ordered set of names corresponding to parameter types.
     inline constexpr const names& parameter_names() const NOEXCEPT
     {
         return names_;
@@ -63,17 +68,20 @@ private:
     const names names_;
 };
 
-template <typename Type, typename = bool>
-struct parameter_names {};
+/// Helpers dependent upon method.
+/// ---------------------------------------------------------------------------
 
-template <typename Type>
-struct parameter_names<Type, bool_if<!is_tuple<Type>>>
+template <typename Method, typename = bool>
+struct names {};
+
+template <typename Method>
+struct names<Method, bool_if<!is_tuple<Method>>>
 {
-    using type = typename Type::names;
+    using type = typename Method::names;
 };
 
-template <typename Type>
-struct parameter_names<Type, bool_if<is_tuple<Type>>>
+template <typename Method>
+struct names<Method, bool_if<is_tuple<Method>>>
 {
     template <typename Tuple>
     struct unpack;
@@ -81,24 +89,70 @@ struct parameter_names<Type, bool_if<is_tuple<Type>>>
     template <typename ...Args>
     struct unpack<std::tuple<Args...>>
     {
-        // method defined above.
         using type = typename method<"", Args...>::names;
     };
 
-    using type = typename unpack<Type>::type;
+    using type = typename unpack<Method>::type;
 };
 
-template <typename Type>
-using names_t = typename parameter_names<Type>::type;
+template <typename Method>
+using names_t = typename names<Method>::type;
 
+/// args_t/method::args is used for signature matching. If method::native then
+/// this is the same as args_native_t - no synthetic tag (first argument).
 template <typename Method>
 using args_t = typename Method::args;
+
+/// args_native_t/method::args_native is used for parameter value extraction.
+template <typename Method>
+using args_native_t = typename Method::args_native;
 
 template <typename Method>
 using tag_t = typename Method::tag;
 
 template <size_t Index, typename Methods>
 using method_t = std::tuple_element_t<Index, Methods>;
+
+/// subscriber_t<Method>
+/// ---------------------------------------------------------------------------
+/// Specializations are const sensitive, strip the const from method declares.
+
+/// Handles parameter pack.
+template <typename ...Args>
+struct subscriber
+{
+    using type = network::unsubscriber<external_t<std::remove_cv_t<Args>>...>;
+};
+
+/// Handles tuple of parameters.
+template <typename ...Args>
+struct subscriber<std::tuple<Args...>>
+{
+    using type = network::unsubscriber<external_t<std::remove_cv_t<Args>>...>;
+};
+
+template <typename Method>
+using subscriber_t = typename subscriber<args_t<Method>>::type;
+
+/// subscribers_t<Method...>
+/// ---------------------------------------------------------------------------
+/// Specializations are const sensitive, strip the const from method declares.
+
+template <typename Methods>
+struct subscribers;
+
+template <typename ...Methods>
+struct subscribers<std::tuple<Methods...>>
+{
+    using type = std::tuple<subscriber_t<Methods>...>;
+};
+
+template <typename Methods>
+struct subscribers_strip
+  : subscribers<std::remove_cv_t<Methods>> {};
+
+template <typename ...Methods>
+using subscribers_t = typename subscribers_strip<Methods...>::type;
 
 BC_POP_WARNING()
 

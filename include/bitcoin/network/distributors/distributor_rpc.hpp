@@ -57,36 +57,14 @@ private:
     // make_subscribers
     // ------------------------------------------------------------------------
 
-    template <typename Method>
-    struct subscriber_type;
+    using methods_t = typename Interface::type;
+    using subscribers_t = rpc::subscribers_t<methods_t>;
 
-    template <text_t Text, typename ...Args>
-    struct subscriber_type<rpc::method<Text, Args...>>
-    {
-        using tag = typename rpc::method<Text, Args...>::tag;
-        using type = network::unsubscriber<tag, rpc::external_t<Args>...>;
-    };
+    template <typename Handler, size_t Index>
+    static inline consteval bool subscriber_matches_handler() NOEXCEPT;
 
-    template <typename Method>
-    using subscriber_t = typename subscriber_type<Method>::type;
-
-    template <typename Method>
-    struct subscribers_type;
-
-    template <typename ...Method>
-    struct subscribers_type<std::tuple<Method...>>
-    {
-        using type = std::tuple<subscriber_t<Method>...>;
-    };
-
-    using methods_t = std::remove_const_t<typename Interface::type>;
-    using subscribers_t = typename subscribers_type<methods_t>::type;
-
-    template <size_t Index, typename Handler>
-    static inline consteval bool is_handler_type() NOEXCEPT;
-
-    template <typename Tag, size_t Index = zero>
-    static inline consteval size_t find_handler_index() NOEXCEPT;
+    template <typename Handler, size_t Index = zero>
+    static inline consteval size_t find_subscriber_for_handler() NOEXCEPT;
 
     template <size_t ...Index>
     static inline subscribers_t make_subscribers(asio::strand& strand,
@@ -95,8 +73,8 @@ private:
     // make_notifiers
     // ------------------------------------------------------------------------
 
-    using optional_t = rpc::params_option;
-    using notifier_t = std::function<code(distributor_rpc&, const optional_t&)>;
+    using parameters_t = rpc::params_option;
+    using notifier_t = std::function<code(distributor_rpc&, const parameters_t&)>;
     using notifiers_t = std::unordered_map<std::string, notifier_t>;
 
     template <typename Argument>
@@ -114,25 +92,25 @@ private:
     static inline rpc::external_t<Argument> get_named(
         const std::string_view& name, const rpc::object_t& object) THROWS;
 
-    static inline rpc::array_t get_array(const optional_t& params) THROWS;
-    static inline rpc::object_t get_object(const optional_t& params) THROWS;
+    static inline rpc::array_t get_array(const parameters_t& params) THROWS;
+    static inline rpc::object_t get_object(const parameters_t& params) THROWS;
 
     template <typename Arguments>
     static inline rpc::externals_t<Arguments> extract_positional(
-        const optional_t& params) THROWS;
+        const parameters_t& params) THROWS;
     template <typename Arguments>
     static inline rpc::externals_t<Arguments> extract_named(
-        const optional_t& params, const rpc::names_t<Arguments>& names) THROWS;
+        const parameters_t& params, const rpc::names_t<Arguments>& names) THROWS;
     template <typename Arguments>
     static inline rpc::externals_t<Arguments> extract(
-        const optional_t& params, const rpc::names_t<Arguments>& names) THROWS;
+        const parameters_t& params, const rpc::names_t<Arguments>& names) THROWS;
 
     template <typename Method>
-    static inline code notify(subscriber_t<Method>& subscriber,
-        const optional_t& params, const rpc::names_t<Method>& names) NOEXCEPT;
+    static inline code notify(rpc::subscriber_t<Method>& subscriber,
+        const parameters_t& params, const rpc::names_t<Method>& names) NOEXCEPT;
     template <size_t Index>
-    static inline code notifier(distributor_rpc& self,
-        const optional_t& params) NOEXCEPT;
+    static inline code functor(distributor_rpc& self,
+        const parameters_t& params) NOEXCEPT;
     template <size_t ...Index>
     static inline constexpr notifiers_t make_notifiers(
         std::index_sequence<Index...>) NOEXCEPT;

@@ -37,9 +37,9 @@ inline rpc::external_t<Argument> CLASS::get_optional() THROWS
 {
     using namespace rpc;
 
-    if constexpr (is_required<Argument>::value)
+    if constexpr (is_required<Argument>)
         throw std::system_error{ error::missing_parameter };
-    else if constexpr (is_optional<Argument>::value)
+    else if constexpr (is_optional<Argument>)
         return Argument::default_value();
     else
         return external_t<Argument>{};
@@ -51,9 +51,9 @@ inline rpc::external_t<Argument> CLASS::get_nullable() THROWS
 {
     using namespace rpc;
 
-    if constexpr (is_required<Argument>::value || is_optional<Argument>::value)
+    if constexpr (is_required<Argument> || is_optional<Argument>)
         throw std::system_error{ error::missing_parameter };
-    else if constexpr (is_nullable<Argument>::value)
+    else if constexpr (is_nullable<Argument>)
         return external_t<Argument>{};
 }
 
@@ -70,7 +70,7 @@ inline rpc::external_t<Argument> CLASS::get_required(
 
     if (!std::holds_alternative<type>(internal))
         throw std::system_error{ error::unexpected_type };
-    else if constexpr (is_nullable<Argument>::value)
+    else if constexpr (is_nullable<Argument>)
         return { std::get<type>(internal) };
     else
         return std::get<type>(internal);
@@ -122,7 +122,7 @@ inline rpc::external_t<Argument> CLASS::get_named(
 }
 
 TEMPLATE
-inline rpc::array_t CLASS::get_array(const optional_t& params) THROWS
+inline rpc::array_t CLASS::get_array(const parameters_t& params) THROWS
 {
     if (!params.has_value())
         return {};
@@ -134,7 +134,7 @@ inline rpc::array_t CLASS::get_array(const optional_t& params) THROWS
 }
 
 TEMPLATE
-inline rpc::object_t CLASS::get_object(const optional_t& params) THROWS
+inline rpc::object_t CLASS::get_object(const parameters_t& params) THROWS
 {
     if (!params.has_value())
         return {};
@@ -148,7 +148,7 @@ inline rpc::object_t CLASS::get_object(const optional_t& params) THROWS
 TEMPLATE
 template <typename Arguments>
 inline rpc::externals_t<Arguments> CLASS::extract_positional(
-    const optional_t& params) THROWS
+    const parameters_t& params) THROWS
 {
     const auto array = get_array(params);
     constexpr auto count = std::tuple_size_v<Arguments>;
@@ -173,7 +173,7 @@ inline rpc::externals_t<Arguments> CLASS::extract_positional(
 TEMPLATE
 template <typename Arguments>
 inline rpc::externals_t<Arguments> CLASS::extract_named(
-    const optional_t& params, const rpc::names_t<Arguments>& names) THROWS
+    const parameters_t& params, const rpc::names_t<Arguments>& names) THROWS
 {
     const auto object = get_object(params);
     constexpr auto count = std::tuple_size_v<Arguments>;
@@ -194,7 +194,7 @@ inline rpc::externals_t<Arguments> CLASS::extract_named(
 
 TEMPLATE
 template <typename Arguments>
-inline rpc::externals_t<Arguments> CLASS::extract(const optional_t& params,
+inline rpc::externals_t<Arguments> CLASS::extract(const parameters_t& params,
     const rpc::names_t<Arguments>& names) THROWS
 {
     constexpr auto mode = Interface::mode;
@@ -219,20 +219,26 @@ inline rpc::externals_t<Arguments> CLASS::extract(const optional_t& params,
 
 TEMPLATE
 template <typename Method>
-inline code CLASS::notify(subscriber_t<Method>& subscriber,
-    const optional_t& params, const rpc::names_t<Method>& names) NOEXCEPT
+inline code CLASS::notify(rpc::subscriber_t<Method>& subscriber,
+    const parameters_t& params, const rpc::names_t<Method>& names) NOEXCEPT
 {
     try
     {
-        std::apply
-        (
-            [&](auto&&... args) NOEXCEPT
+        if constexpr (Method::native)
+        {
+            std::apply([&](auto&&... args) NOEXCEPT
             {
-                subscriber.notify({}, rpc::tag_t<Method>{},
+                subscriber.notify({}, std::forward<decltype(args)>(args)...);
+            }, extract<rpc::args_native_t<Method>>(params, names));
+        }
+        else
+        {
+            std::apply([&](auto&&... args) NOEXCEPT
+            {
+                subscriber.notify({}, Method{},
                     std::forward<decltype(args)>(args)...);
-            },
-            extract<rpc::args_t<Method>>(params, names)
-        );
+            }, extract<rpc::args_native_t<Method>>(params, names));
+        }
 
         return error::success;
     }
@@ -248,12 +254,15 @@ inline code CLASS::notify(subscriber_t<Method>& subscriber,
 
 TEMPLATE
 template <size_t Index>
-inline code CLASS::notifier(distributor_rpc& self,
-    const optional_t& params) NOEXCEPT
+inline code CLASS::functor(distributor_rpc& self,
+    const parameters_t& params) NOEXCEPT
 {
+    // Get method (type), suscriber, and parameter names from the index.
     using method = rpc::method_t<Index, methods_t>;
     auto& subscriber = std::get<Index>(self.subscribers_);
     const auto& names = std::get<Index>(Interface::methods).parameter_names();
+
+    // Invoke subscriber.notify(error::success, ordered-or-named-parameters).
     return notify<method>(subscriber, params, names);
 }
 
@@ -262,15 +271,20 @@ template <size_t ...Index>
 inline constexpr CLASS::notifiers_t CLASS::make_notifiers(
     std::index_sequence<Index...>) NOEXCEPT
 {
+    // Notifiers are declared statically (same for all distributors instances).
     return
     {
         std::make_pair
         (
             std::string{ rpc::method_t<Index, methods_t>::name },
-            &notifier<Index>
+            &functor<Index>
         )...
     };
 }
+
+TEMPLATE
+const typename CLASS::notifiers_t
+CLASS::notifiers_ = make_notifiers(std::make_index_sequence<Interface::size>{});
 
 // make_subscribers/subscribe
 // ----------------------------------------------------------------------------
@@ -280,58 +294,53 @@ template <size_t ...Index>
 inline CLASS::subscribers_t CLASS::make_subscribers(asio::strand& strand,
     std::index_sequence<Index...>) NOEXCEPT
 {
+    // Subscribers declared dynamically (tuple for each distributor/channel).
     return std::make_tuple
     (
-        subscriber_t<rpc::method_t<Index, methods_t>>(strand)...
+        rpc::subscriber_t<rpc::method_t<Index, methods_t>>(strand)...
     );
 }
 
 TEMPLATE
-template <size_t Index, typename Handler>
-inline consteval bool CLASS::is_handler_type() NOEXCEPT
+template <typename Handler, size_t Index>
+inline consteval bool CLASS::subscriber_matches_handler() NOEXCEPT
 {
-    // is_same_type decays individual types but not tuple elements.
-    using handle_args = typename rpc::traits<Handler>::args;
-    using method_args = rpc::args_t<rpc::method_t<Index, methods_t>>;
-    using handle = typename decay_tuple<handle_args>::type;
-    using method = typename decay_tuple<rpc::externals_t<method_args>>::type;
-    return is_same_type<handle, method>;
+    static_assert(Index < std::tuple_size_v<methods_t>, "subscriber missing");
+
+    // This guard limits compilation error noise when a handler is ill-defined.
+    if constexpr (Index < std::tuple_size_v<methods_t>)
+    {
+        return is_same_tuple<rpc::handler_args_t<Handler>,
+            rpc::externals_t<rpc::args_t<rpc::method_t<Index, methods_t>>>>;
+    }
 }
 
 TEMPLATE
-template <typename Tag, size_t Index>
-inline consteval size_t CLASS::find_handler_index() NOEXCEPT
+template <typename Handler, size_t Index>
+inline consteval size_t CLASS::find_subscriber_for_handler() NOEXCEPT
 {
-    static_assert(Index < std::tuple_size_v<methods_t>);
-    using tag = rpc::tag_t<rpc::method_t<Index, methods_t>>;
-    if constexpr (!is_same_type<tag, Tag>)
-        return find_handler_index<Tag, add1(Index)>();
-
-    return Index;
+    // Find the index of the subscriber that matches Handler (w/o code arg).
+    if constexpr (!subscriber_matches_handler<Handler, Index>())
+        return find_subscriber_for_handler<Handler, add1(Index)>();
+    else
+        return Index;
 }
 
 // public
 // ----------------------------------------------------------------------------
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 TEMPLATE
 template <typename Handler>
 inline code CLASS::subscribe(Handler&& handler) NOEXCEPT
 {
-    using tag = typename rpc::traits<Handler>::tag;
-    constexpr auto index = find_handler_index<tag>();
-    static_assert(is_handler_type<index, Handler>());
+    // Iterate methods_t in order to find the matching function signature.
+    // The index of each method correlates to its defined subscriber index.
+    const auto index = find_subscriber_for_handler<Handler>();
     auto& subscriber = std::get<index>(subscribers_);
-
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return subscriber.subscribe(std::forward<Handler>(handler));
-    BC_POP_WARNING()
 }
-
-// private/static
-TEMPLATE
-const typename CLASS::notifiers_t
-CLASS::notifiers_ = make_notifiers(
-    std::make_index_sequence<Interface::size>{});
 
 TEMPLATE
 inline CLASS::distributor_rpc(asio::strand& strand) NOEXCEPT
@@ -343,18 +352,18 @@ inline CLASS::distributor_rpc(asio::strand& strand) NOEXCEPT
 TEMPLATE
 inline code CLASS::notify(const rpc::request_t& request) NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    // Search unordered map by method name for the notifier functor.
     const auto it = notifiers_.find(request.method);
-    if (it == notifiers_.end())
-        return error::unexpected_method;
-
-    return it->second(*this, request.params);
-    BC_POP_WARNING()
+    return it == notifiers_.end() ? error::unexpected_method :
+        it->second(*this, request.params);
 }
+
+BC_POP_WARNING()
 
 TEMPLATE
 inline void CLASS::stop(const code& ec) NOEXCEPT
 {
+    // Stop all subscribers, passing code and default arguments.
     std::apply
     (
         [&ec](auto&&... subscriber) NOEXCEPT
