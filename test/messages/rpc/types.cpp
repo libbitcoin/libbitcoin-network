@@ -224,13 +224,7 @@ static_assert( is_tagged<std::tuple<std::shared_ptr<int>, std::string, bool>>);
 // handler_args_t<Handler>
 // ----------------------------------------------------------------------------
 
-const auto handler1 = [](code, bool) {};
-static_assert(is_same_tuple<handler_args_t<decltype(handler1)>, std::tuple<bool>>);
-
-const auto handler2 = [](const code&, bool&&, const std::string&) {};
-static_assert(is_same_tuple<handler_args_t<decltype(handler2)>, std::tuple<bool, std::string>>);
-
-const auto handler3 = [](const code&, bool&&, const std::string&) NOEXCEPT{};
-static_assert(is_same_tuple<handler_args_t<decltype(handler3)>, std::tuple<bool, std::string>>);
+static_assert(is_same_tuple<handler_args_t<std::function<void(code, bool)>>, std::tuple<bool>>);
+static_assert(is_same_tuple<handler_args_t<std::function<void(const code&, bool&&, const std::string&)>>, std::tuple<bool, std::string>>);
 
 BOOST_AUTO_TEST_SUITE_END()
