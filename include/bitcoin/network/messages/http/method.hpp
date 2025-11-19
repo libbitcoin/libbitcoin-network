@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_METHOD_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_METHOD_HPP
 
+#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
 #include <bitcoin/network/messages/http/types.hpp>
@@ -30,46 +31,32 @@ namespace network {
 namespace http {
 namespace method {
 
-struct method_ptr
-{
-    /// Overload structure -> to obtain .ptr.
-    inline const request* operator->() const NOEXCEPT
-    {
-        return ptr.get();
-    }
-
-    /// Overload structure * to obtain *ptr.
-    inline const request& operator*() const NOEXCEPT
-    {
-        return *ptr;
-    }
-
-    /// Test before pointer dereference.
-    inline operator bool() const NOEXCEPT
-    {
-        return !!ptr;
-    }
-
-    request_cptr ptr{};
-};
-
 template <verb Verb>
-struct method_alias
-  : public method_ptr
+struct tagged_request
+  : public request
 {
-    /// May differ from from ptr->method() (e.g. verb::unknown).
+    using cptr = std::shared_ptr<const tagged_request<Verb>>;
     static constexpr verb method = Verb;
 };
 
-using get     = method_alias<verb::get>;
-using head    = method_alias<verb::head>;
-using post    = method_alias<verb::post>;
-using put     = method_alias<verb::put>;
-using delete_ = method_alias<verb::delete_>;
-using trace   = method_alias<verb::trace>;
-using options = method_alias<verb::options>;
-using connect = method_alias<verb::connect>;
-using unknown = method_alias<verb::unknown>;
+using get     = const tagged_request<verb::get>;
+using post    = const tagged_request<verb::post>;
+using put     = const tagged_request<verb::put>;
+using delete_ = const tagged_request<verb::delete_>;
+using head    = const tagged_request<verb::head>;
+using options = const tagged_request<verb::options>;
+using trace   = const tagged_request<verb::trace>;
+using connect = const tagged_request<verb::connect>;
+using unknown = const tagged_request<verb::unknown>;
+
+template <verb Verb>
+inline auto tag_request(const request_cptr& request) NOEXCEPT
+{
+    return typename tagged_request<Verb>::cptr
+    {
+        request, system::pointer_cast<const tagged_request<Verb>>(request.get())
+    };
+}
 
 } // namespace method
 } // namespace http

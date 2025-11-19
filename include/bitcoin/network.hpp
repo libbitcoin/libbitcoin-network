@@ -50,13 +50,6 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
-#include <bitcoin/network/distributors/distributor.hpp>
-#include <bitcoin/network/distributors/distributor_bitcoind.hpp>
-#include <bitcoin/network/distributors/distributor_electrum.hpp>
-#include <bitcoin/network/distributors/distributor_http.hpp>
-#include <bitcoin/network/distributors/distributor_peer.hpp>
-#include <bitcoin/network/distributors/distributor_stratum_v1.hpp>
-#include <bitcoin/network/distributors/distributors.hpp>
 #include <bitcoin/network/log/capture.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -122,6 +115,7 @@
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>
+#include <bitcoin/network/messages/rpc/any.hpp>
 #include <bitcoin/network/messages/rpc/dispatcher.hpp>
 #include <bitcoin/network/messages/rpc/interface.hpp>
 #include <bitcoin/network/messages/rpc/method.hpp>
@@ -130,6 +124,11 @@
 #include <bitcoin/network/messages/rpc/types.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
+#include <bitcoin/network/messages/rpc/interfaces/bitcoind.hpp>
+#include <bitcoin/network/messages/rpc/interfaces/electrum.hpp>
+#include <bitcoin/network/messages/rpc/interfaces/http.hpp>
+#include <bitcoin/network/messages/rpc/interfaces/peer.hpp>
+#include <bitcoin/network/messages/rpc/interfaces/stratum_v1.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/connector.hpp>

@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_STRATUM_V1_HPP
-#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_STRATUM_V1_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_STRATUM_V1_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_STRATUM_V1_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/rpc/interface.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -46,6 +46,7 @@ struct stratum_v1_methods
         method<"client.rejected", string_t, string_t>{ "job_id", "reject_reason" }
     };
 
+    // Derive this from above in c++26 using reflection.
     using mining_subscribe = at<0, decltype(methods)>;
     using mining_authorize = at<1, decltype(methods)>;
     using mining_submit = at<2, decltype(methods)>;

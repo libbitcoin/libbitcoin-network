@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_ELECTRUM_HPP
-#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_ELECTRUM_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_ELECTRUM_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_ELECTRUM_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/rpc/interface.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -57,6 +57,7 @@ struct electrum_methods
         method<"server.version", optional<""_t>, optional<"1.4"_t>>{ "client_name", "protocol_version" }
     };
 
+    // Derive this from above in c++26 using reflection.
     using blockchain_block_header = at<0, decltype(methods)>;
     using blockchain_block_headers = at<1, decltype(methods)>;
     using blockchain_estimatefee = at<2, decltype(methods)>;

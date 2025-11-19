@@ -72,21 +72,24 @@ DEFINE_JSON_FROM_TAG(value_t)
         {
             value = visit;
         },
-        [&](const string_t& visit)
+        [&](const string_t& visit) THROWS
         {
             value = visit;
         },
-        [&](const array_t& visit)
+        [&](const array_t& visit) THROWS
         {
             value = value_from(visit);
         },
-        [&](const object_t& visit)
+        [&](const object_t& visit) THROWS
         {
             value = value_from(visit);
-        },
-        [&](const messages::peer::ping::cptr&)
-        {
         }
+
+        // Unreachable code warning.
+        ////[&](const any_t& visit) THROWS
+        ////{
+        ////    value = value_from(visit);
+        ////}
     }, instance.value());
 }
 
@@ -135,7 +138,7 @@ DEFINE_JSON_FROM_TAG(identity_t)
         {
             value = visit;
         },
-        [&](const string_t& visit)
+        [&](const string_t& visit) THROWS
         {
             value = visit;
         }
@@ -349,6 +352,21 @@ DEFINE_JSON_TO_TAG(response_t)
     }
 
     return response;
+}
+
+// any_t
+// ----------------------------------------------------------------------------
+
+void tag_invoke(from_tag, boost::json::value&, const any_t&) noexcept(false)
+{
+    // TODO: add serialization interface to any_t.
+    throw ostream_exception{ "any_t >>" };
+}
+
+any_t tag_invoke(to_tag<any_t>, const boost::json::value&) noexcept(false)
+{
+    // TODO: add deserialization interface to any_t.
+    throw ostream_exception{ "any_t <<" };
 }
 
 BC_POP_WARNING()

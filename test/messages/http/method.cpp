@@ -35,25 +35,4 @@ BOOST_AUTO_TEST_CASE(method__static_method__always__equals_verb)
     BOOST_REQUIRE(unknown::method == http::verb::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(method__bool_operator__default__null_and_false)
-{
-    const get instance{};
-    BOOST_REQUIRE(!instance);
-    BOOST_REQUIRE(!instance.ptr);
-}
-
-BOOST_AUTO_TEST_CASE(method__arrow_operator__non_null__expected)
-{
-    constexpr auto expected_method = http::verb::get;
-    const get instance{ std::make_shared<http::request>(expected_method, "/", 11) };
-    BOOST_REQUIRE(instance->method() == expected_method);
-}
-
-BOOST_AUTO_TEST_CASE(method__asterisk_operator__non_null__expected)
-{
-    constexpr auto expected_method = http::verb::post;
-    const get instance{ std::make_shared<http::request>(expected_method, "/", 11) };
-    BOOST_REQUIRE((*instance).method() == expected_method);
-}
-
 BOOST_AUTO_TEST_SUITE_END()

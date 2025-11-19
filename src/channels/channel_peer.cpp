@@ -62,7 +62,7 @@ void channel_peer::stopping(const code& ec) NOEXCEPT
 
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
-    distributor_.stop(ec);
+    dispatcher_.stop(ec);
 }
 
 // TODO: resume of an idle channel results in termination for invalid_magic.
@@ -284,10 +284,18 @@ void channel_peer::handle_read_payload(const code& ec,
     // subscribers on the same thread. This significantly reduces deallocation
     // cost in constrast to allowing the object to destroyed on another thread.
     // If object is passed to another thread destruction cost can be very high.
-    const auto code = distributor_.notify(head->id(), negotiated_version(),
-        payload_buffer_);
-
-    if (code)
+    ///////////////////////////////////////////////////////////////////////////
+    const rpc::request_t request{};
+    ////request = messages::peer::deserialize(head->id(),
+    ////    payload_buffer_, negotiated_version());
+    ////
+    ////if (request)
+    ////{
+    ////    stop(error::invalid_message);
+    ////    return;
+    ////}
+    ///////////////////////////////////////////////////////////////////////////
+    if (const auto code = dispatcher_.notify(request))
     {
         if (head->command == messages::peer::transaction::command ||
             head->command == messages::peer::block::command)

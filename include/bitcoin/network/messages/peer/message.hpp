@@ -36,6 +36,11 @@ inline uint32_t network_checksum(const system::hash_digest& hash) NOEXCEPT
     return from_little_endian(array_cast<uint8_t, sizeof(uint32_t)>(hash));
 }
 
+////inline rpc::request deserialize(const system::data_chunk& body,
+////    uint32_t version) NOEXCEPT
+////{
+////}
+
 /// Deserialize message payload from the wire protocol encoding.
 /// Returns nullptr if serialization fails for any reason (expected).
 template <typename Message>

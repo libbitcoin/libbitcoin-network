@@ -23,7 +23,6 @@
 #include <unordered_map>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/distributors/distributor.hpp>
 #include <bitcoin/network/messages/rpc/method.hpp>
 #include <bitcoin/network/messages/rpc/types.hpp>
 

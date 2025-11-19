@@ -23,10 +23,10 @@
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/channels/channel.hpp>
-#include <bitcoin/network/distributors/distributors.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -47,8 +47,8 @@ public:
     inline void subscribe(auto&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());
-        using message_handler = distributor_http::handler<Message>;
-        distributor_.subscribe(std::forward<message_handler>(handler));
+        using signature = std::function<bool(const code&, const Message&)>;
+        dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
     /// response_buffer_ is initialized to default size, see set_buffer().
@@ -60,7 +60,7 @@ public:
       : channel(log, socket, settings, identifier, options.timeout()),
         response_buffer_(system::to_shared<http::flat_buffer>()),
         request_buffer_(settings.minimum_buffer),
-        distributor_(socket->strand()),
+        dispatcher_(socket->strand()),
         tracker<channel_http>(log)
     {
     }
@@ -97,7 +97,7 @@ private:
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
-    distributor_http distributor_;
+    rpc::dispatcher<rpc::interface_http> dispatcher_;
     bool reading_{};
 };
 

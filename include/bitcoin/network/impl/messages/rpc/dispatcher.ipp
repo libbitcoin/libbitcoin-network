@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_DISPATCHER_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_DISPATCHER_IPP
 
+#include <any>
 #include <tuple>
 #include <utility>
 #include <variant>
@@ -39,8 +40,6 @@ TEMPLATE
 template <typename Argument>
 inline external_t<Argument> CLASS::get_optional() THROWS
 {
-    using namespace rpc;
-
     if constexpr (is_required<Argument>)
         throw std::system_error{ error::missing_parameter };
     else if constexpr (is_optional<Argument>)
@@ -53,8 +52,6 @@ TEMPLATE
 template <typename Argument>
 inline external_t<Argument> CLASS::get_nullable() THROWS
 {
-    using namespace rpc;
-
     if constexpr (is_required<Argument> || is_optional<Argument>)
         throw std::system_error{ error::missing_parameter };
     else if constexpr (is_nullable<Argument>)
@@ -63,17 +60,14 @@ inline external_t<Argument> CLASS::get_nullable() THROWS
 
 TEMPLATE
 template <typename Argument>
-inline external_t<Argument> CLASS::get_required(
-    const value_t& value) THROWS
+inline external_t<Argument> CLASS::get_required(const value_t& value) THROWS
 {
-    using namespace rpc;
-    using type = internal_t<Argument>;
-
     // Get contained variant value_t(inner_t).
     const auto& internal = value.value();
+    using type = internal_t<Argument>;
 
-    if (!std::holds_alternative<type>(internal))
-        throw std::system_error{ error::unexpected_type };
+    if constexpr (is_shared_ptr<type>)
+        return std::get<any_t>(internal).as<pointer_t<type>>();
     else if constexpr (is_nullable<Argument>)
         return { std::get<type>(internal) };
     else
@@ -85,8 +79,6 @@ template <typename Argument>
 inline external_t<Argument> CLASS::get_positional(size_t& position,
     const array_t& array) THROWS
 {
-    using namespace rpc;
-
     // Only optional can be missing.
     if (position >= array.size())
         return get_optional<Argument>();
@@ -107,8 +99,6 @@ template <typename Argument>
 inline external_t<Argument> CLASS::get_named(
     const std::string_view& name, const object_t& object) THROWS
 {
-    using namespace rpc;
-
     // Only optional can be missing.
     const auto it = object.find(std::string{ name });
     if (it == object.end())
@@ -201,13 +191,11 @@ template <typename Arguments>
 inline externals_t<Arguments> CLASS::extract(const parameters_t& params,
     const names_t<Arguments>& names) THROWS
 {
-    constexpr auto mode = Interface::mode;
-
-    if constexpr (mode == grouping::positional)
+    if constexpr (Interface::mode == grouping::positional)
     {
         return extract_positional<Arguments>(params);
     }
-    else if constexpr (mode == grouping::named)
+    else if constexpr (Interface::mode == grouping::named)
     {
         return extract_named<Arguments>(params, names);
     }
@@ -245,6 +233,14 @@ inline code CLASS::notify(subscriber_t<Method>& subscriber,
         }, std::tuple_cat(preamble<Method>(), extract<native>(params, names)));
 
         return error::success;
+    }
+    catch (const std::bad_any_cast&)
+    {
+        return error::unexpected_type;
+    }
+    catch (const std::bad_variant_access&)
+    {
+        return error::unexpected_type;
     }
     catch (const std::system_error& e)
     {

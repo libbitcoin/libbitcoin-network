@@ -16,29 +16,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACE_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACE_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_HTTP_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_HTTP_HPP
 
-#include <tuple>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/enums/grouping.hpp>
-#include <bitcoin/network/messages/rpc/method.hpp>
+#include <bitcoin/network/messages/http/method.hpp>
+#include <bitcoin/network/messages/rpc/interface.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace rpc {
-    
-template <typename Methods, grouping Mode = grouping::either>
-struct interface
-  : public Methods
+
+struct http_methods
 {
-    using type = decltype(Methods::methods);
-    static constexpr auto size = std::tuple_size_v<type>;
-    static constexpr grouping mode = Mode;
+    static constexpr std::tuple methods
+    {
+        method<"get", http::method::get::cptr>{},
+        method<"head", http::method::head::cptr>{},
+        method<"post", http::method::post::cptr>{},
+        method<"put", http::method::put::cptr>{},
+        method<"delete", http::method::delete_::cptr>{},
+        method<"trace", http::method::trace::cptr>{},
+        method<"options", http::method::options::cptr>{},
+        method<"connect", http::method::connect::cptr>{},
+        method<"unknown", http::method::unknown::cptr>{}
+    };
 };
 
-template <size_t Index, typename Methods>
-using at = typename std::tuple_element_t<Index, Methods>::tag;
+/// Positional only, natively tagged (no aliases required).
+using interface_http = interface<http_methods, grouping::positional>;
 
 } // namespace rpc
 } // namespace network

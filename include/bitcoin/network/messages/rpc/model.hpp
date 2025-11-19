@@ -19,13 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MODEL_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_MODEL_HPP
 
+#include <any>
 #include <optional>
 #include <unordered_map>
 #include <utility>
 #include <variant>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/rpc/any.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
-#include <bitcoin/network/messages/peer/peer.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -41,6 +42,7 @@ using number_t = double;
 using string_t = std::string;
 using array_t = std::vector<value_t>;
 using object_t = std::unordered_map<string_t, value_t>;
+using any_t = rpc::any;
 
 // linux and macos define id_t in the global namespace.
 // typedef __darwin_id_t id_t;
@@ -63,7 +65,7 @@ struct value_t
         string_t,
         array_t,
         object_t,
-        messages::peer::ping::cptr
+        any_t
     >;
 
     /// Explicit initialization constructors.
@@ -73,7 +75,7 @@ struct value_t
     value_t(string_t value) NOEXCEPT : inner_{ std::move(value) } {}
     value_t(array_t value) NOEXCEPT : inner_{ std::move(value) } {}
     value_t(object_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(messages::peer::ping::cptr value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(any_t value) NOEXCEPT : inner_{ std::move(value) } {}
 
     /// Forwarding constructors for in-place variant construction.
     FORWARD_VARIANT_CONSTRUCT(value_t, inner_)
@@ -83,7 +85,7 @@ struct value_t
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, string_t, inner_)
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, array_t, inner_)
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, object_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, messages::peer::ping::cptr, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, any_t, inner_)
         
     inner_t& value() NOEXCEPT
     {
@@ -136,6 +138,7 @@ DECLARE_JSON_TAG_INVOKE(value_t);
 DECLARE_JSON_TAG_INVOKE(identity_t);
 DECLARE_JSON_TAG_INVOKE(request_t);
 DECLARE_JSON_TAG_INVOKE(response_t);
+////DECLARE_JSON_TAG_INVOKE(any_t);
 
 } // namespace rpc
 } // namespace network
