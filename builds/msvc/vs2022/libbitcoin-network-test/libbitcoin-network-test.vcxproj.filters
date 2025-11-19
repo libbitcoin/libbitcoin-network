@@ -129,9 +129,6 @@
     <ClCompile Include="..\..\..\..\test\distributors\distributor_peer.cpp">
       <Filter>src\distributors</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\distributors\distributor_rpc.cpp">
-      <Filter>src\distributors</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\error.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -308,6 +305,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\witness_tx_id_relay.cpp">
       <Filter>src\messages\peer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\dispatcher.cpp">
+      <Filter>src\messages\rpc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\method.cpp">
       <Filter>src\messages\rpc</Filter>

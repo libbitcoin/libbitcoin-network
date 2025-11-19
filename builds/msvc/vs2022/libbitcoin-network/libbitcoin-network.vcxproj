@@ -137,7 +137,6 @@
     <ClCompile Include="..\..\..\..\src\config\utilities.cpp" />
     <ClCompile Include="..\..\..\..\src\distributors\distributor_http.cpp" />
     <ClCompile Include="..\..\..\..\src\distributors\distributor_peer.cpp" />
-    <ClCompile Include="..\..\..\..\src\distributors\distributor_rpc.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />
     <ClCompile Include="..\..\..\..\src\log\capture.cpp" />
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
@@ -264,7 +263,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_electrum.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_peer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_rpc.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_stratum_v1.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributors.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
@@ -322,8 +320,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\memory_pool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\merkle_block.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\message.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\not_found.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\ping.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\pong.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\reject.hpp" />
@@ -334,6 +332,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\version_acknowledge.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\witness_tx_id_relay.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\dispatcher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\grouping.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interface.hpp" />
@@ -388,7 +387,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_volume.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\distributors\distributor_rpc.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\dispatcher.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

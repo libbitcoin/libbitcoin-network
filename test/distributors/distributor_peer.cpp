@@ -20,188 +20,115 @@
 
 BOOST_AUTO_TEST_SUITE(distributor_peer_tests)
 
-BOOST_AUTO_TEST_CASE(distributor_peer__construct__stop__stops)
+using namespace rpc;
+
+struct mock_methods
 {
-    default_memory memory{};
+    static constexpr std::tuple methods
+    {
+        method<"ping", messages::peer::ping::cptr>{ "message" }
+    };
+
+    using ping = at<0, decltype(methods)>;
+};
+
+using mock = interface<mock_methods>;
+using distributor_mock = dispatcher<mock>;
+
+BOOST_AUTO_TEST_CASE(distributor_peer__notify__ping_positional__expected)
+{
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor_peer instance(memory, strand);
+    distributor_mock instance(strand);
 
-    std::promise<bool> promise;
+    bool called{};
+    messages::peer::ping::cptr result{};
+    std::promise<code> promise1{};
+    std::promise<code> promise2{};
+    constexpr auto expected = 42u;
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        instance.subscribe(
+            [&](code ec, messages::peer::ping::cptr ptr) NOEXCEPT
+            {
+                // Avoid stop notification (unavoidable test condition).
+                if (called)
+                    return false;
+
+                result = ptr;
+                called = true;
+                promise2.set_value(ec);
+                return true;
+            });
+
+        promise1.set_value(instance.notify(
+        {
+            .method = "ping",
+            .params = { array_t{ system::to_shared<messages::peer::ping>(expected) } }
+        }));
+    });
+
+    BOOST_REQUIRE(!promise1.get_future().get());
+    BOOST_REQUIRE(!promise2.get_future().get());
+    BOOST_REQUIRE(result);
+    BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
+    BOOST_REQUIRE_EQUAL(result->nonce, expected);
+
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.stop(error::service_stopped);
-        promise.set_value(true);
     });
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(promise.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_peer__subscribe__stop__expected_code)
+BOOST_AUTO_TEST_CASE(distributor_peer__notify__ping_named__expected)
 {
-    default_memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor_peer instance(memory, strand);
-    constexpr auto expected_ec = error::invalid_magic;
-    auto result = true;
+    distributor_mock instance(strand);
 
-    std::promise<code> promise;
+    bool called{};
+    messages::peer::ping::cptr result{};
+    std::promise<code> promise1{};
+    std::promise<code> promise2{};
+    constexpr auto expected = 42u;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, const messages::peer::ping::cptr& ping) NOEXCEPT
-        {
-            // Stop notification has nullptr message and specified code.
-            result &= is_null(ping);
-            promise.set_value(ec);
-            return true;
-        });
-    });
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(expected_ec);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-    BOOST_REQUIRE(result);
-}
-
-BOOST_AUTO_TEST_CASE(distributor_peer__notify__invalid_message__no_notification)
-{
-    default_memory memory{};
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_peer instance(memory, strand);
-    constexpr auto expected_ec = error::invalid_magic;
-    auto result = true;
-
-    // Subscription will capture only the stop notification.
-    std::promise<code> promise;
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.subscribe([&](const code& ec, const messages::peer::ping::cptr& ping) NOEXCEPT
-        {
-            result &= is_null(ping);
-            promise.set_value(ec);
-            return true;
-        });
-    });
-
-    // Invalid object deserialization will not cause a notification.
-    system::data_chunk empty{};
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        constexpr auto nonced_ping_version = messages::peer::level::bip31;
-
-        // This line throws and is caught internal to the low level stream.
-        const auto ec = instance.notify(messages::peer::identifier::ping, nonced_ping_version, empty);
-        result &= (ec == error::invalid_message);
-    });
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(expected_ec);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-    BOOST_REQUIRE(result);
-}
-
-BOOST_AUTO_TEST_CASE(distributor_peer__notify__valid_message_invalid_version__no_notification)
-{
-    default_memory memory{};
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_peer instance(memory, strand);
-    constexpr auto expected_ec = error::invalid_magic;
-    auto result = true;
-
-    // Subscription will capture only the stop notification.
-    std::promise<code> promise;
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.subscribe([&](const code& ec, const messages::peer::ping::cptr& ping) NOEXCEPT
-        {
-            result &= is_null(ping);
-            promise.set_value(ec);
-            return true;
-        });
-    });
-    
-    // Invalid object version will not cause a notification.
-    const auto ping = system::to_chunk(system::to_little_endian(42));
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        constexpr uint32_t invalid_ping_version = 0;
-        const auto ec = instance.notify(messages::peer::identifier::ping, invalid_ping_version, ping);
-        result &= (ec == error::invalid_message);
-    });
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(expected_ec);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-    BOOST_REQUIRE(result);
-}
-
-BOOST_AUTO_TEST_CASE(distributor_peer__notify__valid_nonced_ping__expected_notification)
-{
-    default_memory memory{};
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_peer instance(memory, strand);
-    constexpr uint64_t expected_nonce = 42;
-    constexpr auto expected_ec = error::invalid_magic;
-    auto result = true;
-
-    // Subscription will capture message and stop notifications.
-    std::promise<code> promise;
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.subscribe([&](const code& ec, const messages::peer::ping::cptr& ping) NOEXCEPT
-        {
-            // Avoid stop notification (unavoidable test condition).
-            if (!ping)
+        instance.subscribe(
+            [&](const code& ec, const messages::peer::ping::cptr& ptr) NOEXCEPT
             {
-                promise.set_value(ec);
+                // Avoid stop notification (unavoidable test condition).
+                if (called)
+                    return false;
+
+                result = ptr;
+                called = true;
+                promise2.set_value(ec);
                 return true;
-            }
+            });
 
-            // Handle message notification.
-            result &= (ping->nonce == expected_nonce);
-            result &= (ec == error::success);
-            return true;
-        });
+        promise1.set_value(instance.notify(
+        {
+            .method = "ping",
+            .params = { object_t{ { "message", system::to_shared<messages::peer::ping>(expected) } } }
+        }));
     });
 
-    const auto ping = system::to_chunk(system::to_little_endian(expected_nonce));
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        constexpr auto nonced_ping_version = messages::peer::level::bip31;
-        const auto ec = instance.notify(messages::peer::identifier::ping, nonced_ping_version, ping);
-        result &= (ec == error::success);
-    });
+    BOOST_REQUIRE(!promise1.get_future().get());
+    BOOST_REQUIRE(!promise2.get_future().get());
+    BOOST_REQUIRE(result);
+    BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
+    BOOST_REQUIRE_EQUAL(result->nonce, expected);
 
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.stop(expected_ec);
+        instance.stop(error::service_stopped);
     });
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-    BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

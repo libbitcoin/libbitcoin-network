@@ -21,7 +21,6 @@
 
 #include <bitcoin/network/distributors/distributor_http.hpp>
 #include <bitcoin/network/distributors/distributor_peer.hpp>
-#include <bitcoin/network/distributors/distributor_rpc.hpp>
 
 // json-rpc
 #include <bitcoin/network/distributors/distributor.hpp>

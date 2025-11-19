@@ -83,6 +83,9 @@ DEFINE_JSON_FROM_TAG(value_t)
         [&](const object_t& visit)
         {
             value = value_from(visit);
+        },
+        [&](const messages::peer::ping::cptr&)
+        {
         }
     }, instance.value());
 }

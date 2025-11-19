@@ -40,8 +40,11 @@
     <Filter Include="include\bitcoin\network\impl\async\races">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\impl\distributors">
+    <Filter Include="include\bitcoin\network\impl\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\impl\messages\rpc">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\log">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
@@ -50,25 +53,25 @@
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\http">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\messages\http\enums">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\messages\json">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages\peer">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\messages\peer\enums">
+    <Filter Include="include\bitcoin\network\messages\http\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages\rpc">
+    <Filter Include="include\bitcoin\network\messages\json">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\messages\peer">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages\rpc\enums">
+    <Filter Include="include\bitcoin\network\messages\peer\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\messages\rpc">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\messages\rpc\enums">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
@@ -80,7 +83,7 @@
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B1}</UniqueIdentifier>
     </Filter>
     <Filter Include="resource">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000000}</UniqueIdentifier>
@@ -169,9 +172,6 @@
       <Filter>src\distributors</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\distributors\distributor_peer.cpp">
-      <Filter>src\distributors</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\distributors\distributor_rpc.cpp">
       <Filter>src\distributors</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\error.cpp">
@@ -530,9 +530,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_peer.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_rpc.hpp">
-      <Filter>include\bitcoin\network\distributors</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\distributors\distributor_stratum_v1.hpp">
       <Filter>include\bitcoin\network\distributors</Filter>
     </ClInclude>
@@ -704,10 +701,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\message.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\messages.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\not_found.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\not_found.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\peer.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\ping.hpp">
@@ -739,6 +736,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\witness_tx_id_relay.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\dispatcher.hpp">
+      <Filter>include\bitcoin\network\messages\rpc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\grouping.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
@@ -898,8 +898,8 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\distributors\distributor_rpc.ipp">
-      <Filter>include\bitcoin\network\impl\distributors</Filter>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\dispatcher.ipp">
+      <Filter>include\bitcoin\network\impl\messages\rpc</Filter>
     </None>
     <None Include="packages.config" />
   </ItemGroup>

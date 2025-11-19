@@ -19,7 +19,7 @@
 #include <bitcoin/network/net/broadcaster.hpp>
 
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/messages/peer/messages.hpp>
+#include <bitcoin/network/messages/peer/peer.hpp>
 
 namespace libbitcoin {
 namespace network {

@@ -53,7 +53,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/config/utilities.cpp \
     src/distributors/distributor_http.cpp \
     src/distributors/distributor_peer.cpp \
-    src/distributors/distributor_rpc.cpp \
     src/log/capture.cpp \
     src/log/logger.cpp \
     src/log/reporter.cpp \
@@ -173,7 +172,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/config/utilities.cpp \
     test/distributors/distributor_http.cpp \
     test/distributors/distributor_peer.cpp \
-    test/distributors/distributor_rpc.cpp \
     test/log/timer.cpp \
     test/log/tracker.cpp \
     test/messages/http/body_reader.cpp \
@@ -230,6 +228,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/peer/enums/level.cpp \
     test/messages/peer/enums/magic_numbers.cpp \
     test/messages/peer/enums/service.cpp \
+    test/messages/rpc/dispatcher.cpp \
     test/messages/rpc/method.cpp \
     test/messages/rpc/types.cpp \
     test/net/acceptor.cpp \
@@ -327,7 +326,6 @@ include_bitcoin_network_distributors_HEADERS = \
     include/bitcoin/network/distributors/distributor_electrum.hpp \
     include/bitcoin/network/distributors/distributor_http.hpp \
     include/bitcoin/network/distributors/distributor_peer.hpp \
-    include/bitcoin/network/distributors/distributor_rpc.hpp \
     include/bitcoin/network/distributors/distributor_stratum_v1.hpp \
     include/bitcoin/network/distributors/distributors.hpp
 
@@ -346,9 +344,9 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
 
-include_bitcoin_network_impl_distributorsdir = ${includedir}/bitcoin/network/impl/distributors
-include_bitcoin_network_impl_distributors_HEADERS = \
-    include/bitcoin/network/impl/distributors/distributor_rpc.ipp
+include_bitcoin_network_impl_messages_rpcdir = ${includedir}/bitcoin/network/impl/messages/rpc
+include_bitcoin_network_impl_messages_rpc_HEADERS = \
+    include/bitcoin/network/impl/messages/rpc/dispatcher.ipp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \
@@ -413,8 +411,8 @@ include_bitcoin_network_messages_peer_HEADERS = \
     include/bitcoin/network/messages/peer/memory_pool.hpp \
     include/bitcoin/network/messages/peer/merkle_block.hpp \
     include/bitcoin/network/messages/peer/message.hpp \
-    include/bitcoin/network/messages/peer/messages.hpp \
     include/bitcoin/network/messages/peer/not_found.hpp \
+    include/bitcoin/network/messages/peer/peer.hpp \
     include/bitcoin/network/messages/peer/ping.hpp \
     include/bitcoin/network/messages/peer/pong.hpp \
     include/bitcoin/network/messages/peer/reject.hpp \
@@ -435,6 +433,7 @@ include_bitcoin_network_messages_peer_enums_HEADERS = \
 
 include_bitcoin_network_messages_rpcdir = ${includedir}/bitcoin/network/messages/rpc
 include_bitcoin_network_messages_rpc_HEADERS = \
+    include/bitcoin/network/messages/rpc/dispatcher.hpp \
     include/bitcoin/network/messages/rpc/interface.hpp \
     include/bitcoin/network/messages/rpc/method.hpp \
     include/bitcoin/network/messages/rpc/model.hpp \

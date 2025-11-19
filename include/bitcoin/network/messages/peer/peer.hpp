@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_MESSAGES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_PEER_MESSAGES_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_PEER_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_PEER_PEER_HPP
 
 #include <bitcoin/network/messages/peer/address.hpp>
 #include <bitcoin/network/messages/peer/address_item.hpp>
