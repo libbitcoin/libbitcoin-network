@@ -437,9 +437,11 @@ include_bitcoin_network_messages_rpc_interfacesdir = ${includedir}/bitcoin/netwo
 include_bitcoin_network_messages_rpc_interfaces_HEADERS = \
     include/bitcoin/network/messages/rpc/interfaces/bitcoind.hpp \
     include/bitcoin/network/messages/rpc/interfaces/electrum.hpp \
+    include/bitcoin/network/messages/rpc/interfaces/explore.hpp \
     include/bitcoin/network/messages/rpc/interfaces/http.hpp \
     include/bitcoin/network/messages/rpc/interfaces/peer.hpp \
-    include/bitcoin/network/messages/rpc/interfaces/stratum_v1.hpp
+    include/bitcoin/network/messages/rpc/interfaces/stratum_v1.hpp \
+    include/bitcoin/network/messages/rpc/interfaces/stratum_v2.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \

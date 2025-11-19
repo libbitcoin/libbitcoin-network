@@ -30,7 +30,7 @@ struct electrum_methods
 {
     static constexpr std::tuple methods
     {
-        // Blockchain methods.
+        /// Blockchain methods.
         method<"blockchain.block.header", number_t, optional<0>>{ "height", "cp_height" },
         method<"blockchain.block.headers", number_t, number_t, optional<0>>{ "start_height", "count", "cp_height" },
         method<"blockchain.estimatefee", number_t>{ "number" },
@@ -47,7 +47,7 @@ struct electrum_methods
         method<"blockchain.transaction.get_merkle", string_t, number_t>{ "tx_hash", "height" },
         method<"blockchain.transaction.id_from_pos", number_t, number_t, optional<false>>{ "height", "tx_pos", "merkle" },
 
-        // Server methods.
+        /// Server methods.
         method<"server.add_peer", object_t>{ "features" },
         method<"server.banner">{},
         method<"server.donation_address">{},

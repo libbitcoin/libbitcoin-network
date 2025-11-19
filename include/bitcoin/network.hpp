@@ -126,9 +126,11 @@
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 #include <bitcoin/network/messages/rpc/interfaces/bitcoind.hpp>
 #include <bitcoin/network/messages/rpc/interfaces/electrum.hpp>
+#include <bitcoin/network/messages/rpc/interfaces/explore.hpp>
 #include <bitcoin/network/messages/rpc/interfaces/http.hpp>
 #include <bitcoin/network/messages/rpc/interfaces/peer.hpp>
 #include <bitcoin/network/messages/rpc/interfaces/stratum_v1.hpp>
+#include <bitcoin/network/messages/rpc/interfaces/stratum_v2.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/connector.hpp>

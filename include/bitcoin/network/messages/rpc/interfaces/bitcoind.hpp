@@ -30,7 +30,7 @@ struct bitcoind_methods
 {
     static constexpr std::tuple methods
     {
-        // Blockchain methods.
+        /// Blockchain methods.
         method<"getbestblockhash">{},
         method<"getblock", string_t, optional<0>>{ "blockhash", "verbosity" },
         method<"getblockchaininfo">{},
@@ -49,7 +49,7 @@ struct bitcoind_methods
         method<"verifychain", optional<4>, optional<288>>{ "checklevel", "nblocks" },
         method<"verifytxoutset", string_t>{ "input_verify_flag" },
 
-        // Control methods.
+        /// Control methods.
         method<"getmemoryinfo", optional<"stats"_t>>{ "mode" },
         method<"getrpcinfo">{},
         method<"help", optional<""_t>>{ "command" },
@@ -57,14 +57,14 @@ struct bitcoind_methods
         method<"stop">{},
         method<"uptime">{},
 
-        // Mining methods.
+        /// Mining methods.
         method<"getblocktemplate", optional<empty::object>>{ "template_request" },
         method<"getmininginfo">{},
         method<"getnetworkhashps", optional<120>, optional<-1>>{ "nblocks", "height" },
         method<"prioritisetransaction", string_t, number_t, number_t>{ "txid", "dummy", "priority_delta" },
         method<"submitblock", string_t, optional<""_t>>{ "block", "parameters" },
 
-        // Network methods.
+        /// Network methods.
         method<"addnode", string_t, string_t>{ "node", "command" },
         method<"clearbanned">{},
         method<"disconnectnode", string_t, optional<-1>>{ "address", "nodeid" },
@@ -77,7 +77,7 @@ struct bitcoind_methods
         method<"setban", string_t, string_t, optional<86400>, optional<false>, optional<""_t>>{ "addr", "command", "bantime", "absolute", "reason" },
         method<"setnetworkactive", boolean_t>{ "state" },
 
-        // Rawtransactions methods.
+        /// Rawtransactions methods.
         method<"combinerawtransaction", array_t>{ "txs" },
         method<"createrawtransaction", array_t, object_t, optional<0>, optional<false>>{ "inputs", "outputs", "locktime", "replaceable" },
         method<"decoderawtransaction", string_t>{ "hexstring" },
@@ -88,7 +88,7 @@ struct bitcoind_methods
         method<"testmempoolaccept", array_t, optional<0>>{ "rawtxs", "maxfeerate" },
         method<"testrawtransaction", string_t>{ "rawtx" },
 
-        // Util methods (node-related).
+        /// Util methods (node-related).
         method<"createmultisig", number_t, array_t>{ "nrequired", "keys" },
         method<"decodepsbt", string_t>{ "psbt" },
         method<"decodescript", string_t>{ "hex" },
@@ -96,7 +96,7 @@ struct bitcoind_methods
         method<"getdescriptorinfo", string_t>{ "descriptor" },
         method<"validateaddress", string_t>{ "address" },
 
-        // Wallet methods (unsupported).
+        /// Wallet methods (unsupported).
         method<"abandontransaction", string_t>{ "txid" },
         method<"addmultisigaddress", number_t, array_t, optional<""_t>, optional<"legacy"_t>>{ "nrequired", "keys", "label", "address_type" },
         method<"backupwallet", string_t>{ "destination" },
@@ -147,7 +147,6 @@ struct bitcoind_methods
     };
 
     // Derive this from above in c++26 using reflection.
-    // node (supported)
     using getbestblockhash = at<0, decltype(methods)>;
     using getblock = at<1, decltype(methods)>;
     using getblockchaininfo = at<2, decltype(methods)>;
@@ -202,8 +201,6 @@ struct bitcoind_methods
     using estimaterawfee = at<51, decltype(methods)>;
     using getdescriptorinfo = at<52, decltype(methods)>;
     using validateaddress = at<53, decltype(methods)>;
-
-    // wallet (unsupported)
     using abandontransaction = at<54, decltype(methods)>;
     using addmultisigaddress = at<55, decltype(methods)>;
     using backupwallet = at<56, decltype(methods)>;

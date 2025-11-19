@@ -30,14 +30,14 @@ struct stratum_v1_methods
 {
     static constexpr std::tuple methods
     {
-        // Client requests.
+        /// Client requests.
         method<"mining.subscribe", optional<""_t>, optional<0>>{ "user_agent", "extranonce1_size" },
         method<"mining.authorize", string_t, string_t>{ "username", "password" },
         method<"mining.submit", string_t, string_t, string_t, number_t, string_t>{ "worker_name", "job_id", "extranonce2", "ntime", "nonce" },
         method<"mining.extranonce.subscribe">{},
         method<"mining.extranonce.unsubscribe", number_t>{ "id" },
 
-        // Server notifications.
+        /// Server notifications.
         method<"mining.configure", object_t>{ "extensions" },
         method<"mining.set_difficulty", optional<1.0>>{ "difficulty" },
         method<"mining.notify", string_t, string_t, string_t, string_t, array_t, number_t, number_t, number_t, boolean_t, boolean_t, boolean_t>{ "job_id", "prevhash", "coinb1", "coinb2", "merkle_branch", "version", "nbits", "ntime", "clean_jobs", "hash1", "hash2" },

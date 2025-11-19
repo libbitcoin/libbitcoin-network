@@ -330,9 +330,11 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interface.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\bitcoind.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\electrum.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\explore.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\stratum_v1.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\stratum_v2.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\model.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\rpc.hpp" />

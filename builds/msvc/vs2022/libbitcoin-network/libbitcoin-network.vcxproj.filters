@@ -728,6 +728,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\electrum.hpp">
       <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\explore.hpp">
+      <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\http.hpp">
       <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
     </ClInclude>
@@ -735,6 +738,9 @@
       <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\stratum_v1.hpp">
+      <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\stratum_v2.hpp">
       <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\method.hpp">
