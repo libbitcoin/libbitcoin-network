@@ -43,7 +43,7 @@ struct http_methods
     };
 
     template <typename... Args>
-    using subscriber = network::unsubscriber<Args...>;
+    using subscriber = network::subscriber<Args...>;
 };
 
 /// Positional only, natively tagged (no aliases required).

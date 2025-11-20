@@ -57,23 +57,23 @@ protected:
     DECLARE_SUBSCRIBE_CHANNEL();
 
     /// Message handlers by http method.
-    virtual bool handle_receive_get(const code& ec,
+    virtual void handle_receive_get(const code& ec,
         const http::method::get::cptr& get) NOEXCEPT;
-    virtual bool handle_receive_head(const code& ec,
+    virtual void handle_receive_head(const code& ec,
         const http::method::head::cptr& head) NOEXCEPT;
-    virtual bool handle_receive_post(const code& ec,
+    virtual void handle_receive_post(const code& ec,
         const http::method::post::cptr& post) NOEXCEPT;
-    virtual bool handle_receive_put(const code& ec,
+    virtual void handle_receive_put(const code& ec,
         const http::method::put::cptr& put) NOEXCEPT;
-    virtual bool handle_receive_delete(const code& ec,
+    virtual void handle_receive_delete(const code& ec,
         const http::method::delete_::cptr& delete_) NOEXCEPT;
-    virtual bool handle_receive_trace(const code& ec,
+    virtual void handle_receive_trace(const code& ec,
         const http::method::trace::cptr& trace) NOEXCEPT;
-    virtual bool handle_receive_options(const code& ec,
+    virtual void handle_receive_options(const code& ec,
         const http::method::options::cptr& options) NOEXCEPT;
-    virtual bool handle_receive_connect(const code& ec,
+    virtual void handle_receive_connect(const code& ec,
         const http::method::connect::cptr& connect) NOEXCEPT;
-    virtual bool handle_receive_unknown(const code& ec,
+    virtual void handle_receive_unknown(const code& ec,
         const http::method::unknown::cptr& unknown) NOEXCEPT;
 
     /// Senders.

@@ -47,7 +47,7 @@ public:
     inline void subscribe(auto&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());
-        using signature = std::function<bool(const code&, const Message&)>;
+        using signature = std::function<void(const code&, const Message&)>;
         dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
