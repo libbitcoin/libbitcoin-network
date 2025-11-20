@@ -40,14 +40,15 @@ class BCT_API channel_http
 public:
     typedef std::shared_ptr<channel_http> ptr;
     using options_t = settings::http_server;
+    using interface = rpc::interface::http;
 
     /// Subscribe to request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Message>
+    template <class Request>
     inline void subscribe(auto&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());
-        using signature = std::function<void(const code&, const Message&)>;
+        using signature = interface::signature<Request>;
         dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
@@ -97,7 +98,7 @@ private:
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
-    rpc::dispatcher<rpc::interface_http> dispatcher_;
+    rpc::dispatcher<interface> dispatcher_;
     bool reading_{};
 };
 

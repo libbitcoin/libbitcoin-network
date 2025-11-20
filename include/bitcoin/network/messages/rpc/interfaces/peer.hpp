@@ -22,13 +22,13 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
-#include <bitcoin/network/messages/rpc/interface.hpp>
+#include <bitcoin/network/messages/rpc/publish.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-struct peer
+struct peer_methods
 {
     static constexpr std::tuple methods
     {
@@ -69,12 +69,15 @@ struct peer
         method<"witness_tx_id_relay", messages::peer::witness_tx_id_relay::cptr>{}
     };
 
+    /// Unsubscriber requires bool handlers, injects `code` parameter.
     template <typename... Args>
     using subscriber = network::unsubscriber<Args...>;
-};
 
-/// Positional only, natively tagged (no aliases required).
-using interface_peer = interface<peer, grouping::positional>;
+    /// dispatcher.subscribe(std::forward<signature>(handler));
+    template <class Message>
+    using signature = std::function<bool(const code&,
+        const typename Message::cptr&)>;
+};
 
 } // namespace rpc
 } // namespace network

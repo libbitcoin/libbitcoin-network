@@ -21,7 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/interface.hpp>
+#include <bitcoin/network/messages/rpc/publish.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -90,8 +90,6 @@ struct electrum_methods
 
     ////using subscribers = unsubscriber<external_t<decltype(methods)>>;
 };
-
-using electrum = interface<electrum_methods>;
 
 } // namespace rpc
 } // namespace network

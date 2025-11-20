@@ -51,8 +51,8 @@ struct mock_methods
     using ping = at<6>;
 };
 
-using mock = interface<mock_methods>;
-using distributor_mock = dispatcher<mock>;
+using mock_interface = publish<mock_methods>;
+using distributor_mock = dispatcher<mock_interface>;
 
 BOOST_AUTO_TEST_CASE(dispatcher__construct__stop__stops)
 {
@@ -106,10 +106,10 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stopped__subscriber_stopped)
     {
         instance.stop(error::invalid_magic);
         subscribe_ec = instance.subscribe(
-            [&](const code& ec, mock::all_required, bool a, double b, std::string c)
+            [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
             {
-                static_assert(mock::all_required::name == "all_required");
-                static_assert(mock::all_required::size == 3u);
+                static_assert(mock_interface::all_required::name == "all_required");
+                static_assert(mock_interface::all_required::size == 3u);
 
                 // Stop notification sets defaults and specified code.
                 result &= is_zero(a);
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stop__service_stopped)
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         subscribe_ec = instance.subscribe(
-            [&](const code& ec, mock::all_required, bool a, double b, std::string c)
+            [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
             {
                 // Stop notification sets defaults and specified code.
                 result &= is_zero(a);
@@ -180,14 +180,14 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__multiple_stop__expected)
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         const auto ec1 = instance.subscribe(
-            [&](const code&, mock::all_required, bool, double, std::string)
+            [&](const code&, mock_interface::all_required, bool, double, std::string)
             {
                 first_called = true;
                 return true;
             });
 
         const auto ec2 = instance.subscribe(
-            [&](const code&, mock::all_required, bool, double, std::string)
+            [&](const code&, mock_interface::all_required, bool, double, std::string)
             {
                 second_called = true;
                 return true;
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::all_required, const bool a, double b, const std::string& c)
+            [&](const code& ec, mock_interface::all_required, const bool a, double b, const std::string& c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (first_called)
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes
             });
 
         instance.subscribe(
-            [&](const code& ec, mock::all_required, bool a, double&& b, std::string c)
+            [&](const code& ec, mock_interface::all_required, bool a, double&& b, std::string c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (second_called)
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
     std::promise<code> promise{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, mock::empty_method)
+        instance.subscribe([&](const code& ec, mock_interface::empty_method)
         {
             // Avoid stop notification (unavoidable test condition).
             if (called)
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
     std::promise<code> promise{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, mock::empty_method)
+        instance.subscribe([&](const code& ec, mock_interface::empty_method)
         {
             // Avoid stop notification (unavoidable test condition).
             if (called)
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positi
     std::promise<code> promise{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, mock::empty_method)
+        instance.subscribe([&](const code& ec, mock_interface::empty_method)
         {
             result = ec;
             return true;
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expecte
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::all_required, bool a, double b, std::string c)
+            [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::all_required, bool a, double b, std::string c)
+            [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -622,7 +622,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expecte
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::with_options, std::string a, double b, bool c)
+            [&](const code& ec, mock_interface::with_options, std::string a, double b, bool c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -697,7 +697,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::with_options, std::string a, double b, bool c)
+            [&](const code& ec, mock_interface::with_options, std::string a, double b, bool c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -772,7 +772,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expecte
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
+            [&](const code& ec, mock_interface::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -847,7 +847,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
+            [&](const code& ec, mock_interface::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -922,7 +922,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expecte
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::with_combine, std::string a, std::optional<bool> b, double c)
+            [&](const code& ec, mock_interface::with_combine, std::string a, std::optional<bool> b, double c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -997,7 +997,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::with_combine, std::string a, std::optional<bool> b, double c)
+            [&](const code& ec, mock_interface::with_combine, std::string a, std::optional<bool> b, double c)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -1071,7 +1071,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expecte
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::not_required, std::optional<bool> a, double b)
+            [&](const code& ec, mock_interface::not_required, std::optional<bool> a, double b)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)
@@ -1143,7 +1143,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe(
-            [&](const code& ec, mock::not_required, std::optional<bool> a, double b)
+            [&](const code& ec, mock_interface::not_required, std::optional<bool> a, double b)
             {
                 // Avoid stop notification (unavoidable test condition).
                 if (called)

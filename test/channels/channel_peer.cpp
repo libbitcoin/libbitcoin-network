@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         using namespace messages::peer;
-        channel_ptr->subscribe<const ping>([&](code ec, ping::cptr ping) NOEXCEPT
+        channel_ptr->subscribe<ping>([&](code ec, ping::cptr ping) NOEXCEPT
             {
                 result &= is_null(ping);
                 message_stopped.set_value(ec);
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
         });
 
         using namespace messages::peer;
-        channel_ptr->subscribe<ping>([&](code ec, ping::cptr ping) NOEXCEPT
+        channel_ptr->subscribe<ping>([&](code ec, const ping::cptr& ping) NOEXCEPT
         {
             result &= is_null(ping);
             message_stopped.set_value(ec);

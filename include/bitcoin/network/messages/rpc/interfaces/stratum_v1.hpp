@@ -21,7 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/interface.hpp>
+#include <bitcoin/network/messages/rpc/publish.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -66,8 +66,6 @@ struct stratum_v1_methods
     using client_hello = at<9>;
     using client_rejected = at<10>;
 };
-
-using stratum_v1 = interface<stratum_v1_methods>;
 
 } // namespace rpc
 } // namespace network

@@ -62,15 +62,15 @@ void protocol_http::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE_CHANNEL(method::get::cptr,     handle_receive_get,     _1, _2);
-    SUBSCRIBE_CHANNEL(method::head::cptr,    handle_receive_head,    _1, _2);
-    SUBSCRIBE_CHANNEL(method::post::cptr,    handle_receive_post,    _1, _2);
-    SUBSCRIBE_CHANNEL(method::put::cptr,     handle_receive_put,     _1, _2);
-    SUBSCRIBE_CHANNEL(method::delete_::cptr, handle_receive_delete,  _1, _2);
-    SUBSCRIBE_CHANNEL(method::trace::cptr,   handle_receive_trace,   _1, _2);
-    SUBSCRIBE_CHANNEL(method::options::cptr, handle_receive_options, _1, _2);
-    SUBSCRIBE_CHANNEL(method::connect::cptr, handle_receive_connect, _1, _2);
-    SUBSCRIBE_CHANNEL(method::unknown::cptr, handle_receive_unknown, _1, _2);
+    SUBSCRIBE_CHANNEL(method::get,     handle_receive_get,     _1, _2);
+    SUBSCRIBE_CHANNEL(method::head,    handle_receive_head,    _1, _2);
+    SUBSCRIBE_CHANNEL(method::post,    handle_receive_post,    _1, _2);
+    SUBSCRIBE_CHANNEL(method::put,     handle_receive_put,     _1, _2);
+    SUBSCRIBE_CHANNEL(method::delete_, handle_receive_delete,  _1, _2);
+    SUBSCRIBE_CHANNEL(method::trace,   handle_receive_trace,   _1, _2);
+    SUBSCRIBE_CHANNEL(method::options, handle_receive_options, _1, _2);
+    SUBSCRIBE_CHANNEL(method::connect, handle_receive_connect, _1, _2);
+    SUBSCRIBE_CHANNEL(method::unknown, handle_receive_unknown, _1, _2);
     protocol::start();
 }
 

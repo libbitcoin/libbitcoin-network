@@ -22,7 +22,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/method.hpp>
-#include <bitcoin/network/messages/rpc/interface.hpp>
+#include <bitcoin/network/messages/rpc/publish.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -43,12 +43,15 @@ struct http_methods
         method<"unknown", http::method::unknown::cptr>{}
     };
 
+    /// Subscriber requires void handlers, injects `code` parameter.
     template <typename... Args>
     using subscriber = network::subscriber<Args...>;
-};
 
-/// Positional only, natively tagged (no aliases required).
-using interface_http = interface<http_methods, grouping::positional>;
+    /// dispatcher.subscribe(std::forward<signature>(handler));
+    template <class Request>
+    using signature = std::function<void(const code&,
+        const typename Request::cptr&)>;
+};
 
 } // namespace rpc
 } // namespace network

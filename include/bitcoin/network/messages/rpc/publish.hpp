@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACE_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACE_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
 
 #include <tuple>
 #include <bitcoin/network/async/async.hpp>
@@ -30,7 +30,7 @@ namespace network {
 namespace rpc {
     
 template <typename Methods, grouping Mode = grouping::either>
-struct interface
+struct publish
   : public Methods
 {
     using type = decltype(Methods::methods);

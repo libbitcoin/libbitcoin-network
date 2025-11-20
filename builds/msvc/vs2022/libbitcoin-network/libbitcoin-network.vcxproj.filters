@@ -719,9 +719,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\version.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interface.hpp">
-      <Filter>include\bitcoin\network\messages\rpc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\bitcoind.hpp">
       <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
     </ClInclude>
@@ -732,6 +729,9 @@
       <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\http.hpp">
+      <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\interfaces.hpp">
       <Filter>include\bitcoin\network\messages\rpc\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\interfaces\peer.hpp">
@@ -747,6 +747,9 @@
       <Filter>include\bitcoin\network\messages\rpc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\model.hpp">
+      <Filter>include\bitcoin\network\messages\rpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\publish.hpp">
       <Filter>include\bitcoin\network\messages\rpc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\rpc.hpp">

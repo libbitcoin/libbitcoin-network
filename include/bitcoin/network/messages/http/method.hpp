@@ -39,15 +39,15 @@ struct tagged_request
     static constexpr verb method = Verb;
 };
 
-using get     = const tagged_request<verb::get>;
-using post    = const tagged_request<verb::post>;
-using put     = const tagged_request<verb::put>;
-using delete_ = const tagged_request<verb::delete_>;
-using head    = const tagged_request<verb::head>;
-using options = const tagged_request<verb::options>;
-using trace   = const tagged_request<verb::trace>;
-using connect = const tagged_request<verb::connect>;
-using unknown = const tagged_request<verb::unknown>;
+using get     = tagged_request<verb::get>;
+using post    = tagged_request<verb::post>;
+using put     = tagged_request<verb::put>;
+using delete_ = tagged_request<verb::delete_>;
+using head    = tagged_request<verb::head>;
+using options = tagged_request<verb::options>;
+using trace   = tagged_request<verb::trace>;
+using connect = tagged_request<verb::connect>;
+using unknown = tagged_request<verb::unknown>;
 
 template <verb Verb>
 inline auto tag_request(const request_cptr& request) NOEXCEPT

@@ -21,7 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/interface.hpp>
+#include <bitcoin/network/messages/rpc/publish.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -102,8 +102,6 @@ struct stratum_v2_methods
     using submit_shares_error = at<21>;
     using reconnect = at<22>;
 };
-
-using stratum_v2 = interface<stratum_v2_methods>;
 
 } // namespace rpc
 } // namespace network

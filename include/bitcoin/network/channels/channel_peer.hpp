@@ -39,6 +39,7 @@ class BCT_API channel_peer
 {
 public:
     typedef std::shared_ptr<channel_peer> ptr;
+    using interface = rpc::interface::peer;
 
     /// Subscribe to messages from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
@@ -46,8 +47,7 @@ public:
     inline void subscribe(auto&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());
-        using cptr = typename Message::cptr;
-        using signature = std::function<bool(const code&, const cptr&)>;
+        using signature = interface::signature<Message>;
         dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
@@ -140,7 +140,7 @@ private:
     // These are protected by strand/order.
 
     uint32_t negotiated_version_;
-    rpc::dispatcher<rpc::interface_peer> dispatcher_;
+    rpc::dispatcher<interface> dispatcher_;
     messages::peer::version::cptr peer_version_{};
     size_t start_height_{};
     bool quiet_{};

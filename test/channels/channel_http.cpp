@@ -106,8 +106,8 @@ BOOST_AUTO_TEST_CASE(channel_http__subscribe_message__subscribed__expected)
     std::promise<code> message_stopped{};
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->subscribe<method::get::cptr>(
-            [&](code ec, const method::get::cptr& request) NOEXCEPT
+        channel_ptr->subscribe<method::get>(
+            [&](code ec, method::get::cptr request) NOEXCEPT
             {
                 result &= !request;
                 message_stopped.set_value(ec);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stop__all_subscribed__expected)
             stop1_stopped.set_value(ec);
         });
 
-        channel_ptr->subscribe<method::post::cptr>(
+        channel_ptr->subscribe<method::post>(
             [&](code ec, const method::post::cptr& request) NOEXCEPT
             {
                 result &= !request;

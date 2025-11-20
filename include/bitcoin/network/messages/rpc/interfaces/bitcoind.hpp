@@ -21,7 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/interface.hpp>
+#include <bitcoin/network/messages/rpc/publish.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -256,8 +256,6 @@ struct bitcoind_methods
     using walletpassphrase = at<99>;
     using walletprocesspsbt = at<100>;
 };
-
-using bitcoind = interface<bitcoind_methods>;
 
 } // namespace rpc
 } // namespace network

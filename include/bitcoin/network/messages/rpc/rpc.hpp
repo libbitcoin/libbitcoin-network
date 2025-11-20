@@ -23,16 +23,10 @@
 #include <bitcoin/network/messages/rpc/dispatcher.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
-#include <bitcoin/network/messages/rpc/interface.hpp>
-#include <bitcoin/network/messages/rpc/interfaces/bitcoind.hpp>
-#include <bitcoin/network/messages/rpc/interfaces/electrum.hpp>
-#include <bitcoin/network/messages/rpc/interfaces/explore.hpp>
-#include <bitcoin/network/messages/rpc/interfaces/http.hpp>
-#include <bitcoin/network/messages/rpc/interfaces/peer.hpp>
-#include <bitcoin/network/messages/rpc/interfaces/stratum_v1.hpp>
-#include <bitcoin/network/messages/rpc/interfaces/stratum_v2.hpp>
+#include <bitcoin/network/messages/rpc/interfaces/interfaces.hpp>
 #include <bitcoin/network/messages/rpc/method.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>
+#include <bitcoin/network/messages/rpc/publish.hpp>
 #include <bitcoin/network/messages/rpc/types.hpp>
 
 #endif
