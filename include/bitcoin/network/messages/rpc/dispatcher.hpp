@@ -58,20 +58,20 @@ private:
     // make_subscribers
     // ------------------------------------------------------------------------
 
+    using methods_t = typename Interface::type;
+
     template <typename Method>
     using subscriber_t = apply_t<Interface::template subscriber,
         args_t<Method>>;
 
-    template <class>
+    template <typename>
     struct subscribers;
     template <size_t ...Index>
     struct subscribers<std::index_sequence<Index...>>
     {
         using type = std::tuple<subscriber_t<
-            std::tuple_element_t<Index, typename Interface::type>>...>;
+            std::tuple_element_t<Index, methods_t>>...>;
     };
-
-    using methods_t = typename Interface::type;
     using subscribers_t = typename subscribers<std::make_index_sequence<
         Interface::size>>::type;
 
