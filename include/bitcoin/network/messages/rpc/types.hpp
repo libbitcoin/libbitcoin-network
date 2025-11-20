@@ -63,19 +63,35 @@ struct optional<Default>
     static const type default_value() NOEXCEPT  { return {}; }
 };
 
-/// number_t : optional<42> (integer literals)
+/// int8_t   : optional<42_i8>  (int8_t)
+/// int16_t  : optional<42_i16> (int16_t)
+/// int32_t  : optional<42_i32> (int32_t)
+/// int64_t  : optional<42_i64> (int64_t)
+/// uint8_t  : optional<42_u8>  (uint8_t)
+/// uint16_t : optional<42_u16> (uint16_t)
+/// uint32_t : optional<42_u32> (uint32_t)
+/// uint64_t : optional<42_u64> (uint64_t)
 template <auto Default> requires 
-    is_integer<decltype(Default)>
-struct optional<Default> {
+    is_same_type<decltype(Default), int8_t> ||
+    is_same_type<decltype(Default), int16_t> ||
+    is_same_type<decltype(Default), int32_t> ||
+    is_same_type<decltype(Default), int64_t> ||
+    is_same_type<decltype(Default), uint8_t> ||
+    is_same_type<decltype(Default), uint16_t> ||
+    is_same_type<decltype(Default), uint32_t> ||
+    is_same_type<decltype(Default), uint64_t>
+struct optional<Default>
+{
     using tag = optional_tag;
-    using type = number_t;
+    using type = decltype(Default);
     static constexpr type value = static_cast<type>(Default);
     static consteval type default_value() NOEXCEPT { return Default; }
 };
 
-/// number_t : optional<4.2> (double or float literals)
+/// number_t : optional<4.2> (double)
+/// number_t : optional<4.2f> (float)
 template <auto Default> requires
-    is_same_type<decltype(Default), number_t> ||
+    is_same_type<decltype(Default), double> ||
     is_same_type<decltype(Default), float>
 struct optional<Default>
 {
@@ -118,7 +134,7 @@ struct nullable_tag {};
 template <typename Type> requires
     is_same_type<Type, object_t> || is_same_type<Type, array_t> ||
     is_same_type<Type, string_t> || is_same_type<Type, boolean_t> ||
-    is_same_type<Type, number_t>
+    is_same_type<Type, number_t> || is_integral_integer<Type>
 struct nullable
 {
     using tag = nullable_tag;

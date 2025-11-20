@@ -31,7 +31,8 @@ struct mock_methods
         method<"with_options", std::string, optional<4.2>, optional<true>>{ "a", "b", "c" },
         method<"with_nullify", std::string, nullable<double>, nullable<bool>>{ "a", "b", "c" },
         method<"with_combine", std::string, nullable<bool>, optional<4.2>>{ "a", "b", "c" },
-        method<"not_required", nullable<bool>, optional<4.2>>{ "a", "b" }
+        method<"not_required", nullable<bool>, optional<4.2>>{ "a", "b" },
+        method<"ping", messages::peer::ping::cptr>{ "message" }
     };
 
     // Derive this from above in c++26 using reflection.
@@ -41,6 +42,7 @@ struct mock_methods
     using with_nullify = at<3, decltype(methods)>;
     using with_combine = at<4, decltype(methods)>;
     using not_required = at<5, decltype(methods)>;
+    using ping = at<6, decltype(methods)>;
 };
 
 using mock = interface<mock_methods>;
@@ -1190,21 +1192,11 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
     BOOST_REQUIRE(pool.join());
 }
 
-struct ping_methods
-{
-    static constexpr std::tuple methods
-    {
-        method<"ping", messages::peer::ping::cptr>{ "message" }
-    };
-};
-
-using ping_mock = dispatcher<interface<ping_methods>>;
-
 BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    ping_mock instance(strand);
+    distributor_mock instance(strand);
 
     bool called{};
     std::promise<code> promise1{};
@@ -1253,7 +1245,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    ping_mock instance(strand);
+    distributor_mock instance(strand);
 
     bool called{};
     std::promise<code> promise1{};

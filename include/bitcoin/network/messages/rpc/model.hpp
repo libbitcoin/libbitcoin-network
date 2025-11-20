@@ -59,12 +59,27 @@ struct value_t
 {
     using inner_t = std::variant
     <
+        /// json-rpc
         null_t,
         boolean_t,
         number_t,
         string_t,
         array_t,
         object_t,
+
+        /// signed/unsigned integrals, not json deserializable.
+        int8_t,
+        int16_t,
+        int32_t,
+        int64_t,
+
+        uint8_t,
+        uint16_t,
+        uint32_t,
+        uint64_t,
+        
+        /// type-erased shared_ptr<Type>, not json deserializable.
+        /// Pass ptr via any_t and specify it directly in the handler.
         any_t
     >;
 
@@ -75,6 +90,14 @@ struct value_t
     value_t(string_t value) NOEXCEPT : inner_{ std::move(value) } {}
     value_t(array_t value) NOEXCEPT : inner_{ std::move(value) } {}
     value_t(object_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(int8_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(int16_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(int32_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(int64_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(uint8_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(uint16_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(uint32_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(uint64_t value) NOEXCEPT : inner_{ std::move(value) } {}
     value_t(any_t value) NOEXCEPT : inner_{ std::move(value) } {}
 
     /// Forwarding constructors for in-place variant construction.
@@ -85,6 +108,14 @@ struct value_t
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, string_t, inner_)
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, array_t, inner_)
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, object_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int8_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int16_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int32_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int64_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint8_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint16_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint32_t, inner_)
+    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint64_t, inner_)
     FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, any_t, inner_)
         
     inner_t& value() NOEXCEPT
@@ -138,7 +169,6 @@ DECLARE_JSON_TAG_INVOKE(value_t);
 DECLARE_JSON_TAG_INVOKE(identity_t);
 DECLARE_JSON_TAG_INVOKE(request_t);
 DECLARE_JSON_TAG_INVOKE(response_t);
-////DECLARE_JSON_TAG_INVOKE(any_t);
 
 } // namespace rpc
 } // namespace network
