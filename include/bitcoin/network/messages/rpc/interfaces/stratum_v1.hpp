@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_STRATUM_V1_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_STRATUM_V1_HPP
 
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/interface.hpp>
 
