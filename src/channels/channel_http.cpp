@@ -119,7 +119,7 @@ void channel_http::handle_read_request(const code& ec, size_t,
     log_message(*request);
 
     ///////////////////////////////////////////////////////////////////////////
-    // TODO: hack.
+    // TODO: hack, move into rpc::body::reader.
     using namespace rpc;
     using namespace http::method;
 

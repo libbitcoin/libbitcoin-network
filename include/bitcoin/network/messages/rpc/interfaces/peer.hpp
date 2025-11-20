@@ -32,41 +32,41 @@ struct peer_methods
 {
     static constexpr std::tuple methods
     {
-        method<"address", messages::peer::address::cptr>{},
+        method<"addr", messages::peer::address::cptr>{},
         method<"alert", messages::peer::alert::cptr>{},
         method<"block", messages::peer::block::cptr>{},
-        method<"bloom_filter_add", messages::peer::bloom_filter_add::cptr>{},
-        method<"bloom_filter_clear", messages::peer::bloom_filter_clear::cptr>{},
-        method<"bloom_filter_load", messages::peer::bloom_filter_load::cptr>{},
-        method<"client_filter", messages::peer::client_filter::cptr>{},
-        method<"client_filter_checkpoint", messages::peer::client_filter_checkpoint::cptr>{},
-        method<"client_filter_headers", messages::peer::client_filter_headers::cptr>{},
-        method<"compact_block", messages::peer::compact_block::cptr>{},
-        method<"compact_transactions", messages::peer::compact_transactions::cptr>{},
-        method<"fee_filter", messages::peer::fee_filter::cptr>{},
-        method<"get_address", messages::peer::get_address::cptr>{},
-        method<"get_blocks", messages::peer::get_blocks::cptr>{},
-        method<"get_client_filter_checkpoint", messages::peer::get_client_filter_checkpoint::cptr>{},
-        method<"get_client_filter_headers", messages::peer::get_client_filter_headers::cptr>{},
-        method<"get_client_filters", messages::peer::get_client_filters::cptr>{},
-        method<"get_compact_transactions", messages::peer::get_compact_transactions::cptr>{},
-        method<"get_data", messages::peer::get_data::cptr>{},
-        method<"get_headers", messages::peer::get_headers::cptr>{},
+        method<"filteradd", messages::peer::bloom_filter_add::cptr>{},
+        method<"filterclear", messages::peer::bloom_filter_clear::cptr>{},
+        method<"filterload", messages::peer::bloom_filter_load::cptr>{},
+        method<"cfilter", messages::peer::client_filter::cptr>{},
+        method<"cfcheckpt", messages::peer::client_filter_checkpoint::cptr>{},
+        method<"cfheaders", messages::peer::client_filter_headers::cptr>{},
+        method<"cmpctblock", messages::peer::compact_block::cptr>{},
+        method<"blocktxn", messages::peer::compact_transactions::cptr>{},
+        method<"feefilter", messages::peer::fee_filter::cptr>{},
+        method<"getaddr", messages::peer::get_address::cptr>{},
+        method<"getblocks", messages::peer::get_blocks::cptr>{},
+        method<"getcfcheckpt", messages::peer::get_client_filter_checkpoint::cptr>{},
+        method<"getcfheaders", messages::peer::get_client_filter_headers::cptr>{},
+        method<"getcfilters", messages::peer::get_client_filters::cptr>{},
+        method<"getblocktxn", messages::peer::get_compact_transactions::cptr>{},
+        method<"getdata", messages::peer::get_data::cptr>{},
+        method<"getheaders", messages::peer::get_headers::cptr>{},
         method<"headers", messages::peer::headers::cptr>{},
-        method<"inventory", messages::peer::inventory::cptr>{},
-        method<"memory_pool", messages::peer::memory_pool::cptr>{},
-        method<"merkle_block", messages::peer::merkle_block::cptr>{},
-        method<"not_found", messages::peer::not_found::cptr>{},
+        method<"inv", messages::peer::inventory::cptr>{},
+        method<"mempool", messages::peer::memory_pool::cptr>{},
+        method<"merkleblock", messages::peer::merkle_block::cptr>{},
+        method<"notfound", messages::peer::not_found::cptr>{},
         method<"ping", messages::peer::ping::cptr>{},
         method<"pong", messages::peer::pong::cptr>{},
         method<"reject", messages::peer::reject::cptr>{},
-        method<"send_address_v2", messages::peer::send_address_v2::cptr>{},
-        method<"send_compact", messages::peer::send_compact::cptr>{},
-        method<"send_headers", messages::peer::send_headers::cptr>{},
-        method<"transaction", messages::peer::transaction::cptr>{},
+        method<"sendaddrv2", messages::peer::send_address_v2::cptr>{},
+        method<"sendcmpct", messages::peer::send_compact::cptr>{},
+        method<"sendheaders", messages::peer::send_headers::cptr>{},
+        method<"tx", messages::peer::transaction::cptr>{},
         method<"version", messages::peer::version::cptr>{},
-        method<"version_acknowledge", messages::peer::version_acknowledge::cptr>{},
-        method<"witness_tx_id_relay", messages::peer::witness_tx_id_relay::cptr>{}
+        method<"verack", messages::peer::version_acknowledge::cptr>{},
+        method<"wtxidrelay", messages::peer::witness_tx_id_relay::cptr>{}
     };
 
     /// Unsubscriber requires bool handlers, injects `code` parameter.
@@ -77,6 +77,59 @@ struct peer_methods
     template <class Message>
     using signature = std::function<bool(const code&,
         const typename Message::cptr&)>;
+
+    /// TODO: this moves to peer::body::reader
+    /// Type-erased implementation of peer::deserialize<Message>.
+    static inline any_t deserialize(messages::peer::identifier identifier,
+        system::reader& source, uint32_t version) NOEXCEPT
+    {
+        #define RETURN_DESERIALIZED_PTR(message) \
+        case messages::peer::identifier::message: \
+            return { system::to_shared(messages::peer::message:: \
+                deserialize(version, source)) }
+
+        switch (identifier)
+        {
+            RETURN_DESERIALIZED_PTR(address);
+            RETURN_DESERIALIZED_PTR(alert);
+            RETURN_DESERIALIZED_PTR(block);
+            RETURN_DESERIALIZED_PTR(bloom_filter_add);
+            RETURN_DESERIALIZED_PTR(bloom_filter_clear);
+            RETURN_DESERIALIZED_PTR(bloom_filter_load);
+            RETURN_DESERIALIZED_PTR(client_filter);
+            RETURN_DESERIALIZED_PTR(client_filter_checkpoint);
+            RETURN_DESERIALIZED_PTR(client_filter_headers);
+            RETURN_DESERIALIZED_PTR(compact_block);
+            RETURN_DESERIALIZED_PTR(compact_transactions);
+            RETURN_DESERIALIZED_PTR(fee_filter);
+            RETURN_DESERIALIZED_PTR(get_address);
+            RETURN_DESERIALIZED_PTR(get_blocks);
+            RETURN_DESERIALIZED_PTR(get_client_filter_checkpoint);
+            RETURN_DESERIALIZED_PTR(get_client_filter_headers);
+            RETURN_DESERIALIZED_PTR(get_client_filters);
+            RETURN_DESERIALIZED_PTR(get_compact_transactions);
+            RETURN_DESERIALIZED_PTR(get_data);
+            RETURN_DESERIALIZED_PTR(get_headers);
+            RETURN_DESERIALIZED_PTR(headers);
+            RETURN_DESERIALIZED_PTR(inventory);
+            RETURN_DESERIALIZED_PTR(memory_pool);
+            RETURN_DESERIALIZED_PTR(merkle_block);
+            RETURN_DESERIALIZED_PTR(not_found);
+            RETURN_DESERIALIZED_PTR(ping);
+            RETURN_DESERIALIZED_PTR(pong);
+            RETURN_DESERIALIZED_PTR(reject);
+            RETURN_DESERIALIZED_PTR(send_address_v2);
+            RETURN_DESERIALIZED_PTR(send_compact);
+            RETURN_DESERIALIZED_PTR(send_headers);
+            RETURN_DESERIALIZED_PTR(transaction);
+            RETURN_DESERIALIZED_PTR(version);
+            RETURN_DESERIALIZED_PTR(version_acknowledge);
+            RETURN_DESERIALIZED_PTR(witness_tx_id_relay);
+            default: return {};
+        }
+
+        #undef RETURN_DESERIALIZED_PTR
+    }
 };
 
 } // namespace rpc

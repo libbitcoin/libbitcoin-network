@@ -284,18 +284,26 @@ void channel_peer::handle_read_payload(const code& ec,
     // subscribers on the same thread. This significantly reduces deallocation
     // cost in constrast to allowing the object to destroyed on another thread.
     // If object is passed to another thread destruction cost can be very high.
+
     ///////////////////////////////////////////////////////////////////////////
-    const rpc::request_t request{};
-    ////request = messages::peer::deserialize(head->id(),
-    ////    payload_buffer_, negotiated_version());
-    ////
-    ////if (request)
-    ////{
-    ////    stop(error::invalid_message);
-    ////    return;
-    ////}
+    // TODO: hack, move into peer::body::reader.
+    system::stream::in::fast stream{ payload_buffer_ };
+    system::read::bytes::fast reader{ stream };
+    const auto any_message = interface::deserialize(head->id(), reader,
+        negotiated_version());
+
+    if (!any_message)
+    {
+        stop(error::invalid_message);
+        return;
+    }
+
+    if (const auto code = dispatcher_.notify(rpc::request_t
+    {
+        .method = head->command,
+        .params = { rpc::array_t{ any_message } }
+    }))
     ///////////////////////////////////////////////////////////////////////////
-    if (const auto code = dispatcher_.notify(request))
     {
         if (head->command == messages::peer::transaction::command ||
             head->command == messages::peer::block::command)
