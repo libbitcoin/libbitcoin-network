@@ -46,18 +46,24 @@ struct stratum_v1_methods
         method<"client.rejected", string_t, string_t>{ "job_id", "reject_reason" }
     };
 
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
+
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
     // Derive this from above in c++26 using reflection.
-    using mining_subscribe = at<0, decltype(methods)>;
-    using mining_authorize = at<1, decltype(methods)>;
-    using mining_submit = at<2, decltype(methods)>;
-    using mining_extranonce_subscribe = at<3, decltype(methods)>;
-    using mining_extranonce_unsubscribe = at<4, decltype(methods)>;
-    using mining_configure = at<5, decltype(methods)>;
-    using mining_set_difficulty = at<6, decltype(methods)>;
-    using mining_notify = at<7, decltype(methods)>;
-    using client_reconnect = at<8, decltype(methods)>;
-    using client_hello = at<9, decltype(methods)>;
-    using client_rejected = at<10, decltype(methods)>;
+    using mining_subscribe = at<0>;
+    using mining_authorize = at<1>;
+    using mining_submit = at<2>;
+    using mining_extranonce_subscribe = at<3>;
+    using mining_extranonce_unsubscribe = at<4>;
+    using mining_configure = at<5>;
+    using mining_set_difficulty = at<6>;
+    using mining_notify = at<7>;
+    using client_reconnect = at<8>;
+    using client_hello = at<9>;
+    using client_rejected = at<10>;
 };
 
 using stratum_v1 = interface<stratum_v1_methods>;

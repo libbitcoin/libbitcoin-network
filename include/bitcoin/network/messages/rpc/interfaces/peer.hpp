@@ -67,6 +67,9 @@ struct peer
         method<"version_acknowledge", messages::peer::version_acknowledge::cptr>{},
         method<"witness_tx_id_relay", messages::peer::witness_tx_id_relay::cptr>{}
     };
+
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
 };
 
 /// Positional only, natively tagged (no aliases required).

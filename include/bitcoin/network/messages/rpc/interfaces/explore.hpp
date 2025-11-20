@@ -51,26 +51,32 @@ struct explore_methods
         method<"addresses", string_t>{ "hash" }
     };
 
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
+
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
     // Derive this from above in c++26 using reflection.
-    using block = at<0, decltype(methods)>;
-    using header = at<1, decltype(methods)>;
-    using filter = at<2, decltype(methods)>;
-    using block_tx = at<3, decltype(methods)>;
-    using block_txs = at<4, decltype(methods)>;
-    using transaction = at<5, decltype(methods)>;
-    using input = at<6, decltype(methods)>;
-    using inputs = at<7, decltype(methods)>;
-    using input_script = at<8, decltype(methods)>;
-    using input_scripts = at<9, decltype(methods)>;
-    using input_witness = at<10, decltype(methods)>;
-    using input_witnesses = at<11, decltype(methods)>;
-    using output = at<12, decltype(methods)>;
-    using outputs = at<13, decltype(methods)>;
-    using output_script = at<14, decltype(methods)>;
-    using output_scripts = at<15, decltype(methods)>;
-    using output_spender = at<16, decltype(methods)>;
-    using output_spenders = at<17, decltype(methods)>;
-    using addresses = at<18, decltype(methods)>;
+    using block = at<0>;
+    using header = at<1>;
+    using filter = at<2>;
+    using block_tx = at<3>;
+    using block_txs = at<4>;
+    using transaction = at<5>;
+    using input = at<6>;
+    using inputs = at<7>;
+    using input_script = at<8>;
+    using input_scripts = at<9>;
+    using input_witness = at<10>;
+    using input_witnesses = at<11>;
+    using output = at<12>;
+    using outputs = at<13>;
+    using output_script = at<14>;
+    using output_scripts = at<15>;
+    using output_spender = at<16>;
+    using output_spenders = at<17>;
+    using addresses = at<18>;
 };
 
 using interface_explore = interface<explore_methods>;

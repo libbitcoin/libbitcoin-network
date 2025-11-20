@@ -70,30 +70,36 @@ struct stratum_v2_methods
         method<"reconnect", string_t, number_t>{ "new_host", "new_port" }
     };
 
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
+
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
     // Derive this from above in c++26 using reflection.
-    using setup_connection = at<0, decltype(methods)>;
-    using setup_connection_success = at<1, decltype(methods)>;
-    using setup_connection_error = at<2, decltype(methods)>;
-    using open_standard_mining_channel = at<3, decltype(methods)>;
-    using open_standard_mining_channel_success = at<4, decltype(methods)>;
-    using open_standard_mining_channel_error = at<5, decltype(methods)>;
-    using open_extended_mining_channel = at<6, decltype(methods)>;
-    using open_extended_mining_channel_success = at<7, decltype(methods)>;
-    using open_extended_mining_channel_error = at<8, decltype(methods)>;
-    using update_channel = at<9, decltype(methods)>;
-    using update_channel_error = at<10, decltype(methods)>;
-    using close_channel = at<11, decltype(methods)>;
-    using set_target = at<12, decltype(methods)>;
-    using new_mining_job = at<13, decltype(methods)>;
-    using set_new_prev_hash = at<14, decltype(methods)>;
-    using new_extended_mining_job = at<15, decltype(methods)>;
-    using set_custom_mining_job = at<16, decltype(methods)>;
-    using set_custom_mining_job_success = at<17, decltype(methods)>;
-    using set_custom_mining_job_error = at<18, decltype(methods)>;
-    using submit_shares = at<19, decltype(methods)>;
-    using submit_shares_success = at<20, decltype(methods)>;
-    using submit_shares_error = at<21, decltype(methods)>;
-    using reconnect = at<22, decltype(methods)>;
+    using setup_connection = at<0>;
+    using setup_connection_success = at<1>;
+    using setup_connection_error = at<2>;
+    using open_standard_mining_channel = at<3>;
+    using open_standard_mining_channel_success = at<4>;
+    using open_standard_mining_channel_error = at<5>;
+    using open_extended_mining_channel = at<6>;
+    using open_extended_mining_channel_success = at<7>;
+    using open_extended_mining_channel_error = at<8>;
+    using update_channel = at<9>;
+    using update_channel_error = at<10>;
+    using close_channel = at<11>;
+    using set_target = at<12>;
+    using new_mining_job = at<13>;
+    using set_new_prev_hash = at<14>;
+    using new_extended_mining_job = at<15>;
+    using set_custom_mining_job = at<16>;
+    using set_custom_mining_job_success = at<17>;
+    using set_custom_mining_job_error = at<18>;
+    using submit_shares = at<19>;
+    using submit_shares_success = at<20>;
+    using submit_shares_error = at<21>;
+    using reconnect = at<22>;
 };
 
 using stratum_v2 = interface<stratum_v2_methods>;

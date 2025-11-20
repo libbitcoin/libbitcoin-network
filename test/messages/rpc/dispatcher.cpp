@@ -35,14 +35,20 @@ struct mock_methods
         method<"ping", messages::peer::ping::cptr>{ "message" }
     };
 
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
+
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
     // Derive this from above in c++26 using reflection.
-    using empty_method = at<0, decltype(methods)>;
-    using all_required = at<1, decltype(methods)>;
-    using with_options = at<2, decltype(methods)>;
-    using with_nullify = at<3, decltype(methods)>;
-    using with_combine = at<4, decltype(methods)>;
-    using not_required = at<5, decltype(methods)>;
-    using ping = at<6, decltype(methods)>;
+    using empty_method = at<0>;
+    using all_required = at<1>;
+    using with_options = at<2>;
+    using with_nullify = at<3>;
+    using with_combine = at<4>;
+    using not_required = at<5>;
+    using ping = at<6>;
 };
 
 using mock = interface<mock_methods>;

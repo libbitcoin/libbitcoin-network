@@ -291,7 +291,7 @@ CLASS::notifiers_ = make_notifiers(std::make_index_sequence<Interface::size>{});
 
 TEMPLATE
 template <size_t ...Index>
-inline CLASS::registry_t CLASS::make_subscribers(asio::strand& strand,
+inline CLASS::subscribers_t CLASS::make_subscribers(asio::strand& strand,
     std::index_sequence<Index...>) NOEXCEPT
 {
     // Subscribers declared dynamically (tuple for each distributor/channel).

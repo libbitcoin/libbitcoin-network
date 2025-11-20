@@ -41,6 +41,9 @@ struct http_methods
         method<"connect", http::method::connect::cptr>{},
         method<"unknown", http::method::unknown::cptr>{}
     };
+
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
 };
 
 /// Positional only, natively tagged (no aliases required).

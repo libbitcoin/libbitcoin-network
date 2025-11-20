@@ -168,6 +168,7 @@ constexpr bool is_required = !is_optional<Argument> && !is_nullable<Argument>;
 
 /// internal_t (strip nullable<> and optional<>, wrap shared_ptr<> in any_t).
 /// ---------------------------------------------------------------------------
+/// Specializations are const sensitive, strip the const from method declares.
 
 template <typename Argument, typename = void>
 struct internal
@@ -182,7 +183,7 @@ struct internal<Argument, std::void_t<typename Argument::type>>
 };
 
 template <typename Argument>
-using internal_t = typename internal<Argument>::type;
+using internal_t = std::remove_cv_t<typename internal<Argument>::type>;
 
 /// pointer_t (strip std::shared_ptr<>).
 /// ---------------------------------------------------------------------------
@@ -226,6 +227,21 @@ struct externals<std::tuple<Args...>>
 
 template <typename Arguments>
 using externals_t = typename externals<Arguments>::type;
+
+/// apply_t<Template, ...Args> (apply template to external_t<Args>...)
+/// ---------------------------------------------------------------------------
+
+template <template <typename...> class Template, typename Arguments>
+struct apply;
+
+template <template <typename...> class Template, typename ...Args>
+struct apply<Template, std::tuple<Args...>>
+{
+    using type = Template<external_t<Args>...>;
+};
+
+template <template <typename...> class Template, typename ...Args>
+using apply_t = typename apply<Template, Args...>::type;
 
 /// only_trailing_optionals<> : detect non-trailing optionals in arguments.
 /// ---------------------------------------------------------------------------

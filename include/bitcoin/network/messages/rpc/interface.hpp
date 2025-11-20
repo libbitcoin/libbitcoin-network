@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACE_HPP
 
 #include <tuple>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>
 #include <bitcoin/network/messages/rpc/method.hpp>
@@ -37,8 +38,9 @@ struct interface
     static constexpr grouping mode = Mode;
 };
 
-template <size_t Index, typename Methods>
-using at = typename std::tuple_element_t<Index, Methods>::tag;
+template <auto& Methods, size_t Index>
+using method_at = std::tuple_element_t<Index,
+    std::remove_reference_t<decltype(Methods)>>;
 
 } // namespace rpc
 } // namespace network

@@ -32,21 +32,21 @@ struct bitcoind_methods
     {
         /// Blockchain methods.
         method<"getbestblockhash">{},
-        method<"getblock", string_t, optional<0>>{ "blockhash", "verbosity" },
+        method<"getblock", string_t, optional<0_u32>>{ "blockhash", "verbosity" },
         method<"getblockchaininfo">{},
         method<"getblockcount">{},
         method<"getblockfilter", string_t, optional<"basic"_t>>{ "blockhash", "filtertype" },
         method<"getblockhash", number_t>{ "height" },
         method<"getblockheader", string_t, optional<true>>{ "blockhash", "verbose" },
         method<"getblockstats", string_t, optional<empty::array>>{ "hash_or_height", "stats" },
-        method<"getchaintxstats", optional<-1>, optional<""_t>>{ "nblocks", "blockhash" },
+        method<"getchaintxstats", optional<-1_i32>, optional<""_t>>{ "nblocks", "blockhash" },
         method<"getchainwork">{},
         method<"gettxout", string_t, number_t, optional<true>>{ "txid", "n", "include_mempool" },
         method<"gettxoutsetinfo">{},
         method<"pruneblockchain", number_t>{ "height" },
         method<"savemempool">{},
         method<"scantxoutset", string_t, optional<empty::array>>{ "action", "scanobjects" },
-        method<"verifychain", optional<4>, optional<288>>{ "checklevel", "nblocks" },
+        method<"verifychain", optional<4_u32>, optional<288_u32>>{ "checklevel", "nblocks" },
         method<"verifytxoutset", string_t>{ "input_verify_flag" },
 
         /// Control methods.
@@ -60,32 +60,32 @@ struct bitcoind_methods
         /// Mining methods.
         method<"getblocktemplate", optional<empty::object>>{ "template_request" },
         method<"getmininginfo">{},
-        method<"getnetworkhashps", optional<120>, optional<-1>>{ "nblocks", "height" },
+        method<"getnetworkhashps", optional<120_u32>, optional<-1_i32>>{ "nblocks", "height" },
         method<"prioritisetransaction", string_t, number_t, number_t>{ "txid", "dummy", "priority_delta" },
         method<"submitblock", string_t, optional<""_t>>{ "block", "parameters" },
 
         /// Network methods.
         method<"addnode", string_t, string_t>{ "node", "command" },
         method<"clearbanned">{},
-        method<"disconnectnode", string_t, optional<-1>>{ "address", "nodeid" },
+        method<"disconnectnode", string_t, optional<-1_i32>>{ "address", "nodeid" },
         method<"getaddednodeinfo", optional<false>, optional<true>, optional<""_t>>{ "include_chain_info", "dns", "addnode" },
         method<"getconnectioncount">{},
         method<"getnetworkinfo">{},
         method<"getpeerinfo">{},
         method<"listbanned">{},
         method<"ping">{},
-        method<"setban", string_t, string_t, optional<86400>, optional<false>, optional<""_t>>{ "addr", "command", "bantime", "absolute", "reason" },
+        method<"setban", string_t, string_t, optional<86400_u32>, optional<false>, optional<""_t>>{ "addr", "command", "bantime", "absolute", "reason" },
         method<"setnetworkactive", boolean_t>{ "state" },
 
         /// Rawtransactions methods.
         method<"combinerawtransaction", array_t>{ "txs" },
-        method<"createrawtransaction", array_t, object_t, optional<0>, optional<false>>{ "inputs", "outputs", "locktime", "replaceable" },
+        method<"createrawtransaction", array_t, object_t, optional<0_u32>, optional<false>>{ "inputs", "outputs", "locktime", "replaceable" },
         method<"decoderawtransaction", string_t>{ "hexstring" },
         method<"fundrawtransaction", string_t, optional<empty::object>>{ "rawtx", "options" },
-        method<"getrawtransaction", string_t, optional<0>, optional<""_t>>{ "txid", "verbose", "blockhash" },
-        method<"sendrawtransaction", string_t, optional<0>>{ "hexstring", "maxfeerate" },
+        method<"getrawtransaction", string_t, optional<0_u32>, optional<""_t>>{ "txid", "verbose", "blockhash" },
+        method<"sendrawtransaction", string_t, optional<0_u32>>{ "hexstring", "maxfeerate" },
         method<"signrawtransactionwithkey", string_t, optional<empty::array>, optional<empty::array>, optional<"ALL|FORKID"_t>>{ "hexstring", "privkeys", "prevtxs", "sighashtype" },
-        method<"testmempoolaccept", array_t, optional<0>>{ "rawtxs", "maxfeerate" },
+        method<"testmempoolaccept", array_t, optional<0_u32>>{ "rawtxs", "maxfeerate" },
         method<"testrawtransaction", string_t>{ "rawtx" },
 
         /// Util methods (node-related).
@@ -146,108 +146,114 @@ struct bitcoind_methods
         method<"walletprocesspsbt", string_t, optional<false>, optional<false>, optional<false>>{ "psbt", "sign", "bip32derivs", "complete" }
     };
 
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
+
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
     // Derive this from above in c++26 using reflection.
-    using getbestblockhash = at<0, decltype(methods)>;
-    using getblock = at<1, decltype(methods)>;
-    using getblockchaininfo = at<2, decltype(methods)>;
-    using getblockcount = at<3, decltype(methods)>;
-    using getblockfilter = at<4, decltype(methods)>;
-    using getblockhash = at<5, decltype(methods)>;
-    using getblockheader = at<6, decltype(methods)>;
-    using getblockstats = at<7, decltype(methods)>;
-    using getchaintxstats = at<8, decltype(methods)>;
-    using getchainwork = at<9, decltype(methods)>;
-    using gettxout = at<10, decltype(methods)>;
-    using gettxoutsetinfo = at<11, decltype(methods)>;
-    using pruneblockchain = at<12, decltype(methods)>;
-    using savemempool = at<13, decltype(methods)>;
-    using scantxoutset = at<14, decltype(methods)>;
-    using verifychain = at<15, decltype(methods)>;
-    using verifytxoutset = at<16, decltype(methods)>;
-    using getmemoryinfo = at<17, decltype(methods)>;
-    using getrpcinfo = at<18, decltype(methods)>;
-    using help = at<19, decltype(methods)>;
-    using logging = at<20, decltype(methods)>;
-    using stop = at<21, decltype(methods)>;
-    using uptime = at<22, decltype(methods)>;
-    using getblocktemplate = at<23, decltype(methods)>;
-    using getmininginfo = at<24, decltype(methods)>;
-    using getnetworkhashps = at<25, decltype(methods)>;
-    using prioritisetransaction = at<26, decltype(methods)>;
-    using submitblock = at<27, decltype(methods)>;
-    using addnode = at<28, decltype(methods)>;
-    using clearbanned = at<29, decltype(methods)>;
-    using disconnectnode = at<30, decltype(methods)>;
-    using getaddednodeinfo = at<31, decltype(methods)>;
-    using getconnectioncount = at<32, decltype(methods)>;
-    using getnetworkinfo = at<33, decltype(methods)>;
-    using getpeerinfo = at<34, decltype(methods)>;
-    using listbanned = at<35, decltype(methods)>;
-    using ping = at<36, decltype(methods)>;
-    using setban = at<37, decltype(methods)>;
-    using setnetworkactive = at<38, decltype(methods)>;
-    using combinerawtransaction = at<39, decltype(methods)>;
-    using createrawtransaction = at<40, decltype(methods)>;
-    using decoderawtransaction = at<41, decltype(methods)>;
-    using fundrawtransaction = at<42, decltype(methods)>;
-    using getrawtransaction = at<43, decltype(methods)>;
-    using sendrawtransaction = at<44, decltype(methods)>;
-    using signrawtransactionwithkey = at<45, decltype(methods)>;
-    using testmempoolaccept = at<46, decltype(methods)>;
-    using testrawtransaction = at<47, decltype(methods)>;
-    using createmultisig = at<48, decltype(methods)>;
-    using decodepsbt = at<49, decltype(methods)>;
-    using decodescript = at<50, decltype(methods)>;
-    using estimaterawfee = at<51, decltype(methods)>;
-    using getdescriptorinfo = at<52, decltype(methods)>;
-    using validateaddress = at<53, decltype(methods)>;
-    using abandontransaction = at<54, decltype(methods)>;
-    using addmultisigaddress = at<55, decltype(methods)>;
-    using backupwallet = at<56, decltype(methods)>;
-    using bumpfee = at<57, decltype(methods)>;
-    using createwallet = at<58, decltype(methods)>;
-    using dumpprivkey = at<59, decltype(methods)>;
-    using dumpwallet = at<60, decltype(methods)>;
-    using encryptwallet = at<61, decltype(methods)>;
-    using getaddressinfo = at<62, decltype(methods)>;
-    using getbalances = at<63, decltype(methods)>;
-    using getnewaddress = at<64, decltype(methods)>;
-    using getreceivedbyaddress = at<65, decltype(methods)>;
-    using getreceivedbylabel = at<66, decltype(methods)>;
-    using gettransaction = at<67, decltype(methods)>;
-    using getunconfirmedbalance = at<68, decltype(methods)>;
-    using getwalletinfo = at<69, decltype(methods)>;
-    using importaddress = at<70, decltype(methods)>;
-    using importmulti = at<71, decltype(methods)>;
-    using importprivkey = at<72, decltype(methods)>;
-    using importprunedfunds = at<73, decltype(methods)>;
-    using importpubkey = at<74, decltype(methods)>;
-    using importwallet = at<75, decltype(methods)>;
-    using keypoolrefill = at<76, decltype(methods)>;
-    using listaddressgroupings = at<77, decltype(methods)>;
-    using listlabels = at<78, decltype(methods)>;
-    using listlockunspent = at<79, decltype(methods)>;
-    using listreceivedbyaddress = at<80, decltype(methods)>;
-    using listreceivedbylabel = at<81, decltype(methods)>;
-    using listtransactions = at<82, decltype(methods)>;
-    using listunspent = at<83, decltype(methods)>;
-    using loadwallet = at<84, decltype(methods)>;
-    using lockunspent = at<85, decltype(methods)>;
-    using removeprunedfunds = at<86, decltype(methods)>;
-    using rescanblockchain = at<87, decltype(methods)>;
-    using send = at<88, decltype(methods)>;
-    using sendmany = at<89, decltype(methods)>;
-    using sendtoaddress = at<90, decltype(methods)>;
-    using setlabel = at<91, decltype(methods)>;
-    using settxfee = at<92, decltype(methods)>;
-    using signmessage = at<93, decltype(methods)>;
-    using signmessagewithprivkey = at<94, decltype(methods)>;
-    using syncwithvalidationinterfacequeue = at<95, decltype(methods)>;
-    using unloadwallet = at<96, decltype(methods)>;
-    using walletcreatefundedpsbt = at<97, decltype(methods)>;
-    using walletlock = at<98, decltype(methods)>;
-    using walletpassphrase = at<99, decltype(methods)>;
-    using walletprocesspsbt = at<100, decltype(methods)>;
+    using getbestblockhash = at<0>;
+    using getblock = at<1>;
+    using getblockchaininfo = at<2>;
+    using getblockcount = at<3>;
+    using getblockfilter = at<4>;
+    using getblockhash = at<5>;
+    using getblockheader = at<6>;
+    using getblockstats = at<7>;
+    using getchaintxstats = at<8>;
+    using getchainwork = at<9>;
+    using gettxout = at<10>;
+    using gettxoutsetinfo = at<11>;
+    using pruneblockchain = at<12>;
+    using savemempool = at<13>;
+    using scantxoutset = at<14>;
+    using verifychain = at<15>;
+    using verifytxoutset = at<16>;
+    using getmemoryinfo = at<17>;
+    using getrpcinfo = at<18>;
+    using help = at<19>;
+    using logging = at<20>;
+    using stop = at<21>;
+    using uptime = at<22>;
+    using getblocktemplate = at<23>;
+    using getmininginfo = at<24>;
+    using getnetworkhashps = at<25>;
+    using prioritisetransaction = at<26>;
+    using submitblock = at<27>;
+    using addnode = at<28>;
+    using clearbanned = at<29>;
+    using disconnectnode = at<30>;
+    using getaddednodeinfo = at<31>;
+    using getconnectioncount = at<32>;
+    using getnetworkinfo = at<33>;
+    using getpeerinfo = at<34>;
+    using listbanned = at<35>;
+    using ping = at<36>;
+    using setban = at<37>;
+    using setnetworkactive = at<38>;
+    using combinerawtransaction = at<39>;
+    using createrawtransaction = at<40>;
+    using decoderawtransaction = at<41>;
+    using fundrawtransaction = at<42>;
+    using getrawtransaction = at<43>;
+    using sendrawtransaction = at<44>;
+    using signrawtransactionwithkey = at<45>;
+    using testmempoolaccept = at<46>;
+    using testrawtransaction = at<47>;
+    using createmultisig = at<48>;
+    using decodepsbt = at<49>;
+    using decodescript = at<50>;
+    using estimaterawfee = at<51>;
+    using getdescriptorinfo = at<52>;
+    using validateaddress = at<53>;
+    using abandontransaction = at<54>;
+    using addmultisigaddress = at<55>;
+    using backupwallet = at<56>;
+    using bumpfee = at<57>;
+    using createwallet = at<58>;
+    using dumpprivkey = at<59>;
+    using dumpwallet = at<60>;
+    using encryptwallet = at<61>;
+    using getaddressinfo = at<62>;
+    using getbalances = at<63>;
+    using getnewaddress = at<64>;
+    using getreceivedbyaddress = at<65>;
+    using getreceivedbylabel = at<66>;
+    using gettransaction = at<67>;
+    using getunconfirmedbalance = at<68>;
+    using getwalletinfo = at<69>;
+    using importaddress = at<70>;
+    using importmulti = at<71>;
+    using importprivkey = at<72>;
+    using importprunedfunds = at<73>;
+    using importpubkey = at<74>;
+    using importwallet = at<75>;
+    using keypoolrefill = at<76>;
+    using listaddressgroupings = at<77>;
+    using listlabels = at<78>;
+    using listlockunspent = at<79>;
+    using listreceivedbyaddress = at<80>;
+    using listreceivedbylabel = at<81>;
+    using listtransactions = at<82>;
+    using listunspent = at<83>;
+    using loadwallet = at<84>;
+    using lockunspent = at<85>;
+    using removeprunedfunds = at<86>;
+    using rescanblockchain = at<87>;
+    using send = at<88>;
+    using sendmany = at<89>;
+    using sendtoaddress = at<90>;
+    using setlabel = at<91>;
+    using settxfee = at<92>;
+    using signmessage = at<93>;
+    using signmessagewithprivkey = at<94>;
+    using syncwithvalidationinterfacequeue = at<95>;
+    using unloadwallet = at<96>;
+    using walletcreatefundedpsbt = at<97>;
+    using walletlock = at<98>;
+    using walletpassphrase = at<99>;
+    using walletprocesspsbt = at<100>;
 };
 
 using bitcoind = interface<bitcoind_methods>;
