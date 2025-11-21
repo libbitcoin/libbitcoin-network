@@ -65,7 +65,7 @@ public:
 
         if (!ptr)
         {
-            handler(error::bad_alloc);
+            complete(error::bad_alloc, {});
             return;
         }
 
