@@ -31,25 +31,25 @@ struct explore_methods
 {
     static constexpr std::tuple methods
     {
-        method<"block", nullable<string_t>, nullable<number_t>>{ "hash", "height" },
-        method<"header", nullable<string_t>, nullable<number_t>>{ "hash", "height" },
-        method<"filter", nullable<string_t>, nullable<number_t>>{ "hash", "height" },
-        method<"block_tx", nullable<string_t>, nullable<number_t>, number_t>{ "hash", "height", "position" },
-        method<"block_txs", nullable<string_t>, nullable<number_t>>{ "hash", "height" },
-        method<"transaction", string_t>{ "hash" },
-        method<"input", string_t, nullable<number_t>>{ "hash", "index" },
-        method<"inputs", string_t>{ "hash" },
-        method<"input_script", string_t, nullable<number_t>>{ "hash", "index" },
-        method<"input_scripts", string_t>{ "hash" },
-        method<"input_witness", string_t, nullable<number_t>>{ "hash", "index" },
-        method<"input_witnesses", string_t>{ "hash" },
-        method<"output", string_t, nullable<number_t>>{ "hash", "index" },
-        method<"outputs", string_t>{ "hash" },
-        method<"output_script", string_t, nullable<number_t>>{ "hash", "index" },
-        method<"output_scripts", string_t>{ "hash" },
-        method<"output_spender", string_t, nullable<number_t>>{ "hash", "index" },
-        method<"output_spenders", string_t>{ "hash" },
-        method<"addresses", string_t>{ "hash" }
+        method<"block", uint8_t, nullable<string_t>, nullable<number_t>>{ "version", "hash", "height" },
+        method<"header", uint8_t, nullable<string_t>, nullable<number_t>>{ "version", "hash", "height" },
+        method<"filter", uint8_t, nullable<string_t>, nullable<number_t>>{ "version", "hash", "height" },
+        method<"block_tx", uint8_t, nullable<string_t>, nullable<number_t>, number_t>{ "version", "hash", "height", "position" },
+        method<"block_txs", uint8_t, nullable<string_t>, nullable<number_t>>{ "version", "hash", "height" },
+        method<"transaction", uint8_t, string_t>{ "version", "hash" },
+        method<"input", uint8_t, string_t, nullable<number_t>>{ "version", "hash", "index" },
+        method<"inputs", uint8_t, string_t>{ "version", "hash" },
+        method<"input_script", uint8_t, string_t, nullable<number_t>>{ "version", "hash", "index" },
+        method<"input_scripts", uint8_t, string_t>{ "version", "hash" },
+        method<"input_witness", uint8_t, string_t, nullable<number_t>>{ "version", "hash", "index" },
+        method<"input_witnesses", uint8_t, string_t>{ "version", "hash" },
+        method<"output", uint8_t, string_t, nullable<number_t>>{ "version", "hash", "index" },
+        method<"outputs", uint8_t, string_t>{ "version", "hash" },
+        method<"output_script", uint8_t, string_t, nullable<number_t>>{ "version", "hash", "index" },
+        method<"output_scripts", uint8_t, string_t>{ "version", "hash" },
+        method<"output_spender", uint8_t, string_t, nullable<number_t>>{ "version", "hash", "index" },
+        method<"output_spenders", uint8_t, string_t>{ "version", "hash" },
+        method<"addresses", uint8_t, string_t>{ "version", "hash" }
     };
 
     template <typename... Args>
@@ -84,7 +84,7 @@ struct explore_methods
 enum explore_targets
 {
     /// /v[]/block/hash/[bkhash] {1}
-    /// /v[]/block/height/[height] {1}s
+    /// /v[]/block/height/[height] {1}
     block,
 
     /// /v[]/block/hash/[bkhash]/header {1}
