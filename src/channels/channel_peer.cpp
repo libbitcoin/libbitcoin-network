@@ -39,11 +39,6 @@ using namespace system;
 using namespace messages::peer;
 using namespace std::placeholders;
 
-// Dump up to this size of payload as hex in order to diagnose failure.
-static constexpr size_t invalid_payload_dump_size = 0xff;
-static constexpr uint32_t http_magic = 0x20544547;
-static constexpr uint32_t https_magic = 0x02010316;
-
 // Shared pointers required in handler parameters so closures control lifetime.
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
@@ -62,7 +57,7 @@ void channel_peer::stopping(const code& ec) NOEXCEPT
 
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
-    distributor_.stop(ec);
+    dispatcher_.stop(ec);
 }
 
 // TODO: resume of an idle channel results in termination for invalid_magic.
@@ -172,6 +167,9 @@ void channel_peer::read_heading() NOEXCEPT
 
 void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
 {
+    static constexpr uint32_t http_magic = 0x20544547;
+    static constexpr uint32_t https_magic = 0x02010316;
+
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
@@ -242,8 +240,8 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
 // Handle errors and post message to subscribers.
 // The head object is allocated on another thread and destroyed on this one.
 // This introduces cross-thread allocation/deallocation, though size is small.
-void channel_peer::handle_read_payload(const code& ec,
-    size_t LOG_ONLY(payload_size), const heading_ptr& head) NOEXCEPT
+void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
+    const heading_ptr& head) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -280,38 +278,29 @@ void channel_peer::handle_read_payload(const code& ec,
     }
 
     // Notify subscribers of the new message.
-    // The message object is allocated on this thread and notify invokes
-    // subscribers on the same thread. This significantly reduces deallocation
-    // cost in constrast to allowing the object to destroyed on another thread.
-    // If object is passed to another thread destruction cost can be very high.
-    const auto code = distributor_.notify(head->id(), negotiated_version(),
-        payload_buffer_);
-
-    if (code)
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: hack, move into peer::body::reader.
+    if (auto any = interface::deserialize(allocator_, head->id(),
+        payload_buffer_, negotiated_version(), settings().witness_node()))
     {
-        if (head->command == messages::peer::transaction::command ||
-            head->command == messages::peer::block::command)
+        // If object passes to another thread destruction cost is very high.
+        if (const auto code = dispatcher_.notify(rpc::request_t
         {
-            // error::operation_failed implies null arena, not invalid payload.
-            LOGR("Invalid " << head->command << " payload from [" << authority()
-                << "] with hash [" << encode_hash(bitcoin_hash(payload_buffer_)) << "] "
-                << code.message());
-        }
-        else
+            .method = head->command,
+            .params = { rpc::array_t{ std::move(any) } }
+        }))
         {
-            LOGR("Invalid " << head->command << " payload from [" << authority()
-                << "] with bytes (" << encode_base16(
-                    {
-                        payload_buffer_.begin(),
-                        std::next(payload_buffer_.begin(),
-                        std::min(payload_size, invalid_payload_dump_size))
-                    })
-                << "...) " << code.message());
+            stop(code);
+            return;
         }
-
-        stop(code);
+    }
+    else
+    {
+        log_message(head->command, payload_size);
+        stop(error::invalid_message);
         return;
     }
+    ///////////////////////////////////////////////////////////////////////////
 
     // Don't retain larger than configured (time-space tradeoff).
     if (settings().minimum_buffer < payload_buffer_.capacity())
@@ -324,6 +313,41 @@ void channel_peer::handle_read_payload(const code& ec,
         << payload_size << " bytes)");
 
     read_heading();
+}
+
+void channel_peer::handle_send(const code& ec, size_t,
+    const system::chunk_cptr&, const result_handler& handler) NOEXCEPT
+{
+    if (ec)
+        stop(ec);
+
+    handler(ec);
+}
+
+void channel_peer::log_message(const std::string_view& name,
+    size_t LOG_ONLY(size)) const NOEXCEPT
+{
+    // Dump up to this size of payload as hex in order to diagnose failure.
+    static constexpr size_t invalid_payload_dump_size = 0xff;
+
+    if (name == messages::peer::transaction::command ||
+        name == messages::peer::block::command)
+    {
+        LOGR("Invalid " << name << " payload from ["
+            << authority() << "] with hash ["
+            << encode_hash(bitcoin_hash(payload_buffer_)) << "] ");
+    }
+    else
+    {
+        LOGR("Invalid " << name << " payload from ["
+            << authority() << "] with bytes (" << encode_base16(
+                {
+                    payload_buffer_.begin(),
+                    std::next(payload_buffer_.begin(),
+                    std::min(size, invalid_payload_dump_size))
+                })
+            << "...) ");
+    }
 }
 
 BC_POP_WARNING()

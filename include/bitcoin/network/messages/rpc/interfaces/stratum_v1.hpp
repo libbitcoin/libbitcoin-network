@@ -16,11 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_STRATUM_V1_HPP
-#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_STRATUM_V1_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_STRATUM_V1_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_STRATUM_V1_HPP
 
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/rpc/publish.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -30,14 +31,14 @@ struct stratum_v1_methods
 {
     static constexpr std::tuple methods
     {
-        // Client requests.
+        /// Client requests.
         method<"mining.subscribe", optional<""_t>, optional<0>>{ "user_agent", "extranonce1_size" },
         method<"mining.authorize", string_t, string_t>{ "username", "password" },
         method<"mining.submit", string_t, string_t, string_t, number_t, string_t>{ "worker_name", "job_id", "extranonce2", "ntime", "nonce" },
         method<"mining.extranonce.subscribe">{},
         method<"mining.extranonce.unsubscribe", number_t>{ "id" },
 
-        // Server notifications.
+        /// Server notifications.
         method<"mining.configure", object_t>{ "extensions" },
         method<"mining.set_difficulty", optional<1.0>>{ "difficulty" },
         method<"mining.notify", string_t, string_t, string_t, string_t, array_t, number_t, number_t, number_t, boolean_t, boolean_t, boolean_t>{ "job_id", "prevhash", "coinb1", "coinb2", "merkle_branch", "version", "nbits", "ntime", "clean_jobs", "hash1", "hash2" },
@@ -46,20 +47,25 @@ struct stratum_v1_methods
         method<"client.rejected", string_t, string_t>{ "job_id", "reject_reason" }
     };
 
-    using mining_subscribe = at<0, decltype(methods)>;
-    using mining_authorize = at<1, decltype(methods)>;
-    using mining_submit = at<2, decltype(methods)>;
-    using mining_extranonce_subscribe = at<3, decltype(methods)>;
-    using mining_extranonce_unsubscribe = at<4, decltype(methods)>;
-    using mining_configure = at<5, decltype(methods)>;
-    using mining_set_difficulty = at<6, decltype(methods)>;
-    using mining_notify = at<7, decltype(methods)>;
-    using client_reconnect = at<8, decltype(methods)>;
-    using client_hello = at<9, decltype(methods)>;
-    using client_rejected = at<10, decltype(methods)>;
-};
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
 
-using stratum_v1 = interface<stratum_v1_methods>;
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
+    // Derive this from above in c++26 using reflection.
+    using mining_subscribe = at<0>;
+    using mining_authorize = at<1>;
+    using mining_submit = at<2>;
+    using mining_extranonce_subscribe = at<3>;
+    using mining_extranonce_unsubscribe = at<4>;
+    using mining_configure = at<5>;
+    using mining_set_difficulty = at<6>;
+    using mining_notify = at<7>;
+    using client_reconnect = at<8>;
+    using client_hello = at<9>;
+    using client_rejected = at<10>;
+};
 
 } // namespace rpc
 } // namespace network

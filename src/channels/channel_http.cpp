@@ -24,6 +24,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -48,7 +49,7 @@ void channel_http::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::stopping(ec);
-    distributor_.stop(ec);
+    dispatcher_.stop(ec);
 }
 
 void channel_http::resume() NOEXCEPT
@@ -116,7 +117,22 @@ void channel_http::handle_read_request(const code& ec, size_t,
     }
 
     log_message(*request);
-    distributor_.notify(request);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: hack, move into rpc::body::reader.
+    using namespace rpc;
+    using namespace http::method;
+
+    if (const auto code = dispatcher_.notify(request_t
+    {
+        .method = "get",
+        .params = { array_t{ any_t{ tag_request<verb::get>(request) } } }
+    }))
+    {
+        stop(code);
+        return;
+    }
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 /// Expose to derivatives, always fully consumed.

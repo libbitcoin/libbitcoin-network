@@ -14,7 +14,7 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\async\races">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\channels">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
@@ -22,41 +22,38 @@
     <Filter Include="src\config">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\distributors">
+    <Filter Include="src\log">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\log">
+    <Filter Include="src\messages">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\messages\http">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\http\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\json">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\peer">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\peer\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\rpc">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\messages\json">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\peer">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\peer\enums">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\rpc">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\net">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\protocols">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\sessions">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -122,12 +119,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\utilities.cpp">
       <Filter>src\config</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\distributors\distributor_http.cpp">
-      <Filter>src\distributors</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\distributors\distributor_peer.cpp">
-      <Filter>src\distributors</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\error.cpp">
       <Filter>src</Filter>
@@ -305,6 +296,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\witness_tx_id_relay.cpp">
       <Filter>src\messages\peer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\any.cpp">
+      <Filter>src\messages\rpc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\dispatcher.cpp">
       <Filter>src\messages\rpc</Filter>

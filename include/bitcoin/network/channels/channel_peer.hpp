@@ -21,11 +21,11 @@
 
 #include <memory>
 #include <bitcoin/network/channels/channel.hpp>
-#include <bitcoin/network/distributors/distributors.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -39,6 +39,8 @@ class BCT_API channel_peer
 {
 public:
     typedef std::shared_ptr<channel_peer> ptr;
+    using interface = rpc::interface::peer;
+    using dispatcher = rpc::dispatcher<interface>;
 
     /// Subscribe to messages from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
@@ -46,8 +48,8 @@ public:
     inline void subscribe(auto&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());
-        using message_handler = distributor_peer::handler<Message>;
-        distributor_.subscribe(std::forward<message_handler>(handler));
+        using signature = interface::signature<Message>;
+        dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
     /// Serialize and write message to peer (requires strand).
@@ -79,7 +81,8 @@ public:
       : channel(log, socket, settings, identifier,
           settings.channel_inactivity(),
           system::pseudo_random::duration(settings.channel_expiration())),
-        distributor_(memory, socket->strand()),
+        allocator_(memory),
+        dispatcher_(socket->strand()),
         negotiated_version_(settings.protocol_maximum),
         tracker<channel_peer>(log)
     {
@@ -130,20 +133,18 @@ protected:
     bool is_handshaked() const NOEXCEPT;
 
 private:
-    inline void handle_send(const code& ec, size_t, const system::chunk_cptr&,
-        const result_handler& handler) NOEXCEPT
-    {
-        if (ec) stop(ec);
-        handler(ec);
-    }
+    void log_message(const std::string_view& name, size_t size) const NOEXCEPT;
+    void handle_send(const code& ec, size_t size, const system::chunk_cptr&,
+        const result_handler& handler) NOEXCEPT;
 
     // These are protected by strand/order.
 
-    bool quiet_{};
-    distributor_peer distributor_;
+    memory& allocator_;
+    dispatcher dispatcher_;
     uint32_t negotiated_version_;
     messages::peer::version::cptr peer_version_{};
     size_t start_height_{};
+    bool quiet_{};
 
     system::data_chunk payload_buffer_{};
     system::data_array<messages::peer::heading::size()> heading_buffer_{};

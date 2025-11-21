@@ -16,19 +16,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACE_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACE_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
 
 #include <tuple>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>
+#include <bitcoin/network/messages/rpc/method.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace rpc {
     
 template <typename Methods, grouping Mode = grouping::either>
-struct interface
+struct publish
   : public Methods
 {
     using type = decltype(Methods::methods);
@@ -36,8 +38,9 @@ struct interface
     static constexpr grouping mode = Mode;
 };
 
-template <size_t Index, typename Methods>
-using at = typename std::tuple_element_t<Index, Methods>::tag;
+template <auto& Methods, size_t Index>
+using method_at = std::tuple_element_t<Index,
+    std::remove_reference_t<decltype(Methods)>>;
 
 } // namespace rpc
 } // namespace network

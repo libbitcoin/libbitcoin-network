@@ -6,7 +6,7 @@
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at your optional) any later version.
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -53,14 +53,70 @@ static_assert(is_same_type<optional<true>::tag, optional_tag>);
 static_assert(is_same_type<decltype(optional<true>{}.default_value()), boolean_t>);
 static_assert(optional<true>{}.default_value() == true);
 
-// optional<42> (integer literals)
+// optional<42_i8>
+static_assert(is_optional<optional<42_i8>>);
+static_assert(is_same_type<optional<42_i8>::type, int8_t>);
+static_assert(is_same_type<optional<42_i8>::tag, optional_tag>);
+static_assert(is_same_type<decltype(optional<42_i8>{}.default_value()), int8_t>);
+static_assert(optional<42_i8>{}.default_value() == 42_i8);
+
+// optional<42_i16>
+static_assert(is_optional<optional<42_i16>>);
+static_assert(is_same_type<optional<42_i16>::type, int16_t>);
+static_assert(is_same_type<optional<42_i16>::tag, optional_tag>);
+static_assert(is_same_type<decltype(optional<42_i16>{}.default_value()), int16_t>);
+static_assert(optional<42_i16>{}.default_value() == 42_i16);
+
+// optional<42_i32>
+static_assert(is_optional<optional<42_i32>>);
+static_assert(is_same_type<optional<42_i32>::type, int32_t>);
+static_assert(is_same_type<optional<42_i32>::tag, optional_tag>);
+static_assert(is_same_type<decltype(optional<42_i32>{}.default_value()), int32_t>);
+static_assert(optional<42_i32>{}.default_value() == 42_i32);
+
+// optional<42_i64>
+static_assert(is_optional<optional<42_i64>>);
+static_assert(is_same_type<optional<42_i64>::type, int64_t>);
+static_assert(is_same_type<optional<42_i64>::tag, optional_tag>);
+static_assert(is_same_type<decltype(optional<42_i64>{}.default_value()), int64_t>);
+static_assert(optional<42_i64>{}.default_value() == 42_i64);
+
+// optional<42_u8>
+static_assert(is_optional<optional<42_u8>>);
+static_assert(is_same_type<optional<42_u8>::type, uint8_t>);
+static_assert(is_same_type<optional<42_u8>::tag, optional_tag>);
+static_assert(is_same_type<decltype(optional<42_u8>{}.default_value()), uint8_t>);
+static_assert(optional<42_u8>{}.default_value() == 42_u8);
+
+// optional<42_u16>
+static_assert(is_optional<optional<42_u16>>);
+static_assert(is_same_type<optional<42_u16>::type, uint16_t>);
+static_assert(is_same_type<optional<42_u16>::tag, optional_tag>);
+static_assert(is_same_type<decltype(optional<42_u16>{}.default_value()), uint16_t>);
+static_assert(optional<42_u16>{}.default_value() == 42_u16);
+
+// optional<42_u32>
+static_assert(is_optional<optional<42_u32>>);
+static_assert(is_same_type<optional<42_u32>::type, uint32_t>);
+static_assert(is_same_type<optional<42_u32>::tag, optional_tag>);
+static_assert(is_same_type<decltype(optional<42_u32>{}.default_value()), uint32_t>);
+static_assert(optional<42_u32>{}.default_value() == 42_u32);
+
+// optional<42_u64>
+static_assert(is_optional<optional<42_u64>>);
+static_assert(is_same_type<optional<42_u64>::type, uint64_t>);
+static_assert(is_same_type<optional<42_u64>::tag, optional_tag>);
+static_assert(is_same_type<decltype(optional<42_u64>{}.default_value()), uint64_t>);
+static_assert(optional<42_u64>{}.default_value() == 42_u64);
+
+// optional<42>
 static_assert(is_optional<optional<42>>);
-static_assert(is_same_type<optional<42>::type, number_t>);
+static_assert(is_same_type<optional<42>::type, int>);
 static_assert(is_same_type<optional<42>::tag, optional_tag>);
-static_assert(is_same_type<decltype(optional<42>{}.default_value()), number_t > );
+static_assert(is_same_type<decltype(optional<42>{}.default_value()), int> );
 static_assert(optional<42>{}.default_value() == 42);
 
-// optional<4.2> (double or float literals)
+// optional<4.2> (double/float literals consolidated into number_t)
 static_assert(is_optional<optional<4.2>>);
 static_assert(is_optional<optional<4.2f>>);
 static_assert(is_same_type<optional<4.2>::type, number_t>);
@@ -184,7 +240,7 @@ static_assert(is_same_type<external_t<optional<true>>, boolean_t>);
 static_assert(is_same_tuple<externals_t<std::tuple<>>, std::tuple<>>);
 static_assert(is_same_tuple<externals_t<std::tuple<bool>>, std::tuple<bool>>);
 static_assert(is_same_tuple<externals_t<std::tuple<array_t, object_t>>, std::tuple<array_t, object_t>>);
-static_assert(is_same_tuple<externals_t<std::tuple<optional<true>, optional<42>>>, std::tuple<bool, double>>);
+static_assert(is_same_tuple<externals_t<std::tuple<optional<true>, optional<42>>>, std::tuple<bool, int>>);
 static_assert(is_same_tuple<externals_t<std::tuple<nullable<bool>, nullable<double>>>, std::tuple<std::optional<bool>, std::optional<double>>>);
 static_assert(is_same_tuple<externals_t<std::tuple<optional<true>, nullable<double>, optional<empty::array>>>, std::tuple<bool, std::optional<double>, array_t>>);
 
@@ -200,11 +256,11 @@ static_assert( only_trailing_optionals<bool>);
 static_assert( only_trailing_optionals<optional<true>>);
 static_assert( only_trailing_optionals<bool, optional<true>>);
 static_assert( only_trailing_optionals<int, bool, optional<true>>);
-static_assert( only_trailing_optionals<optional<true>, optional<4.2>>);
+static_assert( only_trailing_optionals<optional<true>, optional<42>>);
 static_assert( only_trailing_optionals<int, optional<true>, optional<4.2>>);
 static_assert(!only_trailing_optionals<optional<true>, bool>);
 static_assert(!only_trailing_optionals<bool, optional<true>, bool>);
-static_assert(!only_trailing_optionals<optional<true>, optional<4.2>, bool>);
+static_assert(!only_trailing_optionals<optional<true>, optional<42u>, bool>);
 
 // is_tagged<Tuple>
 // ----------------------------------------------------------------------------

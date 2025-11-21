@@ -23,7 +23,6 @@
 #include <unordered_map>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/distributors/distributor.hpp>
 #include <bitcoin/network/messages/rpc/method.hpp>
 #include <bitcoin/network/messages/rpc/types.hpp>
 
@@ -60,7 +59,21 @@ private:
     // ------------------------------------------------------------------------
 
     using methods_t = typename Interface::type;
-    using registry_t = subscribers_t<methods_t>;
+
+    template <typename Method>
+    using subscriber_t = apply_t<Interface::template subscriber,
+        args_t<Method>>;
+
+    template <typename>
+    struct subscribers;
+    template <size_t ...Index>
+    struct subscribers<std::index_sequence<Index...>>
+    {
+        using type = std::tuple<subscriber_t<
+            std::tuple_element_t<Index, methods_t>>...>;
+    };
+    using subscribers_t = typename subscribers<std::make_index_sequence<
+        Interface::size>>::type;
 
     template <typename Handler, size_t Index>
     static inline consteval bool subscriber_matches_handler() NOEXCEPT;
@@ -69,7 +82,7 @@ private:
     static inline consteval size_t find_subscriber_for_handler() NOEXCEPT;
 
     template <size_t ...Index>
-    static inline registry_t make_subscribers(asio::strand& strand,
+    static inline subscribers_t make_subscribers(asio::strand& strand,
         std::index_sequence<Index...>) NOEXCEPT;
 
     // make_notifiers
@@ -123,7 +136,7 @@ private:
     static const notifiers_t notifiers_;
 
     /// This is not thread safe.
-    registry_t subscribers_;
+    subscribers_t subscribers_;
 };
 
 } // namespace rpc

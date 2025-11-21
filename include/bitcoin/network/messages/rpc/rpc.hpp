@@ -19,12 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_RPC_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_RPC_HPP
 
+#include <bitcoin/network/messages/rpc/any.hpp>
 #include <bitcoin/network/messages/rpc/dispatcher.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
-#include <bitcoin/network/messages/rpc/interface.hpp>
+#include <bitcoin/network/messages/rpc/interfaces/interfaces.hpp>
 #include <bitcoin/network/messages/rpc/method.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>
+#include <bitcoin/network/messages/rpc/publish.hpp>
 #include <bitcoin/network/messages/rpc/types.hpp>
 
 #endif

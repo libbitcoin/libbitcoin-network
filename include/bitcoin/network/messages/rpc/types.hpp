@@ -63,19 +63,35 @@ struct optional<Default>
     static const type default_value() NOEXCEPT  { return {}; }
 };
 
-/// number_t : optional<42> (integer literals)
+/// int8_t   : optional<42_i8>  (int8_t)
+/// int16_t  : optional<42_i16> (int16_t)
+/// int32_t  : optional<42_i32> (int32_t)
+/// int64_t  : optional<42_i64> (int64_t)
+/// uint8_t  : optional<42_u8>  (uint8_t)
+/// uint16_t : optional<42_u16> (uint16_t)
+/// uint32_t : optional<42_u32> (uint32_t)
+/// uint64_t : optional<42_u64> (uint64_t)
 template <auto Default> requires 
-    is_integer<decltype(Default)>
-struct optional<Default> {
+    is_same_type<decltype(Default), int8_t> ||
+    is_same_type<decltype(Default), int16_t> ||
+    is_same_type<decltype(Default), int32_t> ||
+    is_same_type<decltype(Default), int64_t> ||
+    is_same_type<decltype(Default), uint8_t> ||
+    is_same_type<decltype(Default), uint16_t> ||
+    is_same_type<decltype(Default), uint32_t> ||
+    is_same_type<decltype(Default), uint64_t>
+struct optional<Default>
+{
     using tag = optional_tag;
-    using type = number_t;
+    using type = decltype(Default);
     static constexpr type value = static_cast<type>(Default);
     static consteval type default_value() NOEXCEPT { return Default; }
 };
 
-/// number_t : optional<4.2> (double or float literals)
+/// number_t : optional<4.2> (double)
+/// number_t : optional<4.2f> (float)
 template <auto Default> requires
-    is_same_type<decltype(Default), number_t> ||
+    is_same_type<decltype(Default), double> ||
     is_same_type<decltype(Default), float>
 struct optional<Default>
 {
@@ -118,7 +134,7 @@ struct nullable_tag {};
 template <typename Type> requires
     is_same_type<Type, object_t> || is_same_type<Type, array_t> ||
     is_same_type<Type, string_t> || is_same_type<Type, boolean_t> ||
-    is_same_type<Type, number_t>
+    is_same_type<Type, number_t> || is_integral_integer<Type>
 struct nullable
 {
     using tag = nullable_tag;
@@ -150,8 +166,9 @@ constexpr bool is_nullable = is_nullable_t<Argument>::value;
 template <typename Argument>
 constexpr bool is_required = !is_optional<Argument> && !is_nullable<Argument>;
 
-/// internal_t (strip nullable<> and optional<>)
+/// internal_t (strip nullable<> and optional<>, wrap shared_ptr<> in any_t).
 /// ---------------------------------------------------------------------------
+/// Specializations are const sensitive, strip the const from method declares.
 
 template <typename Argument, typename = void>
 struct internal
@@ -166,7 +183,28 @@ struct internal<Argument, std::void_t<typename Argument::type>>
 };
 
 template <typename Argument>
-using internal_t = typename internal<Argument>::type;
+using internal_t = std::remove_cv_t<typename internal<Argument>::type>;
+
+/// pointer_t (strip std::shared_ptr<>).
+/// ---------------------------------------------------------------------------
+
+template <typename Pointer, typename = void>
+struct pointer {};
+
+template <typename Type>
+struct pointer<std::shared_ptr<Type>, void>
+{
+    using type = Type;
+};
+
+template <typename Type>
+struct pointer<std::shared_ptr<const Type>, void>
+{
+    using type = const Type;
+};
+
+template <typename Pointer>
+using pointer_t = typename pointer<Pointer>::type;
 
 /// external_t (nullable<Type> -> std::optional<Type>, optional<Type> -> Type)
 /// ---------------------------------------------------------------------------
@@ -189,6 +227,21 @@ struct externals<std::tuple<Args...>>
 
 template <typename Arguments>
 using externals_t = typename externals<Arguments>::type;
+
+/// apply_t<Template, ...Args> (apply template to external_t<Args>...)
+/// ---------------------------------------------------------------------------
+
+template <template <typename...> class Template, typename Arguments>
+struct apply;
+
+template <template <typename...> class Template, typename ...Args>
+struct apply<Template, std::tuple<Args...>>
+{
+    using type = Template<external_t<Args>...>;
+};
+
+template <template <typename...> class Template, typename ...Args>
+using apply_t = typename apply<Template, Args...>::type;
 
 /// only_trailing_optionals<> : detect non-trailing optionals in arguments.
 /// ---------------------------------------------------------------------------
@@ -217,6 +270,7 @@ constexpr bool only_trailing_optionals =
 
 /// is_tagged<Tuple> : detect native tag (first arg is shared_ptr).
 /// ---------------------------------------------------------------------------
+/// shared_ptr<Type> is wrapped in std::any<shared_ptr<Type>> within value_t.
 
 template <typename Tuple, typename = void>
 struct is_tagged_t : std::false_type {};
@@ -228,9 +282,9 @@ struct is_tagged_t<Tuple, std::enable_if_t<!is_empty_tuple<Tuple>>>
 template <typename Tuple>
 constexpr bool is_tagged = is_tagged_t<Tuple>::value;
 
-/// handler_args_t<Handler> : get args (strip code, set args, set tag to args[0]).
+/// handler_args_t<Handler> : get args (strip code, set args).
 /// ---------------------------------------------------------------------------
-/// Specializations are const/noexcept sensitive, common overrides provided.
+/// Specializations are const sensitive, overrides provided.
 
 template <typename Handler, typename = void>
 struct handler_args;
@@ -239,7 +293,6 @@ template <typename Handler>
 struct handler_args<Handler, std::void_t<decltype(&Handler::operator())>>
   : handler_args<decltype(&Handler::operator())> {};
 
-// non-const
 template <typename Return, typename Class, typename Code, typename ...Args>
 struct handler_args<Return(Class::*)(Code, Args...),
     std::enable_if_t<is_same_type<Code, code>>>
@@ -247,25 +300,8 @@ struct handler_args<Return(Class::*)(Code, Args...),
     using args = std::tuple<Args...>;
 };
 
-// const
 template <typename Return, typename Class, typename Code, typename ...Args>
 struct handler_args<Return(Class::*)(Code, Args...) const,
-    std::enable_if_t<is_same_type<Code, code>>>
-{
-    using args = std::tuple<Args...>;
-};
-
-// non-const, noexcept
-template <typename Return, typename Class, typename Code, typename ...Args>
-struct handler_args<Return(Class::*)(Code, Args...) noexcept,
-    std::enable_if_t<is_same_type<Code, code>>>
-{
-    using args = std::tuple<Args...>;
-};
-
-// const, noexcept
-template <typename Return, typename Class, typename Code, typename ...Args>
-struct handler_args<Return(Class::*)(Code, Args...) const noexcept,
     std::enable_if_t<is_same_type<Code, code>>>
 {
     using args = std::tuple<Args...>;

@@ -78,57 +78,57 @@ void protocol_http::start() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_http::handle_receive_get(const code& ec,
-    const method::get& request) NOEXCEPT
+    const method::get::cptr& get) NOEXCEPT
 {
-    send_method_not_allowed(*request, ec);
+    send_method_not_allowed(*get, ec);
 }
 
 void protocol_http::handle_receive_post(const code& ec,
-    const method::post& request) NOEXCEPT
+    const method::post::cptr& post) NOEXCEPT
 {
-    send_method_not_allowed(*request, ec);
+    send_method_not_allowed(*post, ec);
 }
 
 void protocol_http::handle_receive_put(const code& ec,
-    const method::put& request) NOEXCEPT
+    const method::put::cptr& put) NOEXCEPT
 {
-    send_method_not_allowed(*request, ec);
+    send_method_not_allowed(*put, ec);
 }
 
 void protocol_http::handle_receive_head(const code& ec,
-    const method::head& request) NOEXCEPT
+    const method::head::cptr& head) NOEXCEPT
 {
-    send_method_not_allowed(*request, ec);
+    send_method_not_allowed(*head, ec);
 }
 
 void protocol_http::handle_receive_delete(const code& ec,
-    const method::delete_& request) NOEXCEPT
+    const method::delete_::cptr& delete_) NOEXCEPT
 {
-    send_method_not_allowed(*request, ec);
+    send_method_not_allowed(*delete_, ec);
 }
 
 void protocol_http::handle_receive_trace(const code& ec,
-    const method::trace& request) NOEXCEPT
+    const method::trace::cptr& trace) NOEXCEPT
 {
-    send_method_not_allowed(*request, ec);
+    send_method_not_allowed(*trace, ec);
 }
 
 void protocol_http::handle_receive_options(const code& ec,
-    const method::options& request) NOEXCEPT
+    const method::options::cptr& options) NOEXCEPT
 {
-    send_method_not_allowed(*request, ec);
+    send_method_not_allowed(*options, ec);
 }
 
 void protocol_http::handle_receive_connect(const code& ec,
-    const method::connect& request) NOEXCEPT
+    const method::connect::cptr& connect) NOEXCEPT
 {
-    send_method_not_allowed(*request, ec);
+    send_method_not_allowed(*connect, ec);
 }
 
 void protocol_http::handle_receive_unknown(const code& ec,
-    const method::unknown& request) NOEXCEPT
+    const method::unknown::cptr& unknown) NOEXCEPT
 {
-    send_method_not_allowed(*request, ec);
+    send_method_not_allowed(*unknown, ec);
 }
 
 // Senders.

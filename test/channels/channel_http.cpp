@@ -102,18 +102,22 @@ BOOST_AUTO_TEST_CASE(channel_http__subscribe_message__subscribed__expected)
     constexpr auto expected_ec = error::invalid_magic;
 
     auto result = true;
-    std::promise<code> message_stopped;
+    std::promise<bool> subscribed{};
+    std::promise<code> message_stopped{};
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->subscribe<method::get>(
-            [&](code ec, const method::get& request) NOEXCEPT
+            [&](code ec, method::get::cptr request) NOEXCEPT
             {
                 result &= !request;
                 message_stopped.set_value(ec);
                 return true;
             });
+
+        subscribed.set_value(true);
     });
 
+    BOOST_REQUIRE(subscribed.get_future().get());
     BOOST_REQUIRE(!channel_ptr->stopped());
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
@@ -135,6 +139,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stop__all_subscribed__expected)
     auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, set, 42);
     constexpr auto expected_ec = error::invalid_magic;
 
+    std::promise<bool> subscribed{};
     std::promise<code> stop2_stopped;
     std::promise<code> stop_subscribed;
     channel_ptr->subscribe_stop(
@@ -158,14 +163,17 @@ BOOST_AUTO_TEST_CASE(channel_http__stop__all_subscribed__expected)
         });
 
         channel_ptr->subscribe<method::post>(
-            [&](code ec, const method::post& request) NOEXCEPT
+            [&](code ec, const method::post::cptr& request) NOEXCEPT
             {
                 result &= !request;
                 message_stopped.set_value(ec);
                 return true;
             });
+
+        subscribed.set_value(true);
     });
 
+    BOOST_REQUIRE(subscribed.get_future().get());
     BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(stop_subscribed.get_future().get(), error::success);
 

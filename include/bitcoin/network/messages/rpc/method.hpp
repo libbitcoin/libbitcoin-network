@@ -113,46 +113,10 @@ using tag_t = typename Method::tag;
 template <size_t Index, typename Methods>
 using method_t = std::tuple_element_t<Index, Methods>;
 
-/// subscriber_t<Method>
-/// ---------------------------------------------------------------------------
-/// Specializations are const sensitive, strip the const from method declares.
-
-/// Handles parameter pack.
-template <typename ...Args>
-struct subscriber
-{
-    using type = network::unsubscriber<external_t<std::remove_cv_t<Args>>...>;
-};
-
-/// Handles tuple of parameters.
-template <typename ...Args>
-struct subscriber<std::tuple<Args...>>
-{
-    using type = network::unsubscriber<external_t<std::remove_cv_t<Args>>...>;
-};
-
-template <typename Method>
-using subscriber_t = typename subscriber<args_t<Method>>::type;
-
 /// subscribers_t<Method...>
 /// ---------------------------------------------------------------------------
-/// Specializations are const sensitive, strip the const from method declares.
 
-template <typename Methods>
-struct subscribers;
 
-template <typename ...Methods>
-struct subscribers<std::tuple<Methods...>>
-{
-    using type = std::tuple<subscriber_t<Methods>...>;
-};
-
-template <typename Methods>
-struct subscribers_strip
-  : subscribers<std::remove_cv_t<Methods>> {};
-
-template <typename ...Methods>
-using subscribers_t = typename subscribers_strip<Methods...>::type;
 
 BC_POP_WARNING()
 

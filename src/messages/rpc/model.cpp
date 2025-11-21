@@ -58,6 +58,7 @@ DEFINE_JSON_TO_TAG(version)
 
 DEFINE_JSON_FROM_TAG(value_t)
 {
+    // In the general model, all numbers serialize to double.
     std::visit(overload
     {
         [&](null_t) NOEXCEPT
@@ -72,20 +73,50 @@ DEFINE_JSON_FROM_TAG(value_t)
         {
             value = visit;
         },
-        [&](const string_t& visit)
+        [&](int8_t visit) THROWS
+        {
+            value = value_from(visit).as_double();
+        },
+        [&](int16_t visit) THROWS
+        {
+            value = value_from(visit).as_double();
+        },
+        [&](int32_t visit) THROWS
+        {
+            value = value_from(visit).as_double();
+        },
+        [&](int64_t visit) THROWS
+        {
+            value = value_from(visit).as_double();
+        },
+        [&](uint8_t visit) THROWS
+        {
+            value = value_from(visit).as_double();
+        },
+        [&](uint16_t visit) THROWS
+        {
+            value = value_from(visit).as_double();
+        },
+        [&](uint32_t visit) THROWS
+        {
+            value = value_from(visit).as_double();
+        },
+        [&](uint64_t visit) THROWS
+        {
+            value = value_from(visit).as_double();
+        },
+
+        [&](const string_t& visit) THROWS
         {
             value = visit;
         },
-        [&](const array_t& visit)
+        [&](const array_t& visit) THROWS
         {
             value = value_from(visit);
         },
-        [&](const object_t& visit)
+        [&](const object_t& visit) THROWS
         {
             value = value_from(visit);
-        },
-        [&](const messages::peer::ping::cptr&)
-        {
         }
     }, instance.value());
 }
@@ -102,6 +133,7 @@ DEFINE_JSON_TO_TAG(value_t)
     }
     else if (value.is_number())
     {
+        // In the general model, all numbers deserialize from double.
         return { std::in_place_type<number_t>, value.to_number<number_t>() };
     }
     else if (value.is_string())
@@ -135,7 +167,7 @@ DEFINE_JSON_FROM_TAG(identity_t)
         {
             value = visit;
         },
-        [&](const string_t& visit)
+        [&](const string_t& visit) THROWS
         {
             value = visit;
         }
