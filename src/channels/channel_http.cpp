@@ -193,7 +193,7 @@ void channel_http::log_message(const request& request) const NOEXCEPT
     LOG_ONLY(const auto version = "http/" + serialize(request.version() / 10) +
         "." + serialize(request.version() % 10);)
         
-    LOGP("Request [" << request.method_string()
+    LOGA("Request [" << request.method_string()
         << "] " << version << " (" << (request.chunked() ? "c" : size)
         << ") " << (request.keep_alive() ? "keep" : "drop")
         << " [" << authority() << "]"
@@ -209,7 +209,7 @@ void channel_http::log_message(const response& response) const NOEXCEPT
     LOG_ONLY(const auto version = "http/" + serialize(response.version() / 10)
         + "." + serialize(response.version() % 10);)
         
-    LOGP("Response [" << status_string(response.result())
+    LOGA("Response [" << status_string(response.result())
         << "] " << version << " (" << (response.chunked() ? "c" : size)
         << ") " << (response.keep_alive() ? "keep" : "drop")
         << " [" << authority() << "]"

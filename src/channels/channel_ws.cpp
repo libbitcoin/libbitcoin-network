@@ -92,7 +92,7 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
 
     if (upgraded_)
     {
-        LOGP("Websocket is in upgraded state [" << authority() << "]");
+        LOGA("Websocket is in upgraded state [" << authority() << "]");
         stop(network::error::operation_failed);
         return;
     }
@@ -104,7 +104,7 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
     }
 
     upgraded_ = true;
-    LOGP("Websocket upgraded [" << authority() << "]");
+    LOGA("Websocket upgraded [" << authority() << "]");
 
     const std::string welcome{ "Websocket libbitcoin/4.0" };
     send(to_chunk(welcome), false, [this](const code& ec) NOEXCEPT
