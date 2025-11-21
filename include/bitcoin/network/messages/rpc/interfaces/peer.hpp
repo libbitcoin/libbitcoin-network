@@ -28,6 +28,13 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
+#define RETURN_DESERIALIZED_PTR(message, ...) \
+case messages::peer::identifier::message: \
+{ \
+    return { messages::peer::message::deserialize(version_, data \
+        __VA_OPT__(,) __VA_ARGS__) }; \
+}
+
 struct peer_methods
 {
     static constexpr std::tuple methods
@@ -80,57 +87,53 @@ struct peer_methods
 
     /// TODO: this moves to peer::body::reader
     /// Type-erased implementation of peer::deserialize<Message>.
-    static inline any_t deserialize(messages::peer::identifier identifier,
-        system::reader& source, uint32_t version) NOEXCEPT
+    static inline any_t deserialize(memory& allocator,
+        messages::peer::identifier identifier, const system::data_chunk& data,
+        uint32_t version_, bool witness) NOEXCEPT
     {
-        #define RETURN_DESERIALIZED_PTR(message) \
-        case messages::peer::identifier::message: \
-            return { system::to_shared(messages::peer::message:: \
-                deserialize(version, source)) }
-
         switch (identifier)
         {
-            RETURN_DESERIALIZED_PTR(address);
-            RETURN_DESERIALIZED_PTR(alert);
-            RETURN_DESERIALIZED_PTR(block);
-            RETURN_DESERIALIZED_PTR(bloom_filter_add);
-            RETURN_DESERIALIZED_PTR(bloom_filter_clear);
-            RETURN_DESERIALIZED_PTR(bloom_filter_load);
-            RETURN_DESERIALIZED_PTR(client_filter);
-            RETURN_DESERIALIZED_PTR(client_filter_checkpoint);
-            RETURN_DESERIALIZED_PTR(client_filter_headers);
-            RETURN_DESERIALIZED_PTR(compact_block);
-            RETURN_DESERIALIZED_PTR(compact_transactions);
-            RETURN_DESERIALIZED_PTR(fee_filter);
-            RETURN_DESERIALIZED_PTR(get_address);
+            RETURN_DESERIALIZED_PTR(address)
+            RETURN_DESERIALIZED_PTR(alert)
+            RETURN_DESERIALIZED_PTR(block, witness, *allocator.get_arena())
+            RETURN_DESERIALIZED_PTR(bloom_filter_add)
+            RETURN_DESERIALIZED_PTR(bloom_filter_clear)
+            RETURN_DESERIALIZED_PTR(bloom_filter_load)
+            RETURN_DESERIALIZED_PTR(client_filter)
+            RETURN_DESERIALIZED_PTR(client_filter_checkpoint)
+            RETURN_DESERIALIZED_PTR(client_filter_headers)
+            RETURN_DESERIALIZED_PTR(compact_block, witness)
+            RETURN_DESERIALIZED_PTR(compact_transactions, witness)
+            RETURN_DESERIALIZED_PTR(fee_filter)
+            RETURN_DESERIALIZED_PTR(get_address)
             RETURN_DESERIALIZED_PTR(get_blocks);
-            RETURN_DESERIALIZED_PTR(get_client_filter_checkpoint);
-            RETURN_DESERIALIZED_PTR(get_client_filter_headers);
-            RETURN_DESERIALIZED_PTR(get_client_filters);
-            RETURN_DESERIALIZED_PTR(get_compact_transactions);
-            RETURN_DESERIALIZED_PTR(get_data);
-            RETURN_DESERIALIZED_PTR(get_headers);
-            RETURN_DESERIALIZED_PTR(headers);
-            RETURN_DESERIALIZED_PTR(inventory);
-            RETURN_DESERIALIZED_PTR(memory_pool);
-            RETURN_DESERIALIZED_PTR(merkle_block);
-            RETURN_DESERIALIZED_PTR(not_found);
-            RETURN_DESERIALIZED_PTR(ping);
-            RETURN_DESERIALIZED_PTR(pong);
-            RETURN_DESERIALIZED_PTR(reject);
-            RETURN_DESERIALIZED_PTR(send_address_v2);
-            RETURN_DESERIALIZED_PTR(send_compact);
-            RETURN_DESERIALIZED_PTR(send_headers);
-            RETURN_DESERIALIZED_PTR(transaction);
-            RETURN_DESERIALIZED_PTR(version);
-            RETURN_DESERIALIZED_PTR(version_acknowledge);
-            RETURN_DESERIALIZED_PTR(witness_tx_id_relay);
+            RETURN_DESERIALIZED_PTR(get_client_filter_checkpoint)
+            RETURN_DESERIALIZED_PTR(get_client_filter_headers)
+            RETURN_DESERIALIZED_PTR(get_client_filters)
+            RETURN_DESERIALIZED_PTR(get_compact_transactions)
+            RETURN_DESERIALIZED_PTR(get_data)
+            RETURN_DESERIALIZED_PTR(get_headers)
+            RETURN_DESERIALIZED_PTR(headers)
+            RETURN_DESERIALIZED_PTR(inventory)
+            RETURN_DESERIALIZED_PTR(memory_pool)
+            RETURN_DESERIALIZED_PTR(merkle_block)
+            RETURN_DESERIALIZED_PTR(not_found)
+            RETURN_DESERIALIZED_PTR(ping)
+            RETURN_DESERIALIZED_PTR(pong)
+            RETURN_DESERIALIZED_PTR(reject)
+            RETURN_DESERIALIZED_PTR(send_address_v2)
+            RETURN_DESERIALIZED_PTR(send_compact)
+            RETURN_DESERIALIZED_PTR(send_headers)
+            RETURN_DESERIALIZED_PTR(transaction, witness)
+            RETURN_DESERIALIZED_PTR(version)
+            RETURN_DESERIALIZED_PTR(version_acknowledge)
+            RETURN_DESERIALIZED_PTR(witness_tx_id_relay)
             default: return {};
         }
-
-        #undef RETURN_DESERIALIZED_PTR
     }
 };
+
+#undef RETURN_DESERIALIZED_PTR
 
 } // namespace rpc
 } // namespace network

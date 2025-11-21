@@ -40,6 +40,7 @@ class BCT_API channel_peer
 public:
     typedef std::shared_ptr<channel_peer> ptr;
     using interface = rpc::interface::peer;
+    using dispatcher = rpc::dispatcher<interface>;
 
     /// Subscribe to messages from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
@@ -74,13 +75,15 @@ public:
     }
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.
-    inline channel_peer(memory&, const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier={}) NOEXCEPT
+    inline channel_peer(memory& memory, const logger& log,
+        const socket::ptr& socket, const network::settings& settings,
+        uint64_t identifier={}) NOEXCEPT
       : channel(log, socket, settings, identifier,
           settings.channel_inactivity(),
           system::pseudo_random::duration(settings.channel_expiration())),
+        allocator_(memory),
+        dispatcher_(socket->strand()),
         negotiated_version_(settings.protocol_maximum),
-        dispatcher_(/*memory, */ socket->strand()),
         tracker<channel_peer>(log)
     {
     }
@@ -130,17 +133,15 @@ protected:
     bool is_handshaked() const NOEXCEPT;
 
 private:
-    inline void handle_send(const code& ec, size_t, const system::chunk_cptr&,
-        const result_handler& handler) NOEXCEPT
-    {
-        if (ec) stop(ec);
-        handler(ec);
-    }
+    void log_message(const std::string_view& name, size_t size) const NOEXCEPT;
+    void handle_send(const code& ec, size_t size, const system::chunk_cptr&,
+        const result_handler& handler) NOEXCEPT;
 
     // These are protected by strand/order.
 
+    memory& allocator_;
+    dispatcher dispatcher_;
     uint32_t negotiated_version_;
-    rpc::dispatcher<interface> dispatcher_;
     messages::peer::version::cptr peer_version_{};
     size_t start_height_{};
     bool quiet_{};

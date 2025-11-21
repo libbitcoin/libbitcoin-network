@@ -43,20 +43,10 @@ const uint32_t block::version_maximum = level::maximum_protocol;
 
 // static
 typename block::cptr block::deserialize(uint32_t version,
-    const data_chunk& data, bool witness) NOEXCEPT
-{
-    // default_arena::get() returns pointer to static instance of
-    // system::default_arena, which is not detachable and calls into
-    // std::malloc() and std::free() for each individual allocation.
-    return deserialize(*default_arena::get(), version, data, witness);
-}
-
-// static
-typename block::cptr block::deserialize(arena& arena, uint32_t version,
-    const data_chunk& data, bool witness) NOEXCEPT
+    const data_chunk& data, bool witness, arena& arena) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
-        return nullptr;
+        return {};
 
     // Set starting address of block allocation (nullptr if not detachable).
     const auto memory = pointer_cast<uint8_t>(arena.start(data.size()));
@@ -74,7 +64,7 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
     if (!reader || is_null(block))
     {
         arena.release(memory);
-        return nullptr;
+        return {};
     }
 
     // Cache hashes as extracted from serialized block.
@@ -93,6 +83,16 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
             // Deallocate detached memory (nop if not detachable).
             arena.release(memory);
         }));
+}
+
+// static
+typename block::cptr block::deserialize(uint32_t version,
+    const data_chunk& data, bool witness) NOEXCEPT
+{
+    // default_arena::get() returns pointer to static instance of
+    // system::default_arena, which is not detachable and calls into
+    // std::malloc() and std::free() for each individual allocation.
+    return deserialize(version, data, witness, *default_arena::get());
 }
 
 // static
