@@ -42,14 +42,11 @@ BOOST_AUTO_TEST_CASE(any__shared_ptr_constructor__valid_pointer__expected_state)
     BOOST_REQUIRE(!instance.holds_alternative<double>());
 }
 
-BOOST_AUTO_TEST_CASE(any__shared_ptr_constructor__null_pointer__has_value_but_null)
+BOOST_AUTO_TEST_CASE(any__shared_ptr_constructor__null_pointer__has_value_false)
 {
     const any instance(std::shared_ptr<int>{});
-    BOOST_REQUIRE(instance.has_value());
-    BOOST_REQUIRE(instance.holds_alternative<int>());
-    BOOST_REQUIRE(!instance.get<int>());
-    BOOST_REQUIRE_NO_THROW(instance.as<int>());
-    BOOST_REQUIRE(!instance.as<int>());
+    BOOST_REQUIRE(!instance.has_value());
+    BOOST_REQUIRE(!instance.holds_alternative<int>());
 }
 
 BOOST_AUTO_TEST_CASE(any__emplace__integral__expected_value)

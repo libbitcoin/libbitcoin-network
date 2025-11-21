@@ -37,8 +37,14 @@ class any
 {
 public:
     template <typename Type>
-    inline any(std::shared_ptr<Type> ptr) NOEXCEPT
-      : inner_{ std::move(ptr) }
+    inline any(const std::shared_ptr<Type>& ptr) NOEXCEPT
+      : any{ from_ptr(ptr) }
+    {
+    }
+
+    template <typename Type>
+    inline any(std::shared_ptr<Type>&& ptr) NOEXCEPT
+      : any{ from_ptr(std::forward<std::shared_ptr<Type>>(ptr)) }
     {
     }
 
@@ -51,22 +57,28 @@ public:
     }
 
     any(any&& other) NOEXCEPT
-      : inner_{ std::exchange(other.inner_, std::any{}) }
+      : inner_{ std::move(other.inner_) }
     {
+        other.inner_.reset();
     }
 
     any& operator=(any&& other) NOEXCEPT
     {
         if (this != &other)
-            inner_ = std::exchange(other.inner_, std::any{});
+            inner_ = move(other.inner_);
 
+        other.inner_.reset();
         return *this;
     }
 
     template <typename Type, typename ...Args>
     inline void emplace(Args&&... args) NOEXCEPT
     {
-        inner_ = std::make_shared<Type>(std::forward<Args>(args)...);
+        const auto ptr = std::make_shared<Type>(std::forward<Args>(args)...);
+        inner_ = ptr;
+
+        // Prevent has_value with null contained ponter.
+        if (!ptr) inner_.reset();
     }
 
     template <typename Type>
@@ -102,6 +114,25 @@ public:
     inline void reset() NOEXCEPT
     {
         inner_.reset();
+    }
+
+protected:
+    template <typename Type>
+    static inline any from_ptr(std::shared_ptr<Type>&& ptr) NOEXCEPT
+    {
+        // Prevent has_value with null contained pointer.
+        any value{};
+        if (ptr) value.inner_ = std::forward<std::shared_ptr<Type>>(ptr);
+        return value;
+    }
+
+    template <typename Type>
+    static inline any from_ptr(const std::shared_ptr<Type>& ptr) NOEXCEPT
+    {
+        // Prevent has_value with null contained pointer.
+        any value{};
+        if (ptr) value.inner_ = ptr;
+        return value;
     }
 
 private:
