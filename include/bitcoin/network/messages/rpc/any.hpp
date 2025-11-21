@@ -65,7 +65,7 @@ public:
     any& operator=(any&& other) NOEXCEPT
     {
         if (this != &other)
-            inner_ = move(other.inner_);
+            inner_ = std::move(other.inner_);
 
         other.inner_.reset();
         return *this;
