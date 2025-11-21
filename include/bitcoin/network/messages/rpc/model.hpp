@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MODEL_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_MODEL_HPP
 
-#include <any>
 #include <optional>
 #include <unordered_map>
 #include <utility>
