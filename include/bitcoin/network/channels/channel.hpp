@@ -48,7 +48,7 @@ public:
         BC_ASSERT_MSG(stranded(), "strand");
 
         if (!stranded())
-            return nullptr;
+            return {};
 
         // Protocols are attached after channel start (read paused).
         auto protocol = std::make_shared<Protocol>(session,
