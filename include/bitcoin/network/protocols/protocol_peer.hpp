@@ -40,6 +40,8 @@ class BCT_API protocol_peer
 {
 public:
     typedef std::shared_ptr<protocol_peer> ptr;
+    using channel_t = channel_peer;
+    using options_t = channel_t::options_t;
 
 protected:
     DECLARE_SEND();

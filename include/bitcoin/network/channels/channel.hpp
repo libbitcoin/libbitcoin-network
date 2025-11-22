@@ -37,6 +37,7 @@ class BCT_API channel
 {
 public:
     typedef std::shared_ptr<channel> ptr;
+    using options_t = settings::tcp_server;
 
     DELETE_COPY_MOVE(channel);
 
@@ -86,10 +87,8 @@ public:
 
 protected:
     /// Construct a channel to encapsulated and communicate on the socket.
-    channel(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero,
-        const deadline::duration& inactivity={},
-        const deadline::duration& expiration={}) NOEXCEPT;
+    channel(const logger& log, const socket::ptr& socket, uint64_t identifier,
+        const network::settings& settings, const options_t& options) NOEXCEPT;
 
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;

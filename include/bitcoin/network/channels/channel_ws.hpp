@@ -76,9 +76,9 @@ public:
     }
 
     inline channel_ws(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier={},
-        const options_t& options={}) NOEXCEPT
-      : channel_http(log, socket, settings, identifier, options),
+        uint64_t identifier, const network::settings& settings,
+        const options_t& options) NOEXCEPT
+      : channel_http(log, socket, identifier, settings, options),
         ////distributor_(socket->strand()),
         tracker<channel_ws>(log)
     {

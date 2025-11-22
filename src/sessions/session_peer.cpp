@@ -219,12 +219,19 @@ channel::ptr session_peer::create_channel(const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Default message memory resource, override create_channel to replace.
-    static default_memory memory{};
+    // TODO: move settings() to [inbound], [outbound] and [manual] config.
+    channel_peer::options_t options{};
+    options.name = "inbound";
+    options.secure = false;
+    options.binds = settings().binds;
+    options.connections = settings().inbound_connections;
+    options.inactivity_minutes = settings().channel_inactivity_minutes;
+    options.expiration_minutes = settings().channel_expiration_minutes;
 
     // Channel id must be created using create_key().
-    return std::make_shared<channel_peer>(memory, log, socket, settings(),
-        create_key());
+    // Default message memory resource, override create_channel to replace.
+    return std::make_shared<channel_peer>(log, socket, create_key(),
+        settings(), options);
 }
 
 // Properties.

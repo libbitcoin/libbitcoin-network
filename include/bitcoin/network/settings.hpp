@@ -43,11 +43,13 @@ struct BCT_API settings
         bool secure{ false };
         config::authorities binds{};
         uint16_t connections{ 0 };
-        uint32_t timeout_seconds{ 60 };
+        uint32_t inactivity_minutes{ 10 };
+        uint32_t expiration_minutes{ 60 };
 
         /// Helpers.
-        virtual steady_clock::duration timeout() const NOEXCEPT;
         virtual bool enabled() const NOEXCEPT;
+        virtual steady_clock::duration inactivity() const NOEXCEPT;
+        virtual steady_clock::duration expiration() const NOEXCEPT;
     };
 
     struct http_server
@@ -138,8 +140,6 @@ struct BCT_API settings
     virtual steady_clock::duration channel_handshake() const NOEXCEPT;
     virtual steady_clock::duration channel_germination() const NOEXCEPT;
     virtual steady_clock::duration channel_heartbeat() const NOEXCEPT;
-    virtual steady_clock::duration channel_inactivity() const NOEXCEPT;
-    virtual steady_clock::duration channel_expiration() const NOEXCEPT;
     virtual steady_clock::duration maximum_skew() const NOEXCEPT;
     virtual size_t minimum_address_count() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;

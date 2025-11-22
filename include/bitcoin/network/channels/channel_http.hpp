@@ -41,6 +41,7 @@ public:
     typedef std::shared_ptr<channel_http> ptr;
     using options_t = settings::http_server;
     using interface = rpc::interface::http;
+    using dispatcher = rpc::dispatcher<interface>;
 
     /// Subscribe to request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
@@ -56,9 +57,9 @@ public:
     /// Uses peer config for timeouts if not specified via other construct.
     /// Construct client channel to encapsulate and communicate on the socket.
     inline channel_http(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier={},
-        const options_t& options={}) NOEXCEPT
-      : channel(log, socket, settings, identifier, options.timeout()),
+        uint64_t identifier, const network::settings& settings,
+        const options_t& options) NOEXCEPT
+      : channel(log, socket, identifier, settings, options),
         response_buffer_(system::to_shared<http::flat_buffer>()),
         request_buffer_(settings.minimum_buffer),
         dispatcher_(socket->strand()),
@@ -98,7 +99,7 @@ private:
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
-    rpc::dispatcher<interface> dispatcher_;
+    dispatcher dispatcher_;
     bool reading_{};
 };
 

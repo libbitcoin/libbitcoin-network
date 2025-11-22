@@ -34,7 +34,6 @@ using namespace messages::peer;
 static_assert(heading::maximum_payload(level::canonical, true) == 4'000'000);
 static_assert(heading::maximum_payload(level::canonical, false) == 1'800'003);
 
-// TODO: make witness support configurable.
 // Common default values (no settings context).
 settings::settings() NOEXCEPT
   : threads(1),
@@ -196,16 +195,6 @@ steady_clock::duration settings::channel_heartbeat() const NOEXCEPT
     return minutes(channel_heartbeat_minutes);
 }
 
-steady_clock::duration settings::channel_inactivity() const NOEXCEPT
-{
-    return minutes(channel_inactivity_minutes);
-}
-
-steady_clock::duration settings::channel_expiration() const NOEXCEPT
-{
-    return minutes(channel_expiration_minutes);
-}
-
 steady_clock::duration settings::maximum_skew() const NOEXCEPT
 {
     return minutes(maximum_skew_minutes);
@@ -276,14 +265,19 @@ settings::tcp_server::tcp_server(const std::string_view& logging_name) NOEXCEPT
 {
 }
 
-steady_clock::duration settings::tcp_server::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
 bool settings::tcp_server::enabled() const NOEXCEPT
 {
     return !binds.empty() && to_bool(connections);
+}
+
+steady_clock::duration settings::tcp_server::inactivity() const NOEXCEPT
+{
+    return minutes{ inactivity_minutes };
+}
+
+steady_clock::duration settings::tcp_server::expiration() const NOEXCEPT
+{
+    return minutes{ expiration_minutes };
 }
 
 // http_server

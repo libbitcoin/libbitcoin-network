@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/channels/channel.hpp>
 
-#include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -39,20 +38,17 @@ inline deadline::ptr make_timer(const logger& log, asio::strand& strand,
     const deadline::duration& span) NOEXCEPT
 {
     return to_bool(span.count()) ?
-        std::make_shared<deadline>(log, strand, span) : nullptr;
+        emplace_shared<deadline>(log, strand, span) : nullptr;
 }
 
 // Protocols invoke channel stop for application layer protocol violations.
 // Channels invoke channel stop for channel timouts and communcation failures.
 channel::channel(const logger& log, const socket::ptr& socket,
-    const network::settings& settings, uint64_t identifier,
-    const deadline::duration& inactivity,
-    const deadline::duration& expiration) NOEXCEPT
-  : proxy(socket),
-    settings_(settings),
-    identifier_(identifier),
-    inactivity_(make_timer(log, socket->strand(), inactivity)),
-    expiration_(make_timer(log, socket->strand(), expiration))
+    uint64_t identifier, const network::settings& settings,
+    const options_t& options) NOEXCEPT
+  : proxy(socket), settings_(settings), identifier_(identifier),
+    inactivity_(make_timer(log, socket->strand(), options.inactivity())),
+    expiration_(make_timer(log, socket->strand(), options.expiration()))
 {
 }
 

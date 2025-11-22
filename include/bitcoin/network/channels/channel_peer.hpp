@@ -39,6 +39,7 @@ class BCT_API channel_peer
 {
 public:
     typedef std::shared_ptr<channel_peer> ptr;
+    ////using options_t = settings::tcp_server;
     using interface = rpc::interface::peer;
     using dispatcher = rpc::dispatcher<interface>;
 
@@ -74,14 +75,23 @@ public:
             write({ ptr->data(), ptr->size() }, std::move(complete));
     }
 
+    ////settings.channel_inactivity()
+    ////system::pseudo_random::duration(settings.channel_expiration()))
+
     /// Construct a p2p channel to encapsulate and communicate on the socket.
-    inline channel_peer(memory& memory, const logger& log,
-        const socket::ptr& socket, const network::settings& settings,
-        uint64_t identifier={}) NOEXCEPT
-      : channel(log, socket, settings, identifier,
-          settings.channel_inactivity(),
-          system::pseudo_random::duration(settings.channel_expiration())),
-        allocator_(memory),
+    inline channel_peer(const logger& log, const socket::ptr& socket,
+        uint64_t identifier, const network::settings& settings,
+        const options_t& options) NOEXCEPT
+      : channel_peer(mallocator_, log, socket, identifier, settings, options)
+    {
+    }
+
+    /// Construct a p2p channel to encapsulate and communicate on the socket.
+    inline channel_peer(memory& allocator, const logger& log,
+        const socket::ptr& socket, uint64_t identifier,
+        const network::settings& settings, const options_t& options) NOEXCEPT
+      : channel(log, socket, identifier, settings, options),
+        allocator_(allocator),
         dispatcher_(socket->strand()),
         negotiated_version_(settings.protocol_maximum),
         tracker<channel_peer>(log)
@@ -137,8 +147,10 @@ private:
     void handle_send(const code& ec, size_t size, const system::chunk_cptr&,
         const result_handler& handler) NOEXCEPT;
 
-    // These are protected by strand/order.
+    // Only passes static member get_area(), so safe to use statically.
+    static default_memory mallocator_;
 
+    // These are protected by strand/order.
     memory& allocator_;
     dispatcher dispatcher_;
     uint32_t negotiated_version_;

@@ -517,22 +517,6 @@ BOOST_AUTO_TEST_CASE(settings__channel_heartbeat__always__channel_heartbeat_minu
     BOOST_REQUIRE(instance.channel_heartbeat() == minutes(expected));
 }
 
-BOOST_AUTO_TEST_CASE(settings__channel_inactivity__always__channel_inactivity_minutes)
-{
-    settings instance{};
-    const auto expected = 42u;
-    instance.channel_inactivity_minutes = expected;
-    BOOST_REQUIRE(instance.channel_inactivity() == minutes(expected));
-}
-
-BOOST_AUTO_TEST_CASE(settings__channel_expiration__always__channel_expiration_minutes)
-{
-    settings instance{};
-    constexpr auto expected = 42u;
-    instance.channel_expiration_minutes = expected;
-    BOOST_REQUIRE(instance.channel_expiration() == minutes(expected));
-}
-
 BOOST_AUTO_TEST_CASE(settings__maximum_skew__always__maximum_skew_minutes)
 {
     settings instance{};
@@ -846,8 +830,11 @@ BOOST_AUTO_TEST_CASE(client__tcp_server__defaults__expected)
     BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
+    BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
+    BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
     BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.inactivity() == minutes(10));
+    BOOST_REQUIRE(instance.expiration() == minutes(60));
 }
 
 BOOST_AUTO_TEST_CASE(client__http_server__defaults__expected)
@@ -859,8 +846,11 @@ BOOST_AUTO_TEST_CASE(client__http_server__defaults__expected)
     BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
+    BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
+    BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
     BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.inactivity() == minutes(10));
+    BOOST_REQUIRE(instance.expiration() == minutes(60));
 
     // http_server
     BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");

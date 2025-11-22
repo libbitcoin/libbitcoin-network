@@ -35,12 +35,12 @@ class BCT_API channel_tcp
 {
 public:
     typedef std::shared_ptr<channel_tcp> ptr;
-    using options_t = settings::tcp_server;
+    ////using options_t = settings::tcp_server;
 
     inline channel_tcp(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero,
-        const options_t& options={}) NOEXCEPT
-      : channel(log, socket, settings, identifier, options.timeout()),
+        uint64_t identifier, const network::settings& settings,
+        const options_t& options) NOEXCEPT
+      : channel(log, socket, identifier, settings, options),
         tracker<channel_tcp>(log)
     {
     }
