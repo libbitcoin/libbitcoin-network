@@ -36,7 +36,7 @@ class BCT_API channel_ws
 {
 public:
     typedef std::shared_ptr<channel_ws> ptr;
-    using options_t = settings::websocket_server;
+    using options_t = network::settings::websocket_server;
 
     /// Subscribe to messages post-upgrade (requires strand).
     /// Event handler is always invoked on the channel strand.

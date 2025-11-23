@@ -39,7 +39,7 @@ class BCT_API channel_http
 {
 public:
     typedef std::shared_ptr<channel_http> ptr;
-    using options_t = settings::http_server;
+    using options_t = network::settings::http_server;
     using interface = rpc::interface::http;
     using dispatcher = rpc::dispatcher<interface>;
 

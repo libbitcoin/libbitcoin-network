@@ -39,7 +39,7 @@ class BCT_API channel_peer
 {
 public:
     typedef std::shared_ptr<channel_peer> ptr;
-    ////using options_t = settings::tcp_server;
+    ////using options_t = network::settings::tcp_server;
     using interface = rpc::interface::peer;
     using dispatcher = rpc::dispatcher<interface>;
 

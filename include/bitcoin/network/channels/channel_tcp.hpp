@@ -35,7 +35,7 @@ class BCT_API channel_tcp
 {
 public:
     typedef std::shared_ptr<channel_tcp> ptr;
-    ////using options_t = settings::tcp_server;
+    ////using options_t = network::settings::tcp_server;
 
     inline channel_tcp(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const network::settings& settings,
