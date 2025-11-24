@@ -16,32 +16,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
+#ifndef LIBBITCOIN_NETWORK_RPC_INTERFACES_HPP
+#define LIBBITCOIN_NETWORK_RPC_INTERFACES_HPP
 
-#include <tuple>
-#include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/enums/grouping.hpp>
-#include <bitcoin/network/messages/rpc/method.hpp>
+#include <bitcoin/network/rpc/interfaces/bitcoind.hpp>
+#include <bitcoin/network/rpc/interfaces/electrum.hpp>
+#include <bitcoin/network/rpc/interfaces/explore.hpp>
+#include <bitcoin/network/rpc/interfaces/http.hpp>
+#include <bitcoin/network/rpc/interfaces/peer.hpp>
+#include <bitcoin/network/rpc/interfaces/stratum_v1.hpp>
+#include <bitcoin/network/rpc/interfaces/stratum_v2.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace rpc {
-    
-template <typename Methods, grouping Mode = grouping::either>
-struct publish
-  : public Methods
-{
-    using type = decltype(Methods::methods);
-    static constexpr auto size = std::tuple_size_v<type>;
-    static constexpr grouping mode = Mode;
-};
+namespace interface {
 
-template <auto& Methods, size_t Index>
-using method_at = std::tuple_element_t<Index,
-    std::remove_reference_t<decltype(Methods)>>;
+using bitcoind   = publish<bitcoind_methods>;
+using electrum   = publish<electrum_methods>;
+using explore    = publish<explore_methods>;
+using http       = publish<http_methods, grouping::positional>;
+using peer       = publish<peer_methods, grouping::positional>;
+using stratum_v1 = publish<stratum_v1_methods>;
+using stratum_v2 = publish<stratum_v2_methods>;
 
+} // namespace interface
 } // namespace rpc
 } // namespace network
 } // namespace libbitcoin

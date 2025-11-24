@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_STRATUM_V2_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_INTERFACES_STRATUM_V2_HPP
+#ifndef LIBBITCOIN_NETWORK_RPC_INTERFACES_STRATUM_V2_HPP
+#define LIBBITCOIN_NETWORK_RPC_INTERFACES_STRATUM_V2_HPP
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/publish.hpp>
+#include <bitcoin/network/rpc/publish.hpp>
 
 namespace libbitcoin {
 namespace network {

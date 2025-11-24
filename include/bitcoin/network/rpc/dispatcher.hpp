@@ -16,15 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_DISPATCHER_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_DISPATCHER_HPP
+#ifndef LIBBITCOIN_NETWORK_RPC_DISPATCHER_HPP
+#define LIBBITCOIN_NETWORK_RPC_DISPATCHER_HPP
 
 #include <tuple>
 #include <unordered_map>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/method.hpp>
-#include <bitcoin/network/messages/rpc/types.hpp>
+#include <bitcoin/network/rpc/method.hpp>
+#include <bitcoin/network/rpc/types.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -146,7 +146,7 @@ private:
 #define TEMPLATE template <typename Interface>
 #define CLASS dispatcher<Interface>
 
-#include <bitcoin/network/impl/messages/rpc/dispatcher.ipp>
+#include <bitcoin/network/impl/rpc/dispatcher.ipp>
 
 #undef CLASS
 #undef TEMPLATE

@@ -18,7 +18,7 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(method_tests)
+BOOST_AUTO_TEST_SUITE(http_method_tests)
 
 using namespace network::http::method;
 

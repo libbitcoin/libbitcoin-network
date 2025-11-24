@@ -216,12 +216,6 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\version.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\witness_tx_id_relay.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\any.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\dispatcher.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\method.cpp">
-      <ObjectFileName>$(IntDir)test_messages_rpc_method.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />
@@ -245,6 +239,12 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp" />
+    <ClCompile Include="..\..\..\..\test\rpc\any.cpp" />
+    <ClCompile Include="..\..\..\..\test\rpc\dispatcher.cpp" />
+    <ClCompile Include="..\..\..\..\test\rpc\method.cpp">
+      <ObjectFileName>$(IntDir)test_rpc_method.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\rpc\types.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_inbound.cpp" />

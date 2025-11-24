@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_VERSION_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_VERSION_HPP
+#ifndef LIBBITCOIN_NETWORK_RPC_ENUMS_GROUPING_HPP
+#define LIBBITCOIN_NETWORK_RPC_ENUMS_GROUPING_HPP
 
 #include <bitcoin/network/define.hpp>
 
@@ -25,23 +25,17 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// Enumeration of JSON-RPC protocol versions.
-enum class version
+/// Enumeration of rpc params configurations allowed by an interface.
+enum class grouping
 {
-    /// Undefined version (not set).
-    undefined,
+    /// The interface allows positional arguments only.
+    positional,
 
-    /// JSON-RPC 1.0 (bitcoin core).
-    v1,
+    /// The interface allows named arguments only.
+    named,
 
-    /// JSON-RPC 2.0 (electrum daemon, electrum protocol, stratum v1).
-    v2,
-
-    /// Determine the version from the jsonrpc element.
-    any,
-
-    /// The jsonrpc value is invalid.
-    invalid
+    /// The interface allows positional or named arguments.
+    either
 };
 
 } // namespace rpc

@@ -16,11 +16,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../../test.hpp"
+#include "../test.hpp"
 
 #include <tuple>
-
-BOOST_AUTO_TEST_SUITE(rpc_method_tests)
 
 using namespace rpc;
 
@@ -105,5 +103,3 @@ static_assert(is_same_type<names_t<method<"bar">>, std::array<std::string_view, 
 // tuple
 static_assert(is_same_type<names_t<std::tuple<bool, double>>, std::array<std::string_view, 2>>);
 static_assert(is_same_type<names_t<std::tuple<>>, std::array<std::string_view, 0>>);
-
-BOOST_AUTO_TEST_SUITE_END()

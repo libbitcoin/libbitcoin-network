@@ -16,9 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../../test.hpp"
-
-BOOST_AUTO_TEST_SUITE(rpc_types_tests)
+#include "../test.hpp"
 
 using namespace rpc;
 
@@ -282,5 +280,3 @@ static_assert( is_tagged<std::tuple<std::shared_ptr<int>, std::string, bool>>);
 
 static_assert(is_same_tuple<handler_args_t<std::function<void(code, bool)>>, std::tuple<bool>>);
 static_assert(is_same_tuple<handler_args_t<std::function<void(const code&, bool&&, const std::string&)>>, std::tuple<bool, std::string>>);
-
-BOOST_AUTO_TEST_SUITE_END()

@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
+#ifndef LIBBITCOIN_NETWORK_RPC_METHOD_HPP
+#define LIBBITCOIN_NETWORK_RPC_METHOD_HPP
 
 #include <tuple>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/types.hpp>
+#include <bitcoin/network/rpc/types.hpp>
 
 namespace libbitcoin {
 namespace network {

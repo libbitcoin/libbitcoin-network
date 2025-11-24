@@ -16,30 +16,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_GROUPING_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_GROUPING_HPP
+#ifndef LIBBITCOIN_NETWORK_RPC_RPC_HPP
+#define LIBBITCOIN_NETWORK_RPC_RPC_HPP
 
-#include <bitcoin/network/define.hpp>
-
-namespace libbitcoin {
-namespace network {
-namespace rpc {
-
-/// Enumeration of rpc params configurations allowed by an interface.
-enum class grouping
-{
-    /// The interface allows positional arguments only.
-    positional,
-
-    /// The interface allows named arguments only.
-    named,
-
-    /// The interface allows positional or named arguments.
-    either
-};
-
-} // namespace rpc
-} // namespace network
-} // namespace libbitcoin
+#include <bitcoin/network/rpc/any.hpp>
+#include <bitcoin/network/rpc/dispatcher.hpp>
+#include <bitcoin/network/rpc/enums/grouping.hpp>
+#include <bitcoin/network/rpc/enums/version.hpp>
+#include <bitcoin/network/rpc/interfaces/interfaces.hpp>
+#include <bitcoin/network/rpc/method.hpp>
+#include <bitcoin/network/rpc/model.hpp>
+#include <bitcoin/network/rpc/publish.hpp>
+#include <bitcoin/network/rpc/types.hpp>
 
 #endif
