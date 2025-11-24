@@ -40,7 +40,8 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_inbound::session_inbound(net& network, uint64_t identifier) NOEXCEPT
-  : session_peer(network, identifier), tracker<session_inbound>(network)
+  : session_peer(network, identifier, network.network_settings().inbound),
+    tracker<session_inbound>(network)
 {
 }
 
@@ -51,7 +52,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (!settings().inbound_enabled())
+    if (!settings().inbound.enabled())
     {
         LOGN("Not configured for inbound peer connections.");
         handler(error::success);
@@ -75,10 +76,10 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    LOGN("Accepting " << settings().inbound_connections << " peers on "
-        << settings().binds.size() << " bindings.");
+    LOGN("Accepting " << settings().inbound.connections << " peers on "
+        << settings().inbound.binds.size() << " bindings.");
 
-    for (const auto& bind: settings().binds)
+    for (const auto& bind: settings().inbound.binds)
     {
         const auto acceptor = create_acceptor();
 
@@ -157,7 +158,7 @@ void session_inbound::handle_accepted(const code& ec,
     }
 
     // Could instead stop listening when at limit, though this is simpler.
-    if (inbound_channel_count() >= settings().inbound_connections)
+    if (inbound_channel_count() >= settings().inbound.connections)
     {
         LOGS("Dropping oversubscribed peer [" << socket->authority() << "].");
         socket->stop();

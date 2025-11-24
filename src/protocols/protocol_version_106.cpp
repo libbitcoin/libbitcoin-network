@@ -110,8 +110,8 @@ messages::peer::version protocol_version_106::version_factory(
         {
             timestamp,
             maximum_services_,
-            settings().first_self().to_ip_address(),
-            settings().first_self().port(),
+            settings().inbound.first_self().to_ip_address(),
+            settings().inbound.first_self().port(),
         },
 
         nonce(),

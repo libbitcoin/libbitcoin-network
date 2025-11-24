@@ -44,7 +44,7 @@ protocol_seed_209::protocol_seed_209(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_peer(session, channel),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),
-        session->settings().channel_germination())),
+        session->settings().outbound.seeding_timeout())),
     tracker<protocol_seed_209>(session->log)
 {
 }
@@ -117,7 +117,7 @@ void protocol_seed_209::handle_send_get_address(const code& ec) NOEXCEPT
 address::cptr protocol_seed_209::filter(
     const address_items& items) const NOEXCEPT
 {
-    const size_t cap = settings().host_pool_capacity;
+    const size_t cap = settings().outbound.host_pool_capacity;
     const size_t gap = cap - address_count();
 
     // Take at least the gap or what we can get.
@@ -208,7 +208,7 @@ bool protocol_seed_209::handle_receive_get_address(const code& ec,
         return false;
 
     // Advertise self if configured for inbound and with self address(es).
-    if (settings().advertise_enabled())
+    if (settings().inbound.advertise())
     {
         SEND(selfs(), handle_send_address, _1);
         return true;

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/settings.hpp>
 
-#include <algorithm>
 #include <filesystem>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -31,232 +30,6 @@ namespace network {
 using namespace system;
 using namespace messages::peer;
 
-static_assert(heading::maximum_payload(level::canonical, true) == 4'000'000);
-static_assert(heading::maximum_payload(level::canonical, false) == 1'800'003);
-
-// Common default values (no settings context).
-settings::settings() NOEXCEPT
-  : threads(1),
-    address_upper(10),
-    address_lower(5),
-    protocol_maximum(level::maximum_protocol),
-    protocol_minimum(level::minimum_protocol),
-    services_maximum(service::maximum_services),
-    services_minimum(service::minimum_services),
-    invalid_services(176),
-    enable_address(false),
-    enable_address_v2(false),
-    enable_witness_tx(false),
-    enable_compact(false),
-    enable_alert(false),
-    enable_reject(false),
-    enable_relay(false),
-    enable_ipv6(false),
-    enable_loopback(false),
-    validate_checksum(false),
-    identifier(0),
-    inbound_connections(0),
-    outbound_connections(10),
-    connect_batch_size(5),
-    retry_timeout_seconds(1),
-    connect_timeout_seconds(5),
-    handshake_timeout_seconds(15),
-    seeding_timeout_seconds(30),
-    channel_heartbeat_minutes(5),
-    channel_inactivity_minutes(10),
-    channel_expiration_minutes(1440),
-    maximum_skew_minutes(120),
-    host_pool_capacity(0),
-    rate_limit(1024),
-    minimum_buffer(4'000'000),
-    user_agent(BC_USER_AGENT)
-{
-}
-
-// Use push_back due to initializer_list bug:
-// stackoverflow.com/a/20168627/1172329
-settings::settings(chain::selection context) NOEXCEPT
-  : settings()
-{
-    // Configure common deviations from defaults.
-    switch (context)
-    {
-        case chain::selection::mainnet:
-        {
-            identifier = 3652501241;
-            seeds.reserve(4);
-            seeds.emplace_back("mainnet1.libbitcoin.net", 8333_u16);
-            seeds.emplace_back("mainnet2.libbitcoin.net", 8333_u16);
-            seeds.emplace_back("mainnet3.libbitcoin.net", 8333_u16);
-            seeds.emplace_back("mainnet4.libbitcoin.net", 8333_u16);
-            binds.emplace_back(asio::address{}, 8333_u16);
-            break;
-        }
-
-        case chain::selection::testnet:
-        {
-            identifier = 118034699;
-            seeds.reserve(4);
-            seeds.emplace_back("testnet1.libbitcoin.net", 18333_u16);
-            seeds.emplace_back("testnet2.libbitcoin.net", 18333_u16);
-            seeds.emplace_back("testnet3.libbitcoin.net", 18333_u16);
-            seeds.emplace_back("testnet4.libbitcoin.net", 18333_u16);
-            binds.emplace_back(asio::address{}, 18333_u16);
-            break;
-        }
-
-        case chain::selection::regtest:
-        {
-            identifier = 3669344250;
-            binds.emplace_back(asio::address{}, 18444_u16);
-
-            // Regtest is private network only, so there is no seeding.
-            break;
-        }
-
-        default:
-        case chain::selection::none:
-        {
-        }
-    }
-}
-
-void settings::initialize() NOEXCEPT
-{
-    BC_ASSERT_MSG(friends.empty(), "friends not empty");
-
-    // Dynamic conversion of peers is O(N^2), so set on initialize.
-    // This converts endpoints to addresses, so will produce the default
-    // address for any hosts that are DNS names (i.e. not IP addresses).
-    friends = system::projection<network::config::authorities>(peers);
-}
-
-bool settings::witness_node() const NOEXCEPT
-{
-    return to_bool(services_minimum & service::node_witness);
-}
-
-bool settings::inbound_enabled() const NOEXCEPT
-{
-    return to_bool(inbound_connections) && !binds.empty();
-}
-
-bool settings::outbound_enabled() const NOEXCEPT
-{
-    return to_bool(outbound_connections)
-        && to_bool(host_pool_capacity)
-        && to_bool(connect_batch_size);
-}
-
-bool settings::advertise_enabled() const NOEXCEPT
-{
-    return inbound_enabled() && !selfs.empty();
-}
-
-size_t settings::maximum_payload() const NOEXCEPT
-{
-    return heading::maximum_payload(protocol_maximum,
-        to_bool(services_maximum & service::node_witness));
-}
-
-config::authority settings::first_self() const NOEXCEPT
-{
-    return selfs.empty() ? config::authority{} : selfs.front();
-}
-
-// Randomized from 50% to maximum milliseconds (specified in seconds).
-steady_clock::duration settings::retry_timeout() const NOEXCEPT
-{
-    const auto from = retry_timeout_seconds * 500_u64;
-    const auto to = retry_timeout_seconds * 1'000_u64;
-    return milliseconds{ system::pseudo_random::next(from, to) };
-}
-
-// Randomized from 50% to maximum milliseconds (specified in seconds).
-steady_clock::duration settings::connect_timeout() const NOEXCEPT
-{
-    const auto from = connect_timeout_seconds * 500_u64;
-    const auto to = connect_timeout_seconds * 1'000_u64;
-    return milliseconds{ system::pseudo_random::next(from, to) };
-}
-
-steady_clock::duration settings::channel_handshake() const NOEXCEPT
-{
-    return seconds(handshake_timeout_seconds);
-}
-
-steady_clock::duration settings::channel_germination() const NOEXCEPT
-{
-    return seconds(seeding_timeout_seconds);
-}
-
-steady_clock::duration settings::channel_heartbeat() const NOEXCEPT
-{
-    return minutes(channel_heartbeat_minutes);
-}
-
-steady_clock::duration settings::maximum_skew() const NOEXCEPT
-{
-    return minutes(maximum_skew_minutes);
-}
-
-size_t settings::minimum_address_count() const NOEXCEPT
-{
-    // Cannot overflow as long as both are uint16_t.
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return safe_multiply<size_t>(connect_batch_size, outbound_connections);
-    BC_POP_WARNING()
-}
-
-std::filesystem::path settings::file() const NOEXCEPT
-{
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return path / "hosts.cache";
-    BC_POP_WARNING()
-}
-
-bool settings::disabled(const address_item& item) const NOEXCEPT
-{
-    return !enable_ipv6 && config::is_v6(item.ip);
-}
-
-bool settings::insufficient(const address_item& item) const NOEXCEPT
-{
-    return (item.services & services_minimum) != services_minimum;
-}
-
-bool settings::unsupported(const address_item& item) const NOEXCEPT
-{
-    return to_bool(item.services & invalid_services);
-}
-
-bool settings::blacklisted(const address_item& item) const NOEXCEPT
-{
-    return contains(blacklists, item);
-}
-
-bool settings::whitelisted(const address_item& item) const NOEXCEPT
-{
-    return whitelists.empty() || contains(whitelists, item);
-}
-
-bool settings::peered(const address_item& item) const NOEXCEPT
-{
-    // Friends should be mapped from peers by initialize().
-    return contains(friends, item);
-}
-
-bool settings::excluded(const address_item& item) const NOEXCEPT
-{
-    return !is_specified(item)
-        || disabled(item)
-        || insufficient(item)
-        || unsupported(item)
-        || peered(item)
-        || blacklisted(item)
-        || !whitelisted(item);
-}
-
 // tcp_server
 // ----------------------------------------------------------------------------
 
@@ -267,7 +40,7 @@ settings::tcp_server::tcp_server(const std::string_view& logging_name) NOEXCEPT
 
 bool settings::tcp_server::enabled() const NOEXCEPT
 {
-    return !binds.empty() && to_bool(connections);
+    return to_bool(connections);
 }
 
 steady_clock::duration settings::tcp_server::inactivity() const NOEXCEPT
@@ -292,6 +65,179 @@ system::string_list settings::http_server::host_names() const NOEXCEPT
 
 // websocket_server
 // ----------------------------------------------------------------------------
+
+// [outbound]
+// ----------------------------------------------------------------------------
+
+bool settings::peer_outbound::enabled() const NOEXCEPT
+{
+    return settings::tcp_server::enabled()
+        && to_bool(host_pool_capacity)
+        && to_bool(connect_batch_size);
+}
+
+size_t settings::peer_outbound::minimum_address_count() const NOEXCEPT
+{
+    // Cannot overflow size_t as long as both are uint16_t.
+    return connect_batch_size * peer_outbound::connections;
+}
+
+steady_clock::duration settings::peer_outbound::seeding_timeout() const NOEXCEPT
+{
+    return seconds(seeding_timeout_seconds);
+}
+
+bool settings::peer_outbound::disabled(const address_item& item) const NOEXCEPT
+{
+    return !use_ipv6 && config::is_v6(item.ip);
+}
+
+// [inbound]
+// ----------------------------------------------------------------------------
+
+config::authority settings::peer_inbound::first_self() const NOEXCEPT
+{
+    return selfs.empty() ? config::authority{} : selfs.front();
+}
+
+bool settings::peer_inbound::advertise() const NOEXCEPT
+{
+    return enabled() && !selfs.empty();
+}
+
+bool settings::peer_inbound::enabled() const NOEXCEPT
+{
+    return settings::tcp_server::enabled() && !binds.empty();
+}
+
+// [manual]
+// ----------------------------------------------------------------------------
+
+void settings::peer_manual::initialize() NOEXCEPT
+{
+    BC_ASSERT_MSG(friends.empty(), "friends not empty");
+
+    // Dynamic conversion of peers is O(N^2), so set on initialize.
+    // This converts endpoints to addresses so will produce the default
+    // address for any hosts that are DNS names (i.e. not IP addresses).
+    friends = system::projection<network::config::authorities>(peers);
+}
+
+bool settings::peer_manual::peered(const address_item& item) const NOEXCEPT
+{
+    // Friends should be mapped from peers by initialize().
+    return contains(friends, item);
+}
+
+bool settings::peer_manual::enabled() const NOEXCEPT
+{
+    return settings::tcp_server::enabled() && !peers.empty();
+}
+
+// [network]
+// ----------------------------------------------------------------------------
+
+static_assert(heading::maximum_payload(level::canonical, true) == 4'000'000);
+static_assert(heading::maximum_payload(level::canonical, false) == 1'800'003);
+
+static uint32_t identifier_from_context(chain::selection context) NOEXCEPT
+{
+    switch (context)
+    {
+        case chain::selection::mainnet: return 3652501241;
+        case chain::selection::testnet: return 118034699;
+        case chain::selection::regtest: return 3669344250;
+        default: return 0;
+    }
+}
+
+settings::settings(chain::selection context) NOEXCEPT
+  : outbound{ context },
+    inbound{ context },
+    manual{ context },
+    identifier(identifier_from_context(context))
+{
+}
+
+bool settings::witness_node() const NOEXCEPT
+{
+    return to_bool(services_minimum & service::node_witness);
+}
+
+size_t settings::maximum_payload() const NOEXCEPT
+{
+    return heading::maximum_payload(protocol_maximum,
+        to_bool(services_maximum & service::node_witness));
+}
+
+// Randomized from 50% to maximum milliseconds (specified in seconds).
+steady_clock::duration settings::retry_timeout() const NOEXCEPT
+{
+    const auto from = retry_timeout_seconds * 500_u64;
+    const auto to = retry_timeout_seconds * 1'000_u64;
+    return milliseconds{ system::pseudo_random::next(from, to) };
+}
+
+// Randomized from 50% to maximum milliseconds (specified in seconds).
+steady_clock::duration settings::connect_timeout() const NOEXCEPT
+{
+    const auto from = connect_timeout_seconds * 500_u64;
+    const auto to = connect_timeout_seconds * 1'000_u64;
+    return milliseconds{ system::pseudo_random::next(from, to) };
+}
+
+steady_clock::duration settings::channel_handshake() const NOEXCEPT
+{
+    return seconds(handshake_timeout_seconds);
+}
+
+steady_clock::duration settings::channel_heartbeat() const NOEXCEPT
+{
+    return minutes(channel_heartbeat_minutes);
+}
+
+steady_clock::duration settings::maximum_skew() const NOEXCEPT
+{
+    return minutes(maximum_skew_minutes);
+}
+
+std::filesystem::path settings::file() const NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return path / "hosts.cache";
+    BC_POP_WARNING()
+}
+
+bool settings::insufficient(const address_item& item) const NOEXCEPT
+{
+    return (item.services & services_minimum) != services_minimum;
+}
+
+bool settings::unsupported(const address_item& item) const NOEXCEPT
+{
+    return to_bool(item.services & invalid_services);
+}
+
+bool settings::blacklisted(const address_item& item) const NOEXCEPT
+{
+    return contains(blacklists, item);
+}
+
+bool settings::whitelisted(const address_item& item) const NOEXCEPT
+{
+    return whitelists.empty() || contains(whitelists, item);
+}
+
+bool settings::excluded(const address_item& item) const NOEXCEPT
+{
+    return !is_specified(item)
+        || outbound.disabled(item)
+        || insufficient(item)
+        || unsupported(item)
+        || manual.peered(item)
+        || blacklisted(item)
+        || !whitelisted(item);
+}
 
 } // namespace network
 } // namespace libbitcoin

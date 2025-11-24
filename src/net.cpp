@@ -73,19 +73,22 @@ net::~net() NOEXCEPT
 
 acceptor::ptr net::create_acceptor() NOEXCEPT
 {
-    return std::make_shared<acceptor>(log, strand(), service(), settings_,
+    return emplace_shared<acceptor>(log, strand(), service(),
         accept_suspended_);
 }
 
 connector::ptr net::create_connector(bool seed) NOEXCEPT
 {
-    return std::make_shared<connector>(log, strand(), service(), settings_,
-        connect_suspended_, seed);
+    const auto timeout = seed ? settings_.outbound.seeding_timeout() :
+        settings_.connect_timeout();
+
+    return emplace_shared<connector>(log, strand(), service(), timeout,
+        connect_suspended_);
 }
 
 connectors_ptr net::create_connectors(size_t count) NOEXCEPT
 {
-    const auto connects = std::make_shared<connectors>();
+    const auto connects = to_shared<connectors>();
     connects->reserve(count);
 
     for (size_t connect{}; connect < count; ++connect)
@@ -159,7 +162,7 @@ void net::do_run(const result_handler& handler) NOEXCEPT
     }
 
     // Start manual connections.
-    for (const auto& peer: settings_.peers)
+    for (const auto& peer: settings_.manual.peers)
         do_connect(peer);
 
     // Start inbound connections.
@@ -572,7 +575,7 @@ bool net::store_nonce(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (settings_.enable_loopback || channel.inbound())
+    if (settings_.inbound.enable_loopback || channel.inbound())
         return true;
 
     if (!nonces_.insert(channel.nonce()).second)
@@ -588,7 +591,7 @@ bool net::unstore_nonce(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (settings_.enable_loopback || channel.inbound())
+    if (settings_.inbound.enable_loopback || channel.inbound())
         return true;
 
     if (!to_bool(nonces_.erase(channel.nonce())))
@@ -604,7 +607,7 @@ bool net::is_loopback(const channel_peer& channel) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (settings_.enable_loopback || !channel.inbound())
+    if (settings_.inbound.enable_loopback || !channel.inbound())
         return false;
 
     return to_bool(nonces_.count(channel.peer_version()->nonce));

@@ -321,12 +321,12 @@ BOOST_AUTO_TEST_CASE(net__start__outbound_connections_but_no_peers_no_seeds__see
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.seeds.clear();
-    BOOST_REQUIRE(set.peers.empty());
+    set.outbound.seeds.clear();
+    BOOST_REQUIRE(set.manual.peers.empty());
 
     net net(set, log);
-    BOOST_REQUIRE(net.network_settings().peers.empty());
-    BOOST_REQUIRE(net.network_settings().seeds.empty());
+    BOOST_REQUIRE(net.network_settings().manual.peers.empty());
+    BOOST_REQUIRE(net.network_settings().outbound.seeds.empty());
 
     std::promise<code> promise;
     const auto handler = [&](const code& ec) NOEXCEPT
@@ -359,13 +359,13 @@ BOOST_AUTO_TEST_CASE(net__run__started_no_outbound_connections__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 0;
-    set.seeds.clear();
-    BOOST_REQUIRE(set.peers.empty());
+    set.outbound.connections = 0;
+    set.outbound.seeds.clear();
+    BOOST_REQUIRE(set.manual.peers.empty());
 
     net net(set, log);
-    BOOST_REQUIRE(net.network_settings().peers.empty());
-    BOOST_REQUIRE(net.network_settings().seeds.empty());
+    BOOST_REQUIRE(net.network_settings().manual.peers.empty());
+    BOOST_REQUIRE(net.network_settings().outbound.seeds.empty());
 
     std::promise<code> promise_run;
     const auto run_handler = [&](const code& ec) NOEXCEPT
@@ -402,13 +402,13 @@ BOOST_AUTO_TEST_CASE(net__run__started_no_peers_no_seeds_one_connection_one_batc
 {
     const logger log{};
     mock_settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
+    BOOST_REQUIRE(set.manual.peers.empty());
 
     // This implies seeding would be required.
-    set.host_pool_capacity = 1;
+    set.outbound.host_pool_capacity = 1;
 
     // There are no seeds, so seeding would fail.
-    set.seeds.clear();
+    set.outbound.seeds.clear();
 
     // Cache one address to preclude seeding.
     set.path = TEST_NAME;
@@ -416,8 +416,8 @@ BOOST_AUTO_TEST_CASE(net__run__started_no_peers_no_seeds_one_connection_one_batc
     file << config::authority{ "1.2.3.4:42" } << std::endl;
 
     // Configure one connection with one batch.
-    set.connect_batch_size = 1;
-    set.outbound_connections = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
 
     net net(set, log);
 

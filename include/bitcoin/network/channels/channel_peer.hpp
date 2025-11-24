@@ -26,7 +26,6 @@
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
 #include <bitcoin/network/messages/rpc/rpc.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -39,7 +38,7 @@ class BCT_API channel_peer
 {
 public:
     typedef std::shared_ptr<channel_peer> ptr;
-    ////using options_t = network::settings::tcp_server;
+    ////using options_t = settings_t::tcp_server;
     using interface = rpc::interface::peer;
     using dispatcher = rpc::dispatcher<interface>;
 
@@ -80,7 +79,7 @@ public:
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.
     inline channel_peer(const logger& log, const socket::ptr& socket,
-        uint64_t identifier, const network::settings& settings,
+        uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
       : channel_peer(mallocator_, log, socket, identifier, settings, options)
     {
@@ -89,7 +88,7 @@ public:
     /// Construct a p2p channel to encapsulate and communicate on the socket.
     inline channel_peer(memory& allocator, const logger& log,
         const socket::ptr& socket, uint64_t identifier,
-        const network::settings& settings, const options_t& options) NOEXCEPT
+        const settings_t& settings, const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
         allocator_(allocator),
         dispatcher_(socket->strand()),

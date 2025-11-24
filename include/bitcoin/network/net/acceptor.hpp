@@ -48,8 +48,7 @@ public:
 
     /// Construct an instance.
     acceptor(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings,
-        std::atomic_bool& suspended) NOEXCEPT;
+        asio::io_context& service, std::atomic_bool& suspended) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~acceptor() NOEXCEPT;
@@ -57,9 +56,6 @@ public:
     // Start/stop.
     // ------------------------------------------------------------------------
     /// Starts return operation_failed if not stopped.
-
-    /// Start the listener on all interfaces on the specified port (call once).
-    virtual code start(uint16_t port) NOEXCEPT;
 
     /// Start the listener on the specified ip address and port (call once).
     virtual code start(const config::authority& local) NOEXCEPT;
@@ -85,7 +81,6 @@ protected:
     virtual code start(const asio::endpoint& point) NOEXCEPT;
 
     // These are thread safe.
-    const settings& settings_;
     asio::io_context& service_;
     asio::strand& strand_;
     std::atomic_bool& suspended_;

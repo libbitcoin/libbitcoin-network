@@ -24,7 +24,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/socket.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -35,10 +34,10 @@ class BCT_API channel_tcp
 {
 public:
     typedef std::shared_ptr<channel_tcp> ptr;
-    ////using options_t = network::settings::tcp_server;
+    ////using options_t = settings_t::tcp_server;
 
     inline channel_tcp(const logger& log, const socket::ptr& socket,
-        uint64_t identifier, const network::settings& settings,
+        uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
         tracker<channel_tcp>(log)

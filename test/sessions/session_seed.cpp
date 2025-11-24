@@ -228,10 +228,10 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(bool seed=false) NOEXCEPT override
+    connector::ptr create_connector(bool =false) NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings(), suspended_, seed)));
+            service(), network_settings().connect_timeout(), suspended_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -320,10 +320,10 @@ public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
 
     mock_connector_stop_connect(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings, bool seed,
+        asio::io_context& service, const settings& settings,
         mock_session_seed::ptr session) NOEXCEPT
-      : mock_connector_connect_success(log, strand, service, settings,
-          suspended_, seed),
+      : mock_connector_connect_success(log, strand, service,
+          settings.outbound.seeding_timeout(), suspended_),
         session_(session)
     {
     }
@@ -364,13 +364,13 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(bool seed=false) NOEXCEPT override
+    connector::ptr create_connector(bool =false) NOEXCEPT override
     {
         if (connector_)
             return connector_;
 
         return ((connector_ = std::make_shared<mock_connector_stop_connect>(
-            log, strand(), service(), network_settings(), seed, session_)));
+            log, strand(), service(), network_settings(), session_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -435,8 +435,8 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__started_sufficient__expected)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 1;
-    set.host_pool_capacity = 1;
+    set.outbound.connections = 1;
+    set.outbound.host_pool_capacity = 1;
     mock_net_stop_connect net(set, log);
     auto session = std::make_shared<mock_session_seed_increasing_address_count>(net, 1);
     net.set_session(session);
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__no_outbound__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 0;
+    set.outbound.connections = 0;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_seed>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -512,10 +512,10 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_one_address_count__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 1;
-    set.connect_batch_size = 1;
-    set.host_pool_capacity = 1;
-    BOOST_REQUIRE_EQUAL(set.minimum_address_count(), one);
+    set.outbound.connections = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.host_pool_capacity = 1;
+    BOOST_REQUIRE_EQUAL(set.outbound.minimum_address_count(), one);
 
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_seed_one_address_count>(net, 1);
@@ -538,8 +538,8 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_host_pool_capacity__seedin
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 1;
-    set.host_pool_capacity = 0;
+    set.outbound.connections = 1;
+    set.outbound.host_pool_capacity = 0;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_seed>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -561,9 +561,9 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_seeds__seeding_unsuccessfu
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 1;
-    set.host_pool_capacity = 1;
-    set.seeds.clear();
+    set.outbound.connections = 1;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.seeds.clear();
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_seed>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -585,11 +585,11 @@ BOOST_AUTO_TEST_CASE(session_seed__start__restart__operation_failed)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 1;
-    set.connect_batch_size = 1;
-    set.host_pool_capacity = 1;
-    set.seeds.resize(3);
-    BOOST_REQUIRE_EQUAL(set.minimum_address_count(), one);
+    set.outbound.connections = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.seeds.resize(3);
+    BOOST_REQUIRE_EQUAL(set.outbound.minimum_address_count(), one);
 
     mock_net<mock_connector_connect_fail> net(set, log);
     auto session = std::make_shared<mock_session_seed_increasing_address_count>(net, 1);
@@ -634,11 +634,11 @@ BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 1;
-    set.connect_batch_size = 1;
-    set.host_pool_capacity = 1;
-    set.seeds.resize(2);
-    BOOST_REQUIRE_EQUAL(set.minimum_address_count(), one);
+    set.outbound.connections = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.seeds.resize(2);
+    BOOST_REQUIRE_EQUAL(set.outbound.minimum_address_count(), one);
 
     mock_net<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_seed_increasing_address_count>(net, 1);
@@ -675,8 +675,8 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 1;
-    set.host_pool_capacity = 1;
+    set.outbound.connections = 1;
+    set.outbound.host_pool_capacity = 1;
     mock_net<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_seed>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -710,10 +710,10 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 ////{
 ////    const logger log{};
 ////    settings set(selection::mainnet);
-////    set.seeds.resize(1);
+////    set.outbound.seeds.resize(1);
 ////    set.seeding_timeout_seconds = 5;
-////    set.outbound_connections = 1;
-////    set.host_pool_capacity = 1;
+////    set.outbound.connections = 1;
+////    set.outbound.host_pool_capacity = 1;
 ////    mock_net<> net(set, log);
 ////    auto session = std::make_shared<session_seed>(net, 1);
 ////

@@ -43,7 +43,8 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_outbound::session_outbound(net& network, uint64_t identifier) NOEXCEPT
-  : session_peer(network, identifier), tracker<session_outbound>(network)
+  : session_peer(network, identifier, network.network_settings().inbound),
+    tracker<session_outbound>(network)
 {
 }
 
@@ -54,7 +55,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (!settings().outbound_enabled())
+    if (!settings().outbound.enabled())
     {
         LOGN("Not configured for outbound connections.");
         handler(error::success);
@@ -91,9 +92,9 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
-    const auto peers = settings().outbound_connections;
+    const auto peers = settings().outbound.connections;
 
-    LOG_ONLY(const auto batch = settings().connect_batch_size;)
+    LOG_ONLY(const auto batch = settings().outbound.connect_batch_size;)
     LOGN("Create " << peers << " connections " << batch << " at a time.");
 
     // There is currently no way to vary the number of connections at runtime.
@@ -117,7 +118,8 @@ void session_outbound::start_connect(const code&) NOEXCEPT
         return;
 
     // Create a set of connectors for batched stop.
-    const auto connectors = create_connectors(settings().connect_batch_size);
+    const auto connectors = create_connectors(
+        settings().outbound.connect_batch_size);
 
     // Subscribe connector set to stop desubscriber.
     const auto key = subscribe_stop([=](const code&) NOEXCEPT
@@ -278,7 +280,7 @@ void session_outbound::handle_channel_stop(const code& ec,
 inline bool session_outbound::maybe_reclaim(const code& ec) const NOEXCEPT
 {
     // Bypass if host pool is full (don't allow these to evict others).
-    if (address_count() >= settings().host_pool_capacity)
+    if (address_count() >= settings().outbound.host_pool_capacity)
         return false;
 
     // Failures that might work later (timeouts can drain pool).

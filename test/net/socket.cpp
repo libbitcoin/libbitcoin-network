@@ -48,11 +48,6 @@ class acceptor_accessor
 public:
     using acceptor::acceptor;
 
-    const settings& get_settings() const NOEXCEPT
-    {
-        return settings_;
-    }
-
     const asio::io_context& get_service() const NOEXCEPT
     {
         return service_;

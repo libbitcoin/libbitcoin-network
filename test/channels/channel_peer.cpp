@@ -53,7 +53,7 @@ private:
     mutable std::promise<code> stopped_;
 };
 
-const channel_peer::options_t options{};
+const channel_peer::options_t options{ "test" };
 
 BOOST_AUTO_TEST_CASE(channel_peer__stopped__default__false)
 {

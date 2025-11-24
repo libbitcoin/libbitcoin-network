@@ -42,7 +42,8 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_seed::session_seed(net& network, uint64_t identifier) NOEXCEPT
-  : session_peer(network, identifier), tracker<session_seed>(network)
+  : session_peer(network, identifier, network.network_settings().outbound),
+    tracker<session_seed>(network)
 {
 }
 
@@ -55,8 +56,8 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 
     // Seeding is allowed even with !enable_address configured.
 
-    if (is_zero(settings().outbound_connections) ||
-        is_zero(settings().connect_batch_size))
+    if (is_zero(settings().outbound.connections) ||
+        is_zero(settings().outbound.connect_batch_size))
     {
         LOGN("Bypassed seeding because outbound connections disabled.");
         handler(error::success);
@@ -64,17 +65,17 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    if (address_count() >= settings().minimum_address_count())
+    if (address_count() >= settings().outbound.minimum_address_count())
     {
-        LOGN("Bypassed seeding because of sufficient ("
-            << address_count() << " of " << settings().minimum_address_count()
+        LOGN("Bypassed seeding because of sufficient (" << address_count()
+            << " of " << settings().outbound.minimum_address_count()
             << ") address quantity.");
         handler(error::success);
         unsubscribe_close();
         return;
     }
 
-    if (is_zero(settings().host_pool_capacity))
+    if (is_zero(settings().outbound.host_pool_capacity))
     {
         LOGN("Cannot seed because no address pool capacity configured.");
         handler(error::seeding_unsuccessful);
@@ -82,7 +83,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    if (settings().seeds.empty())
+    if (settings().outbound.seeds.empty())
     {
         LOGN("Cannot seed because no seeds configured");
         handler(error::seeding_unsuccessful);
@@ -105,8 +106,8 @@ void session_seed::handle_started(const code& ec,
         return;
     }
 
-    const auto seeds = settings().seeds.size();
-    const auto required = settings().minimum_address_count();
+    const auto seeds = settings().outbound.seeds.size();
+    const auto required = settings().outbound.minimum_address_count();
 
     LOGN("Seeding because of insufficient ("
         << address_count() << " of " << required << ") address quantity.");
@@ -119,7 +120,7 @@ void session_seed::handle_started(const code& ec,
     // Invoke sufficient on count, invoke complete with all seeds stopped.
     racer->start(move_copy(handler), BIND(stop_seed, _1));
 
-    for (const auto& seed: settings().seeds)
+    for (const auto& seed: settings().outbound.seeds)
     {
         const auto connector = create_connector(true);
         subscribe_stop([=](const code&) NOEXCEPT

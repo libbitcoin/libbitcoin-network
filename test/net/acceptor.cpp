@@ -26,11 +26,6 @@ class accessor
 public:
     using acceptor::acceptor;
 
-    const settings& get_settings() const NOEXCEPT
-    {
-        return settings_;
-    }
-
     const asio::io_context& get_service() const NOEXCEPT
     {
         return service_;
@@ -60,10 +55,8 @@ BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
     threadpool pool(1);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    const settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended);
 
-    BOOST_REQUIRE(&instance->get_settings() == &set);
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
     BOOST_REQUIRE(!instance->get_acceptor().is_open());
@@ -77,11 +70,10 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     threadpool pool(1);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    const settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended);
 
     // Result codes inconsistent due to context.
-    instance->start(42);
+    instance->start(messages::peer::address_item{ 0, 0, 0, 42 });
 
     boost::asio::post(strand, [instance]() NOEXCEPT
     {
@@ -101,11 +93,10 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_stopped_or_suspen
     threadpool pool(2);
     std::atomic_bool suspended{ true };
     asio::strand strand(pool.service().get_executor());
-    settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended);
 
     // Result codes inconsistent due to context.
-    instance->start(42);
+    instance->start(messages::peer::address_item{ 0, 0, 0, 42 });
 
     std::pair<code, socket::ptr>  result{};
     boost::asio::post(strand, [&, instance]() NOEXCEPT
@@ -134,11 +125,10 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended);
 
     // Result codes inconsistent due to context.
-    instance->start(42);
+    instance->start(messages::peer::address_item{ 0, 0, 0, 42 });
 
     std::pair<code, socket::ptr>  result{};
     boost::asio::post(strand, [&, instance]() NOEXCEPT

@@ -56,7 +56,7 @@ void protocol_address_out_209::start() NOEXCEPT
         return;
 
     // Advertise self if configured for inbound and with self address(es).
-    if (settings().advertise_enabled())
+    if (settings().inbound.advertise())
     {
         SEND(selfs(), handle_send, _1);
     }

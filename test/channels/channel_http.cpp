@@ -54,7 +54,7 @@ private:
 };
 
 using namespace http;
-const channel_http::options_t options{};
+const channel_http::options_t options{ "test" };
 
 BOOST_AUTO_TEST_CASE(channel_http__stopped__default__false)
 {

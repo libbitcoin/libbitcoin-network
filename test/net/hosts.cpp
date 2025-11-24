@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     hosts instance(set, log);
-    BOOST_REQUIRE_EQUAL(set.host_pool_capacity, 0u);
+    BOOST_REQUIRE_EQUAL(set.outbound.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
 }
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE(!test::exists(TEST_NAME));
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__success)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
 
     // Not idempotent start.
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__populated_file__expected)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance1(set, log);
 
     // File is deleted if empty on open.
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__populated_file__expected)
 
     // Start with existing file and read entries.
     hosts instance2(set, log);
-    set.enable_ipv6 = true;
+    set.outbound.use_ipv6 = true;
     BOOST_REQUIRE_EQUAL(instance2.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance2.count(), 3u);
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
 
     // Idempotent stop.
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__enabled_started__success)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
 
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__stopped__service_stopped_empty)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     std::promise<code> promise{};
     instance.restore(system::to_shared(unspecified00), [&](const code& ec) NOEXCEPT
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__unique__accepted)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__duplicate_authority__updated)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__three_unique__three)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__redundant__expected)
     const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
+    set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);

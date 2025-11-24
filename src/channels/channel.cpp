@@ -23,7 +23,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/proxy.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -44,7 +43,7 @@ inline deadline::ptr make_timer(const logger& log, asio::strand& strand,
 // Protocols invoke channel stop for application layer protocol violations.
 // Channels invoke channel stop for channel timouts and communcation failures.
 channel::channel(const logger& log, const socket::ptr& socket,
-    uint64_t identifier, const network::settings& settings,
+    uint64_t identifier, const settings_t& settings,
     const options_t& options) NOEXCEPT
   : proxy(socket), settings_(settings), identifier_(identifier),
     inactivity_(make_timer(log, socket->strand(), options.inactivity())),

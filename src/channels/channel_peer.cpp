@@ -30,7 +30,6 @@
 #include <bitcoin/network/messages/peer/peer.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/proxy.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
