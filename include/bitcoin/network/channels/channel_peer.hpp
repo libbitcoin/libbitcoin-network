@@ -74,9 +74,6 @@ public:
             write({ ptr->data(), ptr->size() }, std::move(complete));
     }
 
-    ////settings.channel_inactivity()
-    ////system::pseudo_random::duration(settings.channel_expiration()))
-
     /// Construct a p2p channel to encapsulate and communicate on the socket.
     inline channel_peer(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
