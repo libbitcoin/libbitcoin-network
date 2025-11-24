@@ -30,7 +30,12 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// Not thread safe.
+/// Dispatches notifications to subscriber(s) of the method signature implied
+/// by request. Subscribers and dispatch functors are fully defined at compile
+/// time by the Interface template argument. The request_t parameter is the
+/// request side of the rpc model. Requests are run-time generated (i.e. from
+/// deserialization) and the request implies a signature that must match that
+/// of one subscriber. Otherwise an error is returned from notify(request).
 template <typename Interface>
 class dispatcher
 {

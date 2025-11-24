@@ -28,6 +28,9 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
+/// Type helpers required by dispatcher.
+/// ---------------------------------------------------------------------------
+
 /// optional<>
 /// ---------------------------------------------------------------------------
 

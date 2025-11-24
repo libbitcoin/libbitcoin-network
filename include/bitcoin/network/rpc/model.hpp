@@ -31,6 +31,10 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
+/// This is a document object model for extended json-rpc.
+/// Extensions consist of int#_t, uint#_t, and any_t types.
+/// any_t accepts shared_ptr<T> and exposes shared_ptr<T> via dispatcher<>.
+
 /// Forward declaration for array_t/object_t. 
 struct value_t;
 

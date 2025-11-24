@@ -28,7 +28,9 @@
 namespace libbitcoin {
 namespace network {
 namespace rpc {
-    
+
+/// Methods are a std::tuple of rpc::method<name, args>.
+/// Defines a published interface for use with rpc::dispatcher<>.
 template <typename Methods, grouping Mode = grouping::either>
 struct publish
   : public Methods
