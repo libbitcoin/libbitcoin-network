@@ -84,7 +84,7 @@ address protocol_peer::selfs() const NOEXCEPT
 {
     const auto time_now = unix_time();
     const auto services = settings().services_maximum;
-    const auto& selfs = settings().selfs;
+    const auto& selfs = settings().inbound.selfs;
 
     address message{};
     message.addresses.reserve(selfs.size());

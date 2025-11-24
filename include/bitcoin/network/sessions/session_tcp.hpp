@@ -33,16 +33,16 @@ namespace network {
 class net;
 
 /// This is nearly identical to session_inbound (peer).
-/// The difference is handshake and protocol attamchment. Otherwise that class
+/// The difference is handshake and protocol attachment. Otherwise that class
 /// could be replaced by this one. However that also derives from session_peer
-/// which we don't wnat in downstream client-server sessions. So for now they
+/// which we don't want in downstream client-server sessions. So for now they
 /// are just very redundant.
 class BCT_API session_tcp
   : public session
 {
 public:
     typedef std::shared_ptr<session_tcp> ptr;
-    using options_t = settings::tcp_server;
+    using options_t = network::settings::tcp_server;
 
     /// Start accepting connections as configured (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;

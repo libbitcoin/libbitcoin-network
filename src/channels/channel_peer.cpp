@@ -30,7 +30,6 @@
 #include <bitcoin/network/messages/peer/peer.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/proxy.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -43,6 +42,8 @@ using namespace std::placeholders;
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+default_memory channel_peer::mallocator_ = default_memory{};
 
 // Start/stop/resume (started upon create).
 // ----------------------------------------------------------------------------

@@ -288,49 +288,49 @@ BOOST_AUTO_TEST_CASE(fields__to_websocket_accept__short_key__valid_output)
 {
     fields header{};
     header.set(field::sec_websocket_key, "abc");
-    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28);
+    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28u);
 }
 
 BOOST_AUTO_TEST_CASE(fields__to_websocket_accept__long_key__valid_output)
 {
     fields header{};
     header.set(field::sec_websocket_key, std::string(100, 'a'));
-    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28);
+    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28u);
 }
 
 BOOST_AUTO_TEST_CASE(fields__to_websocket_accept__all_zeros_key__valid_output)
 {
     fields header{};
     header.set(field::sec_websocket_key, std::string(24, '\0'));
-    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28);
+    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28u);
 }
 
 BOOST_AUTO_TEST_CASE(fields__to_websocket_accept__invalid_base64_key__valid_output)
 {
     fields header{};
     header.set(field::sec_websocket_key, "invalid!base64");
-    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28);
+    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28u);
 }
 
 BOOST_AUTO_TEST_CASE(fields__to_websocket_accept__uppercase_key__valid_output)
 {
     fields header{};
     header.set(field::sec_websocket_key, "ABC123");
-    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28);
+    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28u);
 }
 
 BOOST_AUTO_TEST_CASE(fields__to_websocket_accept__minimal_key__valid_output)
 {
     fields header{};
     header.set(field::sec_websocket_key, "dGhl");
-    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28);
+    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28u);
 }
 
 BOOST_AUTO_TEST_CASE(fields__to_websocket_accept__max_key_length__valid_output)
 {
     fields header{};
     header.set(field::sec_websocket_key, std::string(128, 'a'));
-    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28);
+    BOOST_REQUIRE_EQUAL(to_websocket_accept(header).length(), 28u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

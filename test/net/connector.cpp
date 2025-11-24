@@ -26,11 +26,6 @@ class accessor
 public:
     using connector::connector;
 
-    const settings& get_settings() const NOEXCEPT
-    {
-        return settings_;
-    }
-
     const asio::io_context& get_service() const NOEXCEPT
     {
         return service_;
@@ -59,26 +54,13 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
     threadpool pool(1);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    const settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), seconds(10), suspended);
 
-    BOOST_REQUIRE(&instance->get_settings() == &set);
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
     BOOST_REQUIRE(instance->get_timer());
     BOOST_REQUIRE(instance->get_stopped());
 }
-
-class tiny_timeout
-  : public settings
-{
-    using settings::settings;
-
-    steady_clock::duration connect_timeout() const NOEXCEPT override
-    {
-        return microseconds(1);
-    }
-};
 
 BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address_suspended__service_suspended)
 {
@@ -87,8 +69,7 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address_suspended__servic
     threadpool pool(2);
     std::atomic_bool suspended{ true };
     asio::strand strand(pool.service().get_executor());
-    const tiny_timeout set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), microseconds(1), suspended);
     auto result = true;
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -117,8 +98,7 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeou
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    const tiny_timeout set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), microseconds(1), suspended);
     auto result = true;
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -148,8 +128,7 @@ BOOST_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_ti
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    const tiny_timeout set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), microseconds(1), suspended);
     auto result = true;
 
     boost::asio::post(strand, [&, instance]() NOEXCEPT
@@ -179,8 +158,7 @@ BOOST_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    const tiny_timeout set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), microseconds(1), suspended);
     auto result = true;
 
     boost::asio::post(strand, [&, instance]() NOEXCEPT
@@ -208,9 +186,7 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_can
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    settings set(bc::system::chain::selection::mainnet);
-    set.connect_timeout_seconds = 1000;
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), seconds(1000), suspended);
     auto result = true;
 
     boost::asio::post(strand, [&, instance]()NOEXCEPT
@@ -239,9 +215,7 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    settings set(bc::system::chain::selection::mainnet);
-    set.connect_timeout_seconds = 1000;
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), seconds(1000), suspended);
     auto result = true;
 
     boost::asio::post(strand, [&, instance]() NOEXCEPT

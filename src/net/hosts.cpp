@@ -35,7 +35,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 hosts::hosts(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
-    buffer_(settings.host_pool_capacity),
+    buffer_(settings.outbound.host_pool_capacity),
     reporter(log)
 {
 }
@@ -286,7 +286,7 @@ inline void hosts::push(const std::string& line) NOEXCEPT
         {
             LOGF("Address unspecified upon load [" << line << "].");
         }
-        else if (settings_.disabled(item))
+        else if (settings_.outbound.disabled(item))
         {
             // IPv6 addresses saved and loaded with IPv6 disabled.
             ////LOGF("Address disabled upon load [" << line << "].");
@@ -299,7 +299,7 @@ inline void hosts::push(const std::string& line) NOEXCEPT
         {
             LOGF("Address unsupported upon load [" << line << "].");
         }
-        else if (settings_.peered(item))
+        else if (settings_.manual.peered(item))
         {
             LOGF("Address peered upon load [" << line << "].");
         }

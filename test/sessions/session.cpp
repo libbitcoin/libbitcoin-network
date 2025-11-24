@@ -94,7 +94,7 @@ class mock_session
 {
 public:
     mock_session(net& network, size_t key) NOEXCEPT
-      : session_peer(network, key)
+      : session_peer(network, key, session_peer::options_t{ "test" })
     {
     }
 
@@ -585,6 +585,8 @@ BOOST_AUTO_TEST_CASE(session__start__stop__success)
 
 // channel sequence
 
+const mock_channel::options_t options{ "test" };
+
 BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_service_stopped_channel_service_stopped_not_pent_or_stored)
 {
     default_memory memory{};
@@ -595,7 +597,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     BOOST_REQUIRE(session->stopped());
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service());
-    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, session->settings(), 42);
+    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->settings(), options);
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -651,7 +653,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service());
-    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, session->settings(), 42);
+    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->settings(), options);
 
     // Stop the channel (started by default).
     std::promise<bool> unstarted_channel;
@@ -714,7 +716,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     default_memory memory{};
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 0;
+    set.outbound.host_pool_capacity = 0;
     mock_net net(set, log);
     auto session = std::make_shared<mock_session>(net, 1);
 
@@ -741,7 +743,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service());
-    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, session->settings(), 42);
+    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->settings(), options);
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -795,7 +797,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     default_memory memory{};
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 0;
+    set.outbound.host_pool_capacity = 0;
     mock_net net(set, log);
 
     auto session = std::make_shared<mock_session>(net, 1);
@@ -823,7 +825,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service());
-    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, session->settings(), 42);
+    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->settings(), options);
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -879,7 +881,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     default_memory memory{};
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 0;
+    set.outbound.host_pool_capacity = 0;
     mock_net net(set, log);
 
     auto session = std::make_shared<mock_session>(net, 1);
@@ -907,7 +909,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service());
-    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, session->settings(), 42);
+    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->settings(), options);
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;

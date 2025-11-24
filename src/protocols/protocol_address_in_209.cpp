@@ -75,7 +75,7 @@ void protocol_address_in_209::start() NOEXCEPT
 address::cptr protocol_address_in_209::filter(
     const address_items& items) const NOEXCEPT
 {
-    const size_t cap = settings().host_pool_capacity;
+    const size_t cap = settings().outbound.host_pool_capacity;
     const size_t gap = cap - address_count();
 
     // Take at least the gap or what we can get.

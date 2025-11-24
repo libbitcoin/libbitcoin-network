@@ -57,8 +57,8 @@ class mock_acceptor
 {
 public:
     mock_acceptor(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings) NOEXCEPT
-      : acceptor(log, strand, service, settings, suspended_),
+        asio::io_context& service) NOEXCEPT
+      : acceptor(log, strand, service, suspended_),
         stopped_(false), port_(0)
     {
     }
@@ -73,13 +73,6 @@ public:
     bool stopped() const NOEXCEPT
     {
         return stopped_;
-    }
-
-    // Capture port.
-    code start(uint16_t port) NOEXCEPT override
-    {
-        port_ = port;
-        return error::success;
     }
 
     // Capture port.
@@ -121,7 +114,7 @@ class mock_connector
 public:
     mock_connector(const logger& log, asio::strand& strand,
         asio::io_context& service, const settings& settings) NOEXCEPT
-      : connector(log, strand, service, settings, suspended_),
+      : connector(log, strand, service, settings.connect_timeout(), suspended_),
         stopped_(false)
     {
     }
@@ -161,8 +154,7 @@ public:
     // Create mock acceptor to inject mock channel.
     acceptor::ptr create_acceptor() NOEXCEPT override
     {
-        return std::make_shared<mock_acceptor>(log, strand(), service(),
-            network_settings());
+        return std::make_shared<mock_acceptor>(log, strand(), service());
     }
 
     // Create mock connector to inject mock channel.

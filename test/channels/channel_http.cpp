@@ -54,20 +54,21 @@ private:
 };
 
 using namespace http;
+const channel_http::options_t options{ "test" };
 
 BOOST_AUTO_TEST_CASE(channel_http__stopped__default__false)
 {
-    constexpr auto expected_identifier = 42u;
+    constexpr auto expected = 42u;
     const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, expected_identifier);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, expected, set, options);
     BOOST_REQUIRE(!channel_ptr->stopped());
 
     BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);
-    BOOST_REQUIRE_EQUAL(channel_ptr->identifier(), expected_identifier);
+    BOOST_REQUIRE_EQUAL(channel_ptr->identifier(), expected);
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
@@ -81,7 +82,7 @@ BOOST_AUTO_TEST_CASE(channel_http__properties__default__expected)
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, set, options);
 
     BOOST_REQUIRE(!channel_ptr->address());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
@@ -98,7 +99,7 @@ BOOST_AUTO_TEST_CASE(channel_http__subscribe_message__subscribed__expected)
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, set, options);
     constexpr auto expected_ec = error::invalid_magic;
 
     auto result = true;
@@ -136,7 +137,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stop__all_subscribed__expected)
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, 42, set, options);
     constexpr auto expected_ec = error::invalid_magic;
 
     std::promise<bool> subscribed{};
@@ -195,7 +196,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected__expected)
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, set, options);
 
     auto result = true;
     std::promise<code> promise;
@@ -227,7 +228,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected_move__expected)
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, set, options);
 
     auto result = true;
     std::promise<code> promise;
@@ -258,7 +259,7 @@ BOOST_AUTO_TEST_CASE(channel_http__paused__resume_after_read_fail__true)
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, 42, set, options);
 
     std::promise<bool> paused_after_resume;
     boost::asio::post(channel_ptr->strand(), [=, &paused_after_resume]() NOEXCEPT

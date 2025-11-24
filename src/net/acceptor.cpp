@@ -43,10 +43,8 @@ using namespace std::placeholders;
 // Calls are stranded to protect the acceptor member.
 
 acceptor::acceptor(const logger& log, asio::strand& strand,
-    asio::io_context& service, const settings& settings,
-    std::atomic_bool& suspended) NOEXCEPT
-  : settings_(settings),
-    service_(service),
+    asio::io_context& service, std::atomic_bool& suspended) NOEXCEPT
+  : service_(service),
     strand_(strand),
     suspended_(suspended),
     acceptor_(strand_),
@@ -63,13 +61,6 @@ acceptor::~acceptor() NOEXCEPT
 
 // Start/stop.
 // ----------------------------------------------------------------------------
-
-code acceptor::start(uint16_t port) NOEXCEPT
-{
-    const auto ipv6 = settings_.enable_ipv6;
-    const auto protocol = ipv6 ? asio::tcp::v6() : asio::tcp::v4();
-    return start({ protocol, port });
-}
 
 code acceptor::start(const config::authority& local) NOEXCEPT
 {

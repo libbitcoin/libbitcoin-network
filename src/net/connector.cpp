@@ -43,15 +43,13 @@ using namespace std::placeholders;
 // seed timeout uses same timer for connect, handshake and completion.
 
 connector::connector(const logger& log, asio::strand& strand,
-    asio::io_context& service, const settings& settings,
-    std::atomic_bool& suspended, bool seed) NOEXCEPT
-  : settings_(settings),
-    service_(service),
+    asio::io_context& service, const steady_clock::duration& timeout,
+    std::atomic_bool& suspended) NOEXCEPT
+  : service_(service),
     strand_(strand),
     suspended_(suspended),
     resolver_(strand),
-    timer_(emplace_shared<deadline>(log, strand, seed ? 
-        settings.channel_germination() : settings.connect_timeout())),
+    timer_(emplace_shared<deadline>(log, strand, timeout)),
     reporter(log),
     tracker<connector>(log)
 {

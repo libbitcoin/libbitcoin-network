@@ -236,10 +236,10 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(bool seed=false) NOEXCEPT override
+    connector::ptr create_connector(bool =false) NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings(), suspended_, seed)));
+            service(), network_settings().connect_timeout(), suspended_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -305,10 +305,10 @@ public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
 
     mock_connector_stop_connect(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings, bool seed,
+        asio::io_context& service, const settings& settings,
         mock_session_outbound::ptr session) NOEXCEPT
-      : mock_connector_connect_success(log, strand, service, settings,
-          suspended_, seed),
+      : mock_connector_connect_success(log, strand, service,
+          settings.connect_timeout(), suspended_),
         session_(session)
     {
     }
@@ -349,13 +349,13 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(bool seed=false) NOEXCEPT override
+    connector::ptr create_connector(bool =false) NOEXCEPT override
     {
         if (connector_)
             return connector_;
 
         return ((connector_ = std::make_shared<mock_connector_stop_connect>(
-            log, strand(), service(), network_settings(), seed, session_)));
+            log, strand(), service(), network_settings(), session_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -420,9 +420,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 1;
-    set.connect_batch_size = 1;
-    set.outbound_connections = 1;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -476,8 +476,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.outbound_connections = 0;
-    set.host_pool_capacity = 1;
+    set.outbound.connections = 0;
+    set.outbound.host_pool_capacity = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -520,8 +520,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 1;
-    set.connect_batch_size = 0;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.connect_batch_size = 0;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_foun
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 1;
+    set.outbound.host_pool_capacity = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -566,9 +566,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 1;
-    set.connect_batch_size = 1;
-    set.outbound_connections = 1;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -613,9 +613,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 1;
-    set.connect_batch_size = 3;
-    set.outbound_connections = 3;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.connect_batch_size = 3;
+    set.outbound.connections = 3;
     set.connect_timeout_seconds = 10000;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net, 1);
@@ -650,13 +650,13 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 1;
-    set.connect_batch_size = 2;
-    set.outbound_connections = 2;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.connect_batch_size = 2;
+    set.outbound.connections = 2;
     set.connect_timeout_seconds = 10000;
 
-    // Prevent default address from being rejected by enable_ipv6 false.
-    set.enable_ipv6 = true;
+    // Prevent default address from being rejected by use_ipv6 false.
+    set.outbound.use_ipv6 = true;
 
     // This invokes session.stop from within start_connect and then continues.
     // First channel is stopped for service_stopped and others for channel_dropped.
@@ -683,13 +683,13 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    set.host_pool_capacity = 1;
-    set.connect_batch_size = 1;
-    set.outbound_connections = 1;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
     set.connect_timeout_seconds = 10000;
 
-    // Prevent default address from being rejected by enable_ipv6 false.
-    set.enable_ipv6 = true;
+    // Prevent default address from being rejected by use_ipv6 false.
+    set.outbound.use_ipv6 = true;
 
     // Started channel results in read failure.
     mock_net<mock_connector_connect_success> net(set, log);

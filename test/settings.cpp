@@ -23,9 +23,12 @@ BOOST_AUTO_TEST_SUITE(settings_tests)
 using namespace bc::system::chain;
 using namespace messages::peer;
 
+// [network]
+// ----------------------------------------------------------------------------
+
 BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
 
     // [network]
     BOOST_REQUIRE_EQUAL(instance.threads, 1u);
@@ -43,419 +46,63 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
     BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
-    BOOST_REQUIRE_EQUAL(instance.identifier, 0u);
-    BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.outbound_connections, 10u);
-    BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
+    BOOST_REQUIRE_EQUAL(instance.identifier, 3652501241u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
     BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
-    BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
-    BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
-    BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
     BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
-    BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
-    BOOST_REQUIRE_EQUAL(instance.minimum_buffer, heading::maximum_payload(level::canonical, true));
+    BOOST_REQUIRE_EQUAL(instance.minimum_buffer, 4'000'000u);
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
     BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.peers.empty());
-    BOOST_REQUIRE(instance.selfs.empty());
-    BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE(instance.blacklists.empty());
     BOOST_REQUIRE(instance.whitelists.empty());
-    BOOST_REQUIRE(instance.friends.empty());
 }
 
 BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
 {
-    settings instance(selection::mainnet);
-
-    // unchanged from default
-    BOOST_REQUIRE_EQUAL(instance.threads, 1u);
-    BOOST_REQUIRE_EQUAL(instance.address_upper, 10u);
-    BOOST_REQUIRE_EQUAL(instance.address_lower, 5u);
-    BOOST_REQUIRE_EQUAL(instance.protocol_maximum, level::maximum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
-    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
-    BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
-    BOOST_REQUIRE_EQUAL(instance.enable_address, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_address_v2, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_compact, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
-    BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
-    BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.outbound_connections, 10u);
-    BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
-    BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
-    BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
-    BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
-    BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
-    BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
-    BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
-    BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
-    BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
-    BOOST_REQUIRE_EQUAL(instance.minimum_buffer, heading::maximum_payload(level::canonical, true));
-    BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
-    BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
-    BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.peers.empty());
-    BOOST_REQUIRE(instance.selfs.empty());
-    BOOST_REQUIRE(instance.blacklists.empty());
-    BOOST_REQUIRE(instance.whitelists.empty());
-    BOOST_REQUIRE(instance.friends.empty());
-
-    // changed from default
+    settings instance{ selection::mainnet };
     BOOST_REQUIRE_EQUAL(instance.identifier, 3652501241u);
-    BOOST_REQUIRE_EQUAL(instance.binds.size(), 1u);
-    BOOST_REQUIRE_EQUAL(instance.seeds.size(), 4u);
-
-    const auto bind0 = config::authority{ asio::address{}, 8333 };
-    BOOST_REQUIRE_EQUAL(instance.binds[0], bind0);
-
-    const auto seed0 = config::endpoint{ "mainnet1.libbitcoin.net", 8333 };
-    const auto seed1 = config::endpoint{ "mainnet2.libbitcoin.net", 8333 };
-    const auto seed2 = config::endpoint{ "mainnet3.libbitcoin.net", 8333 };
-    const auto seed3 = config::endpoint{ "mainnet4.libbitcoin.net", 8333 };
-    BOOST_REQUIRE_EQUAL(instance.seeds[0], seed0);
-    BOOST_REQUIRE_EQUAL(instance.seeds[1], seed1);
-    BOOST_REQUIRE_EQUAL(instance.seeds[2], seed2);
-    BOOST_REQUIRE_EQUAL(instance.seeds[3], seed3);
 }
 
 BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
 {
-    settings instance(selection::testnet);
-
-    // unchanged from default
-    BOOST_REQUIRE_EQUAL(instance.threads, 1u);
-    BOOST_REQUIRE_EQUAL(instance.address_upper, 10u);
-    BOOST_REQUIRE_EQUAL(instance.address_lower, 5u);
-    BOOST_REQUIRE_EQUAL(instance.protocol_maximum, level::maximum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
-    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
-    BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
-    BOOST_REQUIRE_EQUAL(instance.enable_address, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_address_v2, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_compact, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
-    BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
-    BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.outbound_connections, 10u);
-    BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
-    BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
-    BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
-    BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
-    BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
-    BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
-    BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
-    BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
-    BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
-    BOOST_REQUIRE_EQUAL(instance.minimum_buffer, heading::maximum_payload(level::canonical, true));
-    BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
-    BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
-    BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.peers.empty());
-    BOOST_REQUIRE(instance.selfs.empty());
-    BOOST_REQUIRE(instance.blacklists.empty());
-    BOOST_REQUIRE(instance.whitelists.empty());
-    BOOST_REQUIRE(instance.friends.empty());
-
-    // changed from default
+    settings instance{ selection::testnet };
     BOOST_REQUIRE_EQUAL(instance.identifier, 118034699u);
-    BOOST_REQUIRE_EQUAL(instance.binds.size(), 1u);
-    BOOST_REQUIRE_EQUAL(instance.seeds.size(), 4u);
-
-    const auto bind0 = config::authority{ asio::address{}, 18333 };
-    BOOST_REQUIRE_EQUAL(instance.binds[0], bind0);
-
-    const auto seed0 = config::endpoint{ "testnet1.libbitcoin.net", 18333 };
-    const auto seed1 = config::endpoint{ "testnet2.libbitcoin.net", 18333 };
-    const auto seed2 = config::endpoint{ "testnet3.libbitcoin.net", 18333 };
-    const auto seed3 = config::endpoint{ "testnet4.libbitcoin.net", 18333 };
-    BOOST_REQUIRE_EQUAL(instance.seeds[0], seed0);
-    BOOST_REQUIRE_EQUAL(instance.seeds[1], seed1);
-    BOOST_REQUIRE_EQUAL(instance.seeds[2], seed2);
-    BOOST_REQUIRE_EQUAL(instance.seeds[3], seed3);
 }
 
 BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
 {
-    settings instance(selection::regtest);
-
-    // unchanged from default
-    BOOST_REQUIRE_EQUAL(instance.threads, 1u);
-    BOOST_REQUIRE_EQUAL(instance.address_upper, 10u);
-    BOOST_REQUIRE_EQUAL(instance.address_lower, 5u);
-    BOOST_REQUIRE_EQUAL(instance.protocol_maximum, level::maximum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
-    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
-    BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
-    BOOST_REQUIRE_EQUAL(instance.enable_address, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_address_v2, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_compact, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
-    BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
-    BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.outbound_connections, 10u);
-    BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
-    BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
-    BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
-    BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
-    BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
-    BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
-    BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
-    BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
-    BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
-    BOOST_REQUIRE_EQUAL(instance.minimum_buffer, heading::maximum_payload(level::canonical, true));
-    BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
-    BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.peers.empty());
-    BOOST_REQUIRE(instance.selfs.empty());
-    BOOST_REQUIRE(instance.blacklists.empty());
-    BOOST_REQUIRE(instance.whitelists.empty());
-    BOOST_REQUIRE(instance.friends.empty());
-
-    // Regtest is private network only, so there is no seeding.
-    BOOST_REQUIRE(instance.seeds.empty());
-
-    // changed from default
+    settings instance{ selection::regtest };
     BOOST_REQUIRE_EQUAL(instance.identifier, 3669344250u);
-    BOOST_REQUIRE_EQUAL(instance.binds.size(), 1u);
-
-    const auto bind0 = config::authority{ asio::address{}, 18444 };
-    BOOST_REQUIRE_EQUAL(instance.binds[0], bind0);
 }
+
+// helpers
 
 BOOST_AUTO_TEST_CASE(settings__witness_node__default__false)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     BOOST_REQUIRE(!instance.witness_node());
 }
 
 BOOST_AUTO_TEST_CASE(settings__witness_node__node_witness__true)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.services_minimum = service::node_witness;
     BOOST_REQUIRE(instance.witness_node());
 }
 
-BOOST_AUTO_TEST_CASE(settings__inbound_enabled__default__false)
-{
-    settings instance{};
-    BOOST_REQUIRE(!instance.inbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__inbound_enabled__zero_empty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 0;
-    instance.binds.clear();
-    BOOST_REQUIRE(!instance.inbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__inbound_enabled__nonzero_empty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 42;
-    instance.binds.clear();
-    BOOST_REQUIRE(!instance.inbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__inbound_enabled__zero_nonempty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 0;
-    instance.binds.emplace_back();
-    BOOST_REQUIRE(!instance.inbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__inbound_enabled__nonzero_nonempty__true)
-{
-    settings instance{};
-    instance.inbound_connections = 42;
-    instance.binds.emplace_back();
-    BOOST_REQUIRE(instance.inbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__outbound_enabled__default__true)
-{
-    settings instance{};
-
-    // Default host pool capacity is zero.
-    BOOST_REQUIRE(!instance.outbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__outbound_enabled__true_true_true__true)
-{
-    settings instance{};
-    instance.outbound_connections = 42;
-    instance.host_pool_capacity = 42;
-    instance.connect_batch_size = 42;
-    BOOST_REQUIRE(instance.outbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__outbound_enabled__true_true_false__false)
-{
-    settings instance{};
-    instance.outbound_connections = 42;
-    instance.host_pool_capacity = 42;
-    instance.connect_batch_size = 0;
-    BOOST_REQUIRE(!instance.outbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__outbound_enabled__true_false_true__false)
-{
-    settings instance{};
-    instance.outbound_connections = 42;
-    instance.host_pool_capacity = 0;
-    instance.connect_batch_size = 42;
-    BOOST_REQUIRE(!instance.outbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__outbound_enabled__false_true_true__false)
-{
-    settings instance{};
-    instance.outbound_connections = 0;
-    instance.host_pool_capacity = 42;
-    instance.connect_batch_size = 42;
-    BOOST_REQUIRE(!instance.outbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__outbound_enabled__false_false_false__false)
-{
-    settings instance{};
-    instance.outbound_connections = 0;
-    instance.host_pool_capacity = 0;
-    instance.connect_batch_size = 0;
-    BOOST_REQUIRE(!instance.outbound_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__advertise_enabled__default__false)
-{
-    settings instance{};
-    BOOST_REQUIRE(!instance.advertise_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__advertise_enabled__zero_empty_empty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 0;
-    instance.binds.clear();
-    instance.selfs.clear();
-    BOOST_REQUIRE(!instance.advertise_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__advertise_enabled__zero_empty_nonempty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 0;
-    instance.binds.clear();
-    instance.selfs.emplace_back();
-    BOOST_REQUIRE(!instance.advertise_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__advertise_enabled__zero_nonempty_empty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 0;
-    instance.binds.emplace_back();
-    instance.selfs.clear();
-    BOOST_REQUIRE(!instance.advertise_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__advertise_enabled__zero_nonempty_nonempty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 0;
-    instance.binds.emplace_back();
-    instance.selfs.emplace_back();
-    BOOST_REQUIRE(!instance.advertise_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__advertise_enabled__nonzero_empty_empty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 42;
-    instance.binds.clear();
-    instance.selfs.clear();
-    BOOST_REQUIRE(!instance.advertise_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__advertise_enabled__nonzero_nonempty_empty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 42;
-    instance.binds.emplace_back();
-    instance.selfs.clear();
-    BOOST_REQUIRE(!instance.advertise_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__advertise_enabled__nonzero_empty_nonempty__false)
-{
-    settings instance{};
-    instance.inbound_connections = 42;
-    instance.binds.clear();
-    instance.selfs.emplace_back();
-    BOOST_REQUIRE(!instance.advertise_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__advertise_enabled__nonzero_nonempty_nonempty__true)
-{
-    settings instance{};
-    instance.inbound_connections = 42;
-    instance.binds.emplace_back();
-    instance.selfs.emplace_back();
-    BOOST_REQUIRE(instance.advertise_enabled());
-}
-
-BOOST_AUTO_TEST_CASE(settings__first_self__empty_selfs__default)
-{
-    settings instance{};
-    instance.selfs.clear();
-    BOOST_REQUIRE(instance.first_self() == config::authority{});
-}
-
-BOOST_AUTO_TEST_CASE(settings__first_self__multiple_selfs__front)
-{
-    settings instance{};
-    instance.selfs.clear();
-    instance.selfs.push_back({ asio::address{}, 18333 });
-    instance.selfs.emplace_back();
-    BOOST_REQUIRE_EQUAL(instance.first_self(), instance.selfs.front());
-}
-
 BOOST_AUTO_TEST_CASE(settings__maximum_payload__default__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
 }
 
 BOOST_AUTO_TEST_CASE(settings__maximum_payload__zero_node_none__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.protocol_maximum = 0;
     instance.services_maximum = service::node_none;
     BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 1'800'003u);
@@ -463,7 +110,7 @@ BOOST_AUTO_TEST_CASE(settings__maximum_payload__zero_node_none__expected)
 
 BOOST_AUTO_TEST_CASE(settings__maximum_payload__zero_node_witness__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.protocol_maximum = 0;
     instance.services_maximum = service::node_witness;
     BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
@@ -471,7 +118,7 @@ BOOST_AUTO_TEST_CASE(settings__maximum_payload__zero_node_witness__expected)
 
 BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_node_witness__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.protocol_maximum = max_uint32;
     instance.services_maximum = service::node_witness;
     BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
@@ -479,7 +126,7 @@ BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_node_witness__expected)
 
 BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_maximum_services__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.protocol_maximum = max_uint32;
     instance.services_maximum = service::maximum_services;
     BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
@@ -487,7 +134,7 @@ BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_maximum_services__expect
 
 BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__between_zero_and_retry_timeout_seconds)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.retry_timeout_seconds = 42;
     BOOST_REQUIRE(instance.retry_timeout() > seconds{ zero });
     BOOST_REQUIRE(instance.retry_timeout() <= seconds{ instance.retry_timeout_seconds });
@@ -495,7 +142,7 @@ BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__between_zero_and_retry_tim
 
 BOOST_AUTO_TEST_CASE(settings__connect_timeout__always__between_zero_and_connect_timeout_seconds)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.connect_timeout_seconds = 42;
     BOOST_REQUIRE(instance.connect_timeout() > seconds{ zero });
     BOOST_REQUIRE(instance.connect_timeout() <= seconds{ instance.connect_timeout_seconds });
@@ -503,7 +150,7 @@ BOOST_AUTO_TEST_CASE(settings__connect_timeout__always__between_zero_and_connect
 
 BOOST_AUTO_TEST_CASE(settings__channel_handshake__always__handshake_timeout_seconds)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     constexpr auto expected = 42u;
     instance.handshake_timeout_seconds = expected;
     BOOST_REQUIRE(instance.channel_handshake() == seconds(expected));
@@ -511,90 +158,25 @@ BOOST_AUTO_TEST_CASE(settings__channel_handshake__always__handshake_timeout_seco
 
 BOOST_AUTO_TEST_CASE(settings__channel_heartbeat__always__channel_heartbeat_minutes)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     constexpr auto expected = 42u;
     instance.channel_heartbeat_minutes = expected;
     BOOST_REQUIRE(instance.channel_heartbeat() == minutes(expected));
 }
 
-BOOST_AUTO_TEST_CASE(settings__channel_inactivity__always__channel_inactivity_minutes)
-{
-    settings instance{};
-    const auto expected = 42u;
-    instance.channel_inactivity_minutes = expected;
-    BOOST_REQUIRE(instance.channel_inactivity() == minutes(expected));
-}
-
-BOOST_AUTO_TEST_CASE(settings__channel_expiration__always__channel_expiration_minutes)
-{
-    settings instance{};
-    constexpr auto expected = 42u;
-    instance.channel_expiration_minutes = expected;
-    BOOST_REQUIRE(instance.channel_expiration() == minutes(expected));
-}
-
 BOOST_AUTO_TEST_CASE(settings__maximum_skew__always__maximum_skew_minutes)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     constexpr auto expected = 42u;
     instance.maximum_skew_minutes = expected;
     BOOST_REQUIRE(instance.maximum_skew() == minutes(expected));
 }
 
-BOOST_AUTO_TEST_CASE(settings__channel_germination__always__seeding_timeout_seconds)
-{
-    settings instance{};
-    constexpr auto expected = 42u;
-    instance.seeding_timeout_seconds = expected;
-    BOOST_REQUIRE(instance.channel_germination() == seconds(expected));
-}
-
-BOOST_AUTO_TEST_CASE(settings__minimum_address_count__always__outbound_product)
-{
-    settings instance{};
-    instance.connect_batch_size = 24;
-    instance.outbound_connections = 42;
-    const size_t product = instance.connect_batch_size * instance.outbound_connections;
-    BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), product);
-}
-
-// disabled
-
-BOOST_AUTO_TEST_CASE(settings__disabled__enable_ipv6__both_false)
-{
-    settings instance{};
-    instance.enable_ipv6 = true;
-    BOOST_REQUIRE(!instance.disabled(config::address("42.42.42.42:27")));
-    BOOST_REQUIRE(!instance.disabled(config::address("[42:42::42:2]:27")));
-}
-
-BOOST_AUTO_TEST_CASE(settings__disabled__ipv4__false)
-{
-    settings instance{};
-    instance.enable_ipv6 = false;
-    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42" }));
-    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42:42" }));
-    instance.enable_ipv6 = true;
-    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42" }));
-    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42:42" }));
-}
-
-BOOST_AUTO_TEST_CASE(settings__disabled__ipv6__expected)
-{
-    settings instance{};
-    instance.enable_ipv6 = false;
-    BOOST_REQUIRE(instance.disabled(config::address{ "[2001:db8::2]" }));
-    BOOST_REQUIRE(instance.disabled(config::address{ "[2001:db8::2]:42" }));
-    instance.enable_ipv6 = true;
-    BOOST_REQUIRE(!instance.disabled(config::address{ "[2001:db8::2]" }));
-    BOOST_REQUIRE(!instance.disabled(config::address{ "[2001:db8::2]:42" }));
-}
-
-// insufficient
+// filters
 
 BOOST_AUTO_TEST_CASE(settings__insufficient__default__false)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     constexpr uint64_t services = 0;
     constexpr messages::peer::address_item loop{ 42, services, loopback_ip_address, 8333 };
     instance.services_minimum = 0;
@@ -605,7 +187,7 @@ BOOST_AUTO_TEST_CASE(settings__insufficient__default__false)
 
 BOOST_AUTO_TEST_CASE(settings__insufficient__match__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     constexpr uint64_t services = 0b01010101;
     constexpr messages::peer::address_item loop{ 42, services, loopback_ip_address, 8333 };
     instance.services_minimum = services;
@@ -616,11 +198,9 @@ BOOST_AUTO_TEST_CASE(settings__insufficient__match__expected)
     BOOST_REQUIRE(!instance.insufficient(loop));
 }
 
-// unsupported
-
 BOOST_AUTO_TEST_CASE(settings__unsupported__default__false)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     constexpr uint64_t services = 0;
     constexpr messages::peer::address_item loop{ 42, services, loopback_ip_address, 8333 };
     instance.invalid_services = 0;
@@ -631,7 +211,7 @@ BOOST_AUTO_TEST_CASE(settings__unsupported__default__false)
 
 BOOST_AUTO_TEST_CASE(settings__unsupported__match__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     constexpr uint64_t services = 0b01010101;
     constexpr messages::peer::address_item loop{ 42, services, loopback_ip_address, 8333 };
     instance.invalid_services = services;
@@ -646,67 +226,9 @@ BOOST_AUTO_TEST_CASE(settings__unsupported__match__expected)
     BOOST_REQUIRE(!instance.unsupported(loop));
 }
 
-// whitelisted
-
-BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv4_subnet__expected)
-{
-    settings instance{};
-    instance.whitelists.clear();
-    BOOST_REQUIRE(instance.whitelisted(config::address{ "42.42.42.42" }));
-
-    instance.whitelists.emplace_back("12.12.12.12");
-    instance.whitelists.emplace_back("24.24.24.24");
-    BOOST_REQUIRE(!instance.whitelisted(config::address{ "42.42.42.42" }));
-
-    instance.whitelists.emplace_back("42.42.42.0/24");
-    BOOST_REQUIRE(instance.whitelisted(config::address{ "42.42.42.42" }));
-}
-
-BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv4_host__expected)
-{
-    settings instance{};
-    instance.whitelists.clear();
-    BOOST_REQUIRE(instance.whitelisted(config::address{ "24.24.24.24" }));
-
-    instance.whitelists.emplace_back("12.12.12.12");
-    instance.whitelists.emplace_back("42.42.42.0/24");
-    BOOST_REQUIRE(!instance.whitelisted(config::address{ "24.24.24.24" }));
-
-    instance.whitelists.emplace_back("24.24.24.24");
-    BOOST_REQUIRE(instance.whitelisted(config::address{ "24.24.24.24" }));
-}
-
-BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv6_subnet__expected)
-{
-    settings instance{};
-    instance.whitelists.clear();
-    BOOST_REQUIRE(instance.whitelisted(config::address{ "[2020:db8::3]" }));
-
-    instance.whitelists.emplace_back("[2020:db8::1]");
-    instance.whitelists.emplace_back("[2020:db8::2]");
-    BOOST_REQUIRE(!instance.whitelisted(config::address{ "[2020:db8::3]" }));
-
-    instance.whitelists.emplace_back("[2020:db8::2]/64");
-    BOOST_REQUIRE(instance.whitelisted(config::address{ "[2020:db8::3]" }));
-}
-
-BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv6_host__expected)
-{
-    settings instance{};
-    instance.whitelists.clear();
-    BOOST_REQUIRE(instance.whitelisted(config::address{ "[2020:db8::3]" }));
-    instance.whitelists.emplace_back("[2020:db8::1]");
-    instance.whitelists.emplace_back("[2020:db8::2]");
-    BOOST_REQUIRE(!instance.whitelisted(config::address{ "[2020:db8::3]" }));
-    instance.whitelists.emplace_back("[2020:db8::3]");
-    BOOST_REQUIRE(instance.whitelisted(config::address{ "[2020:db8::3]" }));
-}
-
-// blacklisted
-
 BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_subnet__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.blacklists.clear();
     BOOST_REQUIRE(!instance.blacklisted(config::address{ "42.42.42.42" }));
 
@@ -720,7 +242,7 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_subnet__expected)
 
 BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_host__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.blacklists.clear();
     BOOST_REQUIRE(!instance.blacklisted(config::address{ "24.24.24.24" }));
 
@@ -734,7 +256,7 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_host__expected)
 
 BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_subnet__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.blacklists.clear();
     BOOST_REQUIRE(!instance.blacklisted(config::address{ "[2020:db8::3]" }));
 
@@ -748,7 +270,7 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_subnet__expected)
 
 BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_host__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
     instance.blacklists.clear();
     BOOST_REQUIRE(!instance.blacklisted(config::address{ "[2020:db8::3]" }));
 
@@ -760,11 +282,421 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_host__expected)
     BOOST_REQUIRE(instance.blacklisted(config::address{ "[2020:db8::3]" }));
 }
 
-// peered/initialize
-
-BOOST_AUTO_TEST_CASE(settings__initialize__configured__expected_port_matching)
+BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv4_subnet__expected)
 {
-    settings instance{};
+    settings instance{ system::chain::selection::mainnet };
+    instance.whitelists.clear();
+    BOOST_REQUIRE(instance.whitelisted(config::address{ "42.42.42.42" }));
+
+    instance.whitelists.emplace_back("12.12.12.12");
+    instance.whitelists.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(!instance.whitelisted(config::address{ "42.42.42.42" }));
+
+    instance.whitelists.emplace_back("42.42.42.0/24");
+    BOOST_REQUIRE(instance.whitelisted(config::address{ "42.42.42.42" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv4_host__expected)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.whitelists.clear();
+    BOOST_REQUIRE(instance.whitelisted(config::address{ "24.24.24.24" }));
+
+    instance.whitelists.emplace_back("12.12.12.12");
+    instance.whitelists.emplace_back("42.42.42.0/24");
+    BOOST_REQUIRE(!instance.whitelisted(config::address{ "24.24.24.24" }));
+
+    instance.whitelists.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(instance.whitelisted(config::address{ "24.24.24.24" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv6_subnet__expected)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.whitelists.clear();
+    BOOST_REQUIRE(instance.whitelisted(config::address{ "[2020:db8::3]" }));
+
+    instance.whitelists.emplace_back("[2020:db8::1]");
+    instance.whitelists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!instance.whitelisted(config::address{ "[2020:db8::3]" }));
+
+    instance.whitelists.emplace_back("[2020:db8::2]/64");
+    BOOST_REQUIRE(instance.whitelisted(config::address{ "[2020:db8::3]" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv6_host__expected)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.whitelists.clear();
+    BOOST_REQUIRE(instance.whitelisted(config::address{ "[2020:db8::3]" }));
+    instance.whitelists.emplace_back("[2020:db8::1]");
+    instance.whitelists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!instance.whitelisted(config::address{ "[2020:db8::3]" }));
+    instance.whitelists.emplace_back("[2020:db8::3]");
+    BOOST_REQUIRE(instance.whitelisted(config::address{ "[2020:db8::3]" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__excluded__default__true)
+{
+    settings instance{ system::chain::selection::mainnet };
+    BOOST_REQUIRE(instance.excluded({}));
+}
+
+// services
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
+{
+    constexpr auto name = "test";
+    const settings::tcp_server instance{ name };
+
+    // tcp_server
+    BOOST_REQUIRE_EQUAL(instance.name, name);
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
+    BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.inactivity() == minutes(10));
+    BOOST_REQUIRE(instance.expiration() == minutes(60));
+}
+
+BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
+{
+    constexpr auto name = "test";
+    const settings::http_server instance{ name };
+
+    // tcp_server
+    BOOST_REQUIRE_EQUAL(instance.name, name);
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
+    BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.inactivity() == minutes(10));
+    BOOST_REQUIRE(instance.expiration() == minutes(60));
+
+    // http_server
+    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.host_names().empty());
+}
+
+BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
+{
+    constexpr auto name = "test";
+    const settings::websocket_server instance{ name };
+
+    // tcp_server
+    BOOST_REQUIRE_EQUAL(instance.name, name);
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
+    BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.inactivity() == minutes(10));
+    BOOST_REQUIRE(instance.expiration() == minutes(60));
+
+    // http_server
+    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.host_names().empty());
+
+    // websocket_server (no unique settings yet)
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound__mainnet__expected)
+{
+    const settings::peer_outbound instance{ system::chain::selection::mainnet };
+
+    // tcp_server
+    BOOST_REQUIRE_EQUAL(instance.name, "outbound");
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 10u);
+    BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
+    BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.inactivity() == minutes(10));
+    BOOST_REQUIRE(instance.expiration() == minutes(60));
+
+    // outbound
+    BOOST_REQUIRE(!instance.use_ipv6);
+    BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
+    BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
+    BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.seeds.size(), 4u);
+    BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), 50u);
+    BOOST_REQUIRE(instance.seeding_timeout() == seconds(30));
+    BOOST_REQUIRE(instance.disabled(address_item{ 0, 0, loopback_ip_address, 42 }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_disabled__use_ipv6__both_false)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    instance.use_ipv6 = true;
+    BOOST_REQUIRE(!instance.disabled(config::address("42.42.42.42:27")));
+    BOOST_REQUIRE(!instance.disabled(config::address("[42:42::42:2]:27")));
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_disabled__ipv4__false)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    instance.use_ipv6 = false;
+    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42" }));
+    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42:42" }));
+
+    instance.use_ipv6 = true;
+    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42" }));
+    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42:42" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_disabled__ipv6__expected)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    instance.use_ipv6 = false;
+    BOOST_REQUIRE(instance.disabled(config::address{ "[2001:db8::2]" }));
+    BOOST_REQUIRE(instance.disabled(config::address{ "[2001:db8::2]:42" }));
+
+    instance.use_ipv6 = true;
+    BOOST_REQUIRE(!instance.disabled(config::address{ "[2001:db8::2]" }));
+    BOOST_REQUIRE(!instance.disabled(config::address{ "[2001:db8::2]:42" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_enabled__true_true_true__true)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.host_pool_capacity = 42;
+    instance.connect_batch_size = 42;
+    BOOST_REQUIRE(instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_enabled__true_true_false__false)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.host_pool_capacity = 42;
+    instance.connect_batch_size = 0;
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_enabled__true_false_true__false)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.host_pool_capacity = 0;
+    instance.connect_batch_size = 42;
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_enabled__false_true_true__false)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    instance.connections = 0;
+    instance.host_pool_capacity = 42;
+    instance.connect_batch_size = 42;
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_enabled__false_false_false__false)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    instance.connections = 0;
+    instance.host_pool_capacity = 0;
+    instance.connect_batch_size = 0;
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_seeding_timeout__always__seeding_timeout_seconds)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    constexpr auto expected = 42u;
+    instance.seeding_timeout_seconds = expected;
+    BOOST_REQUIRE(instance.seeding_timeout() == seconds(expected));
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_outbound_minimum_address_count__always__outbound_product)
+{
+    settings::peer_outbound instance{ system::chain::selection::mainnet };
+    instance.connect_batch_size = 24;
+    instance.connections = 42;
+    const size_t product = instance.connect_batch_size * instance.connections;
+    BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), product);
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound__mainnet__expected)
+{
+    const settings::peer_inbound instance{ system::chain::selection::mainnet };
+
+    // tcp_server
+    BOOST_REQUIRE_EQUAL(instance.name, "inbound");
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE_EQUAL(instance.binds.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
+    BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.inactivity() == minutes(10));
+    BOOST_REQUIRE(instance.expiration() == minutes(60));
+
+    // inbound
+    BOOST_REQUIRE(!instance.enable_loopback);
+    BOOST_REQUIRE(instance.selfs.empty());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_enabled__zero_empty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 0;
+    instance.binds.clear();
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_enabled__nonzero_empty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.binds.clear();
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_enabled__zero_nonempty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 0;
+    instance.binds.emplace_back();
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_enabled__nonzero_nonempty__true)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.binds.emplace_back();
+    BOOST_REQUIRE(instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__default__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    BOOST_REQUIRE(!instance.advertise());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__zero_empty_empty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 0;
+    instance.binds.clear();
+    instance.selfs.clear();
+    BOOST_REQUIRE(!instance.advertise());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__zero_empty_nonempty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 0;
+    instance.binds.clear();
+    instance.selfs.emplace_back();
+    BOOST_REQUIRE(!instance.advertise());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__zero_nonempty_empty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 0;
+    instance.binds.emplace_back();
+    instance.selfs.clear();
+    BOOST_REQUIRE(!instance.advertise());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__zero_nonempty_nonempty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 0;
+    instance.binds.emplace_back();
+    instance.selfs.emplace_back();
+    BOOST_REQUIRE(!instance.advertise());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__nonzero_empty_empty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.binds.clear();
+    instance.selfs.clear();
+    BOOST_REQUIRE(!instance.advertise());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__nonzero_nonempty_empty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.binds.emplace_back();
+    instance.selfs.clear();
+    BOOST_REQUIRE(!instance.advertise());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__nonzero_empty_nonempty__false)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.binds.clear();
+    instance.selfs.emplace_back();
+    BOOST_REQUIRE(!instance.advertise());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__nonzero_nonempty_nonempty__true)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.binds.emplace_back();
+    instance.selfs.emplace_back();
+    BOOST_REQUIRE(instance.advertise());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_first_self__empty_selfs__default)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.selfs.clear();
+    BOOST_REQUIRE(instance.first_self() == config::authority{});
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_first_self__multiple_selfs__front)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.selfs.clear();
+    instance.selfs.push_back({ asio::address{}, 18333 });
+    instance.selfs.emplace_back();
+    BOOST_REQUIRE_EQUAL(instance.first_self(), instance.selfs.front());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_manual__mainnet__expected)
+{
+    const settings::peer_manual instance{ system::chain::selection::mainnet };
+
+    // tcp_server
+    BOOST_REQUIRE_EQUAL(instance.name, "manual");
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
+    BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.inactivity() == minutes(10));
+    BOOST_REQUIRE(instance.expiration() == minutes(60));
+
+    // manual
+    BOOST_REQUIRE(instance.peers.empty());
+    BOOST_REQUIRE(instance.friends.empty());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_manual_initialize__configured__expected_port_matching)
+{
+    settings::peer_manual instance{ system::chain::selection::mainnet };
     instance.peers.clear();
     BOOST_REQUIRE(!instance.peered(config::address{ "34.222.125.43:8333" }));
     BOOST_REQUIRE(!instance.peered(config::address{ "51.79.80.166:8333" }));
@@ -792,9 +724,9 @@ BOOST_AUTO_TEST_CASE(settings__initialize__configured__expected_port_matching)
     BOOST_REQUIRE(instance.peered(config::address{ "89.35.142.168" }));
 }
 
-BOOST_AUTO_TEST_CASE(settings__peered__ipv4_host__expected)
+BOOST_AUTO_TEST_CASE(settings__peer_manual_peered__ipv4_host__expected)
 {
-    settings instance{};
+    settings::peer_manual instance{ system::chain::selection::mainnet };
     instance.peers.clear();
     BOOST_REQUIRE(!instance.peered(config::address{ "24.24.24.24" }));
 
@@ -808,9 +740,9 @@ BOOST_AUTO_TEST_CASE(settings__peered__ipv4_host__expected)
     BOOST_REQUIRE(instance.peered(config::address{ "24.24.24.24" }));
 }
 
-BOOST_AUTO_TEST_CASE(settings__peered__ipv6_host__expected)
+BOOST_AUTO_TEST_CASE(settings__peer_manual_peered__ipv6_host__expected)
 {
-    settings instance{};
+    settings::peer_manual instance{ system::chain::selection::mainnet };
     instance.peers.clear();
     BOOST_REQUIRE(!instance.peered(config::address{ "[2020:db8::3]" }));
 
@@ -823,49 +755,6 @@ BOOST_AUTO_TEST_CASE(settings__peered__ipv6_host__expected)
 
     instance.initialize();
     BOOST_REQUIRE(instance.peered(config::address{ "[2020:db8::3]" }));
-}
-
-// excluded
-
-BOOST_AUTO_TEST_CASE(settings__excluded__default__true)
-{
-    settings instance{};
-    instance.initialize();
-    BOOST_REQUIRE(instance.excluded({}));
-}
-
-// client-server
-// ----------------------------------------------------------------------------
-
-BOOST_AUTO_TEST_CASE(client__tcp_server__defaults__expected)
-{
-    const settings::tcp_server instance{};
-
-    // tcp_server
-    BOOST_REQUIRE(instance.name.empty());
-    BOOST_REQUIRE(!instance.secure);
-    BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
-    BOOST_REQUIRE(!instance.enabled());
-}
-
-BOOST_AUTO_TEST_CASE(client__http_server__defaults__expected)
-{
-    const settings::http_server instance{};
-
-    // tcp_server
-    BOOST_REQUIRE(instance.name.empty());
-    BOOST_REQUIRE(!instance.secure);
-    BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
-    BOOST_REQUIRE(!instance.enabled());
-
-    // http_server
-    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
-    BOOST_REQUIRE(instance.hosts.empty());
-    BOOST_REQUIRE(instance.host_names().empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

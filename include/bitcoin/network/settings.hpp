@@ -34,20 +34,21 @@ struct BCT_API settings
     struct tcp_server
     {
         DEFAULT_COPY_MOVE_DESTRUCT(tcp_server);
-        tcp_server() = default;
         tcp_server(const std::string_view& logging_name) NOEXCEPT;
 
         /// For logging only.
-        std::string name{};
+        std::string name;
 
         bool secure{ false };
         config::authorities binds{};
         uint16_t connections{ 0 };
-        uint32_t timeout_seconds{ 60 };
+        uint32_t inactivity_minutes{ 10 };
+        uint32_t expiration_minutes{ 60 };
 
         /// Helpers.
-        virtual steady_clock::duration timeout() const NOEXCEPT;
         virtual bool enabled() const NOEXCEPT;
+        virtual steady_clock::duration inactivity() const NOEXCEPT;
+        virtual steady_clock::duration expiration() const NOEXCEPT;
     };
 
     struct http_server
@@ -73,85 +74,180 @@ struct BCT_API settings
         // TODO: settings unique to the websocket aspect.
     };
 
+    struct peer_outbound
+      : public tcp_server
+    {
+        peer_outbound(system::chain::selection context) NOEXCEPT
+          : tcp_server("outbound")
+        {
+            connections = 10;
+
+            // Use emplace_back due to initializer_list bug:
+            // stackoverflow.com/a/20168627/1172329
+            switch (context)
+            {
+                case system::chain::selection::mainnet:
+                {
+                    seeds.reserve(4);
+                    seeds.emplace_back("mainnet1.libbitcoin.net", 8333_u16);
+                    seeds.emplace_back("mainnet2.libbitcoin.net", 8333_u16);
+                    seeds.emplace_back("mainnet3.libbitcoin.net", 8333_u16);
+                    seeds.emplace_back("mainnet4.libbitcoin.net", 8333_u16);
+                    break;
+                }
+                case system::chain::selection::testnet:
+                {
+                    seeds.reserve(4);
+                    seeds.emplace_back("testnet1.libbitcoin.net", 18333_u16);
+                    seeds.emplace_back("testnet2.libbitcoin.net", 18333_u16);
+                    seeds.emplace_back("testnet3.libbitcoin.net", 18333_u16);
+                    seeds.emplace_back("testnet4.libbitcoin.net", 18333_u16);
+                    break;
+                }
+                case system::chain::selection::regtest:
+                default: break;
+            }
+        }
+
+        bool use_ipv6{ false };
+        config::endpoints seeds{};
+        uint16_t connect_batch_size{ 5 };
+        uint32_t host_pool_capacity{ 0 };
+        uint32_t seeding_timeout_seconds{ 30 };
+
+        /// Helpers.
+        bool enabled() const NOEXCEPT override;
+        virtual size_t minimum_address_count() const NOEXCEPT;
+        virtual steady_clock::duration seeding_timeout() const NOEXCEPT;
+        virtual bool disabled(
+            const messages::peer::address_item& item) const NOEXCEPT;
+    };
+    
+    struct peer_inbound
+      : public tcp_server
+    {
+        peer_inbound(system::chain::selection context) NOEXCEPT
+          : tcp_server("inbound")
+        {
+            // Use emplace_back due to initializer_list bug:
+            // stackoverflow.com/a/20168627/1172329
+            switch (context)
+            {
+                case system::chain::selection::mainnet:
+                {
+                    binds.emplace_back(asio::address{}, 8333_u16);
+                    break;
+                }
+                case system::chain::selection::testnet:
+                {
+                    binds.emplace_back(asio::address{}, 18333_u16);
+                    break;
+                }
+                case system::chain::selection::regtest:
+                {
+                    binds.emplace_back(asio::address{}, 18444_u16);
+                    break;
+                }
+                default: break;
+            }
+        }
+
+        bool enable_loopback{ false };
+        config::authorities selfs{};
+
+        /// Helpers.
+        bool advertise() const NOEXCEPT;
+        bool enabled() const NOEXCEPT override;
+        config::authority first_self() const NOEXCEPT;
+    };
+
+    struct peer_manual
+      : public tcp_server
+    {
+        // The friends field must be initialized after peers is set.
+        peer_manual(system::chain::selection) NOEXCEPT
+          : tcp_server("manual")
+        {
+        }
+
+        config::endpoints peers{};
+        config::authorities friends{};
+
+        /// Helpers.
+        void initialize() NOEXCEPT;
+        bool enabled() const NOEXCEPT override;
+        virtual bool peered(
+            const messages::peer::address_item& item) const NOEXCEPT;
+    };
+
+    // [network]
     // ----------------------------------------------------------------------------
+    // bitcoin p2p network common settings.
 
     DEFAULT_COPY_MOVE_DESTRUCT(settings);
-    settings() NOEXCEPT;
     settings(system::chain::selection context) NOEXCEPT;
 
+    /// Bitcoin p2p protocol services.
+    network::settings::peer_outbound outbound;
+    network::settings::peer_inbound inbound;
+    network::settings::peer_manual manual;
+
     /// Properties.
-    uint32_t threads;
-    uint16_t address_upper;
-    uint16_t address_lower;
-    uint32_t protocol_maximum;
-    uint32_t protocol_minimum;
-    uint64_t services_maximum;
-    uint64_t services_minimum;
-    uint64_t invalid_services;
-    bool enable_address;
-    bool enable_address_v2;
-    bool enable_witness_tx;
-    bool enable_compact;
-    bool enable_alert;
-    bool enable_reject;
-    bool enable_relay;
-    bool enable_ipv6;
-    bool enable_loopback;
-    bool validate_checksum;
-    uint32_t identifier;
-    uint16_t inbound_connections;
-    uint16_t outbound_connections;
-    uint16_t connect_batch_size;
-    uint32_t retry_timeout_seconds;
-    uint32_t connect_timeout_seconds;
-    uint32_t handshake_timeout_seconds;
-    uint32_t seeding_timeout_seconds;
-    uint32_t channel_heartbeat_minutes;
-    uint32_t channel_inactivity_minutes;
-    uint32_t channel_expiration_minutes;
-    uint32_t maximum_skew_minutes;
-    uint32_t host_pool_capacity;
-    uint32_t minimum_buffer;
-    uint32_t rate_limit;
-    std::string user_agent;
+    uint32_t threads{ 1 };
+    uint16_t address_upper{ 10 };
+    uint16_t address_lower{ 5 };
+    uint32_t protocol_maximum{ messages::peer::level::maximum_protocol };
+    uint32_t protocol_minimum{ messages::peer::level::minimum_protocol };
+    uint64_t services_maximum{ messages::peer::service::maximum_services };
+    uint64_t services_minimum{ messages::peer::service::minimum_services };
+    uint64_t invalid_services{ 176 };
+    bool enable_address{ false };
+    bool enable_address_v2{ false };
+    bool enable_witness_tx{ false };
+    bool enable_compact{ false };
+    bool enable_alert{ false };
+    bool enable_reject{ false };
+    bool enable_relay{ false };
+    bool validate_checksum{ false };
+    uint32_t identifier{ 0 };
+    uint32_t retry_timeout_seconds{ 1 };
+    uint32_t connect_timeout_seconds{ 5 };
+    uint32_t handshake_timeout_seconds{ 15 };
+    uint32_t channel_heartbeat_minutes{ 5 };
+    uint32_t maximum_skew_minutes{ 120 };
+    uint32_t minimum_buffer
+    {
+        system::possible_narrow_cast<uint32_t>(
+            messages::peer::heading::maximum_payload(
+                messages::peer::level::canonical, true))
+    };
+    uint32_t rate_limit{ 1024  };
+    std::string user_agent{ BC_USER_AGENT };
     std::filesystem::path path{};
-    config::endpoints peers{};
-    config::endpoints seeds{};
-    config::authorities selfs{};
-    config::authorities binds{};
     config::authorities blacklists{};
     config::authorities whitelists{};
-    config::authorities friends{};
-
-    /// Set friends.
-    virtual void initialize() NOEXCEPT;
 
     /// Helpers.
     virtual bool witness_node() const NOEXCEPT;
-    virtual bool inbound_enabled() const NOEXCEPT;
-    virtual bool outbound_enabled() const NOEXCEPT;
-    virtual bool advertise_enabled() const NOEXCEPT;
     virtual size_t maximum_payload() const NOEXCEPT;
-    virtual config::authority first_self() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
     virtual steady_clock::duration connect_timeout() const NOEXCEPT;
     virtual steady_clock::duration channel_handshake() const NOEXCEPT;
-    virtual steady_clock::duration channel_germination() const NOEXCEPT;
     virtual steady_clock::duration channel_heartbeat() const NOEXCEPT;
-    virtual steady_clock::duration channel_inactivity() const NOEXCEPT;
-    virtual steady_clock::duration channel_expiration() const NOEXCEPT;
     virtual steady_clock::duration maximum_skew() const NOEXCEPT;
-    virtual size_t minimum_address_count() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;
 
     /// Filters.
-    virtual bool disabled(const messages::peer::address_item& item) const NOEXCEPT;
-    virtual bool insufficient(const messages::peer::address_item& item) const NOEXCEPT;
-    virtual bool unsupported(const messages::peer::address_item& item) const NOEXCEPT;
-    virtual bool blacklisted(const messages::peer::address_item& item) const NOEXCEPT;
-    virtual bool whitelisted(const messages::peer::address_item& item) const NOEXCEPT;
-    virtual bool peered(const messages::peer::address_item& item) const NOEXCEPT;
-    virtual bool excluded(const messages::peer::address_item& item) const NOEXCEPT;
+    virtual bool insufficient(
+        const messages::peer::address_item& item) const NOEXCEPT;
+    virtual bool unsupported(
+        const messages::peer::address_item& item) const NOEXCEPT;
+    virtual bool blacklisted(
+        const messages::peer::address_item& item) const NOEXCEPT;
+    virtual bool whitelisted(
+        const messages::peer::address_item& item) const NOEXCEPT;
+    virtual bool excluded(
+        const messages::peer::address_item& item) const NOEXCEPT;
 };
 
 } // namespace network

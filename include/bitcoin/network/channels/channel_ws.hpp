@@ -25,7 +25,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/socket.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -36,7 +35,7 @@ class BCT_API channel_ws
 {
 public:
     typedef std::shared_ptr<channel_ws> ptr;
-    using options_t = settings::websocket_server;
+    using options_t = settings_t::websocket_server;
 
     /// Subscribe to messages post-upgrade (requires strand).
     /// Event handler is always invoked on the channel strand.
@@ -65,7 +64,7 @@ public:
 
         if (!ptr)
         {
-            handler(error::bad_alloc);
+            complete(error::bad_alloc, {});
             return;
         }
 
@@ -76,9 +75,9 @@ public:
     }
 
     inline channel_ws(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier={},
-        const options_t& options={}) NOEXCEPT
-      : channel_http(log, socket, settings, identifier, options),
+        uint64_t identifier, const settings_t& settings,
+        const options_t& options) NOEXCEPT
+      : channel_http(log, socket, identifier, settings, options),
         ////distributor_(socket->strand()),
         tracker<channel_ws>(log)
     {

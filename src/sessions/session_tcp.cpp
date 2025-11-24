@@ -186,7 +186,6 @@ void session_tcp::handle_accepted(const code& ec,
         return;
     }
 
-    // TODO: pass session info to channel for http (e.g. busy, unauthorized).
     // Creates channel_xxxx cast as channel::ptr.
     const auto channel = create_channel(socket);
 

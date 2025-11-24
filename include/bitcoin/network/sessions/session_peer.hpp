@@ -39,6 +39,7 @@ class BCT_API session_peer
 {
 public:
     typedef std::shared_ptr<session_peer> ptr;
+    using options_t = network::settings::tcp_server;
 
     /// Utilities.
     /// -----------------------------------------------------------------------
@@ -68,7 +69,8 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Construct an instance (network should be started).
-    session_peer(net& network, uint64_t identifier) NOEXCEPT;
+    session_peer(net& network, uint64_t identifier,
+        const options_t& options) NOEXCEPT;
 
     /// Channel sequence.
     /// -----------------------------------------------------------------------
@@ -105,6 +107,9 @@ protected:
     /// Message level is supported by confired protocol level.
     virtual bool is_configured(messages::peer::level level) const NOEXCEPT;
 
+    /// The configured options for this peer session.
+    virtual const options_t& options() const NOEXCEPT;
+
 private:
     void do_handle_handshake(const code& ec, const channel::ptr& channel,
         const result_handler& start) NOEXCEPT override;
@@ -115,6 +120,9 @@ private:
 
     // This is thread safe (mostly).
     net& network_;
+
+    // This is thread safe.
+    const options_t& options_;
 };
 
 } // namespace network

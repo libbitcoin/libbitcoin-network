@@ -42,8 +42,9 @@ using namespace std::placeholders;
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_peer::session_peer(net& network, uint64_t identifier) NOEXCEPT
-  : session(network, identifier), network_(network)
+session_peer::session_peer(net& network, uint64_t identifier,
+    const options_t& options) NOEXCEPT
+  : session(network, identifier),  network_(network), options_(options)
 {
 }
 
@@ -219,12 +220,10 @@ channel::ptr session_peer::create_channel(const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Default message memory resource, override create_channel to replace.
-    static default_memory memory{};
-
     // Channel id must be created using create_key().
-    return std::make_shared<channel_peer>(memory, log, socket, settings(),
-        create_key());
+    // Default message memory resource, override create_channel to replace.
+    return emplace_shared<channel_peer>(log, socket, create_key(),
+        settings(), options_);
 }
 
 // Properties.
@@ -253,6 +252,11 @@ size_t session_peer::outbound_channel_count() const NOEXCEPT
 bool session_peer::is_configured(messages::peer::level level) const NOEXCEPT
 {
     return settings().protocol_maximum >= level;
+}
+
+const session_peer::options_t& session_peer::options() const NOEXCEPT
+{
+    return options_;
 }
 
 // Utilities.

@@ -37,6 +37,8 @@ class BCT_API channel
 {
 public:
     typedef std::shared_ptr<channel> ptr;
+    using options_t = network::settings::tcp_server;
+    using settings_t = network::settings;
 
     DELETE_COPY_MOVE(channel);
 
@@ -48,7 +50,7 @@ public:
         BC_ASSERT_MSG(stranded(), "strand");
 
         if (!stranded())
-            return nullptr;
+            return {};
 
         // Protocols are attached after channel start (read paused).
         auto protocol = std::make_shared<Protocol>(session,
@@ -82,14 +84,12 @@ public:
     uint64_t identifier() const NOEXCEPT;
 
     /// Configuration settings.
-    const network::settings& settings() const NOEXCEPT;
+    const settings_t& settings() const NOEXCEPT;
 
 protected:
     /// Construct a channel to encapsulated and communicate on the socket.
-    channel(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero,
-        const deadline::duration& inactivity={},
-        const deadline::duration& expiration={}) NOEXCEPT;
+    channel(const logger& log, const socket::ptr& socket, uint64_t identifier,
+        const settings_t& settings, const options_t& options) NOEXCEPT;
 
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
@@ -107,7 +107,7 @@ private:
     void handle_inactivity(const code& ec) NOEXCEPT;
 
     // These are thread safe (const).
-    const network::settings& settings_;
+    const settings_t& settings_;
     const uint64_t identifier_;
     const uint64_t nonce_
     {

@@ -230,10 +230,10 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(bool seed=false) NOEXCEPT override
+    connector::ptr create_connector(bool =false) NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings(), suspended_, seed)));
+            service(), network_settings().connect_timeout(), suspended_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
+    BOOST_REQUIRE(set.manual.peers.empty());
 
     // Connector is not invoked.
     mock_net<> net(set, log);
@@ -681,10 +681,10 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__s
 {
     const logger log{};
     settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
+    BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
-    set.peers.push_back(expected);
+    set.manual.peers.push_back(expected);
 
     // Connect will return invalid_magic when executed.
     mock_net<mock_connector_connect_fail> net(set, log);
@@ -714,13 +714,13 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__
 {
     const logger log{};
     settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
+    BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.4", 42 };
-    set.peers.push_back({ "42.42.42.1", 42 });
-    set.peers.push_back({ "42.42.42.2", 42 });
-    set.peers.push_back({ "42.42.42.3", 42 });
-    set.peers.push_back(expected);
+    set.manual.peers.push_back({ "42.42.42.1", 42 });
+    set.manual.peers.push_back({ "42.42.42.2", 42 });
+    set.manual.peers.push_back({ "42.42.42.3", 42 });
+    set.manual.peers.push_back(expected);
 
     // Connect will return invalid_magic when executed.
     mock_net<mock_connector_connect_fail> net(set, log);
@@ -751,7 +751,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
+    BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
 
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
+    BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
 
@@ -811,7 +811,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
+    BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
 
