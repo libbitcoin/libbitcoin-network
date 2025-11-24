@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/rpc/rpc.hpp>
 
 #include <variant>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/enums/version.hpp>
+#include <bitcoin/network/rpc/enums/version.hpp>
 
 // boost::json parse/seralize is not exception safe.
 

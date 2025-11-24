@@ -14,7 +14,7 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\async\races">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\channels">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
@@ -29,22 +29,19 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\http">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\json">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\peer">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\peer\enums">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\rpc">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\net">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
@@ -52,8 +49,11 @@
     <Filter Include="src\protocols">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\rpc">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sessions">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -297,18 +297,6 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\witness_tx_id_relay.cpp">
       <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\any.cpp">
-      <Filter>src\messages\rpc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\dispatcher.cpp">
-      <Filter>src\messages\rpc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\method.cpp">
-      <Filter>src\messages\rpc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp">
-      <Filter>src\messages\rpc</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -377,6 +365,18 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp">
       <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\rpc\any.cpp">
+      <Filter>src\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\rpc\dispatcher.cpp">
+      <Filter>src\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\rpc\method.cpp">
+      <Filter>src\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\rpc\types.cpp">
+      <Filter>src\rpc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\sessions\session.cpp">
       <Filter>src\sessions</Filter>

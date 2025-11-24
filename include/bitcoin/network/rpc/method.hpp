@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
+#ifndef LIBBITCOIN_NETWORK_RPC_METHOD_HPP
+#define LIBBITCOIN_NETWORK_RPC_METHOD_HPP
 
 #include <tuple>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/types.hpp>
+#include <bitcoin/network/rpc/types.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -32,6 +32,22 @@ namespace rpc {
 BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
 
 /// Defines methods assignable to an rpc interface.
+/// Each method must have a unique signature in the scope of the interface. The
+/// method name is not part of the signature and is used only for dispatch, not
+/// for subscription. Dispatch is weakly-typed to the name, where the notify
+/// call maps to a functor and thereby imposes the signature requirement on the
+/// request. Subscriptions are strongly-typed by argument signature alone.
+/// Therefore, all signatures must be unique, which imposes a convention-based
+/// restriction on method signatures. If a method signature contains a first
+/// argument of type std::shared_ptr<T> it is considered "native". The type `T`
+/// must be unique for each native method in the interface. Otherwise the
+/// dispatcher<> imposes a requirement that the first argument type is that of
+/// the method itself (ie. the method::tag). This argument is required in the
+/// handler signature, is defaulted upone notify, and is not part of a request,
+/// as the request is matched by method name. This allows two methods to have
+/// the same public signature while being bound by a unqiue argument list. The
+/// notifier always injects a code as the zeroth argument. This must also be
+/// provided by the method handler. So a minimal handler always has two args.
 template <text_t Text, typename ...Args>
 struct method
 {
@@ -45,7 +61,7 @@ struct method
     using args = iif<native, args_native, std::tuple<tag, Args...>>;
     using names = std::array<std::string_view, size>;
 
-    /// Required for construction of tag{}.
+    /// Required for construction of tag{} and passage of default value.
     inline constexpr method() NOEXCEPT
       : names_{}
     {
@@ -68,7 +84,7 @@ private:
     const names names_;
 };
 
-/// Helpers dependent upon method.
+/// Type helpers required by dispatcher<> and dependent upon method.
 /// ---------------------------------------------------------------------------
 
 template <typename Method, typename = bool>
@@ -112,11 +128,6 @@ using tag_t = typename Method::tag;
 
 template <size_t Index, typename Methods>
 using method_t = std::tuple_element_t<Index, Methods>;
-
-/// subscribers_t<Method...>
-/// ---------------------------------------------------------------------------
-
-
 
 BC_POP_WARNING()
 

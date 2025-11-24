@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_ANY_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_ANY_HPP
+#ifndef LIBBITCOIN_NETWORK_RPC_ANY_HPP
+#define LIBBITCOIN_NETWORK_RPC_ANY_HPP
 
 #include <any>
 #include <memory>
@@ -30,6 +30,7 @@ namespace rpc {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+/// Used in model to support dispatch of complex objects.
 /// Similar to std::any, but preserves fixed stack size through shared_ptr.
 /// This allows it to participate in a std::variant type without inflation.
 /// Also differs in that a move will fully remove the original inner object.

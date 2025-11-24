@@ -16,19 +16,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
+#ifndef LIBBITCOIN_NETWORK_RPC_PUBLISH_HPP
+#define LIBBITCOIN_NETWORK_RPC_PUBLISH_HPP
 
 #include <tuple>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/enums/grouping.hpp>
-#include <bitcoin/network/messages/rpc/method.hpp>
+#include <bitcoin/network/rpc/enums/grouping.hpp>
+#include <bitcoin/network/rpc/method.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace rpc {
-    
+
+/// Methods are a std::tuple of rpc::method<name, args>.
+/// Defines a published interface for use with rpc::dispatcher<>.
 template <typename Methods, grouping Mode = grouping::either>
 struct publish
   : public Methods
