@@ -183,7 +183,7 @@ void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
         channel->attach<protocol_reject_70002>(self)->start();
 
     if (peer->is_negotiated(level::bip31))
-        peer->attach<protocol_ping_60001>(self)->start();
+        channel->attach<protocol_ping_60001>(self)->start();
     else if (peer->is_negotiated(level::version_message))
         channel->attach<protocol_ping_106>(self)->start();
 
