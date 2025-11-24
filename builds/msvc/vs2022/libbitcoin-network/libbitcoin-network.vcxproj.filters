@@ -551,10 +551,19 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\fields.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\head.hpp">
+      <Filter>include\bitcoin\network\messages\http</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\http.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp">
+      <Filter>include\bitcoin\network\messages\http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\request.hpp">
+      <Filter>include\bitcoin\network\messages\http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\response.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\types.hpp">

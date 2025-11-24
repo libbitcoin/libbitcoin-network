@@ -349,8 +349,11 @@ include_bitcoin_network_messages_httpdir = ${includedir}/bitcoin/network/message
 include_bitcoin_network_messages_http_HEADERS = \
     include/bitcoin/network/messages/http/body.hpp \
     include/bitcoin/network/messages/http/fields.hpp \
+    include/bitcoin/network/messages/http/head.hpp \
     include/bitcoin/network/messages/http/http.hpp \
     include/bitcoin/network/messages/http/method.hpp \
+    include/bitcoin/network/messages/http/request.hpp \
+    include/bitcoin/network/messages/http/response.hpp \
     include/bitcoin/network/messages/http/types.hpp
 
 include_bitcoin_network_messages_http_enumsdir = ${includedir}/bitcoin/network/messages/http/enums
