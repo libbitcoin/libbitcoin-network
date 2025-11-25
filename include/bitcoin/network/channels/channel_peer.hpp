@@ -60,9 +60,9 @@ public:
         BC_ASSERT(stranded());
 
         // TODO: move to serializer.
-        const auto id = settings().identifier;
+        const auto magic = settings().identifier;
         const auto version = negotiated_version();
-        const auto ptr = messages::peer::serialize(message, id, version);
+        const auto ptr = messages::peer::serialize(message, magic, version);
 
         using namespace std::placeholders;
         count_handler complete = std::bind(&channel_peer::handle_send,
