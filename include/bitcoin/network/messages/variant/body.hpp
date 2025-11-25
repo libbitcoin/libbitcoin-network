@@ -147,7 +147,7 @@ struct BCT_API body
         using buffer_type = asio::const_buffer;
 
         template <bool IsRequest, class Fields>
-        inline explicit reader(http::header<IsRequest, Fields>& header,
+        inline explicit reader(http::message_header<IsRequest, Fields>& header,
             value_type& value) NOEXCEPT
           : reader_{ to_reader(header, value) }
         {
@@ -228,7 +228,7 @@ struct BCT_API body
         using out_buffer = http::get_buffer<const_buffers_type>;
 
         template <bool IsRequest, class Fields>
-        inline explicit writer(http::header<IsRequest, Fields>& header,
+        inline explicit writer(http::message_header<IsRequest, Fields>& header,
             value_type& value) NOEXCEPT
           : writer_{ to_writer(header, value) }
         {

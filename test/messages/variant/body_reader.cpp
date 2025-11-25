@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(variant_body_reader_tests)
 
 BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__bogus__constructs_empty_reader)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     header.set(http::field::content_type, "bogus");
     body::value_type value{};
     value = empty_body::value_type{};
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__bogus__constructs_empty_rea
 
 BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__json__constructs_json_reader)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     header.set(http::field::content_type, "application/json");
     body::value_type value{};
     value = json_body::value_type{};
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__json__constructs_json_reade
 
 BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream__constructs_data_reader)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "bogus");
     body::value_type value{};
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream__c
 
 BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream_with_attachment__constructs_file_reader)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "filename=somenonsense.jpg");
     body::value_type value{};
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream_wi
 
 BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream_with_dirty_attachment__constructs_file_reader)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "dirty 42; filename* = somenonsense.jpg; some other nonsense");
     body::value_type value{};
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream_wi
 
 BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__text_plain__constructs_string_reader)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     header.set(http::field::content_type, "text/plain");
     body::value_type value{};
     value = string_body::value_type{};

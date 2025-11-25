@@ -73,8 +73,8 @@ struct head
 
     struct value_type
     {
-        using header_type = header<IsRequest>;
         using message_type = empty_message<IsRequest>;
+        using header_type = message_header<IsRequest>;
 
         value_type() NOEXCEPT
           : value_type(message_type{})

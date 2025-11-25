@@ -68,19 +68,19 @@ using flat_buffer_ptr = std::shared_ptr<flat_buffer>;
 using flat_buffer_cptr = std::shared_ptr<const flat_buffer>;
 
 /// Types required for custom http::body/head<> definitions.
-template <bool IsRequest, class Fields = fields>
-using header = boost::beast::http::header<IsRequest, Fields>;
 template <bool IsRequest>
 using empty_parser = boost::beast::http::parser<IsRequest, empty_body>;
 template <bool IsRequest>
 using empty_serializer = boost::beast::http::serializer<IsRequest, empty_body>;
 template <bool IsRequest>
 using empty_message = boost::beast::http::message<IsRequest, empty_body>;
+template <bool IsRequest, class Fields = fields>
+using message_header = boost::beast::http::header<IsRequest, Fields>;
 template <class Buffer>
 using get_buffer = boost::optional<std::pair<Buffer, bool>>;
 using length_type = boost::optional<uint64_t>;
-using request_header = header<true, fields>;
-using response_header = header<false, fields>;
+using request_header = message_header<true, fields>;
+using response_header = message_header<false, fields>;
 using empty_request = boost::beast::http::request<empty_body>;
 using empty_response = boost::beast::http::response<empty_body>;
 

@@ -55,7 +55,7 @@ struct BCT_API body
         using buffer_type = asio::const_buffer;
 
         template <bool IsRequest, class Fields>
-        inline explicit reader(http::header<IsRequest, Fields>&,
+        inline explicit reader(http::message_header<IsRequest, Fields>&,
             value_type& value) NOEXCEPT
           : value_{ value }
         {
@@ -79,7 +79,7 @@ struct BCT_API body
         using out_buffer = http::get_buffer<const_buffers_type>;
 
         template <bool IsRequest, class Fields>
-        inline explicit writer(http::header<IsRequest, Fields>&,
+        inline explicit writer(http::message_header<IsRequest, Fields>&,
             value_type& value) NOEXCEPT
           : value_{ value }, serializer_{ value.model.storage() }
         {
