@@ -160,7 +160,7 @@ struct BCT_API body
     protected:
         /// Select reader based on content-type header.
         template <class Header>
-        inline static body_reader to_reader(Header& header,
+        static inline body_reader to_reader(Header& header,
             value_type& value) NOEXCEPT
         {
             switch (http::content_mime_type(header))
@@ -240,7 +240,7 @@ struct BCT_API body
     protected:
         /// Create writer matching the caller-defined body inner variant type.
         template <class Header>
-        inline static body_writer to_writer(Header& header,
+        static inline body_writer to_writer(Header& header,
             value_type& value) NOEXCEPT
         {
             // Caller should have set optional<>, otherwise set to empty_value.

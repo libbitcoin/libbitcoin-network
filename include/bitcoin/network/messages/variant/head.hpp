@@ -35,46 +35,45 @@ namespace variant {
 /// Allows universal request and response message types with single asio async
 /// read(request) and write(response) implementations. body<> is auto-selected
 /// in the read(request) through its access to the header (e.g. content-type).
-/// TODO: move out of http namespace once generalized.
 
 // TODO: expand these variants to support:
-// http framing: request, response [asymmetrical] (using beast).
 // line framing: electrum, strantum_v1 (custom head).
 // websockets framing: rest API (using beast).
 // stratum_v2 framing: stratum_v2 (custom head).
 // zeromq framing: rest API (custom head).
 
-// Aliases for the two concrete HTTP head types
-using request_head  = http::head<true>;
-using response_head = http::head<false>;
+// Aliases for the two HTTP head types (with default http::fields).
 
-using request_reader  = request_head::reader;
-using response_reader = response_head::reader;
+template <bool IsRequest>
+using http_reader = typename http::head<IsRequest>::reader;
+template <bool IsRequest>
 using head_reader = std::variant
 <
-    request_reader,
-    response_reader
+    http_reader<IsRequest>
 >;
 
-using request_writer  = request_head::writer;
-using response_writer = response_head::writer;
+template <bool IsRequest>
+using http_writer = typename http::head<IsRequest>::writer;
+template <bool IsRequest>
 using head_writer = std::variant
 <
-    request_writer,
-    response_writer
+    http_writer<IsRequest>
 >;
 
-using request_value  = request_head::value_type;
-using response_value = response_head::value_type;
+template <bool IsRequest>
+using http_value = typename http::head<IsRequest>::value_type;
+template <bool IsRequest>
 using head_value = std::variant
 <
-    request_value,
-    response_value
+    http_value<IsRequest>
 >;
 
 /// Universal header for all known framing types.
+/// Template differentiates request/response message types, though these vary
+/// only due to the slight asymmetry between http request and response headers.
 /// Currently only HTTP, but designed for future extension (WebSocket, etc.)
-struct BCT_API head
+template <bool IsRequest>
+struct head
 {
     struct value_type
     {
@@ -82,20 +81,19 @@ struct BCT_API head
 
         FORWARD_VARIANT_CONSTRUCT(value_type, inner_)
         FORWARD_VARIANT_ASSIGNMENT(value_type, inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, request_value,  inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, response_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, http_value<IsRequest>,  inner_)
 
         inline bool has_value() const NOEXCEPT
         {
             return inner_.has_value();
         }
 
-        inline head_value& value() NOEXCEPT
+        inline head_value<IsRequest>& value() NOEXCEPT
         {
             return inner_.value(); 
         }
 
-        inline const head_value& value() const NOEXCEPT
+        inline const head_value<IsRequest>& value() const NOEXCEPT
         {
             return inner_.value();
         }
@@ -114,7 +112,7 @@ struct BCT_API head
         }
 
     private:
-        std::optional<head_value> inner_{};
+        std::optional<head_value<IsRequest>> inner_{};
     };
 
     class reader
@@ -127,29 +125,26 @@ struct BCT_API head
         {
         }
 
-        void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
-        size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
-        void finish(boost_code& ec) NOEXCEPT;
+        inline void init(const http::length_type& length,
+            boost_code& ec) NOEXCEPT;
+        inline size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
+        inline void finish(boost_code& ec) NOEXCEPT;
 
     private:
-        static head_reader to_reader(value_type& value) NOEXCEPT
+        static inline head_reader<IsRequest> to_reader(
+            value_type& value) NOEXCEPT
         {
             return std::visit(overload
             {
-                [&](request_value& value) NOEXCEPT
+                [&](http_value<IsRequest>& value) NOEXCEPT
                 {
-                    return head_reader{ std::in_place_type<request_reader>,
-                        value };
-                },
-                [&](response_value& value) NOEXCEPT
-                {
-                    return head_reader{ std::in_place_type<response_reader>,
-                        value };
+                    return head_reader<IsRequest>{
+                        std::in_place_type<http_reader<IsRequest>>, value };
                 }
             }, value.value());
         }
 
-        head_reader reader_;
+        head_reader<IsRequest> reader_;
     };
 
     class writer
@@ -163,33 +158,37 @@ struct BCT_API head
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT;
-        out_buffer get(boost_code& ec) NOEXCEPT;
+        inline void init(boost_code& ec) NOEXCEPT;
+        inline out_buffer get(boost_code& ec) NOEXCEPT;
 
     private:
-        static head_writer to_writer(value_type& value) NOEXCEPT
+        static inline head_writer<IsRequest> to_writer(
+            value_type& value) NOEXCEPT
         {
             return std::visit(overload
             {
-                [&](request_value& value) NOEXCEPT
+                [&](http_value<IsRequest>& value) NOEXCEPT
                 {
-                    return head_writer{ std::in_place_type<request_writer>,
-                        value };
-                },
-                [&](response_value& value) NOEXCEPT
-                {
-                    return head_writer{ std::in_place_type<response_writer>,
-                        value };
+                    return head_writer<IsRequest>{
+                        std::in_place_type<http_writer<IsRequest>>, value };
                 }
             }, value.value());
         }
 
-        head_writer writer_;
+        head_writer<IsRequest> writer_;
     };
 };
 
 } // namespace variant
 } // namespace network
 } // namespace libbitcoin
+
+#define TEMPLATE template <bool IsRequest>
+#define CLASS head<IsRequest>
+
+#include <bitcoin/network/impl/messages/variant/head.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

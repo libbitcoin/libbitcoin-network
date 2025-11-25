@@ -192,7 +192,6 @@
     <ClCompile Include="..\..\..\..\src\messages\variant\body.cpp">
       <ObjectFileName>$(IntDir)src_messages_variant_body.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\variant\head.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
@@ -393,6 +392,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\head.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\variant\head.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\dispatcher.ipp" />
     <None Include="packages.config" />
   </ItemGroup>

@@ -100,7 +100,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/peer/detail/version_acknowledge.cpp \
     src/messages/peer/detail/witness_tx_id_relay.cpp \
     src/messages/variant/body.cpp \
-    src/messages/variant/head.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
     src/net/connector.cpp \
@@ -339,6 +338,10 @@ include_bitcoin_network_impl_async_races_HEADERS = \
 include_bitcoin_network_impl_messages_httpdir = ${includedir}/bitcoin/network/impl/messages/http
 include_bitcoin_network_impl_messages_http_HEADERS = \
     include/bitcoin/network/impl/messages/http/head.ipp
+
+include_bitcoin_network_impl_messages_variantdir = ${includedir}/bitcoin/network/impl/messages/variant
+include_bitcoin_network_impl_messages_variant_HEADERS = \
+    include/bitcoin/network/impl/messages/variant/head.ipp
 
 include_bitcoin_network_impl_rpcdir = ${includedir}/bitcoin/network/impl/rpc
 include_bitcoin_network_impl_rpc_HEADERS = \

@@ -16,23 +16,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/variant/head.hpp>
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_VARIANT_HEAD_IPP
+#define LIBBITCOIN_NETWORK_MESSAGES_VARIANT_HEAD_IPP
 
-#include <utility>
 #include <variant>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace variant {
-
-using namespace network::http;
-using namespace network::error;
     
 // variant::head::reader
 // ----------------------------------------------------------------------------
 
-void head::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
+TEMPLATE
+inline void CLASS::reader::init(const http::length_type& length,
+    boost_code& ec) NOEXCEPT
 {
     std::visit(overload
     {
@@ -44,13 +43,15 @@ void head::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = error::to_boost_code(error::boost_error_t::io_error);
             }
         }
     }, reader_);
 }
 
-size_t head::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
+TEMPLATE
+inline size_t CLASS::reader::put(const buffer_type& buffer,
+    boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -62,14 +63,15 @@ size_t head::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = error::to_boost_code(error::boost_error_t::io_error);
                 return size_t{};
             }
         }
     }, reader_);
 }
 
-void head::reader::finish(boost_code& ec) NOEXCEPT
+TEMPLATE
+inline void CLASS::reader::finish(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -81,7 +83,7 @@ void head::reader::finish(boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = error::to_boost_code(error::boost_error_t::io_error);
             }
         }
     }, reader_);
@@ -89,8 +91,9 @@ void head::reader::finish(boost_code& ec) NOEXCEPT
 
 // variant::head::writer
 // ----------------------------------------------------------------------------
-    
-void head::writer::init(boost_code& ec) NOEXCEPT
+
+TEMPLATE
+inline void CLASS::writer::init(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -102,13 +105,14 @@ void head::writer::init(boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = error::to_boost_code(error::boost_error_t::io_error);
             }
         }
     }, writer_);
 }
 
-head::writer::out_buffer head::writer::get(boost_code& ec) NOEXCEPT
+TEMPLATE
+inline CLASS::writer::out_buffer CLASS::writer::get(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -120,7 +124,7 @@ head::writer::out_buffer head::writer::get(boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = error::to_boost_code(error::boost_error_t::io_error);
                 return out_buffer{};
             }
         }
@@ -130,3 +134,5 @@ head::writer::out_buffer head::writer::get(boost_code& ec) NOEXCEPT
 } // namespace variant
 } // namespace network
 } // namespace libbitcoin
+
+#endif

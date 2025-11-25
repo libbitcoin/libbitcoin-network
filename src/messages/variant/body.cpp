@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/variant/body.hpp>
 
-#include <utility>
 #include <variant>
 #include <bitcoin/network/define.hpp>
 

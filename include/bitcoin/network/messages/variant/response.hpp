@@ -21,8 +21,23 @@
 
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/variant/body.hpp>
+#include <bitcoin/network/messages/variant/head.hpp>
 
- // TODO: move to variant namespace.
+namespace libbitcoin {
+namespace network {
+namespace variant {
+
+struct response
+{
+    variant::head<false> head{};
+    variant::body body{};
+};
+
+} // namespace variant
+} // namespace network
+} // namespace libbitcoin
+
+// TODO: move to variant namespace.
 namespace libbitcoin {
 namespace network {
 namespace http {

@@ -282,7 +282,6 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/messages/peer/detail/version_acknowledge.cpp"
     "../../src/messages/peer/detail/witness_tx_id_relay.cpp"
     "../../src/messages/variant/body.cpp"
-    "../../src/messages/variant/head.cpp"
     "../../src/net/acceptor.cpp"
     "../../src/net/broadcaster.cpp"
     "../../src/net/connector.cpp"
