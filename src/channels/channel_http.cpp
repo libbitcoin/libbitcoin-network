@@ -23,7 +23,7 @@
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/variant/variant.hpp>
 #include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
@@ -166,11 +166,11 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
 void channel_http::set_buffer(response& response) NOEXCEPT
 {
     if (const auto& body = response.body();
-        body.contains<json_value>())
+        body.contains<variant::json_value>())
     {
-        const auto& value = body.get<json_value>();
+        const auto& value = body.get<variant::json_value>();
         response_buffer_->max_size(value.size_hint);
-        body.get<json_value>().buffer = response_buffer_;
+        body.get<variant::json_value>().buffer = response_buffer_;
     }
 }
 

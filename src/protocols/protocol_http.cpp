@@ -25,7 +25,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/variant/variant.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
@@ -33,7 +33,7 @@ namespace libbitcoin {
 namespace network {
 
 #define CLASS protocol_http
-
+    
 using namespace http;
 using namespace std::placeholders;
 

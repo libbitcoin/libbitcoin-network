@@ -16,18 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_RESPONSE_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_RESPONSE_HPP
+#include "../../test.hpp"
 
-#include <variant>
-#include <bitcoin/network/define.hpp>
+BOOST_AUTO_TEST_SUITE(http_head_reader_tests)
 
-namespace libbitcoin {
-namespace network {
-namespace http {
+using namespace network::http;
 
-} // namespace http
-} // namespace network
-} // namespace libbitcoin
+////struct accessor
+////  : public head::reader
+////{
+////    using base = head::reader;
+////    using base::reader;
+////    using base::to_reader;
+////};
 
-#endif
+BOOST_AUTO_TEST_SUITE_END()

@@ -25,7 +25,7 @@
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/variant/variant.hpp>
 #include <bitcoin/network/rpc/rpc.hpp>
 #include <bitcoin/network/net/socket.hpp>
 

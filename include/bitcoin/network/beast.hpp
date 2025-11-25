@@ -40,93 +40,24 @@ constexpr int32_t version_1_0 = 10;
 
 /// beast::http::empty_body
 using empty_body = boost::beast::http::empty_body;
-using empty_request = boost::beast::http::request<empty_body>;
-using empty_response = boost::beast::http::response<empty_body>;
-using empty_parser = boost::beast::http::request_parser<empty_body>;
-using empty_serializer = boost::beast::http::serializer<false, empty_body>;
-using empty_response_cptr = std::shared_ptr<const empty_response>;
-using empty_request_cptr = std::shared_ptr<const empty_request>;
-using empty_response_ptr = std::shared_ptr<empty_response>;
-using empty_request_ptr = std::shared_ptr<empty_request>;
 
 // TODO: rename to chunk_body etc., to highlight the allocator.
 /// beast::http::vector_body<uint8_t, bc::allocator<uint8_t>>
 using data_body = boost::beast::http::vector_body<uint8_t, allocator<uint8_t>>;
-using data_request = boost::beast::http::request<data_body>;
-using data_response = boost::beast::http::response<data_body>;
-using data_parser = boost::beast::http::request_parser<data_body>;
-using data_serializer = boost::beast::http::serializer<false, data_body>;
-using data_response_cptr = std::shared_ptr<const data_response>;
-using data_request_cptr = std::shared_ptr<const data_request>;
-using data_response_ptr = std::shared_ptr<data_response>;
-using data_request_ptr = std::shared_ptr<data_request>;
 
 /// beast::http::file_body
 using file_body = boost::beast::http::file_body;
-using file_request = boost::beast::http::request<file_body>;
-using file_response = boost::beast::http::response<file_body>;
-using file_parser = boost::beast::http::request_parser<file_body>;
-using file_serializer = boost::beast::http::serializer<false, file_body>;
-using file_response_cptr = std::shared_ptr<const file_response>;
-using file_request_cptr = std::shared_ptr<const file_request>;
-using file_response_ptr = std::shared_ptr<file_response>;
-using file_request_ptr = std::shared_ptr<file_request>;
 
 /// beast::http::span_body<uint8_t>
 /// Must cast write span uint8_t* to non-const.
 using span_body = boost::beast::http::span_body<uint8_t>;
-using span_request = boost::beast::http::request<span_body>;
-using span_response = boost::beast::http::response<span_body>;
-using span_parser = boost::beast::http::request_parser<span_body>;
-using span_serializer = boost::beast::http::serializer<false, span_body>;
-using span_response_cptr = std::shared_ptr<const span_response>;
-using span_request_cptr = std::shared_ptr<const span_request>;
-using span_response_ptr = std::shared_ptr<span_response>;
-using span_request_ptr = std::shared_ptr<span_request>;
 
 /// beast::http::buffer_body
 /// Must cast write buffer void* to non-const.
 using buffer_body = boost::beast::http::buffer_body;
-using buffer_request = boost::beast::http::request<buffer_body>;
-using buffer_response = boost::beast::http::response<buffer_body>;
-using buffer_parser = boost::beast::http::request_parser<buffer_body>;
-using buffer_serializer = boost::beast::http::serializer<false, buffer_body>;
-using buffer_response_cptr = std::shared_ptr<const buffer_response>;
-using buffer_request_cptr = std::shared_ptr<const buffer_request>;
-using buffer_response_ptr = std::shared_ptr<buffer_response>;
-using buffer_request_ptr = std::shared_ptr<buffer_request>;
 
 /// beast::http::string_body
 using string_body = boost::beast::http::string_body;
-using string_request = boost::beast::http::request<string_body>;
-using string_response = boost::beast::http::response<string_body>;
-using string_parser = boost::beast::http::request_parser<string_body>;
-using string_serializer = boost::beast::http::serializer<false, string_body>;
-using string_request_cptr = std::shared_ptr<const string_request>;
-using string_response_cptr = std::shared_ptr<const string_response>;
-using string_response_ptr = std::shared_ptr<string_response>;
-using string_request_ptr = std::shared_ptr<string_request>;
-
-/////// http::json::body
-////using json_request = boost::beast::http::request<json_body>;
-////using json_response = boost::beast::http::response<json_body>;
-////using json_parser = boost::beast::http::request_parser<json_body>;
-////using json_serializer = boost::beast::http::serializer<false, json_body>;
-////using json_response_cptr = std::shared_ptr<const json_response>;
-////using json_request_cptr = std::shared_ptr<const json_request>;
-////using json_response_ptr = std::shared_ptr<json_response>;
-////using json_request_ptr = std::shared_ptr<json_request>;
-
-// Defined in types.hpp.
-/////// http::body (variant)
-////using request = boost::beast::http::request<body>;
-////using response = boost::beast::http::response<body>;
-////using parser = boost::beast::http::request_parser<body>;
-////using serializer = boost::beast::http::serializer<false, body>;
-////using response_cptr = std::shared_ptr<const response>;
-////using request_cptr = std::shared_ptr<const request>;
-////using response_ptr = std::shared_ptr<response>;
-////using request_ptr = std::shared_ptr<request>;
 
 /// general purpose
 using file = file_body::value_type;

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/http/body.hpp>
+#include <bitcoin/network/messages/variant/body.hpp>
 
 #include <utility>
 #include <variant>
@@ -24,11 +24,12 @@
 
 namespace libbitcoin {
 namespace network {
-namespace http {
+namespace variant {
 
+using namespace network::http;
 using namespace network::error;
     
-// http::body::reader
+// variant::body::reader
 // ----------------------------------------------------------------------------
 
 void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
@@ -49,8 +50,7 @@ void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
     }, reader_);
 }
 
-size_t body::reader::put(const buffer_type& buffer,
-    boost_code& ec) NOEXCEPT
+size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -87,7 +87,7 @@ void body::reader::finish(boost_code& ec) NOEXCEPT
     }, reader_);
 }
 
-// http::body::writer
+// variant::body::writer
 // ----------------------------------------------------------------------------
     
 void body::writer::init(boost_code& ec) NOEXCEPT
@@ -127,6 +127,6 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
     }, writer_);
 }
 
-} // namespace http
+} // namespace variant
 } // namespace network
 } // namespace libbitcoin

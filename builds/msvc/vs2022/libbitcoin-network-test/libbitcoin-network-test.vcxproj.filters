@@ -32,7 +32,7 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\http\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\json">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
@@ -41,7 +41,10 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\peer\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\variant">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\net">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
@@ -135,12 +138,6 @@
     <ClCompile Include="..\..\..\..\test\memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\http\body_reader.cpp">
-      <Filter>src\messages\http</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\http\body_writer.cpp">
-      <Filter>src\messages\http</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
       <Filter>src\messages\http\enums</Filter>
     </ClCompile>
@@ -153,7 +150,10 @@
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
+    <ClCompile Include="..\..\..\..\test\messages\http\head_reader.cpp">
+      <Filter>src\messages\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\head_writer.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
@@ -296,6 +296,21 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\witness_tx_id_relay.cpp">
       <Filter>src\messages\peer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\variant\body_reader.cpp">
+      <Filter>src\messages\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\variant\body_writer.cpp">
+      <Filter>src\messages\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\variant\head_reader.cpp">
+      <Filter>src\messages\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\variant\head_writer.cpp">
+      <Filter>src\messages\variant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\variant\method.cpp">
+      <Filter>src\messages\variant</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp">
       <Filter>src</Filter>

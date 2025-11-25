@@ -32,7 +32,6 @@ namespace json {
 /// is movable and as such must be in-place contructed (e.g. variant contruct).
 struct BCT_API body
 {
-    
     /// Content passed to/from reader/writer via request/response.
     /// `static uint64_t size(const value_type&)` must be defined for beast to 
     /// produce `content_length`, otherwise the response is chunked. Predeter-

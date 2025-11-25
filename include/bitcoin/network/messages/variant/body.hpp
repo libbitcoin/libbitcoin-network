@@ -16,28 +16,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_VARIANT_BODY_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_VARIANT_BODY_HPP
 
 #include <optional>
 #include <variant>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/http/enums/mime_type.hpp>
-#include <bitcoin/network/messages/http/fields.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
+
+// TODO: relies on http::header, length_type, get_buffer, mime_type.
 
 namespace libbitcoin {
 namespace network {
-namespace http {
+namespace variant {
 
-using empty_reader = empty_body::reader;
-using json_reader = json_body::reader;
-using data_reader = data_body::reader;
-using file_reader = file_body::reader;
-using span_reader = span_body::reader;
-using buffer_reader = buffer_body::reader;
-using string_reader = string_body::reader;
-using variant_reader = std::variant
+using empty_reader = http::empty_body::reader;
+using json_reader = json::body::reader;
+using data_reader = http::data_body::reader;
+using file_reader = http::file_body::reader;
+using span_reader = http::span_body::reader;
+using buffer_reader = http::buffer_body::reader;
+using string_reader = http::string_body::reader;
+using body_reader = std::variant
 <
     empty_reader,
     json_reader,
@@ -48,14 +50,14 @@ using variant_reader = std::variant
     string_reader
 >;
 
-using empty_writer = empty_body::writer;
-using json_writer = json_body::writer;
-using data_writer = data_body::writer;
-using file_writer = file_body::writer;
-using span_writer = span_body::writer;
-using buffer_writer = buffer_body::writer;
-using string_writer = string_body::writer;
-using variant_writer = std::variant
+using empty_writer = http::empty_body::writer;
+using json_writer = json::body::writer;
+using data_writer = http::data_body::writer;
+using file_writer = http::file_body::writer;
+using span_writer = http::span_body::writer;
+using buffer_writer = http::buffer_body::writer;
+using string_writer = http::string_body::writer;
+using body_writer = std::variant
 <
     empty_writer,
     json_writer,
@@ -66,14 +68,14 @@ using variant_writer = std::variant
     string_writer
 >;
 
-using empty_value = empty_body::value_type;
-using json_value = json_body::value_type;
-using data_value = data_body::value_type;
-using file_value = file_body::value_type;
-using span_value = span_body::value_type;
-using buffer_value = buffer_body::value_type;
-using string_value = string_body::value_type;
-using variant_value = std::variant
+using empty_value = http::empty_body::value_type;
+using json_value = json::body::value_type;
+using data_value = http::data_body::value_type;
+using file_value = http::file_body::value_type;
+using span_value = http::span_body::value_type;
+using buffer_value = http::buffer_body::value_type;
+using string_value = http::string_body::value_type;
+using body_value = std::variant
 <
     empty_value,
     json_value,
@@ -84,7 +86,7 @@ using variant_value = std::variant
     string_value
 >;
 
-/// boost::beast::http body template for all known message types.
+/// body template for all known message types.
 /// This encapsulates a variant of supported body types, selects a type upon
 /// reader or writer construction, and then passes all calls through to it.
 struct BCT_API body
@@ -112,12 +114,12 @@ struct BCT_API body
             return inner_.has_value();
         }
 
-        inline variant_value& value() NOEXCEPT
+        inline body_value& value() NOEXCEPT
         {
             return inner_.value();
         }
 
-        inline const variant_value& value() const NOEXCEPT
+        inline const body_value& value() const NOEXCEPT
         {
             return inner_.value();
         }
@@ -136,7 +138,7 @@ struct BCT_API body
         }
 
     private:
-        std::optional<variant_value> inner_{};
+        std::optional<body_value> inner_{};
     };
 
     class reader
@@ -145,32 +147,32 @@ struct BCT_API body
         using buffer_type = asio::const_buffer;
 
         template <bool IsRequest, class Fields>
-        inline explicit reader(header<IsRequest, Fields>& header,
+        inline explicit reader(http::header<IsRequest, Fields>& header,
             value_type& value) NOEXCEPT
           : reader_{ to_reader(header, value) }
         {
         }
 
-        void init(const length_type& length, boost_code& ec) NOEXCEPT;
+        void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
         size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
         void finish(boost_code& ec) NOEXCEPT;
 
     protected:
         /// Select reader based on content-type header.
         template <class Header>
-        inline static variant_reader to_reader(Header& header,
+        inline static body_reader to_reader(Header& header,
             value_type& value) NOEXCEPT
         {
-            switch (content_mime_type(header))
+            switch (http::content_mime_type(header))
             {
-                case mime_type::application_json:
+                case http::mime_type::application_json:
                     value = json_value{};
                     break;
-                case mime_type::text_plain:
+                case http::mime_type::text_plain:
                     value = string_value{};
                     break;
-                case mime_type::application_octet_stream:
-                    if (has_attachment(header))
+                case http::mime_type::application_octet_stream:
+                    if (http::has_attachment(header))
                         value = file_value{};
                     else
                         value = data_value{};
@@ -183,50 +185,50 @@ struct BCT_API body
             {
                 [&](empty_value& value) NOEXCEPT
                 {
-                    return variant_reader{ empty_reader{ header, value } };
+                    return body_reader{ empty_reader{ header, value } };
                 },
                 [&](json_value& value) NOEXCEPT
                 {
                     // json_reader not copy or assignable (by contained parser).
                     // So *requires* in-place construction for variant populate.
-                    return variant_reader{ std::in_place_type<json_reader>,
+                    return body_reader{ std::in_place_type<json_reader>,
                         header, value };
                 },
                 [&](data_value& value) NOEXCEPT
                 {
-                    return variant_reader{ data_reader{ header, value } };
+                    return body_reader{ data_reader{ header, value } };
                 },
                 [&](file_value& value) NOEXCEPT
                 {
-                    return variant_reader{ file_reader{ header, value } };
+                    return body_reader{ file_reader{ header, value } };
                 },
                 [&](span_value& value) NOEXCEPT
                 {
-                    return variant_reader{ span_reader{ header, value } };
+                    return body_reader{ span_reader{ header, value } };
                 },
                 [&](buffer_value& value) NOEXCEPT
                 {
-                    return variant_reader{ buffer_reader{ header, value } };
+                    return body_reader{ buffer_reader{ header, value } };
                 },
                 [&](string_value& value) NOEXCEPT
                 {
-                    return variant_reader{ string_reader{ header, value } };
+                    return body_reader{ string_reader{ header, value } };
                 }
             }, value.value());
         }
 
     private:
-        variant_reader reader_;
+        body_reader reader_;
     };
 
     class writer
     {
     public:
         using const_buffers_type = asio::const_buffer;
-        using out_buffer = get_buffer<const_buffers_type>;
+        using out_buffer = http::get_buffer<const_buffers_type>;
 
         template <bool IsRequest, class Fields>
-        inline explicit writer(header<IsRequest, Fields>& header,
+        inline explicit writer(http::header<IsRequest, Fields>& header,
             value_type& value) NOEXCEPT
           : writer_{ to_writer(header, value) }
         {
@@ -238,7 +240,7 @@ struct BCT_API body
     protected:
         /// Create writer matching the caller-defined body inner variant type.
         template <class Header>
-        inline static variant_writer to_writer(Header& header,
+        inline static body_writer to_writer(Header& header,
             value_type& value) NOEXCEPT
         {
             // Caller should have set optional<>, otherwise set to empty_value.
@@ -249,44 +251,44 @@ struct BCT_API body
             {
                 [&](empty_value& value) NOEXCEPT
                 {
-                    return variant_writer{ empty_writer{ header, value } };
+                    return body_writer{ empty_writer{ header, value } };
                 },
                 [&](json_value& value) NOEXCEPT
                 {
                     // json_writer is not movable (by contained serializer).
                     // So *requires* in-place construction for variant populate.
-                    return variant_writer{ std::in_place_type<json_writer>,
+                    return body_writer{ std::in_place_type<json_writer>,
                         header, value };
                 },
                 [&](data_value& value) NOEXCEPT
                 {
-                    return variant_writer{ data_writer{ header, value } };
+                    return body_writer{ data_writer{ header, value } };
                 },
                 [&](file_value& value) NOEXCEPT
                 {
-                    return variant_writer{ file_writer{ header, value } };
+                    return body_writer{ file_writer{ header, value } };
                 },
                 [&](span_value& value) NOEXCEPT
                 {
-                    return variant_writer{ span_writer{ header, value } };
+                    return body_writer{ span_writer{ header, value } };
                 },
                 [&](buffer_value& value) NOEXCEPT
                 {
-                    return variant_writer{ buffer_writer{ header, value } };
+                    return body_writer{ buffer_writer{ header, value } };
                 },
                 [&](string_value& value) NOEXCEPT
                 {
-                    return variant_writer{ string_writer{ header, value } };
+                    return body_writer{ string_writer{ header, value } };
                 }
             }, value.value());
         }
 
     private:
-        variant_writer writer_;
+        body_writer writer_;
     };
 };
 
-} // namespace http
+} // namespace variant
 } // namespace network
 } // namespace libbitcoin
 

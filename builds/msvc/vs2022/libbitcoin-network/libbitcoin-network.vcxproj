@@ -140,12 +140,12 @@
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\memory.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\http\body.cpp">
-      <ObjectFileName>$(IntDir)src_messages_http_body.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\fields.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\head.cpp">
+      <ObjectFileName>$(IntDir)src_messages_http_head.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\json\body.cpp">
       <ObjectFileName>$(IntDir)src_messages_json_body.obj</ObjectFileName>
     </ClCompile>
@@ -192,6 +192,12 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\witness_tx_id_relay.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\variant\body.cpp">
+      <ObjectFileName>$(IntDir)src_messages_variant_body.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\variant\head.cpp">
+      <ObjectFileName>$(IntDir)src_messages_variant_head.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
@@ -265,7 +271,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\tracker.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\memory.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\magic_numbers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\mime_type.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\status.hpp" />
@@ -274,10 +279,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\fields.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\head.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\http.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\request.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\response.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\json.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address.hpp" />
@@ -326,6 +327,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\version_acknowledge.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\witness_tx_id_relay.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\variant\body.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\variant\head.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\variant\method.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\variant\request.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\variant\response.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\variant\variant.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\broadcaster.hpp" />
