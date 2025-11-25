@@ -57,7 +57,7 @@ public:
 
 private:
     using work_guard = boost::asio::executor_work_guard<asio::executor_type>;
-    inline static work_guard keep_alive(asio::io_context& service) NOEXCEPT;
+    static inline work_guard keep_alive(asio::io_context& service) NOEXCEPT;
 
     // This is thread safe.
     asio::io_context service_{};
