@@ -143,9 +143,6 @@
     <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\fields.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\http\head.cpp">
-      <ObjectFileName>$(IntDir)src_messages_http_head.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\json\body.cpp">
       <ObjectFileName>$(IntDir)src_messages_json_body.obj</ObjectFileName>
     </ClCompile>
@@ -195,9 +192,7 @@
     <ClCompile Include="..\..\..\..\src\messages\variant\body.cpp">
       <ObjectFileName>$(IntDir)src_messages_variant_body.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\variant\head.cpp">
-      <ObjectFileName>$(IntDir)src_messages_variant_head.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\variant\head.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
@@ -397,6 +392,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_volume.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\head.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\dispatcher.ipp" />
     <None Include="packages.config" />
   </ItemGroup>

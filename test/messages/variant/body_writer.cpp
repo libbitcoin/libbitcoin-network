@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(variant_body_writer_tests)
 
 BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__undefined__constructs_empty_writer)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     body::value_type value{};
     ///value = empty_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__undefined__constructs_empty
 
 BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__empty__constructs_empty_writer)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     body::value_type value{};
     value = empty_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__empty__constructs_empty_wri
 
 BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__json__constructs_json_writer)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     body::value_type value{};
     value = json_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__json__constructs_json_write
 
 BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__data__constructs_data_writer)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     body::value_type value{};
     value = data_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__data__constructs_data_write
 
 BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__span__constructs_span_writer)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     body::value_type value{};
     value = span_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__span__constructs_span_write
 
 BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__buffer__constructs_buffer_writer)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     body::value_type value{};
     value = buffer_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__buffer__constructs_buffer_w
 
 BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__string__constructs_string_writer)
 {
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     body::value_type value{};
     value = string_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__file__constructs_file_write
     file.open((TEST_PATH).c_str(), boost::beast::file_mode::write, ec);
     BOOST_REQUIRE(!ec);
 
-    header<false, fields> header{};
+    message_header<false, fields> header{};
     body::value_type value{};
     value = std::move(file);
     const auto variant = accessor::to_writer(header, value);

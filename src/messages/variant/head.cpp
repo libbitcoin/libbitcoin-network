@@ -26,7 +26,6 @@ namespace libbitcoin {
 namespace network {
 namespace variant {
 
-using namespace system;
 using namespace network::http;
 using namespace network::error;
     
@@ -37,25 +36,16 @@ void head::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
 {
     std::visit(overload
     {
-        [&](request_reader& read) NOEXCEPT
+        [&](auto& read) NOEXCEPT
         {
             try
             {
-                if (length.has_value())
-                    read.header_limit(narrow_cast<uint32_t>(length.value()));
-
-                read.eager(true);
-                ec.clear();
+                read.init(length, ec);
             }
             catch (...)
             {
                 ec = to_boost_code(boost_error_t::io_error);
             }
-        },
-        [&](response_reader&) NOEXCEPT
-        {
-            // Server doesn't read responses.
-            ec = to_boost_code(boost_error_t::operation_not_supported);
         }
     }, reader_);
 }
@@ -64,65 +54,35 @@ size_t head::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
-        [&](request_reader& read) NOEXCEPT
+        [&](auto& read) NOEXCEPT
         {
             try
             {
-                const auto consumed = read.put(boost::asio::buffer(buffer), ec);
-                if (ec == boost::beast::http::error::need_more)
-                {
-                    ec.clear();
-                    return buffer.size();
-                }
-
-                if (ec)
-                    return zero;
-
-                if (read.is_header_done())
-                    value_.value().emplace<request_header>() = read.get();
-
-                return consumed;
+                return read.put(buffer, ec);
             }
             catch (...)
             {
                 ec = to_boost_code(boost_error_t::io_error);
-                return zero;
+                return size_t{};
             }
-        },
-        [&](response_reader&) NOEXCEPT
-        {
-            // Server doesn't read responses.
-            ec = to_boost_code(boost_error_t::operation_not_supported);
-            return zero;
         }
     }, reader_);
 }
 
 void head::reader::finish(boost_code& ec) NOEXCEPT
 {
-    std::visit(overload
+    return std::visit(overload
     {
-        [&] (request_reader& read) NOEXCEPT
+        [&](auto& read) NOEXCEPT
         {
             try
             {
-                if (read.is_header_done())
-                {
-                    ec.clear();
-                    return;
-                }
-
-                ec = boost::beast::http::error::partial_message;
+                return read.finish(ec);
             }
             catch (...)
             {
                 ec = to_boost_code(boost_error_t::io_error);
             }
-        },
-        [&](response_reader&) NOEXCEPT
-        {
-            // Server doesn't read responses.
-            ec = error::operation_failed;
         }
     }, reader_);
 }
@@ -134,14 +94,16 @@ void head::writer::init(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
-        [&] (request_writer&) NOEXCEPT
+        [&](auto& write) NOEXCEPT
         {
-            // Server doesn't write requests.
-            ec = to_boost_code(boost_error_t::operation_not_supported);
-        },
-        [&](response_writer&) NOEXCEPT
-        {
-            ec.clear();
+            try
+            {
+                write.init(ec);
+            }
+            catch (...)
+            {
+                ec = to_boost_code(boost_error_t::io_error);
+            }
         }
     }, writer_);
 }
@@ -150,34 +112,16 @@ head::writer::out_buffer head::writer::get(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
-        [&](request_writer&) NOEXCEPT -> out_buffer
-        {
-            // Server doesn't write requests.
-            ec = to_boost_code(boost_error_t::operation_not_supported);
-            return {};
-        },
-        [&](response_writer& write) NOEXCEPT -> out_buffer
+        [&](auto& write) NOEXCEPT
         {
             try
             {
-                if (write.is_done())
-                {
-                    ec = to_boost_code(boost_error_t::success);
-                    return {};
-                }
-            
-                out_buffer buffer{};
-                write.next(ec, [&](boost_code&, const auto&) NOEXCEPT
-                {
-                    ////constexpr auto more = true;
-                });
-            
-                return buffer;
+                return write.get(ec);
             }
             catch (...)
             {
                 ec = to_boost_code(boost_error_t::io_error);
-                return {};
+                return out_buffer{};
             }
         }
     }, writer_);
