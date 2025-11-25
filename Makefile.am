@@ -55,7 +55,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/logger.cpp \
     src/log/reporter.cpp \
     src/messages/http/fields.cpp \
-    src/messages/http/head.cpp \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
     src/messages/json/body.cpp \
@@ -336,6 +335,10 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_speed.ipp \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
+
+include_bitcoin_network_impl_messages_httpdir = ${includedir}/bitcoin/network/impl/messages/http
+include_bitcoin_network_impl_messages_http_HEADERS = \
+    include/bitcoin/network/impl/messages/http/head.ipp
 
 include_bitcoin_network_impl_rpcdir = ${includedir}/bitcoin/network/impl/rpc
 include_bitcoin_network_impl_rpc_HEADERS = \

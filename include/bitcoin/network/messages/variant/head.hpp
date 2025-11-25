@@ -44,45 +44,46 @@ namespace variant {
 // stratum_v2 framing: stratum_v2 (custom head).
 // zeromq framing: rest API (custom head).
 
-using request_reader = boost::beast::http::parser<true, http::empty_body>;
-using response_reader = boost::beast::http::parser<false, http::empty_body>;
+// Aliases for the two concrete HTTP head types
+using request_head  = http::head<true>;
+using response_head = http::head<false>;
+
+using request_reader  = request_head::reader;
+using response_reader = response_head::reader;
 using head_reader = std::variant
 <
     request_reader,
     response_reader
 >;
 
-using request_writer = boost::beast::http::serializer<true, http::empty_body>;
-using response_writer = boost::beast::http::serializer<false, http::empty_body>;
+using request_writer  = request_head::writer;
+using response_writer = response_head::writer;
 using head_writer = std::variant
 <
     request_writer,
     response_writer
 >;
 
-using request_header = boost::beast::http::header<true, boost::beast::http::fields>;
-using response_header = boost::beast::http::header<false, boost::beast::http::fields>;
+using request_value  = request_head::value_type;
+using response_value = response_head::value_type;
 using head_value = std::variant
 <
-    request_header,
-    response_header
+    request_value,
+    response_value
 >;
 
-using empty_request = boost::beast::http::message<true, http::empty_body>;
-using empty_response = boost::beast::http::message<false, http::empty_body>;
-
-/// header template for all known message types.
-/// Request head is selected by reader and response by writer (i.e. channel).
+/// Universal header for all known framing types.
+/// Currently only HTTP, but designed for future extension (WebSocket, etc.)
 struct BCT_API head
 {
-    struct head_type
+    struct value_type
     {
-        head_type() NOEXCEPT = default;
+        value_type() NOEXCEPT = default;
 
-        FORWARD_VARIANT_CONSTRUCT(head_type, inner_)
-        FORWARD_VARIANT_ASSIGNMENT(head_type, inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(head_type, request_header, inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(head_type, response_header, inner_)
+        FORWARD_VARIANT_CONSTRUCT(value_type, inner_)
+        FORWARD_VARIANT_ASSIGNMENT(value_type, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, request_value,  inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, response_value, inner_)
 
         inline bool has_value() const NOEXCEPT
         {
@@ -91,7 +92,7 @@ struct BCT_API head
 
         inline head_value& value() NOEXCEPT
         {
-            return inner_.value();
+            return inner_.value(); 
         }
 
         inline const head_value& value() const NOEXCEPT
@@ -99,13 +100,13 @@ struct BCT_API head
             return inner_.value();
         }
 
-        template<typename Inner>
+        template <typename Inner>
         inline bool contains() const NOEXCEPT
         {
             return has_value() && std::holds_alternative<Inner>(value());
         }
 
-        template<typename Inner>
+        template <typename Inner>
         inline const Inner& get() const NOEXCEPT
         {
             BC_ASSERT(contains<Inner>());
@@ -121,39 +122,34 @@ struct BCT_API head
     public:
         using buffer_type = asio::const_buffer;
 
-        inline explicit reader(head_type& value) NOEXCEPT
-          : reader_{ to_reader(value) }, value_{ value }
+        inline explicit reader(value_type& value) NOEXCEPT
+          : reader_{ to_reader(value) }
         {
         }
 
-        void init(const http::length_type&, boost_code& ec) NOEXCEPT;
+        void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
         size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
         void finish(boost_code& ec) NOEXCEPT;
 
-    protected:
-        inline static head_reader to_reader(head_type& value) NOEXCEPT
+    private:
+        static head_reader to_reader(value_type& value) NOEXCEPT
         {
-            // Caller should have set optional<>, otherwise set invalid read.
-            if (!value.has_value())
-                value = response_header{};
-
             return std::visit(overload
             {
-                [&](request_header&) NOEXCEPT
+                [&](request_value& value) NOEXCEPT
                 {
-                    return head_reader{ std::in_place_type<request_reader> };
+                    return head_reader{ std::in_place_type<request_reader>,
+                        value };
                 },
-                [&](response_header&) NOEXCEPT
+                [&](response_value& value) NOEXCEPT
                 {
-                    // Server doesn't read responses.
-                    return head_reader{ std::in_place_type<response_reader> };
+                    return head_reader{ std::in_place_type<response_reader>,
+                        value };
                 }
             }, value.value());
         }
 
-    private:
         head_reader reader_;
-        head_type& value_;
     };
 
     class writer
@@ -162,39 +158,32 @@ struct BCT_API head
         using const_buffers_type = asio::const_buffer;
         using out_buffer = http::get_buffer<const_buffers_type>;
 
-        inline explicit writer(head_type& value) NOEXCEPT
-          : writer_{ to_writer(value) }
+        inline explicit writer(value_type& value) NOEXCEPT
+          : writer_(to_writer(value))
         {
         }
 
         void init(boost_code& ec) NOEXCEPT;
         out_buffer get(boost_code& ec) NOEXCEPT;
 
-    protected:
-        /// Create writer matching caller-defined header inner variant type.
-        inline static head_writer to_writer(head_type& value) NOEXCEPT
+    private:
+        static head_writer to_writer(value_type& value) NOEXCEPT
         {
-            // Caller should have set optional<>, otherwise set invalid write.
-            if (!value.has_value())
-                value = response_header{};
-
             return std::visit(overload
             {
-                [&] (request_header& value) NOEXCEPT
+                [&](request_value& value) NOEXCEPT
                 {
-                    // Server doesn't write requests.
-                    return head_writer{ request_writer{ 
-                        empty_request{ std::move(value) } } };
+                    return head_writer{ std::in_place_type<request_writer>,
+                        value };
                 },
-                [&](response_header& value) NOEXCEPT
+                [&](response_value& value) NOEXCEPT
                 {
-                    return head_writer{ response_writer{ 
-                        empty_response{ std::move(value) } } };
+                    return head_writer{ std::in_place_type<response_writer>,
+                        value };
                 }
             }, value.value());
         }
 
-    private:
         head_writer writer_;
     };
 };

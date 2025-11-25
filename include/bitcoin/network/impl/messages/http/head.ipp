@@ -16,7 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/json/body.hpp>
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_HEAD_IPP
+#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_HEAD_IPP
 
 #include <memory>
 #include <utility>
@@ -24,48 +25,44 @@
 
 namespace libbitcoin {
 namespace network {
-namespace json {
+namespace http {
 
-using namespace system;
-using namespace network::error;
-
-// json::body::reader
+// http::head::reader
 // ----------------------------------------------------------------------------
 
-void body::reader::init(const http::length_type& length,
+TEMPLATE
+inline void CLASS::reader::init(const length_type& length,
     boost_code& ec) NOEXCEPT
 {
+    using namespace system;
+    using namespace network::error;
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto value = length.get_value_or(zero);
     BC_POP_WARNING()
 
-    if (is_limited<size_t>(value))
+    if (is_limited<uint32_t>(value))
     {
         ec = to_http_code(http_error_t::buffer_overflow);
         return;
     }
 
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    expected_ = possible_narrow_cast<size_t>(value);
+    parser_.eager(true);
+    parser_.header_limit(narrow_cast<uint32_t>(value));
     BC_POP_WARNING()
-
-    parser_.reset();
-    total_ = zero;
     ec.clear();
 }
 
-size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
+TEMPLATE
+inline size_t CLASS::reader::put(const buffer_type& buffer,
+    boost_code& ec) NOEXCEPT
 {
+    using namespace network::error;
+    size_t parsed{};
+
     try
     {
-        const auto data = pointer_cast<const char>(buffer.data());
-        const auto parsed = parser_.write_some(data, buffer.size(), ec);
-
-        total_ = ceilinged_add(total_, parsed);
-        if (!ec && total_ > expected_.value_or(max_size_t))
-            ec = to_http_code(http_error_t::body_limit);
-
-        return parsed;
+        parsed = parser_.put(buffer, ec);
     }
     catch (const boost::system::system_error& e)
     {
@@ -78,20 +75,29 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         ec = to_http_code(http_error_t::bad_alloc);
     }
 
-    return {};
+    if (ec == http_error_t::need_more)
+    {
+        ec.clear();
+        return buffer.size();
+    }
+
+    return ec ? zero : parsed;
 }
 
-void body::reader::finish(boost_code& ec) NOEXCEPT
+TEMPLATE
+inline void CLASS::reader::finish(boost_code& ec) NOEXCEPT
 {
+    using namespace network::error;
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    parser_.finish(ec);
+    ec = parser_.is_header_done() ? boost_code{} : 
+        to_http_code(http_error_t::partial_message);
     BC_POP_WARNING()
 
     if (ec) return;
 
     try
     {
-       value_.model = parser_.release();
+        value_.header = std::move(parser_.release());
     }
     catch (const boost::system::system_error& e)
     {
@@ -103,19 +109,18 @@ void body::reader::finish(boost_code& ec) NOEXCEPT
         // As a catch-all we blame alloc.
         ec = to_http_code(http_error_t::bad_alloc);
     }
-
-    parser_.reset();
 }
 
-// json::body::writer
+// http::head::writer
 // ----------------------------------------------------------------------------
 
-void body::writer::init(boost_code& ec) NOEXCEPT
+TEMPLATE
+inline void CLASS::writer::init(boost_code& ec) NOEXCEPT
 {
     if (!value_.buffer)
     {
         // Caller controls max_size and other buffer behavior by assigning it.
-        value_.buffer = emplace_shared<http::flat_buffer>(default_buffer);
+        value_.buffer = system::emplace_shared<flat_buffer>(default_buffer);
     }
     else
     {
@@ -124,15 +129,16 @@ void body::writer::init(boost_code& ec) NOEXCEPT
     }
 
     ec.clear();
-    serializer_.reset(&value_.model);
 }
 
-body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
+TEMPLATE
+inline CLASS::writer::out_buffer CLASS::writer::get(boost_code& ec) NOEXCEPT
 {
     ec.clear();
-    if (serializer_.done())
+    if (serializer_.is_done())
         return {};
 
+    using namespace network::error;
     const auto size = value_.buffer->max_size();
     if (is_zero(size))
     {
@@ -144,20 +150,24 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
     {
         // Always prepares the configured max_size.
         const auto buffer = value_.buffer->prepare(size);
-        const auto data = pointer_cast<char>(buffer.data());
-        const auto view = serializer_.read(data, buffer.size());
-
-        // No progress (edge case).
-        if (view.empty() && !serializer_.done())
+        serializer_.next(ec, [&](boost_code& code, auto const& buffers) NOEXCEPT
         {
-            ec = to_http_code(http_error_t::unexpected_body);
-            return {};
-        }
+            const auto copied = boost::asio::buffer_copy(buffer, buffers);
 
-        value_.buffer->commit(view.size());
-        value_.buffer->consume(view.size());
-        const auto more = !serializer_.done();
-        return out_buffer{ std::make_pair(boost::asio::buffer(view), more) };
+            // No progress (edge case).
+            if (is_zero(copied) && !serializer_.is_done())
+            {
+                code = to_http_code(http_error_t::unexpected_body);
+                return;
+            }
+
+            value_.buffer->commit(copied);
+            value_.buffer->consume(copied);
+        });
+
+        if (ec) return {};
+        const auto more = !serializer_.is_done();
+        return out_buffer{ std::make_pair(value_.buffer->data(), more) };
     }
     catch (...)
     {
@@ -167,6 +177,8 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
     }
 }
 
-} // namespace json
+} // namespace http
 } // namespace network
 } // namespace libbitcoin
+
+#endif

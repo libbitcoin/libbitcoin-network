@@ -81,8 +81,7 @@ struct BCT_API body
         template <bool IsRequest, class Fields>
         inline explicit writer(http::header<IsRequest, Fields>&,
             value_type& value) NOEXCEPT
-          : value_{ value },
-            serializer_{ value.model.storage() }
+          : value_{ value }, serializer_{ value.model.storage() }
         {
         }
 
