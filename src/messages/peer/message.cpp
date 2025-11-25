@@ -29,7 +29,7 @@ namespace messages {
 namespace peer {
 
 template <>
-inline system::chunk_ptr serialize<transaction>(const transaction& message,
+system::chunk_ptr serialize<transaction>(const transaction& message,
     uint32_t magic, uint32_t version) NOEXCEPT
 {
     using namespace system;
