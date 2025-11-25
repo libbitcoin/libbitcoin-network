@@ -57,14 +57,9 @@
 #include <bitcoin/network/log/reporter.hpp>
 #include <bitcoin/network/log/timer.hpp>
 #include <bitcoin/network/log/tracker.hpp>
-#include <bitcoin/network/messages/http/body.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
 #include <bitcoin/network/messages/http/head.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
-#include <bitcoin/network/messages/http/method.hpp>
-#include <bitcoin/network/messages/http/request.hpp>
-#include <bitcoin/network/messages/http/response.hpp>
-#include <bitcoin/network/messages/http/types.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/http/enums/mime_type.hpp>
 #include <bitcoin/network/messages/http/enums/status.hpp>
@@ -118,6 +113,12 @@
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>
+#include <bitcoin/network/messages/variant/body.hpp>
+#include <bitcoin/network/messages/variant/head.hpp>
+#include <bitcoin/network/messages/variant/method.hpp>
+#include <bitcoin/network/messages/variant/request.hpp>
+#include <bitcoin/network/messages/variant/response.hpp>
+#include <bitcoin/network/messages/variant/variant.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/connector.hpp>

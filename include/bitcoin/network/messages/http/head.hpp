@@ -19,12 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_HEAD_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_HEAD_HPP
 
-#include <variant>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace http {
+
+using empty_request = boost::beast::http::request<empty_body>;
+using empty_response = boost::beast::http::response<empty_body>;
 
 } // namespace http
 } // namespace network

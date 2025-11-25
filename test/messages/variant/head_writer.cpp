@@ -16,15 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_HTTP_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_HTTP_HPP
+#include "../../test.hpp"
 
-#include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/http/enums/mime_type.hpp>
-#include <bitcoin/network/messages/http/enums/status.hpp>
-#include <bitcoin/network/messages/http/enums/target.hpp>
-#include <bitcoin/network/messages/http/enums/verb.hpp>
-#include <bitcoin/network/messages/http/fields.hpp>
-#include <bitcoin/network/messages/http/head.hpp>
+BOOST_AUTO_TEST_SUITE(variant_head_writer_tests)
 
-#endif
+using namespace network::variant;
+
+////struct accessor
+////  : public head::writer
+////{
+////    using base = head::writer;
+////    using base::writer;
+////    using base::to_writer;
+////};
+
+BOOST_AUTO_TEST_SUITE_END()

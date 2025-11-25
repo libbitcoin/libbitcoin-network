@@ -16,18 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_REQUEST_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_REQUEST_HPP
+#include "../../test.hpp"
 
-#include <variant>
-#include <bitcoin/network/define.hpp>
+BOOST_AUTO_TEST_SUITE(variant_method_tests)
 
-namespace libbitcoin {
-namespace network {
-namespace http {
+using namespace network::http::method;
 
-} // namespace http
-} // namespace network
-} // namespace libbitcoin
+BOOST_AUTO_TEST_CASE(method__static_method__always__equals_verb)
+{
+    BOOST_REQUIRE(get::method == http::verb::get);
+    BOOST_REQUIRE(head::method == http::verb::head);
+    BOOST_REQUIRE(post::method == http::verb::post);
+    BOOST_REQUIRE(put::method == http::verb::put);
+    BOOST_REQUIRE(delete_::method == http::verb::delete_);
+    BOOST_REQUIRE(trace::method == http::verb::trace);
+    BOOST_REQUIRE(options::method == http::verb::options);
+    BOOST_REQUIRE(connect::method == http::verb::connect);
+    BOOST_REQUIRE(unknown::method == http::verb::unknown);
+}
 
-#endif
+BOOST_AUTO_TEST_SUITE_END()
