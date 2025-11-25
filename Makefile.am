@@ -58,47 +58,47 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
     src/messages/json/body.cpp \
-    src/messages/peer/address.cpp \
-    src/messages/peer/address_item.cpp \
-    src/messages/peer/alert.cpp \
-    src/messages/peer/alert_item.cpp \
-    src/messages/peer/block.cpp \
-    src/messages/peer/bloom_filter_add.cpp \
-    src/messages/peer/bloom_filter_clear.cpp \
-    src/messages/peer/bloom_filter_load.cpp \
-    src/messages/peer/client_filter.cpp \
-    src/messages/peer/client_filter_checkpoint.cpp \
-    src/messages/peer/client_filter_headers.cpp \
-    src/messages/peer/compact_block.cpp \
-    src/messages/peer/compact_block_item.cpp \
-    src/messages/peer/compact_transactions.cpp \
-    src/messages/peer/fee_filter.cpp \
-    src/messages/peer/get_address.cpp \
-    src/messages/peer/get_blocks.cpp \
-    src/messages/peer/get_client_filter_checkpoint.cpp \
-    src/messages/peer/get_client_filter_headers.cpp \
-    src/messages/peer/get_client_filters.cpp \
-    src/messages/peer/get_compact_transactions.cpp \
-    src/messages/peer/get_data.cpp \
-    src/messages/peer/get_headers.cpp \
-    src/messages/peer/headers.cpp \
-    src/messages/peer/heading.cpp \
-    src/messages/peer/inventory.cpp \
-    src/messages/peer/inventory_item.cpp \
-    src/messages/peer/memory_pool.cpp \
-    src/messages/peer/merkle_block.cpp \
     src/messages/peer/message.cpp \
-    src/messages/peer/not_found.cpp \
-    src/messages/peer/ping.cpp \
-    src/messages/peer/pong.cpp \
-    src/messages/peer/reject.cpp \
-    src/messages/peer/send_address_v2.cpp \
-    src/messages/peer/send_compact.cpp \
-    src/messages/peer/send_headers.cpp \
-    src/messages/peer/transaction.cpp \
-    src/messages/peer/version.cpp \
-    src/messages/peer/version_acknowledge.cpp \
-    src/messages/peer/witness_tx_id_relay.cpp \
+    src/messages/peer/detail/address.cpp \
+    src/messages/peer/detail/address_item.cpp \
+    src/messages/peer/detail/alert.cpp \
+    src/messages/peer/detail/alert_item.cpp \
+    src/messages/peer/detail/block.cpp \
+    src/messages/peer/detail/bloom_filter_add.cpp \
+    src/messages/peer/detail/bloom_filter_clear.cpp \
+    src/messages/peer/detail/bloom_filter_load.cpp \
+    src/messages/peer/detail/client_filter.cpp \
+    src/messages/peer/detail/client_filter_checkpoint.cpp \
+    src/messages/peer/detail/client_filter_headers.cpp \
+    src/messages/peer/detail/compact_block.cpp \
+    src/messages/peer/detail/compact_block_item.cpp \
+    src/messages/peer/detail/compact_transactions.cpp \
+    src/messages/peer/detail/fee_filter.cpp \
+    src/messages/peer/detail/get_address.cpp \
+    src/messages/peer/detail/get_blocks.cpp \
+    src/messages/peer/detail/get_client_filter_checkpoint.cpp \
+    src/messages/peer/detail/get_client_filter_headers.cpp \
+    src/messages/peer/detail/get_client_filters.cpp \
+    src/messages/peer/detail/get_compact_transactions.cpp \
+    src/messages/peer/detail/get_data.cpp \
+    src/messages/peer/detail/get_headers.cpp \
+    src/messages/peer/detail/headers.cpp \
+    src/messages/peer/detail/heading.cpp \
+    src/messages/peer/detail/inventory.cpp \
+    src/messages/peer/detail/inventory_item.cpp \
+    src/messages/peer/detail/memory_pool.cpp \
+    src/messages/peer/detail/merkle_block.cpp \
+    src/messages/peer/detail/not_found.cpp \
+    src/messages/peer/detail/ping.cpp \
+    src/messages/peer/detail/pong.cpp \
+    src/messages/peer/detail/reject.cpp \
+    src/messages/peer/detail/send_address_v2.cpp \
+    src/messages/peer/detail/send_compact.cpp \
+    src/messages/peer/detail/send_headers.cpp \
+    src/messages/peer/detail/transaction.cpp \
+    src/messages/peer/detail/version.cpp \
+    src/messages/peer/detail/version_acknowledge.cpp \
+    src/messages/peer/detail/witness_tx_id_relay.cpp \
     src/messages/variant/body.cpp \
     src/messages/variant/head.cpp \
     src/net/acceptor.cpp \
@@ -179,47 +179,47 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/http/enums/target.cpp \
     test/messages/json/body_reader.cpp \
     test/messages/json/body_writer.cpp \
-    test/messages/peer/address.cpp \
-    test/messages/peer/address_item.cpp \
-    test/messages/peer/alert.cpp \
-    test/messages/peer/alert_item.cpp \
-    test/messages/peer/block.cpp \
-    test/messages/peer/bloom_filter_add.cpp \
-    test/messages/peer/bloom_filter_clear.cpp \
-    test/messages/peer/bloom_filter_load.cpp \
-    test/messages/peer/client_filter.cpp \
-    test/messages/peer/client_filter_checkpoint.cpp \
-    test/messages/peer/client_filter_headers.cpp \
-    test/messages/peer/compact_block.cpp \
-    test/messages/peer/compact_block_item.cpp \
-    test/messages/peer/compact_transactions.cpp \
-    test/messages/peer/fee_filter.cpp \
-    test/messages/peer/get_address.cpp \
-    test/messages/peer/get_blocks.cpp \
-    test/messages/peer/get_client_filter_checkpoint.cpp \
-    test/messages/peer/get_client_filter_headers.cpp \
-    test/messages/peer/get_client_filters.cpp \
-    test/messages/peer/get_compact_transactions.cpp \
-    test/messages/peer/get_data.cpp \
-    test/messages/peer/get_headers.cpp \
-    test/messages/peer/headers.cpp \
     test/messages/peer/heading.cpp \
-    test/messages/peer/inventory.cpp \
-    test/messages/peer/inventory_item.cpp \
-    test/messages/peer/memory_pool.cpp \
-    test/messages/peer/merkle_block.cpp \
     test/messages/peer/message.cpp \
-    test/messages/peer/not_found.cpp \
-    test/messages/peer/ping.cpp \
-    test/messages/peer/pong.cpp \
-    test/messages/peer/reject.cpp \
-    test/messages/peer/send_address_v2.cpp \
-    test/messages/peer/send_compact.cpp \
-    test/messages/peer/send_headers.cpp \
-    test/messages/peer/transaction.cpp \
-    test/messages/peer/version.cpp \
-    test/messages/peer/version_acknowledge.cpp \
-    test/messages/peer/witness_tx_id_relay.cpp \
+    test/messages/peer/detail/address.cpp \
+    test/messages/peer/detail/address_item.cpp \
+    test/messages/peer/detail/alert.cpp \
+    test/messages/peer/detail/alert_item.cpp \
+    test/messages/peer/detail/block.cpp \
+    test/messages/peer/detail/bloom_filter_add.cpp \
+    test/messages/peer/detail/bloom_filter_clear.cpp \
+    test/messages/peer/detail/bloom_filter_load.cpp \
+    test/messages/peer/detail/client_filter.cpp \
+    test/messages/peer/detail/client_filter_checkpoint.cpp \
+    test/messages/peer/detail/client_filter_headers.cpp \
+    test/messages/peer/detail/compact_block.cpp \
+    test/messages/peer/detail/compact_block_item.cpp \
+    test/messages/peer/detail/compact_transactions.cpp \
+    test/messages/peer/detail/fee_filter.cpp \
+    test/messages/peer/detail/get_address.cpp \
+    test/messages/peer/detail/get_blocks.cpp \
+    test/messages/peer/detail/get_client_filter_checkpoint.cpp \
+    test/messages/peer/detail/get_client_filter_headers.cpp \
+    test/messages/peer/detail/get_client_filters.cpp \
+    test/messages/peer/detail/get_compact_transactions.cpp \
+    test/messages/peer/detail/get_data.cpp \
+    test/messages/peer/detail/get_headers.cpp \
+    test/messages/peer/detail/headers.cpp \
+    test/messages/peer/detail/inventory.cpp \
+    test/messages/peer/detail/inventory_item.cpp \
+    test/messages/peer/detail/memory_pool.cpp \
+    test/messages/peer/detail/merkle_block.cpp \
+    test/messages/peer/detail/not_found.cpp \
+    test/messages/peer/detail/ping.cpp \
+    test/messages/peer/detail/pong.cpp \
+    test/messages/peer/detail/reject.cpp \
+    test/messages/peer/detail/send_address_v2.cpp \
+    test/messages/peer/detail/send_compact.cpp \
+    test/messages/peer/detail/send_headers.cpp \
+    test/messages/peer/detail/transaction.cpp \
+    test/messages/peer/detail/version.cpp \
+    test/messages/peer/detail/version_acknowledge.cpp \
+    test/messages/peer/detail/witness_tx_id_relay.cpp \
     test/messages/peer/enums/identifier.cpp \
     test/messages/peer/enums/level.cpp \
     test/messages/peer/enums/magic_numbers.cpp \
@@ -375,48 +375,51 @@ include_bitcoin_network_messages_json_HEADERS = \
 
 include_bitcoin_network_messages_peerdir = ${includedir}/bitcoin/network/messages/peer
 include_bitcoin_network_messages_peer_HEADERS = \
-    include/bitcoin/network/messages/peer/address.hpp \
-    include/bitcoin/network/messages/peer/address_item.hpp \
-    include/bitcoin/network/messages/peer/alert.hpp \
-    include/bitcoin/network/messages/peer/alert_item.hpp \
-    include/bitcoin/network/messages/peer/block.hpp \
-    include/bitcoin/network/messages/peer/bloom_filter_add.hpp \
-    include/bitcoin/network/messages/peer/bloom_filter_clear.hpp \
-    include/bitcoin/network/messages/peer/bloom_filter_load.hpp \
-    include/bitcoin/network/messages/peer/client_filter.hpp \
-    include/bitcoin/network/messages/peer/client_filter_checkpoint.hpp \
-    include/bitcoin/network/messages/peer/client_filter_headers.hpp \
-    include/bitcoin/network/messages/peer/compact_block.hpp \
-    include/bitcoin/network/messages/peer/compact_block_item.hpp \
-    include/bitcoin/network/messages/peer/compact_transactions.hpp \
-    include/bitcoin/network/messages/peer/fee_filter.hpp \
-    include/bitcoin/network/messages/peer/get_address.hpp \
-    include/bitcoin/network/messages/peer/get_blocks.hpp \
-    include/bitcoin/network/messages/peer/get_client_filter_checkpoint.hpp \
-    include/bitcoin/network/messages/peer/get_client_filter_headers.hpp \
-    include/bitcoin/network/messages/peer/get_client_filters.hpp \
-    include/bitcoin/network/messages/peer/get_compact_transactions.hpp \
-    include/bitcoin/network/messages/peer/get_data.hpp \
-    include/bitcoin/network/messages/peer/get_headers.hpp \
-    include/bitcoin/network/messages/peer/headers.hpp \
     include/bitcoin/network/messages/peer/heading.hpp \
-    include/bitcoin/network/messages/peer/inventory.hpp \
-    include/bitcoin/network/messages/peer/inventory_item.hpp \
-    include/bitcoin/network/messages/peer/memory_pool.hpp \
-    include/bitcoin/network/messages/peer/merkle_block.hpp \
     include/bitcoin/network/messages/peer/message.hpp \
-    include/bitcoin/network/messages/peer/not_found.hpp \
-    include/bitcoin/network/messages/peer/peer.hpp \
-    include/bitcoin/network/messages/peer/ping.hpp \
-    include/bitcoin/network/messages/peer/pong.hpp \
-    include/bitcoin/network/messages/peer/reject.hpp \
-    include/bitcoin/network/messages/peer/send_address_v2.hpp \
-    include/bitcoin/network/messages/peer/send_compact.hpp \
-    include/bitcoin/network/messages/peer/send_headers.hpp \
-    include/bitcoin/network/messages/peer/transaction.hpp \
-    include/bitcoin/network/messages/peer/version.hpp \
-    include/bitcoin/network/messages/peer/version_acknowledge.hpp \
-    include/bitcoin/network/messages/peer/witness_tx_id_relay.hpp
+    include/bitcoin/network/messages/peer/peer.hpp
+
+include_bitcoin_network_messages_peer_detaildir = ${includedir}/bitcoin/network/messages/peer/detail
+include_bitcoin_network_messages_peer_detail_HEADERS = \
+    include/bitcoin/network/messages/peer/detail/address.hpp \
+    include/bitcoin/network/messages/peer/detail/address_item.hpp \
+    include/bitcoin/network/messages/peer/detail/alert.hpp \
+    include/bitcoin/network/messages/peer/detail/alert_item.hpp \
+    include/bitcoin/network/messages/peer/detail/block.hpp \
+    include/bitcoin/network/messages/peer/detail/bloom_filter_add.hpp \
+    include/bitcoin/network/messages/peer/detail/bloom_filter_clear.hpp \
+    include/bitcoin/network/messages/peer/detail/bloom_filter_load.hpp \
+    include/bitcoin/network/messages/peer/detail/client_filter.hpp \
+    include/bitcoin/network/messages/peer/detail/client_filter_checkpoint.hpp \
+    include/bitcoin/network/messages/peer/detail/client_filter_headers.hpp \
+    include/bitcoin/network/messages/peer/detail/compact_block.hpp \
+    include/bitcoin/network/messages/peer/detail/compact_block_item.hpp \
+    include/bitcoin/network/messages/peer/detail/compact_transactions.hpp \
+    include/bitcoin/network/messages/peer/detail/fee_filter.hpp \
+    include/bitcoin/network/messages/peer/detail/get_address.hpp \
+    include/bitcoin/network/messages/peer/detail/get_blocks.hpp \
+    include/bitcoin/network/messages/peer/detail/get_client_filter_checkpoint.hpp \
+    include/bitcoin/network/messages/peer/detail/get_client_filter_headers.hpp \
+    include/bitcoin/network/messages/peer/detail/get_client_filters.hpp \
+    include/bitcoin/network/messages/peer/detail/get_compact_transactions.hpp \
+    include/bitcoin/network/messages/peer/detail/get_data.hpp \
+    include/bitcoin/network/messages/peer/detail/get_headers.hpp \
+    include/bitcoin/network/messages/peer/detail/headers.hpp \
+    include/bitcoin/network/messages/peer/detail/inventory.hpp \
+    include/bitcoin/network/messages/peer/detail/inventory_item.hpp \
+    include/bitcoin/network/messages/peer/detail/memory_pool.hpp \
+    include/bitcoin/network/messages/peer/detail/merkle_block.hpp \
+    include/bitcoin/network/messages/peer/detail/not_found.hpp \
+    include/bitcoin/network/messages/peer/detail/ping.hpp \
+    include/bitcoin/network/messages/peer/detail/pong.hpp \
+    include/bitcoin/network/messages/peer/detail/reject.hpp \
+    include/bitcoin/network/messages/peer/detail/send_address_v2.hpp \
+    include/bitcoin/network/messages/peer/detail/send_compact.hpp \
+    include/bitcoin/network/messages/peer/detail/send_headers.hpp \
+    include/bitcoin/network/messages/peer/detail/transaction.hpp \
+    include/bitcoin/network/messages/peer/detail/version.hpp \
+    include/bitcoin/network/messages/peer/detail/version_acknowledge.hpp \
+    include/bitcoin/network/messages/peer/detail/witness_tx_id_relay.hpp
 
 include_bitcoin_network_messages_peer_enumsdir = ${includedir}/bitcoin/network/messages/peer/enums
 include_bitcoin_network_messages_peer_enums_HEADERS = \

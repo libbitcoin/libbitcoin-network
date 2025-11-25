@@ -22,7 +22,7 @@
 #include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
-#include <bitcoin/network/messages/peer/transaction.hpp>
+#include <bitcoin/network/messages/peer/detail/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -30,7 +30,7 @@ namespace messages {
 namespace peer {
 
 template <>
-system::chunk_ptr serialize<transaction>(const transaction& message,
+inline system::chunk_ptr serialize<transaction>(const transaction& message,
     uint32_t magic, uint32_t version) NOEXCEPT
 {
     using namespace system;
