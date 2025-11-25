@@ -16,13 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_VARIANT_VARIANT_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_VARIANT_VARIANT_HPP
+#include "../../test.hpp"
 
-#include <bitcoin/network/messages/variant/body.hpp>
-#include <bitcoin/network/messages/variant/head.hpp>
-#include <bitcoin/network/messages/variant/method.hpp>
-#include <bitcoin/network/messages/variant/request.hpp>
-#include <bitcoin/network/messages/variant/response.hpp>
+BOOST_AUTO_TEST_SUITE(monad_head_reader_tests)
 
-#endif
+using namespace network::monad;
+
+////struct accessor
+////  : public head::reader
+////{
+////    using base = head::reader;
+////    using base::reader;
+////    using base::to_reader;
+////};
+
+BOOST_AUTO_TEST_SUITE_END()

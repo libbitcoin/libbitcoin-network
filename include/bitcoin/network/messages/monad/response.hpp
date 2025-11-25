@@ -16,35 +16,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_VARIANT_RESPONSE_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_VARIANT_RESPONSE_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_MONAD_RESPONSE_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_MONAD_RESPONSE_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/variant/body.hpp>
-#include <bitcoin/network/messages/variant/head.hpp>
+#include <bitcoin/network/messages/monad/body.hpp>
+#include <bitcoin/network/messages/monad/head.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace variant {
+namespace monad {
 
 struct response
 {
-    variant::head<false> head{};
-    variant::body body{};
+    monad::head<false> head{};
+    monad::body body{};
 };
 
-} // namespace variant
+} // namespace monad
 } // namespace network
 } // namespace libbitcoin
 
-// TODO: move to variant namespace.
+// TODO: move to monad namespace.
 namespace libbitcoin {
 namespace network {
 namespace http {
     
-// TODO: move to variant::response.
-using response = boost::beast::http::response<variant::body>;
-using serializer = boost::beast::http::response_serializer<variant::body>;
+// TODO: move to monad::response.
+using response = boost::beast::http::response<monad::body>;
+using serializer = boost::beast::http::response_serializer<monad::body>;
 using response_cptr = std::shared_ptr<const response>;
 using response_ptr = std::shared_ptr<response>;
 

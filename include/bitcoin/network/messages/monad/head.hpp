@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_VARIANT_HEAD_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_VARIANT_HEAD_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_MONAD_HEAD_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_MONAD_HEAD_HPP
 
 #include <optional>
 #include <variant>
@@ -29,7 +29,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace variant {
+namespace monad {
 
 /// Variant head<> template, analogous to the variant body<> template.
 /// Allows universal request and response message types with single asio async
@@ -179,14 +179,14 @@ struct head
     };
 };
 
-} // namespace variant
+} // namespace monad
 } // namespace network
 } // namespace libbitcoin
 
 #define TEMPLATE template <bool IsRequest>
 #define CLASS head<IsRequest>
 
-#include <bitcoin/network/impl/messages/variant/head.ipp>
+#include <bitcoin/network/impl/messages/monad/head.ipp>
 
 #undef CLASS
 #undef TEMPLATE

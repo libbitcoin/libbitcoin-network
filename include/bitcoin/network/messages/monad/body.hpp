@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_VARIANT_BODY_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_VARIANT_BODY_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_MONAD_BODY_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_MONAD_BODY_HPP
 
 #include <optional>
 #include <variant>
@@ -30,7 +30,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace variant {
+namespace monad {
 
 using empty_reader = http::empty_body::reader;
 using json_reader = json::body::reader;
@@ -288,7 +288,7 @@ struct BCT_API body
     };
 };
 
-} // namespace variant
+} // namespace monad
 } // namespace network
 } // namespace libbitcoin
 

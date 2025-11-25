@@ -16,35 +16,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_VARIANT_REQUEST_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_VARIANT_REQUEST_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_MONAD_REQUEST_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_MONAD_REQUEST_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/variant/body.hpp>
-#include <bitcoin/network/messages/variant/head.hpp>
+#include <bitcoin/network/messages/monad/body.hpp>
+#include <bitcoin/network/messages/monad/head.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace variant {
+namespace monad {
 
 struct request
 {
-    variant::head<true> head{};
-    variant::body body{};
+    monad::head<true> head{};
+    monad::body body{};
 };
 
-} // namespace variant
+} // namespace monad
 } // namespace network
 } // namespace libbitcoin
 
-// TODO: move to variant namespace.
+// TODO: move to monad namespace.
 namespace libbitcoin {
 namespace network {
 namespace http {
     
-// TODO: move to variant::request.
-using request = boost::beast::http::request<variant::body>;
-using parser = boost::beast::http::request_parser<variant::body>;
+// TODO: move to monad::request.
+using request = boost::beast::http::request<monad::body>;
+using parser = boost::beast::http::request_parser<monad::body>;
 using request_cptr = std::shared_ptr<const request>;
 using request_ptr = std::shared_ptr<request>;
 

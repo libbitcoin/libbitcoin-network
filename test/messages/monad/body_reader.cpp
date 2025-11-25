@@ -19,7 +19,7 @@
 #include "../../test.hpp"
 
 using namespace http;
-using namespace network::variant;
+using namespace network::monad;
 
 struct accessor
   : public body::reader
@@ -29,9 +29,9 @@ struct accessor
     using base::to_reader;
 };
 
-BOOST_AUTO_TEST_SUITE(variant_body_reader_tests)
+BOOST_AUTO_TEST_SUITE(monad_body_reader_tests)
 
-BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__bogus__constructs_empty_reader)
+BOOST_AUTO_TEST_CASE(monad_body_reader__to_reader__bogus__constructs_empty_reader)
 {
     message_header<false, fields> header{};
     header.set(http::field::content_type, "bogus");
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__bogus__constructs_empty_rea
     BOOST_REQUIRE(std::holds_alternative<empty_reader>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__json__constructs_json_reader)
+BOOST_AUTO_TEST_CASE(monad_body_reader__to_reader__json__constructs_json_reader)
 {
     message_header<false, fields> header{};
     header.set(http::field::content_type, "application/json");
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__json__constructs_json_reade
     BOOST_REQUIRE(std::holds_alternative<json_reader>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream__constructs_data_reader)
+BOOST_AUTO_TEST_CASE(monad_body_reader__to_reader__application_octet_stream__constructs_data_reader)
 {
     message_header<false, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream__c
     BOOST_REQUIRE(std::holds_alternative<data_reader>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream_with_attachment__constructs_file_reader)
+BOOST_AUTO_TEST_CASE(monad_body_reader__to_reader__application_octet_stream_with_attachment__constructs_file_reader)
 {
     message_header<false, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream_wi
     BOOST_REQUIRE(std::holds_alternative<file_reader>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream_with_dirty_attachment__constructs_file_reader)
+BOOST_AUTO_TEST_CASE(monad_body_reader__to_reader__application_octet_stream_with_dirty_attachment__constructs_file_reader)
 {
     message_header<false, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__application_octet_stream_wi
     BOOST_REQUIRE(std::holds_alternative<file_reader>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_reader__to_reader__text_plain__constructs_string_reader)
+BOOST_AUTO_TEST_CASE(monad_body_reader__to_reader__text_plain__constructs_string_reader)
 {
     message_header<false, fields> header{};
     header.set(http::field::content_type, "text/plain");

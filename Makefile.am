@@ -58,6 +58,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
     src/messages/json/body.cpp \
+    src/messages/monad/body.cpp \
     src/messages/peer/message.cpp \
     src/messages/peer/detail/address.cpp \
     src/messages/peer/detail/address_item.cpp \
@@ -99,7 +100,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/peer/detail/version.cpp \
     src/messages/peer/detail/version_acknowledge.cpp \
     src/messages/peer/detail/witness_tx_id_relay.cpp \
-    src/messages/variant/body.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
     src/net/connector.cpp \
@@ -178,6 +178,11 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/http/enums/target.cpp \
     test/messages/json/body_reader.cpp \
     test/messages/json/body_writer.cpp \
+    test/messages/monad/body_reader.cpp \
+    test/messages/monad/body_writer.cpp \
+    test/messages/monad/head_reader.cpp \
+    test/messages/monad/head_writer.cpp \
+    test/messages/monad/method.cpp \
     test/messages/peer/heading.cpp \
     test/messages/peer/message.cpp \
     test/messages/peer/detail/address.cpp \
@@ -223,11 +228,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/peer/enums/level.cpp \
     test/messages/peer/enums/magic_numbers.cpp \
     test/messages/peer/enums/service.cpp \
-    test/messages/variant/body_reader.cpp \
-    test/messages/variant/body_writer.cpp \
-    test/messages/variant/head_reader.cpp \
-    test/messages/variant/head_writer.cpp \
-    test/messages/variant/method.cpp \
     test/net/acceptor.cpp \
     test/net/broadcaster.cpp \
     test/net/connector.cpp \
@@ -339,9 +339,9 @@ include_bitcoin_network_impl_messages_httpdir = ${includedir}/bitcoin/network/im
 include_bitcoin_network_impl_messages_http_HEADERS = \
     include/bitcoin/network/impl/messages/http/head.ipp
 
-include_bitcoin_network_impl_messages_variantdir = ${includedir}/bitcoin/network/impl/messages/variant
-include_bitcoin_network_impl_messages_variant_HEADERS = \
-    include/bitcoin/network/impl/messages/variant/head.ipp
+include_bitcoin_network_impl_messages_monaddir = ${includedir}/bitcoin/network/impl/messages/monad
+include_bitcoin_network_impl_messages_monad_HEADERS = \
+    include/bitcoin/network/impl/messages/monad/head.ipp
 
 include_bitcoin_network_impl_rpcdir = ${includedir}/bitcoin/network/impl/rpc
 include_bitcoin_network_impl_rpc_HEADERS = \
@@ -375,6 +375,15 @@ include_bitcoin_network_messages_jsondir = ${includedir}/bitcoin/network/message
 include_bitcoin_network_messages_json_HEADERS = \
     include/bitcoin/network/messages/json/body.hpp \
     include/bitcoin/network/messages/json/json.hpp
+
+include_bitcoin_network_messages_monaddir = ${includedir}/bitcoin/network/messages/monad
+include_bitcoin_network_messages_monad_HEADERS = \
+    include/bitcoin/network/messages/monad/body.hpp \
+    include/bitcoin/network/messages/monad/head.hpp \
+    include/bitcoin/network/messages/monad/method.hpp \
+    include/bitcoin/network/messages/monad/monad.hpp \
+    include/bitcoin/network/messages/monad/request.hpp \
+    include/bitcoin/network/messages/monad/response.hpp
 
 include_bitcoin_network_messages_peerdir = ${includedir}/bitcoin/network/messages/peer
 include_bitcoin_network_messages_peer_HEADERS = \
@@ -430,15 +439,6 @@ include_bitcoin_network_messages_peer_enums_HEADERS = \
     include/bitcoin/network/messages/peer/enums/level.hpp \
     include/bitcoin/network/messages/peer/enums/magic_numbers.hpp \
     include/bitcoin/network/messages/peer/enums/service.hpp
-
-include_bitcoin_network_messages_variantdir = ${includedir}/bitcoin/network/messages/variant
-include_bitcoin_network_messages_variant_HEADERS = \
-    include/bitcoin/network/messages/variant/body.hpp \
-    include/bitcoin/network/messages/variant/head.hpp \
-    include/bitcoin/network/messages/variant/method.hpp \
-    include/bitcoin/network/messages/variant/request.hpp \
-    include/bitcoin/network/messages/variant/response.hpp \
-    include/bitcoin/network/messages/variant/variant.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \

@@ -18,9 +18,9 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(variant_head_writer_tests)
+BOOST_AUTO_TEST_SUITE(monad_head_writer_tests)
 
-using namespace network::variant;
+using namespace network::monad;
 
 ////struct accessor
 ////  : public head::writer

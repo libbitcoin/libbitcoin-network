@@ -67,6 +67,12 @@
 #include <bitcoin/network/messages/http/enums/verb.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/json/json.hpp>
+#include <bitcoin/network/messages/monad/body.hpp>
+#include <bitcoin/network/messages/monad/head.hpp>
+#include <bitcoin/network/messages/monad/method.hpp>
+#include <bitcoin/network/messages/monad/monad.hpp>
+#include <bitcoin/network/messages/monad/request.hpp>
+#include <bitcoin/network/messages/monad/response.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
@@ -113,12 +119,6 @@
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>
-#include <bitcoin/network/messages/variant/body.hpp>
-#include <bitcoin/network/messages/variant/head.hpp>
-#include <bitcoin/network/messages/variant/method.hpp>
-#include <bitcoin/network/messages/variant/request.hpp>
-#include <bitcoin/network/messages/variant/response.hpp>
-#include <bitcoin/network/messages/variant/variant.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/connector.hpp>

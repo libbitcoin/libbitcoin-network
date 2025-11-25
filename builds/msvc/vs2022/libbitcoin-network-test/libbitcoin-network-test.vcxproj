@@ -164,6 +164,21 @@
     <ClCompile Include="..\..\..\..\test\messages\json\body_writer.cpp">
       <ObjectFileName>$(IntDir)test_messages_json_body_writer.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\monad\body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_monad_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\monad\body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_monad_body_writer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\monad\head_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_monad_head_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\monad\head_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_monad_head_writer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\monad\method.cpp">
+      <ObjectFileName>$(IntDir)test_messages_monad_method.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
@@ -213,21 +228,6 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\enums\service.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\variant\body_reader.cpp">
-      <ObjectFileName>$(IntDir)test_messages_variant_body_reader.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\variant\body_writer.cpp">
-      <ObjectFileName>$(IntDir)test_messages_variant_body_writer.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\variant\head_reader.cpp">
-      <ObjectFileName>$(IntDir)test_messages_variant_head_reader.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\variant\head_writer.cpp">
-      <ObjectFileName>$(IntDir)test_messages_variant_head_writer.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\variant\method.cpp">
-      <ObjectFileName>$(IntDir)test_messages_variant_method.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />

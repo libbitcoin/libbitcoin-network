@@ -19,19 +19,19 @@
 #include "../../test.hpp"
 
 using namespace http;
-using namespace network::variant;
+using namespace network::monad;
 
 struct accessor
-    : public body::writer
+  : public body::writer
 {
     using base = body::writer;
     using base::writer;
     using base::to_writer;
 };
 
-BOOST_AUTO_TEST_SUITE(variant_body_writer_tests)
+BOOST_AUTO_TEST_SUITE(monad_body_writer_tests)
 
-BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__undefined__constructs_empty_writer)
+BOOST_AUTO_TEST_CASE(monad_body_writer__to_writer__undefined__constructs_empty_writer)
 {
     message_header<false, fields> header{};
     body::value_type value{};
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__undefined__constructs_empty
     BOOST_REQUIRE(std::holds_alternative<empty_writer>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__empty__constructs_empty_writer)
+BOOST_AUTO_TEST_CASE(monad_body_writer__to_writer__empty__constructs_empty_writer)
 {
     message_header<false, fields> header{};
     body::value_type value{};
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__empty__constructs_empty_wri
     BOOST_REQUIRE(std::holds_alternative<empty_writer>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__json__constructs_json_writer)
+BOOST_AUTO_TEST_CASE(monad_body_writer__to_writer__json__constructs_json_writer)
 {
     message_header<false, fields> header{};
     body::value_type value{};
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__json__constructs_json_write
     BOOST_REQUIRE(std::holds_alternative<json_writer>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__data__constructs_data_writer)
+BOOST_AUTO_TEST_CASE(monad_body_writer__to_writer__data__constructs_data_writer)
 {
     message_header<false, fields> header{};
     body::value_type value{};
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__data__constructs_data_write
     BOOST_REQUIRE(std::holds_alternative<data_writer>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__span__constructs_span_writer)
+BOOST_AUTO_TEST_CASE(monad_body_writer__to_writer__span__constructs_span_writer)
 {
     message_header<false, fields> header{};
     body::value_type value{};
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__span__constructs_span_write
     BOOST_REQUIRE(std::holds_alternative<span_writer>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__buffer__constructs_buffer_writer)
+BOOST_AUTO_TEST_CASE(monad_body_writer__to_writer__buffer__constructs_buffer_writer)
 {
     message_header<false, fields> header{};
     body::value_type value{};
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__buffer__constructs_buffer_w
     BOOST_REQUIRE(std::holds_alternative<buffer_writer>(variant));
 }
 
-BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__string__constructs_string_writer)
+BOOST_AUTO_TEST_CASE(monad_body_writer__to_writer__string__constructs_string_writer)
 {
     message_header<false, fields> header{};
     body::value_type value{};
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(variant_body_writer_file_body_tests, test::directory_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(variant_body_writer__to_writer__file__constructs_file_writer)
+BOOST_AUTO_TEST_CASE(monad_body_writer__to_writer__file__constructs_file_writer)
 {
     // In dubug builds boost asserts that the file is open.
     // BOOST_ASSERT(body_.file_.is_open());
