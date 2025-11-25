@@ -150,24 +150,31 @@ inline CLASS::writer::out_buffer CLASS::writer::get(boost_code& ec) NOEXCEPT
     {
         // Always prepares the configured max_size.
         const auto buffer = value_.buffer->prepare(size);
-        serializer_.next(ec, [&](boost_code& code, auto const& buffers) NOEXCEPT
-        {
-            const auto copied = boost::asio::buffer_copy(buffer, buffers);
-
-            // No progress (edge case).
-            if (is_zero(copied) && !serializer_.is_done())
+        serializer_.next(ec,
+            [&](boost_code& code, auto const& buffers) NOEXCEPT
             {
-                code = to_http_code(http_error_t::unexpected_body);
-                return;
-            }
+                const auto copied = boost::asio::buffer_copy(buffer, buffers);
 
-            value_.buffer->commit(copied);
-            value_.buffer->consume(copied);
-        });
+                // No progress (edge case).
+                if (is_zero(copied) && !serializer_.is_done())
+                {
+                    code = to_http_code(http_error_t::unexpected_body);
+                    return;
+                }
+
+                value_.buffer->commit(copied);
+                value_.buffer->consume(copied);
+            });
 
         if (ec) return {};
         const auto more = !serializer_.is_done();
         return out_buffer{ std::make_pair(value_.buffer->data(), more) };
+    }
+    catch (const boost::system::system_error& e)
+    {
+        // Primary exception type for parsing operations.
+        ec = e.code();
+        return {};
     }
     catch (...)
     {

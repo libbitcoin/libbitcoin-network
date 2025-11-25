@@ -159,6 +159,12 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
         const auto more = !serializer_.done();
         return out_buffer{ std::make_pair(boost::asio::buffer(view), more) };
     }
+    catch (const boost::system::system_error& e)
+    {
+        // Primary exception type for parsing operations.
+        ec = e.code();
+        return {};
+    }
     catch (...)
     {
         // As a catch-all we blame alloc.
