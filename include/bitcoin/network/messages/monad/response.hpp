@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_MONAD_RESPONSE_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_MONAD_RESPONSE_HPP
 
+#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/monad/body.hpp>
 #include <bitcoin/network/messages/monad/head.hpp>
@@ -33,21 +34,15 @@ struct response
     monad::body body{};
 };
 
-} // namespace monad
-} // namespace network
-} // namespace libbitcoin
-
-// TODO: move to monad namespace.
-namespace libbitcoin {
-namespace network {
-namespace http {
-    
-// TODO: move to monad::response.
-using response = boost::beast::http::response<monad::body>;
-using serializer = boost::beast::http::response_serializer<monad::body>;
-using response_cptr = std::shared_ptr<const response>;
 using response_ptr = std::shared_ptr<response>;
+using response_cptr = std::shared_ptr<const response>;
 
+} // namespace monad
+
+// TODO: use monad::response.
+namespace http {
+using response = boost::beast::http::response<monad::body>;
+using response_ptr = std::shared_ptr<response>;
 } // namespace http
 } // namespace network
 } // namespace libbitcoin
