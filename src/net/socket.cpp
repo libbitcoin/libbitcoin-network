@@ -337,7 +337,7 @@ void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
         // This operation posts handler to the strand.
         beast::http::async_read(socket_, buffer.get(), request.get(),
             std::bind(&socket::handle_http_read,
-                shared_from_this(), _1, _2, request, buffer, handler));
+                shared_from_this(), _1, _2, request, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
     {
@@ -508,13 +508,9 @@ void socket::handle_io(const boost_code& ec, size_t size,
 
 void socket::handle_http_read(const boost_code& ec, size_t size,
     const std::reference_wrapper<http::request>& request,
-    std::reference_wrapper<http::flat_buffer> buffer,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // Always consume all of the buffer as the request is fully read.
-    buffer.get().consume(buffer.get().size());
 
     if (error::asio_is_canceled(ec))
     {
