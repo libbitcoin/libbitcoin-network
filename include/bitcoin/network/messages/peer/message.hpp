@@ -20,10 +20,9 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_MESSAGE_HPP
 
 #include <iterator>
-#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
-#include <bitcoin/network/messages/peer/transaction.hpp>
+#include <bitcoin/network/messages/peer/detail/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -53,9 +52,7 @@ inline system::chunk_ptr serialize(const Message& message, uint32_t magic,
 {
     using namespace system;
     const auto size = heading::size() + message.size(version);
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    const auto data = std::make_shared<data_chunk>(size);
-    BC_POP_WARNING()
+    const auto data = emplace_shared<data_chunk>(size);
     const auto start = std::next(data->begin(), heading::size());
     const data_slab body(start, data->end());
     if (!message.serialize(version, body) ||

@@ -19,10 +19,9 @@
 #include <bitcoin/network/messages/peer/message.hpp>
 
 #include <iterator>
-#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
-#include <bitcoin/network/messages/peer/transaction.hpp>
+#include <bitcoin/network/messages/peer/detail/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -36,9 +35,7 @@ system::chunk_ptr serialize<transaction>(const transaction& message,
     using namespace system;
     const auto body_size = message.size(version);
     const auto size = heading::size() + body_size;
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    const auto data = std::make_shared<data_chunk>(size);
-    BC_POP_WARNING()
+    const auto data = emplace_shared<data_chunk>(size);
     const auto start = std::next(data->begin(), heading::size());
     const data_slab body(start, data->end());
     if (!message.serialize(version, body))
