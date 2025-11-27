@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_RPC_TYPES_HPP
 #define LIBBITCOIN_NETWORK_RPC_TYPES_HPP
 
+#include <memory>
 #include <optional>
 #include <tuple>
 #include <bitcoin/network/define.hpp>
@@ -137,7 +138,8 @@ struct nullable_tag {};
 template <typename Type> requires
     is_same_type<Type, object_t> || is_same_type<Type, array_t> ||
     is_same_type<Type, string_t> || is_same_type<Type, boolean_t> ||
-    is_same_type<Type, number_t> || is_integral_integer<Type>
+    is_same_type<Type, number_t> || is_integral_integer<Type> ||
+    is_shared_ptr<Type>
 struct nullable
 {
     using tag = nullable_tag;

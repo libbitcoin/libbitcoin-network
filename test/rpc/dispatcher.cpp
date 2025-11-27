@@ -926,6 +926,7 @@ struct mock_missing_nullable
     static constexpr std::tuple methods
     {
         method<"missing_nullable", double, nullable<bool>>{ "a", "b" },
+        method<"missing_nullable_pointer", double, nullable<messages::peer::ping::cptr>>{ "a", "b" },
     };
 
     template <typename... Args>
@@ -935,6 +936,7 @@ struct mock_missing_nullable
     using at = method_at<methods, Index>;
 
     using missing_nullable = at<0>;
+    using missing_nullable_pointer = at<1>;
 };
 
 using missing_nullable_interface = publish<mock_missing_nullable>;
@@ -947,7 +949,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
     distributor_missing_nullable instance(strand);
 
     double result_a{};
-    boolean_t result_b{};
+    bool result_b{};
     using method = missing_nullable_interface::missing_nullable;
 
     instance.subscribe([&](const code&, method::tag, double a, std::optional<bool> b)
@@ -994,6 +996,79 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
     BOOST_REQUIRE(!ec5);
     BOOST_REQUIRE(result_b);
     BOOST_REQUIRE_EQUAL(result_a, 24.0);
+    instance.stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
+{
+    boost::asio::io_service service;
+    asio::strand strand(service.get_executor());
+    distributor_missing_nullable instance(strand);
+
+    double result_a{};
+    messages::peer::ping::cptr result_b{};
+    using method = missing_nullable_interface::missing_nullable_pointer;
+    const auto ping42 = system::emplace_shared<const messages::peer::ping>(42);
+
+    instance.subscribe([&](const code&, method::tag, double a, std::optional<messages::peer::ping::cptr> b)
+    {
+        result_a = a;
+        result_b = b.value_or(nullptr);
+        return true;
+    });
+    
+    const auto ec1 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 } } }
+    });
+    
+    const auto ec2 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 }, { null_t{} } } }
+    });
+    
+    const auto ec3 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { null_t{} }, { 42.0 } } }
+    });
+    
+    const auto ec4 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 } } }
+    });
+    
+    const auto ec5 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 }, { "a", null_t{} } } }
+    });
+
+    // Named params requires explicit value_t in some pointer cases.
+    const auto ec6 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 }, { "b", value_t{ ping42 } } } }
+    });
+
+    const auto ec7 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 }, { ping42 } } }
+    });
+
+    BOOST_REQUIRE(!ec1);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE_EQUAL(ec3, error::missing_parameter);
+    BOOST_REQUIRE(!ec4);
+    BOOST_REQUIRE(!ec5);
+    BOOST_REQUIRE(!ec6);
+    BOOST_REQUIRE(!ec7);
+    BOOST_REQUIRE_EQUAL(result_a, 42.0);
+    BOOST_REQUIRE_EQUAL(result_b->nonce, ping42->nonce);
     instance.stop(error::service_stopped);
 }
 
