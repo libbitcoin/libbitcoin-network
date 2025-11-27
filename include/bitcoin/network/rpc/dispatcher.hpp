@@ -98,19 +98,18 @@ private:
     using notifiers_t = std::unordered_map<std::string, notifier_t>;
 
     template <typename Argument>
-    static inline external_t<Argument> get_required(
-        const value_t& value) THROWS;
+    static inline external_t<Argument> get_missing() THROWS;
     template <typename Argument>
-    static inline external_t<Argument> get_optional() THROWS;
+    static inline external_t<Argument> get_nullified() THROWS;
     template <typename Argument>
-    static inline external_t<Argument> get_nullable() THROWS;
+    static inline external_t<Argument> get_valued(const value_t& value) THROWS;
 
     template <typename Argument>
     static inline external_t<Argument> get_positional(size_t& position,
         const array_t& array) THROWS;
     template <typename Argument>
-    static inline external_t<Argument> get_named(
-        const std::string_view& name, const object_t& object) THROWS;
+    static inline external_t<Argument> get_named(const std::string_view& name,
+        const object_t& object) THROWS;
 
     static inline array_t get_array(const parameters_t& params) THROWS;
     static inline object_t get_object(const parameters_t& params) THROWS;

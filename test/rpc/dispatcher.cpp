@@ -921,12 +921,11 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
     instance.stop(error::service_stopped);
 }
 
-struct mock_methods2
+struct mock_missing_nullable
 {
     static constexpr std::tuple methods
     {
-        method<"test_method0", bool, double>{ "a", "b" },
-        method<"test_method1", double, optional<true>>{ "a", "b" },
+        method<"missing_nullable", double, nullable<bool>>{ "a", "b" },
     };
 
     template <typename... Args>
@@ -935,33 +934,66 @@ struct mock_methods2
     template <size_t Index>
     using at = method_at<methods, Index>;
 
-    using test_method0 = at<0>;
-    using test_method1 = at<1>;
+    using missing_nullable = at<0>;
 };
 
-using mock_interface2 = publish<mock_methods2>;
-using distributor_mock2 = dispatcher<mock_interface2>;
+using missing_nullable_interface = publish<mock_missing_nullable>;
+using distributor_missing_nullable = dispatcher<missing_nullable_interface>;
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__test_method0__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
 {
     boost::asio::io_service service;
     asio::strand strand(service.get_executor());
-    distributor_mock2 instance(strand);
-    using method0 = mock_interface2::test_method0;
-    using method2 = mock_interface2::test_method0;
+    distributor_missing_nullable instance(strand);
 
-    instance.subscribe([&](const code&, method0::tag, bool, double)
+    double result_a{};
+    boolean_t result_b{};
+    using method = missing_nullable_interface::missing_nullable;
+
+    instance.subscribe([&](const code&, method::tag, double a, std::optional<bool> b)
     {
+        result_a = a;
+        result_b = b.value_or(true);
         return true;
     });
-
-    const auto ec = instance.notify(
+    
+    const auto ec1 = instance.notify(
     {
-        .method = string_t{ method0::name },
-        .params = { object_t{ { "a", bool{} }, { "b", double{} } } }
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 }, { false } } }
+    });
+    
+    const auto ec2 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 }, { "b", false } } }
+    });
+    
+    const auto ec3 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "b", false }, { "a", 42.0 } } }
+    });
+    
+    const auto ec4 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 }, { "b", null_t{} } } }
+    });
+    
+    const auto ec5 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 24.0 } } }
     });
 
-    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(!ec1);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
+    BOOST_REQUIRE(!ec5);
+    BOOST_REQUIRE(result_b);
+    BOOST_REQUIRE_EQUAL(result_a, 24.0);
     instance.stop(error::service_stopped);
 }
 
