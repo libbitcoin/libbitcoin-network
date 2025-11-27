@@ -87,39 +87,44 @@ struct value_t
     >;
 
     /// Explicit initialization constructors.
+    value_t() NOEXCEPT : inner_{ null_t{} } {}
     value_t(null_t) NOEXCEPT : inner_{ null_t{} } {}
     value_t(boolean_t value) NOEXCEPT : inner_{ value } {}
     value_t(number_t value) NOEXCEPT : inner_{ value } {}
-    value_t(string_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(array_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(object_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(int8_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(int16_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(int32_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(int64_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(uint8_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(uint16_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(uint32_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(uint64_t value) NOEXCEPT : inner_{ std::move(value) } {}
-    value_t(any_t value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(const string_t& value) NOEXCEPT : inner_{ value } {}
+    value_t(const array_t& value) NOEXCEPT : inner_{ value } {}
+    value_t(const object_t& value) NOEXCEPT : inner_{ value } {}
+    value_t(string_t&& value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(array_t&& value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(object_t&& value) NOEXCEPT : inner_{ std::move(value) } {}
+    value_t(int8_t value) NOEXCEPT : inner_{ value } {}
+    value_t(int16_t value) NOEXCEPT : inner_{ value } {}
+    value_t(int32_t value) NOEXCEPT : inner_{ value } {}
+    value_t(int64_t value) NOEXCEPT : inner_{ value } {}
+    value_t(uint8_t value) NOEXCEPT : inner_{ value } {}
+    value_t(uint16_t value) NOEXCEPT : inner_{ value } {}
+    value_t(uint32_t value) NOEXCEPT : inner_{ value } {}
+    value_t(uint64_t value) NOEXCEPT : inner_{ value } {}
+    value_t(const any_t& value) NOEXCEPT : inner_{ value } {}
+    value_t(any_t&& value) NOEXCEPT : inner_{ std::move(value) } {}
 
     /// Forwarding constructors for in-place variant construction.
     FORWARD_VARIANT_CONSTRUCT(value_t, inner_)
     FORWARD_VARIANT_ASSIGNMENT(value_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, boolean_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, number_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, string_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, array_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, object_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int8_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int16_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int32_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int64_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint8_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint16_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint32_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint64_t, inner_)
-    FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, any_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, boolean_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, number_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, string_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, array_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, object_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int8_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int16_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int32_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, int64_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint8_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint16_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint32_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint64_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, any_t, inner_)
         
     inner_t& value() NOEXCEPT
     {
