@@ -337,7 +337,7 @@ inline code CLASS::subscribe(Handler&& handler) NOEXCEPT
 {
     // Iterate methods_t in order to find the matching function signature.
     // The index of each method correlates to its defined subscriber index.
-    const auto index = find_subscriber_for_handler<Handler>();
+    constexpr auto index = find_subscriber_for_handler<Handler>();
     auto& subscriber = std::get<index>(subscribers_);
     return subscriber.subscribe(std::forward<Handler>(handler));
 }
