@@ -246,30 +246,30 @@ struct apply<Template, std::tuple<Args...>>
 template <template <typename...> class Template, typename ...Args>
 using apply_t = typename apply<Template, Args...>::type;
 
-/// only_trailing_optionals<> : detect non-trailing optionals in arguments.
+/// only_trailing_unrequireds<> : detect non-trailing unrequireds in arguments.
 /// ---------------------------------------------------------------------------
 
 template <typename ...Args>
-struct only_trailing_optionals_t;
+struct only_trailing_unrequireds_t;
 
 template <>
-struct only_trailing_optionals_t<> : std::true_type {};
+struct only_trailing_unrequireds_t<> : std::true_type {};
 
 template <typename ...Args>
-constexpr bool all_optional() noexcept
+constexpr bool all_unrequired() noexcept
 {
-    return ((is_optional<Args>) && ...);
+    return ((!is_required<Args>) && ...);
 }
 
 template <typename First, typename ...Rest>
-struct only_trailing_optionals_t<First, Rest...>
-  : iif<is_optional<First>,
-        std::bool_constant<all_optional<Rest...>()>,
-            only_trailing_optionals_t<Rest...>> {};
+struct only_trailing_unrequireds_t<First, Rest...>
+  : iif<!is_required<First>,
+        std::bool_constant<all_unrequired<Rest...>()>,
+            only_trailing_unrequireds_t<Rest...>> {};
 
 template <typename ...Args>
-constexpr bool only_trailing_optionals = 
-    only_trailing_optionals_t<Args...>::value;
+constexpr bool only_trailing_unrequireds = 
+    only_trailing_unrequireds_t<Args...>::value;
 
 /// is_tagged<Tuple> : detect native tag (first arg is shared_ptr).
 /// ---------------------------------------------------------------------------

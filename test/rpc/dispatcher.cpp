@@ -59,7 +59,6 @@ BOOST_AUTO_TEST_CASE(dispatcher__construct__stop__stops)
     boost::asio::io_service service;
     asio::strand strand(service.get_executor());
     distributor_mock instance(strand);
-
     instance.stop(error::service_stopped);
 }
 
@@ -72,6 +71,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__no_subscriber__success)
     request_t request{};
     request.method = "empty_method";
     const auto ec = instance.notify(request);
+    instance.stop(error::service_stopped);
     BOOST_REQUIRE_EQUAL(ec, error::success);
 }
 
@@ -145,6 +145,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__multiple__expected)
 
     BOOST_REQUIRE(!ec1);
     BOOST_REQUIRE(!ec2);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__unknown_method__unexpected_method)
@@ -156,6 +157,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__unknown_method__unexpected_method)
     request_t request{};
     request.method = "unknown_method";
     BOOST_REQUIRE_EQUAL(instance.notify(request), error::unexpected_method);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes_both)
@@ -203,6 +205,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes
     BOOST_CHECK_EQUAL(second_result_b, 24.0);
     BOOST_CHECK_EQUAL(first_result_c, "42");
     BOOST_CHECK_EQUAL(second_result_c, "42");
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
@@ -223,6 +226,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
     request.method = "empty_method";
     BOOST_REQUIRE(!instance.notify(request));
     BOOST_REQUIRE(called);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
@@ -247,6 +251,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
 
     BOOST_REQUIRE(!instance.notify(request));
     BOOST_REQUIRE(called);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positional)
@@ -262,6 +267,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positi
     };
 
     BOOST_REQUIRE_EQUAL(instance.notify(request), error::extra_positional);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expected)
@@ -317,6 +323,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expecte
     BOOST_REQUIRE_EQUAL(result_a, true);
     BOOST_REQUIRE_EQUAL(result_b, 24.0);
     BOOST_REQUIRE_EQUAL(result_c, "42");
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
@@ -403,6 +410,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
     BOOST_REQUIRE_EQUAL(result_a, false);
     BOOST_REQUIRE_EQUAL(result_b, 42.0);
     BOOST_REQUIRE_EQUAL(result_c, "24");
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expected)
@@ -458,6 +466,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expecte
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
     BOOST_REQUIRE_EQUAL(result_c, true);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
@@ -513,6 +522,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
     BOOST_REQUIRE_EQUAL(result_c, true);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expected)
@@ -568,6 +578,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expecte
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
     BOOST_REQUIRE_EQUAL(result_c, true);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
@@ -623,6 +634,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
     BOOST_REQUIRE_EQUAL(result_c, true);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expected)
@@ -678,6 +690,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expecte
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, true);
     BOOST_REQUIRE_EQUAL(result_c, 4.2);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
@@ -733,6 +746,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, true);
     BOOST_REQUIRE_EQUAL(result_c, 4.2);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expected)
@@ -785,6 +799,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expecte
     BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, true);
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
@@ -837,6 +852,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
     BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, true);
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
@@ -869,6 +885,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
     BOOST_REQUIRE(result);
     BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
     BOOST_REQUIRE_EQUAL(result->nonce, expected);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
@@ -901,6 +918,51 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
     BOOST_REQUIRE(result);
     BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
     BOOST_REQUIRE_EQUAL(result->nonce, expected);
+    instance.stop(error::service_stopped);
+}
+
+struct mock_methods2
+{
+    static constexpr std::tuple methods
+    {
+        method<"test_method0", bool, double>{ "a", "b" },
+        method<"test_method1", double, optional<true>>{ "a", "b" },
+    };
+
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
+
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
+    using test_method0 = at<0>;
+    using test_method1 = at<1>;
+};
+
+using mock_interface2 = publish<mock_methods2>;
+using distributor_mock2 = dispatcher<mock_interface2>;
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__test_method0__expected)
+{
+    boost::asio::io_service service;
+    asio::strand strand(service.get_executor());
+    distributor_mock2 instance(strand);
+    using method0 = mock_interface2::test_method0;
+    using method2 = mock_interface2::test_method0;
+
+    instance.subscribe([&](const code&, method0::tag, bool, double)
+    {
+        return true;
+    });
+
+    const auto ec = instance.notify(
+    {
+        .method = string_t{ method0::name },
+        .params = { object_t{ { "a", bool{} }, { "b", double{} } } }
+    });
+
+    BOOST_REQUIRE(!ec);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

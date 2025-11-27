@@ -31,23 +31,28 @@ struct explore_methods
 {
     static constexpr std::tuple methods
     {
+        // The block hash or height is required (TODO: nullable any/ptr).
         method<"block", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "height" },
         method<"header", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "height" },
         method<"filter", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "height" },
-        method<"block_tx", uint8_t, system::hash_cptr, nullable<uint32_t>, uint32_t>{ "version", "hash", "height", "position" },
         method<"block_txs", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "height" },
+
+        // The position parameter is out of URL order because it's required.
+        method<"block_tx", uint8_t, uint32_t, system::hash_cptr, nullable<uint32_t>>{ "version", "position", "hash", "height" },
+
+        // All required parameters.
         method<"transaction", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"input", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "index" },
+        method<"input", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
         method<"inputs", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"input_script", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "index" },
+        method<"input_script", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
         method<"input_scripts", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"input_witness", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "index" },
+        method<"input_witness", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
         method<"input_witnesses", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"output", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "index" },
+        method<"output", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
         method<"outputs", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"output_script", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "index" },
+        method<"output_script", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
         method<"output_scripts", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"output_spender", uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "hash", "index" },
+        method<"output_spender", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
         method<"output_spenders", uint8_t, system::hash_cptr>{ "version", "hash" },
         method<"address", uint8_t, system::hash_cptr>{ "version", "hash" }
     };
@@ -97,13 +102,13 @@ enum explore_targets
 
     /// -----------------------------------------------------------------------
 
-    /// /v[]/block/hash/[bkhash]/transaction/[position] {1}
-    /// /v[]/block/height/[height]/transaction/[position] {1}
-    block_tx,
-
     /// /v[]/block/hash/[bkhash]/transactions {all txs in the block}
     /// /v[]/block/height/[height]/transactions {all txs in the block}
     block_txs,
+
+    /// /v[]/block/hash/[bkhash]/transaction/[position] {1}
+    /// /v[]/block/height/[height]/transaction/[position] {1}
+    block_tx,
 
     /// /v[]/transaction/[txhash] {1}
     transaction,

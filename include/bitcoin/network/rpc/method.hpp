@@ -51,7 +51,7 @@ BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
 template <text_t Text, typename ...Args>
 struct method
 {
-    static_assert(only_trailing_optionals<Args...>, "optionals must be last");
+    static_assert(only_trailing_unrequireds<Args...>, "optionals must be last");
     static constexpr std::string_view name{ Text.text.data(), Text.text.size() };
     static constexpr bool native = is_tagged<std::tuple<Args...>>;
     static constexpr auto size = sizeof...(Args);

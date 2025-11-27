@@ -246,19 +246,34 @@ static_assert(is_same_tuple<externals_t<std::tuple<optional<true>, nullable<doub
 static_assert(is_same_tuple<externals_t<std::tuple<const bool>>, std::tuple<bool>>);
 static_assert(!is_same_tuple<externals_t<std::tuple<>>, std::tuple<bool>>);
 
-// only_trailing_optionals<Args...>
+// only_trailing_unrequireds<Args...>
 // ----------------------------------------------------------------------------
 
-static_assert( only_trailing_optionals<>);
-static_assert( only_trailing_optionals<bool>);
-static_assert( only_trailing_optionals<optional<true>>);
-static_assert( only_trailing_optionals<bool, optional<true>>);
-static_assert( only_trailing_optionals<int, bool, optional<true>>);
-static_assert( only_trailing_optionals<optional<true>, optional<42>>);
-static_assert( only_trailing_optionals<int, optional<true>, optional<4.2>>);
-static_assert(!only_trailing_optionals<optional<true>, bool>);
-static_assert(!only_trailing_optionals<bool, optional<true>, bool>);
-static_assert(!only_trailing_optionals<optional<true>, optional<42u>, bool>);
+static_assert( only_trailing_unrequireds<>);
+static_assert( only_trailing_unrequireds<bool>);
+
+static_assert( only_trailing_unrequireds<optional<true>>);
+static_assert( only_trailing_unrequireds<bool, optional<true>>);
+static_assert( only_trailing_unrequireds<int, bool, optional<true>>);
+static_assert( only_trailing_unrequireds<optional<true>, optional<42>>);
+static_assert( only_trailing_unrequireds<int, optional<true>, optional<4.2>>);
+static_assert(!only_trailing_unrequireds<optional<true>, bool>);
+static_assert(!only_trailing_unrequireds<bool, optional<true>, bool>);
+static_assert(!only_trailing_unrequireds<optional<true>, optional<42u>, bool>);
+
+static_assert( only_trailing_unrequireds<nullable<bool>>);
+static_assert( only_trailing_unrequireds<bool, nullable<bool>>);
+static_assert( only_trailing_unrequireds<int, bool, nullable<bool>>);
+static_assert( only_trailing_unrequireds<nullable<bool>, nullable<int32_t>>);
+static_assert( only_trailing_unrequireds<int, nullable<bool>, nullable<double>>);
+static_assert(!only_trailing_unrequireds<nullable<bool>, bool>);
+static_assert(!only_trailing_unrequireds<bool, nullable<bool>, bool>);
+static_assert(!only_trailing_unrequireds<nullable<bool>, nullable<uint32_t>, bool>);
+
+static_assert( only_trailing_unrequireds<bool, optional<true>, nullable<uint32_t>>);
+static_assert( only_trailing_unrequireds<bool, nullable<uint32_t>, optional<true>>);
+static_assert(!only_trailing_unrequireds<optional<true>, nullable<uint32_t>, bool>);
+static_assert(!only_trailing_unrequireds<nullable<uint32_t>, optional<true>, bool>);
 
 // is_tagged<Tuple>
 // ----------------------------------------------------------------------------
