@@ -47,17 +47,6 @@ using array_t = std::vector<value_t>;
 using object_t = std::unordered_map<string_t, value_t>;
 using any_t = rpc::any;
 
-// linux and macos define id_t in the global namespace.
-// typedef __darwin_id_t id_t;
-// typedef __id_t id_t;
-using identity_t = std::variant
-<
-    null_t,
-    code_t,
-    string_t
->;
-using id_option = std::optional<identity_t>;
-
 struct value_t
 {
     using inner_t = std::variant
@@ -155,6 +144,17 @@ struct result_t
     value_option data{};
 };
 using error_option = std::optional<result_t>;
+
+// linux and macos define id_t in the global namespace.
+// typedef __darwin_id_t id_t;
+// typedef __id_t id_t;
+using identity_t = std::variant
+<
+    null_t,
+    code_t,
+    string_t
+>;
+using id_option = std::optional<identity_t>;
 
 struct response_t
 {
