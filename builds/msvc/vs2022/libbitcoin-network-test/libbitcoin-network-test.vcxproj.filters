@@ -153,12 +153,6 @@
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\http\head_reader.cpp">
-      <Filter>src\messages\http</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\http\head_writer.cpp">
-      <Filter>src\messages\http</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
       <Filter>src\messages\json</Filter>
     </ClCompile>
@@ -169,12 +163,6 @@
       <Filter>src\messages\monad</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\monad\body_writer.cpp">
-      <Filter>src\messages\monad</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\head_reader.cpp">
-      <Filter>src\messages\monad</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\head_writer.cpp">
       <Filter>src\messages\monad</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\monad\method.cpp">

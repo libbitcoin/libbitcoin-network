@@ -953,44 +953,45 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
     const auto ec1 = instance.notify(
     {
         .method = string_t{ method::name },
-        .params = { array_t{ { 42.0 } } }
+        .params = { array_t{ 42.0 } }
     });
     
     const auto ec2 = instance.notify(
     {
         .method = string_t{ method::name },
-        .params = { array_t{ { 42.0 }, { null_t{} } } }
+        .params = { array_t{ 42.0, null_t{} } }
     });
     
     const auto ec3 = instance.notify(
     {
         .method = string_t{ method::name },
-        .params = { array_t{ { null_t{} }, { 42.0 } } }
+        .params = { array_t{ null_t{}, 42.0 } }
     });
-    
+
+    // any_t{ ping42 } or { ping42 } must be specified.
     const auto ec4 = instance.notify(
     {
         .method = string_t{ method::name },
-        .params = { object_t{ { "a", 42.0 } } }
+        .params = { array_t{ 42.0, any_t{ ping42 } } }
     });
     
     const auto ec5 = instance.notify(
     {
         .method = string_t{ method::name },
-        .params = { object_t{ { "a", 42.0 }, { "a", null_t{} } } }
+        .params = { object_t{ { "a", 42.0 } } }
     });
-
-    // Named params requires explicit value_t in some pointer cases.
+    
     const auto ec6 = instance.notify(
     {
         .method = string_t{ method::name },
-        .params = { object_t{ { "a", 42.0 }, { "b", value_t{ ping42 } } } }
+        .params = { object_t{ { "a", 42.0 }, { "a", null_t{} } } }
     });
 
+    // any_t{ ping42 } or { ping42 } must be specified.
     const auto ec7 = instance.notify(
     {
         .method = string_t{ method::name },
-        .params = { array_t{ { 42.0 }, { ping42 } } }
+        .params = { object_t{ { "a", 42.0 }, { "b", any_t{ ping42 } } } }
     });
 
     BOOST_REQUIRE(!ec1);

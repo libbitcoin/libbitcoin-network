@@ -171,8 +171,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/log/timer.cpp \
     test/log/tracker.cpp \
     test/messages/http/fields.cpp \
-    test/messages/http/head_reader.cpp \
-    test/messages/http/head_writer.cpp \
     test/messages/http/enums/magic_numbers.cpp \
     test/messages/http/enums/mime_type.cpp \
     test/messages/http/enums/target.cpp \
@@ -180,8 +178,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/json/body_writer.cpp \
     test/messages/monad/body_reader.cpp \
     test/messages/monad/body_writer.cpp \
-    test/messages/monad/head_reader.cpp \
-    test/messages/monad/head_writer.cpp \
     test/messages/monad/method.cpp \
     test/messages/peer/heading.cpp \
     test/messages/peer/message.cpp \
