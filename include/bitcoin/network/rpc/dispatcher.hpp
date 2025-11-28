@@ -44,30 +44,28 @@ public:
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
     /// If key exists, handler is invoked with error::subscriber_exists.
-    /// Otherwise handler retained. Subscription code is also returned here.
-    template <typename Handler>
-    inline code subscribe(Handler&& handler) NOEXCEPT;
+    /// Desubscribe key is forwarded via Args (unused by dispatch).
+    template <typename Handler, typename ...Args>
+    inline code subscribe(Handler&& handler, Args&&... args) NOEXCEPT;
 
     /// Create an instance of this class.
     inline dispatcher() NOEXCEPT;
     virtual ~dispatcher() = default;
 
-    /// Dispatch the request to the appropriate method's unsubscriber.
+    /// Dispatch request to subscribed method handler(s).
     virtual inline code notify(const request_t& request) NOEXCEPT;
 
-    /// Stop all unsubscribers with the given code.
+    /// Stop all subscribers with the given code.
     virtual inline void stop(const code& ec) NOEXCEPT;
 
-private:
-    // make_subscribers
-    // ------------------------------------------------------------------------
-
+    /// make_subscribers
+    /// -----------------------------------------------------------------------
+protected:
+    template <typename Method>
+    using subscriber_t = apply_t<Interface::template subscriber, args_t<Method>>;
     using methods_t = typename Interface::type;
 
-    template <typename Method>
-    using subscriber_t = apply_t<Interface::template subscriber,
-        args_t<Method>>;
-
+private:
     template <typename>
     struct subscribers;
     template <size_t ...Index>
@@ -89,9 +87,9 @@ private:
     static inline subscribers_t make_subscribers(
         std::index_sequence<Index...>) NOEXCEPT;
 
-    // make_notifiers
-    // ------------------------------------------------------------------------
-
+    /// make_notifiers
+    /// -----------------------------------------------------------------------
+private:
     using parameters_t = params_option;
     using notifier_t = std::function<code(dispatcher&, const parameters_t&)>;
     using notifiers_t = std::unordered_map<std::string, notifier_t>;
@@ -119,12 +117,7 @@ private:
     template <typename Arguments>
     static inline externals_t<Arguments> extract_named(
         const parameters_t& params, const names_t<Arguments>& names) THROWS;
-    template <typename Arguments>
-    static inline externals_t<Arguments> extract(
-        const parameters_t& params, const names_t<Arguments>& names) THROWS;
 
-    template <typename Method>
-    static inline auto preamble() NOEXCEPT;
     template <typename Method>
     static inline code notify(subscriber_t<Method>& subscriber,
         const parameters_t& params, const names_t<Method>& names) NOEXCEPT;
@@ -135,8 +128,16 @@ private:
     static inline constexpr notifiers_t make_notifiers(
         std::index_sequence<Index...>) NOEXCEPT;
 
-    /// Static map of handlers to functions.
+    /// Static map of handlers to functors.
     static const notifiers_t notifiers_;
+
+protected:
+    template <typename Method>
+    static inline auto preamble(const code& ec=error::success) NOEXCEPT;
+
+    template <typename Arguments>
+    static inline externals_t<Arguments> extract(const parameters_t& params,
+        const names_t<Arguments>& names) THROWS;
 
     /// This is not thread safe.
     subscribers_t subscribers_;

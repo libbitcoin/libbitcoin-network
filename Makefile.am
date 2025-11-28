@@ -101,7 +101,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/peer/detail/version_acknowledge.cpp \
     src/messages/peer/detail/witness_tx_id_relay.cpp \
     src/net/acceptor.cpp \
-    src/net/broadcaster.cpp \
     src/net/connector.cpp \
     src/net/deadline.cpp \
     src/net/hosts.cpp \
@@ -225,7 +224,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/peer/enums/magic_numbers.cpp \
     test/messages/peer/enums/service.cpp \
     test/net/acceptor.cpp \
-    test/net/broadcaster.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
     test/net/hosts.cpp \
@@ -247,6 +245,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_version_70002.cpp \
     test/protocols/protocol_version_70016.cpp \
     test/rpc/any.cpp \
+    test/rpc/broadcaster.cpp \
     test/rpc/dispatcher.cpp \
     test/rpc/method.cpp \
     test/rpc/types.cpp \
@@ -341,6 +340,7 @@ include_bitcoin_network_impl_messages_monad_HEADERS = \
 
 include_bitcoin_network_impl_rpcdir = ${includedir}/bitcoin/network/impl/rpc
 include_bitcoin_network_impl_rpc_HEADERS = \
+    include/bitcoin/network/impl/rpc/broadcaster.ipp \
     include/bitcoin/network/impl/rpc/dispatcher.ipp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
@@ -439,7 +439,6 @@ include_bitcoin_network_messages_peer_enums_HEADERS = \
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/acceptor.hpp \
-    include/bitcoin/network/net/broadcaster.hpp \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/deadline.hpp \
     include/bitcoin/network/net/hosts.hpp \
@@ -470,6 +469,7 @@ include_bitcoin_network_protocols_HEADERS = \
 include_bitcoin_network_rpcdir = ${includedir}/bitcoin/network/rpc
 include_bitcoin_network_rpc_HEADERS = \
     include/bitcoin/network/rpc/any.hpp \
+    include/bitcoin/network/rpc/broadcaster.hpp \
     include/bitcoin/network/rpc/dispatcher.hpp \
     include/bitcoin/network/rpc/method.hpp \
     include/bitcoin/network/rpc/model.hpp \
@@ -489,7 +489,8 @@ include_bitcoin_network_rpc_interfaces_HEADERS = \
     include/bitcoin/network/rpc/interfaces/explore.hpp \
     include/bitcoin/network/rpc/interfaces/http.hpp \
     include/bitcoin/network/rpc/interfaces/interfaces.hpp \
-    include/bitcoin/network/rpc/interfaces/peer.hpp \
+    include/bitcoin/network/rpc/interfaces/peer_broadcast.hpp \
+    include/bitcoin/network/rpc/interfaces/peer_dispatch.hpp \
     include/bitcoin/network/rpc/interfaces/stratum_v1.hpp \
     include/bitcoin/network/rpc/interfaces/stratum_v2.hpp
 

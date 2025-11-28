@@ -120,7 +120,6 @@
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
-#include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/hosts.hpp>
@@ -145,6 +144,7 @@
 #include <bitcoin/network/protocols/protocol_ws.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/rpc/any.hpp>
+#include <bitcoin/network/rpc/broadcaster.hpp>
 #include <bitcoin/network/rpc/dispatcher.hpp>
 #include <bitcoin/network/rpc/method.hpp>
 #include <bitcoin/network/rpc/model.hpp>
@@ -158,7 +158,8 @@
 #include <bitcoin/network/rpc/interfaces/explore.hpp>
 #include <bitcoin/network/rpc/interfaces/http.hpp>
 #include <bitcoin/network/rpc/interfaces/interfaces.hpp>
-#include <bitcoin/network/rpc/interfaces/peer.hpp>
+#include <bitcoin/network/rpc/interfaces/peer_broadcast.hpp>
+#include <bitcoin/network/rpc/interfaces/peer_dispatch.hpp>
 #include <bitcoin/network/rpc/interfaces/stratum_v1.hpp>
 #include <bitcoin/network/rpc/interfaces/stratum_v2.hpp>
 #include <bitcoin/network/sessions/session.hpp>

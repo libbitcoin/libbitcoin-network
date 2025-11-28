@@ -35,8 +35,17 @@ case messages::peer::identifier::message: \
         __VA_OPT__(,) __VA_ARGS__) }; \
 }
 
-struct peer_methods
+struct peer_dispatch
 {
+    /// Unsubscriber requires bool handlers, injects `code` parameter.
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
+
+    /// dispatcher.subscribe(std::forward<signature>(handler));
+    template <class Message>
+    using signature = std::function<bool(const code&,
+        const typename Message::cptr&)>;
+
     static constexpr std::tuple methods
     {
         method<"addr", messages::peer::address::cptr>{},
@@ -75,15 +84,6 @@ struct peer_methods
         method<"verack", messages::peer::version_acknowledge::cptr>{},
         method<"wtxidrelay", messages::peer::witness_tx_id_relay::cptr>{}
     };
-
-    /// Unsubscriber requires bool handlers, injects `code` parameter.
-    template <typename... Args>
-    using subscriber = network::unsubscriber<Args...>;
-
-    /// dispatcher.subscribe(std::forward<signature>(handler));
-    template <class Message>
-    using signature = std::function<bool(const code&,
-        const typename Message::cptr&)>;
 
     /// TODO: this moves to peer::body::reader
     /// Type-erased implementation of peer::deserialize<Message>.

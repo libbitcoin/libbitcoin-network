@@ -218,7 +218,6 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
@@ -240,6 +239,7 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp" />
     <ClCompile Include="..\..\..\..\test\rpc\any.cpp" />
+    <ClCompile Include="..\..\..\..\test\rpc\broadcaster.cpp" />
     <ClCompile Include="..\..\..\..\test\rpc\dispatcher.cpp" />
     <ClCompile Include="..\..\..\..\test\rpc\method.cpp">
       <ObjectFileName>$(IntDir)test_rpc_method.obj</ObjectFileName>

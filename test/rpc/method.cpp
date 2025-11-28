@@ -18,9 +18,7 @@
  */
 #include "../test.hpp"
 
-#include <tuple>
-
-using namespace rpc;
+using namespace network::rpc;
 
 // setup
 // -----------------------------------------------------------------------------

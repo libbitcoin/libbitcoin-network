@@ -23,7 +23,8 @@
 #include <bitcoin/network/rpc/interfaces/electrum.hpp>
 #include <bitcoin/network/rpc/interfaces/explore.hpp>
 #include <bitcoin/network/rpc/interfaces/http.hpp>
-#include <bitcoin/network/rpc/interfaces/peer.hpp>
+#include <bitcoin/network/rpc/interfaces/peer_broadcast.hpp>
+#include <bitcoin/network/rpc/interfaces/peer_dispatch.hpp>
 #include <bitcoin/network/rpc/interfaces/stratum_v1.hpp>
 #include <bitcoin/network/rpc/interfaces/stratum_v2.hpp>
 
@@ -36,10 +37,15 @@ using bitcoind   = publish<bitcoind_methods>;
 using electrum   = publish<electrum_methods>;
 using explore    = publish<explore_methods>;
 using http       = publish<http_methods, grouping::positional>;
-using peer       = publish<peer_methods, grouping::positional>;
 using stratum_v1 = publish<stratum_v1_methods>;
 using stratum_v2 = publish<stratum_v2_methods>;
 
+namespace peer {
+
+using dispatch = publish<peer_dispatch, grouping::positional>;
+using broadcast = publish<peer_broadcast, grouping::positional>;
+
+} // namespace peer
 } // namespace interface
 } // namespace rpc
 } // namespace network

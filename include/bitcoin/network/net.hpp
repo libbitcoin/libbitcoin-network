@@ -30,6 +30,7 @@
 #include <bitcoin/network/messages/peer/peer.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
+#include <bitcoin/network/rpc/rpc.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -314,9 +315,9 @@ private:
     // These are protected by strand.
     hosts hosts_;
     object_key keys_{};
-    broadcaster broadcaster_{};
     stop_subscriber stop_subscriber_{};
     channel_subscriber connect_subscriber_{};
+    rpc::broadcaster<rpc::interface::peer::broadcast> broadcaster_{};
 
     // Guards loopback.
     // TODO: optimize, default bucket count is around 8.
