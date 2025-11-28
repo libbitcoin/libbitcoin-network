@@ -31,16 +31,17 @@ struct explore_methods
 {
     static constexpr std::tuple methods
     {
-        // The block hash or height is required.
+        // The block hash or height is logically required.
         method<"block", uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "hash", "height" },
         method<"header", uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "hash", "height" },
         method<"filter", uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "hash", "height" },
         method<"block_txs", uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "hash", "height" },
 
+        // The block hash or height is logically required.
         // The position parameter is out of URL order because it's required.
         method<"block_tx", uint8_t, uint32_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "position", "hash", "height" },
 
-        // All required parameters.
+        // All parameters are required.
         method<"transaction", uint8_t, system::hash_cptr>{ "version", "hash" },
         method<"input", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
         method<"inputs", uint8_t, system::hash_cptr>{ "version", "hash" },
