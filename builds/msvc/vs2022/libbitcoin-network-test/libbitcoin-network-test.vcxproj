@@ -152,12 +152,6 @@
     <ClCompile Include="..\..\..\..\test\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\http\head_reader.cpp">
-      <ObjectFileName>$(IntDir)test_messages_http_head_reader.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\http\head_writer.cpp">
-      <ObjectFileName>$(IntDir)test_messages_http_head_writer.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
       <ObjectFileName>$(IntDir)test_messages_json_body_reader.obj</ObjectFileName>
     </ClCompile>
@@ -169,12 +163,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\monad\body_writer.cpp">
       <ObjectFileName>$(IntDir)test_messages_monad_body_writer.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\head_reader.cpp">
-      <ObjectFileName>$(IntDir)test_messages_monad_head_reader.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\head_writer.cpp">
-      <ObjectFileName>$(IntDir)test_messages_monad_head_writer.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\monad\method.cpp">
       <ObjectFileName>$(IntDir)test_messages_monad_method.obj</ObjectFileName>
