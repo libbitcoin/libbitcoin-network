@@ -77,7 +77,7 @@ private:
     BC_POP_WARNING()
 
     // This is protected by strand.
-    mutable subscriber subscriber_{ strand_ };
+    mutable subscriber subscriber_{};
 };
 
 } // namespace network

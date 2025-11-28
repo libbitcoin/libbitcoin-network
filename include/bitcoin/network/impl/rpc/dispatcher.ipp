@@ -38,7 +38,7 @@ namespace rpc {
 
 TEMPLATE
 template <typename Argument>
-inline external_t<Argument> CLASS::get_optional() THROWS
+inline external_t<Argument> CLASS::get_missing() THROWS
 {
     if constexpr (is_required<Argument>)
         throw std::system_error{ error::missing_parameter };
@@ -50,17 +50,17 @@ inline external_t<Argument> CLASS::get_optional() THROWS
 
 TEMPLATE
 template <typename Argument>
-inline external_t<Argument> CLASS::get_nullable() THROWS
+inline external_t<Argument> CLASS::get_nullified() THROWS
 {
-    if constexpr (is_required<Argument> || is_optional<Argument>)
+    if constexpr (!is_nullable<Argument>)
         throw std::system_error{ error::missing_parameter };
-    else if constexpr (is_nullable<Argument>)
+    else
         return external_t<Argument>{};
 }
 
 TEMPLATE
 template <typename Argument>
-inline external_t<Argument> CLASS::get_required(const value_t& value) THROWS
+inline external_t<Argument> CLASS::get_valued(const value_t& value) THROWS
 {
     // Get contained variant value_t(inner_t).
     const auto& internal = value.value();
@@ -81,17 +81,17 @@ inline external_t<Argument> CLASS::get_positional(size_t& position,
 {
     // Only optional can be missing.
     if (position >= array.size())
-        return get_optional<Argument>();
+        return get_missing<Argument>();
 
     // Get contained variant value_t(inner_t).
     const auto& internal = array.at(position++);
 
     // value_t(null_t) implies nullable.
     if (std::holds_alternative<null_t>(internal.value()))
-        return get_nullable<Argument>();
+        return get_nullified<Argument>();
 
     // Otherwise value_t(inner_t) is required.
-    return get_required<Argument>(internal);
+    return get_valued<Argument>(internal);
 }
 
 TEMPLATE
@@ -102,17 +102,17 @@ inline external_t<Argument> CLASS::get_named(
     // Only optional can be missing.
     const auto it = object.find(std::string{ name });
     if (it == object.end())
-        return get_optional<Argument>();
+        return get_missing<Argument>();
 
     // Get contained variant value_t(inner_t).
     const auto& internal = it->second;
 
     // value_t(null_t) implies nullable.
     if (std::holds_alternative<null_t>(internal.value()))
-        return get_nullable<Argument>();
+        return get_nullified<Argument>();
 
     // Otherwise value_t(inner_t) is required.
-    return get_required<Argument>(internal);
+    return get_valued<Argument>(internal);
 }
 
 TEMPLATE
@@ -291,13 +291,13 @@ CLASS::notifiers_ = make_notifiers(std::make_index_sequence<Interface::size>{});
 
 TEMPLATE
 template <size_t ...Index>
-inline CLASS::subscribers_t CLASS::make_subscribers(asio::strand& strand,
+inline CLASS::subscribers_t CLASS::make_subscribers(
     std::index_sequence<Index...>) NOEXCEPT
 {
     // Subscribers declared dynamically (tuple for each distributor/channel).
     return std::make_tuple
     (
-        subscriber_t<method_t<Index, methods_t>>(strand)...
+        subscriber_t<method_t<Index, methods_t>>{}...
     );
 }
 
@@ -337,15 +337,14 @@ inline code CLASS::subscribe(Handler&& handler) NOEXCEPT
 {
     // Iterate methods_t in order to find the matching function signature.
     // The index of each method correlates to its defined subscriber index.
-    const auto index = find_subscriber_for_handler<Handler>();
+    constexpr auto index = find_subscriber_for_handler<Handler>();
     auto& subscriber = std::get<index>(subscribers_);
     return subscriber.subscribe(std::forward<Handler>(handler));
 }
 
 TEMPLATE
-inline CLASS::dispatcher(asio::strand& strand) NOEXCEPT
-  : subscribers_(make_subscribers(strand,
-      std::make_index_sequence<Interface::size>{}))
+inline CLASS::dispatcher() NOEXCEPT
+  : subscribers_(make_subscribers(std::make_index_sequence<Interface::size>{}))
 {
 }
 

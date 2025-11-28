@@ -88,7 +88,6 @@ public:
         const settings_t& settings, const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
         allocator_(allocator),
-        dispatcher_(socket->strand()),
         negotiated_version_(settings.protocol_maximum),
         tracker<channel_peer>(log)
     {
@@ -148,9 +147,9 @@ private:
 
     // These are protected by strand/order.
     memory& allocator_;
-    dispatcher dispatcher_;
     uint32_t negotiated_version_;
     messages::peer::version::cptr peer_version_{};
+    dispatcher dispatcher_{};
     size_t start_height_{};
     bool quiet_{};
 

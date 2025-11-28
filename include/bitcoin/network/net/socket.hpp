@@ -189,7 +189,6 @@ private:
     // http (request reference enables websocket upgrade)
     void handle_http_read(const boost_code& ec, size_t size,
         const std::reference_wrapper<http::request>& request,
-        std::reference_wrapper<http::flat_buffer> buffer,
         const count_handler& handler) NOEXCEPT;
     void handle_http_write(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;

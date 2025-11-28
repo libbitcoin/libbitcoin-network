@@ -20,8 +20,6 @@
 #define LIBBITCOIN_NETWORK_ASYNC_DESUBSCRIBER_HPP
 
 #include <map>
-#include <utility>
-#include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -40,8 +38,7 @@ public:
     typedef std::function<bool(const code&, Args...)> handler;
     typedef std::function<void(const code&, const Key&)> completer;
 
-    // Strand is only used for assertions.
-    desubscriber(asio::strand& strand) NOEXCEPT;
+    desubscriber() NOEXCEPT = default;
     ~desubscriber() NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
@@ -72,9 +69,6 @@ public:
     bool empty() const NOEXCEPT;
 
 private:
-    // This is thread safe.
-    asio::strand& strand_;
-
     // These are not thread safe.
     bool stopped_{ false };
 

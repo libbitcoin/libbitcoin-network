@@ -236,7 +236,7 @@ private:
     std::atomic_bool stopped_{ true };
 
     // This is not thread safe.
-    subscriber stop_subscriber_;
+    subscriber stop_subscriber_{};
 };
 
 #undef CLASS

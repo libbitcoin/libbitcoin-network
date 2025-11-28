@@ -21,7 +21,6 @@
 
 #include <tuple>
 #include <unordered_map>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/rpc/method.hpp>
 #include <bitcoin/network/rpc/types.hpp>
@@ -50,7 +49,7 @@ public:
     inline code subscribe(Handler&& handler) NOEXCEPT;
 
     /// Create an instance of this class.
-    inline dispatcher(asio::strand& strand) NOEXCEPT;
+    inline dispatcher() NOEXCEPT;
     virtual ~dispatcher() = default;
 
     /// Dispatch the request to the appropriate method's unsubscriber.
@@ -87,7 +86,7 @@ private:
     static inline consteval size_t find_subscriber_for_handler() NOEXCEPT;
 
     template <size_t ...Index>
-    static inline subscribers_t make_subscribers(asio::strand& strand,
+    static inline subscribers_t make_subscribers(
         std::index_sequence<Index...>) NOEXCEPT;
 
     // make_notifiers
@@ -98,19 +97,18 @@ private:
     using notifiers_t = std::unordered_map<std::string, notifier_t>;
 
     template <typename Argument>
-    static inline external_t<Argument> get_required(
-        const value_t& value) THROWS;
+    static inline external_t<Argument> get_missing() THROWS;
     template <typename Argument>
-    static inline external_t<Argument> get_optional() THROWS;
+    static inline external_t<Argument> get_nullified() THROWS;
     template <typename Argument>
-    static inline external_t<Argument> get_nullable() THROWS;
+    static inline external_t<Argument> get_valued(const value_t& value) THROWS;
 
     template <typename Argument>
     static inline external_t<Argument> get_positional(size_t& position,
         const array_t& array) THROWS;
     template <typename Argument>
-    static inline external_t<Argument> get_named(
-        const std::string_view& name, const object_t& object) THROWS;
+    static inline external_t<Argument> get_named(const std::string_view& name,
+        const object_t& object) THROWS;
 
     static inline array_t get_array(const parameters_t& params) THROWS;
     static inline object_t get_object(const parameters_t& params) THROWS;

@@ -313,10 +313,10 @@ private:
 
     // These are protected by strand.
     hosts hosts_;
-    broadcaster broadcaster_;
-    stop_subscriber stop_subscriber_;
-    channel_subscriber connect_subscriber_;
     object_key keys_{};
+    broadcaster broadcaster_{};
+    stop_subscriber stop_subscriber_{};
+    channel_subscriber connect_subscriber_{};
 
     // Guards loopback.
     // TODO: optimize, default bucket count is around 8.

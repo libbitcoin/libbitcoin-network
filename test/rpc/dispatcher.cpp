@@ -56,187 +56,97 @@ using distributor_mock = dispatcher<mock_interface>;
 
 BOOST_AUTO_TEST_CASE(dispatcher__construct__stop__stops)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
-    std::promise<bool> promise{};
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-        promise.set_value(true);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(promise.get_future().get());
+    distributor_mock instance{};
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__no_subscriber__success)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
-    std::promise<code> promise{};
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        request_t request{};
-        request.method = "empty_method";
-        const auto ec = instance.notify(request);
-        promise.set_value(ec);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::success);
+    distributor_mock instance{};
+    request_t request{};
+    request.method = "empty_method";
+    const auto ec = instance.notify(request);
+    instance.stop(error::service_stopped);
+    BOOST_REQUIRE_EQUAL(ec, error::success);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stopped__subscriber_stopped)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-    constexpr auto expected_ec = error::subscriber_stopped;
-    code subscribe_ec{};
+    distributor_mock instance{};
     auto result = true;
+    instance.stop(error::invalid_magic);
+    const auto subscribe_ec = instance.subscribe(
+        [&](const code&, mock_interface::all_required, bool a, double b, std::string c)
+        {
+            static_assert(mock_interface::all_required::name == "all_required");
+            static_assert(mock_interface::all_required::size == 3u);
 
-    std::promise<code> promise{};
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::invalid_magic);
-        subscribe_ec = instance.subscribe(
-            [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
-            {
-                static_assert(mock_interface::all_required::name == "all_required");
-                static_assert(mock_interface::all_required::size == 3u);
+            // Stop notification sets defaults and specified code.
+            result &= is_zero(a);
+            result &= is_zero(b);
+            result &= c.empty();
+            return false;
+        });
 
-                // Stop notification sets defaults and specified code.
-                result &= is_zero(a);
-                result &= is_zero(b);
-                result &= c.empty();
-                promise.set_value(ec);
-                return false;
-            });
-    });
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::invalid_magic);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-    BOOST_REQUIRE_EQUAL(subscribe_ec, expected_ec);
+    BOOST_REQUIRE_EQUAL(error::subscriber_stopped, subscribe_ec);
     BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stop__service_stopped)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-    constexpr auto expected_ec = error::service_stopped;
-    code subscribe_ec{};
+    distributor_mock instance{};
+    code result_ec{};
     auto result = true;
+    const auto subscribe_ec = instance.subscribe(
+        [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
+        {
+            // Stop notification sets defaults and specified code.
+            result_ec = ec;
+            result &= is_zero(a);
+            result &= is_zero(b);
+            result &= c.empty();
+            return true;
+        });
 
-    std::promise<code> promise;
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        subscribe_ec = instance.subscribe(
-            [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
-            {
-                // Stop notification sets defaults and specified code.
-                result &= is_zero(a);
-                result &= is_zero(b);
-                result &= c.empty();
-                promise.set_value(ec);
-                return true;
-            });
-    });
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(expected_ec);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
+    instance.stop(error::invalid_magic);
+    BOOST_REQUIRE_EQUAL(result_ec, error::invalid_magic);
     BOOST_REQUIRE(!subscribe_ec);
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__subscribe__multiple_stop__expected)
+BOOST_AUTO_TEST_CASE(dispatcher__subscribe__multiple__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
+    distributor_mock instance{};
 
-    bool first_called{};
-    bool second_called{};
-    std::promise<std::pair<code, code>> promise{};
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        const auto ec1 = instance.subscribe(
-            [&](const code&, mock_interface::all_required, bool, double, std::string)
-            {
-                first_called = true;
-                return true;
-            });
+    const auto ec1 = instance.subscribe(
+        [&](const code&, mock_interface::all_required, bool, double, std::string)
+        {
+            return true;
+        });
 
-        const auto ec2 = instance.subscribe(
-            [&](const code&, mock_interface::all_required, bool, double, std::string)
-            {
-                second_called = true;
-                return true;
-            });
+    const auto ec2 = instance.subscribe(
+        [&](const code&, mock_interface::all_required, bool, double, std::string)
+        {
+            return true;
+        });
 
-        promise.set_value({ec1, ec2});
-    });
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-
-    const auto [ec1, ec2] = promise.get_future().get();
     BOOST_REQUIRE(!ec1);
     BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(first_called);
-    BOOST_REQUIRE(second_called);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__unknown_method__unexpected_method)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
-    std::promise<code> promise{};
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        request_t request{};
-        request.method = "unknown_method";
-        const auto ec = instance.notify(request);
-        promise.set_value(ec);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::unexpected_method);
+    distributor_mock instance{};
+    request_t request{};
+    request.method = "unknown_method";
+    BOOST_REQUIRE_EQUAL(instance.notify(request), error::unexpected_method);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes_both)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool first_called{};
     bool second_called{};
     bool first_result_a{};
@@ -245,1055 +155,854 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes
     double second_result_b{};
     std::string first_result_c{};
     std::string second_result_c{};
-    std::promise<code> promise{};
-    std::promise<code> first_promise{};
-    std::promise<code> second_promise{};
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::all_required, const bool a, double b, const std::string& c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (first_called)
-                    return false;
 
-                first_called = true;
-                first_result_a = a;
-                first_result_b = b;
-                first_result_c = c;
-                first_promise.set_value(ec);
-                return true;
-            });
+    instance.subscribe(
+        [&](const code&, mock_interface::all_required, const bool a, double b, const std::string& c)
+        {
+            first_called = true;
+            first_result_a = a;
+            first_result_b = b;
+            first_result_c = c;
+            return true;
+        });
 
-        instance.subscribe(
-            [&](const code& ec, mock_interface::all_required, bool a, double&& b, std::string c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (second_called)
-                    return false;
+    instance.subscribe(
+        [&](const code&, mock_interface::all_required, bool a, double&& b, std::string c)
+        {
+            second_called = true;
+            second_result_a = a;
+            second_result_b = b;
+            second_result_c = c;
+            return true;
+        });
 
-                second_called = true;
-                second_result_a = a;
-                second_result_b = b;
-                second_result_c = c;
-                second_promise.set_value(ec);
-                return true;
-            });
-
-        request_t request{};
-        request.method = "all_required";
-        request.params = params_t{ array_t{ boolean_t{ true }, number_t{ 24.0 }, string_t{ "42" } } };
-        promise.set_value(instance.notify(request));
-    });
-
-    BOOST_REQUIRE(!promise.get_future().get());
-    BOOST_REQUIRE(!first_promise.get_future().get());
-    BOOST_REQUIRE(!second_promise.get_future().get());
+    request_t request{};
+    request.method = "all_required";
+    request.params = params_t{ array_t{ boolean_t{ true }, number_t{ 24.0 }, string_t{ "42" } } };
+    BOOST_REQUIRE(!instance.notify(request));
     BOOST_CHECK_EQUAL(first_result_a, true);
     BOOST_CHECK_EQUAL(second_result_a, true);
     BOOST_CHECK_EQUAL(first_result_b, 24.0);
     BOOST_CHECK_EQUAL(second_result_b, 24.0);
     BOOST_CHECK_EQUAL(first_result_c, "42");
     BOOST_CHECK_EQUAL(second_result_c, "42");
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
-    code ec{};
+    distributor_mock instance{};
     bool called{};
-    std::promise<code> promise{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe([&](const code&, mock_interface::empty_method)
     {
-        instance.subscribe([&](const code& ec, mock_interface::empty_method)
-        {
-            // Avoid stop notification (unavoidable test condition).
-            if (called)
-                return false;
-
-            called = true;
-            promise.set_value(ec);
-            return true;
-        });
-
-        request_t request{};
-        request.method = "empty_method";
-        ec = instance.notify(request);
+        if (called) return false;
+        called = true;
+        return true;
     });
 
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!promise.get_future().get());
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    request_t request{};
+    request.method = "empty_method";
+    BOOST_REQUIRE(!instance.notify(request));
+    BOOST_REQUIRE(called);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
-    std::promise<code> promise{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe([&](const code&, mock_interface::empty_method)
     {
-        instance.subscribe([&](const code& ec, mock_interface::empty_method)
-        {
-            // Avoid stop notification (unavoidable test condition).
-            if (called)
-                return false;
-
-            called = true;
-            promise.set_value(ec);
-            return true;
-        });
-
-        const request_t request
-        {
-            .method = "empty_method",
-            .params = { array_t{} }
-        };
-
-        instance.notify(request);
+        if (called) return false;
+        called = true;
+        return true;
     });
 
-    BOOST_REQUIRE(!promise.get_future().get());
-
-    boost::asio::post(strand, [&]() NOEXCEPT
+    const request_t request
     {
-        instance.stop(error::service_stopped);
-    });
+        .method = "empty_method",
+        .params = { array_t{} }
+    };
 
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(!instance.notify(request));
+    BOOST_REQUIRE(called);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positional)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
+    distributor_mock instance{};
 
-    code result{};
-    std::promise<code> promise{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+    const request_t request
     {
-        instance.subscribe([&](const code& ec, mock_interface::empty_method)
-        {
-            result = ec;
-            return true;
-        });
+        .method = "empty_method",
+        .params = { array_t{ value_t{ 1.0 } } }
+    };
 
-        const request_t request
-        {
-            .method = "empty_method",
-            .params = { array_t{ value_t{ 1.0 } } }
-        };
-
-        promise.set_value(instance.notify(request));
-    });
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::extra_positional);
-    BOOST_REQUIRE_EQUAL(result, error::service_stopped);
+    BOOST_REQUIRE_EQUAL(instance.notify(request), error::extra_positional);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     bool result_a{};
     double result_b{};
     std::string result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::all_required, bool a, double b, std::string c)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a;
+            result_b = b;
+            result_c = c;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b;
-                result_c = c;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "all_required",
-            .params = { array_t{ value_t{ true }, value_t{ 24.0 } } }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "all_required",
-            .params = { array_t{ string_t{ "42" }, number_t{ 24.0 }, boolean_t{ true } } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "all_required",
-            .params = { array_t{ string_t{ "42" }, number_t{ 24.0 }, boolean_t{ true }, boolean_t{ true } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "all_required",
-            .params = { array_t{ boolean_t{ true }, number_t{ 24.0 }, string_t{ "42" } } }
-        }));
+        .method = "all_required",
+        .params = { array_t{ boolean_t{ true }, value_t{ 24.0 } } }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE_EQUAL(promise2.get_future().get(), error::unexpected_type);
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        .method = "all_required",
+        .params = { array_t{ string_t{ "42" }, number_t{ 24.0 }, boolean_t{ true } } }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "all_required",
+        .params = { array_t{ boolean_t{ true }, number_t{ 24.0 }, string_t{ "42" }, string_t{ "42" } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "all_required",
+        .params = { array_t{ boolean_t{ true }, number_t{ 24.0 }, string_t{ "42" } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE_EQUAL(ec2, error::unexpected_type);
+    BOOST_REQUIRE_EQUAL(ec3, error::extra_positional);
+    BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, true);
     BOOST_REQUIRE_EQUAL(result_b, 24.0);
     BOOST_REQUIRE_EQUAL(result_c, "42");
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     bool result_a{};
     double result_b{};
     std::string result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    std::promise<code> promise6{};
-    std::promise<code> promise7{};
-    std::promise<code> promise8{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::all_required, bool a, double b, std::string c)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a;
+            result_b = b;
+            result_c = c;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b;
-                result_c = c;
-                promise8.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            // missing_parameter (absent)
-            .method = "all_required",
-            .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } } } }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            // missing_parameter (misnamed/absent)
-            .method = "all_required",
-            .params = { object_t{ { "fu", boolean_t{ true } }, { "ga", number_t{ 24.0 } }, { "zi", string_t{ "42" } } } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            // unexpected_type (named but wrong type)
-            .method = "all_required",
-            .params = { object_t{ { "a", number_t{ 24.0 } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            // extra_named
-            .method = "all_required",
-            .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } }, { "d", string_t{ "42" } } } }
-        }));
-
-        promise5.set_value(instance.notify(
-        {
-            // success – duplicate keys are allowed (real JSON input)
-            // Boost.JSON parser resolves duplicates using last-writer-wins,
-            // before object_t conversion occurs, so map never sees duplicates.
-            // Test construction uses initializer_list -> first-writer-wins.
-            .method = "all_required",
-            .params = { object_t{ { "a", boolean_t{ false } }, { "b", number_t{ 42.0 } }, { "c", string_t{ "24" } }, { "c", string_t{ "42" } } } }
-        }));
-
-        promise6.set_value(instance.notify(
-        {
-            // success, in order
-            .method = "all_required",
-            .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
-        }));
-
-        promise7.set_value(instance.notify(
-        {
-            // success, out of order
-            .method = "all_required",
-            .params = { object_t{ { "b", number_t{ 24.0 } }, { "c", string_t{ "24" } }, { "a", boolean_t{ false } } } }
-        }));
+        // missing_parameter (absent)
+        .method = "all_required",
+        .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } } } }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE_EQUAL(promise2.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE_EQUAL(promise3.get_future().get(), error::unexpected_type);
-    BOOST_REQUIRE_EQUAL(promise4.get_future().get(), error::extra_named);
-    BOOST_REQUIRE(!promise5.get_future().get());
-    BOOST_REQUIRE(!promise6.get_future().get());
-    BOOST_REQUIRE(!promise7.get_future().get());
-    BOOST_REQUIRE(!promise8.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        // missing_parameter (misnamed/absent)
+        .method = "all_required",
+        .params = { object_t{ { "fu", boolean_t{ true } }, { "ga", number_t{ 24.0 } }, { "zi", string_t{ "42" } } } }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        // unexpected_type (named but wrong type)
+        .method = "all_required",
+        .params = { object_t{ { "a", number_t{ 24.0 } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        // extra_named
+        .method = "all_required",
+        .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } }, { "d", string_t{ "42" } } } }
+    });
+
+    const auto ec5 = instance.notify(
+    {
+        // success – duplicate keys are allowed (real JSON input)
+        // Boost.JSON parser resolves duplicates using last-writer-wins,
+        // before object_t conversion occurs, so map never sees duplicates.
+        // Test construction uses initializer_list -> first-writer-wins.
+        .method = "all_required",
+        .params = { object_t{ { "a", boolean_t{ false } }, { "b", number_t{ 42.0 } }, { "c", string_t{ "24" } }, { "c", string_t{ "42" } } } }
+    });
+
+    const auto ec6 = instance.notify(
+    {
+        // success, in order
+        .method = "all_required",
+        .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
+    });
+
+    const auto ec7 = instance.notify(
+    {
+        // success, out of order
+        .method = "all_required",
+        .params = { object_t{ { "b", number_t{ 24.0 } }, { "c", string_t{ "24" } }, { "a", boolean_t{ false } } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE_EQUAL(ec2, error::missing_parameter);
+    BOOST_REQUIRE_EQUAL(ec3, error::unexpected_type);
+    BOOST_REQUIRE_EQUAL(ec4, error::extra_named);
+    BOOST_REQUIRE(!ec5);
+    BOOST_REQUIRE(!ec6);
+    BOOST_REQUIRE(!ec7);
     BOOST_REQUIRE_EQUAL(result_a, false);
     BOOST_REQUIRE_EQUAL(result_b, 42.0);
     BOOST_REQUIRE_EQUAL(result_c, "24");
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     number_t result_b{};
     boolean_t result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::with_options, std::string a, double b, bool c)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a;
+            result_b = b;
+            result_c = c;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::with_options, std::string a, double b, bool c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b;
-                result_c = c;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "with_options",
-            .params = { array_t{} }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "with_options",
-            .params = { array_t{ string_t{ "42" } } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "with_options",
-            .params = { array_t{ string_t{ "42" }, number_t{ 42.0 } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "with_options",
-            .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, boolean_t{ false } } }
-        }));
+        .method = "with_options",
+        .params = { array_t{} }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        .method = "with_options",
+        .params = { array_t{ string_t{ "42" } } }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "with_options",
+        .params = { array_t{ string_t{ "42" }, number_t{ 42.0 } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "with_options",
+        .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, boolean_t{ false } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
     BOOST_REQUIRE_EQUAL(result_c, true);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     number_t result_b{};
     boolean_t result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::with_options, std::string a, double b, bool c)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a;
+            result_b = b;
+            result_c = c;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::with_options, std::string a, double b, bool c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b;
-                result_c = c;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "with_options",
-            .params = { object_t{} }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "with_options",
-            .params = { object_t{ { "a", string_t{ "42" } } } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "with_options",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "with_options",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", boolean_t{ false } } } }
-        }));
+        .method = "with_options",
+        .params = { object_t{} }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        .method = "with_options",
+        .params = { object_t{ { "a", string_t{ "42" } } } }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "with_options",
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "with_options",
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", boolean_t{ false } } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
     BOOST_REQUIRE_EQUAL(result_c, true);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     number_t result_b{};
     boolean_t result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a;
+            result_b = b.has_value() ? b.value() : 4.2;
+            result_c = c.has_value() ? c.value() : true;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b.has_value() ? b.value() : 4.2;
-                result_c = c.has_value() ? c.value() : true;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "with_nullify",
-            .params = { array_t{ null_t{}, null_t{}, null_t{} } }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "with_nullify",
-            .params = { array_t{ string_t{ "42" }, null_t{}, null_t{} } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "with_nullify",
-            .params = { array_t{ string_t{ "42" }, null_t{}, boolean_t{ false } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "with_nullify",
-            .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, null_t{} } }
-        }));
+        .method = "with_nullify",
+        .params = { array_t{ null_t{}, null_t{}, null_t{} } }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        .method = "with_nullify",
+        .params = { array_t{ string_t{ "42" }, null_t{}, null_t{} } }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "with_nullify",
+        .params = { array_t{ string_t{ "42" }, null_t{}, boolean_t{ false } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "with_nullify",
+        .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, null_t{} } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
     BOOST_REQUIRE_EQUAL(result_c, true);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     number_t result_b{};
     boolean_t result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a;
+            result_b = b.has_value() ? b.value() : 4.2;
+            result_c = c.has_value() ? c.value() : true;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b.has_value() ? b.value() : 4.2;
-                result_c = c.has_value() ? c.value() : true;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "with_nullify",
-            .params = { object_t{ { "a", null_t{} }, { "b", null_t{} }, { "c", null_t{} } } }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "with_nullify",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} }, { "c", null_t{} } } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "with_nullify",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} }, { "c", boolean_t{ false } } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "with_nullify",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", null_t{} } } }
-        }));
+        .method = "with_nullify",
+        .params = { object_t{ { "a", null_t{} }, { "b", null_t{} }, { "c", null_t{} } } }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        .method = "with_nullify",
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} }, { "c", null_t{} } } }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "with_nullify",
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} }, { "c", boolean_t{ false } } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "with_nullify",
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", null_t{} } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
     BOOST_REQUIRE_EQUAL(result_c, true);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     boolean_t result_b{};
     number_t result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::with_combine, std::string a, std::optional<bool> b, double c)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a;
+            result_b = b.has_value() ? b.value() : true;
+            result_c = c;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::with_combine, std::string a, std::optional<bool> b, double c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b.has_value() ? b.value() : true;
-                result_c = c;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "with_combine",
-            .params = { array_t{ null_t{}, null_t{}, null_t{} } }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "with_combine",
-            .params = { array_t{ string_t{ "42" }, null_t{} } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "with_combine",
-            .params = { array_t{ string_t{ "42" }, null_t{}, number_t{ 42.0 } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "with_combine",
-            .params = { array_t{ string_t{ "42" }, boolean_t{ false }, number_t{ 42.0 } } }
-        }));
+        .method = "with_combine",
+        .params = { array_t{ null_t{}, null_t{}, null_t{} } }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        .method = "with_combine",
+        .params = { array_t{ string_t{ "42" }, null_t{} } }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "with_combine",
+        .params = { array_t{ string_t{ "42" }, null_t{}, number_t{ 42.0 } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "with_combine",
+        .params = { array_t{ string_t{ "42" }, boolean_t{ false }, number_t{ 42.0 } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, true);
     BOOST_REQUIRE_EQUAL(result_c, 4.2);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     boolean_t result_b{};
     number_t result_c{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::with_combine, std::string a, std::optional<bool> b, double c)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a;
+            result_b = b.has_value() ? b.value() : true;
+            result_c = c;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::with_combine, std::string a, std::optional<bool> b, double c)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a;
-                result_b = b.has_value() ? b.value() : true;
-                result_c = c;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "with_combine",
-            .params = { object_t{ { "a", null_t{} }, { "b", null_t{} }, { "c", null_t{} } } }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "with_combine",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} } } }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "with_combine",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} }, { "c", number_t{ 42.0 } } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "with_combine",
-            .params = { object_t{ { "a", string_t{ "42" } }, { "b", boolean_t{ false } }, { "c", number_t{ 42.0 } } } }
-        }));
+        .method = "with_combine",
+        .params = { object_t{ { "a", null_t{} }, { "b", null_t{} }, { "c", null_t{} } } }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        .method = "with_combine",
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} } } }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "with_combine",
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} }, { "c", number_t{ 42.0 } } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "with_combine",
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", boolean_t{ false } }, { "c", number_t{ 42.0 } } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, "42");
     BOOST_REQUIRE_EQUAL(result_b, true);
     BOOST_REQUIRE_EQUAL(result_c, 4.2);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     boolean_t result_a{};
     number_t result_b{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::not_required, std::optional<bool> a, double b)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a.has_value() ? a.value() : true;
+            result_b = b;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::not_required, std::optional<bool> a, double b)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a.has_value() ? a.value() : true;
-                result_b = b;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "not_required",
-            .params = { array_t{ null_t{}, null_t{} } }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "not_required",
-            .params = { array_t{} }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "not_required",
-            .params = { array_t{ boolean_t{ false } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "not_required",
-            .params = { array_t{ boolean_t{ false }, number_t{ 42.0 } } }
-        }));
+        .method = "not_required",
+        .params = { array_t{ null_t{}, null_t{} } }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        .method = "not_required",
+        .params = { array_t{} }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "not_required",
+        .params = { array_t{ boolean_t{ false } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "not_required",
+        .params = { array_t{ boolean_t{ false }, number_t{ 42.0 } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, true);
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     boolean_t result_a{};
     number_t result_b{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
-    std::promise<code> promise3{};
-    std::promise<code> promise4{};
-    std::promise<code> promise5{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+
+    instance.subscribe(
+        [&](const code&, mock_interface::not_required, std::optional<bool> a, double b)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a.has_value() ? a.value() : true;
+            result_b = b;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
     {
-        instance.subscribe(
-            [&](const code& ec, mock_interface::not_required, std::optional<bool> a, double b)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
-
-                called = true;
-                result_a = a.has_value() ? a.value() : true;
-                result_b = b;
-                promise5.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
-        {
-            .method = "not_required",
-            .params = { object_t{ { "a", null_t{} }, { "b", null_t{} } } }
-        }));
-
-        promise2.set_value(instance.notify(
-        {
-            .method = "not_required",
-            .params = { object_t{} }
-        }));
-
-        promise3.set_value(instance.notify(
-        {
-            .method = "not_required",
-            .params = { object_t{ { "a", boolean_t{ false } } } }
-        }));
-
-        promise4.set_value(instance.notify(
-        {
-            .method = "not_required",
-            .params = { object_t{ { "a", boolean_t{ false } }, { "b", number_t{ 42.0 } } } }
-        }));
+        .method = "not_required",
+        .params = { object_t{ { "a", null_t{} }, { "b", null_t{} } } }
     });
 
-    BOOST_REQUIRE_EQUAL(promise1.get_future().get(), error::missing_parameter);
-    BOOST_REQUIRE(!promise2.get_future().get());
-    BOOST_REQUIRE(!promise3.get_future().get());
-    BOOST_REQUIRE(!promise4.get_future().get());
-    BOOST_REQUIRE(!promise5.get_future().get());
+    const auto ec2 = instance.notify(
+    {
+        .method = "not_required",
+        .params = { object_t{} }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "not_required",
+        .params = { object_t{ { "a", boolean_t{ false } } } }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "not_required",
+        .params = { object_t{ { "a", boolean_t{ false } }, { "b", number_t{ 42.0 } } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, true);
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
     constexpr auto expected = 42u;
     messages::peer::ping::cptr result{};
     const auto pointer = system::to_shared<messages::peer::ping>(expected);
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.subscribe(
-            [&](code ec, messages::peer::ping::cptr ptr)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
 
-                result = ptr;
-                called = true;
-                promise2.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
+    instance.subscribe(
+        [&](code, messages::peer::ping::cptr ptr)
         {
-            .method = "ping",
-            .params = { array_t{ any_t{ pointer } } }
-        }));
+            if (called) return false;
+            called = true;
+            result = ptr;
+            return true;
+        });
+
+    const auto ec = instance.notify(
+    {
+        .method = "ping",
+        .params = { array_t{ any_t{ pointer } } }
     });
 
-    BOOST_REQUIRE(!promise1.get_future().get());
-    BOOST_REQUIRE(!promise2.get_future().get());
+    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(result);
     BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
     BOOST_REQUIRE_EQUAL(result->nonce, expected);
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
-    std::promise<code> promise1{};
-    std::promise<code> promise2{};
     constexpr auto expected = 42u;
     messages::peer::ping::cptr result{};
     const auto pointer = system::to_shared<messages::peer::ping>(expected);
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.subscribe(
-            [&](const code& ec, const messages::peer::ping::cptr& ptr)
-            {
-                // Avoid stop notification (unavoidable test condition).
-                if (called)
-                    return false;
 
-                result = ptr;
-                called = true;
-                promise2.set_value(ec);
-                return true;
-            });
-
-        promise1.set_value(instance.notify(
+    instance.subscribe(
+        [&](const code&, const messages::peer::ping::cptr& ptr)
         {
-            .method = "ping",
-            .params = { object_t{ { "message", any_t{ pointer } } } }
-        }));
+            if (called) return false;
+            called = true;
+            result = ptr;
+            return true;
+        });
+
+    const auto ec = instance.notify(
+    {
+        .method = "ping",
+        .params = { object_t{ { "message", any_t{ pointer } } } }
     });
 
-    BOOST_REQUIRE(!promise1.get_future().get());
-    BOOST_REQUIRE(!promise2.get_future().get());
+    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(result);
     BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
     BOOST_REQUIRE_EQUAL(result->nonce, expected);
+    instance.stop(error::service_stopped);
+}
 
-    boost::asio::post(strand, [&]() NOEXCEPT
+struct mock_missing_nullable
+{
+    static constexpr std::tuple methods
     {
-        instance.stop(error::service_stopped);
+        method<"missing_nullable", double, nullable<bool>>{ "a", "b" },
+        method<"missing_nullable_pointer", double, nullable<messages::peer::ping::cptr>>{ "a", "b" },
+    };
+
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
+
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
+    using missing_nullable = at<0>;
+    using missing_nullable_pointer = at<1>;
+};
+
+using missing_nullable_interface = publish<mock_missing_nullable>;
+using distributor_missing_nullable = dispatcher<missing_nullable_interface>;
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
+{
+    distributor_missing_nullable instance{};
+    double result_a{};
+    bool result_b{};
+    using method = missing_nullable_interface::missing_nullable;
+
+    instance.subscribe([&](const code&, method::tag, double a, std::optional<bool> b)
+    {
+        result_a = a;
+        result_b = b.value_or(true);
+        return true;
+    });
+    
+    const auto ec1 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 }, { false } } }
+    });
+    
+    const auto ec2 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 }, { "b", false } } }
+    });
+    
+    const auto ec3 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "b", false }, { "a", 42.0 } } }
+    });
+    
+    const auto ec4 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 }, { "b", null_t{} } } }
+    });
+    
+    const auto ec5 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 24.0 } } }
     });
 
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(!ec1);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(!ec4);
+    BOOST_REQUIRE(!ec5);
+    BOOST_REQUIRE(result_b);
+    BOOST_REQUIRE_EQUAL(result_a, 24.0);
+    instance.stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
+{
+    distributor_missing_nullable instance{};
+    double result_a{};
+    messages::peer::ping::cptr result_b{};
+    using method = missing_nullable_interface::missing_nullable_pointer;
+    const auto ping42 = system::emplace_shared<const messages::peer::ping>(42);
+
+    instance.subscribe([&](const code&, method::tag, double a, std::optional<messages::peer::ping::cptr> b)
+    {
+        result_a = a;
+        result_b = b.value_or(nullptr);
+        return true;
+    });
+    
+    const auto ec1 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 } } }
+    });
+    
+    const auto ec2 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 }, { null_t{} } } }
+    });
+    
+    const auto ec3 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { null_t{} }, { 42.0 } } }
+    });
+    
+    const auto ec4 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 } } }
+    });
+    
+    const auto ec5 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 }, { "a", null_t{} } } }
+    });
+
+    // Named params requires explicit value_t in some pointer cases.
+    const auto ec6 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 42.0 }, { "b", value_t{ ping42 } } } }
+    });
+
+    const auto ec7 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 }, { ping42 } } }
+    });
+
+    BOOST_REQUIRE(!ec1);
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE_EQUAL(ec3, error::missing_parameter);
+    BOOST_REQUIRE(!ec4);
+    BOOST_REQUIRE(!ec5);
+    BOOST_REQUIRE(!ec6);
+    BOOST_REQUIRE(!ec7);
+    BOOST_REQUIRE_EQUAL(result_a, 42.0);
+    BOOST_REQUIRE_EQUAL(result_b->nonce, ping42->nonce);
+    instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

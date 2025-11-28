@@ -27,12 +27,12 @@ namespace network {
 using namespace system;
 
 #define SUBSCRIBER(name) name##_subscriber_
-#define MAKE_SUBSCRIBER(name) SUBSCRIBER(name)(strand)
+#define MAKE_SUBSCRIBER(name) SUBSCRIBER(name)()
 #define STOP_SUBSCRIBER(name) SUBSCRIBER(name).stop_default(ec)
 #define UNSUBSCRIBER(name) SUBSCRIBER(name) \
     .notify_one(subscriber, error::desubscribed, nullptr, subscriber)
 
-broadcaster::broadcaster(asio::strand& strand) NOEXCEPT
+broadcaster::broadcaster() NOEXCEPT
   : MAKE_SUBSCRIBER(address),
     MAKE_SUBSCRIBER(alert),
     MAKE_SUBSCRIBER(block),

@@ -61,7 +61,6 @@ public:
       : channel(log, socket, identifier, settings, options),
         response_buffer_(system::to_shared<http::flat_buffer>()),
         request_buffer_(settings.minimum_buffer),
-        dispatcher_(socket->strand()),
         tracker<channel_http>(log)
     {
     }
@@ -98,7 +97,7 @@ private:
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
-    dispatcher dispatcher_;
+    dispatcher dispatcher_{};
     bool reading_{};
 };
 

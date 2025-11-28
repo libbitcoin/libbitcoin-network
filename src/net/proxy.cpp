@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
@@ -42,7 +41,6 @@ using namespace std::placeholders;
 // is not started.
 proxy::proxy(const socket::ptr& socket) NOEXCEPT
   : socket_(socket),
-    stop_subscriber_(socket->strand()),
     reporter(socket->log)
 {
 }

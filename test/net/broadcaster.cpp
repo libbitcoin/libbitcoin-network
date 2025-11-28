@@ -20,115 +20,58 @@
 
 BOOST_AUTO_TEST_SUITE(broadcaster_tests)
 
-BOOST_AUTO_TEST_CASE(broadcaster__construct__stop__stops)
-{
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    broadcaster instance(strand);
-
-    std::promise<bool> promise;
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(error::service_stopped);
-        promise.set_value(true);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(promise.get_future().get());
-}
-
 BOOST_AUTO_TEST_CASE(broadcaster__subscribe__stop__expected_code)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    broadcaster instance(strand);
+    broadcaster instance{};
     constexpr uint64_t channel_id = 42;
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
-    // Subscription will capture message and stop notifications.
-    std::promise<code> sub_promise;
-    std::promise<code> ping_promise;
+    BOOST_REQUIRE(!instance.subscribe(
+        [&](const code& ec, const messages::peer::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
+        {
+            // Stop notification has nullptr message, zero id, and specified code.
+            result &= is_null(ping);
+            result &= is_zero(id);
+            result &= (ec == expected_ec);
+            return true;
+        }, channel_id));
 
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        sub_promise.set_value(instance.subscribe(
-            [&](const code& ec, const messages::peer::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
-            {
-                // Stop notification has nullptr message, zero id, and specified code.
-                result &= is_null(ping);
-                result &= is_zero(id);
-                ping_promise.set_value(ec);
-                return true;
-            }, channel_id));
-    });
-
-    // Wait on successful subscription.
-    BOOST_REQUIRE(!sub_promise.get_future().get());
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(expected_ec);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(ping_promise.get_future().get(), expected_ec);
+    instance.stop(expected_ec);
     BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_CASE(broadcaster__notify__valid_nonced_ping__expected_notification)
 {
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    broadcaster instance(strand);
+    broadcaster instance{};
     constexpr uint64_t channel_id = 42;
     constexpr uint64_t expected_nonce = 42;
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
+    code stop_ec{};
 
-    // Subscription will capture message and stop notifications.
-    std::promise<code> sub_promise;
-    std::promise<code> ping_promise;
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        sub_promise.set_value(instance.subscribe(
-            [&](const code& ec, const messages::peer::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
+    BOOST_REQUIRE(!instance.subscribe(
+        [&](const code& ec, const messages::peer::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
+        {
+            // Handle stop notification (unavoidable test condition).
+            if (!ping)
             {
-                // Handle stop notification (unavoidable test condition).
-                if (!ping)
-                {
-                    ping_promise.set_value(ec);
-                    return true;
-                }
-
-                // Handle message notification.
-                result &= (ping->nonce == expected_nonce);
-                result &= (ec == error::success);
-                result &= (id == channel_id);
+                stop_ec = ec;
                 return true;
-            }, channel_id));
-    });
+            }
 
-    // Wait on successful subscription.
-    BOOST_REQUIRE(!sub_promise.get_future().get());
+            // Handle message notification.
+            result &= (ping->nonce == expected_nonce);
+            result &= (ec == error::success);
+            result &= (id == channel_id);
+            return true;
+        }, channel_id));
 
     // Move vs. emplace required on some platforms, possibly due to default constructor.
     const auto ping = std::make_shared<messages::peer::ping>(messages::peer::ping{ expected_nonce });
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.notify(ping, channel_id);
-    });
-
-    boost::asio::post(strand, [&]() NOEXCEPT
-    {
-        instance.stop(expected_ec);
-    });
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(ping_promise.get_future().get(), expected_ec);
+    instance.notify(ping, channel_id);
+    instance.stop(expected_ec);
+    BOOST_REQUIRE_EQUAL(stop_ec, expected_ec);
     BOOST_REQUIRE(result);
 }
 
