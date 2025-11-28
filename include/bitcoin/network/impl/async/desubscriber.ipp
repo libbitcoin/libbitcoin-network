@@ -25,12 +25,6 @@ namespace libbitcoin {
 namespace network {
 
 template <typename Key, typename... Args>
-desubscriber<Key, Args...>::desubscriber(asio::strand& strand) NOEXCEPT
-  : strand_(strand)
-{
-}
-
-template <typename Key, typename... Args>
 desubscriber<Key, Args...>::~desubscriber() NOEXCEPT
 {
     // Destruction may not occur on the strand.
@@ -41,8 +35,6 @@ template <typename Key, typename... Args>
 code desubscriber<Key, Args...>::
 subscribe(handler&& handler, const Key& key) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     if (stopped_)
     {
@@ -66,8 +58,6 @@ template <typename Key, typename... Args>
 void desubscriber<Key, Args...>::
 notify(const code& ec, const Args&... args) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     if (stopped_)
         return;
 
@@ -92,8 +82,6 @@ template <typename Key, typename... Args>
 bool desubscriber<Key, Args...>::
 notify_one(const Key& key, const code& ec, const Args&... args) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     if (stopped_)
         return false;
 
@@ -116,7 +104,6 @@ void desubscriber<Key, Args...>::
 stop(const code& ec, const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(ec, "desubscriber stopped with success code");
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
         return;
@@ -130,7 +117,6 @@ template <typename Key, typename... Args>
 void desubscriber<Key, Args...>::
 stop_default(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     stop(ec, Args{}...);
 }
 
@@ -138,7 +124,6 @@ template <typename Key, typename... Args>
 size_t desubscriber<Key, Args...>::
 size() const NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     return map_.size();
 }
 
@@ -146,7 +131,6 @@ template <typename Key, typename... Args>
 bool desubscriber<Key, Args...>::
 empty() const NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     return map_.empty();
 }
 

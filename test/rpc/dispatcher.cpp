@@ -56,18 +56,13 @@ using distributor_mock = dispatcher<mock_interface>;
 
 BOOST_AUTO_TEST_CASE(dispatcher__construct__stop__stops)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
+    distributor_mock instance{};
     instance.stop(error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__no_subscriber__success)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     request_t request{};
     request.method = "empty_method";
     const auto ec = instance.notify(request);
@@ -77,11 +72,8 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__no_subscriber__success)
 
 BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stopped__subscriber_stopped)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
+    distributor_mock instance{};
     auto result = true;
-
     instance.stop(error::invalid_magic);
     const auto subscribe_ec = instance.subscribe(
         [&](const code&, mock_interface::all_required, bool a, double b, std::string c)
@@ -102,12 +94,9 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stopped__subscriber_stopped)
 
 BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stop__service_stopped)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
+    distributor_mock instance{};
     code result_ec{};
     auto result = true;
-
     const auto subscribe_ec = instance.subscribe(
         [&](const code& ec, mock_interface::all_required, bool a, double b, std::string c)
         {
@@ -127,9 +116,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stop__service_stopped)
 
 BOOST_AUTO_TEST_CASE(dispatcher__subscribe__multiple__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
+    distributor_mock instance{};
 
     const auto ec1 = instance.subscribe(
         [&](const code&, mock_interface::all_required, bool, double, std::string)
@@ -150,10 +137,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__multiple__expected)
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__unknown_method__unexpected_method)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     request_t request{};
     request.method = "unknown_method";
     BOOST_REQUIRE_EQUAL(instance.notify(request), error::unexpected_method);
@@ -162,10 +146,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__unknown_method__unexpected_method)
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes_both)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool first_called{};
     bool second_called{};
     bool first_result_a{};
@@ -210,11 +191,9 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
+
     instance.subscribe([&](const code&, mock_interface::empty_method)
     {
         if (called) return false;
@@ -231,9 +210,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
+    distributor_mock instance{};
     bool called{};
 
     instance.subscribe([&](const code&, mock_interface::empty_method)
@@ -256,9 +233,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positional)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
+    distributor_mock instance{};
 
     const request_t request
     {
@@ -272,10 +247,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positi
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     bool result_a{};
     double result_b{};
@@ -328,10 +300,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expecte
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     bool result_a{};
     double result_b{};
@@ -415,10 +384,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     number_t result_b{};
@@ -471,10 +437,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expecte
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     number_t result_b{};
@@ -527,10 +490,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     number_t result_b{};
@@ -583,10 +543,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expecte
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     number_t result_b{};
@@ -639,10 +596,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     boolean_t result_b{};
@@ -695,10 +649,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expecte
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     string_t result_a{};
     boolean_t result_b{};
@@ -751,10 +702,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     boolean_t result_a{};
     number_t result_b{};
@@ -804,10 +752,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expecte
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     boolean_t result_a{};
     number_t result_b{};
@@ -857,10 +802,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
 
 BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     constexpr auto expected = 42u;
     messages::peer::ping::cptr result{};
@@ -890,10 +832,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
 
 BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_mock instance(strand);
-
+    distributor_mock instance{};
     bool called{};
     constexpr auto expected = 42u;
     messages::peer::ping::cptr result{};
@@ -944,10 +883,7 @@ using distributor_missing_nullable = dispatcher<missing_nullable_interface>;
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_missing_nullable instance(strand);
-
+    distributor_missing_nullable instance{};
     double result_a{};
     bool result_b{};
     using method = missing_nullable_interface::missing_nullable;
@@ -1001,10 +937,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
 
 BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
 {
-    boost::asio::io_service service;
-    asio::strand strand(service.get_executor());
-    distributor_missing_nullable instance(strand);
-
+    distributor_missing_nullable instance{};
     double result_a{};
     messages::peer::ping::cptr result_b{};
     using method = missing_nullable_interface::missing_nullable_pointer;

@@ -89,7 +89,7 @@ public:
     DEFINE_SUBSCRIBER(witness_tx_id_relay);
 
     /// Create an instance of this class.
-    broadcaster(asio::strand& strand) NOEXCEPT;
+    broadcaster() NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
     /// If key exists, handler is invoked with error::subscriber_exists.

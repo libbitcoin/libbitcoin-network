@@ -26,13 +26,6 @@ namespace network {
 
 template <typename... Args>
 subscriber<Args...>::
-subscriber(asio::strand& strand) NOEXCEPT
-  : strand_(strand)
-{
-}
-
-template <typename... Args>
-subscriber<Args...>::
 ~subscriber() NOEXCEPT
 {
     // Destruction may not occur on the strand.
@@ -43,8 +36,6 @@ template <typename... Args>
 code subscriber<Args...>::
 subscribe(handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     if (stopped_)
     {
@@ -63,8 +54,6 @@ template <typename... Args>
 void subscriber<Args...>::
 notify(const code& ec, const Args&... args) const NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     if (stopped_)
         return;
 
@@ -82,7 +71,6 @@ void subscriber<Args...>::
 stop(const code& ec, const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(ec, "subscriber stopped with success code");
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
         return;
@@ -96,7 +84,6 @@ template <typename... Args>
 void subscriber<Args...>::
 stop_default(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     stop(ec, Args{}...);
 }
 
@@ -104,7 +91,6 @@ template <typename... Args>
 size_t subscriber<Args...>::
 size() const NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     return queue_.size();
 }
 
@@ -112,7 +98,6 @@ template <typename... Args>
 bool subscriber<Args...>::
 empty() const NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     return queue_.empty();
 }
 

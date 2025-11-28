@@ -159,8 +159,8 @@ private:
     socket::ptr socket_;
 
     // These are protected by strand.
+    stop_subscriber stop_subscriber_{};
     queue queue_{};
-    stop_subscriber stop_subscriber_;
 };
 
 } // namespace network

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_HPP
 
-#include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -36,8 +35,7 @@ public:
 
     typedef std::function<void(const code&, Args...)> handler;
 
-    // Strand is only used for assertions.
-    subscriber(asio::strand& strand) NOEXCEPT;
+    subscriber() NOEXCEPT = default;
     ~subscriber() NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
@@ -60,9 +58,6 @@ public:
     bool empty() const NOEXCEPT;
 
 private:
-    // This is thread safe.
-    asio::strand& strand_;
-
     // These are not thread safe.
     bool stopped_{ false };
     std_vector<handler> queue_{};

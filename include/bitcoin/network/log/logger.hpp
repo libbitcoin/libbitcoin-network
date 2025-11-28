@@ -149,8 +149,8 @@ private:
 
     // These are protected by strand.
     // notify()/do_notify() can be const because of mutable subscriber.
-    mutable message_subscriber message_subscriber_{ strand_ };
-    mutable event_subscriber event_subscriber_{ strand_ };
+    mutable message_subscriber message_subscriber_{};
+    mutable event_subscriber event_subscriber_{};
 };
 
 } // namespace network

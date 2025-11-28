@@ -21,7 +21,6 @@
 
 #include <tuple>
 #include <unordered_map>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/rpc/method.hpp>
 #include <bitcoin/network/rpc/types.hpp>
@@ -50,7 +49,7 @@ public:
     inline code subscribe(Handler&& handler) NOEXCEPT;
 
     /// Create an instance of this class.
-    inline dispatcher(asio::strand& strand) NOEXCEPT;
+    inline dispatcher() NOEXCEPT;
     virtual ~dispatcher() = default;
 
     /// Dispatch the request to the appropriate method's unsubscriber.
@@ -87,7 +86,7 @@ private:
     static inline consteval size_t find_subscriber_for_handler() NOEXCEPT;
 
     template <size_t ...Index>
-    static inline subscribers_t make_subscribers(asio::strand& strand,
+    static inline subscribers_t make_subscribers(
         std::index_sequence<Index...>) NOEXCEPT;
 
     // make_notifiers

@@ -39,8 +39,7 @@ public:
 
     typedef std::function<bool(const code&, Args...)> handler;
 
-    // Strand is only used for assertions.
-    unsubscriber(asio::strand& strand) NOEXCEPT;
+    unsubscriber() NOEXCEPT = default;
     ~unsubscriber() NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
@@ -64,9 +63,6 @@ public:
     bool empty() const NOEXCEPT;
 
 private:
-    // This is thread safe.
-    asio::strand& strand_;
-
     // These are not thread safe.
     bool stopped_{ false };
     std::list<handler> queue_{};
