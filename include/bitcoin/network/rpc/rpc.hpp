@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_RPC_RPC_HPP
 
 #include <bitcoin/network/rpc/any.hpp>
+#include <bitcoin/network/rpc/broadcaster.hpp>
 #include <bitcoin/network/rpc/dispatcher.hpp>
 #include <bitcoin/network/rpc/enums/grouping.hpp>
 #include <bitcoin/network/rpc/enums/version.hpp>

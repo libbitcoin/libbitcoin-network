@@ -76,6 +76,10 @@ private:
     std::map<Key, handler> map_{};
 };
 
+/// Concept to detect key presence on a subscriber.
+template <typename Type>
+concept subscriber_key = requires { typename Type::key; };
+
 } // namespace network
 } // namespace libbitcoin
 

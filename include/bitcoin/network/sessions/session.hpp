@@ -29,6 +29,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
 #include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/rpc/rpc.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -42,8 +43,10 @@ class BCT_API session
   : public enable_shared_from_base<session>, public reporter
 {
 public:
-    typedef std::shared_ptr<session> ptr;
-    typedef broadcaster::channel_id channel_id;
+    using ptr = std::shared_ptr<session>;
+    using interface = rpc::interface::peer::broadcast;
+    using broadcaster = rpc::broadcaster<interface>;
+    using channel_id = broadcaster::key_t;
 
     DELETE_COPY_MOVE(session);
 
@@ -61,7 +64,13 @@ private:
         channel_id sender) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        broadcaster_.notify(message, sender);
+
+        using namespace rpc;
+        broadcaster_.notify(request_t
+        {
+            .method = Message::command,
+            .params = { array_t{ any_t{ message }, { sender } } }
+        }, sender);
     }
 
     template <typename Handler>
@@ -85,11 +94,13 @@ public:
     /// best-efforts propagation. Use individual channel.send calls otherwise.
     /// Sender identifies the channel to its own handler, for option to bypass.
 
-    template <class Message, typename Handler = broadcaster::handler<Message>>
+    template <class Message, typename Handler>
     void subscribe(Handler&& handler, channel_id id) NOEXCEPT
     {
+        using signature = interface::signature<Message>;
         boost::asio::post(strand(),
-            BIND(do_subscribe<Handler>, std::forward<Handler>(handler), id));
+            BIND(do_subscribe<signature>,
+                std::forward<signature>(handler), id));
     }
 
     template <class Message>

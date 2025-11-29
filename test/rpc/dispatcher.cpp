@@ -22,6 +22,7 @@ BOOST_AUTO_TEST_SUITE(dispatcher_tests)
 
 using namespace rpc;
 
+// uses unsubscriber<> (bool handler returns).
 struct mock_methods
 {
     static constexpr std::tuple methods
@@ -860,6 +861,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
     instance.stop(error::service_stopped);
 }
 
+// uses subscriber<> (void handler returns).
 struct mock_missing_nullable
 {
     static constexpr std::tuple methods
@@ -869,7 +871,7 @@ struct mock_missing_nullable
     };
 
     template <typename... Args>
-    using subscriber = network::unsubscriber<Args...>;
+    using subscriber = network::subscriber<Args...>;
 
     template <size_t Index>
     using at = method_at<methods, Index>;
@@ -892,7 +894,6 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
     {
         result_a = a;
         result_b = b.value_or(true);
-        return true;
     });
     
     const auto ec1 = instance.notify(
@@ -947,7 +948,6 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
     {
         result_a = a;
         result_b = b.value_or(nullptr);
-        return true;
     });
     
     const auto ec1 = instance.notify(

@@ -309,9 +309,6 @@
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\connector.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -373,6 +370,9 @@
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\rpc\any.cpp">
+      <Filter>src\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\rpc\broadcaster.cpp">
       <Filter>src\rpc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\rpc\dispatcher.cpp">

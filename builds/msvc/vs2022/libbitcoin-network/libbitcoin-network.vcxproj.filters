@@ -342,9 +342,6 @@
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\connector.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -743,9 +740,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\broadcaster.hpp">
-      <Filter>include\bitcoin\network\net</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
@@ -818,6 +812,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\any.hpp">
       <Filter>include\bitcoin\network\rpc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\broadcaster.hpp">
+      <Filter>include\bitcoin\network\rpc</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\dispatcher.hpp">
       <Filter>include\bitcoin\network\rpc</Filter>
     </ClInclude>
@@ -840,9 +837,6 @@
       <Filter>include\bitcoin\network\rpc\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\interfaces.hpp">
-      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer.hpp">
       <Filter>include\bitcoin\network\rpc\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\stratum_v1.hpp">
@@ -896,6 +890,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer_dispatch.hpp">
+      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer_broadcast.hpp">
+      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\desubscriber.ipp">
@@ -930,6 +930,9 @@
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\monad\head.ipp">
       <Filter>include\bitcoin\network\impl\messages\monad</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\broadcaster.ipp">
+      <Filter>include\bitcoin\network\impl\rpc</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\dispatcher.ipp">
       <Filter>include\bitcoin\network\impl\rpc</Filter>

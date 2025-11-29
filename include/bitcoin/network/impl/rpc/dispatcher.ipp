@@ -81,17 +81,17 @@ inline external_t<Argument> CLASS::get_positional(size_t& position,
 {
     // Only optional can be missing.
     if (position >= array.size())
-        return get_missing<Argument>();
+        return CLASS::get_missing<Argument>();
 
     // Get contained variant value_t(inner_t).
     const auto& internal = array.at(position++);
 
     // value_t(null_t) implies nullable.
     if (std::holds_alternative<null_t>(internal.value()))
-        return get_nullified<Argument>();
+        return CLASS::get_nullified<Argument>();
 
     // Otherwise value_t(inner_t) is required.
-    return get_valued<Argument>(internal);
+    return CLASS::get_valued<Argument>(internal);
 }
 
 TEMPLATE
@@ -102,17 +102,17 @@ inline external_t<Argument> CLASS::get_named(
     // Only optional can be missing.
     const auto it = object.find(std::string{ name });
     if (it == object.end())
-        return get_missing<Argument>();
+        return CLASS::get_missing<Argument>();
 
     // Get contained variant value_t(inner_t).
     const auto& internal = it->second;
 
     // value_t(null_t) implies nullable.
     if (std::holds_alternative<null_t>(internal.value()))
-        return get_nullified<Argument>();
+        return CLASS::get_nullified<Argument>();
 
     // Otherwise value_t(inner_t) is required.
-    return get_valued<Argument>(internal);
+    return CLASS::get_valued<Argument>(internal);
 }
 
 TEMPLATE
@@ -153,8 +153,8 @@ inline externals_t<Arguments> CLASS::extract_positional(
     {
         // Sequence via comma expansion is required to preserve order.
         ((
-            std::get<Index>(values) = get_positional<std::tuple_element_t<
-            Index, Arguments>>(position, array)
+            std::get<Index>(values) = CLASS::get_positional<
+            std::tuple_element_t<Index, Arguments>>(position, array)
         ), ...);
     }(std::make_index_sequence<count>{});
 
@@ -180,7 +180,7 @@ inline externals_t<Arguments> CLASS::extract_named(
     {
         return std::make_tuple
         (
-            get_named<std::tuple_element_t<Index, Arguments>>(
+            CLASS::get_named<std::tuple_element_t<Index, Arguments>>(
                 names.at(Index), object)...
         );
     }(std::make_index_sequence<count>{});
@@ -193,30 +193,30 @@ inline externals_t<Arguments> CLASS::extract(const parameters_t& params,
 {
     if constexpr (Interface::mode == grouping::positional)
     {
-        return extract_positional<Arguments>(params);
+        return CLASS::extract_positional<Arguments>(params);
     }
     else if constexpr (Interface::mode == grouping::named)
     {
-        return extract_named<Arguments>(params, names);
+        return CLASS::extract_named<Arguments>(params, names);
     }
     else // grouping::either
     {
         if (!params.has_value() ||
             std::holds_alternative<array_t>(params.value()))
-            return extract_positional<Arguments>(params);
+            return CLASS::extract_positional<Arguments>(params);
         else
-            return extract_named<Arguments>(params, names);
+            return CLASS::extract_named<Arguments>(params, names);
     }
 }
 
 TEMPLATE
 template <typename Method>
-inline auto CLASS::preamble() NOEXCEPT
+inline auto CLASS::preamble(const code& ec) NOEXCEPT
 {
     if constexpr (Method::native)
-        return std::make_tuple(code{});
+        return std::make_tuple(ec);
     else
-        return std::make_tuple(code{}, Method{});
+        return std::make_tuple(ec, Method{});
 }
 
 TEMPLATE
@@ -230,7 +230,8 @@ inline code CLASS::notify(subscriber_t<Method>& subscriber,
         std::apply([&](auto&&... args) NOEXCEPT
         {
             subscriber.notify(std::forward<decltype(args)>(args)...);
-        }, std::tuple_cat(preamble<Method>(), extract<native>(params, names)));
+        }, std::tuple_cat(CLASS::preamble<Method>(),
+            CLASS::extract<native>(params, names)));
 
         return error::success;
     }
@@ -277,14 +278,15 @@ inline constexpr CLASS::notifiers_t CLASS::make_notifiers(
         std::make_pair
         (
             std::string{ method_t<Index, methods_t>::name },
-            &functor<Index>
+            &CLASS::functor<Index>
         )...
     };
 }
 
 TEMPLATE
 const typename CLASS::notifiers_t
-CLASS::notifiers_ = make_notifiers(std::make_index_sequence<Interface::size>{});
+CLASS::notifiers_ = CLASS::make_notifiers(
+    std::make_index_sequence<Interface::size>{});
 
 // make_subscribers/subscribe
 // ----------------------------------------------------------------------------
@@ -320,8 +322,8 @@ template <typename Handler, size_t Index>
 inline consteval size_t CLASS::find_subscriber_for_handler() NOEXCEPT
 {
     // Find the index of the subscriber that matches Handler (w/o code arg).
-    if constexpr (!subscriber_matches_handler<Handler, Index>())
-        return find_subscriber_for_handler<Handler, add1(Index)>();
+    if constexpr (!CLASS::subscriber_matches_handler<Handler, Index>())
+        return CLASS::find_subscriber_for_handler<Handler, add1(Index)>();
     else
         return Index;
 }
@@ -332,28 +334,30 @@ inline consteval size_t CLASS::find_subscriber_for_handler() NOEXCEPT
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 TEMPLATE
-template <typename Handler>
-inline code CLASS::subscribe(Handler&& handler) NOEXCEPT
+template <typename Handler, typename ...Args>
+inline code CLASS::subscribe(Handler&& handler, Args&&... args) NOEXCEPT
 {
     // Iterate methods_t in order to find the matching function signature.
     // The index of each method correlates to its defined subscriber index.
-    constexpr auto index = find_subscriber_for_handler<Handler>();
-    auto& subscriber = std::get<index>(subscribers_);
-    return subscriber.subscribe(std::forward<Handler>(handler));
+    constexpr auto index = CLASS::find_subscriber_for_handler<Handler>();
+    auto& subscriber = std::get<index>(this->subscribers_);
+    return subscriber.subscribe(std::forward<Handler>(handler),
+        std::forward<Args>(args)...);
 }
 
 TEMPLATE
 inline CLASS::dispatcher() NOEXCEPT
-  : subscribers_(make_subscribers(std::make_index_sequence<Interface::size>{}))
+  : subscribers_(CLASS::make_subscribers(
+      std::make_index_sequence<Interface::size>{}))
 {
 }
 
 TEMPLATE
 inline code CLASS::notify(const request_t& request) NOEXCEPT
 {
-    // Search unordered map by method name for the notifier functor.
-    const auto it = notifiers_.find(request.method);
-    return it == notifiers_.end() ? error::unexpected_method :
+    // Search unordered map by method name for the notify() functor.
+    const auto it = this->notifiers_.find(request.method);
+    return it == this->notifiers_.end() ? error::unexpected_method :
         it->second(*this, request.params);
 }
 
@@ -365,11 +369,11 @@ inline void CLASS::stop(const code& ec) NOEXCEPT
     // Stop all subscribers, passing code and default arguments.
     std::apply
     (
-        [&ec](auto&&... subscriber) NOEXCEPT
+        [&ec](auto&... subscriber) NOEXCEPT
         {
             (subscriber.stop_default(ec), ...);
         },
-        subscribers_
+        this->subscribers_
     );
 }
 
