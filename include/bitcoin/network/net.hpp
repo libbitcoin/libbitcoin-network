@@ -46,6 +46,7 @@ class BCT_API net
 {
 public:
     typedef std::shared_ptr<net> ptr;
+
     typedef uint64_t object_key;
 
     typedef desubscriber<object_key> stop_subscriber;
@@ -55,6 +56,8 @@ public:
     typedef desubscriber<object_key, const channel::ptr&> channel_subscriber;
     typedef channel_subscriber::handler channel_notifier;
     typedef channel_subscriber::completer channel_completer;
+
+    typedef rpc::broadcaster<rpc::interface::peer::broadcast> broadcaster;
     
     /// Constructors.
     /// -----------------------------------------------------------------------
@@ -315,12 +318,11 @@ private:
     // These are protected by strand.
     hosts hosts_;
     object_key keys_{};
+    broadcaster broadcaster_{};
     stop_subscriber stop_subscriber_{};
     channel_subscriber connect_subscriber_{};
-    rpc::broadcaster<rpc::interface::peer::broadcast> broadcaster_{};
 
     // Guards loopback.
-    // TODO: optimize, default bucket count is around 8.
     std::unordered_set<uint64_t> nonces_{};
 };
 
