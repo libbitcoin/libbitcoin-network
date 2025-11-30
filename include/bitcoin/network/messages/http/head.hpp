@@ -71,7 +71,7 @@ struct head
         empty_serializer<IsRequest> serializer_;
     };
 
-    struct value_type
+    class value_type
     {
         using message_type = empty_message<IsRequest>;
         using header_type = message_header<IsRequest>;
