@@ -32,30 +32,30 @@ struct explore_methods
     static constexpr std::tuple methods
     {
         // The block hash or height is logically required.
-        method<"block", uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "hash", "height" },
-        method<"header", uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "hash", "height" },
-        method<"filter", uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "hash", "height" },
-        method<"block_txs", uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "hash", "height" },
+        method<"block", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
+        method<"header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
+        method<"filter", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
+        method<"block_txs", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
 
         // The block hash or height is logically required.
         // The position parameter is out of URL order because it's required.
-        method<"block_tx", uint8_t, uint32_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "position", "hash", "height" },
+        method<"block_tx", uint8_t, uint8_t, uint32_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "position", "hash", "height" },
 
         // All parameters are required.
-        method<"transaction", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"input", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
-        method<"inputs", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"input_script", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
-        method<"input_scripts", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"input_witness", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
-        method<"input_witnesses", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"output", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
-        method<"outputs", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"output_script", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
-        method<"output_scripts", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"output_spender", uint8_t, system::hash_cptr, uint32_t>{ "version", "hash", "index" },
-        method<"output_spenders", uint8_t, system::hash_cptr>{ "version", "hash" },
-        method<"address", uint8_t, system::hash_cptr>{ "version", "hash" }
+        method<"transaction", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"input", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"inputs", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"input_script", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"input_scripts", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"input_witness", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"input_witnesses", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"output", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"outputs", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"output_script", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"output_scripts", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"output_spender", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"output_spenders", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"address", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" }
     };
 
     template <typename... Args>
