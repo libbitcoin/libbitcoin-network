@@ -79,6 +79,7 @@ protected:
     /// Senders.
     virtual void send_bad_host(const http::request& request) NOEXCEPT;
     virtual void send_not_found(const http::request& request) NOEXCEPT;
+    virtual void send_not_acceptable(const http::request& request) NOEXCEPT;
     virtual void send_forbidden(const http::request& request) NOEXCEPT;
     virtual void send_not_implemented(const http::request& request) NOEXCEPT;
     virtual void send_method_not_allowed(const http::request& request) NOEXCEPT;

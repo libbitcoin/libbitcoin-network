@@ -184,6 +184,18 @@ void protocol_http::send_not_found(const request& request) NOEXCEPT
     SEND(std::move(out), handle_complete, _1, error::success);
 }
 
+void protocol_http::send_not_acceptable(const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    const auto code = status::not_acceptable;
+    const auto media = to_media_type(request[field::accept]);
+    response out{ code, request.version() };
+    add_common_headers(out, request);
+    out.body() = string_status(code, out.reason(), media);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::success);
+}
+
 // Closes channel.
 void protocol_http::send_not_implemented(const request& request) NOEXCEPT
 {
