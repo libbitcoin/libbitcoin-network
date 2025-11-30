@@ -139,12 +139,22 @@ inline void CLASS::desubscribe(const key_t& key,
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+inline code CLASS::notify(const request_t& request) NOEXCEPT
+{
+    return base::notify(request);
+};
+
+TEMPLATE
 inline code CLASS::notify(const request_t& request, const key_t& key) NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
     // Search unordered map by method name for the notify_one() functor.
     const auto it = this->one_notifiers_.find(request.method);
     return it == this->one_notifiers_.end() ? error::unexpected_method :
         it->second(*this, key, request.params);
+
+    BC_POP_WARNING()
 };
 
 TEMPLATE
