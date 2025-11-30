@@ -765,14 +765,14 @@ BOOST_AUTO_TEST_CASE(error_t__code__method_not_allowed__true_exected_message)
 
 // http 5xx server error
 
-////BOOST_AUTO_TEST_CASE(error_t__code__internal_server_error__true_exected_message)
-////{
-////    constexpr auto value = error::internal_server_error;
-////    const auto ec = code(value);
-////    BOOST_REQUIRE(ec);
-////    BOOST_REQUIRE(ec == value);
-////    BOOST_REQUIRE_EQUAL(ec.message(), "internal server error");
-////}
+BOOST_AUTO_TEST_CASE(error_t__code__internal_server_error__true_exected_message)
+{
+    constexpr auto value = error::internal_server_error;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "internal server error");
+}
 
 BOOST_AUTO_TEST_CASE(error_t__code__not_implemented__true_exected_message)
 {

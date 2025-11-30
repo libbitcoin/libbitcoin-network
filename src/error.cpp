@@ -131,7 +131,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     ////{ unavailable_for_legal_reasons, "unavailable for legal reasons" },
 
     ////// http 5xx server error
-    ////{ internal_server_error, "internal server error" },
+    { internal_server_error, "internal server error" },
     { not_implemented, "not implemented" },
     ////{ bad_gateway, "bad gateway" },
     ////{ service_unavailable, "service unavailable" },

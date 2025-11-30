@@ -83,6 +83,8 @@ protected:
     virtual void send_forbidden(const http::request& request) NOEXCEPT;
     virtual void send_not_implemented(const http::request& request) NOEXCEPT;
     virtual void send_method_not_allowed(const http::request& request) NOEXCEPT;
+    virtual void send_internal_server_error(const http::request& request,
+        const code& reason) NOEXCEPT;
     virtual void send_bad_target(const http::request& request,
         const code& reason={}) NOEXCEPT;
 
