@@ -31,10 +31,10 @@ struct mock_desubscriber
 
     static constexpr std::tuple methods
     {
-        method<"ping0", ping::cptr, size_t>{},
+        method<"ping0", ping::cptr, uint16_t>{},
         method<"ping1", ping::cptr, string_t>{ "message", "value" },
-        method<"ping2", size_t, nullable<ping::cptr>>{},
-        method<"ping3", size_t, nullable<ping::cptr>>{ "value", "message" }
+        method<"ping2", uint16_t, nullable<ping::cptr>>{},
+        method<"ping3", uint16_t, nullable<ping::cptr>>{ "value", "message" }
     };
 
     template <typename... Args>
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__native_positional__expected)
 {
     mock_broadcaster instance{};
     constexpr uint64_t expected_nonce = 42;
-    constexpr size_t expected_value = 42;
+    constexpr uint16_t expected_value = 42;
     constexpr mock_broadcaster::key_t channel_id = 17;
     constexpr auto expected_ec = network::error::invalid_magic;
     bool called{};
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__native_positional__expected)
     code stop_ec{};
 
     BOOST_REQUIRE(!instance.subscribe(
-        [&](const code& ec, ping::cptr ping, size_t value)
+        [&](const code& ec, ping::cptr ping, uint16_t value)
         {
             // Handle stop notification (unavoidable test condition).
             if (called)
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_positional__expect
     mock_broadcaster instance{};
     using tag = mock_desubscriber::ping2;
     constexpr uint64_t expected_nonce = 42;
-    constexpr size_t expected_value = 42;
+    constexpr uint16_t expected_value = 42;
     constexpr mock_broadcaster::key_t channel_id = 17;
     constexpr auto expected_ec = network::error::invalid_magic;
     bool called{};
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_positional__expect
     code stop_ec{};
 
     BOOST_REQUIRE(!instance.subscribe(
-        [&](const code& ec, tag, size_t value, std::optional<ping::cptr> ping)
+        [&](const code& ec, tag, uint16_t value, std::optional<ping::cptr> ping)
         {
             // Handle stop notification (unavoidable test condition).
             if (called)
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_named__expected)
     mock_broadcaster instance{};
     using tag = mock_desubscriber::ping3;
     constexpr uint64_t expected_nonce = 42;
-    constexpr size_t expected_value = 42;
+    constexpr uint16_t expected_value = 42;
     constexpr mock_broadcaster::key_t channel_id = 17;
     constexpr auto expected_ec = network::error::invalid_magic;
     bool called{};
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_named__expected)
     code stop_ec{};
 
     BOOST_REQUIRE(!instance.subscribe(
-        [&](const code& ec, tag, size_t value, std::optional<ping::cptr> ping)
+        [&](const code& ec, tag, uint16_t value, std::optional<ping::cptr> ping)
         {
             // Handle stop notification (unavoidable test condition).
             if (called)
