@@ -551,7 +551,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\magic_numbers.hpp">
       <Filter>include\bitcoin\network\messages\http\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\mime_type.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\media_type.hpp">
       <Filter>include\bitcoin\network\messages\http\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\status.hpp">
@@ -839,6 +839,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\interfaces.hpp">
       <Filter>include\bitcoin\network\rpc\interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer_broadcast.hpp">
+      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer_dispatch.hpp">
+      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\stratum_v1.hpp">
       <Filter>include\bitcoin\network\rpc\interfaces</Filter>
     </ClInclude>
@@ -889,12 +895,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp">
       <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer_dispatch.hpp">
-      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer_broadcast.hpp">
-      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -96,7 +96,7 @@ protected:
 
     /// Override to replace string status response message.
     virtual std::string string_status(const http::status status,
-        const std::string& reason, const http::mime_type& type,
+        const std::string& reason, const http::media_type& type,
         const std::string& details = {}) const NOEXCEPT;
 
     /// Utilities.

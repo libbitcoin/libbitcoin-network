@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/http/enums/mime_type.hpp>
+#include <bitcoin/network/messages/http/enums/media_type.hpp>
 
 #include <algorithm>
 #include <unordered_map>
@@ -32,75 +32,77 @@ namespace http {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-using mime_bimap = boost::bimap
+using media_bimap = boost::bimap
 <
-    boost::bimaps::set_of<mime_type>, 
+    boost::bimaps::set_of<media_type>, 
     boost::bimaps::set_of<std::string>
 >;
 
-static mime_bimap construct_mime_bimap() NOEXCEPT
+static media_bimap construct_media_bimap() NOEXCEPT
 {
-    mime_bimap bimap{};
-    bimap.insert({ mime_type::application_javascript, "application/javascript" });
-    bimap.insert({ mime_type::application_json, "application/json" });
-    bimap.insert({ mime_type::application_octet_stream, "application/octet-stream" });
-    bimap.insert({ mime_type::application_pdf, "application/pdf" });
-    bimap.insert({ mime_type::application_xml, "application/xml" });
-    bimap.insert({ mime_type::application_zip, "application/zip" });
-    bimap.insert({ mime_type::audio_mpeg, "audio/mpeg" });
-    bimap.insert({ mime_type::font_woff, "font/woff" });
-    bimap.insert({ mime_type::font_woff2, "font/woff2" });
-    bimap.insert({ mime_type::image_gif, "image/gif" });
-    bimap.insert({ mime_type::image_jpeg, "image/jpeg" });
-    bimap.insert({ mime_type::image_png, "image/png" });
-    bimap.insert({ mime_type::image_svg_xml, "image/svg+xml" });
-    bimap.insert({ mime_type::image_x_icon, "image/x-icon" });
-    bimap.insert({ mime_type::text_css, "text/css" });
-    bimap.insert({ mime_type::text_html, "text/html" });
-    bimap.insert({ mime_type::text_plain, "text/plain" });
-    bimap.insert({ mime_type::video_mp4, "video/mp4" });
-    ////bimap.insert({ mime_type::unknown, "unknown" });
+    media_bimap bimap{};
+    bimap.insert({ media_type::application_javascript, "application/javascript" });
+    bimap.insert({ media_type::application_json, "application/json" });
+    bimap.insert({ media_type::application_octet_stream, "application/octet-stream" });
+    bimap.insert({ media_type::application_pdf, "application/pdf" });
+    bimap.insert({ media_type::application_xml, "application/xml" });
+    bimap.insert({ media_type::application_zip, "application/zip" });
+    bimap.insert({ media_type::audio_mpeg, "audio/mpeg" });
+    bimap.insert({ media_type::font_woff, "font/woff" });
+    bimap.insert({ media_type::font_woff2, "font/woff2" });
+    bimap.insert({ media_type::image_gif, "image/gif" });
+    bimap.insert({ media_type::image_jpeg, "image/jpeg" });
+    bimap.insert({ media_type::image_png, "image/png" });
+    bimap.insert({ media_type::image_svg_xml, "image/svg+xml" });
+    bimap.insert({ media_type::image_x_icon, "image/x-icon" });
+    bimap.insert({ media_type::text_css, "text/css" });
+    bimap.insert({ media_type::text_html, "text/html" });
+    bimap.insert({ media_type::text_plain, "text/plain" });
+    bimap.insert({ media_type::video_mp4, "video/mp4" });
+    ////bimap.insert({ media_type::unknown, "unknown" });
     return bimap;
 };
 
-const mime_bimap& mime_map() NOEXCEPT
+const media_bimap& media_map() NOEXCEPT
 {
-    static const auto types = construct_mime_bimap();
+    static const auto types = construct_media_bimap();
     return types;
 }
 
-mime_type to_mime_type(const std::string_view& accept, mime_type default_) NOEXCEPT
+media_type to_media_type(const std::string_view& accept,
+    media_type default_) NOEXCEPT
 {
-    const auto type = mime_map().right.find(system::ascii_to_lower(accept));
-    return type == mime_map().right.end() ? default_ : type->second;
+    const auto type = media_map().right.find(system::ascii_to_lower(accept));
+    return type == media_map().right.end() ? default_ : type->second;
 };
 
-std::string from_mime_type(mime_type type,
+std::string from_media_type(media_type type,
     const std::string_view& default_) NOEXCEPT
 {
-    const auto text = mime_map().left.find(type);
-    return text == mime_map().left.end() ? std::string{ default_ } :
+    const auto text = media_map().left.find(type);
+    return text == media_map().left.end() ? std::string{ default_ } :
         text->second;
 };
 
-mime_types to_mime_types(const std::string_view& accepts,
-    mime_type default_) NOEXCEPT
+media_types to_media_types(const std::string_view& accepts,
+    media_type default_) NOEXCEPT
 {
     using namespace system;
     const auto tokens = split(accepts, ",");
 
-    mime_types out{};
+    media_types out{};
     out.resize(tokens.size());
-    std::ranges::transform(tokens, out.begin(), [&](const auto& accept) NOEXCEPT
-    {
-        return to_mime_type(split(accept, ";").front(), default_);
-    });
+    std::ranges::transform(tokens, out.begin(),
+        [&](const auto& accept) NOEXCEPT
+        {
+            return to_media_type(split(accept, ";").front(), default_);
+        });
 
     distinct(out);
     return out;
 }
 
-std::string from_mime_types(const mime_types& types,
+std::string from_media_types(const media_types& types,
     const std::string_view& default_) NOEXCEPT
 {
     using namespace system;
@@ -108,15 +110,15 @@ std::string from_mime_types(const mime_types& types,
     out.resize(types.size());
     std::ranges::transform(types, out.begin(), [&](auto type) NOEXCEPT
     {
-        return from_mime_type(type, default_);
+        return from_media_type(type, default_);
     });
 
     distinct(out);
     return join(out, ",");
 }
 
-mime_type content_mime_type(const std::string_view& content_type,
-    mime_type default_) NOEXCEPT
+media_type content_media_type(const std::string_view& content_type,
+    media_type default_) NOEXCEPT
 {
     if (content_type.empty())
         return default_;
@@ -126,61 +128,62 @@ mime_type content_mime_type(const std::string_view& content_type,
         return default_;
 
     const auto type = system::ascii_to_lower(parts.front());
-    const auto found = mime_map().right.find(type);
-    return found == mime_map().right.end() ? default_ : found->second;
+    const auto found = media_map().right.find(type);
+    return found == media_map().right.end() ? default_ : found->second;
 }
 
-mime_type content_mime_type(const fields& fields, mime_type default_) NOEXCEPT
+media_type content_media_type(const fields& fields,
+    media_type default_) NOEXCEPT
 {
-    return content_mime_type(fields[field::content_type], default_);
+    return content_media_type(fields[field::content_type], default_);
 }
 
-mime_type extension_mime_type(const std::string_view& extension,
-    mime_type default_) NOEXCEPT
+media_type extension_media_type(const std::string_view& extension,
+    media_type default_) NOEXCEPT
 {
-    static const std::unordered_map<std::string, mime_type> types
+    static const std::unordered_map<std::string, media_type> types
     {
-        { ".js",    mime_type::application_javascript },
-        ////{ "",   mime_type::application_octet_stream },
-        { ".json",  mime_type::application_json },
-        { ".pdf",   mime_type::application_pdf },
-        { ".zip",   mime_type::application_zip },
-        { ".xml",   mime_type::application_xml },
-        { ".mp3",   mime_type::audio_mpeg },
-        { ".woff",  mime_type::font_woff },
-        { ".woff2", mime_type::font_woff2 },
-        { ".gif",   mime_type::image_gif },
-        { ".jpg",   mime_type::image_jpeg },
-        { ".jpeg",  mime_type::image_jpeg },
-        { ".png",   mime_type::image_png },
-        { ".svg",   mime_type::image_svg_xml },
-        { ".ico",   mime_type::image_x_icon },
-        { ".css",   mime_type::text_css },
-        { ".html",  mime_type::text_html },
-        { ".htm",   mime_type::text_html },
-        { ".txt",   mime_type::text_plain },
-        { ".mp4",   mime_type::video_mp4 }
+        { ".js",    media_type::application_javascript },
+        ////{ "",   media_type::application_octet_stream },
+        { ".json",  media_type::application_json },
+        { ".pdf",   media_type::application_pdf },
+        { ".zip",   media_type::application_zip },
+        { ".xml",   media_type::application_xml },
+        { ".mp3",   media_type::audio_mpeg },
+        { ".woff",  media_type::font_woff },
+        { ".woff2", media_type::font_woff2 },
+        { ".gif",   media_type::image_gif },
+        { ".jpg",   media_type::image_jpeg },
+        { ".jpeg",  media_type::image_jpeg },
+        { ".png",   media_type::image_png },
+        { ".svg",   media_type::image_svg_xml },
+        { ".ico",   media_type::image_x_icon },
+        { ".css",   media_type::text_css },
+        { ".html",  media_type::text_html },
+        { ".htm",   media_type::text_html },
+        { ".txt",   media_type::text_plain },
+        { ".mp4",   media_type::video_mp4 }
     };
 
     const auto type = types.find(system::ascii_to_lower(extension));
     return type == types.end() ? default_ : type->second;
 }
 
-mime_type file_mime_type(const std::filesystem::path& path,
-    mime_type default_) NOEXCEPT
+media_type file_media_type(const std::filesystem::path& path,
+    media_type default_) NOEXCEPT
 {
     if (!path.has_extension())
         return default_;
 
     const auto extension = system::cast_to_string(path.extension().u8string());
-    return extension_mime_type(extension, default_);
+    return extension_media_type(extension, default_);
 }
 
-mime_type target_mime_type(const std::string& target,
-    mime_type default_) NOEXCEPT
+media_type target_media_type(const std::string& target,
+    media_type default_) NOEXCEPT
 {
     // request.target() is a boost::string_view, which requres path conversion.
-    return file_mime_type(target, default_);
+    return file_media_type(target, default_);
 }
 
 BC_POP_WARNING()

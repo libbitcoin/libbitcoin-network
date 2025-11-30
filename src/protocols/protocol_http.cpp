@@ -145,10 +145,10 @@ void protocol_http::send_method_not_allowed(const request& request,
     std::string details{ "method=" };
     details += request.method_string();
     const auto code = status::method_not_allowed;
-    const auto mime = to_mime_type(request[field::accept]);
+    const auto media = to_media_type(request[field::accept]);
     response out{ status::bad_request, request.version() };
     add_common_headers(out, request, true);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::method_not_allowed);
 }
@@ -158,10 +158,10 @@ void protocol_http::send_not_implemented(const request& request) NOEXCEPT
     BC_ASSERT(stranded());
     std::string details{ "server configuration" };
     const auto code = status::not_implemented;
-    const auto mime = to_mime_type(request[field::accept]);
+    const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::not_implemented);
 }
@@ -172,10 +172,10 @@ void protocol_http::send_not_found(const request& request) NOEXCEPT
     std::string details{ "path:" };
     details += request.target();
     const auto code = status::not_found;
-    const auto mime = to_mime_type(request[field::accept]);
+    const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::success);
 }
@@ -187,10 +187,10 @@ void protocol_http::send_forbidden(const request& request) NOEXCEPT
     std::string details{ "origin:" };
     details += request[field::origin];
     const auto code = status::forbidden;
-    const auto mime = to_mime_type(request[field::accept]);
+    const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request, true);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::forbidden);
 }
@@ -202,10 +202,10 @@ void protocol_http::send_bad_host(const request& request) NOEXCEPT
     std::string details{ "host=" };
     details += request[field::host];
     const auto code = status::bad_request;
-    const auto mime = to_mime_type(request[field::accept]);
+    const auto media = to_media_type(request[field::accept]);
     response out{ status::bad_request, request.version() };
     add_common_headers(out, request, true);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::bad_request);
 }
@@ -217,10 +217,10 @@ void protocol_http::send_bad_target(const request& request) NOEXCEPT
     std::string details{ "target=" };
     details += request.target();
     const auto code = status::bad_request;
-    const auto mime = to_mime_type(request[field::accept]);
+    const auto media = to_media_type(request[field::accept]);
     response out{ status::bad_request, request.version() };
     add_common_headers(out, request, true);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::bad_request);
 }
@@ -264,7 +264,7 @@ bool protocol_http::is_allowed_host(const fields& fields,
         config::to_normal_host(host, default_port()));
 }
 
-// TODO: pass and set response mime_type.
+// TODO: pass and set response media_type.
 void protocol_http::add_common_headers(fields& fields,
     const request& request, bool closing) const NOEXCEPT
 {
@@ -313,10 +313,10 @@ void protocol_http::add_common_headers(fields& fields,
 // so it's dereferenced before calling and passed along with status enum value.
 
 std::string protocol_http::string_status(const http::status /*status*/,
-    const std::string& reason, const http::mime_type& /*type*/,
+    const std::string& reason, const http::media_type& /*type*/,
     const std::string& details) const NOEXCEPT
 {
-    // TODO: format proper status response bodies for status and mime type.
+    // TODO: format proper status response bodies for status and media type.
     return reason + (details.empty() ? "" : " [" + details + "]");
 }
 
