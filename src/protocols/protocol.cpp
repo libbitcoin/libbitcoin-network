@@ -58,13 +58,13 @@ protocol::~protocol() NOEXCEPT
 
 void protocol::start() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    BC_ASSERT(stranded());
     started_ = true;
 }
 
 bool protocol::started() const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    BC_ASSERT(stranded());
     return started_;
 }
 
@@ -80,7 +80,7 @@ bool protocol::stopped(const code& ec) const NOEXCEPT
 // Called from stop subscription instead of stop (which would be a cycle).
 void protocol::stopping(const code&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    BC_ASSERT(stranded());
 }
 
 // Stop the channel::proxy, which results protocol stop handler invocation.
@@ -93,21 +93,21 @@ void protocol::stop(const code& ec) NOEXCEPT
 // Suspend reads from the socket until resume.
 void protocol::pause() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    BC_ASSERT(stranded());
     channel_->pause();
 }
 
 // Resumes reads from the socket following pause.
 void protocol::resume() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    BC_ASSERT(stranded());
     channel_->resume();
 }
 
 // Zero if timer expired.
 size_t protocol::remaining() const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    BC_ASSERT(stranded());
     return channel_->remaining();
 }
 
