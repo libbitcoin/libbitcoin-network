@@ -79,11 +79,12 @@ protected:
     /// Senders.
     virtual void send_bad_host(const http::request& request) NOEXCEPT;
     virtual void send_not_found(const http::request& request) NOEXCEPT;
+    virtual void send_not_acceptable(const http::request& request) NOEXCEPT;
     virtual void send_forbidden(const http::request& request) NOEXCEPT;
-    virtual void send_bad_target(const http::request& request) NOEXCEPT;
     virtual void send_not_implemented(const http::request& request) NOEXCEPT;
-    virtual void send_method_not_allowed(const http::request& request,
-        const code& ec) NOEXCEPT;
+    virtual void send_method_not_allowed(const http::request& request) NOEXCEPT;
+    virtual void send_bad_target(const http::request& request,
+        const code& reason={}) NOEXCEPT;
 
     /// Request handler MUST invoke this once unless stopped.
     virtual void handle_complete(const code& ec,
@@ -96,7 +97,7 @@ protected:
 
     /// Override to replace string status response message.
     virtual std::string string_status(const http::status status,
-        const std::string& reason, const http::mime_type& type,
+        const std::string& reason, const http::media_type& type,
         const std::string& details = {}) const NOEXCEPT;
 
     /// Utilities.

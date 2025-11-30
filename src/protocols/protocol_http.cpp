@@ -39,6 +39,8 @@ using namespace std::placeholders;
 
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 // [field] returns "" if not found but .at(field) throws.
 
@@ -80,90 +82,92 @@ void protocol_http::start() NOEXCEPT
 void protocol_http::handle_receive_get(const code& ec,
     const method::get::cptr& get) NOEXCEPT
 {
-    send_method_not_allowed(*get, ec);
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*get);
 }
 
 void protocol_http::handle_receive_post(const code& ec,
     const method::post::cptr& post) NOEXCEPT
 {
-    send_method_not_allowed(*post, ec);
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*post);
 }
 
 void protocol_http::handle_receive_put(const code& ec,
     const method::put::cptr& put) NOEXCEPT
 {
-    send_method_not_allowed(*put, ec);
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*put);
 }
 
 void protocol_http::handle_receive_head(const code& ec,
     const method::head::cptr& head) NOEXCEPT
 {
-    send_method_not_allowed(*head, ec);
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*head);
 }
 
 void protocol_http::handle_receive_delete(const code& ec,
     const method::delete_::cptr& delete_) NOEXCEPT
 {
-    send_method_not_allowed(*delete_, ec);
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*delete_);
 }
 
 void protocol_http::handle_receive_trace(const code& ec,
     const method::trace::cptr& trace) NOEXCEPT
 {
-    send_method_not_allowed(*trace, ec);
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*trace);
 }
 
 void protocol_http::handle_receive_options(const code& ec,
     const method::options::cptr& options) NOEXCEPT
 {
-    send_method_not_allowed(*options, ec);
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*options);
 }
 
 void protocol_http::handle_receive_connect(const code& ec,
     const method::connect::cptr& connect) NOEXCEPT
 {
-    send_method_not_allowed(*connect, ec);
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*connect);
 }
 
 void protocol_http::handle_receive_unknown(const code& ec,
     const method::unknown::cptr& unknown) NOEXCEPT
 {
-    send_method_not_allowed(*unknown, ec);
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*unknown);
 }
 
 // Senders.
 // ----------------------------------------------------------------------------
 
-// Closes channel.
-void protocol_http::send_method_not_allowed(const request& request,
-    const code& ec) NOEXCEPT
+void protocol_http::send_bad_target(const request& request,
+    const code& reason) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (stopped(ec))
-        return;
-
-    std::string details{ "method=" };
-    details += request.method_string();
-    const auto code = status::method_not_allowed;
-    const auto mime = to_mime_type(request[field::accept]);
+    std::string details{ "target=" };
+    details += request.target();
+    if (reason) details += "\nreason=" + reason.message();
+    const auto code = status::bad_request;
+    const auto media = to_media_type(request[field::accept]);
     response out{ status::bad_request, request.version() };
     add_common_headers(out, request, true);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
-    SEND(std::move(out), handle_complete, _1, error::method_not_allowed);
-}
-
-void protocol_http::send_not_implemented(const request& request) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    std::string details{ "server configuration" };
-    const auto code = status::not_implemented;
-    const auto mime = to_mime_type(request[field::accept]);
-    response out{ code, request.version() };
-    add_common_headers(out, request);
-    out.body() = string_status(code, out.reason(), mime, details);
-    out.prepare_payload();
-    SEND(std::move(out), handle_complete, _1, error::not_implemented);
+    SEND(std::move(out), handle_complete, _1, error::success);
 }
 
 void protocol_http::send_not_found(const request& request) NOEXCEPT
@@ -172,12 +176,38 @@ void protocol_http::send_not_found(const request& request) NOEXCEPT
     std::string details{ "path:" };
     details += request.target();
     const auto code = status::not_found;
-    const auto mime = to_mime_type(request[field::accept]);
+    const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::success);
+}
+
+void protocol_http::send_not_acceptable(const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    const auto code = status::not_acceptable;
+    const auto media = to_media_type(request[field::accept]);
+    response out{ code, request.version() };
+    add_common_headers(out, request);
+    out.body() = string_status(code, out.reason(), media);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::success);
+}
+
+// Closes channel.
+void protocol_http::send_not_implemented(const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    std::string details{ "server configuration" };
+    const auto code = status::not_implemented;
+    const auto media = to_media_type(request[field::accept]);
+    response out{ code, request.version() };
+    add_common_headers(out, request);
+    out.body() = string_status(code, out.reason(), media, details);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::not_implemented);
 }
 
 // Closes channel.
@@ -187,10 +217,10 @@ void protocol_http::send_forbidden(const request& request) NOEXCEPT
     std::string details{ "origin:" };
     details += request[field::origin];
     const auto code = status::forbidden;
-    const auto mime = to_mime_type(request[field::accept]);
+    const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request, true);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::forbidden);
 }
@@ -202,27 +232,26 @@ void protocol_http::send_bad_host(const request& request) NOEXCEPT
     std::string details{ "host=" };
     details += request[field::host];
     const auto code = status::bad_request;
-    const auto mime = to_mime_type(request[field::accept]);
+    const auto media = to_media_type(request[field::accept]);
     response out{ status::bad_request, request.version() };
     add_common_headers(out, request, true);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::bad_request);
 }
 
 // Closes channel.
-void protocol_http::send_bad_target(const request& request) NOEXCEPT
+void protocol_http::send_method_not_allowed(const request& request) NOEXCEPT
 {
-    BC_ASSERT(stranded());
-    std::string details{ "target=" };
-    details += request.target();
-    const auto code = status::bad_request;
-    const auto mime = to_mime_type(request[field::accept]);
+    std::string details{ "method=" };
+    details += request.method_string();
+    const auto code = status::method_not_allowed;
+    const auto media = to_media_type(request[field::accept]);
     response out{ status::bad_request, request.version() };
     add_common_headers(out, request, true);
-    out.body() = string_status(code, out.reason(), mime, details);
+    out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
-    SEND(std::move(out), handle_complete, _1, error::bad_request);
+    SEND(std::move(out), handle_complete, _1, error::method_not_allowed);
 }
 
 // Handle sends.
@@ -264,7 +293,7 @@ bool protocol_http::is_allowed_host(const fields& fields,
         config::to_normal_host(host, default_port()));
 }
 
-// TODO: pass and set response mime_type.
+// TODO: pass and set response media_type.
 void protocol_http::add_common_headers(fields& fields,
     const request& request, bool closing) const NOEXCEPT
 {
@@ -313,10 +342,10 @@ void protocol_http::add_common_headers(fields& fields,
 // so it's dereferenced before calling and passed along with status enum value.
 
 std::string protocol_http::string_status(const http::status /*status*/,
-    const std::string& reason, const http::mime_type& /*type*/,
+    const std::string& reason, const http::media_type& /*type*/,
     const std::string& details) const NOEXCEPT
 {
-    // TODO: format proper status response bodies for status and mime type.
+    // TODO: format proper status response bodies for status and media type.
     return reason + (details.empty() ? "" : " [" + details + "]");
 }
 
@@ -328,6 +357,8 @@ uint16_t protocol_http::default_port() const NOEXCEPT
     return default_port_;
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

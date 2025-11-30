@@ -42,8 +42,9 @@ public:
     inline broadcaster() NOEXCEPT = default;
     virtual ~broadcaster() = default;
 
-    /// Dispatch request to key-subscribed method handler(s).
+    /// Dispatch request, optionally to key-subscribed method handler(s).
     /// Success if subscription key found (subscribed). Requires desubscriber.
+    inline code notify(const request_t& request) NOEXCEPT override;
     virtual inline code notify(const request_t& request,
         const key_t& key) NOEXCEPT;
 

@@ -26,7 +26,7 @@
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
 
-// TODO: relies on http::header, length_type, get_buffer, mime_type.
+// TODO: relies on http::header, length_type, get_buffer, media_type.
 
 namespace libbitcoin {
 namespace network {
@@ -163,15 +163,15 @@ struct BCT_API body
         static inline body_reader to_reader(Header& header,
             value_type& value) NOEXCEPT
         {
-            switch (http::content_mime_type(header))
+            switch (http::content_media_type(header))
             {
-                case http::mime_type::application_json:
+                case http::media_type::application_json:
                     value = json_value{};
                     break;
-                case http::mime_type::text_plain:
+                case http::media_type::text_plain:
                     value = string_value{};
                     break;
-                case http::mime_type::application_octet_stream:
+                case http::media_type::application_octet_stream:
                     if (http::has_attachment(header))
                         value = file_value{};
                     else

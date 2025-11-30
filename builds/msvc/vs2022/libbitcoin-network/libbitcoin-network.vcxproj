@@ -265,7 +265,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\tracker.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\magic_numbers.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\mime_type.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\media_type.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\status.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\target.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp" />

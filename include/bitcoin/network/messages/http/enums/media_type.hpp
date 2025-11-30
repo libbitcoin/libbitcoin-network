@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_ENUMS_MIME_TYPE_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_ENUMS_MIME_TYPE_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_ENUMS_MEDIA_TYPE_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_ENUMS_MEDIA_TYPE_HPP
 
 #include <filesystem>
 #include <bitcoin/network/define.hpp>
@@ -26,8 +26,8 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
-/// Enumeration of utilized MIME types.
-enum class mime_type
+/// Enumeration of utilized MEDIA types.
+enum class media_type
 {
     application_javascript,
     application_json,
@@ -50,29 +50,29 @@ enum class mime_type
     unknown
 };
 
-using mime_types = std::vector<mime_type>;
+using media_types = std::vector<media_type>;
 
-BCT_API mime_type to_mime_type(const std::string_view& accept,
-    mime_type default_=mime_type::unknown) NOEXCEPT;
-BCT_API std::string from_mime_type(mime_type type,
+BCT_API media_type to_media_type(const std::string_view& accept,
+    media_type default_=media_type::unknown) NOEXCEPT;
+BCT_API std::string from_media_type(media_type type,
     const std::string_view& default_="unknown") NOEXCEPT;
 
-BCT_API mime_types to_mime_types(const std::string_view& accepts,
-    mime_type default_=mime_type::unknown) NOEXCEPT;
-BCT_API std::string from_mime_types(const mime_types& types,
+BCT_API media_types to_media_types(const std::string_view& accepts,
+    media_type default_=media_type::unknown) NOEXCEPT;
+BCT_API std::string from_media_types(const media_types& types,
     const std::string_view& default_="unknown") NOEXCEPT;
 
-BCT_API mime_type content_mime_type(const std::string_view& content_type,
-    mime_type default_=mime_type::unknown) NOEXCEPT;
-BCT_API mime_type content_mime_type(const http::fields& fields,
-    mime_type default_ = mime_type::unknown) NOEXCEPT;
+BCT_API media_type content_media_type(const std::string_view& content_type,
+    media_type default_=media_type::unknown) NOEXCEPT;
+BCT_API media_type content_media_type(const http::fields& fields,
+    media_type default_ = media_type::unknown) NOEXCEPT;
 
-BCT_API mime_type extension_mime_type(const std::string_view& extension,
-    mime_type default_=mime_type::unknown) NOEXCEPT;
-BCT_API mime_type file_mime_type(const std::filesystem::path& path,
-    mime_type default_=mime_type::unknown) NOEXCEPT;
-BCT_API mime_type target_mime_type(const std::string& target,
-    mime_type default_=mime_type::unknown) NOEXCEPT;
+BCT_API media_type extension_media_type(const std::string_view& extension,
+    media_type default_=media_type::unknown) NOEXCEPT;
+BCT_API media_type file_media_type(const std::filesystem::path& path,
+    media_type default_=media_type::unknown) NOEXCEPT;
+BCT_API media_type target_media_type(const std::string& target,
+    media_type default_=media_type::unknown) NOEXCEPT;
 
 } // namespace http
 } // namespace network

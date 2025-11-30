@@ -61,7 +61,7 @@
 #include <bitcoin/network/messages/http/head.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/http/enums/mime_type.hpp>
+#include <bitcoin/network/messages/http/enums/media_type.hpp>
 #include <bitcoin/network/messages/http/enums/status.hpp>
 #include <bitcoin/network/messages/http/enums/target.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
