@@ -51,7 +51,7 @@ default_memory channel_peer::mallocator_ = default_memory{};
 // This should not be called internally.
 void channel_peer::stopping(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Stops timers and any other base channel state.
     channel::stopping(ec);
@@ -64,7 +64,7 @@ void channel_peer::stopping(const code& ec) NOEXCEPT
 // TODO: resume of an idle channel results in termination for invalid_magic.
 void channel_peer::resume() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     channel::resume();
     read_heading();
 }
@@ -112,7 +112,7 @@ uint32_t channel_peer::negotiated_version() const NOEXCEPT
 
 void channel_peer::set_negotiated_version(uint32_t value) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     negotiated_version_ = value;
 }
 
@@ -129,7 +129,7 @@ version::cptr channel_peer::peer_version() const NOEXCEPT
 
 void channel_peer::set_peer_version(const version::cptr& value) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     peer_version_ = value;
 }
 
@@ -151,7 +151,7 @@ address_item_cptr channel_peer::get_updated_address() const NOEXCEPT
 
 void channel_peer::read_heading() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Both terminate read loop, paused can be resumed, stopped cannot.
     // Pause only prevents start of the read loop, it does not prevent messages
@@ -171,7 +171,7 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
     static constexpr uint32_t http_magic = 0x20544547;
     static constexpr uint32_t https_magic = 0x02010316;
 
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped())
     {
@@ -244,7 +244,7 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
 void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
     const heading_ptr& head) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped())
     {

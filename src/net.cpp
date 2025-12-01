@@ -106,14 +106,14 @@ void net::start(result_handler&& handler) NOEXCEPT
 
 void net::do_start(const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     manual_ = attach_manual_session();
     manual_->start(std::bind(&net::handle_start, this, _1, handler));
 }
 
 void net::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (ec)
     {
@@ -150,7 +150,7 @@ void net::run(result_handler&& handler) NOEXCEPT
 
 void net::do_run(const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (closed())
     {
@@ -169,7 +169,7 @@ void net::do_run(const result_handler& handler) NOEXCEPT
 
 void net::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (ec)
     {
@@ -206,7 +206,7 @@ void net::close() NOEXCEPT
 
 void net::do_close() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Release reference to manual session (also held by stop subscriber).
     if (manual_) manual_.reset();
@@ -321,7 +321,7 @@ void net::subscribe_connect(channel_notifier&& handler,
 void net::do_subscribe_connect(const channel_notifier& handler,
     const channel_completer& complete) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     const auto key = create_key();
     complete(connect_subscriber_.subscribe(move_copy(handler), key), key);
@@ -336,7 +336,7 @@ void net::notify_connect(const channel::ptr& channel) NOEXCEPT
 
 void net::do_notify_connect(const channel::ptr& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     connect_subscriber_.notify(error::success, channel);
 }
 
@@ -348,21 +348,21 @@ void net::unsubscribe_connect(object_key key) NOEXCEPT
 
 void net::do_unsubscribe_connect(object_key key) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     connect_subscriber_.notify_one(key, error::desubscribed, nullptr);
 }
 
 // protected
 void net::subscribe_close(stop_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     subscribe_close(std::move(handler), create_key());
 }
 
 // private
 code net::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     return stop_subscriber_.subscribe(std::move(handler), key);
 }
 
@@ -386,7 +386,7 @@ void net::subscribe_close(stop_handler&& handler,
 void net::do_subscribe_close(const stop_handler& handler,
     const stop_completer& complete) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     
     const auto key = create_key();
     complete(subscribe_close(move_copy(handler), key), key);
@@ -400,14 +400,14 @@ void net::unsubscribe_close(object_key key) NOEXCEPT
 
 void net::do_unsubscribe_close(object_key key) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     stop_subscriber_.notify_one(key, error::desubscribed);
 }
 
 // At one object/session/ns, this overflows in ~585 years (and handled).
 net::object_key net::create_key() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (is_zero(++keys_))
     {
@@ -429,7 +429,7 @@ void net::connect(const config::endpoint& endpoint) NOEXCEPT
 
 void net::do_connect(const config::endpoint& endpoint) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     if (manual_) manual_->connect(endpoint);
 }
 
@@ -451,7 +451,7 @@ void net::connect(const config::endpoint& endpoint,
 void net::do_connect_handled(const config::endpoint& endpoint,
     const channel_notifier& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (manual_)
         manual_->connect(endpoint, move_copy(handler));
@@ -506,7 +506,7 @@ void net::take(address_item_handler&& handler) NOEXCEPT
 
 void net::do_take(const address_item_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     hosts_.take(move_copy(handler));
 }
 
@@ -520,7 +520,7 @@ void net::restore(const address_item_cptr& address,
 void net::do_restore(const address_item_cptr& address,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     hosts_.restore(address, move_copy(handler));
 }
 
@@ -532,7 +532,7 @@ void net::fetch(address_handler&& handler) NOEXCEPT
 
 void net::do_fetch(const address_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Accelerate stop, since hosts keeps running until all threads closed.
     if (closed())
@@ -553,7 +553,7 @@ void net::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 void net::do_save(const address_cptr& message,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Accelerate stop, since hosts keeps running until all threads closed.
     if (closed())
@@ -570,7 +570,7 @@ void net::do_save(const address_cptr& message,
 
 bool net::store_nonce(const channel_peer& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (settings_.inbound.enable_loopback || channel.inbound())
         return true;
@@ -586,7 +586,7 @@ bool net::store_nonce(const channel_peer& channel) NOEXCEPT
 
 bool net::unstore_nonce(const channel_peer& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (settings_.inbound.enable_loopback || channel.inbound())
         return true;
@@ -602,7 +602,7 @@ bool net::unstore_nonce(const channel_peer& channel) NOEXCEPT
 
 bool net::is_loopback(const channel_peer& channel) const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (settings_.inbound.enable_loopback || !channel.inbound())
         return false;
@@ -615,7 +615,7 @@ bool net::is_loopback(const channel_peer& channel) const NOEXCEPT
 
 code net::count_channel(const channel_peer& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (closed())
         return error::service_stopped;
@@ -655,7 +655,7 @@ code net::count_channel(const channel_peer& channel) NOEXCEPT
 
 void net::uncount_channel(const channel_peer& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     hosts_.unreserve(channel.authority());
 
@@ -683,25 +683,25 @@ void net::uncount_channel(const channel_peer& channel) NOEXCEPT
 
 session_seed::ptr net::attach_seed_session() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     return attach<session_seed>(*this);
 }
 
 session_manual::ptr net::attach_manual_session() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     return attach<session_manual>(*this);
 }
 
 session_inbound::ptr net::attach_inbound_session() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     return attach<session_inbound>(*this);
 }
 
 session_outbound::ptr net::attach_outbound_session() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     return attach<session_outbound>(*this);
 }
 

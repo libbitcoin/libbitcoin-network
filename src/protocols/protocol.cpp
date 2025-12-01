@@ -156,7 +156,7 @@ uint64_t protocol::identifier() const NOEXCEPT
 // create custom handlers to perform operations upon send completion.
 void protocol::handle_send(const code&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 }
 
 } // namespace network

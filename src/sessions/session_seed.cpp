@@ -52,7 +52,7 @@ session_seed::session_seed(net& network, uint64_t identifier) NOEXCEPT
 
 void session_seed::start(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Seeding is allowed even with !enable_address configured.
 
@@ -97,7 +97,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 void session_seed::handle_started(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (ec)
     {
@@ -141,7 +141,7 @@ void session_seed::handle_started(const code& ec,
 void session_seed::start_seed(const code&, const config::endpoint& seed,
     const connector::ptr& connector, const socket_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     LOGN("Connecting to seed [" << seed << "]");
 
     // Guard restartable connector (shutdown delay).
@@ -157,7 +157,7 @@ void session_seed::start_seed(const code&, const config::endpoint& seed,
 void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
     const config::endpoint& LOG_ONLY(seed), const race::ptr& racer) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (ec)
     {
@@ -217,7 +217,7 @@ void session_seed::attach_handshake(const channel::ptr& channel,
 void session_seed::handle_channel_start(const code& ec,
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (ec)
     {
@@ -268,14 +268,14 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
 void session_seed::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel), const race::ptr& racer) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     LOGN("Seed stop [" << channel->authority() << "] " << ec.message());
     racer->finish(address_count());
 }
 
 void session_seed::stop_seed(const code&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     LOGN("Seed session complete.");
     unsubscribe_close();

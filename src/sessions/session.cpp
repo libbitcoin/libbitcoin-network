@@ -61,7 +61,7 @@ session::~session() NOEXCEPT
 
 void session::start(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (!stopped())
     {
@@ -75,7 +75,7 @@ void session::start(result_handler&& handler) NOEXCEPT
 
 void session::stop() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Break out of sesson loop as handlers execute. 
     stopped_.store(true);
@@ -94,7 +94,7 @@ void session::stop() NOEXCEPT
 void session::start_channel(const channel::ptr& channel,
     result_handler&& starter, result_handler&& stopper) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped())
     {
@@ -145,7 +145,7 @@ void session::handle_handshake(const code& ec, const channel::ptr& channel,
 void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
     const result_handler& start) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (ec)
     {
@@ -163,7 +163,7 @@ void session::handle_channel_starting(const code& ec,
     const channel::ptr& channel, const result_handler& started,
     const result_handler& stopped) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (ec)
     {
@@ -190,7 +190,7 @@ void session::handle_channel_started(const code& ec,
 void session::do_handle_channel_started(const code& ec,
     const channel::ptr& channel, const result_handler& started) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Handles channel subscribe_stop code.
     if (ec)
@@ -235,7 +235,7 @@ void session::handle_channel_stopped(const code& ec,
 void session::do_handle_channel_stopped(const code& ec,
     const channel::ptr& channel, const result_handler& stopped) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     unpend(channel);
     unsubscribe(channel->identifier());
@@ -250,14 +250,14 @@ void session::do_handle_channel_stopped(const code& ec,
 
 void session::defer(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     defer(settings().retry_timeout(), std::move(handler));
 }
 
 void session::defer(const steady_clock::duration& timeout,
     result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped())
     {
@@ -278,7 +278,7 @@ void session::defer(const steady_clock::duration& timeout,
 void session::handle_timer(const code& ec, object_key key,
     const result_handler& complete) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     stop_subscriber_.notify_one(key, ec);
     complete(ec);
 }
@@ -286,14 +286,14 @@ void session::handle_timer(const code& ec, object_key key,
 bool session::handle_defer(const code&, object_key,
     const deadline::ptr& timer) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     timer->stop();
     return false;
 }
 
 void session::pend(const channel::ptr& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     stop_subscriber_.subscribe(BIND(handle_pend, _1, channel),
         channel->identifier());
 }
@@ -301,13 +301,13 @@ void session::pend(const channel::ptr& channel) NOEXCEPT
 // Ok to not find after stop, clears before channel stop handlers fire.
 void session::unpend(const channel::ptr& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     notify(channel->identifier());
 }
 
 bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     if (ec) channel->stop(ec);
     return false;
 }
@@ -315,7 +315,7 @@ bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
 typename session::object_key 
 session::subscribe_stop(notify_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     const auto key = create_key();
     stop_subscriber_.subscribe(std::move(handler), key);
     return key;
@@ -329,7 +329,7 @@ bool session::notify(object_key key) NOEXCEPT
 // At one object/session/ns, this overflows in ~585 years (and handled).
 session::object_key session::create_key() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     return network_.create_key();
 }

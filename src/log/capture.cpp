@@ -102,7 +102,7 @@ void capture::stop() NOEXCEPT
 // private
 void capture::do_stop() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Subscriber asserts if stopped with a success code.
     subscriber_.stop_default(error::service_stopped);
@@ -125,7 +125,7 @@ void capture::notify(const code& ec, const std::string& line) const NOEXCEPT
 void capture::do_notify(const code& ec,
     const std::string& line) const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     subscriber_.notify(ec, line);
 }
 
@@ -147,7 +147,7 @@ void capture::subscribe(notifier&& handler, result_handler&& complete) NOEXCEPT
 void capture::do_subscribe(const notifier& handler,
     const result_handler& complete) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     complete(subscriber_.subscribe(move_copy(handler)));
 }
 

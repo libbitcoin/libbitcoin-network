@@ -89,7 +89,7 @@ bool logger::stopped() const NOEXCEPT
 void logger::do_stop(const code& ec, time_t zulu, const std::string& message,
     uint8_t level) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Subscriber asserts if stopped with a success code.
     message_subscriber_.stop(ec, level, zulu, message);
@@ -115,7 +115,7 @@ void logger::notify(const code& ec, uint8_t level,
 void logger::do_notify_message(const code& ec, uint8_t level, time_t zulu,
     const std::string& message) const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     message_subscriber_.notify(ec, level, zulu, message);
 }
 
@@ -135,7 +135,7 @@ void logger::subscribe_messages(message_notifier&& handler) NOEXCEPT
 // private
 void logger::do_subscribe_messages(const message_notifier& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     message_subscriber_.subscribe(move_copy(handler));
 }
 
@@ -153,7 +153,7 @@ void logger::fire(uint8_t event_, uint64_t value) const NOEXCEPT
 void logger::do_notify_event(uint8_t event_, uint64_t value,
     const time& point) const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     event_subscriber_.notify(error::success, event_, value, point);
 }
 
@@ -173,7 +173,7 @@ void logger::subscribe_events(event_notifier&& handler) NOEXCEPT
 // private
 void logger::do_subscribe_events(const event_notifier& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     event_subscriber_.subscribe(move_copy(handler));
 }
 

@@ -47,7 +47,7 @@ public:
     inline typename Protocol::ptr attach(const SessionPtr& session,
         Args&&... args) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
+        BC_ASSERT(stranded());
 
         if (!stranded())
             return {};
