@@ -32,21 +32,21 @@ struct explore_methods
     static constexpr std::tuple methods
     {
         /// The block hash or height is logically required.
-        method<"block", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
-        method<"header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
+        method<"block", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "hash", "height", "witness" },
+        method<"header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "hash", "height", "witness" },
+        method<"block_txs", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>,optional<true>>{ "version", "media", "hash", "height", "witness" },
         method<"filter", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
-        method<"block_txs", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
 
         /// The block hash or height is logically required.
         /// The position parameter is out of URL order because it's required.
-        method<"block_tx", uint8_t, uint8_t, uint32_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "position", "hash", "height" },
+        method<"block_tx", uint8_t, uint8_t, uint32_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "position", "hash", "height", "witness" },
 
         /// All three parameters are required.
-        method<"transaction", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"transaction", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "witness" },
         method<"address", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
 
         /// Three of four parameters are required.
-        method<"input", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
+        method<"input", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>, optional<true>>{ "version", "media", "hash", "index", "witness" },
         method<"input_script", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
         method<"input_witness", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
         method<"output", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
@@ -63,8 +63,8 @@ struct explore_methods
     // Derive this from above in c++26 using reflection.
     using block = at<0>;
     using header = at<1>;
-    using filter = at<2>;
-    using block_txs = at<3>;
+    using block_txs = at<2>;
+    using filter = at<3>;
     using block_tx = at<4>;
     using transaction = at<5>;
     using address = at<6>;
