@@ -620,7 +620,8 @@ void socket::handle_ws_event(ws::frame_type kind,
             break;
         case ws::frame_type::close:
             LOGX("WS close [" << authority() << "] " << websocket_->reason());
-            do_async_stop();
+            // BUGBUG: does not set stopped_ and does not invoke stopping().
+            ////do_async_stop();
             break;
     }
 }
