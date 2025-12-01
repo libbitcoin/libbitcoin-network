@@ -52,7 +52,7 @@ session_tcp::session_tcp(net& network, uint64_t identifier,
 
 void session_tcp::start(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (!options_.enabled())
     {
@@ -68,7 +68,7 @@ void session_tcp::start(result_handler&& handler) NOEXCEPT
 void session_tcp::handle_started(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     BC_ASSERT_MSG(!stopped(), "session stopped in start");
 
     if (ec)
@@ -115,7 +115,7 @@ void session_tcp::handle_started(const code& ec,
 void session_tcp::start_accept(const code&,
     const acceptor::ptr& acceptor) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Terminates accept loop (and acceptor is restartable).
     if (stopped())
@@ -127,7 +127,7 @@ void session_tcp::start_accept(const code&,
 void session_tcp::handle_accepted(const code& ec,
     const socket::ptr& socket, const acceptor::ptr& acceptor) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
@@ -241,7 +241,7 @@ void session_tcp::do_attach_handshake(
 void session_tcp::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     LOGS("Inbound " << name_ << " channel start [" << channel->authority()
         << "] " << ec.message());
 
@@ -252,7 +252,7 @@ void session_tcp::handle_channel_start(const code& LOG_ONLY(ec),
 void session_tcp::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     LOGS("Inbound " << name_ << " channel stop [" << channel->authority()
         << "] " << ec.message());
 

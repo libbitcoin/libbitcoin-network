@@ -54,7 +54,7 @@ session_peer::session_peer(net& network, uint64_t identifier,
 void session_peer::start_channel(const channel::ptr& channel,
     result_handler&& starter, result_handler&& stopper) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // In case of a loopback, inbound and outbound are on the same strand.
     // Inbound does not check nonce until handshake completes, so no race.
@@ -76,7 +76,7 @@ void session_peer::start_channel(const channel::ptr& channel,
 void session_peer::do_handle_handshake(const code& ec, const channel::ptr& channel,
     const result_handler& start) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Handles channel and protocol start failures.
     const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
@@ -121,7 +121,7 @@ void session_peer::do_attach_protocols(const channel::ptr& channel,
 void session_peer::do_handle_channel_stopped(const code& ec,
     const channel::ptr& channel, const result_handler& stopped) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
     unpend(channel);
@@ -218,7 +218,7 @@ void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
 
 channel::ptr session_peer::create_channel(const socket::ptr& socket) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Channel id must be created using create_key().
     // Default message memory resource, override create_channel to replace.

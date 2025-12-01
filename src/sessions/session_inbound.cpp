@@ -50,7 +50,7 @@ session_inbound::session_inbound(net& network, uint64_t identifier) NOEXCEPT
 
 void session_inbound::start(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (!settings().inbound.enabled())
     {
@@ -66,7 +66,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
 void session_inbound::handle_started(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     BC_ASSERT_MSG(!stopped(), "session stopped in start");
 
     if (ec)
@@ -112,7 +112,7 @@ void session_inbound::handle_started(const code& ec,
 void session_inbound::start_accept(const code&,
     const acceptor::ptr& acceptor) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Terminates accept loop (and acceptor is restartable).
     if (stopped())
@@ -124,7 +124,7 @@ void session_inbound::start_accept(const code&,
 void session_inbound::handle_accepted(const code& ec,
     const socket::ptr& socket, const acceptor::ptr& acceptor) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
@@ -259,7 +259,7 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
 void session_inbound::handle_channel_start(const code&,
     const channel::ptr&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     ////LOGS("Inbound channel start [" << channel->authority() << "] "
     ////    << ec.message());
 }
@@ -308,7 +308,7 @@ void session_inbound::attach_protocols(
 void session_inbound::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     LOGS("Inbound peer channel stop [" << channel->authority() << "] "
         << ec.message());
 }

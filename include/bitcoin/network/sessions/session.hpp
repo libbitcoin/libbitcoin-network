@@ -63,7 +63,7 @@ private:
     void do_broadcast(const typename Message::cptr& message,
         channel_id sender) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
+        BC_ASSERT(stranded());
 
         using namespace rpc;
         broadcaster_.notify(request_t
@@ -76,13 +76,13 @@ private:
     template <typename Handler>
     void do_subscribe(const Handler& handler, channel_id subscriber) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
+        BC_ASSERT(stranded());
         broadcaster_.subscribe(move_copy(handler), subscriber);
     }
 
     void do_unsubscribe(channel_id subscriber) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
+        BC_ASSERT(stranded());
         broadcaster_.unsubscribe(subscriber);
     }
 

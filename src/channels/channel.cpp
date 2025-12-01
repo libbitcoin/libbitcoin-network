@@ -60,10 +60,10 @@ channel::~channel() NOEXCEPT
 // Start/stop/resume (started/paused upon create).
 // ----------------------------------------------------------------------------
 
-// This should not be called internally.
+// This should not be called internally (invoked by stop() or async_stop()).
 void channel::stopping(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     stop_expiration();
     stop_inactivity();
     proxy::stopping(ec);
@@ -75,7 +75,7 @@ void channel::stopping(const code& ec) NOEXCEPT
 
 void channel::pause() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     stop_expiration();
     stop_inactivity();
     proxy::pause();
@@ -84,7 +84,7 @@ void channel::pause() NOEXCEPT
 // Resume timers from pause and start read loop.
 void channel::resume() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     start_expiration();
     start_inactivity();
     proxy::resume();
@@ -99,25 +99,25 @@ void channel::resume() NOEXCEPT
 // protected
 void channel::waiting() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     start_inactivity();
 }
 
 size_t channel::remaining() const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     return inactivity_ ? limit<size_t>(inactivity_->remaining().count()) : zero;
 }
 
 void channel::stop_expiration() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     if (expiration_) expiration_->stop();
 }
 
 void channel::start_expiration() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped())
         return;
@@ -130,7 +130,7 @@ void channel::start_expiration() NOEXCEPT
 
 void channel::handle_expiration(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // error::operation_canceled is set by timer reset (channel not stopped).
     if (stopped() || ec == error::operation_canceled)
@@ -148,14 +148,14 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
 
 void channel::stop_inactivity() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     if (inactivity_) inactivity_->stop();
 }
 
 // Cancels previous timer and retains configured duration.
 void channel::start_inactivity() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped())
         return;
@@ -169,7 +169,7 @@ void channel::start_inactivity() NOEXCEPT
 // There is no timeout set on individual sends and receives, just inactivity.
 void channel::handle_inactivity(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // error::operation_canceled is set by timer reset (channel not stopped).
     if (stopped() || ec == error::operation_canceled)

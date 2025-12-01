@@ -57,19 +57,19 @@ proxy::~proxy() NOEXCEPT
 
 void proxy::pause() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     paused_ = true;
 }
 
 void proxy::resume() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     paused_ = false;
 }
 
 bool proxy::paused() const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     return paused_;
 }
 
@@ -81,7 +81,7 @@ void proxy::waiting() NOEXCEPT
 
 // Stop (socket/proxy started upon create).
 // ----------------------------------------------------------------------------
-// The proxy is not allowed to stop itself (internally).
+// Internal stop must call stop() or async_stop().
 
 bool proxy::stopped() const NOEXCEPT
 {
@@ -122,10 +122,10 @@ void proxy::async_stop(const code& ec) NOEXCEPT
 }
 
 // protected
-// This should not be called internally, as derived rely on stop() override.
+// This should not be called internally (invoked by stop() or async_stop()).
 void proxy::stopping(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Clear the write buffer, which holds handlers.
     queue_.clear();
@@ -138,7 +138,7 @@ void proxy::stopping(const code& ec) NOEXCEPT
 // protected
 void proxy::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     stop_subscriber_.subscribe(std::move(handler));
 }
 
@@ -161,7 +161,7 @@ void proxy::subscribe_stop(result_handler&& handler,
 void proxy::do_subscribe_stop(const result_handler& handler,
     const result_handler& complete) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     stop_subscriber_.subscribe(move_copy(handler));
     complete(error::success);
 }
@@ -229,7 +229,7 @@ void proxy::ws_write(const asio::const_buffer& in, bool binary,
 void proxy::do_write(const asio::const_buffer& payload,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped())
     {
@@ -254,7 +254,7 @@ void proxy::do_write(const asio::const_buffer& payload,
 // private
 void proxy::write() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (queue_.empty())
         return;
@@ -270,7 +270,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
     const asio::const_buffer& /* LOG_ONLY(payload) */,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped())
     {

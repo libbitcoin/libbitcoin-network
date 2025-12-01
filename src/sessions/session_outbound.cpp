@@ -53,7 +53,7 @@ session_outbound::session_outbound(net& network, uint64_t identifier) NOEXCEPT
 
 void session_outbound::start(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     if (!settings().outbound.enabled())
     {
@@ -82,7 +82,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
 void session_outbound::handle_started(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     BC_ASSERT_MSG(!stopped(), "session stopped in start");
 
     if (ec)
@@ -111,7 +111,7 @@ void session_outbound::handle_started(const code& ec,
 // Attempt to connect one peer using a batch of connectors.
 void session_outbound::start_connect(const code&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Terminates retry loops.
     if (stopped())
@@ -147,7 +147,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     object_key key, const race::ptr& racer,
     const connector::ptr& connector) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     ////COUNT(events::outbound1, key);
 
     if (ec)
@@ -173,7 +173,7 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
     object_key key, const config::address& peer,
     const race::ptr& racer) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     ////COUNT(events::outbound2, key);
 
     if (ec == error::service_suspended)
@@ -195,7 +195,7 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
 void session_outbound::handle_connect(const code& ec,
     const socket::ptr& socket, object_key key) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     ////COUNT(events::outbound3, key);
 
     // Unregister connectors, in case there was no winner.
@@ -247,7 +247,7 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
 void session_outbound::handle_channel_start(const code&,
     const channel::ptr&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     ////LOGS("Outbound channel start [" << channel->authority() << "] "
     ////    "(" << key << ") " << ec.message());
@@ -262,7 +262,7 @@ void session_outbound::attach_protocols(
 void session_outbound::handle_channel_stop(const code& ec,
     const channel::ptr& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     ////LOGS("Outbound channel stop [" << channel->authority() << "] "
     ////    "(" << key << ") " << ec.message());
@@ -333,7 +333,7 @@ void session_outbound::reclaim(const code& ec,
 
 void session_outbound::handle_reclaim(const code&) const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 }
 
 BC_POP_WARNING()

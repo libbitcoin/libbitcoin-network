@@ -67,14 +67,14 @@ socket::~socket() NOEXCEPT
 
 // Stop.
 // ----------------------------------------------------------------------------
-// The socket is not allowed to stop itself (internally).
+// Internal stop must call stop() or async_stop().
 
 void socket::stop() NOEXCEPT
 {
     if (stopped_.load())
         return;
 
-    // Stop flag can accelerate work stoppage, as it does not wait on strand.
+    // Stop flag accelerates work stoppage, as it does not wait on strand.
     stopped_.store(true);
 
     // Stop is posted to strand to protect the socket.
@@ -103,14 +103,19 @@ void socket::do_stop() NOEXCEPT
     websocket_.reset();
 }
 
+// Called internally from stranded handle_ws_event, when peer closes websocket.
+// That ensures derived proxy has a chance to invoke stopping, and dispatch
+// here ensures websocket_->async_close() will get invoked before thread stop.
 void socket::async_stop() NOEXCEPT
 {
+    // Stop flag accelerates work stoppage, as it does not wait on strand.
+    stopped_.store(true);
+
     // Async stop is dispatched to strand to protect the socket.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_async_stop, shared_from_this()));
 }
 
-// Called in internally, from handle_ws_event, when peer closes websocket. 
 void socket::do_async_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -617,7 +622,7 @@ void socket::handle_ws_event(ws::frame_type kind,
             break;
         case ws::frame_type::close:
             LOGX("WS close [" << authority() << "] " << websocket_->reason());
-            do_async_stop();
+            async_stop();
             break;
     }
 }

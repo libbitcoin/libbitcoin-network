@@ -53,14 +53,14 @@ session_manual::session_manual(net& network, uint64_t identifier) NOEXCEPT
 
 void session_manual::start(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     session_peer::start(BIND(handle_started, _1, std::move(handler)));
 }
 
 void session_manual::handle_started(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     handler(ec);
 }
 
@@ -69,7 +69,7 @@ void session_manual::handle_started(const code& ec,
 
 void session_manual::connect(const config::endpoint& peer) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     const auto self = shared_from_base<session_manual>();
     connect(peer, [=](const code&, channel::ptr) NOEXCEPT
@@ -82,7 +82,7 @@ void session_manual::connect(const config::endpoint& peer) NOEXCEPT
 void session_manual::connect(const config::endpoint& peer,
     channel_notifier&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Create a persistent connector for the manual connection.
     const auto connector = create_connector();
@@ -103,7 +103,7 @@ void session_manual::connect(const config::endpoint& peer,
 void session_manual::start_connect(const code&, const endpoint& peer,
     const connector::ptr& connector, const channel_notifier& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Terminates retry loops (and connector is restartable).
     if (stopped())
@@ -120,7 +120,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
     const endpoint& peer, const connector::ptr& connector,
     const channel_notifier& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
@@ -175,7 +175,7 @@ void session_manual::handle_channel_start(const code& ec,
     const channel::ptr& channel, const endpoint& LOG_ONLY(peer),
     const channel_notifier& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
     LOGS("Manual channel start [" << peer << "] " << ec.message());
 
     // Connection success notification.
@@ -194,7 +194,7 @@ void session_manual::handle_channel_stop(const code& ec,
     const channel::ptr&, const endpoint& peer, const connector::ptr& connector,
     const channel_notifier& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT(stranded());
 
     // The channel stopped following connection, try again with delay.
     LOGS("Manual channel stop [" << peer << "] " << ec.message());

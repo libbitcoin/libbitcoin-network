@@ -93,7 +93,7 @@ protected:
     template <class Derived, class Message, typename Method, typename... Args>
     inline void subscribe_broadcast(Method&& method, Args&&... args) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
+        BC_ASSERT(stranded());
 
         const auto bouncer = [self = shared_from_this(),
             handler = BIND_SHARED(method, args)]
@@ -110,7 +110,7 @@ protected:
     template <class Derived>
     inline void unsubscribe_broadcast() NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
+        BC_ASSERT(stranded());
         session_->unsubscribe(channel_->identifier());
     }
 
@@ -119,7 +119,7 @@ protected:
     template <class Message>
     inline void broadcast(const typename Message::cptr& message) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "strand");
+        BC_ASSERT(stranded());
         session_->broadcast<Message>(message, channel_->identifier());
     }
 
