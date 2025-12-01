@@ -287,34 +287,6 @@ struct is_tagged_t<Tuple, std::enable_if_t<!is_empty_tuple<Tuple>>>
 template <typename Tuple>
 constexpr bool is_tagged = is_tagged_t<Tuple>::value;
 
-/// handler_args_t<Handler> : get args (strip code, set args).
-/// ---------------------------------------------------------------------------
-/// Specializations are const sensitive, overrides provided.
-
-template <typename Handler, typename = void>
-struct handler_args;
-
-template <typename Handler>
-struct handler_args<Handler, std::void_t<decltype(&Handler::operator())>>
-  : handler_args<decltype(&Handler::operator())> {};
-
-template <typename Return, typename Class, typename Code, typename ...Args>
-struct handler_args<Return(Class::*)(Code, Args...),
-    std::enable_if_t<is_same_type<Code, code>>>
-{
-    using args = std::tuple<Args...>;
-};
-
-template <typename Return, typename Class, typename Code, typename ...Args>
-struct handler_args<Return(Class::*)(Code, Args...) const,
-    std::enable_if_t<is_same_type<Code, code>>>
-{
-    using args = std::tuple<Args...>;
-};
-
-template <typename Handler>
-using handler_args_t = typename handler_args<Handler>::args;
-
 } // namespace rpc
 } // namespace network
 } // namespace libbitcoin

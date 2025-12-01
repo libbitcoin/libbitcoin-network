@@ -163,7 +163,7 @@ void protocol_http::send_internal_server_error(const request& request,
     details += reason.message();
     const auto code = status::internal_server_error;
     const auto media = to_media_type(request[field::accept]);
-    response out{ status::bad_request, request.version() };
+    response out{ code, request.version() };
     add_common_headers(out, request, true);
     out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
@@ -179,8 +179,8 @@ void protocol_http::send_bad_target(const request& request,
     if (reason) details += "\nreason=" + reason.message();
     const auto code = status::bad_request;
     const auto media = to_media_type(request[field::accept]);
-    response out{ status::bad_request, request.version() };
-    add_common_headers(out, request, true);
+    response out{ code, request.version() };
+    add_common_headers(out, request);
     out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::success);
@@ -220,7 +220,7 @@ void protocol_http::send_not_implemented(const request& request) NOEXCEPT
     const auto code = status::not_implemented;
     const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
-    add_common_headers(out, request);
+    add_common_headers(out, request, true);
     out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::not_implemented);
