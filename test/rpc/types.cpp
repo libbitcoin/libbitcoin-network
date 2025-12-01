@@ -289,9 +289,3 @@ static_assert( is_tagged<std::tuple<const std::shared_ptr<const int>>>);
 static_assert( is_tagged<std::tuple<const std::shared_ptr<const int>&>>);
 static_assert( is_tagged<std::tuple<std::shared_ptr<const int>&&>>);
 static_assert( is_tagged<std::tuple<std::shared_ptr<int>, std::string, bool>>);
-
-// handler_args_t<Handler>
-// ----------------------------------------------------------------------------
-
-static_assert(is_same_tuple<handler_args_t<std::function<void(code, bool)>>, std::tuple<bool>>);
-static_assert(is_same_tuple<handler_args_t<std::function<void(const code&, bool&&, const std::string&)>>, std::tuple<bool, std::string>>);
