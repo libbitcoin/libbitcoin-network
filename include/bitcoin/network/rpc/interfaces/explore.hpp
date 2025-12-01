@@ -33,9 +33,9 @@ struct explore_methods
     {
         /// The block hash or height is logically required.
         method<"block", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "hash", "height", "witness" },
-        method<"header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "hash", "height", "witness" },
-        method<"block_txs", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>,optional<true>>{ "version", "media", "hash", "height", "witness" },
+        method<"header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
         method<"filter", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
+        method<"block_txs", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
 
         /// The block hash or height is logically required.
         /// The position parameter is out of URL order because it's required.
@@ -63,8 +63,8 @@ struct explore_methods
     // Derive this from above in c++26 using reflection.
     using block = at<0>;
     using header = at<1>;
-    using block_txs = at<2>;
-    using filter = at<3>;
+    using filter = at<2>;
+    using block_txs = at<3>;
     using block_tx = at<4>;
     using transaction = at<5>;
     using address = at<6>;
