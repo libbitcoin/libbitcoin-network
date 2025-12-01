@@ -103,6 +103,9 @@ void socket::do_stop() NOEXCEPT
     websocket_.reset();
 }
 
+// Called internally from stranded handle_ws_event, when peer closes websocket.
+// That ensures derived proxy has a chance to invoke stopping, and dispatch
+// here ensures websocket_->async_close() will get invoked before thread stop.
 void socket::async_stop() NOEXCEPT
 {
     // Stop flag accelerates work stoppage, as it does not wait on strand.
@@ -113,7 +116,6 @@ void socket::async_stop() NOEXCEPT
         std::bind(&socket::do_async_stop, shared_from_this()));
 }
 
-// Called in internally, from handle_ws_event, when peer closes websocket. 
 void socket::do_async_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -620,8 +622,7 @@ void socket::handle_ws_event(ws::frame_type kind,
             break;
         case ws::frame_type::close:
             LOGX("WS close [" << authority() << "] " << websocket_->reason());
-            // BUGBUG: does not set stopped_ and does not invoke stopping().
-            ////do_async_stop();
+            async_stop();
             break;
     }
 }
