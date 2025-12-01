@@ -31,31 +31,27 @@ struct explore_methods
 {
     static constexpr std::tuple methods
     {
-        // The block hash or height is logically required.
+        /// The block hash or height is logically required.
         method<"block", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
         method<"header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
         method<"filter", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
         method<"block_txs", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
 
-        // The block hash or height is logically required.
-        // The position parameter is out of URL order because it's required.
+        /// The block hash or height is logically required.
+        /// The position parameter is out of URL order because it's required.
         method<"block_tx", uint8_t, uint8_t, uint32_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "position", "hash", "height" },
 
-        // All parameters are required.
+        /// All three parameters are required.
         method<"transaction", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"input", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
-        method<"inputs", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"input_script", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
-        method<"input_scripts", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"input_witness", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
-        method<"input_witnesses", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"output", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
-        method<"outputs", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"output_script", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
-        method<"output_scripts", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"output_spender", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
-        method<"output_spenders", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"address", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" }
+        method<"address", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+
+        /// Three of four parameters are required.
+        method<"input", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
+        method<"input_script", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
+        method<"input_witness", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
+        method<"output", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
+        method<"output_script", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
+        method<"output_spender", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" }
     };
 
     template <typename... Args>
@@ -68,22 +64,16 @@ struct explore_methods
     using block = at<0>;
     using header = at<1>;
     using filter = at<2>;
-    using block_tx = at<3>;
-    using block_txs = at<4>;
+    using block_txs = at<3>;
+    using block_tx = at<4>;
     using transaction = at<5>;
-    using input = at<6>;
-    using inputs = at<7>;
+    using address = at<6>;
+    using input = at<7>;
     using input_script = at<8>;
-    using input_scripts = at<9>;
-    using input_witness = at<10>;
-    using input_witnesses = at<11>;
-    using output = at<12>;
-    using outputs = at<13>;
-    using output_script = at<14>;
-    using output_scripts = at<15>;
-    using output_spender = at<16>;
-    using output_spenders = at<17>;
-    using address = at<18>;
+    using input_witness = at<9>;
+    using output = at<10>;
+    using output_script = at<11>;
+    using output_spender = at<12>;
 };
 
 /// Pagination and filtering are via query string.
