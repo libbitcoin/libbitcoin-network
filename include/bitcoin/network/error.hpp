@@ -156,7 +156,7 @@ enum error_t : uint8_t
     ////unavailable_for_legal_reasons,
 
     ////// http 5xx server error
-    ////internal_server_error,
+    internal_server_error,
     not_implemented,
     ////bad_gateway,
     ////service_unavailable,

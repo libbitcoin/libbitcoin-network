@@ -154,6 +154,22 @@ void protocol_http::handle_receive_unknown(const code& ec,
 // Senders.
 // ----------------------------------------------------------------------------
 
+// Closes channel.
+void protocol_http::send_internal_server_error(const request& request,
+    const code& reason) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    std::string details{ "error=" };
+    details += reason.message();
+    const auto code = status::internal_server_error;
+    const auto media = to_media_type(request[field::accept]);
+    response out{ status::bad_request, request.version() };
+    add_common_headers(out, request, true);
+    out.body() = string_status(code, out.reason(), media, details);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::internal_server_error);
+}
+
 void protocol_http::send_bad_target(const request& request,
     const code& reason) NOEXCEPT
 {

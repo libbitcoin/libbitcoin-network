@@ -27,7 +27,7 @@ namespace network {
 namespace http {
 
 /// Enumeration of utilized MEDIA types.
-enum class media_type
+enum class media_type : uint8_t
 {
     application_javascript,
     application_json,
