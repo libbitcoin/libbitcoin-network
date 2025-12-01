@@ -60,7 +60,7 @@ channel::~channel() NOEXCEPT
 // Start/stop/resume (started/paused upon create).
 // ----------------------------------------------------------------------------
 
-// This should not be called internally.
+// This should not be called internally (invoked by stop() or async_stop()).
 void channel::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());

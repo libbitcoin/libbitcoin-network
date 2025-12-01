@@ -81,7 +81,7 @@ void proxy::waiting() NOEXCEPT
 
 // Stop (socket/proxy started upon create).
 // ----------------------------------------------------------------------------
-// The proxy is not allowed to stop itself (internally).
+// Internal stop must call stop() or async_stop().
 
 bool proxy::stopped() const NOEXCEPT
 {
@@ -122,7 +122,7 @@ void proxy::async_stop(const code& ec) NOEXCEPT
 }
 
 // protected
-// This should not be called internally, as derived rely on stop() override.
+// This should not be called internally (invoked by stop() or async_stop()).
 void proxy::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());

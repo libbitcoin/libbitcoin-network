@@ -67,7 +67,7 @@ socket::~socket() NOEXCEPT
 
 // Stop.
 // ----------------------------------------------------------------------------
-// The socket is not allowed to stop itself (internally).
+// Internal stop must call stop() or async_stop().
 
 void socket::stop() NOEXCEPT
 {
