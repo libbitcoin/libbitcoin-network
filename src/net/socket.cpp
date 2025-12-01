@@ -74,7 +74,7 @@ void socket::stop() NOEXCEPT
     if (stopped_.load())
         return;
 
-    // Stop flag can accelerate work stoppage, as it does not wait on strand.
+    // Stop flag accelerates work stoppage, as it does not wait on strand.
     stopped_.store(true);
 
     // Stop is posted to strand to protect the socket.
@@ -105,6 +105,9 @@ void socket::do_stop() NOEXCEPT
 
 void socket::async_stop() NOEXCEPT
 {
+    // Stop flag accelerates work stoppage, as it does not wait on strand.
+    stopped_.store(true);
+
     // Async stop is dispatched to strand to protect the socket.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_async_stop, shared_from_this()));
