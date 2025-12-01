@@ -46,7 +46,7 @@ struct explore_methods
         method<"address", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
 
         /// Three of four parameters are required.
-        method<"input", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>, optional<true>>{ "version", "media", "hash", "index", "witness" },
+        method<"input", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
         method<"input_script", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
         method<"input_witness", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
         method<"output", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
