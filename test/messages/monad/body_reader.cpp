@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(monad_body_reader__to_reader__application_octet_stream__con
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "bogus");
     body::value_type value{};
-    value = data_body::value_type{};
+    value = chunk_body::value_type{};
     const auto variant = accessor::to_reader(header, value);
     BOOST_REQUIRE(std::holds_alternative<data_reader>(variant));
 }

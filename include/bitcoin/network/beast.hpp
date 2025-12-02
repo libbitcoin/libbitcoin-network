@@ -41,9 +41,8 @@ constexpr int32_t version_1_0 = 10;
 /// beast::http::empty_body
 using empty_body = boost::beast::http::empty_body;
 
-// TODO: rename to chunk_body etc., to highlight the allocator.
 /// beast::http::vector_body<uint8_t, bc::allocator<uint8_t>>
-using data_body = boost::beast::http::vector_body<uint8_t, allocator<uint8_t>>;
+using chunk_body = boost::beast::http::vector_body<uint8_t, allocator<uint8_t>>;
 
 /// beast::http::file_body
 using file_body = boost::beast::http::file_body;
