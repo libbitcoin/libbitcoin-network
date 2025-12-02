@@ -31,27 +31,28 @@ struct explore_methods
 {
     static constexpr std::tuple methods
     {
-        /// The block hash or height is logically required.
         method<"block", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "hash", "height", "witness" },
         method<"header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
-        method<"filter", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
         method<"block_txs", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
-
-        /// The block hash or height is logically required.
-        /// The position parameter is out of URL order because it's required.
         method<"block_tx", uint8_t, uint8_t, uint32_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "position", "hash", "height", "witness" },
-
-        /// All three parameters are required.
         method<"transaction", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "witness" },
-        method<"address", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"tx_block", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
 
-        /// Three of four parameters are required.
-        method<"input", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
-        method<"input_script", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
-        method<"input_witness", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
-        method<"output", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
-        method<"output_script", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" },
-        method<"output_spender", uint8_t, uint8_t, system::hash_cptr, nullable<uint32_t>>{ "version", "media", "hash", "index" }
+        method<"inputs", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "witness" },
+        method<"input", uint8_t, uint8_t, system::hash_cptr, uint32_t, optional<true>>{ "version", "media", "hash", "index", "witness" },
+        method<"input_script", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"input_witness", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+ 
+        method<"outputs", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"output", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"output_script", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"output_spender", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+        method<"output_spenders", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
+
+        method<"address", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"filter", uint8_t, uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "type", "hash", "height" },
+        method<"filter_hash", uint8_t, uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "type", "hash", "height" },
+        method<"filter_header", uint8_t, uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "type", "hash", "height" }
     };
 
     template <typename... Args>
@@ -63,17 +64,26 @@ struct explore_methods
     // Derive this from above in c++26 using reflection.
     using block = at<0>;
     using header = at<1>;
-    using filter = at<2>;
-    using block_txs = at<3>;
-    using block_tx = at<4>;
-    using transaction = at<5>;
-    using address = at<6>;
+    using block_txs = at<2>;
+    using block_tx = at<3>;
+    using transaction = at<4>;
+    using tx_block = at<5>;
+
+    using inputs = at<6>;
     using input = at<7>;
     using input_script = at<8>;
     using input_witness = at<9>;
-    using output = at<10>;
-    using output_script = at<11>;
-    using output_spender = at<12>;
+
+    using outputs = at<10>;
+    using output = at<11>;
+    using output_script = at<12>;
+    using output_spender = at<13>;
+    using output_spenders = at<14>;
+
+    using address = at<15>;
+    using filter = at<16>;
+    using filter_hash = at<17>;
+    using filter_header = at<18>;
 };
 
 /// Pagination and filtering are via query string.
@@ -86,10 +96,6 @@ enum explore_targets
     /// /v[]/block/hash/[bkhash]/header {1}
     /// /v[]/block/height/[height]/header {1}
     header,
-
-    /// /v[]/block/hash/[bkhash]/filter {1}
-    /// /v[]/block/height/[height]/filter {1}
-    filter,
 
     /// -----------------------------------------------------------------------
 
@@ -104,39 +110,42 @@ enum explore_targets
     /// /v[]/transaction/[txhash] {1}
     transaction,
 
-    /// -----------------------------------------------------------------------
+    /// /v[]/transaction/[txhash]/block {1 - confirmed}
+    tx_block,
 
-    /// /v[]/input/[txhash]/[index] {1}
-    input,
+    /// -----------------------------------------------------------------------
 
     /// /v[]/inputs/[txhash] {all inputs in the tx}
     inputs,
 
+    /// /v[]/input/[txhash]/[index] {1}
+    input,
+
     /// /v[]/input/[txhash]/[index]/script {1}
     input_script,
 
-    /// /v[]/input/[txhash]/scripts {all input scripts in the tx}
-    input_scripts,
+    /////// /v[]/input/[txhash]/scripts {all input scripts in the tx}
+    ////input_scripts,
 
     /// /v[]/input/[txhash]/[index]/witness {1}
     input_witness,
 
-    /// /v[]/input/[txhash]/witnesses {all witnesses in the tx}
-    input_witnesses,
+    /////// /v[]/input/[txhash]/witnesses {all witnesses in the tx}
+    ////input_witnesses,
 
     /// -----------------------------------------------------------------------
-
-    /// /v[]/output/[txhash]/[index] {1}
-    output,
 
     /// /v[]/outputs/[txhash] {all outputs in the tx}
     outputs,
 
+    /// /v[]/output/[txhash]/[index] {1}
+    output,
+
     /// /v[]/output/[txhash]/[index]/script {1}
     output_script,
 
-    /// /v[]/output/[txhash]/scripts {all output scripts in the tx}
-    output_scripts,
+    /////// /v[]/output/[txhash]/scripts {all output scripts in the tx}
+    ////output_scripts,
 
     /// /v[]/output/[txhash]/[index]/spender {1 - confirmed}
     output_spender,
@@ -147,7 +156,19 @@ enum explore_targets
     /// -----------------------------------------------------------------------
 
     /// /v[]/address/[output-script-hash] {all}
-    address
+    address,
+
+    /// /v[]/block/hash/[bkhash]/filter/[type] {1}
+    /// /v[]/block/height/[height]/filter/[type] {1}
+    filter,
+
+    /// /v[]/block/hash/[bkhash]/filter/[type]/hash {1}
+    /// /v[]/block/height/[height]/filter/[type]/hash {1}
+    filter_hash,
+
+    /// /v[]/block/hash/[bkhash]/filter/[type]/header {1}
+    /// /v[]/block/height/[height]/filter/[type]/header {1}
+    filter_header
 };
 
 } // namespace rpc
