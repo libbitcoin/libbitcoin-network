@@ -34,7 +34,7 @@ namespace monad {
 
 using empty_reader = http::empty_body::reader;
 using json_reader = json::body::reader;
-using data_reader = http::data_body::reader;
+using data_reader = http::chunk_body::reader;
 using file_reader = http::file_body::reader;
 using span_reader = http::span_body::reader;
 using buffer_reader = http::buffer_body::reader;
@@ -52,7 +52,7 @@ using body_reader = std::variant
 
 using empty_writer = http::empty_body::writer;
 using json_writer = json::body::writer;
-using data_writer = http::data_body::writer;
+using data_writer = http::chunk_body::writer;
 using file_writer = http::file_body::writer;
 using span_writer = http::span_body::writer;
 using buffer_writer = http::buffer_body::writer;
@@ -70,7 +70,7 @@ using body_writer = std::variant
 
 using empty_value = http::empty_body::value_type;
 using json_value = json::body::value_type;
-using data_value = http::data_body::value_type;
+using data_value = http::chunk_body::value_type;
 using file_value = http::file_body::value_type;
 using span_value = http::span_body::value_type;
 using buffer_value = http::buffer_body::value_type;

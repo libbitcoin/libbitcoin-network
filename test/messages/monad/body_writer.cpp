@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(monad_body_writer__to_writer__data__constructs_data_writer)
 {
     message_header<false, fields> header{};
     body::value_type value{};
-    value = data_body::value_type{};
+    value = chunk_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
     BOOST_REQUIRE(std::holds_alternative<data_writer>(variant));
 }
