@@ -159,6 +159,10 @@ void protocol_http::send_internal_server_error(const code& reason,
     const request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    LOGA("Internal server error ["
+        << (request.target().empty() ? "default" : request.target()) << "] "
+        << reason.message());
+
     std::string details{ "error=" };
     details += reason.message();
     const auto code = status::internal_server_error;
@@ -216,12 +220,11 @@ void protocol_http::send_not_acceptable(const request& request) NOEXCEPT
 void protocol_http::send_not_implemented(const request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    std::string details{ "server configuration" };
     const auto code = status::not_implemented;
     const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request, true);
-    out.body() = string_status(code, out.reason(), media, details);
+    out.body() = string_status(code, out.reason(), media);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::not_implemented);
 }

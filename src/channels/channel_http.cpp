@@ -105,7 +105,7 @@ void channel_http::handle_read_request(const code& ec, size_t,
     if (ec)
     {
         // Don't log common conditions.
-        if (ec != error::peer_disconnect && ec != error::operation_canceled)
+        if (ec != error::end_of_stream && ec != error::operation_canceled)
         {
             LOGF("Request read failure [" << authority() << "] "
                 << ec.message());
