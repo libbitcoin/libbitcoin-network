@@ -97,6 +97,10 @@ enum explore_targets
     /// /v[]/block/height/[height]/header {1}
     header,
 
+    /////// /v[]/block/hash/[bkhash]/context {1}
+    /////// /v[]/block/height/[height]/context {1}
+    ////context,
+
     /// -----------------------------------------------------------------------
 
     /// /v[]/block/hash/[bkhash]/transactions {all txs in the block}
@@ -124,14 +128,8 @@ enum explore_targets
     /// /v[]/input/[txhash]/[index]/script {1}
     input_script,
 
-    /////// /v[]/input/[txhash]/scripts {all input scripts in the tx}
-    ////input_scripts,
-
     /// /v[]/input/[txhash]/[index]/witness {1}
     input_witness,
-
-    /////// /v[]/input/[txhash]/witnesses {all witnesses in the tx}
-    ////input_witnesses,
 
     /// -----------------------------------------------------------------------
 
@@ -144,13 +142,10 @@ enum explore_targets
     /// /v[]/output/[txhash]/[index]/script {1}
     output_script,
 
-    /////// /v[]/output/[txhash]/scripts {all output scripts in the tx}
-    ////output_scripts,
-
     /// /v[]/output/[txhash]/[index]/spender {1 - confirmed}
     output_spender,
 
-    /// /v[]/output/[txhash]/spenders {all}
+    /// /v[]/output/[txhash]/[index]/spenders {all}
     output_spenders,
 
     /// -----------------------------------------------------------------------
