@@ -155,8 +155,8 @@ void protocol_http::handle_receive_unknown(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Closes channel.
-void protocol_http::send_internal_server_error(const request& request,
-    const code& reason) NOEXCEPT
+void protocol_http::send_internal_server_error(const code& reason,
+    const request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
     std::string details{ "error=" };
@@ -170,8 +170,8 @@ void protocol_http::send_internal_server_error(const request& request,
     SEND(std::move(out), handle_complete, _1, error::internal_server_error);
 }
 
-void protocol_http::send_bad_target(const request& request,
-    const code& reason) NOEXCEPT
+void protocol_http::send_bad_target(const code& reason,
+    const request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
     std::string details{ "target=" };

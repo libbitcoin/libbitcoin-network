@@ -77,16 +77,16 @@ protected:
         const http::method::unknown::cptr& unknown) NOEXCEPT;
 
     /// Senders.
-    virtual void send_bad_host(const http::request& request) NOEXCEPT;
-    virtual void send_not_found(const http::request& request) NOEXCEPT;
-    virtual void send_not_acceptable(const http::request& request) NOEXCEPT;
-    virtual void send_forbidden(const http::request& request) NOEXCEPT;
-    virtual void send_not_implemented(const http::request& request) NOEXCEPT;
-    virtual void send_method_not_allowed(const http::request& request) NOEXCEPT;
-    virtual void send_internal_server_error(const http::request& request,
-        const code& reason) NOEXCEPT;
-    virtual void send_bad_target(const http::request& request,
-        const code& reason={}) NOEXCEPT;
+    virtual void send_bad_host(const http::request& request={}) NOEXCEPT;
+    virtual void send_not_found(const http::request& request={}) NOEXCEPT;
+    virtual void send_not_acceptable(const http::request& request={}) NOEXCEPT;
+    virtual void send_forbidden(const http::request& request={}) NOEXCEPT;
+    virtual void send_not_implemented(const http::request& request={}) NOEXCEPT;
+    virtual void send_method_not_allowed(const http::request& request={}) NOEXCEPT;
+    virtual void send_internal_server_error(const code& reason,
+        const http::request& request={}) NOEXCEPT;
+    virtual void send_bad_target(const code& reason={},
+        const http::request& request={}) NOEXCEPT;
 
     /// Request handler MUST invoke this once unless stopped.
     virtual void handle_complete(const code& ec,
@@ -94,13 +94,12 @@ protected:
 
     /// Override to replace status response headers.
     virtual void add_common_headers(http::fields& fields,
-        const http::request& request,
-        bool closing = false) const NOEXCEPT;
+        const http::request& request, bool closing=false) const NOEXCEPT;
 
     /// Override to replace string status response message.
     virtual std::string string_status(const http::status status,
         const std::string& reason, const http::media_type& type,
-        const std::string& details = {}) const NOEXCEPT;
+        const std::string& details={}) const NOEXCEPT;
 
     /// Utilities.
     bool is_allowed_host(const http::fields& fields,
