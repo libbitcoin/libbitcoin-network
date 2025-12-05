@@ -31,6 +31,7 @@ struct explore_methods
 {
     static constexpr std::tuple methods
     {
+        method<"top", uint8_t, uint8_t>{ "version", "media" },
         method<"block", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "hash", "height", "witness" },
         method<"block_header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
         method<"block_txs", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
@@ -68,38 +69,43 @@ struct explore_methods
     using at = method_at<methods, Index>;
 
     // Derive this from above in c++26 using reflection.
-    using block = at<0>;
-    using block_header = at<1>;
-    using block_txs = at<2>;
-    using block_fees = at<3>;
-    using block_filter = at<4>;
-    using block_filter_hash = at<5>;
-    using block_filter_header = at<6>;
-    using block_tx = at<7>;
 
-    using tx = at<8>;
-    using tx_block = at<9>;
-    using tx_fee = at<10>;
+    using top = at<0>;
 
-    using inputs = at<11>;
-    using input = at<12>;
-    using input_script = at<13>;
-    using input_witness = at<14>;
+    using block = at<1>;
+    using block_header = at<2>;
+    using block_txs = at<3>;
+    using block_fees = at<4>;
+    using block_filter = at<5>;
+    using block_filter_hash = at<6>;
+    using block_filter_header = at<7>;
+    using block_tx = at<8>;
 
-    using outputs = at<15>;
-    using output = at<16>;
-    using output_script = at<17>;
-    using output_spender = at<18>;
-    using output_spenders = at<19>;
+    using tx = at<9>;
+    using tx_block = at<10>;
+    using tx_fee = at<11>;
 
-    using address = at<20>;
-    using address_confirmed = at<21>;
-    using address_unconfirmed = at<22>;
-    using address_balance = at<23>;
+    using inputs = at<12>;
+    using input = at<13>;
+    using input_script = at<14>;
+    using input_witness = at<15>;
+
+    using outputs = at<16>;
+    using output = at<17>;
+    using output_script = at<18>;
+    using output_spender = at<19>;
+    using output_spenders = at<20>;
+
+    using address = at<21>;
+    using address_confirmed = at<22>;
+    using address_unconfirmed = at<23>;
+    using address_balance = at<24>;
 };
 
-/// Pagination and filtering are via query string.
+/// ?format=data|text|json (via query string).
 /// -----------------------------------------------------------------------
+
+/// /v1/block/top {1}
 
 /// /v1/block/hash/[bkhash] {1}
 /// /v1/block/height/[height] {1}
