@@ -32,11 +32,17 @@ struct explore_methods
     static constexpr std::tuple methods
     {
         method<"block", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "hash", "height", "witness" },
-        method<"header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
+        method<"block_header", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
         method<"block_txs", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
+        method<"block_fees", uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "hash", "height" },
+        method<"block_filter", uint8_t, uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "type", "hash", "height" },
+        method<"block_filter_hash", uint8_t, uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "type", "hash", "height" },
+        method<"block_filter_header", uint8_t, uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "type", "hash", "height" },
         method<"block_tx", uint8_t, uint8_t, uint32_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "position", "hash", "height", "witness" },
-        method<"transaction", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "witness" },
+
+        method<"tx", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "witness" },
         method<"tx_block", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"tx_fee", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
 
         method<"inputs", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "witness" },
         method<"input", uint8_t, uint8_t, system::hash_cptr, uint32_t, optional<true>>{ "version", "media", "hash", "index", "witness" },
@@ -50,9 +56,9 @@ struct explore_methods
         method<"output_spenders", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
 
         method<"address", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"filter", uint8_t, uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "type", "hash", "height" },
-        method<"filter_hash", uint8_t, uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "type", "hash", "height" },
-        method<"filter_header", uint8_t, uint8_t, uint8_t, nullable<system::hash_cptr>, nullable<uint32_t>>{ "version", "media", "type", "hash", "height" }
+        method<"address_confirmed", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"address_unconfirmed", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"address_balance", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" }
     };
 
     template <typename... Args>
@@ -63,108 +69,89 @@ struct explore_methods
 
     // Derive this from above in c++26 using reflection.
     using block = at<0>;
-    using header = at<1>;
+    using block_header = at<1>;
     using block_txs = at<2>;
-    using block_tx = at<3>;
-    using transaction = at<4>;
-    using tx_block = at<5>;
+    using block_fees = at<3>;
+    using block_filter = at<4>;
+    using block_filter_hash = at<5>;
+    using block_filter_header = at<6>;
+    using block_tx = at<7>;
 
-    using inputs = at<6>;
-    using input = at<7>;
-    using input_script = at<8>;
-    using input_witness = at<9>;
+    using tx = at<8>;
+    using tx_block = at<9>;
+    using tx_fee = at<10>;
 
-    using outputs = at<10>;
-    using output = at<11>;
-    using output_script = at<12>;
-    using output_spender = at<13>;
-    using output_spenders = at<14>;
+    using inputs = at<11>;
+    using input = at<12>;
+    using input_script = at<13>;
+    using input_witness = at<14>;
 
-    using address = at<15>;
-    using filter = at<16>;
-    using filter_hash = at<17>;
-    using filter_header = at<18>;
+    using outputs = at<15>;
+    using output = at<16>;
+    using output_script = at<17>;
+    using output_spender = at<18>;
+    using output_spenders = at<19>;
+
+    using address = at<20>;
+    using address_confirmed = at<21>;
+    using address_unconfirmed = at<22>;
+    using address_balance = at<23>;
 };
 
 /// Pagination and filtering are via query string.
-enum explore_targets
-{
-    /// /v[]/block/hash/[bkhash] {1}
-    /// /v[]/block/height/[height] {1}
-    block,
+/// -----------------------------------------------------------------------
 
-    /// /v[]/block/hash/[bkhash]/header {1}
-    /// /v[]/block/height/[height]/header {1}
-    header,
+/// /v1/block/hash/[bkhash] {1}
+/// /v1/block/height/[height] {1}
 
-    /////// /v[]/block/hash/[bkhash]/context {1}
-    /////// /v[]/block/height/[height]/context {1}
-    ////context,
+/// /v1/block/hash/[bkhash]/header {1}
+/// /v1/block/height/[height]/header {1}
 
-    /// -----------------------------------------------------------------------
+/// /v1/block/hash/[bkhash]/fees {1}
+/// /v1/block/height/[height]/fees {1}
 
-    /// /v[]/block/hash/[bkhash]/transactions {all txs in the block}
-    /// /v[]/block/height/[height]/transactions {all txs in the block}
-    block_txs,
+/// /v1/block/hash/[bkhash]/filter/[type] {1}
+/// /v1/block/height/[height]/filter/[type] {1}
 
-    /// /v[]/block/hash/[bkhash]/transaction/[position] {1}
-    /// /v[]/block/height/[height]/transaction/[position] {1}
-    block_tx,
+/// /v1/block/hash/[bkhash]/filter/[type]/hash {1}
+/// /v1/block/height/[height]/filter/[type]/hash {1}
 
-    /// /v[]/transaction/[txhash] {1}
-    transaction,
+/// /v1/block/hash/[bkhash]/filter/[type]/header {1}
+/// /v1/block/height/[height]/filter/[type]/header {1}
 
-    /// /v[]/transaction/[txhash]/block {1 - confirmed}
-    tx_block,
+/// /v1/block/hash/[bkhash]/txs {all txs in the block}
+/// /v1/block/height/[height]/txs {all txs in the block}
 
-    /// -----------------------------------------------------------------------
+/// /v1/block/hash/[bkhash]/tx/[position] {1}
+/// /v1/block/height/[height]/tx/[position] {1}
 
-    /// /v[]/inputs/[txhash] {all inputs in the tx}
-    inputs,
+/// -----------------------------------------------------------------------
 
-    /// /v[]/input/[txhash]/[index] {1}
-    input,
+/// /v1/tx/[txhash] {1}
+/// /v1/tx/[txhash]/block {1 - if confirmed}
+/// /v1/tx/[txhash]/fee {1}
 
-    /// /v[]/input/[txhash]/[index]/script {1}
-    input_script,
+/// -----------------------------------------------------------------------
 
-    /// /v[]/input/[txhash]/[index]/witness {1}
-    input_witness,
+/// /v1/input/[txhash] {all inputs in the tx}
+/// /v1/input/[txhash]/[index] {1}
+/// /v1/input/[txhash]/[index]/script {1}
+/// /v1/input/[txhash]/[index]/witness {1}
 
-    /// -----------------------------------------------------------------------
+/// -----------------------------------------------------------------------
 
-    /// /v[]/outputs/[txhash] {all outputs in the tx}
-    outputs,
+/// /v1/output/[txhash] {all outputs in the tx}
+/// /v1/output/[txhash]/[index] {1}
+/// /v1/output/[txhash]/[index]/script {1}
+/// /v1/output/[txhash]/[index]/spender {1 - if confirmed}
+/// /v1/output/[txhash]/[index]/spenders {all}
 
-    /// /v[]/output/[txhash]/[index] {1}
-    output,
+/// -----------------------------------------------------------------------
 
-    /// /v[]/output/[txhash]/[index]/script {1}
-    output_script,
-
-    /// /v[]/output/[txhash]/[index]/spender {1 - confirmed}
-    output_spender,
-
-    /// /v[]/output/[txhash]/[index]/spenders {all}
-    output_spenders,
-
-    /// -----------------------------------------------------------------------
-
-    /// /v[]/address/[output-script-hash] {all}
-    address,
-
-    /// /v[]/block/hash/[bkhash]/filter/[type] {1}
-    /// /v[]/block/height/[height]/filter/[type] {1}
-    filter,
-
-    /// /v[]/block/hash/[bkhash]/filter/[type]/hash {1}
-    /// /v[]/block/height/[height]/filter/[type]/hash {1}
-    filter_hash,
-
-    /// /v[]/block/hash/[bkhash]/filter/[type]/header {1}
-    /// /v[]/block/height/[height]/filter/[type]/header {1}
-    filter_header
-};
+/// /v1/address/[output-script-hash] {all}
+/// /v1/address/[output-script-hash]/unconfirmed {all unconfirmed}
+/// /v1/address/[output-script-hash]/confirmed {all unconfirmed}
+/// /v1/address/[output-script-hash]/balance {all confirmed}
 
 } // namespace rpc
 } // namespace network
