@@ -101,57 +101,57 @@ struct explore_methods
 /// Pagination and filtering are via query string.
 /// -----------------------------------------------------------------------
 
-/// /v[]/block/hash/[bkhash] {1}
-/// /v[]/block/height/[height] {1}
+/// /v1/block/hash/[bkhash] {1}
+/// /v1/block/height/[height] {1}
 
-/// /v[]/block/hash/[bkhash]/header {1}
-/// /v[]/block/height/[height]/header {1}
+/// /v1/block/hash/[bkhash]/header {1}
+/// /v1/block/height/[height]/header {1}
 
-/// /v[]/block/hash/[bkhash]/fees {1}
-/// /v[]/block/height/[height]/fees {1}
+/// /v1/block/hash/[bkhash]/fees {1}
+/// /v1/block/height/[height]/fees {1}
 
-/// /v[]/block/hash/[bkhash]/filter/[type] {1}
-/// /v[]/block/height/[height]/filter/[type] {1}
+/// /v1/block/hash/[bkhash]/filter/[type] {1}
+/// /v1/block/height/[height]/filter/[type] {1}
 
-/// /v[]/block/hash/[bkhash]/filter/[type]/hash {1}
-/// /v[]/block/height/[height]/filter/[type]/hash {1}
+/// /v1/block/hash/[bkhash]/filter/[type]/hash {1}
+/// /v1/block/height/[height]/filter/[type]/hash {1}
 
-/// /v[]/block/hash/[bkhash]/filter/[type]/header {1}
-/// /v[]/block/height/[height]/filter/[type]/header {1}
+/// /v1/block/hash/[bkhash]/filter/[type]/header {1}
+/// /v1/block/height/[height]/filter/[type]/header {1}
 
-/// /v[]/block/hash/[bkhash]/txs {all txs in the block}
-/// /v[]/block/height/[height]/txs {all txs in the block}
+/// /v1/block/hash/[bkhash]/txs {all txs in the block}
+/// /v1/block/height/[height]/txs {all txs in the block}
 
-/// /v[]/block/hash/[bkhash]/tx/[position] {1}
-/// /v[]/block/height/[height]/tx/[position] {1}
-
-/// -----------------------------------------------------------------------
-
-/// /v[]/tx/[txhash] {1}
-/// /v[]/tx/[txhash]/block {1 - confirmed}
-/// /v[]/tx/[txhash]/fee {1}
+/// /v1/block/hash/[bkhash]/tx/[position] {1}
+/// /v1/block/height/[height]/tx/[position] {1}
 
 /// -----------------------------------------------------------------------
 
-/// /v[]/input/[txhash] {all inputs in the tx}
-/// /v[]/input/[txhash]/[index] {1}
-/// /v[]/input/[txhash]/[index]/script {1}
-/// /v[]/input/[txhash]/[index]/witness {1}
+/// /v1/tx/[txhash] {1}
+/// /v1/tx/[txhash]/block {1 - if confirmed}
+/// /v1/tx/[txhash]/fee {1}
 
 /// -----------------------------------------------------------------------
 
-/// /v[]/output/[txhash] {all outputs in the tx}
-/// /v[]/output/[txhash]/[index] {1}
-/// /v[]/output/[txhash]/[index]/script {1}
-/// /v[]/output/[txhash]/[index]/spender {1 - confirmed}
-/// /v[]/output/[txhash]/[index]/spenders {all}
+/// /v1/input/[txhash] {all inputs in the tx}
+/// /v1/input/[txhash]/[index] {1}
+/// /v1/input/[txhash]/[index]/script {1}
+/// /v1/input/[txhash]/[index]/witness {1}
 
 /// -----------------------------------------------------------------------
 
-/// /v[]/address/[output-script-hash] {all}
-/// /v[]/address/[output-script-hash]/unconfirmed {all unconfirmed}
-/// /v[]/address/[output-script-hash]/confirmed {all unconfirmed}
-/// /v[]/address/[output-script-hash]/balance {all confirmed}
+/// /v1/output/[txhash] {all outputs in the tx}
+/// /v1/output/[txhash]/[index] {1}
+/// /v1/output/[txhash]/[index]/script {1}
+/// /v1/output/[txhash]/[index]/spender {1 - if confirmed}
+/// /v1/output/[txhash]/[index]/spenders {all}
+
+/// -----------------------------------------------------------------------
+
+/// /v1/address/[output-script-hash] {all}
+/// /v1/address/[output-script-hash]/unconfirmed {all unconfirmed}
+/// /v1/address/[output-script-hash]/confirmed {all unconfirmed}
+/// /v1/address/[output-script-hash]/balance {all confirmed}
 
 } // namespace rpc
 } // namespace network
