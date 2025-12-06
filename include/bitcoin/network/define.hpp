@@ -127,6 +127,8 @@ namespace network {
     bind<CLASS>(&CLASS::method, __VA_ARGS__)
 #define POST(method, ...) \
     post<CLASS>(&CLASS::method, __VA_ARGS__)
+#define PARALLEL(method, ...) \
+    parallel<CLASS>(&CLASS::method, __VA_ARGS__)
 
 } // namespace network
 } // namespace libbitcoin

@@ -88,6 +88,14 @@ protected:
             BIND_SHARED(method, args));
     }
 
+    /// Post base or derived class method to network threadpool (use PARALLEL).
+    template <class Derived, typename Method, typename... Args>
+    inline auto parallel(Method&& method, Args&&... args) NOEXCEPT
+    {
+        return boost::asio::post(channel_->service(),
+            BIND_SHARED(method, args));
+    }
+
     /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST).
     /// Method is invoked with error::subscriber_stopped if already stopped.
     template <class Derived, class Message, typename Method, typename... Args>
