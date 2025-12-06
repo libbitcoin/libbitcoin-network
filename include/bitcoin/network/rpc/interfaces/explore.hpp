@@ -42,7 +42,7 @@ struct explore_methods
         method<"block_tx", uint8_t, uint8_t, uint32_t, nullable<system::hash_cptr>, nullable<uint32_t>, optional<true>>{ "version", "media", "position", "hash", "height", "witness" },
 
         method<"tx", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "witness" },
-        method<"tx_block", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
+        method<"tx_header", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
         method<"tx_fee", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
 
         method<"inputs", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "witness" },
@@ -82,7 +82,7 @@ struct explore_methods
     using block_tx = at<8>;
 
     using tx = at<9>;
-    using tx_block = at<10>;
+    using tx_header = at<10>;
     using tx_fee = at<11>;
 
     using inputs = at<12>;
@@ -134,7 +134,7 @@ struct explore_methods
 /// -----------------------------------------------------------------------
 
 /// /v1/tx/[txhash] {1}
-/// /v1/tx/[txhash]/block {1 - if confirmed}
+/// /v1/tx/[txhash]/header {1 - if confirmed}
 /// /v1/tx/[txhash]/fee {1}
 
 /// -----------------------------------------------------------------------
