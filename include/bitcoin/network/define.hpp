@@ -122,7 +122,7 @@ namespace network {
         std::forward<Args>(args)...)
 #define BIND_THIS(method, args) \
     std::bind(std::forward<Method>(method), static_cast<Derived*>(this), \
-    std::forward<Args>(args)...)
+        std::forward<Args>(args)...)
 #define BIND(method, ...) \
     bind<CLASS>(&CLASS::method, __VA_ARGS__)
 #define POST(method, ...) \
