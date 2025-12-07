@@ -322,6 +322,11 @@ asio::strand& proxy::strand() NOEXCEPT
     return socket_->strand();
 }
 
+asio::io_context& proxy::service() const NOEXCEPT
+{
+    return socket_->service();
+}
+
 bool proxy::stranded() const NOEXCEPT
 {
     return socket_->stranded();

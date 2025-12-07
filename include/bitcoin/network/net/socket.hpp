@@ -130,6 +130,9 @@ public:
     /// Get the strand of the socket.
     virtual asio::strand& strand() NOEXCEPT;
 
+    /// Get the network threadpool iocontext.
+    virtual asio::io_context& service() const NOEXCEPT;
+
 protected:
     /// The socket was upgraded to a websocket (requires strand).
     virtual bool websocket() const NOEXCEPT;
@@ -204,6 +207,7 @@ private:
 protected:
     // These are thread safe.
     asio::strand strand_;
+    asio::io_context& service_;
     std::atomic_bool stopped_{};
 
     // These are protected by strand (see also handle_accept).

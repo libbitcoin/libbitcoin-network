@@ -52,6 +52,7 @@ socket::socket(const logger& log, asio::io_context& service,
     const config::address& address) NOEXCEPT
   : strand_(service.get_executor()),
     socket_(strand_),
+    service_(service),
     address_(address),
     reporter(log),
     tracker<socket>(log)
@@ -662,6 +663,11 @@ bool socket::stranded() const NOEXCEPT
 asio::strand& socket::strand() NOEXCEPT
 {
     return strand_;
+}
+
+asio::io_context& socket::service() const NOEXCEPT
+{
+    return service_;
 }
 
 // Websocket properties.
