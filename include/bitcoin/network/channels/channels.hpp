@@ -22,7 +22,6 @@
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/channels/channel_peer.hpp>
-#include <bitcoin/network/channels/channel_tcp.hpp>
 #include <bitcoin/network/channels/channel_ws.hpp>
 
 #endif

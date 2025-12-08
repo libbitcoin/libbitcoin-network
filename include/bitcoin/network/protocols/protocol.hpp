@@ -45,6 +45,8 @@ class BCT_API protocol
 {
 public:
     typedef std::shared_ptr<protocol> ptr;
+    using channel_t = channel;
+    using options_t = channel_t::options_t;
 
     DELETE_COPY_MOVE(protocol);
 

@@ -127,7 +127,6 @@
     <ClCompile Include="..\..\..\..\src\channels\channel.cpp" />
     <ClCompile Include="..\..\..\..\src\channels\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\src\channels\channel_peer.cpp" />
-    <ClCompile Include="..\..\..\..\src\channels\channel_tcp.cpp" />
     <ClCompile Include="..\..\..\..\src\channels\channel_ws.cpp" />
     <ClCompile Include="..\..\..\..\src\config\address.cpp">
       <ObjectFileName>$(IntDir)src_config_address.obj</ObjectFileName>
@@ -246,7 +245,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_peer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_tcp.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_ws.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channels.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\address.hpp" />
@@ -344,7 +342,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_60001.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_reject_70002.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_seed_209.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_tcp.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_106.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70001.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70002.hpp" />

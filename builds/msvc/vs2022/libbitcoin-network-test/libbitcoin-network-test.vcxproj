@@ -133,7 +133,6 @@
     <ClCompile Include="..\..\..\..\test\channels\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp" />
-    <ClCompile Include="..\..\..\..\test\channels\channel_tcp.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_ws.cpp" />
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
@@ -233,7 +232,6 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_tcp.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />

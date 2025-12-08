@@ -108,9 +108,6 @@
     <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\channels\channel_tcp.cpp">
-      <Filter>src\channels</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\channels\channel_ws.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
@@ -352,9 +349,6 @@
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp">
-      <Filter>src\protocols</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_tcp.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp">
