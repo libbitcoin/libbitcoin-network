@@ -56,10 +56,10 @@ struct explore_methods
         method<"output_spender", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
         method<"output_spenders", uint8_t, uint8_t, system::hash_cptr, uint32_t>{ "version", "media", "hash", "index" },
 
-        method<"address", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"address_confirmed", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"address_unconfirmed", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" },
-        method<"address_balance", uint8_t, uint8_t, system::hash_cptr>{ "version", "media", "hash" }
+        method<"address", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "turbo" },
+        method<"address_confirmed", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "turbo" },
+        method<"address_unconfirmed", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "turbo" },
+        method<"address_balance", uint8_t, uint8_t, system::hash_cptr, optional<true>>{ "version", "media", "hash", "turbo" }
     };
 
     template <typename... Args>
