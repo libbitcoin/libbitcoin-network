@@ -114,7 +114,7 @@ private:
     const channel_http::ptr channel_;
 
     // These are thread safe.
-    const session_tcp::ptr session_;
+    const session_server::ptr session_;
     const uint16_t default_port_;
     const options_t& options_;
 };

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/sessions/session_tcp.hpp>
+#include <bitcoin/network/sessions/session_server.hpp>
 
 #include <utility>
 #include <bitcoin/network/config/config.hpp>
@@ -27,7 +27,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define CLASS session_tcp
+#define CLASS session_server
 
 using namespace system;
 using namespace std::placeholders;
@@ -38,7 +38,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_tcp::session_tcp(net& network, uint64_t identifier,
+session_server::session_server(net& network, uint64_t identifier,
     const options_t& options) NOEXCEPT
   : session(network, identifier),
     ////network_(network),
@@ -50,7 +50,7 @@ session_tcp::session_tcp(net& network, uint64_t identifier,
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_tcp::start(result_handler&& handler) NOEXCEPT
+void session_server::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -65,7 +65,7 @@ void session_tcp::start(result_handler&& handler) NOEXCEPT
     session::start(BIND(handle_started, _1, std::move(handler)));
 }
 
-void session_tcp::handle_started(const code& ec,
+void session_server::handle_started(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -112,7 +112,7 @@ void session_tcp::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Attempt to accept peers on each configured endpoint.
-void session_tcp::start_accept(const code&,
+void session_server::start_accept(const code&,
     const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -124,7 +124,7 @@ void session_tcp::start_accept(const code&,
     acceptor->accept(BIND(handle_accepted, _1, _2, acceptor));
 }
 
-void session_tcp::handle_accepted(const code& ec,
+void session_server::handle_accepted(const code& ec,
     const socket::ptr& socket, const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -200,17 +200,17 @@ void session_tcp::handle_accepted(const code& ec,
         BIND(handle_channel_stop, _1, channel));
 }
 
-bool session_tcp::blacklisted(const config::address& address) const NOEXCEPT
+bool session_server::blacklisted(const config::address& address) const NOEXCEPT
 {
     return settings().blacklisted(address);
 }
 
-bool session_tcp::whitelisted(const config::address& address) const NOEXCEPT
+bool session_server::whitelisted(const config::address& address) const NOEXCEPT
 {
     return settings().whitelisted(address);
 }
 
-bool session_tcp::enabled() const NOEXCEPT
+bool session_server::enabled() const NOEXCEPT
 {
     return true;
 }
@@ -219,14 +219,14 @@ bool session_tcp::enabled() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // Some client types do not utilize a handshake, so default is bypassed.
-void session_tcp::attach_handshake(const channel::ptr&,
+void session_server::attach_handshake(const channel::ptr&,
     result_handler&&) NOEXCEPT
 {
     BC_ASSERT(false);
 }
 
 // Handshake bypassed, channel remains paused until after protocol attach.
-void session_tcp::do_attach_handshake(
+void session_server::do_attach_handshake(
     const channel::ptr& BC_DEBUG_ONLY(channel),
     const result_handler& handshake) NOEXCEPT
 {
@@ -238,7 +238,7 @@ void session_tcp::do_attach_handshake(
 // Completion sequence.
 // ----------------------------------------------------------------------------
 
-void session_tcp::handle_channel_start(const code& LOG_ONLY(ec),
+void session_server::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -249,7 +249,7 @@ void session_tcp::handle_channel_start(const code& LOG_ONLY(ec),
     channel_count_ = ceilinged_add(channel_count_, one);
 }
 
-void session_tcp::handle_channel_stop(const code& LOG_ONLY(ec),
+void session_server::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT(stranded());

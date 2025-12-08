@@ -48,7 +48,7 @@ protocol_http::protocol_http(const session::ptr& session,
     const channel::ptr& channel, const options_t& options) NOEXCEPT
   : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_http>(channel)),
-    session_(std::dynamic_pointer_cast<session_tcp>(session)),
+    session_(std::dynamic_pointer_cast<session_server>(session)),
     default_port_(options.secure ? default_tls : default_http),
     options_(options)
 {

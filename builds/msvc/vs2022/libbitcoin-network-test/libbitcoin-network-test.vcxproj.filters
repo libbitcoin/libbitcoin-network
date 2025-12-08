@@ -396,7 +396,7 @@
     <ClCompile Include="..\..\..\..\test\sessions\session_seed.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\sessions\session_tcp.cpp">
+    <ClCompile Include="..\..\..\..\test\sessions\session_server.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">
