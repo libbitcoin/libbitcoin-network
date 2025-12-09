@@ -34,7 +34,7 @@ namespace network {
 
 /// Half-duplex reading of http-request and sending of http-response.
 class BCT_API channel_http
-  : public channel, protected tracker<channel_http>
+  : public channel
 {
 public:
     typedef std::shared_ptr<channel_http> ptr;
@@ -60,8 +60,7 @@ public:
         const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
         response_buffer_(system::to_shared<http::flat_buffer>()),
-        request_buffer_(settings.minimum_buffer),
-        tracker<channel_http>(log)
+        request_buffer_(settings.minimum_buffer)
     {
     }
 

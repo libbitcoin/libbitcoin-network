@@ -34,7 +34,7 @@ namespace network {
 /// Version into should only be written before/during handshake.
 /// Attach/resume/signal_activity must be called from the strand.
 class BCT_API channel_peer
-  : public channel, protected tracker<channel_peer>
+  : public channel
 {
 public:
     typedef std::shared_ptr<channel_peer> ptr;
@@ -88,8 +88,7 @@ public:
         const settings_t& settings, const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
         allocator_(allocator),
-        negotiated_version_(settings.protocol_maximum),
-        tracker<channel_peer>(log)
+        negotiated_version_(settings.protocol_maximum)
     {
     }
 
