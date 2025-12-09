@@ -154,6 +154,7 @@ void session_inbound::handle_accepted(const code& ec,
     {
         LOGS("Dropping inbound peer connection (disabled).");
         socket->stop();
+        defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
@@ -162,6 +163,7 @@ void session_inbound::handle_accepted(const code& ec,
     {
         LOGS("Dropping oversubscribed peer [" << socket->authority() << "].");
         socket->stop();
+        defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
@@ -171,6 +173,7 @@ void session_inbound::handle_accepted(const code& ec,
     {
         ////LOGS("Dropping not whitelisted peer [" << socket->authority() << "].");
         socket->stop();
+        start_accept(error::success, acceptor);
         return;
     }
 
@@ -178,6 +181,7 @@ void session_inbound::handle_accepted(const code& ec,
     {
         ////LOGS("Dropping blacklisted peer [" << socket->authority() << "].");
         socket->stop();
+        start_accept(error::success, acceptor);
         return;
     }
 

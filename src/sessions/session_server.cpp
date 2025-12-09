@@ -157,6 +157,7 @@ void session_server::handle_accepted(const code& ec,
     {
         LOGS("Dropping " << name_ << " connection (disabled).");
         socket->stop();
+        defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
@@ -167,6 +168,7 @@ void session_server::handle_accepted(const code& ec,
         LOGS("Dropping oversubscribed " << name_ << " connection ["
             << socket->authority() << "].");
         socket->stop();
+        defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
@@ -176,6 +178,7 @@ void session_server::handle_accepted(const code& ec,
     {
         ////LOGS("Dropping not whitelisted peer [" << socket->authority() << "].");
         socket->stop();
+        start_accept(error::success, acceptor);
         return;
     }
 
@@ -183,6 +186,7 @@ void session_server::handle_accepted(const code& ec,
     {
         ////LOGS("Dropping blacklisted peer [" << socket->authority() << "].");
         socket->stop();
+        start_accept(error::success, acceptor);
         return;
     }
 
