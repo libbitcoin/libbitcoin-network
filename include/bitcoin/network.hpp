@@ -151,15 +151,10 @@
 #include <bitcoin/network/rpc/types.hpp>
 #include <bitcoin/network/rpc/enums/grouping.hpp>
 #include <bitcoin/network/rpc/enums/version.hpp>
-#include <bitcoin/network/rpc/interfaces/bitcoind.hpp>
-#include <bitcoin/network/rpc/interfaces/electrum.hpp>
-#include <bitcoin/network/rpc/interfaces/explore.hpp>
 #include <bitcoin/network/rpc/interfaces/http.hpp>
 #include <bitcoin/network/rpc/interfaces/interfaces.hpp>
 #include <bitcoin/network/rpc/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/rpc/interfaces/peer_dispatch.hpp>
-#include <bitcoin/network/rpc/interfaces/stratum_v1.hpp>
-#include <bitcoin/network/rpc/interfaces/stratum_v2.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>

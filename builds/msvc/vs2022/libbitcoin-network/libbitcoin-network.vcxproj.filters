@@ -815,15 +815,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\enums\version.hpp">
       <Filter>include\bitcoin\network\rpc\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\bitcoind.hpp">
-      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\electrum.hpp">
-      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\explore.hpp">
-      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\http.hpp">
       <Filter>include\bitcoin\network\rpc\interfaces</Filter>
     </ClInclude>
@@ -834,12 +825,6 @@
       <Filter>include\bitcoin\network\rpc\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer_dispatch.hpp">
-      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\stratum_v1.hpp">
-      <Filter>include\bitcoin\network\rpc\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\stratum_v2.hpp">
       <Filter>include\bitcoin\network\rpc\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\method.hpp">

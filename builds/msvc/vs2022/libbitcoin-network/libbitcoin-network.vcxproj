@@ -353,15 +353,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\dispatcher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\enums\grouping.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\enums\version.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\bitcoind.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\electrum.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\explore.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\interfaces.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer_broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\peer_dispatch.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\stratum_v1.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\interfaces\stratum_v2.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\model.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\publish.hpp" />

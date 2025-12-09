@@ -479,15 +479,10 @@ include_bitcoin_network_rpc_enums_HEADERS = \
 
 include_bitcoin_network_rpc_interfacesdir = ${includedir}/bitcoin/network/rpc/interfaces
 include_bitcoin_network_rpc_interfaces_HEADERS = \
-    include/bitcoin/network/rpc/interfaces/bitcoind.hpp \
-    include/bitcoin/network/rpc/interfaces/electrum.hpp \
-    include/bitcoin/network/rpc/interfaces/explore.hpp \
     include/bitcoin/network/rpc/interfaces/http.hpp \
     include/bitcoin/network/rpc/interfaces/interfaces.hpp \
     include/bitcoin/network/rpc/interfaces/peer_broadcast.hpp \
-    include/bitcoin/network/rpc/interfaces/peer_dispatch.hpp \
-    include/bitcoin/network/rpc/interfaces/stratum_v1.hpp \
-    include/bitcoin/network/rpc/interfaces/stratum_v2.hpp
+    include/bitcoin/network/rpc/interfaces/peer_dispatch.hpp
 
 include_bitcoin_network_sessionsdir = ${includedir}/bitcoin/network/sessions
 include_bitcoin_network_sessions_HEADERS = \
