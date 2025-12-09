@@ -526,8 +526,7 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
 
     if (!ec && beast::websocket::is_upgrade(request.get()))
     {
-        set_websocket(request.get());
-        handler(error::upgraded, size);
+        handler(set_websocket(request.get()), size);
         return;
     }
 
@@ -680,23 +679,36 @@ bool socket::websocket() const NOEXCEPT
     return websocket_.has_value();
 }
 
-void socket::set_websocket(const http::request& request) NOEXCEPT
+code socket::set_websocket(const http::request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT(!websocket());
 
-    websocket_.emplace(std::move(socket_));
-    websocket_->set_option(ws::decorator{[](http::fields& header) NOEXCEPT
+    try
     {
-        // Customize the response header.
-        header.set(http::field::server, "libbitcoin/4.0");
-    }});
-    websocket_->accept(request);
-    websocket_->binary(true);
+        websocket_.emplace(std::move(socket_));
+        websocket_->set_option(ws::decorator
+        {
+            [](http::fields& header) NOEXCEPT
+            {
+                // Customize the response header.
+                header.set(http::field::server, "libbitcoin/4.0");
+            }
+        });
 
-    // Handle ping, pong, close.
-    websocket_->control_callback(std::bind(&socket::do_ws_event,
-        shared_from_this(), _1, _2));
+        // Handle ping, pong, close.
+        websocket_->control_callback(std::bind(&socket::do_ws_event,
+            shared_from_this(), _1, _2));
+
+        websocket_->binary(true);
+        websocket_->accept(request);
+        return error::upgraded;
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ set_websocket: " << e.what());
+        return error::operation_failed;
+    }
 }
 
 BC_POP_WARNING()

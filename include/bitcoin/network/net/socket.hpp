@@ -174,7 +174,7 @@ private:
     void do_ws_event(ws::frame_type kind,
         const std::string_view& data) NOEXCEPT;
 
-    void set_websocket(const http::request& request) NOEXCEPT;
+    code set_websocket(const http::request& request) NOEXCEPT;
 
     // completion
     // ------------------------------------------------------------------------
