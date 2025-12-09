@@ -52,8 +52,8 @@ public:
         dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
+    // TODO: network.minimum_buffer is being overloaded here.
     /// response_buffer_ is initialized to default size, see set_buffer().
-    /// Uses peer config for timeouts if not specified via other construct.
     /// Construct client channel to encapsulate and communicate on the socket.
     inline channel_http(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
@@ -68,11 +68,10 @@ public:
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
-    /// http is half-duplex, so reads must wait until send is completed.
     /// Must be called (only once) from protocol message handler (if no stop).
     virtual void read_request() NOEXCEPT;
 
-    /// Serialize and write response to peer (requires strand).
+    /// Serialize and write http response to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
     void send(http::response&& response, result_handler&& handler) NOEXCEPT;
 
@@ -80,13 +79,15 @@ protected:
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
 
+    /// Read request buffer (not thread safe).
     virtual http::flat_buffer& request_buffer() NOEXCEPT;
+
+    /// Initial http read handler (stranded).
     virtual void handle_read_request(const code& ec, size_t bytes,
         const http::request_cptr& request) NOEXCEPT;
 
 private:
     void do_stop(const code& ec) NOEXCEPT;
-
     void set_buffer(http::response& response) NOEXCEPT;
     void handle_send(const code& ec, size_t bytes, http::response_ptr&,
         const result_handler& handler) NOEXCEPT;
