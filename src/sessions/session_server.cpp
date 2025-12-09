@@ -124,8 +124,8 @@ void session_server::start_accept(const code&,
     acceptor->accept(BIND(handle_accepted, _1, _2, acceptor));
 }
 
-void session_server::handle_accepted(const code& ec,
-    const socket::ptr& socket, const acceptor::ptr& acceptor) NOEXCEPT
+void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
+    const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
