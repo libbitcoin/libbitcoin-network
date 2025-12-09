@@ -45,7 +45,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/channels/channel.cpp \
     src/channels/channel_http.cpp \
     src/channels/channel_peer.cpp \
-    src/channels/channel_tcp.cpp \
     src/channels/channel_ws.cpp \
     src/config/address.cpp \
     src/config/authority.cpp \
@@ -127,7 +126,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/sessions/session_outbound.cpp \
     src/sessions/session_peer.cpp \
     src/sessions/session_seed.cpp \
-    src/sessions/session_tcp.cpp
+    src/sessions/session_server.cpp
 
 # local: test/libbitcoin-network-test
 #------------------------------------------------------------------------------
@@ -161,7 +160,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/channels/channel.cpp \
     test/channels/channel_http.cpp \
     test/channels/channel_peer.cpp \
-    test/channels/channel_tcp.cpp \
     test/channels/channel_ws.cpp \
     test/config/address.cpp \
     test/config/authority.cpp \
@@ -239,7 +237,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_ping_60001.cpp \
     test/protocols/protocol_reject_70002.cpp \
     test/protocols/protocol_seed_209.cpp \
-    test/protocols/protocol_tcp.cpp \
     test/protocols/protocol_version_106.cpp \
     test/protocols/protocol_version_70001.cpp \
     test/protocols/protocol_version_70002.cpp \
@@ -255,7 +252,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/sessions/session_manual.cpp \
     test/sessions/session_outbound.cpp \
     test/sessions/session_seed.cpp \
-    test/sessions/session_tcp.cpp
+    test/sessions/session_server.cpp
 
 endif WITH_TESTS
 
@@ -303,7 +300,6 @@ include_bitcoin_network_channels_HEADERS = \
     include/bitcoin/network/channels/channel.hpp \
     include/bitcoin/network/channels/channel_http.hpp \
     include/bitcoin/network/channels/channel_peer.hpp \
-    include/bitcoin/network/channels/channel_tcp.hpp \
     include/bitcoin/network/channels/channel_ws.hpp \
     include/bitcoin/network/channels/channels.hpp
 
@@ -458,7 +454,6 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_ping_60001.hpp \
     include/bitcoin/network/protocols/protocol_reject_70002.hpp \
     include/bitcoin/network/protocols/protocol_seed_209.hpp \
-    include/bitcoin/network/protocols/protocol_tcp.hpp \
     include/bitcoin/network/protocols/protocol_version_106.hpp \
     include/bitcoin/network/protocols/protocol_version_70001.hpp \
     include/bitcoin/network/protocols/protocol_version_70002.hpp \
@@ -502,6 +497,6 @@ include_bitcoin_network_sessions_HEADERS = \
     include/bitcoin/network/sessions/session_outbound.hpp \
     include/bitcoin/network/sessions/session_peer.hpp \
     include/bitcoin/network/sessions/session_seed.hpp \
-    include/bitcoin/network/sessions/session_tcp.hpp \
+    include/bitcoin/network/sessions/session_server.hpp \
     include/bitcoin/network/sessions/sessions.hpp
 

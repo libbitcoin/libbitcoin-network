@@ -42,7 +42,6 @@
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/channels/channel_peer.hpp>
-#include <bitcoin/network/channels/channel_tcp.hpp>
 #include <bitcoin/network/channels/channel_ws.hpp>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/config/address.hpp>
@@ -136,7 +135,6 @@
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 #include <bitcoin/network/protocols/protocol_reject_70002.hpp>
 #include <bitcoin/network/protocols/protocol_seed_209.hpp>
-#include <bitcoin/network/protocols/protocol_tcp.hpp>
 #include <bitcoin/network/protocols/protocol_version_106.hpp>
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
@@ -168,7 +166,7 @@
 #include <bitcoin/network/sessions/session_outbound.hpp>
 #include <bitcoin/network/sessions/session_peer.hpp>
 #include <bitcoin/network/sessions/session_seed.hpp>
-#include <bitcoin/network/sessions/session_tcp.hpp>
+#include <bitcoin/network/sessions/session_server.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 #endif

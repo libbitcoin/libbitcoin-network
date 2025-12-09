@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SESSION_TCP_HPP
-#define LIBBITCOIN_NETWORK_SESSION_TCP_HPP
+#ifndef LIBBITCOIN_NETWORK_SESSION_SERVER_HPP
+#define LIBBITCOIN_NETWORK_SESSION_SERVER_HPP
 
 #include <memory>
 #include <bitcoin/network/channels/channels.hpp>
@@ -37,11 +37,11 @@ class net;
 /// could be replaced by this one. However that also derives from session_peer
 /// which we don't want in downstream client-server sessions. So for now they
 /// are just very redundant.
-class BCT_API session_tcp
+class BCT_API session_server
   : public session
 {
 public:
-    typedef std::shared_ptr<session_tcp> ptr;
+    typedef std::shared_ptr<session_server> ptr;
     using options_t = network::settings::tcp_server;
 
     /// Start accepting connections as configured (call from network strand).
@@ -49,7 +49,7 @@ public:
 
 protected:
     /// Construct an instance (network should be started).
-    session_tcp(net& network, uint64_t identifier,
+    session_server(net& network, uint64_t identifier,
         const options_t& options) NOEXCEPT;
 
     /// Accept cycle.

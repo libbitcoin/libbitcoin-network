@@ -227,7 +227,6 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/channels/channel.cpp"
     "../../src/channels/channel_http.cpp"
     "../../src/channels/channel_peer.cpp"
-    "../../src/channels/channel_tcp.cpp"
     "../../src/channels/channel_ws.cpp"
     "../../src/config/address.cpp"
     "../../src/config/authority.cpp"
@@ -309,7 +308,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/sessions/session_outbound.cpp"
     "../../src/sessions/session_peer.cpp"
     "../../src/sessions/session_seed.cpp"
-    "../../src/sessions/session_tcp.cpp" )
+    "../../src/sessions/session_server.cpp" )
 
 # ${CANONICAL_LIB_NAME} project specific include directory normalization for build.
 #------------------------------------------------------------------------------
@@ -367,7 +366,6 @@ if (with-tests)
         "../../test/channels/channel.cpp"
         "../../test/channels/channel_http.cpp"
         "../../test/channels/channel_peer.cpp"
-        "../../test/channels/channel_tcp.cpp"
         "../../test/channels/channel_ws.cpp"
         "../../test/config/address.cpp"
         "../../test/config/authority.cpp"
@@ -445,7 +443,6 @@ if (with-tests)
         "../../test/protocols/protocol_ping_60001.cpp"
         "../../test/protocols/protocol_reject_70002.cpp"
         "../../test/protocols/protocol_seed_209.cpp"
-        "../../test/protocols/protocol_tcp.cpp"
         "../../test/protocols/protocol_version_106.cpp"
         "../../test/protocols/protocol_version_70001.cpp"
         "../../test/protocols/protocol_version_70002.cpp"
@@ -461,7 +458,7 @@ if (with-tests)
         "../../test/sessions/session_manual.cpp"
         "../../test/sessions/session_outbound.cpp"
         "../../test/sessions/session_seed.cpp"
-        "../../test/sessions/session_tcp.cpp" )
+        "../../test/sessions/session_server.cpp" )
 
     add_test( NAME libbitcoin-network-test COMMAND libbitcoin-network-test
             --run_test=*
