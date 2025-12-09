@@ -29,7 +29,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Websocket tcp/ip channel, uses channel_http for upgrade/multiplex.
+/// Abstract base websocket tcp/ip channel, on base http channel.
 class BCT_API channel_ws
   : public channel_http, protected tracker<channel_ws>
 {
@@ -37,70 +37,32 @@ public:
     typedef std::shared_ptr<channel_ws> ptr;
     using options_t = settings_t::websocket_server;
 
-    /// Subscribe to messages post-upgrade (requires strand).
-    /// Event handler is always invoked on the channel strand.
-    template <class Message>
-    inline void subscribe(auto&& ) NOEXCEPT
-    {
-        BC_ASSERT(stranded());
-        ////using message_handler = distributor_ws::handler<Message>;
-        ////ws_distributor_.subscribe(std::forward<message_handler>(handler));
-    }
-
-    /// Serialize and write websocket message to peer (requires strand).
-    /// Completion handler is always invoked on the channel strand.
-    inline void send(system::data_chunk&& message, bool binary,
-        result_handler&& handler) NOEXCEPT
-    {
-        BC_ASSERT(stranded());
-        BC_ASSERT(upgraded_);
-        using namespace std::placeholders;
-
-        // TODO: Serialize message.
-        const auto ptr = system::move_shared(std::move(message));
-        count_handler complete = std::bind(&channel_ws::handle_send,
-            shared_from_base<channel_ws>(), _1, _2, ptr,
-            std::move(handler));
-
-        if (!ptr)
-        {
-            complete(error::bad_alloc, {});
-            return;
-        }
-
-        // TODO: serialize message to send.
-        // TODO: websocket is full duplex, so writes must be queued.
-        ws_write(asio::const_buffer{ ptr->data(), ptr->size() },
-            binary, std::move(complete));
-    }
-
+protected:
     inline channel_ws(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
       : channel_http(log, socket, identifier, settings, options),
-        ////distributor_(socket->strand()),
         tracker<channel_ws>(log)
     {
     }
 
-    /// Half-duplex http until upgraded to full-duplex websockets.
+    /// Reads are never buffered, restart the reader.
     void read_request() NOEXCEPT override;
 
-protected:
+    /// Pre-upgrade http read.
     void handle_read_request(const code& ec, size_t bytes,
         const http::request_cptr& request) NOEXCEPT override;
+
+    /// Post-upgrade websocket read.
     virtual void handle_read_websocket(const code& ec, size_t bytes) NOEXCEPT;
 
-private:
-    inline void handle_send(const code& ec, size_t, const system::chunk_ptr&,
-        const result_handler& handler) NOEXCEPT
-    {
-        if (ec) stop(ec);
-        handler(ec);
-    }
+    /// Dispatch websocket buffer via derived handlers (override to handle).
+    /// Override to handle dispatch, must invoke read_request() on complete.
+    virtual void dispatch_websocket(const http::flat_buffer& buffer,
+        size_t bytes) NOEXCEPT;
 
-    // These are protected by strand.
-    ////distributor_rest distributor_;
+private:
+    // This is protected by strand.
     bool upgraded_{ false };
 };
 
