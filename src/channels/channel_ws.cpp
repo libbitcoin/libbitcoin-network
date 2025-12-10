@@ -46,6 +46,7 @@ void channel_ws::read_request() NOEXCEPT
         return;
     }
 
+    request_buffer().consume(request_buffer().size());
     ws_read(request_buffer(),
         std::bind(&channel_ws::handle_read_websocket,
             shared_from_base<channel_ws>(), _1, _2));
@@ -78,14 +79,12 @@ void channel_ws::handle_read_websocket(const code& ec, size_t bytes) NOEXCEPT
     }
 
     dispatch_websocket(request_buffer(), bytes);
-    request_buffer().consume(bytes);
 }
 
 void channel_ws::dispatch_websocket(const http::flat_buffer&,
     size_t LOG_ONLY(bytes)) NOEXCEPT
 {
-    LOGA("Websocket read of " << bytes  << " bytes unhandled ["
-        << authority() << "]");
+    LOGA("Websocket read of " << bytes  << " bytes [" << authority() << "]");
 
     // Restart reader.
     read_request();

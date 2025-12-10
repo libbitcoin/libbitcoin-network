@@ -31,7 +31,7 @@ namespace network {
 
 /// Abstract base websocket tcp/ip channel, on base http channel.
 class BCT_API channel_ws
-  : public channel_http, protected tracker<channel_ws>
+  : public channel_http
 {
 public:
     typedef std::shared_ptr<channel_ws> ptr;
@@ -41,8 +41,7 @@ protected:
     inline channel_ws(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
-      : channel_http(log, socket, identifier, settings, options),
-        tracker<channel_ws>(log)
+      : channel_http(log, socket, identifier, settings, options)
     {
     }
 

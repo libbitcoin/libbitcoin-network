@@ -68,8 +68,9 @@ socket::~socket() NOEXCEPT
 
 // Stop.
 // ----------------------------------------------------------------------------
-// Internal stop must call stop() or async_stop().
+// The socket does not (must not) stop itself.
 
+// Immediate stop (no graceful websocket closing).
 void socket::stop() NOEXCEPT
 {
     if (stopped_.load())
@@ -88,6 +89,9 @@ void socket::do_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
+    // Release the callback closure before shutdown/close.
+    if (websocket()) websocket_->control_callback();
+
     boost_code ignore{};
     auto& socket = get_transport();
 
@@ -99,16 +103,14 @@ void socket::do_stop() NOEXCEPT
     // Any asynchronous send, receive or connect operations are canceled
     // immediately, and will complete with the operation_aborted error.
     socket.close(ignore);
-
-    // Discard the optional.
-    websocket_.reset();
 }
 
-// Called internally from stranded handle_ws_event, when peer closes websocket.
-// That ensures derived proxy has a chance to invoke stopping, and dispatch
-// here ensures websocket_->async_close() will get invoked before thread stop.
+// Lazy stop (graceful websocket closing).
 void socket::async_stop() NOEXCEPT
 {
+    if (stopped_.load())
+        return;
+
     // Stop flag accelerates work stoppage, as it does not wait on strand.
     stopped_.store(true);
 
@@ -152,7 +154,6 @@ asio::socket& socket::get_transport() NOEXCEPT
 void socket::accept(asio::acceptor& acceptor,
     result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(!websocket_.has_value(), "socket is upgraded");
     BC_ASSERT_MSG(!socket_.is_open(), "accept on open socket");
 
     // Closure of the acceptor, not the socket, releases this handler.
@@ -428,6 +429,11 @@ void socket::do_ws_write(const asio::const_buffer& in, bool binary,
 void socket::do_ws_event(ws::frame_type kind,
     const std::string_view& data) NOEXCEPT
 {
+    // Must not post to the iocontext once closed, and this is under control of
+    // the websocket, so must be guarded here. Otherwise the socket will leak.
+    if (stopped())
+        return;
+
     // Takes ownership of the string.
     boost::asio::dispatch(strand_,
         std::bind(&socket::handle_ws_event,
@@ -526,8 +532,7 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
 
     if (!ec && beast::websocket::is_upgrade(request.get()))
     {
-        set_websocket(request.get());
-        handler(error::upgraded, size);
+        handler(set_websocket(request.get()), size);
         return;
     }
 
@@ -611,8 +616,9 @@ void socket::handle_ws_event(ws::frame_type kind,
     const std::string& data) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    ////BC_ASSERT(websocket());
 
+    // Beast sends the necessary responses during our read.
+    // Close will be picked up in our async read/write handlers.
     switch (kind)
     {
         case ws::frame_type::ping:
@@ -623,7 +629,6 @@ void socket::handle_ws_event(ws::frame_type kind,
             break;
         case ws::frame_type::close:
             LOGX("WS close [" << authority() << "] " << websocket_->reason());
-            async_stop();
             break;
     }
 }
@@ -680,23 +685,36 @@ bool socket::websocket() const NOEXCEPT
     return websocket_.has_value();
 }
 
-void socket::set_websocket(const http::request& request) NOEXCEPT
+code socket::set_websocket(const http::request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT(!websocket());
 
-    websocket_.emplace(std::move(socket_));
-    websocket_->set_option(ws::decorator{[](http::fields& header) NOEXCEPT
+    try
     {
-        // Customize the response header.
-        header.set(http::field::server, "libbitcoin/4.0");
-    }});
-    websocket_->accept(request);
-    websocket_->binary(true);
+        websocket_.emplace(std::move(socket_));
+        websocket_->set_option(ws::decorator
+        {
+            [](http::fields& header) NOEXCEPT
+            {
+                // Customize the response header.
+                header.set(http::field::server, "libbitcoin/4.0");
+            }
+        });
 
-    // Handle ping, pong, close.
-    websocket_->control_callback(std::bind(&socket::do_ws_event,
-        shared_from_this(), _1, _2));
+        // Handle ping, pong, close - must be cleared on stop.
+        websocket_->control_callback(std::bind(&socket::do_ws_event,
+            shared_from_this(), _1, _2));
+
+        websocket_->binary(true);
+        websocket_->accept(request);
+        return error::upgraded;
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ set_websocket: " << e.what());
+        return error::operation_failed;
+    }
 }
 
 BC_POP_WARNING()
