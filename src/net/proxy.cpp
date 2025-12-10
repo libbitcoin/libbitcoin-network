@@ -81,7 +81,7 @@ void proxy::waiting() NOEXCEPT
 
 // Stop (socket/proxy started upon create).
 // ----------------------------------------------------------------------------
-// Internal stop must call stop() or async_stop().
+// The proxy does not (must not) stop itself.
 
 bool proxy::stopped() const NOEXCEPT
 {
