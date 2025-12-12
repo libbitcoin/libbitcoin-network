@@ -160,6 +160,9 @@ protected:
     /// Resume reading from the socket, starts timers (requires strand).
     virtual void resume() NOEXCEPT;
 
+    /// Monitor/unmonitor the socket for cancel/write (requires strand).
+    virtual void monitor(bool value) NOEXCEPT;
+
     /// Seconds before channel expires, zero if expired (requires strand).
     virtual size_t remaining() const NOEXCEPT;
 

@@ -166,6 +166,19 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     complete(error::success);
 }
 
+// Wait.
+// ----------------------------------------------------------------------------
+
+void proxy::wait(result_handler&& handler) NOEXCEPT
+{
+    socket_->wait(std::move(handler));
+}
+
+void proxy::cancel(result_handler&& handler) NOEXCEPT
+{
+    socket_->cancel(std::move(handler));
+}
+
 // TCP.
 // ----------------------------------------------------------------------------
 

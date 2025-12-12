@@ -27,6 +27,8 @@
 namespace libbitcoin {
 namespace network {
 
+#define CLASS channel
+
 using namespace system;
 using namespace std::placeholders;
 
@@ -88,6 +90,22 @@ void channel::resume() NOEXCEPT
     start_expiration();
     start_inactivity();
     proxy::resume();
+}
+
+void channel::monitor(bool value) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    auto handler = std::bind(&channel::handle_monitor,
+        shared_from_base<channel>(), _1);
+
+    value ? wait(std::move(handler)) : cancel(std::move(handler));
+}
+
+void channel::handle_monitor(const code& ec) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    if (ec) stop(ec);
 }
 
 // Timers.
