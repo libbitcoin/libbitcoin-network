@@ -74,6 +74,9 @@ public:
     /// Resume reading from the socket, starts timers (requires strand).
     void resume() NOEXCEPT override;
 
+    /// Monitor/unmonitor the socket for cancel/write (requires strand).
+    void monitor(bool value) NOEXCEPT;
+
     /// Seconds before channel expires, zero if expired (requires strand).
     size_t remaining() const NOEXCEPT;
 

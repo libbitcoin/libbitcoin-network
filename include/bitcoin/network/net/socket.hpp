@@ -67,6 +67,15 @@ public:
     /// Same as stop but provides graceful shutdown for websocket connections.
     virtual void async_stop() NOEXCEPT;
 
+    /// Wait.
+    /// -----------------------------------------------------------------------
+
+    /// Wait on a peer close/cancel/send, no data capture/loss.
+    virtual void wait(result_handler&& handler) NOEXCEPT;
+
+    /// Cancel wait or any asynchronous read/write operation, handlers posted.
+    virtual void cancel(result_handler&& handler) NOEXCEPT;
+
     /// Connection.
     /// -----------------------------------------------------------------------
 
@@ -145,6 +154,12 @@ private:
     void do_async_stop() NOEXCEPT;
     asio::socket& get_transport() NOEXCEPT;
 
+    // wait
+    // ------------------------------------------------------------------------
+
+    void do_wait(const result_handler& handler) NOEXCEPT;
+    void do_cancel(const result_handler& handler) NOEXCEPT;
+
     // stranded
     // ------------------------------------------------------------------------
 
@@ -178,6 +193,10 @@ private:
 
     // completion
     // ------------------------------------------------------------------------
+
+    // wait
+    void handle_wait(const boost_code& ec,
+        const result_handler& handler) NOEXCEPT;
 
     // connection
     void handle_accept(const boost_code& ec,

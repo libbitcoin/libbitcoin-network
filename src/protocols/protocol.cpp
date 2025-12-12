@@ -104,6 +104,13 @@ void protocol::resume() NOEXCEPT
     channel_->resume();
 }
 
+// Monitor/unmonitor the socket for stop/cancel/bytes.
+void protocol::monitor(bool value) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    channel_->monitor(value);
+}
+
 // Zero if timer expired.
 size_t protocol::remaining() const NOEXCEPT
 {

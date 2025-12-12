@@ -90,6 +90,30 @@ void channel::resume() NOEXCEPT
     proxy::resume();
 }
 
+void channel::monitor(bool value) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (value)
+    {
+        // Invoke stop only if was *not* canceled (by cancel/stop).
+        wait([&](const code& ec) NOEXCEPT
+        {
+            LOGA("wait [" << authority() << "] " << ec.message());
+            if (ec) stop(ec);
+        });
+    }
+    else
+    {
+        // Invokes wait handler with operation_canceled (stop on fail).
+        cancel([&](const code& ec) NOEXCEPT
+        {
+            LOGA("cancel [" << authority() << "] " << ec.message());
+            if (ec) stop(ec);
+        });
+    }
+}
+
 // Timers.
 // ----------------------------------------------------------------------------
 // TODO: build DoS protection around rate_limit_, backlog(), total(), and time.

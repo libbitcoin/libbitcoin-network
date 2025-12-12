@@ -145,6 +145,79 @@ asio::socket& socket::get_transport() NOEXCEPT
     return websocket() ? beast::get_lowest_layer(*websocket_) : socket_;
 }
 
+// Wait.
+// ----------------------------------------------------------------------------
+
+void socket::wait(result_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_wait,
+            shared_from_this(), std::move(handler)));
+}
+
+// private
+void socket::do_wait(const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    get_transport().async_wait(asio::socket::wait_read,
+        std::bind(&socket::handle_wait,
+            shared_from_this(), _1, handler));
+}
+
+// private
+void socket::handle_wait(const boost_code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // Only wait cancel results in caller not calling stop.
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::success);
+        return;
+    }
+
+    if (ec)
+    {
+        handler(error::asio_to_error_code(ec));
+        return;
+    }
+
+    handler(error::operation_canceled);
+}
+
+void socket::cancel(result_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_cancel,
+            shared_from_this(), std::move(handler)));
+}
+
+// private
+void socket::do_cancel(const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (stopped())
+    {
+        handler(error::success);
+        return;
+    }
+
+    try
+    {
+        // Causes connect, send, and receive calls to quit with
+        // asio::error::operation_aborted passed to handlers.
+        socket_.cancel();
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_cancel: " << e.what());
+        handler(error::service_stopped);
+    }
+}
+
 // Connection.
 // ----------------------------------------------------------------------------
 // Boost async functions are NOT THREAD SAFE for the same socket object.

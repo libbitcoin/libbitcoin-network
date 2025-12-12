@@ -108,6 +108,15 @@ protected:
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
+    /// Wait.
+    /// -----------------------------------------------------------------------
+
+    /// Wait on a peer close/cancel/send, no data capture/loss.
+    virtual void wait(result_handler&& handler) NOEXCEPT;
+
+    /// Cancel wait or any asynchronous read/write operation, handlers posted.
+    virtual void cancel(result_handler&& handler) NOEXCEPT;
+
     /// TCP.
     /// -----------------------------------------------------------------------
 
