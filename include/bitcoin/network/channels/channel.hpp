@@ -109,6 +109,8 @@ private:
     void start_inactivity() NOEXCEPT;
     void handle_inactivity(const code& ec) NOEXCEPT;
 
+    void handle_monitor(const code& ec) NOEXCEPT;
+
     // These are thread safe (const).
     const settings_t& settings_;
     const uint64_t identifier_;

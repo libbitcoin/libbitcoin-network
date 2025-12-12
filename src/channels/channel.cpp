@@ -27,6 +27,8 @@
 namespace libbitcoin {
 namespace network {
 
+#define CLASS channel
+
 using namespace system;
 using namespace std::placeholders;
 
@@ -94,24 +96,16 @@ void channel::monitor(bool value) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (value)
-    {
-        // Invoke stop only if was *not* canceled (by cancel/stop).
-        wait([&](const code& ec) NOEXCEPT
-        {
-            LOGA("wait [" << authority() << "] " << ec.message());
-            if (ec) stop(ec);
-        });
-    }
-    else
-    {
-        // Invokes wait handler with operation_canceled (stop on fail).
-        cancel([&](const code& ec) NOEXCEPT
-        {
-            LOGA("cancel [" << authority() << "] " << ec.message());
-            if (ec) stop(ec);
-        });
-    }
+    auto handler = std::bind(&channel::handle_monitor,
+        shared_from_base<channel>(), _1);
+
+    value ? wait(std::move(handler)) : cancel(std::move(handler));
+}
+
+void channel::handle_monitor(const code& ec) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    if (ec) stop(ec);
 }
 
 // Timers.
