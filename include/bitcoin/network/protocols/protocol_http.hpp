@@ -102,7 +102,9 @@ protected:
         const std::string& details={}) const NOEXCEPT;
 
     /// Utilities.
-    bool is_allowed_host(const http::fields& fields,
+    virtual bool is_allowed_host(const http::fields& fields,
+        size_t version) const NOEXCEPT;
+    virtual bool is_allowed_origin(const http::fields& fields,
         size_t version) const NOEXCEPT;
 
     /// Properties.

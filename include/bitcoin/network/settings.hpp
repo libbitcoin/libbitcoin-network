@@ -56,14 +56,16 @@ struct BCT_API settings
     {
         using tcp_server::tcp_server;
 
-        /// Sent via responses if configured (recommended).
+        /// Sent via responses if configured .
         std::string server{ "libbitcoin/4.0" };
 
-        /// Validated against requests if configured (recommended).
+        /// Validated against hosts/origins if configured.
         config::endpoints hosts{};
+        config::endpoints origins{};
 
-        /// Normalized hosts helper.
+        /// Normalized configured hosts/origins helpers.
         virtual system::string_list host_names() const NOEXCEPT;
+        virtual system::string_list origin_names() const NOEXCEPT;
     };
 
     struct websocket_server

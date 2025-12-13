@@ -300,8 +300,6 @@ void protocol_http::handle_complete(const code& ec,
 bool protocol_http::is_allowed_host(const fields& fields,
     size_t version) const NOEXCEPT
 {
-    BC_ASSERT(stranded());
-
     // Disallow unspecified host.
     // Host header field is mandatory at http 1.1.
     const auto host = fields[field::host];
@@ -310,6 +308,19 @@ bool protocol_http::is_allowed_host(const fields& fields,
 
     return options_.hosts.empty() || system::contains(options_.hosts,
         config::to_normal_host(host, default_port()));
+}
+
+bool protocol_http::is_allowed_origin(const fields& fields,
+    size_t version) const NOEXCEPT
+{
+    // Allow same-origin and no-origin requests.
+    // Origin header field is not available until http 1.1.
+    const auto origin = fields[field::origin];
+    if (origin.empty() || version < version_1_1)
+        return true;
+
+    return options_.origins.empty() || system::contains(options_.origins,
+        config::to_normal_host(origin, default_port()));
 }
 
 // TODO: pass and set response media_type.
