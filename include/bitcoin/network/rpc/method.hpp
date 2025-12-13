@@ -68,7 +68,9 @@ struct method
     }
 
     /// Defines a method assignable to an rpc interface.
-    template <typename ...Names, if_equal<sizeof...(Names), size> = true>
+    template <typename ...Names, if_equal<sizeof...(Names), size> = true,
+        bool_if<std::conjunction_v<std::is_convertible<std::decay_t<Names>,
+            std::string_view>...>> = true>
     inline constexpr method(Names&&... names) NOEXCEPT
       : names_{ std::forward<Names>(names)... }
     {
