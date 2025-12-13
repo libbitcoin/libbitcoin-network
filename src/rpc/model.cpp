@@ -310,6 +310,10 @@ DEFINE_JSON_FROM_TAG(response_t)
             object["data"] = value_from(result.data.value());
         }
     }
+    else if (instance.jsonrpc != version::v2)
+    {
+        object["error"] = boost::json::value{};
+    }
 
     if (instance.result.has_value())
     {
