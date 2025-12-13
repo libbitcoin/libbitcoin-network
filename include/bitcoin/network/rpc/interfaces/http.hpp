@@ -36,7 +36,7 @@ struct http_methods
         method<"head", http::method::head::cptr>{},
         method<"post", http::method::post::cptr>{},
         method<"put", http::method::put::cptr>{},
-        method<"delete", http::method::delete_::cptr>{},
+        method<"delete_", http::method::delete_::cptr>{},
         method<"trace", http::method::trace::cptr>{},
         method<"options", http::method::options::cptr>{},
         method<"connect", http::method::connect::cptr>{},

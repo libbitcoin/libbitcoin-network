@@ -19,6 +19,7 @@
 #include <bitcoin/network/channels/channel_http.hpp>
 
 #include <utility>
+#include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -30,8 +31,15 @@ namespace libbitcoin {
 namespace network {
 
 #define CLASS channel_http
+#define CASE_REQUEST_TO_MODEL(verb_, request_, model_) \
+case verb::verb_: \
+    model_.method = #verb_; \
+    model_.params = { array_t{ any_t{ \
+        http::method::tag_request<verb::verb_>(request_) } } }; \
+    break
 
 using namespace system;
+using namespace network::rpc;
 using namespace network::http;
 using namespace std::placeholders;
 
@@ -115,23 +123,25 @@ void channel_http::handle_read_request(const code& ec, size_t,
         return;
     }
 
-    log_message(*request);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: hack, move into rpc::body::reader.
-    using namespace rpc;
-    using namespace http::method;
-
-    if (const auto code = dispatcher_.notify(request_t
+    request_t model{};
+    switch (request.get()->method())
     {
-        .method = "get",
-        .params = { array_t{ any_t{ tag_request<verb::get>(request) } } }
-    }))
-    {
-        stop(code);
-        return;
+        CASE_REQUEST_TO_MODEL(get, request, model);
+        CASE_REQUEST_TO_MODEL(head, request, model);
+        CASE_REQUEST_TO_MODEL(post, request, model);
+        CASE_REQUEST_TO_MODEL(put, request, model);
+        CASE_REQUEST_TO_MODEL(delete_, request, model);
+        CASE_REQUEST_TO_MODEL(trace, request, model);
+        CASE_REQUEST_TO_MODEL(options, request, model);
+        CASE_REQUEST_TO_MODEL(connect, request, model);
+
+        default:
+        CASE_REQUEST_TO_MODEL(unknown, request, model);
     }
-    ///////////////////////////////////////////////////////////////////////////
+
+    log_message(*request);
+    if (const auto code = dispatcher_.notify(model))
+        stop(code);
 }
 
 flat_buffer& channel_http::request_buffer() NOEXCEPT
