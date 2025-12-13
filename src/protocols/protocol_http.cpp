@@ -273,6 +273,19 @@ void protocol_http::send_method_not_allowed(const request& request) NOEXCEPT
     SEND(std::move(out), handle_complete, _1, error::method_not_allowed);
 }
 
+void protocol_http::send_ok(const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    const auto code = status::ok;
+    const auto media = to_media_type(request[field::accept]);
+    response out{ code, request.version() };
+    add_common_headers(out, request);
+    out.body() = string_status(code, out.reason(), media);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::success);
+}
+
+
 // Handle sends.
 // ----------------------------------------------------------------------------
 
