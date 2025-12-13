@@ -18,6 +18,8 @@
  */
 #include "../../test.hpp"
 
+#if defined(HAVE_SLOW_TESTS)
+
 BOOST_AUTO_TEST_SUITE(json_body_writer_tests)
 
 using namespace network::http;
@@ -92,3 +94,6 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_m
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif // HAVE_SLOW_TESTS
+

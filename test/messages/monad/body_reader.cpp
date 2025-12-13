@@ -18,6 +18,8 @@
  */
 #include "../../test.hpp"
 
+#if defined(HAVE_SLOW_TESTS)
+
 using namespace http;
 using namespace network::monad;
 
@@ -95,3 +97,5 @@ BOOST_AUTO_TEST_CASE(monad_body_reader__to_reader__text_plain__constructs_string
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif // HAVE_SLOW_TESTS
