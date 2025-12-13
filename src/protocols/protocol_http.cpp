@@ -252,7 +252,7 @@ void protocol_http::send_bad_host(const request& request) NOEXCEPT
     details += request[field::host];
     const auto code = status::bad_request;
     const auto media = to_media_type(request[field::accept]);
-    response out{ status::bad_request, request.version() };
+    response out{ code, request.version() };
     add_common_headers(out, request, true);
     out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
@@ -266,7 +266,7 @@ void protocol_http::send_method_not_allowed(const request& request) NOEXCEPT
     details += request.method_string();
     const auto code = status::method_not_allowed;
     const auto media = to_media_type(request[field::accept]);
-    response out{ status::bad_request, request.version() };
+    response out{ code, request.version() };
     add_common_headers(out, request, true);
     out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
