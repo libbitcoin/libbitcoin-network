@@ -54,7 +54,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/logger.cpp \
     src/log/reporter.cpp \
     src/messages/http/fields.cpp \
-    src/messages/http/enums/mime_type.cpp \
+    src/messages/http/enums/media_type.cpp \
     src/messages/http/enums/target.cpp \
     src/messages/json/body.cpp \
     src/messages/monad/body.cpp \
@@ -169,7 +169,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/log/tracker.cpp \
     test/messages/http/fields.cpp \
     test/messages/http/enums/magic_numbers.cpp \
-    test/messages/http/enums/mime_type.cpp \
+    test/messages/http/enums/media_type.cpp \
     test/messages/http/enums/target.cpp \
     test/messages/json/body_reader.cpp \
     test/messages/json/body_writer.cpp \

@@ -148,7 +148,7 @@
     <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
       <ObjectFileName>$(IntDir)test_messages_http_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\http\enums\mime_type.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\media_type.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">

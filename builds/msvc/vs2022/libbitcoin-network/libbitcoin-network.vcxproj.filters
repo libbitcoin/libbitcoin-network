@@ -195,7 +195,7 @@
     <ClCompile Include="..\..\..\..\src\memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp">
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\media_type.cpp">
       <Filter>src\messages\http\enums</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp">

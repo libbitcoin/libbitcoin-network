@@ -139,7 +139,7 @@
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\memory.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\media_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\fields.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\json\body.cpp">

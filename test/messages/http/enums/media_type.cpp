@@ -378,6 +378,11 @@ BOOST_AUTO_TEST_CASE(media_type__content_media_type__lower_case_exist__expected)
     BOOST_REQUIRE(content_media_type("video/mp4") == media_type::video_mp4);
 }
 
+BOOST_AUTO_TEST_CASE(media_type__content_media_type__whitespace_exist__expected)
+{
+    BOOST_REQUIRE(content_media_type(" application/json ") == media_type::application_json);
+}
+
 BOOST_AUTO_TEST_CASE(media_type__content_media_type__mixed_case_exist__expected)
 {
     BOOST_REQUIRE(content_media_type("APPLICATION/JAVASCRIPT") == media_type::application_javascript);
