@@ -41,6 +41,7 @@ using buffer_reader = http::buffer_body::reader;
 using string_reader = http::string_body::reader;
 using body_reader = std::variant
 <
+    std::monostate,
     empty_reader,
     json_reader,
     data_reader,
@@ -149,7 +150,7 @@ struct BCT_API body
         template <bool IsRequest, class Fields>
         inline explicit reader(http::message_header<IsRequest, Fields>& header,
             value_type& value) NOEXCEPT
-          : reader_{ to_reader(header, value) }
+          : header_{ header }, value_{ value }, reader_{ std::monostate{} }
         {
         }
 
@@ -158,10 +159,11 @@ struct BCT_API body
         void finish(boost_code& ec) NOEXCEPT;
 
     protected:
+        // The reader only reads requests, and http::fields are required.
+        using header = http::message_header<true, http::fields>;
+
         /// Select reader based on content-type header.
-        template <class Header>
-        static inline body_reader to_reader(Header& header,
-            value_type& value) NOEXCEPT
+        inline void assign_reader(header& header, value_type& value) NOEXCEPT
         {
             switch (http::content_media_type(header))
             {
@@ -181,43 +183,45 @@ struct BCT_API body
                     value = empty_value{};
             }
 
-            return std::visit(overload
+            std::visit(overload
             {
+                [&](std::monostate&) NOEXCEPT
+                {
+                },
                 [&](empty_value& value) NOEXCEPT
                 {
-                    return body_reader{ empty_reader{ header, value } };
+                    reader_.emplace<empty_reader>(header, value);
                 },
                 [&](json_value& value) NOEXCEPT
                 {
                     // json_reader not copy or assignable (by contained parser).
                     // So *requires* in-place construction for variant populate.
-                    return body_reader{ std::in_place_type<json_reader>,
-                        header, value };
+                    reader_.emplace<json_reader>(header, value);
                 },
                 [&](data_value& value) NOEXCEPT
                 {
-                    return body_reader{ data_reader{ header, value } };
+                    reader_.emplace<data_reader>(header, value);
                 },
                 [&](file_value& value) NOEXCEPT
                 {
-                    return body_reader{ file_reader{ header, value } };
+                    reader_.emplace<file_reader>(header, value);
                 },
-                [&](span_value& value) NOEXCEPT
+                [&](span_value&) NOEXCEPT
                 {
-                    return body_reader{ span_reader{ header, value } };
                 },
-                [&](buffer_value& value) NOEXCEPT
+                [&](buffer_value&) NOEXCEPT
                 {
-                    return body_reader{ buffer_reader{ header, value } };
                 },
                 [&](string_value& value) NOEXCEPT
                 {
-                    return body_reader{ string_reader{ header, value } };
+                    reader_.emplace<string_reader>(header, value);
                 }
             }, value.value());
         }
 
     private:
+        header& header_;
+        value_type& value_;
         body_reader reader_;
     };
 

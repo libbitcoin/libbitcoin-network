@@ -33,8 +33,15 @@ using namespace network::error;
 
 void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
 {
+    // Header is unread at construct, so this must be deferred until init.
+    assign_reader(header_, value_);
+
     std::visit(overload
     {
+        [&](std::monostate&) NOEXCEPT
+        {
+            ec = to_boost_code(boost_error_t::io_error);
+        },
         [&](auto& read) NOEXCEPT
         {
             try
@@ -53,6 +60,11 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
+        [&](std::monostate&) NOEXCEPT
+        {
+            ec = to_boost_code(boost_error_t::io_error);
+            return size_t{};
+        },
         [&](auto& read) NOEXCEPT
         {
             try
@@ -70,13 +82,18 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 
 void body::reader::finish(boost_code& ec) NOEXCEPT
 {
-    return std::visit(overload
+    std::visit(overload
     {
+        [&](std::monostate&) NOEXCEPT
+        {
+            // Called at beast finish_header and must succeed.
+            ec = {};
+        },
         [&](auto& read) NOEXCEPT
         {
             try
             {
-                return read.finish(ec);
+                read.finish(ec);
             }
             catch (...)
             {
