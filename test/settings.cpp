@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
     BOOST_REQUIRE(instance.origins.empty());
     BOOST_REQUIRE(instance.host_names().empty());
     BOOST_REQUIRE(instance.origin_names().empty());
-    BOOST_REQUIRE(instance.allow_opaque_origin);
+    BOOST_REQUIRE(!instance.allow_opaque_origin);
 }
 
 BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
     BOOST_REQUIRE(instance.origins.empty());
     BOOST_REQUIRE(instance.host_names().empty());
     BOOST_REQUIRE(instance.origin_names().empty());
-    BOOST_REQUIRE(instance.allow_opaque_origin);
+    BOOST_REQUIRE(!instance.allow_opaque_origin);
 
     // websocket_server (no unique settings yet)
 }

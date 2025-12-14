@@ -64,7 +64,7 @@ struct BCT_API settings
         config::endpoints origins{};
 
         /// Opaque origins are always serialized as "null".
-        bool allow_opaque_origin{ true };
+        bool allow_opaque_origin{ false };
 
         /// Normalized configured hosts/origins helpers.
         virtual system::string_list host_names() const NOEXCEPT;
