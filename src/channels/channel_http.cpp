@@ -91,7 +91,7 @@ void channel_http::read_request() NOEXCEPT
     const auto in = to_shared<request>();
 
     // Post handle_read_request to strand upon stop, error, or buffer full.
-    read(request_buffer_, *in,
+    read(request_buffer(), *in,
         std::bind(&channel_http::handle_read_request,
             shared_from_base<channel_http>(), _1, _2, in));
 }
