@@ -93,9 +93,13 @@ protected:
     virtual void handle_complete(const code& ec,
         const code& reason) NOEXCEPT;
 
-    /// Override to replace status response headers.
+    /// Sets date, server, keep-alive - does NOT set access control.  
     virtual void add_common_headers(http::fields& fields,
         const http::request& request, bool closing=false) const NOEXCEPT;
+
+    /// Set only on success (200/204), assumes origin has been verified.
+    virtual void add_access_control_headers(http::fields& fields,
+        const http::request& request) const NOEXCEPT;
 
     /// Override to replace string status response message.
     virtual std::string string_status(const http::status status,

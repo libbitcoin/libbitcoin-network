@@ -35,6 +35,7 @@ namespace network {
 #define CLASS protocol_http
     
 using namespace http;
+using namespace system;
 using namespace std::placeholders;
 
 // Bind throws (ok).
@@ -273,6 +274,7 @@ void protocol_http::send_method_not_allowed(const request& request) NOEXCEPT
     SEND(std::move(out), handle_complete, _1, error::method_not_allowed);
 }
 
+// Sets access control headers.
 void protocol_http::send_ok(const request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -280,11 +282,11 @@ void protocol_http::send_ok(const request& request) NOEXCEPT
     const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request);
+    add_access_control_headers(out, request);
     out.body() = string_status(code, out.reason(), media);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::success);
 }
-
 
 // Handle sends.
 // ----------------------------------------------------------------------------
@@ -319,7 +321,7 @@ bool protocol_http::is_allowed_host(const fields& fields,
     if (host.empty() && version >= version_1_1)
         return false;
 
-    return options_.hosts.empty() || system::contains(options_.hosts,
+    return options_.hosts.empty() || contains(options_.hosts,
         config::to_normal_host(host, default_port()));
 }
 
@@ -336,51 +338,57 @@ bool protocol_http::is_allowed_origin(const fields& fields,
     if (origin == "null")
         return options_.allow_opaque_origin;
 
-    return options_.origins.empty() || system::contains(options_.origins,
+    return options_.origins.empty() || contains(options_.origins,
         config::to_normal_host(origin, default_port()));
 }
 
-// TODO: pass and set response media_type.
 void protocol_http::add_common_headers(fields& fields,
     const request& request, bool closing) const NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // date (current)
-    // ------------------------------------------------------------------------
     fields.set(field::date, format_http_time(zulu_time()));
-
-    // server (configured)
-    // ------------------------------------------------------------------------
     if (!options_.server.empty())
         fields.set(field::server, options_.server);
 
-    // origin (allow)
-    // ------------------------------------------------------------------------
-    if (to_bool(request.count(field::origin)))
-        fields.set(field::access_control_allow_origin, request[field::origin]);
-
-    // connection (close or keep-alive)
-    // ------------------------------------------------------------------------
     // http 1.1 assumes keep-alive if not specified, http 1.0 does not.
     // Beast parser defaults keep-alive to true in http 1.1 requests.
-
     if (closing || !request.keep_alive())
     {
         fields.set(field::connection, "close");
-        return;
     }
+    else
+    {
+        if (request.version() < version_1_1)
+            fields.set(field::connection, "keep-alive");
 
-    if (request.version() < version_1_1)
-        fields.set(field::connection, "keep-alive");
+        // Remaining zero if inactivity timer has expired (or not configured).
+        if (const auto secs = remaining())
+            fields.set(field::keep_alive, "timeout=" + serialize(secs));
+    }
+}
 
-    // keep_alive (configured timeout)
-    // ------------------------------------------------------------------------
-    // The keep_alive.timeout field is encoded as seconds.
+void protocol_http::add_access_control_headers(fields& fields,
+    const request& request) const NOEXCEPT
+{
+    const auto origin = to_bool(request.count(field::origin));
+    const auto headers = to_bool(request.count(
+        field::access_control_request_headers));
+    const auto method = to_bool(request.count(
+        field::access_control_request_method));
 
-    // Remaining is zero if inactivity timer is expired (or not configured).
-    if (const auto secs = remaining())
-        fields.set(field::keep_alive, "timeout=" + system::serialize(secs));
+    if (origin)
+        fields.set(field::access_control_allow_origin, request[field::origin]);
+    if (headers)
+        fields.set(field::access_control_allow_headers, "*");
+    if (method)
+        fields.set(field::access_control_allow_methods, "*");
+
+    if (origin || headers || method)
+    {
+        fields.set(field::vary, "origin");
+        fields.set(field::access_control_max_age, "86400");
+    }
 }
 
 // Status message generation.
