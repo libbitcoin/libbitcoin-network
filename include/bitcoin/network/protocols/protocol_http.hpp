@@ -77,6 +77,7 @@ protected:
         const http::method::unknown::cptr& unknown) NOEXCEPT;
 
     /// Senders.
+    virtual void send_ok(const http::request& request={}) NOEXCEPT;
     virtual void send_bad_host(const http::request& request={}) NOEXCEPT;
     virtual void send_not_found(const http::request& request={}) NOEXCEPT;
     virtual void send_not_acceptable(const http::request& request={}) NOEXCEPT;
@@ -92,9 +93,13 @@ protected:
     virtual void handle_complete(const code& ec,
         const code& reason) NOEXCEPT;
 
-    /// Override to replace status response headers.
+    /// Sets date, server, keep-alive - does NOT set access control.  
     virtual void add_common_headers(http::fields& fields,
         const http::request& request, bool closing=false) const NOEXCEPT;
+
+    /// Set only on success (200/204), assumes origin has been verified.
+    virtual void add_access_control_headers(http::fields& fields,
+        const http::request& request) const NOEXCEPT;
 
     /// Override to replace string status response message.
     virtual std::string string_status(const http::status status,
@@ -102,7 +107,9 @@ protected:
         const std::string& details={}) const NOEXCEPT;
 
     /// Utilities.
-    bool is_allowed_host(const http::fields& fields,
+    virtual bool is_allowed_host(const http::fields& fields,
+        size_t version) const NOEXCEPT;
+    virtual bool is_allowed_origin(const http::fields& fields,
         size_t version) const NOEXCEPT;
 
     /// Properties.

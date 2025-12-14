@@ -18,6 +18,8 @@
  */
 #include "../../test.hpp"
 
+#if defined(HAVE_SLOW_TESTS)
+
 BOOST_AUTO_TEST_SUITE(json_body_reader_tests)
 
 using namespace network::http;
@@ -96,3 +98,6 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__over_length__protocol_error)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif // HAVE_SLOW_TESTS
+

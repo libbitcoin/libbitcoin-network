@@ -63,6 +63,13 @@ system::string_list settings::http_server::host_names() const NOEXCEPT
     return config::to_host_names(hosts, port);
 }
 
+system::string_list settings::http_server::origin_names() const NOEXCEPT
+{
+    // secure changes default port from 80 to 443.
+    const auto port = secure ? http::default_tls : http::default_http;
+    return config::to_host_names(hosts, port);
+}
+
 // websocket_server
 // ----------------------------------------------------------------------------
 
