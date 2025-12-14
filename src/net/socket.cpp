@@ -461,6 +461,9 @@ void socket::do_ws_read(std::reference_wrapper<http::flat_buffer> out,
     BC_ASSERT(stranded());
     BC_ASSERT(websocket());
 
+    // Consume full previous buffer (no bytes are left behind by ws read).
+    out.get().consume(out.get().size());
+
     try
     {
         websocket_->async_read(out.get(),

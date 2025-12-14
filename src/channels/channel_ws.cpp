@@ -46,7 +46,6 @@ void channel_ws::read_request() NOEXCEPT
         return;
     }
 
-    request_buffer().consume(request_buffer().size());
     ws_read(request_buffer(),
         std::bind(&channel_ws::handle_read_websocket,
             shared_from_base<channel_ws>(), _1, _2));
