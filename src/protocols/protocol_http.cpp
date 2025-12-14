@@ -332,6 +332,10 @@ bool protocol_http::is_allowed_origin(const fields& fields,
     if (origin.empty() || version < version_1_1)
         return true;
 
+    // Opaque origin is sent as "null", often representing a file: URL.
+    if (origin == "null")
+        return options_.allow_opaque_origin;
+
     return options_.origins.empty() || system::contains(options_.origins,
         config::to_normal_host(origin, default_port()));
 }
