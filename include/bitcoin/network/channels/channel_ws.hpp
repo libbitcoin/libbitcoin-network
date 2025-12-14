@@ -46,18 +46,18 @@ protected:
     }
 
     /// Reads are never buffered, restart the reader.
-    void read_request() NOEXCEPT override;
+    void receive() NOEXCEPT override;
 
     /// Pre-upgrade http read.
-    void handle_read_request(const code& ec, size_t bytes,
+    void handle_receive(const code& ec, size_t bytes,
         const http::request_cptr& request) NOEXCEPT override;
 
     /// Post-upgrade websocket read.
-    virtual void handle_read_websocket(const code& ec, size_t bytes) NOEXCEPT;
+    virtual void handle_receive_ws(const code& ec, size_t bytes) NOEXCEPT;
 
     /// Dispatch websocket buffer via derived handlers (override to handle).
-    /// Override to handle dispatch, must invoke read_request() on complete.
-    virtual void dispatch_websocket(const http::flat_buffer& buffer,
+    /// Override to handle dispatch, must invoke receive() on complete.
+    virtual void dispatch_ws(const http::flat_buffer& buffer,
         size_t bytes) NOEXCEPT;
 
 private:

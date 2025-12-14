@@ -305,8 +305,8 @@ void protocol_http::handle_complete(const code& ec,
         return;
     }
 
-    // Continue half duplex.
-    channel_->read_request();
+    // Continue read loop.
+    channel_->receive();
 }
 
 // Utilities.

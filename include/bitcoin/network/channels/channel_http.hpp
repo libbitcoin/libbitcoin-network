@@ -67,12 +67,13 @@ public:
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
-    /// Must be called (only once) from protocol message handler (if no stop).
-    virtual void read_request() NOEXCEPT;
+    /// Must call after successful message handling if no stop.
+    virtual void receive() NOEXCEPT;
 
     /// Serialize and write http response to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
-    void send(http::response&& response, result_handler&& handler) NOEXCEPT;
+    virtual void send(http::response&& response,
+        result_handler&& handler) NOEXCEPT;
 
 protected:
     /// Stranded handler invoked from stop().
@@ -81,16 +82,17 @@ protected:
     /// Read request buffer (not thread safe).
     virtual http::flat_buffer& request_buffer() NOEXCEPT;
 
-    /// Initial http read handler (stranded).
-    virtual void handle_read_request(const code& ec, size_t bytes,
-        const http::request_cptr& request) NOEXCEPT;
+    /// Dispatch request to subscribers by verb type.
+    virtual void dispatch(const http::request_cptr& request) NOEXCEPT;
 
-private:
-    void do_stop(const code& ec) NOEXCEPT;
-    void set_buffer(http::response& response) NOEXCEPT;
-    void handle_send(const code& ec, size_t bytes, http::response_ptr&,
+    virtual void size_json_buffer(http::response& response) NOEXCEPT;
+
+    virtual void handle_receive(const code& ec, size_t bytes,
+        const http::request_cptr& request) NOEXCEPT;
+    virtual void handle_send(const code& ec, size_t bytes, http::response_ptr&,
         const result_handler& handler) NOEXCEPT;
 
+private:
     void log_message(const http::request& request) const NOEXCEPT;
     void log_message(const http::response& response) const NOEXCEPT;
 
