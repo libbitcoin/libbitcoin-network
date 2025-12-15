@@ -63,46 +63,35 @@ void channel_http::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::resume();
-    read_request();
+    receive();
 }
 
-// Read cycle (read continues until stop called, call only once).
+// Read cycle.
 // ----------------------------------------------------------------------------
 
-// Calling more than once is safe but implies a protocol problem. Failure to
-// call after successful message handling results in stalled channel. This can
-// be buried in the common send completion hander, conditioned on the result
-// code. This is simpler and more performant than having the distributor isssue
-// one and only one completion handler to invoke read continuation.
-void channel_http::read_request() NOEXCEPT
+// Failure to call after successful message handling causes stalled channel.
+void channel_http::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT_MSG(!reading_, "already reading");
 
-    // Both terminate read loop, paused can be resumed, stopped cannot.
-    // Pause only prevents start of the read loop, it does not prevent messages
-    // from being issued for sockets already past that point (e.g. waiting).
-    // Pause is mainly for startup coordination, preventing missed messages.
     if (stopped() || paused() || reading_)
         return;
 
-    // HTTP is half duplex.
     reading_ = true;
     const auto in = to_shared<request>();
 
-    // Post handle_read_request to strand upon stop, error, or buffer full.
+    // Post handle_read to strand upon stop, error, or buffer full.
     read(request_buffer(), *in,
-        std::bind(&channel_http::handle_read_request,
+        std::bind(&channel_http::handle_receive,
             shared_from_base<channel_http>(), _1, _2, in));
 }
 
-void channel_http::handle_read_request(const code& ec, size_t,
+// private
+void channel_http::handle_receive(const code& ec, size_t,
     const request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // HTTP is half duplex.
-    reading_ = false;
 
     if (stopped())
     {
@@ -123,6 +112,14 @@ void channel_http::handle_read_request(const code& ec, size_t,
         return;
     }
 
+    reading_ = false;
+    log_message(*request);
+    dispatch(request);
+}
+
+// Wrap the monad request as a tagged verb request and dispatch by type.
+void channel_http::dispatch(const request_cptr& request) NOEXCEPT
+{
     request_t model{};
     switch (request.get()->method())
     {
@@ -139,7 +136,6 @@ void channel_http::handle_read_request(const code& ec, size_t,
         CASE_REQUEST_TO_MODEL(unknown, request, model);
     }
 
-    log_message(*request);
     if (const auto code = dispatcher_.notify(model))
         stop(code);
 }
@@ -156,7 +152,7 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    set_buffer(response);
+    size_json_buffer(response);
     const auto ptr = system::move_shared(std::move(response));
     count_handler complete = std::bind(&channel_http::handle_send,
         shared_from_base<channel_http>(), _1, _2, ptr, std::move(handler));
@@ -171,7 +167,16 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
     write(*ptr, std::move(complete));
 }
 
-void channel_http::set_buffer(response& response) NOEXCEPT
+// private
+void channel_http::handle_send(const code& ec, size_t, response_ptr&,
+    const result_handler& handler) NOEXCEPT
+{
+    if (ec) stop(ec);
+    handler(ec);
+}
+
+// private
+void channel_http::size_json_buffer(response& response) NOEXCEPT
 {
     if (const auto& body = response.body();
         body.contains<monad::json_value>())
@@ -182,15 +187,9 @@ void channel_http::set_buffer(response& response) NOEXCEPT
     }
 }
 
-void channel_http::handle_send(const code& ec, size_t, response_ptr&,
-    const result_handler& handler) NOEXCEPT
-{
-    if (ec) stop(ec);
-    handler(ec);
-}
-
 // log helpers
 // ----------------------------------------------------------------------------
+// private
 
 void channel_http::log_message(const request& request) const NOEXCEPT
 {

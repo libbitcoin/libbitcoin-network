@@ -36,26 +36,25 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // public/virtual
 // ----------------------------------------------------------------------------
 
-void channel_ws::read_request() NOEXCEPT
+void channel_ws::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     if (stopped() || paused() || !upgraded_)
     {
-        channel_http::read_request();
+        channel_http::receive();
         return;
     }
 
-    request_buffer().consume(request_buffer().size());
     ws_read(request_buffer(),
-        std::bind(&channel_ws::handle_read_websocket,
+        std::bind(&channel_ws::handle_receive_ws,
             shared_from_base<channel_ws>(), _1, _2));
 }
 
 // upgraded
 // ----------------------------------------------------------------------------
 
-void channel_ws::handle_read_websocket(const code& ec, size_t bytes) NOEXCEPT
+void channel_ws::handle_receive_ws(const code& ec, size_t bytes) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -78,22 +77,24 @@ void channel_ws::handle_read_websocket(const code& ec, size_t bytes) NOEXCEPT
         return;
     }
 
-    dispatch_websocket(request_buffer(), bytes);
+    dispatch_ws(request_buffer(), bytes);
 }
 
-void channel_ws::dispatch_websocket(const http::flat_buffer&,
+void channel_ws::dispatch_ws(const http::flat_buffer&,
     size_t LOG_ONLY(bytes)) NOEXCEPT
 {
     LOGA("Websocket read of " << bytes  << " bytes [" << authority() << "]");
 
+    // TODO: dispatch and restart upon completion.
+
     // Restart reader.
-    read_request();
+    receive();
 }
 
 // pre-upgrade
 // ----------------------------------------------------------------------------
 
-void channel_ws::handle_read_request(const code& ec, size_t bytes,
+void channel_ws::handle_receive(const code& ec, size_t bytes,
     const http::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -107,13 +108,13 @@ void channel_ws::handle_read_request(const code& ec, size_t bytes,
 
     if (ec != error::upgraded)
     {
-        channel_http::handle_read_request(ec, bytes, request);
+        channel_http::handle_receive(ec, bytes, request);
         return;
     }
 
     upgraded_ = true;
     LOGA("Websocket upgraded [" << authority() << "]");
-    read_request();
+    receive();
 }
 
 BC_POP_WARNING()
