@@ -215,6 +215,12 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\enums\service.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_body_writer.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />

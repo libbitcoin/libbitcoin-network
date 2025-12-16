@@ -99,6 +99,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/peer/detail/version.cpp \
     src/messages/peer/detail/version_acknowledge.cpp \
     src/messages/peer/detail/witness_tx_id_relay.cpp \
+    src/messages/rpc/body.cpp \
     src/net/acceptor.cpp \
     src/net/connector.cpp \
     src/net/deadline.cpp \
@@ -221,6 +222,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/peer/enums/level.cpp \
     test/messages/peer/enums/magic_numbers.cpp \
     test/messages/peer/enums/service.cpp \
+    test/messages/rpc/body_reader.cpp \
+    test/messages/rpc/body_writer.cpp \
     test/net/acceptor.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
@@ -431,6 +434,11 @@ include_bitcoin_network_messages_peer_enums_HEADERS = \
     include/bitcoin/network/messages/peer/enums/level.hpp \
     include/bitcoin/network/messages/peer/enums/magic_numbers.hpp \
     include/bitcoin/network/messages/peer/enums/service.hpp
+
+include_bitcoin_network_messages_rpcdir = ${includedir}/bitcoin/network/messages/rpc
+include_bitcoin_network_messages_rpc_HEADERS = \
+    include/bitcoin/network/messages/rpc/body.hpp \
+    include/bitcoin/network/messages/rpc/rpc.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \

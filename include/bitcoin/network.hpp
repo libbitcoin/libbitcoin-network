@@ -118,6 +118,8 @@
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>
+#include <bitcoin/network/messages/rpc/body.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>

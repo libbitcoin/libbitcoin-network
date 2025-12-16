@@ -54,6 +54,11 @@ struct BCT_API body
     public:
         using buffer_type = asio::const_buffer;
 
+        inline explicit reader(value_type& value) NOEXCEPT
+          : value_{ value }
+        {
+        }
+
         template <bool IsRequest, class Fields>
         inline explicit reader(http::message_header<IsRequest, Fields>&,
             value_type& value) NOEXCEPT
@@ -61,15 +66,17 @@ struct BCT_API body
         {
         }
 
-        void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
-        size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
-        void finish(boost_code& ec) NOEXCEPT;
+        virtual void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
+        virtual size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
+        virtual void finish(boost_code& ec) NOEXCEPT;
+
+    protected:
+        value_type& value_;
+        boost::json::stream_parser parser_{};
 
     private:
-        value_type& value_;
         size_t total_{};
         http::length_type expected_{};
-        boost::json::stream_parser parser_{};
     };
 
     class writer
@@ -78,20 +85,27 @@ struct BCT_API body
         using const_buffers_type = asio::const_buffer;
         using out_buffer = http::get_buffer<const_buffers_type>;
 
-        template <bool IsRequest, class Fields>
-        inline explicit writer(http::message_header<IsRequest, Fields>&,
-            value_type& value) NOEXCEPT
+        inline explicit writer(value_type& value) NOEXCEPT
           : value_{ value }, serializer_{ value.model.storage() }
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT;
-        out_buffer get(boost_code& ec) NOEXCEPT;
+        template <bool IsRequest, class Fields>
+        inline explicit writer(http::message_header<IsRequest, Fields>&,
+            value_type& value) NOEXCEPT
+          : writer{ value }
+        {
+        }
+
+        virtual void init(boost_code& ec) NOEXCEPT;
+        virtual out_buffer get(boost_code& ec) NOEXCEPT;
+        
+    protected:
+        value_type& value_;
+        boost::json::serializer serializer_;
 
     private:
         static constexpr size_t default_buffer = 4096;
-        const value_type& value_;
-        boost::json::serializer serializer_;
     };
 };
 

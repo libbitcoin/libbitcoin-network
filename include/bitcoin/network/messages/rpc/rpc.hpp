@@ -16,30 +16,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_HANDLERS_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_HANDLERS_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_RPC_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_RPC_HPP
 
-#include <bitcoin/network/define.hpp>
-
-namespace libbitcoin {
-namespace network {
-
-// Utility to convert a const reference instance to moveable.
-template <typename Type>
-inline Type move_copy(const Type& instance) NOEXCEPT
-{
-    auto copy = instance;
-    return copy;
-}
-
-// Common handlers, used across types.
-typedef std::function<bool(const code&)> notify_handler;
-typedef std::function<void(const code&)> result_handler;
-typedef std::function<void(const code&, size_t)> count_handler;
-typedef std::function<void(const code&,
-    const boost::json::value&)> json_handler;
-
-} // namespace network
-} // namespace libbitcoin
+#include <bitcoin/network/messages/rpc/body.hpp>
 
 #endif
