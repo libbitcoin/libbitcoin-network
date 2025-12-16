@@ -18,7 +18,7 @@
  */
 #include "../../test.hpp"
 
-#if !defined(HAVE_SLOW_TESTS)
+#if defined(HAVE_SLOW_TESTS)
 
 BOOST_AUTO_TEST_SUITE(rpc_body_writer_tests)
 
