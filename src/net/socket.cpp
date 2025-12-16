@@ -279,6 +279,24 @@ void socket::write(const asio::const_buffer& in,
             shared_from_this(), in, std::move(handler)));
 }
 
+// JSON.
+// ----------------------------------------------------------------------------
+
+void socket::json_read(json_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_json_read,
+            shared_from_this(), std::move(handler)));
+}
+
+void socket::json_write(const json_model& model,
+    result_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_json_write,
+            shared_from_this(), std::cref(model), std::move(handler)));
+}
+
 // HTTP.
 // ----------------------------------------------------------------------------
 
@@ -394,6 +412,28 @@ void socket::do_write(const asio::const_buffer& in,
         LOGF("Exception @ do_write: " << e.what());
         handler(error::operation_failed, {});
     }
+}
+
+// json (private).
+// ----------------------------------------------------------------------------
+// These execute on the strand to protect the member socket.
+
+void socket::do_json_read(const json_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // TODO:
+    handler({}, {});
+}
+
+void socket::do_json_write(
+    const std::reference_wrapper<const json_model>& ,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // TODO:
+    handler({});
 }
 
 // http (private).

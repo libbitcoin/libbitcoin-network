@@ -38,7 +38,14 @@ bool operator!=(const asio::const_buffer& left, const asio::const_buffer& right)
     return !(left == right);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__constructor__default__null_model)
+BOOST_AUTO_TEST_CASE(json_body_writer__constructor1__default__null_model)
+{
+    json::body::value_type body{};
+    json::body::writer writer(body);
+    BOOST_REQUIRE(boost::get<value>(body.model).is_null());
+}
+
+BOOST_AUTO_TEST_CASE(json_body_writer__constructor2__default__null_model)
 {
     response_header header{};
     json::body::value_type body{};
@@ -48,9 +55,8 @@ BOOST_AUTO_TEST_CASE(json_body_writer__constructor__default__null_model)
 
 BOOST_AUTO_TEST_CASE(json_body_writer__init__default__success)
 {
-    response_header header{};
     json::body::value_type body{};
-    json::body::writer writer(header, body);
+    json::body::writer writer(body);
     boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
@@ -60,9 +66,8 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more
 {
     const std::string_view expected{ "null" };
     const asio::const_buffer out{ expected.data(), expected.size() };
-    response_header header{};
     json::body::value_type body{};
-    json::body::writer writer(header, body);
+    json::body::writer writer(body);
     boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
@@ -78,10 +83,9 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_m
 {
     const std::string_view expected{ R"({"key":"value"})" };
     const asio::const_buffer out{ expected.data(), expected.size() };
-    response_header header{};
     json::body::value_type body{};
     body.model = object{ { "key", "value" } };
-    json::body::writer writer(header, body);
+    json::body::writer writer(body);
     boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
@@ -96,4 +100,3 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_m
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif // HAVE_SLOW_TESTS
-

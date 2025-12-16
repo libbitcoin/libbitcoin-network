@@ -191,6 +191,9 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\witness_tx_id_relay.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\message.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\rpc\body.cpp">
+      <ObjectFileName>$(IntDir)src_messages_rpc_body.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector.cpp" />
@@ -324,6 +327,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\heading.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\message.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\peer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\body.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\rpc.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />

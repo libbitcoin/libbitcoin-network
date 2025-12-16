@@ -40,6 +40,8 @@ class BCT_API socket
 {
 public:
     typedef std::shared_ptr<socket> ptr;
+    typedef boost::json::value json_model;
+    typedef std::shared_ptr<json_model> json_model_ptr;
 
     DELETE_COPY_MOVE(socket);
 
@@ -98,6 +100,16 @@ public:
     /// Write full buffer to the socket, handler posted to socket strand.
     virtual void write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
+
+    /// JSON.
+    /// -----------------------------------------------------------------------
+
+    /// Read full json model from the socket, handler posted to socket strand.
+    virtual void json_read(json_handler&& handler) NOEXCEPT;
+
+    /// Write full json model to the socket, handler posted to socket strand.
+    virtual void json_write(const json_model& model,
+        result_handler&& handler) NOEXCEPT;
 
     /// HTTP.
     /// -----------------------------------------------------------------------
@@ -173,12 +185,16 @@ private:
     void do_write(const asio::const_buffer& in,
         const count_handler& handler) NOEXCEPT;
 
+    // json
+    void do_json_read(const json_handler& handler) NOEXCEPT;
+    void do_json_write(const std::reference_wrapper<const json_model>& model,
+        const result_handler& handler) NOEXCEPT;
+
     // http
     void do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
         const std::reference_wrapper<http::request>& request,
         const count_handler& handler) NOEXCEPT;
-    void do_http_write(
-        const std::reference_wrapper<http::response>& response,
+    void do_http_write(const std::reference_wrapper<http::response>& response,
         const count_handler& handler) NOEXCEPT;
 
     // ws
