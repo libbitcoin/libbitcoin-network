@@ -35,8 +35,8 @@ struct BCT_API body
     struct value_type
       : json::body::value_type
     {
-        rpc::request_t request{};
-        rpc::response_t response{};
+        request_t request{};
+        response_t response{};
     };
 
     class reader
