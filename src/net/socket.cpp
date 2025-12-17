@@ -239,9 +239,10 @@ void socket::accept(asio::acceptor& acceptor,
     try
     {
         // Dispatches on the acceptor's strand (which should be network).
+        // Cannot move handler due to catch block invocation.
         acceptor.async_accept(socket_,
             std::bind(&socket::handle_accept,
-                shared_from_this(), _1, std::move(handler)));
+                shared_from_this(), _1, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
     {
