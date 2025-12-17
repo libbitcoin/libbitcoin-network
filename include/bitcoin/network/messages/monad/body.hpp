@@ -24,9 +24,8 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
-#include <bitcoin/network/messages/http/http.hpp>
-
-// TODO: relies on http::header, length_type, get_buffer, media_type.
+#include <bitcoin/network/messages/http/enums/media_type.hpp>
+#include <bitcoin/network/messages/http/fields.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -293,6 +292,20 @@ struct BCT_API body
 };
 
 } // namespace monad
+} // namespace network
+} // namespace libbitcoin
+
+namespace libbitcoin {
+namespace network {
+namespace http {
+
+using request = boost::beast::http::request<monad::body>;
+using request_cptr = std::shared_ptr<const request>;
+
+using response = boost::beast::http::response<monad::body>;
+using response_ptr = std::shared_ptr<response>;
+
+} // namespace http
 } // namespace network
 } // namespace libbitcoin
 

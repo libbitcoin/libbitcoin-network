@@ -57,8 +57,8 @@
 #include <bitcoin/network/log/timer.hpp>
 #include <bitcoin/network/log/tracker.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
-#include <bitcoin/network/messages/http/head.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/http/method.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/http/enums/media_type.hpp>
 #include <bitcoin/network/messages/http/enums/status.hpp>
@@ -67,11 +67,7 @@
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/json/json.hpp>
 #include <bitcoin/network/messages/monad/body.hpp>
-#include <bitcoin/network/messages/monad/head.hpp>
-#include <bitcoin/network/messages/monad/method.hpp>
 #include <bitcoin/network/messages/monad/monad.hpp>
-#include <bitcoin/network/messages/monad/request.hpp>
-#include <bitcoin/network/messages/monad/response.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>

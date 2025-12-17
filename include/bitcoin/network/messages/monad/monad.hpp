@@ -20,9 +20,5 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_MONAD_MONAD_HPP
 
 #include <bitcoin/network/messages/monad/body.hpp>
-#include <bitcoin/network/messages/monad/head.hpp>
-#include <bitcoin/network/messages/monad/method.hpp>
-#include <bitcoin/network/messages/monad/request.hpp>
-#include <bitcoin/network/messages/monad/response.hpp>
 
 #endif

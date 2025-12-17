@@ -21,7 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/monad/monad.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/rpc/publish.hpp>
 
 namespace libbitcoin {
