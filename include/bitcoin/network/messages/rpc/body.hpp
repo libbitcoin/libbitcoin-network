@@ -35,8 +35,8 @@ struct BCT_API body
     struct value_type
       : json::body::value_type
     {
-        rpc::request_t request{};
-        rpc::response_t response{};
+        request_t request{};
+        response_t response{};
     };
 
     class reader
@@ -97,7 +97,9 @@ namespace libbitcoin {
 namespace network {
 namespace http {
     
-using terminated_body = rpc::body;
+using rpc_body = rpc::body;
+using rpc_request = boost::beast::http::request<rpc_body>;
+using rpc_response = boost::beast::http::response<rpc_body>;
 
 } // namespace http
 } // namespace network

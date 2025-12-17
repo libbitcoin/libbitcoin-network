@@ -329,14 +329,6 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
 
-include_bitcoin_network_impl_messages_httpdir = ${includedir}/bitcoin/network/impl/messages/http
-include_bitcoin_network_impl_messages_http_HEADERS = \
-    include/bitcoin/network/impl/messages/http/head.ipp
-
-include_bitcoin_network_impl_messages_monaddir = ${includedir}/bitcoin/network/impl/messages/monad
-include_bitcoin_network_impl_messages_monad_HEADERS = \
-    include/bitcoin/network/impl/messages/monad/head.ipp
-
 include_bitcoin_network_impl_rpcdir = ${includedir}/bitcoin/network/impl/rpc
 include_bitcoin_network_impl_rpc_HEADERS = \
     include/bitcoin/network/impl/rpc/broadcaster.ipp \
@@ -355,8 +347,8 @@ include_bitcoin_network_log_HEADERS = \
 include_bitcoin_network_messages_httpdir = ${includedir}/bitcoin/network/messages/http
 include_bitcoin_network_messages_http_HEADERS = \
     include/bitcoin/network/messages/http/fields.hpp \
-    include/bitcoin/network/messages/http/head.hpp \
-    include/bitcoin/network/messages/http/http.hpp
+    include/bitcoin/network/messages/http/http.hpp \
+    include/bitcoin/network/messages/http/method.hpp
 
 include_bitcoin_network_messages_http_enumsdir = ${includedir}/bitcoin/network/messages/http/enums
 include_bitcoin_network_messages_http_enums_HEADERS = \
@@ -374,11 +366,7 @@ include_bitcoin_network_messages_json_HEADERS = \
 include_bitcoin_network_messages_monaddir = ${includedir}/bitcoin/network/messages/monad
 include_bitcoin_network_messages_monad_HEADERS = \
     include/bitcoin/network/messages/monad/body.hpp \
-    include/bitcoin/network/messages/monad/head.hpp \
-    include/bitcoin/network/messages/monad/method.hpp \
-    include/bitcoin/network/messages/monad/monad.hpp \
-    include/bitcoin/network/messages/monad/request.hpp \
-    include/bitcoin/network/messages/monad/response.hpp
+    include/bitcoin/network/messages/monad/monad.hpp
 
 include_bitcoin_network_messages_peerdir = ${includedir}/bitcoin/network/messages/peer
 include_bitcoin_network_messages_peer_HEADERS = \

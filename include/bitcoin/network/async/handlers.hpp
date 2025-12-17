@@ -36,8 +36,6 @@ inline Type move_copy(const Type& instance) NOEXCEPT
 typedef std::function<bool(const code&)> notify_handler;
 typedef std::function<void(const code&)> result_handler;
 typedef std::function<void(const code&, size_t)> count_handler;
-typedef std::function<void(const code&,
-    const boost::json::value&)> json_handler;
 
 } // namespace network
 } // namespace libbitcoin

@@ -26,7 +26,9 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/monad/monad.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -40,8 +42,6 @@ class BCT_API socket
 {
 public:
     typedef std::shared_ptr<socket> ptr;
-    typedef boost::json::value json_model;
-    typedef std::shared_ptr<json_model> json_model_ptr;
 
     DELETE_COPY_MOVE(socket);
 
@@ -90,7 +90,7 @@ public:
     virtual void connect(const asio::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
-    /// TCP.
+    /// TCP (generic).
     /// -----------------------------------------------------------------------
 
     /// Read full buffer from the socket, handler posted to socket strand.
@@ -101,17 +101,29 @@ public:
     virtual void write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
-    /// JSON.
+    /// TCP-RPC (e.g. electrum, stratum_v1).
     /// -----------------------------------------------------------------------
 
-    /// Read full json model from the socket, handler posted to socket strand.
-    virtual void json_read(json_handler&& handler) NOEXCEPT;
+    /// Read full rpc request from the socket, handler posted to socket strand.
+    virtual void rpc_read(rpc::response_t& out,
+        count_handler&& handler) NOEXCEPT;
 
-    /// Write full json model to the socket, handler posted to socket strand.
-    virtual void json_write(const json_model& model,
-        result_handler&& handler) NOEXCEPT;
+    /// Write full rpc response to the socket, handler posted to socket strand.
+    virtual void rpc_write(const rpc::response_t& model,
+        count_handler&& handler) NOEXCEPT;
 
-    /// HTTP.
+    /// HTTP-RPC (e.g. bitcoind).
+    /// -----------------------------------------------------------------------
+
+    /// Read full rpc request from the socket, handler posted to socket strand.
+    virtual void http_read(http::flat_buffer& buffer,
+        http::rpc_request& request, count_handler&& handler) NOEXCEPT;
+
+    /// Write full rpc request to the socket, handler posted to socket strand.
+    virtual void http_write(http::rpc_response& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// HTTP (generic).
     /// -----------------------------------------------------------------------
 
     /// Read full http variant request from the socket.
@@ -122,7 +134,7 @@ public:
     virtual void http_write(http::response& response,
         count_handler&& handler) NOEXCEPT;
 
-    /// WS.
+    /// WS (generic).
     /// -----------------------------------------------------------------------
 
     /// Read full buffer from the websocket (post-upgrade).
@@ -179,25 +191,36 @@ private:
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
 
-    // tcp
+    // tcp (generic)
     void do_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
     void do_write(const asio::const_buffer& in,
         const count_handler& handler) NOEXCEPT;
 
-    // json
-    void do_json_read(const json_handler& handler) NOEXCEPT;
-    void do_json_write(const std::reference_wrapper<const json_model>& model,
-        const result_handler& handler) NOEXCEPT;
+    // tcp (rpc)
+    void do_rpc_read(
+        std::reference_wrapper<rpc::response_t> out,
+        const count_handler& handler) NOEXCEPT;
+    void do_rpc_write(
+        const std::reference_wrapper<const rpc::response_t>& in,
+        const count_handler& handler) NOEXCEPT;
 
-    // http
+    // http (rpc)
+    void do_http_rpc_read(std::reference_wrapper<http::flat_buffer> buffer,
+        const std::reference_wrapper<http::rpc_request>& request,
+        const count_handler& handler) NOEXCEPT;
+    void do_http_rpc_write(
+        const std::reference_wrapper<http::rpc_response>& response,
+        const count_handler& handler) NOEXCEPT;
+
+    // http (generic)
     void do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
         const std::reference_wrapper<http::request>& request,
         const count_handler& handler) NOEXCEPT;
     void do_http_write(const std::reference_wrapper<http::response>& response,
         const count_handler& handler) NOEXCEPT;
 
-    // ws
+    // ws (generic)
     void do_ws_read(std::reference_wrapper<http::flat_buffer> out,
         const count_handler& handler) NOEXCEPT;
     void do_ws_write(const asio::const_buffer& in, bool binary,
@@ -220,18 +243,28 @@ private:
     void handle_connect(const boost_code& ec, const asio::endpoint& peer,
         const result_handler& handler) NOEXCEPT;
 
-    // tcp
-    void handle_io(const boost_code& ec, size_t size,
+    // tcp (generic)
+    void handle_tcp(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
-    // http (request reference enables websocket upgrade)
+    // tcp (rpc)
+    void handle_rpc_tcp(const boost_code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
+
+    // http (rpc)
+    void handle_http_rpc_read(const boost_code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_rpc_write(const boost_code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
+
+    // http (generic)
     void handle_http_read(const boost_code& ec, size_t size,
         const std::reference_wrapper<http::request>& request,
         const count_handler& handler) NOEXCEPT;
     void handle_http_write(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
-    // ws
+    // ws (generic)
     void handle_ws_read(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
     void handle_ws_write(const boost_code& ec, size_t size,

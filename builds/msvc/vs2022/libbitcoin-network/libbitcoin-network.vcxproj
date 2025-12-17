@@ -271,16 +271,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\target.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\fields.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\head.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\http.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\json.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\monad\body.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\monad\head.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\monad\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\monad\monad.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\monad\request.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\monad\response.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\alert.hpp" />
@@ -388,8 +384,6 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_volume.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\head.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\monad\head.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\broadcaster.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\dispatcher.ipp" />
     <None Include="packages.config" />

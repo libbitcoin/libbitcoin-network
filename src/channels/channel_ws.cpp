@@ -20,7 +20,7 @@
 
 #include <optional>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/monad/monad.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
 
 namespace libbitcoin {
 namespace network {
