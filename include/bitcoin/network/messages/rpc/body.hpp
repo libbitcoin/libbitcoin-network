@@ -97,7 +97,7 @@ namespace libbitcoin {
 namespace network {
 namespace http {
     
-using terminated_body = rpc::body;
+using rpc_body = rpc::body;
 
 } // namespace http
 } // namespace network
