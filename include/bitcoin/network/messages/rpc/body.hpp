@@ -21,7 +21,7 @@
 
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
-#include <bitcoin/network/rpc/model.hpp>
+#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -85,7 +85,6 @@ struct BCT_API body
 
     private:
         const bool terminate_{};
-        boost::json::value temp_json_{};
     };
 };
 
