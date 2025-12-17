@@ -23,6 +23,10 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/net/socket.hpp>
+#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -179,7 +183,7 @@ void proxy::cancel(result_handler&& handler) NOEXCEPT
     socket_->cancel(std::move(handler));
 }
 
-// TCP.
+// TCP (generic).
 // ----------------------------------------------------------------------------
 
 void proxy::read(const asio::mutable_buffer& buffer,
@@ -199,7 +203,48 @@ void proxy::write(const asio::const_buffer& payload,
             shared_from_this(), payload, std::move(handler)));
 }
 
-// HTTP.
+// TCP-RPC.
+// ----------------------------------------------------------------------------
+
+void proxy::read(rpc::response_t& out, count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::waiting, shared_from_this()));
+
+    socket_->rpc_read(out, std::move(handler));
+}
+
+void proxy::write(const rpc::response_t& in, count_handler&& handler) NOEXCEPT
+{
+    socket_->rpc_write(in, std::move(handler));
+
+    // TODO: compose?
+    ////boost::asio::dispatch(strand(),
+    ////    std::bind(&proxy::do_write,
+    ////        shared_from_this(), std::ref(in), std::move(handler)));
+}
+
+// HTTP-RPC.
+// ----------------------------------------------------------------------------
+
+// Method waiting() is invoked directly if read() is called from strand().
+void proxy::read(http::flat_buffer& buffer, http::rpc_request& request,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::waiting, shared_from_this()));
+
+    socket_->http_read(buffer, request, std::move(handler));
+}
+
+// Writes are composed but http is half duplex so there is no interleave risk.
+void proxy::write(http::rpc_response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->http_write(response, std::move(handler));
+}
+
+// HTTP (generic).
 // ----------------------------------------------------------------------------
 
 // Method waiting() is invoked directly if read() is called from strand().
@@ -219,7 +264,7 @@ void proxy::write(http::response& response,
     socket_->http_write(response, std::move(handler));
 }
 
-// WS.
+// WS (generic).
 // ----------------------------------------------------------------------------
 
 void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT

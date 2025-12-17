@@ -27,7 +27,9 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/rpc/rpc.hpp>
 #include <bitcoin/network/net/socket.hpp>
+#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -117,7 +119,7 @@ protected:
     /// Cancel wait or any asynchronous read/write operation, handlers posted.
     virtual void cancel(result_handler&& handler) NOEXCEPT;
 
-    /// TCP.
+    /// TCP (generic).
     /// -----------------------------------------------------------------------
 
     /// Read fixed-size TCP message from the remote endpoint into buffer.
@@ -128,7 +130,29 @@ protected:
     virtual void write(const asio::const_buffer& payload,
         count_handler&& handler) NOEXCEPT;
 
-    /// HTTP.
+    /// TCP-RPC (e.g. electrum, stratum_v1).
+    /// -----------------------------------------------------------------------
+
+    /// Read full rpc request from the socket, handler posted to socket strand.
+    virtual void read(rpc::response_t& out,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full rpc response to the socket, handler posted to socket strand.
+    virtual void write(const rpc::response_t& in,
+        count_handler&& handler) NOEXCEPT;
+
+    /// HTTP-RPC (e.g. bitcoind).
+    /// -----------------------------------------------------------------------
+
+    /// Read full rpc request from the socket, handler posted to socket strand.
+    virtual void read(http::flat_buffer& buffer,
+        http::rpc_request& request, count_handler&& handler) NOEXCEPT;
+
+    /// Write full rpc request to the socket, handler posted to socket strand.
+    virtual void write(http::rpc_response& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// HTTP (generic).
     /// -----------------------------------------------------------------------
 
     /// Read full http variant request from the socket, using provided buffer.
@@ -139,7 +163,7 @@ protected:
     virtual void write(http::response& response,
         count_handler&& handler) NOEXCEPT;
 
-    /// WS.
+    /// WS (generic).
     /// -----------------------------------------------------------------------
 
     /// Read full buffer from the websocket (post-upgrade).
