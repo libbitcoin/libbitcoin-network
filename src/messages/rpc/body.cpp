@@ -38,6 +38,7 @@ BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 // rpc::body::reader
 // ----------------------------------------------------------------------------
 
+template <>
 size_t body<rpc::request_t>::reader::
 put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 {
@@ -90,6 +91,7 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     return parsed;
 }
 
+template <>
 void body<rpc::request_t>::reader::
 finish(boost_code& ec) NOEXCEPT
 {
@@ -119,6 +121,7 @@ finish(boost_code& ec) NOEXCEPT
     }
 }
 
+template <>
 size_t body<rpc::response_t>::reader::
 put(const buffer_type&, boost_code&) NOEXCEPT
 {
@@ -126,6 +129,7 @@ put(const buffer_type&, boost_code&) NOEXCEPT
     return {};
 }
 
+template <>
 void body<rpc::response_t>::reader::
 finish(boost_code&) NOEXCEPT
 {
@@ -135,6 +139,7 @@ finish(boost_code&) NOEXCEPT
 // rpc::body::writer
 // ----------------------------------------------------------------------------
 
+template <>
 void body<rpc::response_t>::writer::
 init(boost_code& ec) NOEXCEPT
 {
@@ -161,6 +166,7 @@ init(boost_code& ec) NOEXCEPT
     serializer_.reset(&value_.model);
 }
 
+template <>
 body<rpc::response_t>::writer::out_buffer
 body<rpc::response_t>::writer::
 get(boost_code& ec) NOEXCEPT
@@ -180,12 +186,14 @@ get(boost_code& ec) NOEXCEPT
     return out_buffer{ std::make_pair(buffer(&line, sizeof(line)), !more) };
 }
 
+template <>
 void body<rpc::request_t>::writer::
 init(boost_code&) NOEXCEPT
 {
     BC_ASSERT(false);
 }
 
+template <>
 body<rpc::request_t>::writer::out_buffer
 body<rpc::request_t>::writer::
 get(boost_code&) NOEXCEPT
@@ -198,9 +206,9 @@ BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()
 
-// Force compilation.
-template struct body<rpc::value_type<rpc::request_t>>;
-template struct body<rpc::value_type<rpc::response_t>>;
+////// Force compilation.
+////template struct body<rpc::value_type<rpc::request_t>>;
+////template struct body<rpc::value_type<rpc::response_t>>;
 
 } // namespace rpc
 } // namespace network
