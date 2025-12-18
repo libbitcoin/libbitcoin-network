@@ -329,6 +329,10 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
 
+include_bitcoin_network_impl_messages_jsondir = ${includedir}/bitcoin/network/impl/messages/json
+include_bitcoin_network_impl_messages_json_HEADERS = \
+    include/bitcoin/network/impl/messages/json/body.ipp
+
 include_bitcoin_network_impl_rpcdir = ${includedir}/bitcoin/network/impl/rpc
 include_bitcoin_network_impl_rpc_HEADERS = \
     include/bitcoin/network/impl/rpc/broadcaster.ipp \
