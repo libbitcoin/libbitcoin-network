@@ -22,8 +22,8 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
-// Force compilation.
-template struct body<json_value>;
+////// Force compilation.
+////template struct body<json_value>;
 
 } // namespace json
 } // namespace network
