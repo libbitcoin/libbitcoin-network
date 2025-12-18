@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/monad/body.hpp>
+#include <bitcoin/network/messages/monad_body.hpp>
 
 #include <variant>
 #include <bitcoin/network/define.hpp>
@@ -110,6 +110,9 @@ void body::writer::init(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
+        [&] (std::monostate&) NOEXCEPT
+        {
+        },
         [&](auto& write) NOEXCEPT
         {
             try
@@ -128,6 +131,10 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
+        [&] (std::monostate&) NOEXCEPT
+        {
+            return out_buffer{};
+        },
         [&](auto& write) NOEXCEPT
         {
             try

@@ -23,67 +23,91 @@
 #include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/http/enums/media_type.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
+#include <bitcoin/network/messages/json_body.hpp>
+#include <bitcoin/network/messages/rpc_body.hpp>
+
+// CYCLE
+#include <bitcoin/network/rpc/rpc.hpp>
+
+namespace libbitcoin {
+namespace network {
+namespace rpc {
+
+using request_body = rpc::body<rpc::request_t>;
+using response_body = rpc::body<rpc::response_t>;
+
+} // rpc 
+} // network
+} // libbitcoin
 
 namespace libbitcoin {
 namespace network {
 namespace monad {
 
 using empty_reader = http::empty_body::reader;
-using json_reader = http::json_body::reader;
 using data_reader = http::chunk_body::reader;
 using file_reader = http::file_body::reader;
 using span_reader = http::span_body::reader;
 using buffer_reader = http::buffer_body::reader;
 using string_reader = http::string_body::reader;
+using json_reader = http::json_body::reader;
+using rpc_reader = rpc::request_body::reader;
 using body_reader = std::variant
 <
     std::monostate,
     empty_reader,
-    json_reader,
     data_reader,
     file_reader,
     span_reader,
     buffer_reader,
-    string_reader
+    string_reader,
+    json_reader,
+    rpc_reader
 >;
 
 using empty_writer = http::empty_body::writer;
-using json_writer = http::json_body::writer;
 using data_writer = http::chunk_body::writer;
 using file_writer = http::file_body::writer;
 using span_writer = http::span_body::writer;
 using buffer_writer = http::buffer_body::writer;
 using string_writer = http::string_body::writer;
+using json_writer = http::json_body::writer;
+using rpc_writer = rpc::response_body::writer;
 using body_writer = std::variant
 <
+    std::monostate,
     empty_writer,
-    json_writer,
     data_writer,
     file_writer,
     span_writer,
     buffer_writer,
-    string_writer
+    string_writer,
+    json_writer,
+    rpc_writer
 >;
 
 using empty_value = http::empty_body::value_type;
-using json_value = http::json_body::value_type;
 using data_value = http::chunk_body::value_type;
 using file_value = http::file_body::value_type;
 using span_value = http::span_body::value_type;
 using buffer_value = http::buffer_body::value_type;
 using string_value = http::string_body::value_type;
+using json_value = http::json_body::value_type;
+using rpcin_value = rpc::request_body::value_type;
+using rpcout_value = rpc::response_body::value_type;
 using body_value = std::variant
 <
     empty_value,
-    json_value,
     data_value,
     file_value,
     span_value,
     buffer_value,
-    string_value
+    string_value,
+    json_value,
+    rpcin_value,
+    rpcout_value
 >;
 
 /// body template for all known message types.
@@ -95,6 +119,10 @@ struct BCT_API body
     /// The pass-thru body(), reader populates in construct.
     struct value_type
     {
+        /// Set to change reader to plain json (vs. json-rpc).
+        /// Writer is determined by assigned body type.
+        bool plain_json{};
+
         /// Allow default construct (empty optional).
         value_type() NOEXCEPT = default;
 
@@ -102,12 +130,14 @@ struct BCT_API body
         FORWARD_VARIANT_CONSTRUCT(value_type, inner_)
         FORWARD_VARIANT_ASSIGNMENT(value_type, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, empty_value, inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, json_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, data_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, file_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, span_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, buffer_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, string_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, json_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpcin_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpcout_value, inner_)
 
         inline bool has_value() const NOEXCEPT
         {
@@ -167,7 +197,10 @@ struct BCT_API body
             switch (http::content_media_type(header))
             {
                 case http::media_type::application_json:
-                    value = json_value{};
+                    if (value_.plain_json)
+                        value = json_value{};
+                    else
+                        value = rpcin_value{};
                     break;
                 case http::media_type::text_plain:
                     value = string_value{};
@@ -188,16 +221,11 @@ struct BCT_API body
                 [&](std::monostate&) NOEXCEPT {},
                 [&](span_value&) NOEXCEPT {},
                 [&](buffer_value&) NOEXCEPT {},
+                [&](rpcout_value&) NOEXCEPT {},
 
                 [&](empty_value& value) NOEXCEPT
                 {
                     reader_.emplace<empty_reader>(header, value);
-                },
-                [&](json_value& value) NOEXCEPT
-                {
-                    // json_reader not copy or assignable (by contained parser).
-                    // So *requires* in-place construction for variant populate.
-                    reader_.emplace<json_reader>(header, value);
                 },
                 [&](data_value& value) NOEXCEPT
                 {
@@ -210,6 +238,16 @@ struct BCT_API body
                 [&](string_value& value) NOEXCEPT
                 {
                     reader_.emplace<string_reader>(header, value);
+                },
+                [&](json_value& value) NOEXCEPT
+                {
+                    // json_reader not copy or assignable (by contained parser).
+                    reader_.emplace<json_reader>(header, value);
+                },
+                [&](rpcin_value& value) NOEXCEPT
+                {
+                    // json_reader not copy or assignable (by contained parser).
+                    reader_.emplace<rpc_reader>(header, value);
                 }
             }, value.value());
         }
@@ -252,13 +290,6 @@ struct BCT_API body
                 {
                     return body_writer{ empty_writer{ header, value } };
                 },
-                [&](json_value& value) NOEXCEPT
-                {
-                    // json_writer is not movable (by contained serializer).
-                    // So *requires* in-place construction for variant populate.
-                    return body_writer{ std::in_place_type<json_writer>,
-                        header, value };
-                },
                 [&](data_value& value) NOEXCEPT
                 {
                     return body_writer{ data_writer{ header, value } };
@@ -278,6 +309,24 @@ struct BCT_API body
                 [&](string_value& value) NOEXCEPT
                 {
                     return body_writer{ string_writer{ header, value } };
+                },
+                [&](json_value& value) NOEXCEPT
+                {
+                    // json_writer is not movable (by contained serializer).
+                    // So requires in-place construction for variant populate.
+                    return body_writer{ std::in_place_type<json_writer>,
+                        header, value };
+                },
+                [&](rpcout_value& value) NOEXCEPT
+                {
+                    // json_writer is not movable (by contained serializer).
+                    // So requires in-place construction for variant populate.
+                    return body_writer{ std::in_place_type<rpc_writer>,
+                        header, value };
+                },
+                [&](rpcin_value&) NOEXCEPT
+                {
+                    return body_writer{ std::monostate{} };
                 }
             }, value.value());
         }

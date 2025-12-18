@@ -151,21 +151,13 @@
     <ClCompile Include="..\..\..\..\test\messages\http\enums\media_type.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
-      <ObjectFileName>$(IntDir)test_messages_json_body_reader.obj</ObjectFileName>
+    <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_method.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\body_writer.cpp">
-      <ObjectFileName>$(IntDir)test_messages_json_body_writer.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\body_reader.cpp">
-      <ObjectFileName>$(IntDir)test_messages_monad_body_reader.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\body_writer.cpp">
-      <ObjectFileName>$(IntDir)test_messages_monad_body_writer.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\method.cpp">
-      <ObjectFileName>$(IntDir)test_messages_monad_method.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\monad_body_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\monad_body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
@@ -215,12 +207,8 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\enums\service.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\body_reader.cpp">
-      <ObjectFileName>$(IntDir)test_messages_rpc_body_reader.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\body_writer.cpp">
-      <ObjectFileName>$(IntDir)test_messages_rpc_body_writer.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc_body_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc_body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />

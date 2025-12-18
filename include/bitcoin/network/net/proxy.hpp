@@ -26,8 +26,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/http/http.hpp>
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/rpc/rpc.hpp>
 
@@ -139,17 +138,6 @@ protected:
 
     /// Write full rpc response to the socket, handler posted to socket strand.
     virtual void write(const rpc::response_t& in,
-        count_handler&& handler) NOEXCEPT;
-
-    /// HTTP-RPC (e.g. bitcoind).
-    /// -----------------------------------------------------------------------
-
-    /// Read full rpc request from the socket, handler posted to socket strand.
-    virtual void read(http::flat_buffer& buffer,
-        http::rpc_request& request, count_handler&& handler) NOEXCEPT;
-
-    /// Write full rpc request to the socket, handler posted to socket strand.
-    virtual void write(http::rpc_response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// HTTP (generic).

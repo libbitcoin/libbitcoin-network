@@ -26,8 +26,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/http/http.hpp>
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
@@ -112,17 +111,6 @@ public:
     virtual void rpc_write(const rpc::response_t& model,
         count_handler&& handler) NOEXCEPT;
 
-    /// HTTP-RPC (e.g. bitcoind).
-    /// -----------------------------------------------------------------------
-
-    /// Read full rpc request from the socket, handler posted to socket strand.
-    virtual void http_read(http::flat_buffer& buffer,
-        http::rpc_request& request, count_handler&& handler) NOEXCEPT;
-
-    /// Write full rpc request to the socket, handler posted to socket strand.
-    virtual void http_write(http::rpc_response& response,
-        count_handler&& handler) NOEXCEPT;
-
     /// HTTP (generic).
     /// -----------------------------------------------------------------------
 
@@ -205,14 +193,6 @@ private:
         const std::reference_wrapper<const rpc::response_t>& in,
         const count_handler& handler) NOEXCEPT;
 
-    // http (rpc)
-    void do_http_rpc_read(std::reference_wrapper<http::flat_buffer> buffer,
-        const std::reference_wrapper<http::rpc_request>& request,
-        const count_handler& handler) NOEXCEPT;
-    void do_http_rpc_write(
-        const std::reference_wrapper<http::rpc_response>& response,
-        const count_handler& handler) NOEXCEPT;
-
     // http (generic)
     void do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
         const std::reference_wrapper<http::request>& request,
@@ -249,12 +229,6 @@ private:
 
     // tcp (rpc)
     void handle_rpc_tcp(const boost_code& ec, size_t size,
-        const count_handler& handler) NOEXCEPT;
-
-    // http (rpc)
-    void handle_http_rpc_read(const boost_code& ec, size_t size,
-        const count_handler& handler) NOEXCEPT;
-    void handle_http_rpc_write(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
     // http (generic)

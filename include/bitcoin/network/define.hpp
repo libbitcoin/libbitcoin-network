@@ -143,23 +143,25 @@ namespace network {
 // error          : beast
 // define         : error
 
-// Other directory common includes are not internally chained.
-// Each header includes only its required common headers.
-
-// /async         : define
-// /messages      : define memory
-// /log           : define /async
-// /config        : define /messages /async
-// /net           : define settings memory /config /log
-// /distributors  : define /messages /async
-// /channels      : define settings /distributors /net
-// /sessions      : define settings /channels /net [forward: net]
-// /protocols     : define settings /sessions
-
 // Root directory singletons.
 
 // memory         : define
-// settings       : define /messages /config
-// net            : define settings /sessions /protocols 
+// settings       : define /config
+// net            : define settings /sessions
+
+// Other directory common includes are not internally chained.
+// Each header includes only its required common headers.
+// protcols are not included in any headers except protocols.
+
+// /async         : define
+// /log           : define /async
+// /messages      : define memory
+// /config        : define /messages /async
+// /net           : define settings memory /config /log
+// /rpc           : define /messages /async
+// /interface     : define /rpc
+// /channels      : define /net /interface
+// /sessions      : define /channels
+// /protocols     : define /sessions
 
 #endif

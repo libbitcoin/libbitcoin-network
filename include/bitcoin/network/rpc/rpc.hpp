@@ -24,7 +24,6 @@
 #include <bitcoin/network/rpc/dispatcher.hpp>
 #include <bitcoin/network/rpc/enums/grouping.hpp>
 #include <bitcoin/network/rpc/enums/version.hpp>
-#include <bitcoin/network/rpc/interfaces/interfaces.hpp>
 #include <bitcoin/network/rpc/method.hpp>
 #include <bitcoin/network/rpc/model.hpp>
 #include <bitcoin/network/rpc/publish.hpp>
