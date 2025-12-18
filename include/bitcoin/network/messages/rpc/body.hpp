@@ -28,7 +28,7 @@ namespace network {
 namespace rpc {
 
 template <typename Type>
-struct value_type
+struct message_type
   : public json::json_value
 {
     Type message{};
@@ -38,9 +38,9 @@ struct value_type
 /// Extends json::body with JSON-RPC validation.
 template <typename Message>
 struct BCT_API body
-  : public json::body<value_type<Message>>
+  : public json::body<message_type<Message>>
 {
-    using message_value = value_type<Message>;
+    using message_value = message_type<Message>;
     using base = typename json::body<message_value>;
     using value_type = base::value_type;
 
