@@ -20,8 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_BODY_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/json/body.hpp>
-#include <bitcoin/network/rpc/rpc.hpp>
+#include <bitcoin/network/messages/json_body.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -99,20 +98,6 @@ struct BCT_API body
 };
 
 } // namespace rpc
-} // namespace network
-} // namespace libbitcoin
-
-namespace libbitcoin {
-namespace network {
-namespace http {
-    
-using rpc_request_body = rpc::body<rpc::request_t>;
-using rpc_response_body = rpc::body<rpc::response_t>;
-
-using rpc_request = boost::beast::http::request<rpc_request_body>;
-using rpc_response = boost::beast::http::response<rpc_response_body>;
-
-} // namespace http
 } // namespace network
 } // namespace libbitcoin
 

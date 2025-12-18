@@ -131,7 +131,7 @@ using json_body = json::body<>;
 #define TEMPLATE template <typename Value>
 #define CLASS body<Value>
 
-#include <bitcoin/network/impl/messages/json/body.ipp>
+#include <bitcoin/network/impl/messages/json_body.ipp>
 
 #undef CLASS
 #undef TEMPLATE

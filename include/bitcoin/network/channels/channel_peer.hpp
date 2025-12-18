@@ -22,9 +22,10 @@
 #include <memory>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/interface/interface.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/peer/peer.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {

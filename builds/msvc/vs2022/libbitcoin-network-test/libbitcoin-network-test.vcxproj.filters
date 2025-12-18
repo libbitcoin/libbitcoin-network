@@ -32,24 +32,15 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\http\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\json">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\monad">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\peer">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\peer\detail">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\peer\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\rpc">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\net">
@@ -153,20 +144,20 @@
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
-      <Filter>src\messages\json</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
+      <Filter>src\messages\http</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\body_writer.cpp">
-      <Filter>src\messages\json</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp">
+      <Filter>src\messages</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\body_reader.cpp">
-      <Filter>src\messages\monad</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp">
+      <Filter>src\messages</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\body_writer.cpp">
-      <Filter>src\messages\monad</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\monad_body_reader.cpp">
+      <Filter>src\messages</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\monad\method.cpp">
-      <Filter>src\messages\monad</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\monad_body_writer.cpp">
+      <Filter>src\messages</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\address.cpp">
       <Filter>src\messages\peer\detail</Filter>
@@ -303,11 +294,11 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp">
       <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\body_reader.cpp">
-      <Filter>src\messages\rpc</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\rpc_body_reader.cpp">
+      <Filter>src\messages</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\body_writer.cpp">
-      <Filter>src\messages\rpc</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\rpc_body_writer.cpp">
+      <Filter>src\messages</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp">
       <Filter>src</Filter>

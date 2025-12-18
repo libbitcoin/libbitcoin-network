@@ -24,7 +24,7 @@
 #include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/net/socket.hpp>
+#include <bitcoin/network/net/net.hpp>
 
 namespace libbitcoin {
 namespace network {

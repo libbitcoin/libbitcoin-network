@@ -16,9 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_MONAD_MONAD_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_MONAD_MONAD_HPP
+#include "../../test.hpp"
 
-#include <bitcoin/network/messages/monad/body.hpp>
+BOOST_AUTO_TEST_SUITE(http_method_tests)
 
-#endif
+using namespace network::http::method;
+
+BOOST_AUTO_TEST_CASE(method__static_method__always__equals_verb)
+{
+    BOOST_REQUIRE(get::method == http::verb::get);
+    BOOST_REQUIRE(head::method == http::verb::head);
+    BOOST_REQUIRE(post::method == http::verb::post);
+    BOOST_REQUIRE(put::method == http::verb::put);
+    BOOST_REQUIRE(delete_::method == http::verb::delete_);
+    BOOST_REQUIRE(trace::method == http::verb::trace);
+    BOOST_REQUIRE(options::method == http::verb::options);
+    BOOST_REQUIRE(connect::method == http::verb::connect);
+    BOOST_REQUIRE(unknown::method == http::verb::unknown);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

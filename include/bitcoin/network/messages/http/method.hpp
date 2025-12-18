@@ -22,7 +22,7 @@
 #include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
-#include <bitcoin/network/messages/monad/body.hpp>
+#include <bitcoin/network/messages/monad_body.hpp>
 
 /// Type-differentiation for request message distribution.
 
@@ -33,7 +33,7 @@ namespace method {
 
 template <verb Verb>
 struct tagged_request
-  : public request
+  : public http::request
 {
     using cptr = std::shared_ptr<const tagged_request<Verb>>;
     static constexpr verb method = Verb;

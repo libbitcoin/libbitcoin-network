@@ -20,7 +20,7 @@
 
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/peer/peer.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/protocols/protocol_ping_106.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 

@@ -24,8 +24,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/http/http.hpp>
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
@@ -301,25 +300,6 @@ void socket::rpc_write(const rpc::response_t& in,
             shared_from_this(), std::cref(in), std::move(handler)));
 }
 
-// HTTP-RPC.
-// ----------------------------------------------------------------------------
-
-void socket::http_read(http::flat_buffer& buffer,
-    http::rpc_request& request, count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_rpc_read, shared_from_this(),
-            std::ref(buffer), std::ref(request), std::move(handler)));
-}
-
-void socket::http_write(http::rpc_response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_rpc_write, shared_from_this(),
-            std::ref(response), std::move(handler)));
-}
-
 // HTTP.
 // ----------------------------------------------------------------------------
 
@@ -443,50 +423,6 @@ void socket::do_rpc_write(
 
     // TODO: implement and land on handle_rpc_tcp.
     handle_rpc_tcp(boost_code{}, size_t{}, handler);
-}
-
-// http (rpc).
-// ----------------------------------------------------------------------------
-
-void socket::do_http_rpc_read(
-    std::reference_wrapper<http::flat_buffer> buffer,
-    const std::reference_wrapper<http::rpc_request>& request,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    try
-    {
-        // This operation posts handler to the strand.
-        beast::http::async_read(socket_, buffer.get(), request.get(),
-            std::bind(&socket::handle_http_rpc_read,
-                shared_from_this(), _1, _2, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_rpc_read: " << e.what());
-        handler(error::operation_failed, {});
-    }
-}
-
-void socket::do_http_rpc_write(
-    const std::reference_wrapper<http::rpc_response>& response,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    try
-    {
-        // This operation posts handler to the strand.
-        beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http_rpc_write,
-                shared_from_this(), _1, _2, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_rpc_write: " << e.what());
-        handler(error::operation_failed, {});
-    }
 }
 
 // http (generic).
@@ -711,37 +647,6 @@ void socket::handle_rpc_tcp(const boost_code& ec, size_t size,
     }
 
     handler(code, size);
-}
-
-// http (rpc)
-// ----------------------------------------------------------------------------
-
-// Differs from generic http by not enabling ws upgrade.
-void socket::handle_http_rpc_read(const boost_code& ec, size_t size,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (error::asio_is_canceled(ec))
-    {
-        handler(error::channel_stopped, size);
-        return;
-    }
-
-    const auto code = error::beast_to_error_code(ec);
-    if (code == error::unknown)
-    {
-        LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
-            << ":" << ec.message());
-    }
-
-    handler(code, size);
-}
-
-void socket::handle_http_rpc_write(const boost_code& ec, size_t size,
-    const count_handler& handler) NOEXCEPT
-{
-    handle_http_write(ec, size, handler);
 }
 
 // http (generic)

@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_RPC_INTERFACES_HPP
-#define LIBBITCOIN_NETWORK_RPC_INTERFACES_HPP
+#ifndef LIBBITCOIN_NETWORK_INTERFACE_HPP
+#define LIBBITCOIN_NETWORK_INTERFACE_HPP
 
-#include <bitcoin/network/rpc/interfaces/http.hpp>
-#include <bitcoin/network/rpc/interfaces/peer_broadcast.hpp>
-#include <bitcoin/network/rpc/interfaces/peer_dispatch.hpp>
+#include <bitcoin/network/interface/http.hpp>
+#include <bitcoin/network/interface/peer_broadcast.hpp>
+#include <bitcoin/network/interface/peer_dispatch.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -31,10 +31,11 @@ namespace interface {
 using http = publish<http_methods, grouping::positional>;
 
 namespace peer {
+
 using dispatch = publish<peer_dispatch, grouping::positional>;
 using broadcast = publish<peer_broadcast, grouping::positional>;
-} // namespace peer
 
+} // namespace peer
 } // namespace interface
 } // namespace rpc
 } // namespace network
