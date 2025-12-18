@@ -384,6 +384,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_volume.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\body.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\broadcaster.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\dispatcher.ipp" />
     <None Include="packages.config" />

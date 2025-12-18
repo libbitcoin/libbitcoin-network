@@ -27,27 +27,30 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
+/// Content passed to/from reader/writer via request/response.
+/// `static uint64_t size(const value_type&)` must be defined for beast to 
+/// produce `content_length`, otherwise the response is chunked. Predeter-
+/// mining size would have the effect of eliminating the benefit of
+/// streaming serialize.
+struct json_value
+{
+    /// JSON document object model to parse/serialize.
+    boost::json::value model{};
+
+    /// Used by channel to resize reusable buffer.
+    size_t size_hint{};
+
+    /// Writer serialization buffer (max size, allocated on write).
+    mutable http::flat_buffer_ptr buffer{};
+};
+
 /// boost::beast::http body for JSON messages.
 /// Because of the parser and serializer members, neither the reader nor writer
 /// is movable and as such must be in-place contructed (e.g. variant contruct).
+template <typename Value = json_value>
 struct BCT_API body
 {
-    /// Content passed to/from reader/writer via request/response.
-    /// `static uint64_t size(const value_type&)` must be defined for beast to 
-    /// produce `content_length`, otherwise the response is chunked. Predeter-
-    /// mining size would have the effect of eliminating the benefit of
-    /// streaming serialize.
-    struct value_type
-    {
-        /// JSON DOM.
-        boost::json::value model{};
-
-        /// Used by channel to resize reusable buffer.
-        size_t size_hint{};
-
-        /// Writer serialization buffer (max size, allocated on write).
-        mutable http::flat_buffer_ptr buffer{};
-    };
+    using value_type = Value;
 
     class reader
     {
@@ -66,6 +69,7 @@ struct BCT_API body
         {
         }
 
+        virtual ~reader() = default;
         virtual void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
         virtual size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
         virtual void finish(boost_code& ec) NOEXCEPT;
@@ -97,6 +101,7 @@ struct BCT_API body
         {
         }
 
+        virtual ~writer() = default;
         virtual void init(boost_code& ec) NOEXCEPT;
         virtual out_buffer get(boost_code& ec) NOEXCEPT;
         
@@ -117,10 +122,18 @@ namespace libbitcoin {
 namespace network {
 namespace http {
     
-using json_body = json::body;
+using json_body = json::body<>;
 
 } // namespace http
 } // namespace network
 } // namespace libbitcoin
+
+#define TEMPLATE template <typename Value>
+#define CLASS body<Value>
+
+#include <bitcoin/network/impl/messages/json/body.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

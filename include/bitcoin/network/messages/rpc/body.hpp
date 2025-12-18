@@ -27,37 +27,44 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
+template <typename Type>
+struct value_type
+  : public json::json_value
+{
+    Type message{};
+};
+
 /// Derived boost::beast::http body for JSON-RPC messages.
 /// Extends json::body with JSON-RPC validation.
+template <typename Message>
 struct BCT_API body
-  : public json::body
+  : public json::body<value_type<Message>>
 {
-    struct value_type
-      : json::body::value_type
-    {
-        request_t request{};
-        response_t response{};
-    };
+    using message_value = value_type<Message>;
+    using base = typename json::body<message_value>;
+    using value_type = base::value_type;
 
     class reader
-      : public json::body::reader
+      : public json::body<message_value>::reader
     {
     public:
+        using reader_type = base::reader;
+        using buffer_type = reader_type::buffer_type;
+
         inline explicit reader(value_type& value) NOEXCEPT
-          : json::body::reader{ value }, terminated_{ true }
+          : reader_type{ value }, terminated_{ true }
         {
         }
 
         template <bool IsRequest, class Fields>
         inline explicit reader(http::message_header<IsRequest, Fields>& header,
             value_type& value) NOEXCEPT
-          : json::body::reader{ header, value }
+          : reader_type{ header, value }
         {
         }
 
         size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT override;
         void finish(boost_code& ec) NOEXCEPT override;
-        bool is_done() const NOEXCEPT;
 
     private:
         const bool terminated_{};
@@ -65,18 +72,21 @@ struct BCT_API body
     };
 
     class writer
-      : public json::body::writer
+      : public json::body<message_value>::writer
     {
     public:
+        using writer_type = base::writer;
+        using out_buffer = writer_type::out_buffer;
+
         inline explicit writer(value_type& value) NOEXCEPT
-          : json::body::writer{ value }, terminate_{ true }
+          : writer_type{ value }, terminate_{ true }
         {
         }
 
         template <bool IsRequest, class Fields>
         inline explicit writer(http::message_header<IsRequest, Fields>& header,
             value_type& value) NOEXCEPT
-          : json::body::writer{ header, value }
+          : writer_type{ header, value }
         {
         }
 
@@ -96,9 +106,11 @@ namespace libbitcoin {
 namespace network {
 namespace http {
     
-using rpc_body = rpc::body;
-using rpc_request = boost::beast::http::request<rpc_body>;
-using rpc_response = boost::beast::http::response<rpc_body>;
+using rpc_request_body = rpc::body<rpc::request_t>;
+using rpc_response_body = rpc::body<rpc::response_t>;
+
+using rpc_request = boost::beast::http::request<rpc_request_body>;
+using rpc_response = boost::beast::http::response<rpc_response_body>;
 
 } // namespace http
 } // namespace network

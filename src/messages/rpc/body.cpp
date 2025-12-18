@@ -21,6 +21,8 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/json/json.hpp>
+#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -36,7 +38,8 @@ BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 // rpc::body::reader
 // ----------------------------------------------------------------------------
 
-size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
+size_t body<rpc::request_t>::reader::
+put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 {
     const auto size = buffer.size();
     if (is_zero(size))
@@ -51,7 +54,7 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         return {};
     }
 
-    const auto parsed = json::body::reader::put(buffer, ec);
+    const auto parsed = base::reader::put(buffer, ec);
     if (ec || !parser_.done())
         return parsed;
 
@@ -87,9 +90,10 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     return parsed;
 }
 
-void body::reader::finish(boost_code& ec) NOEXCEPT
+void body<rpc::request_t>::reader::
+finish(boost_code& ec) NOEXCEPT
 {
-    json::body::reader::finish(ec);
+    base::reader::finish(ec);
     if (ec) return;
 
     if (terminated_ && !has_terminator_)
@@ -98,11 +102,10 @@ void body::reader::finish(boost_code& ec) NOEXCEPT
         return;
     }
 
-    auto& derived = static_cast<body::value_type&>(value_);
     try
     {
-        derived.request = value_to<rpc::request_t>(derived.model);
-        derived.model.emplace_null();
+        value_.message = value_to<rpc::request_t>(value_.model);
+        value_.model.emplace_null();
     }
     catch (const boost::system::system_error& e)
     {
@@ -116,23 +119,31 @@ void body::reader::finish(boost_code& ec) NOEXCEPT
     }
 }
 
-bool body::reader::is_done() const NOEXCEPT
+size_t body<rpc::response_t>::reader::
+put(const buffer_type&, boost_code&) NOEXCEPT
 {
-    return parser_.done() && has_terminator_;
+    BC_ASSERT(false);
+    return {};
+}
+
+void body<rpc::response_t>::reader::
+finish(boost_code&) NOEXCEPT
+{
+    BC_ASSERT(false);
 }
 
 // rpc::body::writer
 // ----------------------------------------------------------------------------
 
-void body::writer::init(boost_code& ec) NOEXCEPT
+void body<rpc::response_t>::writer::
+init(boost_code& ec) NOEXCEPT
 {
-    json::body::writer::init(ec);
+    base::writer::init(ec);
     if (ec) return;
 
-    auto& derived = static_cast<body::value_type&>(value_);
     try
     {
-        boost::json::value_from(derived.response, value_.model);
+        boost::json::value_from(value_.message, value_.model);
     }
     catch (const boost::system::system_error& e)
     {
@@ -150,9 +161,11 @@ void body::writer::init(boost_code& ec) NOEXCEPT
     serializer_.reset(&value_.model);
 }
 
-body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
+body<rpc::response_t>::writer::out_buffer
+body<rpc::response_t>::writer::
+get(boost_code& ec) NOEXCEPT
 {
-    auto out = json::body::writer::get(ec);
+    auto out = base::writer::get(ec);
     if (ec || !terminate_) return out;
 
     constexpr char more = true;
@@ -163,13 +176,31 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
     }
 
     using namespace boost::asio;
-    static const auto line = '\n';
+    static constexpr auto line = '\n';
     return out_buffer{ std::make_pair(buffer(&line, sizeof(line)), !more) };
+}
+
+void body<rpc::request_t>::writer::
+init(boost_code&) NOEXCEPT
+{
+    BC_ASSERT(false);
+}
+
+body<rpc::request_t>::writer::out_buffer
+body<rpc::request_t>::writer::
+get(boost_code&) NOEXCEPT
+{
+    BC_ASSERT(false);
+    return {};
 }
 
 BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()
+
+// Force compilation.
+template struct body<rpc::value_type<rpc::request_t>>;
+template struct body<rpc::value_type<rpc::response_t>>;
 
 } // namespace rpc
 } // namespace network

@@ -32,7 +32,7 @@ namespace network {
 namespace monad {
 
 using empty_reader = http::empty_body::reader;
-using json_reader = json::body::reader;
+using json_reader = http::json_body::reader;
 using data_reader = http::chunk_body::reader;
 using file_reader = http::file_body::reader;
 using span_reader = http::span_body::reader;
@@ -51,7 +51,7 @@ using body_reader = std::variant
 >;
 
 using empty_writer = http::empty_body::writer;
-using json_writer = json::body::writer;
+using json_writer = http::json_body::writer;
 using data_writer = http::chunk_body::writer;
 using file_writer = http::file_body::writer;
 using span_writer = http::span_body::writer;
@@ -69,7 +69,7 @@ using body_writer = std::variant
 >;
 
 using empty_value = http::empty_body::value_type;
-using json_value = json::body::value_type;
+using json_value = http::json_body::value_type;
 using data_value = http::chunk_body::value_type;
 using file_value = http::file_body::value_type;
 using span_value = http::span_body::value_type;
@@ -184,9 +184,11 @@ struct BCT_API body
 
             std::visit(overload
             {
-                [&](std::monostate&) NOEXCEPT
-                {
-                },
+                // These are not selectable above.
+                [&](std::monostate&) NOEXCEPT {},
+                [&](span_value&) NOEXCEPT {},
+                [&](buffer_value&) NOEXCEPT {},
+
                 [&](empty_value& value) NOEXCEPT
                 {
                     reader_.emplace<empty_reader>(header, value);
@@ -204,12 +206,6 @@ struct BCT_API body
                 [&](file_value& value) NOEXCEPT
                 {
                     reader_.emplace<file_reader>(header, value);
-                },
-                [&](span_value&) NOEXCEPT
-                {
-                },
-                [&](buffer_value&) NOEXCEPT
-                {
                 },
                 [&](string_value& value) NOEXCEPT
                 {
