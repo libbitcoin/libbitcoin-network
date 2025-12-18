@@ -56,7 +56,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/http/fields.cpp \
     src/messages/http/enums/media_type.cpp \
     src/messages/http/enums/target.cpp \
-    src/messages/json/body.cpp \
     src/messages/monad/body.cpp \
     src/messages/peer/message.cpp \
     src/messages/peer/detail/address.cpp \
