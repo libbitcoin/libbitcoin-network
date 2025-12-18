@@ -48,7 +48,7 @@ struct json_value
 /// Because of the parser and serializer members, neither the reader nor writer
 /// is movable and as such must be in-place contructed (e.g. variant contruct).
 template <typename Value = json_value>
-struct BCT_API body
+struct body
 {
     using value_type = Value;
 
