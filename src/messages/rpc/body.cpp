@@ -206,10 +206,6 @@ BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()
 
-////// Force compilation.
-////template struct body<rpc::value_type<rpc::request_t>>;
-////template struct body<rpc::value_type<rpc::response_t>>;
-
 } // namespace rpc
 } // namespace network
 } // namespace libbitcoin
