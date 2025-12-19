@@ -299,18 +299,26 @@ DEFINE_JSON_FROM_TAG(response_t)
     {
         const auto& result = instance.error.value();
 
-        object["error"] =
-        {
-            { "code", result.code },
-            { "message", result.message }
-        };
-
         if (result.data.has_value())
         {
-            object["data"] = value_from(result.data.value());
+            object["error"] =
+            {
+                { "code", result.code },
+                { "message", result.message },
+                { "data", value_from(result.data.value()) }
+            };
+        }
+        else
+        {
+            object["error"] =
+            {
+                { "code", result.code },
+                { "message", result.message }
+            };
         }
     }
-    else if (instance.jsonrpc != version::v2)
+    else if (instance.jsonrpc == version::v1 || 
+        instance.jsonrpc == version::undefined)
     {
         object["error"] = boost::json::value{};
     }
@@ -318,6 +326,11 @@ DEFINE_JSON_FROM_TAG(response_t)
     if (instance.result.has_value())
     {
         object["result"] = value_from(instance.result.value());
+    }
+    else if (instance.jsonrpc == version::v1 ||
+        instance.jsonrpc == version::undefined)
+    {
+        object["result"] = boost::json::value{};
     }
 
     value = object;
