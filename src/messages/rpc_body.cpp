@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <utility>
+#include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/rpc/rpc.hpp>
@@ -118,6 +119,31 @@ finish(boost_code& ec) NOEXCEPT
     {
         // As a catch-all we blame alloc.
         ec = to_http_code(http_error_t::bad_alloc);
+    }
+
+    // Post-parse semantic validation.
+
+    if (value_.message.jsonrpc == version::undefined)
+        value_.message.jsonrpc = version::v1;
+
+    if (value_.message.method.empty() ||
+        !value_.message.params.has_value())
+    {
+        ec = to_boost_code(boost_error_t::bad_message);
+        return;
+    }
+
+    if (value_.message.jsonrpc == version::v1)
+    {
+        if (!value_.message.id.has_value())
+            ec = to_boost_code(boost_error_t::bad_message);
+        else if (!std::holds_alternative<array_t>(
+            value_.message.params.value()))
+            ec = to_boost_code(boost_error_t::bad_message);
+
+        // TODO: v1 batch is not allowed.
+        ////else if (value_.message.is_batch())
+        ////    ec = to_boost_code(boost_error_t::bad_message);
     }
 }
 
