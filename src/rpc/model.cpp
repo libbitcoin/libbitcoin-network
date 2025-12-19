@@ -310,7 +310,8 @@ DEFINE_JSON_FROM_TAG(response_t)
             object["data"] = value_from(result.data.value());
         }
     }
-    else if (instance.jsonrpc != version::v2)
+    else if (instance.jsonrpc == version::v1 || 
+        instance.jsonrpc == version::undefined)
     {
         object["error"] = boost::json::value{};
     }
@@ -318,6 +319,11 @@ DEFINE_JSON_FROM_TAG(response_t)
     if (instance.result.has_value())
     {
         object["result"] = value_from(instance.result.value());
+    }
+    else if (instance.jsonrpc == version::v1 ||
+        instance.jsonrpc == version::undefined)
+    {
+        object["result"] = boost::json::value{};
     }
 
     value = object;
