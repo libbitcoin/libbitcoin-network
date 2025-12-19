@@ -299,15 +299,22 @@ DEFINE_JSON_FROM_TAG(response_t)
     {
         const auto& result = instance.error.value();
 
-        object["error"] =
-        {
-            { "code", result.code },
-            { "message", result.message }
-        };
-
         if (result.data.has_value())
         {
-            object["data"] = value_from(result.data.value());
+            object["error"] =
+            {
+                { "code", result.code },
+                { "message", result.message },
+                { "data", value_from(result.data.value()) }
+            };
+        }
+        else
+        {
+            object["error"] =
+            {
+                { "code", result.code },
+                { "message", result.message }
+            };
         }
     }
     else if (instance.jsonrpc == version::v1 || 
