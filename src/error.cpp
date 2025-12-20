@@ -316,7 +316,7 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
     return error::unknown;
 }
 
-code beast_to_error_code(const boost_code& ec) NOEXCEPT
+code http_to_error_code(const boost_code& ec) NOEXCEPT
 {
     namespace beast = boost::beast::http;
 

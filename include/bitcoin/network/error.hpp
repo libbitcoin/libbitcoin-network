@@ -238,7 +238,7 @@ BCT_API bool asio_is_canceled(const boost_code& ec) NOEXCEPT;
 BCT_API code asio_to_error_code(const boost_code& ec) NOEXCEPT;
 
 /// 1:1 mapping of boost::beast:http::error to network (or error::unknown).
-BCT_API code beast_to_error_code(const boost_code& ec) NOEXCEPT;
+BCT_API code http_to_error_code(const boost_code& ec) NOEXCEPT;
 
 } // namespace error
 } // namespace network

@@ -29,8 +29,9 @@
 
 namespace libbitcoin {
 namespace network {
-
+    
 using namespace system;
+using namespace network::rpc;
 using namespace std::placeholders;
 namespace beast = boost::beast;
 
@@ -140,13 +141,6 @@ void socket::do_async_stop() NOEXCEPT
         std::bind(&socket::do_stop, shared_from_this()));
 }
 
-asio::socket& socket::get_transport() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    return websocket() ? beast::get_lowest_layer(*websocket_) : socket_;
-}
-
 // Wait.
 // ----------------------------------------------------------------------------
 
@@ -182,6 +176,7 @@ void socket::handle_wait(const boost_code& ec,
 
     if (ec)
     {
+        logx("wait", ec);
         handler(error::asio_to_error_code(ec));
         return;
     }
@@ -285,19 +280,28 @@ void socket::write(const asio::const_buffer& in,
 /// TCP-RPC.
 // ----------------------------------------------------------------------------
 
-void socket::rpc_read(rpc::response_t& out, count_handler&& handler) NOEXCEPT
+void socket::rpc_read(rpc_in_value& request, count_handler&& handler) NOEXCEPT
 {
+    boost_code ec{};
+    const auto in = emplace_shared<read_rpc>(request);
+    in->reader.init({}, ec);
+
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_rpc_read,
-            shared_from_this(), std::ref(out), std::move(handler)));
+            shared_from_this(), ec, zero, in, std::move(handler)));
 }
 
-void socket::rpc_write(const rpc::response_t& in,
+void socket::rpc_write(rpc_out_value&& response,
     count_handler&& handler) NOEXCEPT
 {
+    boost_code ec{};
+    const auto out = emplace_shared<write_rpc>(std::move(response));
+    out->writer.init(ec);
+
+    // Dispatch success or fail, for handler invoke on strand.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_rpc_write,
-            shared_from_this(), std::cref(in), std::move(handler)));
+            shared_from_this(), ec, zero, out, std::move(handler)));
 }
 
 // HTTP.
@@ -406,23 +410,52 @@ void socket::do_write(const asio::const_buffer& in,
 // tcp (rpc).
 // ----------------------------------------------------------------------------
 
-void socket::do_rpc_read(std::reference_wrapper<rpc::response_t> /* out */,
+void socket::do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    constexpr auto size = write_rpc::rpc_writer::default_buffer;
 
-    // TODO: implement and land on handle_rpc_tcp.
-    handle_rpc_tcp(boost_code{}, size_t{}, handler);
+    if (ec)
+    {
+        const auto code = error::http_to_error_code(ec);
+        if (code == error::unknown) logx("rpc-read", ec);
+        handler(code, total);
+        return;
+    }
+
+    if (is_null(in->value.buffer))
+        in->value.buffer = to_shared<http::flat_buffer>();
+
+    get_transport().async_receive(in->value.buffer->prepare(size),
+        std::bind(&socket::handle_rpc_read,
+            shared_from_this(), _1, _2, total, in, handler));
 }
 
-void socket::do_rpc_write(
-    const std::reference_wrapper<const rpc::response_t>&  /* in */,
-    const count_handler& handler) NOEXCEPT
+void socket::do_rpc_write(boost_code ec, size_t total,
+    const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // TODO: implement and land on handle_rpc_tcp.
-    handle_rpc_tcp(boost_code{}, size_t{}, handler);
+    const auto buffer = ec ? write_rpc::out_buffer{} : out->writer.get(ec);
+    if (ec)
+    {
+        const auto code = error::http_to_error_code(ec);
+        if (code == error::unknown) logx("rpc-write", ec);
+        handler(code, total);
+        return;
+    }
+
+    // Finished.
+    if (!buffer->second)
+    {
+        handler(error::success, total);
+        return;
+    }
+
+    get_transport().async_send(buffer->first,
+        std::bind(&socket::handle_rpc_write,
+            shared_from_this(), _1, _2, total, out, handler));
 }
 
 // http (generic).
@@ -565,12 +598,7 @@ void socket::handle_accept(const boost_code& ec,
     }
 
     const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown)
-    {
-        LOGX("Raw accept code (" << ec.value() << ") " << ec.category().name()
-            << ":" << ec.message());
-    }
-
+    if (code == error::unknown) logx("accept", ec);
     handler(code);
 }
 
@@ -592,12 +620,7 @@ void socket::handle_connect(const boost_code& ec,
     }
 
     const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown)
-    {
-        LOGX("Raw connect code (" << ec.value() << ") " << ec.category().name()
-            << ":" << ec.message());
-    }
-
+    if (code == error::unknown) logx("connect", ec);
     handler(code);
 }
 
@@ -616,37 +639,69 @@ void socket::handle_tcp(const boost_code& ec, size_t size,
     }
 
     const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown)
-    {
-        LOGX("Raw tcp code (" << ec.value() << ") " << ec.category().name()
-            << ":" << ec.message());
-    }
-
+    if (code == error::unknown) logx("tcp", ec);
     handler(code, size);
 }
 
 // tcp (rpc)
 // ----------------------------------------------------------------------------
 
-void socket::handle_rpc_tcp(const boost_code& ec, size_t size,
-    const count_handler& handler) NOEXCEPT
+void socket::handle_rpc_read(boost_code ec, size_t size, size_t total,
+    const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
+    total = ceilinged_add(total, size);
     if (error::asio_is_canceled(ec))
     {
-        handler(error::channel_stopped, size);
+        handler(error::channel_stopped, total);
         return;
     }
 
-    const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown)
+    if (!ec)
     {
-        LOGX("Raw tcp code (" << ec.value() << ") " << ec.category().name()
-            << ":" << ec.message());
+        in->value.buffer->commit(size);
+        const auto data = in->value.buffer->data();
+        const auto parsed = in->reader.put(data, ec);
+        if (!ec)
+        {
+            if (parsed < data.size())
+            {
+                handler(error::unexpected_body, total);
+                return;
+            }
+
+            in->value.buffer->consume(parsed);
+            if (in->reader.done())
+            {
+                in->reader.finish(ec);
+
+                // Finished.
+                if (!ec)
+                {
+                    handler(error::success, total);
+                    return;
+                }
+            }
+        }
     }
 
-    handler(code, size);
+    do_rpc_read(ec, total, in, handler);
+}
+
+void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
+    const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    total = ceilinged_add(total, size);
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, total);
+        return;
+    }
+
+    do_rpc_write(ec, total, out, handler);
 }
 
 // http (generic)
@@ -670,13 +725,8 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = error::beast_to_error_code(ec);
-    if (code == error::unknown)
-    {
-        LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
-            << ":" << ec.message());
-    }
-
+    const auto code = error::http_to_error_code(ec);
+    if (code == error::unknown) logx("http", ec);
     handler(code, size);
 }
 
@@ -691,13 +741,8 @@ void socket::handle_http_write(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = error::beast_to_error_code(ec);
-    if (code == error::unknown)
-    {
-        LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
-            << ":" << ec.message());
-    }
-
+    const auto code = error::http_to_error_code(ec);
+    if (code == error::unknown) logx("http", ec);
     handler(code, size);
 }
 
@@ -716,13 +761,8 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = error::beast_to_error_code(ec);
-    if (code == error::unknown)
-    {
-        LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
-            << ":" << ec.message());
-    }
-
+    const auto code = error::http_to_error_code(ec);
+    if (code == error::unknown) logx("ws-read", ec);
     handler(code, size /*, websocket_->got_binary() */);
 }
 
@@ -738,13 +778,8 @@ void socket::handle_ws_write(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = error::beast_to_error_code(ec);
-    if (code == error::unknown)
-    {
-        LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
-            << ":" << ec.message());
-    }
-
+    const auto code = error::http_to_error_code(ec);
+    if (code == error::unknown) logx("ws-write", ec);
     handler(code, size /*, websocket_->got_binary() */);
 }
 
@@ -851,6 +886,23 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
         LOGF("Exception @ set_websocket: " << e.what());
         return error::operation_failed;
     }
+}
+
+// utility
+// ----------------------------------------------------------------------------
+
+asio::socket& socket::get_transport() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    return websocket() ? beast::get_lowest_layer(*websocket_) : socket_;
+}
+
+void socket::logx(const std::string& context,
+    const boost_code& ec) const NOEXCEPT
+{
+    LOGX("Socket " << context << " error (" << ec.value() << ") "
+        << ec.category().name() << ":" << ec.message());
 }
 
 BC_POP_WARNING()

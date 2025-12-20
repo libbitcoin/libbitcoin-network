@@ -114,6 +114,12 @@ void CLASS::reader::finish(boost_code& ec) NOEXCEPT
     parser_.reset();
 }
 
+TEMPLATE
+bool CLASS::reader::done() const NOEXCEPT
+{
+    return parser_.done();
+}
+
 // json::body<>::writer
 // ----------------------------------------------------------------------------
 
