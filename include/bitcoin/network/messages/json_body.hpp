@@ -73,6 +73,7 @@ struct body
         virtual void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
         virtual size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
         virtual void finish(boost_code& ec) NOEXCEPT;
+        virtual bool done() const NOEXCEPT;
 
     protected:
         value_type& value_;
@@ -86,6 +87,7 @@ struct body
     class writer
     {
     public:
+        static constexpr size_t default_buffer = 4096;
         using const_buffers_type = asio::const_buffer;
         using out_buffer = http::get_buffer<const_buffers_type>;
 
@@ -108,9 +110,6 @@ struct body
     protected:
         value_type& value_;
         boost::json::serializer serializer_;
-
-    private:
-        static constexpr size_t default_buffer = 4096;
     };
 };
 

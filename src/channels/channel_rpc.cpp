@@ -16,13 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNELS_HPP
-#define LIBBITCOIN_NETWORK_CHANNELS_CHANNELS_HPP
-
-#include <bitcoin/network/channels/channel.hpp>
-#include <bitcoin/network/channels/channel_http.hpp>
-#include <bitcoin/network/channels/channel_peer.hpp>
 #include <bitcoin/network/channels/channel_rpc.hpp>
-#include <bitcoin/network/channels/channel_ws.hpp>
 
-#endif
+#include <bitcoin/network/define.hpp>
+
+namespace libbitcoin {
+namespace network {
+
+} // namespace network
+} // namespace libbitcoin

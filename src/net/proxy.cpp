@@ -194,18 +194,18 @@ void proxy::read(const asio::mutable_buffer& buffer,
     socket_->read(buffer, std::move(handler));
 }
 
-void proxy::write(const asio::const_buffer& payload,
+void proxy::write(const asio::const_buffer& buffer,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write,
-            shared_from_this(), payload, std::move(handler)));
+            shared_from_this(), buffer, std::move(handler)));
 }
 
 // TCP-RPC.
 // ----------------------------------------------------------------------------
 
-void proxy::read(rpc::response_t& out, count_handler&& handler) NOEXCEPT
+void proxy::read(rpc_in_value& out, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand(),
         std::bind(&proxy::waiting, shared_from_this()));
@@ -213,9 +213,9 @@ void proxy::read(rpc::response_t& out, count_handler&& handler) NOEXCEPT
     socket_->rpc_read(out, std::move(handler));
 }
 
-void proxy::write(const rpc::response_t& in, count_handler&& handler) NOEXCEPT
+void proxy::write(rpc_out_value&& in, count_handler&& handler) NOEXCEPT
 {
-    socket_->rpc_write(in, std::move(handler));
+    socket_->rpc_write(std::move(in), std::move(handler));
 
     // TODO: compose?
     ////boost::asio::dispatch(strand(),

@@ -42,6 +42,8 @@ class BCT_API proxy
 public:
     typedef std::shared_ptr<proxy> ptr;
     typedef subscriber<> stop_subscriber;
+    typedef rpc::request_body::value_type rpc_in_value;
+    typedef rpc::response_body::value_type rpc_out_value;
 
     DELETE_COPY_MOVE(proxy);
 
@@ -126,19 +128,17 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
     /// Send a complete TCP message to the remote endpoint.
-    virtual void write(const asio::const_buffer& payload,
+    virtual void write(const asio::const_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
     /// TCP-RPC (e.g. electrum, stratum_v1).
     /// -----------------------------------------------------------------------
 
     /// Read full rpc request from the socket, handler posted to socket strand.
-    virtual void read(rpc::response_t& out,
-        count_handler&& handler) NOEXCEPT;
+    virtual void read(rpc_in_value& out, count_handler&& handler) NOEXCEPT;
 
     /// Write full rpc response to the socket, handler posted to socket strand.
-    virtual void write(const rpc::response_t& in,
-        count_handler&& handler) NOEXCEPT;
+    virtual void write(rpc_out_value&& in, count_handler&& handler) NOEXCEPT;
 
     /// HTTP (generic).
     /// -----------------------------------------------------------------------

@@ -152,7 +152,7 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    size_json_buffer(response);
+    assign_json_buffer(response);
     const auto ptr = system::move_shared(std::move(response));
     count_handler complete = std::bind(&channel_http::handle_send,
         shared_from_base<channel_http>(), _1, _2, ptr, std::move(handler));
@@ -176,7 +176,7 @@ void channel_http::handle_send(const code& ec, size_t, response_ptr&,
 }
 
 // private
-void channel_http::size_json_buffer(response& response) NOEXCEPT
+void channel_http::assign_json_buffer(response& response) NOEXCEPT
 {
     if (const auto& body = response.body();
         body.contains<monad::json_value>())
