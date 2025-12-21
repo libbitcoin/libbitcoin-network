@@ -23,5 +23,22 @@
 namespace libbitcoin {
 namespace network {
 
+void channel_rpc::resume() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    channel::resume();
+    receive();
+}
+
+void channel_rpc::receive() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+}
+
+void channel_rpc::send() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+}
+
 } // namespace network
 } // namespace libbitcoin

@@ -41,6 +41,16 @@ public:
       : channel(log, socket, identifier, settings, options)
     {
     }
+
+    /// Resume reading from the socket (requires strand).
+    void resume() NOEXCEPT override;
+
+    /// Must call after successful message handling if no stop.
+    virtual void receive() NOEXCEPT;
+
+    /// Serialize and write rpc response to client (requires strand).
+    /// Completion handler is always invoked on the channel strand.
+    virtual void send() NOEXCEPT;
 };
 
 } // namespace network
