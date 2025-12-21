@@ -28,7 +28,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// rpc over tcp channel.
+/// Read rpc-request and send rpc-response.
 class BCT_API channel_rpc
   : public channel
 {
