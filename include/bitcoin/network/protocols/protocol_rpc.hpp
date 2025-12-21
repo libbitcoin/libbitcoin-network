@@ -16,13 +16,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNELS_HPP
-#define LIBBITCOIN_NETWORK_CHANNELS_CHANNELS_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_RPC_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_RPC_HPP
 
-#include <bitcoin/network/channels/channel.hpp>
-#include <bitcoin/network/channels/channel_http.hpp>
-#include <bitcoin/network/channels/channel_peer.hpp>
-#include <bitcoin/network/channels/channel_rpc.hpp>
-#include <bitcoin/network/channels/channel_ws.hpp>
+#include <memory>
+#include <bitcoin/network/channels/channels.hpp>
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/protocols/protocol_rpc.hpp>
+
+namespace libbitcoin {
+namespace network {
+
+class BCT_API protocol_rpc
+ : public protocol
+{
+public:
+    typedef std::shared_ptr<protocol> ptr;
+    using channel_t = channel_rpc;
+    using options_t = channel_t::options_t;
+
+protected:
+    inline protocol_rpc(const session::ptr& session,
+        const channel::ptr& channel, const options_t&) NOEXCEPT
+      : protocol(session, channel)
+    {
+    }
+};
+
+} // namespace network
+} // namespace libbitcoin
 
 #endif

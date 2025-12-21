@@ -133,6 +133,7 @@
     <ClCompile Include="..\..\..\..\test\channels\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel_rpc.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_ws.cpp" />
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>

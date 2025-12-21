@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNELS_HPP
-#define LIBBITCOIN_NETWORK_CHANNELS_CHANNELS_HPP
+#include "../test.hpp"
 
-#include <bitcoin/network/channels/channel.hpp>
-#include <bitcoin/network/channels/channel_http.hpp>
-#include <bitcoin/network/channels/channel_peer.hpp>
-#include <bitcoin/network/channels/channel_rpc.hpp>
-#include <bitcoin/network/channels/channel_ws.hpp>
+BOOST_AUTO_TEST_SUITE(channel_rpc_tests)
 
-#endif
+BOOST_AUTO_TEST_CASE(channel_rpc_test)
+{
+    BOOST_REQUIRE(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
