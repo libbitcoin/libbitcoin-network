@@ -86,8 +86,10 @@ protected:
     /// Dispatch request to subscribers by verb type.
     virtual void dispatch(const http::request_cptr& request) NOEXCEPT;
 
-    virtual void size_json_buffer(http::response& response) NOEXCEPT;
+    /// Size and assign response_buffer_ if value type is json or json-rpc.
+    virtual void assign_json_buffer(http::response& response) NOEXCEPT;
 
+    // Handlers.
     virtual void handle_receive(const code& ec, size_t bytes,
         const http::request_cptr& request) NOEXCEPT;
     virtual void handle_send(const code& ec, size_t bytes, http::response_ptr&,
