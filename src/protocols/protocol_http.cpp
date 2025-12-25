@@ -58,6 +58,7 @@ protocol_http::protocol_http(const session::ptr& session,
 // Start.
 // ----------------------------------------------------------------------------
 
+// public
 void protocol_http::start() NOEXCEPT
 {
     BC_ASSERT(stranded());
