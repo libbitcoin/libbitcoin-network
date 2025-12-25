@@ -251,7 +251,7 @@ private:
         const result_handler& handler) NOEXCEPT;
 
     // connection
-    void handle_accept(const boost_code& ec,
+    void handle_accept(boost_code ec,
         const result_handler& handler) NOEXCEPT;
     void handle_connect(const boost_code& ec, const asio::endpoint& peer,
         const result_handler& handler) NOEXCEPT;

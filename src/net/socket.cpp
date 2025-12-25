@@ -581,7 +581,7 @@ void socket::do_ws_event(ws::frame_type kind,
 // ----------------------------------------------------------------------------
 // These are invoked on strand upon failure, socket cancel, or completion.
 
-void socket::handle_accept(const boost_code& ec,
+void socket::handle_accept(boost_code ec,
     const result_handler& handler) NOEXCEPT
 {
     // This is running in the acceptor (not socket) execution context.
@@ -589,7 +589,7 @@ void socket::handle_accept(const boost_code& ec,
     // address_ remains defaulted for inbound (accepted) connections.
 
     if (!ec)
-        authority_ = { socket_.remote_endpoint() };
+        authority_ = { socket_.remote_endpoint(ec) };
 
     if (error::asio_is_canceled(ec))
     {
