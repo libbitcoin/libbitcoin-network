@@ -47,11 +47,11 @@ public:
     using channel_t = channel_http;
     using options_t = channel_t::options_t;
 
+    void start() NOEXCEPT override;
+
 protected:
     protocol_http(const session::ptr& session, const channel::ptr& channel,
         const options_t& options) NOEXCEPT;
-
-    void start() NOEXCEPT override;
 
     DECLARE_SEND();
     DECLARE_SUBSCRIBE_CHANNEL();

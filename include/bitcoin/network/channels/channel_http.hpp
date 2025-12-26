@@ -33,7 +33,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Half-duplex reading of http-request and sending of http-response.
+/// Half-duplex reading/writing of http-request/response.
 class BCT_API channel_http
   : public channel
 {
@@ -43,7 +43,7 @@ public:
     using interface = rpc::interface::http;
     using dispatcher = rpc::dispatcher<interface>;
 
-    /// Subscribe to request from peer (requires strand).
+    /// Subscribe to request from client (requires strand).
     /// Event handler is always invoked on the channel strand.
     template <class Request>
     inline void subscribe(auto&& handler) NOEXCEPT
@@ -71,7 +71,7 @@ public:
     /// Must call after successful message handling if no stop.
     virtual void receive() NOEXCEPT;
 
-    /// Serialize and write http response to peer (requires strand).
+    /// Serialize and write http response to client (requires strand).
     /// Completion handler is always invoked on the channel strand.
     virtual void send(http::response&& response,
         result_handler&& handler) NOEXCEPT;
@@ -89,7 +89,7 @@ protected:
     /// Size and assign response_buffer_ if value type is json or json-rpc.
     virtual void assign_json_buffer(http::response& response) NOEXCEPT;
 
-    // Handlers.
+    /// Handlers.
     virtual void handle_receive(const code& ec, size_t bytes,
         const http::request_cptr& request) NOEXCEPT;
     virtual void handle_send(const code& ec, size_t bytes, http::response_ptr&,
