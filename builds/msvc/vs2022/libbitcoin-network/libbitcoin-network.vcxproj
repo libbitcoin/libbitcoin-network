@@ -143,7 +143,7 @@
     <ClCompile Include="..\..\..\..\src\messages\http\enums\media_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\fields.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\monad_body.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http_body.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
@@ -187,7 +187,8 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\witness_tx_id_relay.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\message.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\rpc_body.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\rpc\body.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\rpc\model.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector.cpp" />
@@ -209,7 +210,6 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70001.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70016.cpp" />
-    <ClCompile Include="..\..\..\..\src\rpc\model.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_manual.cpp" />
@@ -270,10 +270,11 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\target.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\fields.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\http.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http_body.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http_method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json_body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\messages.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\monad_body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\alert.hpp" />
@@ -320,7 +321,17 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\heading.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\message.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\peer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc_body.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\any.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\body.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\broadcaster.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\dispatcher.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\grouping.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\version.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\method.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\model.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\publish.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\rpc.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />
@@ -346,16 +357,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70016.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ws.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\any.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\broadcaster.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\dispatcher.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\enums\grouping.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\enums\version.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\method.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\model.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\publish.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\rpc.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\rpc\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp" />
@@ -378,8 +379,8 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json_body.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\broadcaster.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\rpc\dispatcher.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\broadcaster.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\dispatcher.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

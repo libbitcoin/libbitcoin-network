@@ -25,7 +25,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -280,7 +279,7 @@ void socket::write(const asio::const_buffer& in,
 /// TCP-RPC.
 // ----------------------------------------------------------------------------
 
-void socket::rpc_read(rpc_in_value& request, count_handler&& handler) NOEXCEPT
+void socket::rpc_read(rpc::in_value& request, count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
     const auto in = emplace_shared<read_rpc>(request);
@@ -291,7 +290,7 @@ void socket::rpc_read(rpc_in_value& request, count_handler&& handler) NOEXCEPT
             shared_from_this(), ec, zero, in, std::move(handler)));
 }
 
-void socket::rpc_write(rpc_out_value&& response,
+void socket::rpc_write(rpc::out_value&& response,
     count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
@@ -414,7 +413,7 @@ void socket::do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    constexpr auto size = write_rpc::rpc_writer::default_buffer;
+    constexpr auto size = rpc::writer::default_buffer;
 
     if (ec)
     {

@@ -155,10 +155,10 @@
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
       <ObjectFileName>$(IntDir)test_messages_http_method.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http_body_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\monad_body_reader.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\monad_body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
@@ -208,8 +208,15 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\enums\service.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc_body_reader.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc_body_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\any.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\body_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\body_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\broadcaster.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\dispatcher.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\method.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_method.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
@@ -231,13 +238,6 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp" />
-    <ClCompile Include="..\..\..\..\test\rpc\any.cpp" />
-    <ClCompile Include="..\..\..\..\test\rpc\broadcaster.cpp" />
-    <ClCompile Include="..\..\..\..\test\rpc\dispatcher.cpp" />
-    <ClCompile Include="..\..\..\..\test\rpc\method.cpp">
-      <ObjectFileName>$(IntDir)test_rpc_method.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\rpc\types.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_inbound.cpp" />

@@ -25,7 +25,6 @@
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/socket.hpp>
-#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -205,7 +204,7 @@ void proxy::write(const asio::const_buffer& buffer,
 // TCP-RPC.
 // ----------------------------------------------------------------------------
 
-void proxy::read(rpc_in_value& out, count_handler&& handler) NOEXCEPT
+void proxy::read(rpc::in_value& out, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand(),
         std::bind(&proxy::waiting, shared_from_this()));
@@ -213,7 +212,7 @@ void proxy::read(rpc_in_value& out, count_handler&& handler) NOEXCEPT
     socket_->rpc_read(out, std::move(handler));
 }
 
-void proxy::write(rpc_out_value&& in, count_handler&& handler) NOEXCEPT
+void proxy::write(rpc::out_value&& in, count_handler&& handler) NOEXCEPT
 {
     socket_->rpc_write(std::move(in), std::move(handler));
 

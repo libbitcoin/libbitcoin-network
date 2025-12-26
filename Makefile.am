@@ -54,8 +54,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/capture.cpp \
     src/log/logger.cpp \
     src/log/reporter.cpp \
-    src/messages/monad_body.cpp \
-    src/messages/rpc_body.cpp \
+    src/messages/http_body.cpp \
     src/messages/http/fields.cpp \
     src/messages/http/enums/media_type.cpp \
     src/messages/http/enums/target.cpp \
@@ -100,6 +99,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/peer/detail/version.cpp \
     src/messages/peer/detail/version_acknowledge.cpp \
     src/messages/peer/detail/witness_tx_id_relay.cpp \
+    src/messages/rpc/body.cpp \
+    src/messages/rpc/model.cpp \
     src/net/acceptor.cpp \
     src/net/connector.cpp \
     src/net/deadline.cpp \
@@ -120,7 +121,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/protocols/protocol_version_70001.cpp \
     src/protocols/protocol_version_70002.cpp \
     src/protocols/protocol_version_70016.cpp \
-    src/rpc/model.cpp \
     src/sessions/session.cpp \
     src/sessions/session_inbound.cpp \
     src/sessions/session_manual.cpp \
@@ -169,12 +169,10 @@ test_libbitcoin_network_test_SOURCES = \
     test/config/utilities.cpp \
     test/log/timer.cpp \
     test/log/tracker.cpp \
+    test/messages/http_body_reader.cpp \
+    test/messages/http_body_writer.cpp \
     test/messages/json_body_reader.cpp \
     test/messages/json_body_writer.cpp \
-    test/messages/monad_body_reader.cpp \
-    test/messages/monad_body_writer.cpp \
-    test/messages/rpc_body_reader.cpp \
-    test/messages/rpc_body_writer.cpp \
     test/messages/http/fields.cpp \
     test/messages/http/method.cpp \
     test/messages/http/enums/magic_numbers.cpp \
@@ -225,6 +223,13 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/peer/enums/level.cpp \
     test/messages/peer/enums/magic_numbers.cpp \
     test/messages/peer/enums/service.cpp \
+    test/messages/rpc/any.cpp \
+    test/messages/rpc/body_reader.cpp \
+    test/messages/rpc/body_writer.cpp \
+    test/messages/rpc/broadcaster.cpp \
+    test/messages/rpc/dispatcher.cpp \
+    test/messages/rpc/method.cpp \
+    test/messages/rpc/types.cpp \
     test/net/acceptor.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
@@ -245,11 +250,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_version_70001.cpp \
     test/protocols/protocol_version_70002.cpp \
     test/protocols/protocol_version_70016.cpp \
-    test/rpc/any.cpp \
-    test/rpc/broadcaster.cpp \
-    test/rpc/dispatcher.cpp \
-    test/rpc/method.cpp \
-    test/rpc/types.cpp \
     test/sessions/session.cpp \
     test/sessions/session_html.cpp \
     test/sessions/session_inbound.cpp \
@@ -335,10 +335,10 @@ include_bitcoin_network_impl_messagesdir = ${includedir}/bitcoin/network/impl/me
 include_bitcoin_network_impl_messages_HEADERS = \
     include/bitcoin/network/impl/messages/json_body.ipp
 
-include_bitcoin_network_impl_rpcdir = ${includedir}/bitcoin/network/impl/rpc
-include_bitcoin_network_impl_rpc_HEADERS = \
-    include/bitcoin/network/impl/rpc/broadcaster.ipp \
-    include/bitcoin/network/impl/rpc/dispatcher.ipp
+include_bitcoin_network_impl_messages_rpcdir = ${includedir}/bitcoin/network/impl/messages/rpc
+include_bitcoin_network_impl_messages_rpc_HEADERS = \
+    include/bitcoin/network/impl/messages/rpc/broadcaster.ipp \
+    include/bitcoin/network/impl/messages/rpc/dispatcher.ipp
 
 include_bitcoin_network_interfacedir = ${includedir}/bitcoin/network/interface
 include_bitcoin_network_interface_HEADERS = \
@@ -359,15 +359,15 @@ include_bitcoin_network_log_HEADERS = \
 
 include_bitcoin_network_messagesdir = ${includedir}/bitcoin/network/messages
 include_bitcoin_network_messages_HEADERS = \
+    include/bitcoin/network/messages/http_body.hpp \
+    include/bitcoin/network/messages/http_method.hpp \
     include/bitcoin/network/messages/json_body.hpp \
-    include/bitcoin/network/messages/messages.hpp \
-    include/bitcoin/network/messages/monad_body.hpp \
-    include/bitcoin/network/messages/rpc_body.hpp
+    include/bitcoin/network/messages/messages.hpp
 
 include_bitcoin_network_messages_httpdir = ${includedir}/bitcoin/network/messages/http
 include_bitcoin_network_messages_http_HEADERS = \
     include/bitcoin/network/messages/http/fields.hpp \
-    include/bitcoin/network/messages/http/method.hpp
+    include/bitcoin/network/messages/http/http.hpp
 
 include_bitcoin_network_messages_http_enumsdir = ${includedir}/bitcoin/network/messages/http/enums
 include_bitcoin_network_messages_http_enums_HEADERS = \
@@ -432,6 +432,23 @@ include_bitcoin_network_messages_peer_enums_HEADERS = \
     include/bitcoin/network/messages/peer/enums/magic_numbers.hpp \
     include/bitcoin/network/messages/peer/enums/service.hpp
 
+include_bitcoin_network_messages_rpcdir = ${includedir}/bitcoin/network/messages/rpc
+include_bitcoin_network_messages_rpc_HEADERS = \
+    include/bitcoin/network/messages/rpc/any.hpp \
+    include/bitcoin/network/messages/rpc/body.hpp \
+    include/bitcoin/network/messages/rpc/broadcaster.hpp \
+    include/bitcoin/network/messages/rpc/dispatcher.hpp \
+    include/bitcoin/network/messages/rpc/method.hpp \
+    include/bitcoin/network/messages/rpc/model.hpp \
+    include/bitcoin/network/messages/rpc/publish.hpp \
+    include/bitcoin/network/messages/rpc/rpc.hpp \
+    include/bitcoin/network/messages/rpc/types.hpp
+
+include_bitcoin_network_messages_rpc_enumsdir = ${includedir}/bitcoin/network/messages/rpc/enums
+include_bitcoin_network_messages_rpc_enums_HEADERS = \
+    include/bitcoin/network/messages/rpc/enums/grouping.hpp \
+    include/bitcoin/network/messages/rpc/enums/version.hpp
+
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/acceptor.hpp \
@@ -461,22 +478,6 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_version_70016.hpp \
     include/bitcoin/network/protocols/protocol_ws.hpp \
     include/bitcoin/network/protocols/protocols.hpp
-
-include_bitcoin_network_rpcdir = ${includedir}/bitcoin/network/rpc
-include_bitcoin_network_rpc_HEADERS = \
-    include/bitcoin/network/rpc/any.hpp \
-    include/bitcoin/network/rpc/broadcaster.hpp \
-    include/bitcoin/network/rpc/dispatcher.hpp \
-    include/bitcoin/network/rpc/method.hpp \
-    include/bitcoin/network/rpc/model.hpp \
-    include/bitcoin/network/rpc/publish.hpp \
-    include/bitcoin/network/rpc/rpc.hpp \
-    include/bitcoin/network/rpc/types.hpp
-
-include_bitcoin_network_rpc_enumsdir = ${includedir}/bitcoin/network/rpc/enums
-include_bitcoin_network_rpc_enums_HEADERS = \
-    include/bitcoin/network/rpc/enums/grouping.hpp \
-    include/bitcoin/network/rpc/enums/version.hpp
 
 include_bitcoin_network_sessionsdir = ${includedir}/bitcoin/network/sessions
 include_bitcoin_network_sessions_HEADERS = \

@@ -22,7 +22,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/rpc/rpc.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
