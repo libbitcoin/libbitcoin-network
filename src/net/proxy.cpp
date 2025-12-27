@@ -204,22 +204,33 @@ void proxy::write(const asio::const_buffer& buffer,
 // TCP-RPC.
 // ----------------------------------------------------------------------------
 
-void proxy::read(rpc::in_value& out, count_handler&& handler) NOEXCEPT
+void proxy::read(http::flat_buffer& buffer, rpc::request& request,
+    count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand(),
         std::bind(&proxy::waiting, shared_from_this()));
 
-    socket_->rpc_read(out, std::move(handler));
+    socket_->rpc_read(buffer, request, std::move(handler));
 }
 
-void proxy::write(rpc::out_value&& in, count_handler&& handler) NOEXCEPT
+void proxy::write(rpc::response& response, count_handler&& handler) NOEXCEPT
 {
-    socket_->rpc_write(std::move(in), std::move(handler));
-
     // TODO: compose?
-    ////boost::asio::dispatch(strand(),
-    ////    std::bind(&proxy::do_write,
-    ////        shared_from_this(), std::ref(in), std::move(handler)));
+    socket_->rpc_write(response, std::move(handler));
+}
+
+// WS (generic).
+// ----------------------------------------------------------------------------
+
+void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
+{
+    socket_->ws_read(out, std::move(handler));
+}
+
+void proxy::ws_write(const asio::const_buffer& in, bool binary,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->ws_write(in, binary, std::move(handler));
 }
 
 // HTTP (generic).
@@ -240,20 +251,6 @@ void proxy::write(http::response& response,
     count_handler&& handler) NOEXCEPT
 {
     socket_->http_write(response, std::move(handler));
-}
-
-// WS (generic).
-// ----------------------------------------------------------------------------
-
-void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
-{
-    socket_->ws_read(out, std::move(handler));
-}
-
-void proxy::ws_write(const asio::const_buffer& in, bool binary,
-    count_handler&& handler) NOEXCEPT
-{
-    socket_->ws_write(in, binary, std::move(handler));
 }
 
 // Send cycle (send continues until queue is empty).

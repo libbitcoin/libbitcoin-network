@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
 
+#include <memory>
 #include <optional>
 #include <variant>
 #include <bitcoin/network/async/async.hpp>
@@ -87,8 +88,8 @@ using body_value = std::variant
     buffer_value,
     string_value,
     json_value,
-    rpc::in_value,
-    rpc::out_value
+    rpc::request,
+    rpc::response
 >;
 
 /// body template for all known message types.
@@ -117,8 +118,8 @@ struct BCT_API body
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, buffer_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, string_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, json_value, inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpc::in_value, inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpc::out_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpc::request, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpc::response, inner_)
 
         inline bool has_value() const NOEXCEPT
         {
@@ -181,7 +182,7 @@ struct BCT_API body
                     if (value_.plain_json)
                         value = json_value{};
                     else
-                        value = rpc::in_value{};
+                        value = rpc::request{};
                     break;
                 case http::media_type::text_plain:
                     value = string_value{};
@@ -202,7 +203,7 @@ struct BCT_API body
                 [&](std::monostate&) NOEXCEPT {},
                 [&](span_value&) NOEXCEPT {},
                 [&](buffer_value&) NOEXCEPT {},
-                [&](rpc::out_value&) NOEXCEPT {},
+                [&](rpc::response&) NOEXCEPT {},
 
                 [&](empty_value& value) NOEXCEPT
                 {
@@ -225,7 +226,7 @@ struct BCT_API body
                     // json_reader not copy or assignable (by contained parser).
                     reader_.emplace<json_reader>(header, value);
                 },
-                [&](rpc::in_value& value) NOEXCEPT
+                [&](rpc::request& value) NOEXCEPT
                 {
                     // json_reader not copy or assignable (by contained parser).
                     reader_.emplace<rpc::reader>(header, value);
@@ -298,14 +299,14 @@ struct BCT_API body
                     return body_writer{ std::in_place_type<json_writer>,
                         header, value };
                 },
-                [&](rpc::out_value& value) NOEXCEPT
+                [&](rpc::response& value) NOEXCEPT
                 {
                     // json_writer is not movable (by contained serializer).
                     // So requires in-place construction for variant populate.
                     return body_writer{ std::in_place_type<rpc::writer>,
                         header, value };
                 },
-                [&](rpc::in_value&) NOEXCEPT
+                [&](rpc::request&) NOEXCEPT
                 {
                     return body_writer{ std::monostate{} };
                 }
@@ -319,7 +320,10 @@ struct BCT_API body
 
 using request = boost::beast::http::request<http::body>;
 using request_cptr = std::shared_ptr<const request>;
+using request_ptr = std::shared_ptr<request>;
+
 using response = boost::beast::http::response<http::body>;
+using response_cptr = std::shared_ptr<const response>;
 using response_ptr = std::shared_ptr<response>;
 
 } // namespace http

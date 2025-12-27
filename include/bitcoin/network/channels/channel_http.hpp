@@ -42,7 +42,7 @@ public:
     using interface = rpc::interface::http;
     using dispatcher = rpc::dispatcher<interface>;
 
-    /// Subscribe to request from client (requires strand).
+    /// Subscribe to message from client (requires strand).
     /// Event handler is always invoked on the channel strand.
     template <class Request>
     inline void subscribe(auto&& handler) NOEXCEPT
@@ -53,8 +53,7 @@ public:
     }
 
     // TODO: network.minimum_buffer is being overloaded here.
-    /// response_buffer_ is initialized to default size, see set_buffer().
-    /// Construct client channel to encapsulate and communicate on the socket.
+    /// Construct http channel to encapsulate and communicate on the socket.
     inline channel_http(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
@@ -70,7 +69,7 @@ public:
     /// Must call after successful message handling if no stop.
     virtual void receive() NOEXCEPT;
 
-    /// Serialize and write http response to client (requires strand).
+    /// Serialize and write http message to client (requires strand).
     /// Completion handler is always invoked on the channel strand.
     virtual void send(http::response&& response,
         result_handler&& handler) NOEXCEPT;
@@ -91,12 +90,15 @@ protected:
     /// Handlers.
     virtual void handle_receive(const code& ec, size_t bytes,
         const http::request_cptr& request) NOEXCEPT;
-    virtual void handle_send(const code& ec, size_t bytes, http::response_ptr&,
+    virtual void handle_send(const code& ec, size_t bytes,
+        const http::response_cptr& response,
         const result_handler& handler) NOEXCEPT;
 
 private:
-    void log_message(const http::request& request) const NOEXCEPT;
-    void log_message(const http::response& response) const NOEXCEPT;
+    void log_message(const http::request& request,
+        size_t bytes) const NOEXCEPT;
+    void log_message(const http::response& response,
+        size_t bytes) const NOEXCEPT;
 
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;

@@ -132,21 +132,12 @@ protected:
     /// TCP-RPC (e.g. electrum, stratum_v1).
     /// -----------------------------------------------------------------------
 
-    /// Read full rpc request from the socket, handler posted to socket strand.
-    virtual void read(rpc::in_value& out, count_handler&& handler) NOEXCEPT;
-
-    /// Write full rpc response to the socket, handler posted to socket strand.
-    virtual void write(rpc::out_value&& in, count_handler&& handler) NOEXCEPT;
-
-    /// HTTP (generic).
-    /// -----------------------------------------------------------------------
-
-    /// Read full http variant request from the socket, using provided buffer.
-    virtual void read(http::flat_buffer& buffer, http::request& request,
+    /// Read rpc request from the socket, using provided buffer.
+    virtual void read(http::flat_buffer& buffer, rpc::request& request,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write full http variant response to the socket (json buffer in body).
-    virtual void write(http::response& response,
+    /// Write rpc response to the socket (json buffer in body).
+    virtual void write(rpc::response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// WS (generic).
@@ -158,6 +149,21 @@ protected:
 
     /// Write full buffer to the websocket (post-upgrade), specify binary/text.
     virtual void ws_write(const asio::const_buffer& in, bool binary,
+        count_handler&& handler) NOEXCEPT;
+
+    /// WS-RPC (custom).
+    /// -----------------------------------------------------------------------
+    /// TODO.
+
+    /// HTTP (generic).
+    /// -----------------------------------------------------------------------
+
+    /// Read http request from the socket, using provided buffer.
+    virtual void read(http::flat_buffer& buffer, http::request& request,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write http response to the socket (json buffer in body).
+    virtual void write(http::response& response,
         count_handler&& handler) NOEXCEPT;
 
 private:

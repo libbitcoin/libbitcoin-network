@@ -22,7 +22,9 @@
 #include <memory>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/interface/interface.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 
 namespace libbitcoin {
@@ -35,10 +37,27 @@ class BCT_API channel_rpc
 public:
     typedef std::shared_ptr<channel_rpc> ptr;
 
+    // TODO: implement in node.
+    using interface = rpc::interface::http;
+    using dispatcher = rpc::dispatcher<interface>;
+
+    /// Subscribe to request from client (requires strand).
+    /// Event handler is always invoked on the channel strand.
+    template <class Handler>
+    inline void subscribe(Handler&& handler) NOEXCEPT
+    {
+        BC_ASSERT(stranded());
+        dispatcher_.subscribe(std::forward<Handler>(handler));
+    }
+
+    // TODO: network.minimum_buffer is being overloaded here.
+    /// Construct rpc channel to encapsulate and communicate on the socket.
     inline channel_rpc(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
-      : channel(log, socket, identifier, settings, options)
+      : channel(log, socket, identifier, settings, options),
+        response_buffer_(system::to_shared<http::flat_buffer>()),
+        request_buffer_(settings.minimum_buffer)
     {
     }
 
@@ -48,9 +67,43 @@ public:
     /// Must call after successful message handling if no stop.
     virtual void receive() NOEXCEPT;
 
-    /// Serialize and write rpc response to client (requires strand).
+    /// Serialize and write response to client (requires strand).
     /// Completion handler is always invoked on the channel strand.
-    virtual void send() NOEXCEPT;
+    virtual void send(rpc::response_t&& message, size_t size_hint,
+        result_handler&& handler) NOEXCEPT;
+
+protected:
+    /// Stranded handler invoked from stop().
+    void stopping(const code& ec) NOEXCEPT override;
+
+    /// Read request buffer (not thread safe).
+    virtual http::flat_buffer& request_buffer() NOEXCEPT;
+
+    /// Dispatch request to subscribers by requested method.
+    virtual void dispatch(const rpc::request_cptr& request) NOEXCEPT;
+
+    /// Size and assign response_buffer_ (value type is json-rpc::json).
+    virtual rpc::response_ptr assign_message(rpc::response_t&& message,
+        size_t size_hint) NOEXCEPT;
+
+    /// Handlers.
+    virtual void handle_receive(const code& ec, size_t bytes,
+        const rpc::request_cptr& request) NOEXCEPT;
+    virtual void handle_send(const code& ec, size_t bytes,
+        const rpc::response_cptr& response,
+        const result_handler& handler) NOEXCEPT;
+
+private:
+    void log_message(const rpc::request& request,
+        size_t bytes) const NOEXCEPT;
+    void log_message(const rpc::response& response,
+        size_t bytes) const NOEXCEPT;
+
+    // These are protected by strand.
+    http::flat_buffer_ptr response_buffer_;
+    http::flat_buffer request_buffer_;
+    dispatcher dispatcher_{};
+    bool reading_{};
 };
 
 } // namespace network

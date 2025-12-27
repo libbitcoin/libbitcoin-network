@@ -102,23 +102,12 @@ public:
     /// TCP-RPC (e.g. electrum, stratum_v1).
     /// -----------------------------------------------------------------------
 
-    /// Read full rpc request from the socket, handler posted to socket strand.
-    virtual void rpc_read(rpc::in_value& request,
+    /// Read rpc request from the socket, handler posted to socket strand.
+    virtual void rpc_read(http::flat_buffer& buffer, rpc::request& request,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write full rpc response to the socket, handler posted to socket strand.
-    virtual void rpc_write(rpc::out_value&& response,
-        count_handler&& handler) NOEXCEPT;
-
-    /// HTTP (generic).
-    /// -----------------------------------------------------------------------
-
-    /// Read full http variant request from the socket.
-    virtual void http_read(http::flat_buffer& buffer,
-        http::request& request, count_handler&& handler) NOEXCEPT;
-
-    /// Write full http variant response to the socket.
-    virtual void http_write(http::response& response,
+    /// Write rpc response to the socket, handler posted to socket strand.
+    virtual void rpc_write(rpc::response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// WS (generic).
@@ -130,6 +119,21 @@ public:
 
     /// Write full buffer to the websocket (post-upgrade), specify binary/text.
     virtual void ws_write(const asio::const_buffer& in, bool binary,
+        count_handler&& handler) NOEXCEPT;
+
+    /// WS-RPC (custom).
+    /// -----------------------------------------------------------------------
+    /// TODO.
+
+    /// HTTP (generic).
+    /// -----------------------------------------------------------------------
+
+    /// Read http request from the socket, handler posted to socket strand.
+    virtual void http_read(http::flat_buffer& buffer, http::request& request,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write http response to the socket, handler posted to socket strand.
+    virtual void http_write(http::response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Properties.
@@ -166,13 +170,12 @@ private:
     {
         typedef std::shared_ptr<read_rpc> ptr;
 
-        read_rpc(rpc::in_value& request_) NOEXCEPT
-          : value{}, reader{ value }
+        read_rpc(rpc::request& request) NOEXCEPT
+          : value{ request }, reader{ value }
         {
-            request_ = value;
         }
 
-        rpc::in_value value;
+        rpc::request& value;
         rpc::reader reader;
     };
 
@@ -181,12 +184,12 @@ private:
         typedef std::shared_ptr<write_rpc> ptr;
         using out_buffer = rpc::writer::out_buffer;
 
-        write_rpc(rpc::out_value&& response) NOEXCEPT
-          : value{ std::move(response) }, writer{ value }
+        write_rpc(rpc::response& response) NOEXCEPT
+          : value{ response }, writer{ value }
         {
         }
 
-        rpc::out_value value;
+        rpc::response& value;
         rpc::writer writer;
     };
 
@@ -221,13 +224,6 @@ private:
     void do_rpc_write(boost_code ec, size_t total, const write_rpc::ptr& out,
         const count_handler& handler) NOEXCEPT;
 
-    // http (generic)
-    void do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
-        const std::reference_wrapper<http::request>& request,
-        const count_handler& handler) NOEXCEPT;
-    void do_http_write(const std::reference_wrapper<http::response>& response,
-        const count_handler& handler) NOEXCEPT;
-
     // ws (generic)
     void do_ws_read(std::reference_wrapper<http::flat_buffer> out,
         const count_handler& handler) NOEXCEPT;
@@ -235,6 +231,13 @@ private:
         const count_handler& handler) NOEXCEPT;
     void do_ws_event(ws::frame_type kind,
         const std::string_view& data) NOEXCEPT;
+
+    // http (generic)
+    void do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
+        const std::reference_wrapper<http::request>& request,
+        const count_handler& handler) NOEXCEPT;
+    void do_http_write(const std::reference_wrapper<http::response>& response,
+        const count_handler& handler) NOEXCEPT;
 
     code set_websocket(const http::request& request) NOEXCEPT;
 
@@ -261,13 +264,6 @@ private:
     void handle_rpc_write(boost_code ec, size_t size, size_t total,
         const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
 
-    // http (generic)
-    void handle_http_read(const boost_code& ec, size_t size,
-        const std::reference_wrapper<http::request>& request,
-        const count_handler& handler) NOEXCEPT;
-    void handle_http_write(const boost_code& ec, size_t size,
-        const count_handler& handler) NOEXCEPT;
-
     // ws (generic)
     void handle_ws_read(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
@@ -275,6 +271,13 @@ private:
         const count_handler& handler) NOEXCEPT;
     void handle_ws_event(ws::frame_type kind,
         const std::string& data) NOEXCEPT;
+
+    // http (generic)
+    void handle_http_read(const boost_code& ec, size_t size,
+        const std::reference_wrapper<http::request>& request,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_write(const boost_code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
 
 protected:
     // These are thread safe.
