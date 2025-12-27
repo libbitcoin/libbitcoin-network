@@ -317,14 +317,6 @@ struct BCT_API body
     };
 };
 
-} // namespace http
-} // namespace network
-} // namespace libbitcoin
-
-namespace libbitcoin {
-namespace network {
-namespace http {
-
 using request = boost::beast::http::request<http::body>;
 using request_cptr = std::shared_ptr<const request>;
 using response = boost::beast::http::response<http::body>;
