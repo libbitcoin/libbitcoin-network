@@ -27,7 +27,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -41,8 +40,6 @@ class BCT_API socket
 {
 public:
     typedef std::shared_ptr<socket> ptr;
-    typedef rpc::request_body::value_type rpc_in_value;
-    typedef rpc::response_body::value_type rpc_out_value;
 
     DELETE_COPY_MOVE(socket);
 
@@ -106,11 +103,11 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Read full rpc request from the socket, handler posted to socket strand.
-    virtual void rpc_read(rpc_in_value& request,
+    virtual void rpc_read(rpc::in_value& request,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full rpc response to the socket, handler posted to socket strand.
-    virtual void rpc_write(rpc_out_value&& response,
+    virtual void rpc_write(rpc::out_value&& response,
         count_handler&& handler) NOEXCEPT;
 
     /// HTTP (generic).
@@ -168,31 +165,29 @@ private:
     struct read_rpc
     {
         typedef std::shared_ptr<read_rpc> ptr;
-        using rpc_reader = rpc::request_body::reader;
 
-        read_rpc(rpc_in_value& request_) NOEXCEPT
+        read_rpc(rpc::in_value& request_) NOEXCEPT
           : value{}, reader{ value }
         {
             request_ = value;
         }
 
-        rpc_in_value value;
-        rpc_reader reader;
+        rpc::in_value value;
+        rpc::reader reader;
     };
 
     struct write_rpc
     {
         typedef std::shared_ptr<write_rpc> ptr;
-        using rpc_writer = rpc::response_body::writer;
-        using out_buffer = rpc_writer::out_buffer;
+        using out_buffer = rpc::writer::out_buffer;
 
-        write_rpc(rpc_out_value&& response) NOEXCEPT
+        write_rpc(rpc::out_value&& response) NOEXCEPT
           : value{ std::move(response) }, writer{ value }
         {
         }
 
-        rpc_out_value value;
-        rpc_writer writer;
+        rpc::out_value value;
+        rpc::writer writer;
     };
 
     // stop

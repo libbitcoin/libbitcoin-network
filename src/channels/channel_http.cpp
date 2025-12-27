@@ -25,7 +25,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -117,7 +116,7 @@ void channel_http::handle_receive(const code& ec, size_t,
     dispatch(request);
 }
 
-// Wrap the monad request as a tagged verb request and dispatch by type.
+// Wrap the http request as a tagged verb request and dispatch by type.
 void channel_http::dispatch(const request_cptr& request) NOEXCEPT
 {
     request_t model{};
@@ -179,11 +178,11 @@ void channel_http::handle_send(const code& ec, size_t, response_ptr&,
 void channel_http::assign_json_buffer(response& response) NOEXCEPT
 {
     if (const auto& body = response.body();
-        body.contains<monad::json_value>())
+        body.contains<json_body::value_type>())
     {
-        const auto& value = body.get<monad::json_value>();
+        const auto& value = body.get<json_body::value_type>();
         response_buffer_->max_size(value.size_hint);
-        body.get<monad::json_value>().buffer = response_buffer_;
+        body.get<json_body::value_type>().buffer = response_buffer_;
     }
 }
 

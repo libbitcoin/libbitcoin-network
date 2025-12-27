@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_MESSAGES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_MESSAGES_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_HTTP_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_HTTP_HPP
 
-#include <bitcoin/network/messages/http/http.hpp>
-#include <bitcoin/network/messages/http_body.hpp>
-#include <bitcoin/network/messages/http_method.hpp>
-#include <bitcoin/network/messages/json_body.hpp>
-#include <bitcoin/network/messages/peer/peer.hpp>
-#include <bitcoin/network/messages/rpc/rpc.hpp>
+ #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
+ #include <bitcoin/network/messages/http/enums/media_type.hpp>
+ #include <bitcoin/network/messages/http/enums/status.hpp>
+ #include <bitcoin/network/messages/http/enums/target.hpp>
+ #include <bitcoin/network/messages/http/enums/verb.hpp>
+ #include <bitcoin/network/messages/http/fields.hpp>
 
 #endif

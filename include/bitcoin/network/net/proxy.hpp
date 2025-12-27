@@ -24,11 +24,11 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/socket.hpp>
-#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -42,8 +42,6 @@ class BCT_API proxy
 public:
     typedef std::shared_ptr<proxy> ptr;
     typedef subscriber<> stop_subscriber;
-    typedef rpc::request_body::value_type rpc_in_value;
-    typedef rpc::response_body::value_type rpc_out_value;
 
     DELETE_COPY_MOVE(proxy);
 
@@ -135,10 +133,10 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Read full rpc request from the socket, handler posted to socket strand.
-    virtual void read(rpc_in_value& out, count_handler&& handler) NOEXCEPT;
+    virtual void read(rpc::in_value& out, count_handler&& handler) NOEXCEPT;
 
     /// Write full rpc response to the socket, handler posted to socket strand.
-    virtual void write(rpc_out_value&& in, count_handler&& handler) NOEXCEPT;
+    virtual void write(rpc::out_value&& in, count_handler&& handler) NOEXCEPT;
 
     /// HTTP (generic).
     /// -----------------------------------------------------------------------

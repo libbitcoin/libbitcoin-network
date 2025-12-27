@@ -26,7 +26,6 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/rpc/rpc.hpp>
 
 namespace libbitcoin {
 namespace network {

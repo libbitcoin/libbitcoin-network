@@ -155,11 +155,10 @@ namespace network {
 
 // /async         : define
 // /log           : define /async
-// /messages      : define memory
-// /config        : define /messages /async
+// /messages      : define memory /async
+// /config        : define /messages
+// /interface     : define /messages
 // /net           : define settings memory /config /log
-// /rpc           : define /messages /async
-// /interface     : define /rpc
 // /channels      : define /net /interface
 // /sessions      : define /channels
 // /protocols     : define /sessions
