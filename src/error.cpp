@@ -177,7 +177,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { partial_deflate_block, "partial deflate block" },
     { message_too_big, "message too big" },
     { bad_http_version, "bad http version" },
-    { bad_method, "bad method" },
+    { websocket_bad_method, "websocket bad method" },
     { no_host, "no host" },
     { no_connection, "no connection" },
     { no_connection_upgrade, "no connection upgrade" },
