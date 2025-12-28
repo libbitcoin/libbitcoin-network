@@ -304,9 +304,9 @@ void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
     ///////////////////////////////////////////////////////////////////////////
 
     // Don't retain larger than configured (time-space tradeoff).
-    if (settings().minimum_buffer < payload_buffer_.capacity())
+    if (options().minimum_buffer < payload_buffer_.capacity())
     {
-        payload_buffer_.resize(settings().minimum_buffer);
+        payload_buffer_.resize(options().minimum_buffer);
         payload_buffer_.shrink_to_fit();
     }
 

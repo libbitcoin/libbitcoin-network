@@ -47,7 +47,10 @@ inline deadline::ptr make_timer(const logger& log, asio::strand& strand,
 channel::channel(const logger& log, const socket::ptr& socket,
     uint64_t identifier, const settings_t& settings,
     const options_t& options) NOEXCEPT
-  : proxy(socket), settings_(settings), identifier_(identifier),
+  : proxy(socket),
+    options_(options),
+    settings_(settings),
+    identifier_(identifier),
     inactivity_(make_timer(log, socket->strand(), options.inactivity())),
     expiration_(make_timer(log, socket->strand(), options.expiration()))
 {
@@ -219,6 +222,11 @@ uint64_t channel::identifier() const NOEXCEPT
 const network::settings& channel::settings() const NOEXCEPT
 {
     return settings_;
+}
+
+const channel::options_t& channel::options() const NOEXCEPT
+{
+    return options_;
 }
 
 BC_POP_WARNING()

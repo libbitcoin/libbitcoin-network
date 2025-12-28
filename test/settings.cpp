@@ -53,7 +53,6 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
-    BOOST_REQUIRE_EQUAL(instance.minimum_buffer, 4'000'000u);
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
     BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BOOST_REQUIRE(instance.path.empty());
@@ -344,6 +343,7 @@ BOOST_AUTO_TEST_CASE(settings__excluded__default__true)
 
 // services
 // ----------------------------------------------------------------------------
+constexpr auto maximum_request = system::chain::max_block_weight;
 
 BOOST_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
 {
@@ -357,6 +357,7 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
@@ -374,6 +375,7 @@ BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
@@ -399,6 +401,7 @@ BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
@@ -425,6 +428,7 @@ BOOST_AUTO_TEST_CASE(settings__peer_outbound__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.connections, 10u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
@@ -545,6 +549,7 @@ BOOST_AUTO_TEST_CASE(settings__peer_inbound__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
@@ -691,6 +696,7 @@ BOOST_AUTO_TEST_CASE(settings__peer_manual__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));

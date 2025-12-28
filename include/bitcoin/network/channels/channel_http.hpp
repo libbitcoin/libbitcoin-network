@@ -52,14 +52,13 @@ public:
         dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
-    // TODO: network.minimum_buffer is being overloaded here.
     /// Construct http channel to encapsulate and communicate on the socket.
     inline channel_http(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
         response_buffer_(system::to_shared<http::flat_buffer>()),
-        request_buffer_(settings.minimum_buffer)
+        request_buffer_(options.minimum_buffer)
     {
     }
 
