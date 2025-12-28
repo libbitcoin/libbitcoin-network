@@ -166,6 +166,9 @@ protected:
     void logx(const std::string& context, const boost_code& ec) const NOEXCEPT;
 
 private:
+    using http_parser = boost::beast::http::request_parser<http::body>;
+    using http_parser_ptr = std::shared_ptr<http_parser>;
+
     struct read_rpc
     {
         typedef std::shared_ptr<read_rpc> ptr;
@@ -275,7 +278,7 @@ private:
     // http (generic)
     void handle_http_read(const boost_code& ec, size_t size,
         const std::reference_wrapper<http::request>& request,
-        const count_handler& handler) NOEXCEPT;
+        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void handle_http_write(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
