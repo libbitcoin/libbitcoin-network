@@ -721,7 +721,7 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = error::http_to_error_code(ec);
+    const auto code = error::ws_to_error_code(ec);
     if (code == error::unknown) logx("ws-read", ec);
     handler(code, size /*, websocket_->got_binary() */);
 }
@@ -738,7 +738,7 @@ void socket::handle_ws_write(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = error::http_to_error_code(ec);
+    const auto code = error::ws_to_error_code(ec);
     if (code == error::unknown) logx("ws-write", ec);
     handler(code, size /*, websocket_->got_binary() */);
 }
