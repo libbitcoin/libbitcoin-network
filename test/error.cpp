@@ -1100,7 +1100,18 @@ BOOST_AUTO_TEST_CASE(error_t__code__short_read__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "short read");
 }
 
+// TODO: boost beast websocket error
+
 // rpc error
+
+BOOST_AUTO_TEST_CASE(error_t__code__message_overflow__true_exected_message)
+{
+    constexpr auto value = error::message_overflow;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "message overflow");
+}
 
 BOOST_AUTO_TEST_CASE(error_t__code__undefined_type__true_exected_message)
 {
@@ -1110,6 +1121,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__undefined_type__true_exected_message)
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "undefined type");
 }
+
 BOOST_AUTO_TEST_CASE(error_t__code__unexpected_method__true_exected_message)
 {
     constexpr auto value = error::unexpected_method;

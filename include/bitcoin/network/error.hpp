@@ -168,7 +168,7 @@ enum error_t : uint8_t
     ////not_extended,
     ////network_authentication_required,
 
-    // boost beast error
+    // boost beast http error
     end_of_stream,
     partial_message,
     need_more,
@@ -196,7 +196,41 @@ enum error_t : uint8_t
     stale_parser,
     short_read,
 
+    // boost beast websocket error
+    websocket_closed,
+    websocket_buffer_overflow,
+    partial_deflate_block,
+    message_too_big,
+    bad_http_version,
+    websocket_bad_method,
+    no_host,
+    no_connection,
+    no_connection_upgrade,
+    no_upgrade,
+    no_upgrade_websocket,
+    no_sec_key,
+    bad_sec_key,
+    no_sec_version,
+    bad_sec_version,
+    no_sec_accept,
+    bad_sec_accept,
+    upgrade_declined,
+    bad_opcode, 
+    bad_data_frame,
+    bad_continuation,
+    bad_reserved_bits,
+    bad_control_fragment,
+    bad_control_size,
+    bad_unmasked_frame,
+    bad_masked_frame,
+    bad_size,
+    bad_frame_payload,
+    bad_close_code,
+    bad_close_size,
+    bad_close_payload,
+
     // rpc error
+    message_overflow,
     undefined_type,
     unexpected_method,
     unexpected_type,
@@ -239,6 +273,9 @@ BCT_API code asio_to_error_code(const boost_code& ec) NOEXCEPT;
 
 /// 1:1 mapping of boost::beast:http::error to network (or error::unknown).
 BCT_API code http_to_error_code(const boost_code& ec) NOEXCEPT;
+
+/// 1:1 mapping of boost::beast:websocket::error to network (or error::unknown).
+BCT_API code ws_to_error_code(const boost_code& ec) NOEXCEPT;
 
 } // namespace error
 } // namespace network
