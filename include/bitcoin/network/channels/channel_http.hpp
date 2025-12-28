@@ -63,16 +63,16 @@ public:
     {
     }
 
+    /// Serialize and write http message to client (requires strand).
+    /// Completion handler is always invoked on the channel strand.
+    void send(http::response&& response,
+        result_handler&& handler) NOEXCEPT;
+
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
     /// Must call after successful message handling if no stop.
     virtual void receive() NOEXCEPT;
-
-    /// Serialize and write http message to client (requires strand).
-    /// Completion handler is always invoked on the channel strand.
-    virtual void send(http::response&& response,
-        result_handler&& handler) NOEXCEPT;
 
 protected:
     /// Stranded handler invoked from stop().
