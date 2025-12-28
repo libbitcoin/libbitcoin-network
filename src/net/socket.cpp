@@ -34,9 +34,6 @@ using namespace network::rpc;
 using namespace std::placeholders;
 namespace beast = boost::beast;
 
-// TODO: move to config.
-constexpr size_t client_request_limit = 5u * 1024u * 1024u;
-
 // Shared pointers required in handler parameters so closures control lifetime.
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
@@ -59,6 +56,7 @@ socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
 socket::socket(const logger& log, asio::io_context& service,
     const config::address& address) NOEXCEPT
   : strand_(service.get_executor()),
+    maximum_(5u * 1024u * 1024u),
     socket_(strand_),
     service_(service),
     address_(address),
@@ -551,10 +549,10 @@ void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
         auto parser = to_shared<http_parser>();
 
         // Causes http::error::body_limit on completion.
-        parser->body_limit(client_request_limit);
+        parser->body_limit(maximum_);
 
         // Causes http::error::header_limit on completion.
-        parser->header_limit(client_request_limit);
+        parser->header_limit(maximum_);
 
         // This operation posts handler to the strand.
         beast::http::async_read(socket_, buffer.get(), *parser,
@@ -675,7 +673,7 @@ void socket::handle_rpc_read(boost_code ec, size_t size, size_t total,
         return;
     }
 
-    if (total > client_request_limit)
+    if (total > maximum_)
     {
         handler(error::message_overflow, total);
         return;
@@ -894,7 +892,7 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
         websocket_.emplace(std::move(socket_));
 
         // Causes websocket::error::message_too_big on completion.
-        websocket_->read_message_max(client_request_limit);
+        websocket_->read_message_max(maximum_);
         websocket_->set_option(ws::decorator
         {
             [](http::fields& header) NOEXCEPT

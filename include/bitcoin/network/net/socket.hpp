@@ -289,6 +289,7 @@ protected:
     std::atomic_bool stopped_{};
 
     // These are protected by strand (see also handle_accept).
+    size_t maximum_;
     asio::socket socket_;
     config::address address_;
     config::authority authority_{};
