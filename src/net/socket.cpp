@@ -552,7 +552,7 @@ void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
         parser->body_limit(maximum_);
 
         // Causes http::error::header_limit on completion.
-        parser->header_limit(maximum_);
+        parser->header_limit(limit<uint32_t>(maximum_));
 
         // This operation posts handler to the strand.
         beast::http::async_read(socket_, buffer.get(), *parser,
