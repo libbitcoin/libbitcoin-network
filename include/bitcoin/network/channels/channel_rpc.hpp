@@ -60,16 +60,16 @@ public:
     {
     }
 
+    /// Serialize and write response to client (requires strand).
+    /// Completion handler is always invoked on the channel strand.
+    void send(rpc::response_t&& message, size_t size_hint,
+        result_handler&& handler) NOEXCEPT;
+
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
     /// Must call after successful message handling if no stop.
     virtual void receive() NOEXCEPT;
-
-    /// Serialize and write response to client (requires strand).
-    /// Completion handler is always invoked on the channel strand.
-    virtual void send(rpc::response_t&& message, size_t size_hint,
-        result_handler&& handler) NOEXCEPT;
 
 protected:
     /// Stranded handler invoked from stop().
