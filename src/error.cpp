@@ -171,7 +171,41 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { stale_parser, "stale parser" },
     { short_read, "short read" },
 
+    // boost beast websocket error
+    { websocket_closed, "websocket closed" },
+    { websocket_buffer_overflow, "websocket buffer overflow" },
+    { partial_deflate_block, "partial deflate block" },
+    { message_too_big, "message too big" },
+    { bad_http_version, "bad http version" },
+    { websocket_bad_method, "websocket bad method" },
+    { no_host, "no host" },
+    { no_connection, "no connection" },
+    { no_connection_upgrade, "no connection upgrade" },
+    { no_upgrade, "no upgrade" },
+    { no_upgrade_websocket, "no upgrade websocket" },
+    { no_sec_key, "no sec key" },
+    { bad_sec_key, "bad sec key" },
+    { no_sec_version, "no sec version" },
+    { bad_sec_version, "bad sec version" },
+    { no_sec_accept, "no sec accept" },
+    { bad_sec_accept, "bad sec accept" },
+    { upgrade_declined, "upgrade declined" },
+    { bad_opcode, "bad opcode" },
+    { bad_data_frame, "bad data frame" },
+    { bad_continuation, "bad continuation" },
+    { bad_reserved_bits, "bad reserved bits" },
+    { bad_control_fragment, "bad control fragment" },
+    { bad_control_size, "bad control size" },
+    { bad_unmasked_frame, "bad unmasked frame" },
+    { bad_masked_frame, "bad masked frame" },
+    { bad_size, "bad size" },
+    { bad_frame_payload, "bad frame payload" },
+    { bad_close_code, "bad close code" },
+    { bad_close_size, "bad close size" },
+    { bad_close_payload, "bad close payload" },
+
     // rpc error
+    { message_overflow, "message overflow" },
     { undefined_type, "undefined type" },
     { unexpected_method, "unexpected method" },
     { unexpected_type, "unexpected type" },
@@ -318,65 +352,138 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
 
 code http_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    namespace beast = boost::beast::http;
+    namespace http = boost::beast::http;
 
     if (!ec)
         return {};
 
-    if (ec == beast::error::end_of_stream)
+    if (ec == http::error::end_of_stream)
         return error::end_of_stream;
-    if (ec == beast::error::partial_message)
+    if (ec == http::error::partial_message)
         return error::partial_message;
-    if (ec == beast::error::need_more)
+    if (ec == http::error::need_more)
         return error::need_more;
-    if (ec == beast::error::unexpected_body)
+    if (ec == http::error::unexpected_body)
         return error::unexpected_body;
-    if (ec == beast::error::need_buffer)
+    if (ec == http::error::need_buffer)
         return error::need_buffer;
-    if (ec == beast::error::end_of_chunk)
+    if (ec == http::error::end_of_chunk)
         return error::end_of_chunk;
-    if (ec == beast::error::buffer_overflow)
+    if (ec == http::error::buffer_overflow)
         return error::buffer_overflow;
-    if (ec == beast::error::header_limit)
+    if (ec == http::error::header_limit)
         return error::header_limit;
-    if (ec == beast::error::body_limit)
+    if (ec == http::error::body_limit)
         return error::body_limit;
-    if (ec == beast::error::bad_alloc)
+    if (ec == http::error::bad_alloc)
         return error::bad_alloc;
-    if (ec == beast::error::bad_line_ending)
+    if (ec == http::error::bad_line_ending)
         return error::bad_line_ending;
-    if (ec == beast::error::bad_method)
+    if (ec == http::error::bad_method)
         return error::bad_method;
-    if (ec == beast::error::bad_target)
+    if (ec == http::error::bad_target)
         return error::bad_target;
-    if (ec == beast::error::bad_version)
+    if (ec == http::error::bad_version)
         return error::bad_version;
-    if (ec == beast::error::bad_status)
+    if (ec == http::error::bad_status)
         return error::bad_status;
-    if (ec == beast::error::bad_reason)
+    if (ec == http::error::bad_reason)
         return error::bad_reason;
-    if (ec == beast::error::bad_field)
+    if (ec == http::error::bad_field)
         return error::bad_field;
-    if (ec == beast::error::bad_value)
+    if (ec == http::error::bad_value)
         return error::bad_value;
-    if (ec == beast::error::bad_content_length)
+    if (ec == http::error::bad_content_length)
         return error::bad_content_length;
-    if (ec == beast::error::bad_transfer_encoding)
+    if (ec == http::error::bad_transfer_encoding)
         return error::bad_transfer_encoding;
-    if (ec == beast::error::bad_chunk)
+    if (ec == http::error::bad_chunk)
         return error::bad_chunk;
-    if (ec == beast::error::bad_chunk_extension)
+    if (ec == http::error::bad_chunk_extension)
         return error::bad_chunk_extension;
-    if (ec == beast::error::bad_obs_fold)
+    if (ec == http::error::bad_obs_fold)
         return error::bad_obs_fold;
-    if (ec == beast::error::multiple_content_length)
+    if (ec == http::error::multiple_content_length)
         return error::multiple_content_length;
-    if (ec == beast::error::stale_parser)
+    if (ec == http::error::stale_parser)
         return error::stale_parser;
-    if (ec == beast::error::short_read)
+    if (ec == http::error::short_read)
         return error::short_read;
 
     return asio_to_error_code(ec);
+}
+
+code ws_to_error_code(const boost_code& ec) NOEXCEPT
+{
+    namespace ws = boost::beast::websocket;
+
+    if (!ec)
+        return {};
+
+    if (ec == ws::error::closed)
+        return error::websocket_closed;
+    if (ec == ws::error::buffer_overflow)
+        return error::websocket_buffer_overflow;
+    if (ec == ws::error::partial_deflate_block)
+        return error::partial_deflate_block;
+    if (ec == ws::error::message_too_big)
+        return error::message_too_big;
+    if (ec == ws::error::bad_http_version)
+        return error::bad_http_version;
+    if (ec == ws::error::bad_method)
+        return error::websocket_bad_method;
+    if (ec == ws::error::no_host)
+        return error::no_host;
+    if (ec == ws::error::no_connection)
+        return error::no_connection;
+    if (ec == ws::error::no_connection_upgrade)
+        return error::no_connection_upgrade;
+    if (ec == ws::error::no_upgrade)
+        return error::no_upgrade;
+    if (ec == ws::error::no_upgrade_websocket)
+        return error::no_upgrade_websocket;
+    if (ec == ws::error::no_sec_key)
+        return error::no_sec_key;
+    if (ec == ws::error::bad_sec_key)
+        return error::bad_sec_key;
+    if (ec == ws::error::no_sec_version)
+        return error::no_sec_version;
+    if (ec == ws::error::bad_sec_version)
+        return error::bad_sec_version;
+    if (ec == ws::error::no_sec_accept)
+        return error::no_sec_accept;
+    if (ec == ws::error::bad_sec_accept)
+        return error::bad_sec_accept;
+    if (ec == ws::error::upgrade_declined)
+        return error::upgrade_declined;
+    if (ec == ws::error::bad_opcode)
+        return error::bad_opcode;
+    if (ec == ws::error::bad_data_frame)
+        return error::bad_data_frame;
+    if (ec == ws::error::bad_continuation)
+        return error::bad_continuation;
+    if (ec == ws::error::bad_reserved_bits)
+        return error::bad_reserved_bits;
+    if (ec == ws::error::bad_control_fragment)
+        return error::bad_control_fragment;
+    if (ec == ws::error::bad_control_size)
+        return error::bad_control_size;
+    if (ec == ws::error::bad_unmasked_frame)
+        return error::bad_unmasked_frame;
+    if (ec == ws::error::bad_masked_frame)
+        return error::bad_masked_frame;
+    if (ec == ws::error::bad_size)
+        return error::bad_size;
+    if (ec == ws::error::bad_frame_payload)
+        return error::bad_frame_payload;
+    if (ec == ws::error::bad_close_code)
+        return error::bad_close_code;
+    if (ec == ws::error::bad_close_size)
+        return error::bad_close_size;
+    if (ec == ws::error::bad_close_payload)
+        return error::bad_close_payload;
+
+    return http_to_error_code(ec);
 }
 
 } // namespace error

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_BODY_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_BODY_HPP
 
+#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json_body.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>
@@ -98,12 +99,16 @@ struct BCT_API body
     };
 };
 
-// Only defines that require model.hpp, could move to independent file.
 using request_body = body<request_t>;
-using response_body = body<response_t>;
-using in_value = request_body::value_type;
-using out_value = response_body::value_type;
+using request = request_body::value_type;
+using request_cptr = std::shared_ptr<const request>;
+using request_ptr = std::shared_ptr<request>;
 using reader = request_body::reader;
+
+using response_body = body<response_t>;
+using response = response_body::value_type;
+using response_cptr = std::shared_ptr<const response>;
+using response_ptr = std::shared_ptr<response>;
 using writer = response_body::writer;
 
 } // namespace rpc

@@ -34,6 +34,12 @@ using namespace network::rpc;
 using namespace std::placeholders;
 namespace beast = boost::beast;
 
+// TODO: move to config.
+constexpr size_t client_request_limit = 5u * 1024u * 1024u;
+
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Boost: "The execution context provides the I/O executor that the socket will
@@ -279,10 +285,13 @@ void socket::write(const asio::const_buffer& in,
 /// TCP-RPC.
 // ----------------------------------------------------------------------------
 
-void socket::rpc_read(rpc::in_value& request, count_handler&& handler) NOEXCEPT
+// Buffer could be passed via request, so this is for interface consistency.
+void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
+    count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
     const auto in = emplace_shared<read_rpc>(request);
+    in->value.buffer = emplace_shared<http::flat_buffer>(buffer);
     in->reader.init({}, ec);
 
     boost::asio::dispatch(strand_,
@@ -290,36 +299,17 @@ void socket::rpc_read(rpc::in_value& request, count_handler&& handler) NOEXCEPT
             shared_from_this(), ec, zero, in, std::move(handler)));
 }
 
-void socket::rpc_write(rpc::out_value&& response,
+void socket::rpc_write(rpc::response& response,
     count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
-    const auto out = emplace_shared<write_rpc>(std::move(response));
+    const auto out = emplace_shared<write_rpc>(response);
     out->writer.init(ec);
 
     // Dispatch success or fail, for handler invoke on strand.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_rpc_write,
             shared_from_this(), ec, zero, out, std::move(handler)));
-}
-
-// HTTP.
-// ----------------------------------------------------------------------------
-
-void socket::http_read(http::flat_buffer& buffer,
-    http::request& request, count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_read, shared_from_this(),
-            std::ref(buffer), std::ref(request), std::move(handler)));
-}
-
-void socket::http_write(http::response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_write, shared_from_this(),
-            std::ref(response), std::move(handler)));
 }
 
 // WS.
@@ -339,6 +329,25 @@ void socket::ws_write(const asio::const_buffer& in, bool binary,
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_ws_write,
             shared_from_this(), in, binary, std::move(handler)));
+}
+
+// HTTP.
+// ----------------------------------------------------------------------------
+
+void socket::http_read(http::flat_buffer& buffer,
+    http::request& request, count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_http_read, shared_from_this(),
+            std::ref(buffer), std::ref(request), std::move(handler)));
+}
+
+void socket::http_write(http::response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_http_write, shared_from_this(),
+            std::ref(response), std::move(handler)));
 }
 
 // connect (private).
@@ -457,61 +466,6 @@ void socket::do_rpc_write(boost_code ec, size_t total,
             shared_from_this(), _1, _2, total, out, handler));
 }
 
-// http (generic).
-// ----------------------------------------------------------------------------
-
-void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
-    const std::reference_wrapper<http::request>& request,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (websocket())
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
-    try
-    {
-        // This operation posts handler to the strand.
-        beast::http::async_read(socket_, buffer.get(), request.get(),
-            std::bind(&socket::handle_http_read,
-                shared_from_this(), _1, _2, request, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_read: " << e.what());
-        handler(error::operation_failed, {});
-    }
-}
-
-void socket::do_http_write(
-    const std::reference_wrapper<http::response>& response,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (websocket())
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
-    try
-    {
-        // This operation posts handler to the strand.
-        beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http_write,
-                shared_from_this(), _1, _2, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_write: " << e.what());
-        handler(error::operation_failed, {});
-    }
-}
-
 // ws (generic).
 // ----------------------------------------------------------------------------
 
@@ -574,6 +528,70 @@ void socket::do_ws_event(ws::frame_type kind,
     boost::asio::dispatch(strand_,
         std::bind(&socket::handle_ws_event,
             shared_from_this(), kind, std::string{ data }));
+}
+
+// http (generic).
+// ----------------------------------------------------------------------------
+
+void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
+    const std::reference_wrapper<http::request>& request,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
+    try
+    {
+        // Explicit parser orverride gives access to limits.
+        auto parser = to_shared<http_parser>();
+
+        // Causes http::error::body_limit on completion.
+        parser->body_limit(client_request_limit);
+
+        // Causes http::error::header_limit on completion.
+        parser->header_limit(client_request_limit);
+
+        // This operation posts handler to the strand.
+        beast::http::async_read(socket_, buffer.get(), *parser,
+            std::bind(&socket::handle_http_read,
+                shared_from_this(), _1, _2, request, parser, handler));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_http_read: " << e.what());
+        handler(error::operation_failed, {});
+    }
+}
+
+void socket::do_http_write(
+    const std::reference_wrapper<http::response>& response,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (websocket())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
+    try
+    {
+        // This operation posts handler to the strand.
+        beast::http::async_write(socket_, response.get(),
+            std::bind(&socket::handle_http_write,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_http_write: " << e.what());
+        handler(error::operation_failed, {});
+    }
 }
 
 // completion (private).
@@ -657,6 +675,12 @@ void socket::handle_rpc_read(boost_code ec, size_t size, size_t total,
         return;
     }
 
+    if (total > client_request_limit)
+    {
+        handler(error::message_overflow, total);
+        return;
+    }
+
     if (!ec)
     {
         in->value.buffer->commit(size);
@@ -703,48 +727,6 @@ void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
     do_rpc_write(ec, total, out, handler);
 }
 
-// http (generic)
-// ----------------------------------------------------------------------------
-
-void socket::handle_http_read(const boost_code& ec, size_t size,
-    const std::reference_wrapper<http::request>& request,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (error::asio_is_canceled(ec))
-    {
-        handler(error::channel_stopped, size);
-        return;
-    }
-
-    if (!ec && beast::websocket::is_upgrade(request.get()))
-    {
-        handler(set_websocket(request.get()), size);
-        return;
-    }
-
-    const auto code = error::http_to_error_code(ec);
-    if (code == error::unknown) logx("http", ec);
-    handler(code, size);
-}
-
-void socket::handle_http_write(const boost_code& ec, size_t size,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (error::asio_is_canceled(ec))
-    {
-        handler(error::channel_stopped, size);
-        return;
-    }
-
-    const auto code = error::http_to_error_code(ec);
-    if (code == error::unknown) logx("http", ec);
-    handler(code, size);
-}
-
 // ws (generic)
 // ----------------------------------------------------------------------------
 
@@ -760,7 +742,7 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = error::http_to_error_code(ec);
+    const auto code = error::ws_to_error_code(ec);
     if (code == error::unknown) logx("ws-read", ec);
     handler(code, size /*, websocket_->got_binary() */);
 }
@@ -777,7 +759,7 @@ void socket::handle_ws_write(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = error::http_to_error_code(ec);
+    const auto code = error::ws_to_error_code(ec);
     if (code == error::unknown) logx("ws-write", ec);
     handler(code, size /*, websocket_->got_binary() */);
 }
@@ -801,6 +783,53 @@ void socket::handle_ws_event(ws::frame_type kind,
             LOGX("WS close [" << authority() << "] " << websocket_->reason());
             break;
     }
+}
+
+// http (generic)
+// ----------------------------------------------------------------------------
+
+void socket::handle_http_read(const boost_code& ec, size_t size,
+    const std::reference_wrapper<http::request>& request,
+    const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, size);
+        return;
+    }
+
+    if (!ec && beast::websocket::is_upgrade(parser->get()))
+    {
+        handler(set_websocket(parser->get()), size);
+        return;
+    }
+
+    if (!ec)
+    {
+        request.get() = parser->release();
+    }
+
+    const auto code = error::http_to_error_code(ec);
+    if (code == error::unknown) logx("http", ec);
+    handler(code, size);
+}
+
+void socket::handle_http_write(const boost_code& ec, size_t size,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, size);
+        return;
+    }
+
+    const auto code = error::http_to_error_code(ec);
+    if (code == error::unknown) logx("http", ec);
+    handler(code, size);
 }
 
 // Properties.
@@ -863,6 +892,9 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
     try
     {
         websocket_.emplace(std::move(socket_));
+
+        // Causes websocket::error::message_too_big on completion.
+        websocket_->read_message_max(client_request_limit);
         websocket_->set_option(ws::decorator
         {
             [](http::fields& header) NOEXCEPT
@@ -904,6 +936,8 @@ void socket::logx(const std::string& context,
         << ec.category().name() << ":" << ec.message());
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

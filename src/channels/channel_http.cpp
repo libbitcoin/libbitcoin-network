@@ -33,12 +33,11 @@ namespace network {
 #define CASE_REQUEST_TO_MODEL(verb_, request_, model_) \
 case verb::verb_: \
     model_.method = #verb_; \
-    model_.params = { array_t{ any_t{ \
+    model_.params = { rpc::array_t{ rpc::any_t{ \
         http::method::tag_request<verb::verb_>(request_) } } }; \
     break
 
 using namespace system;
-using namespace network::rpc;
 using namespace network::http;
 using namespace std::placeholders;
 
@@ -86,15 +85,14 @@ void channel_http::receive() NOEXCEPT
             shared_from_base<channel_http>(), _1, _2, in));
 }
 
-// private
-void channel_http::handle_receive(const code& ec, size_t,
-    const request_cptr& request) NOEXCEPT
+void channel_http::handle_receive(const code& ec, size_t bytes,
+    const http::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     if (stopped())
     {
-        LOGQ("Request read abort [" << authority() << "]");
+        LOGQ("Http read abort [" << authority() << "]");
         return;
     }
 
@@ -103,7 +101,7 @@ void channel_http::handle_receive(const code& ec, size_t,
         // Don't log common conditions.
         if (ec != error::end_of_stream && ec != error::operation_canceled)
         {
-            LOGF("Request read failure [" << authority() << "] "
+            LOGF("Http read failure [" << authority() << "] "
                 << ec.message());
         }
 
@@ -112,14 +110,14 @@ void channel_http::handle_receive(const code& ec, size_t,
     }
 
     reading_ = false;
-    log_message(*request);
+    log_message(*request, bytes);
     dispatch(request);
 }
 
 // Wrap the http request as a tagged verb request and dispatch by type.
 void channel_http::dispatch(const request_cptr& request) NOEXCEPT
 {
-    request_t model{};
+    rpc::request_t model{};
     switch (request.get()->method())
     {
         CASE_REQUEST_TO_MODEL(get, request, model);
@@ -162,15 +160,16 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
         return;
     }
 
-    log_message(*ptr);
-    write(*ptr, std::move(complete));
+    write(response, std::move(complete));
 }
 
-// private
-void channel_http::handle_send(const code& ec, size_t, response_ptr&,
-    const result_handler& handler) NOEXCEPT
+void channel_http::handle_send(const code& ec, size_t bytes,
+    const response_cptr& response, const result_handler& handler) NOEXCEPT
 {
-    if (ec) stop(ec);
+    if (ec)
+        stop(ec);
+
+    log_message(*response, bytes);
     handler(ec);
 }
 
@@ -180,42 +179,39 @@ void channel_http::assign_json_buffer(response& response) NOEXCEPT
     if (const auto& body = response.body();
         body.contains<json_body::value_type>())
     {
-        const auto& value = body.get<json_body::value_type>();
+        auto& value = body.get<json_body::value_type>();
         response_buffer_->max_size(value.size_hint);
-        body.get<json_body::value_type>().buffer = response_buffer_;
+        value.buffer = response_buffer_;
     }
 }
 
 // log helpers
 // ----------------------------------------------------------------------------
-// private
 
-void channel_http::log_message(const request& request) const NOEXCEPT
+void channel_http::log_message(const request& LOG_ONLY(request),
+    size_t LOG_ONLY(bytes)) const NOEXCEPT
 {
-    LOG_ONLY(const auto size = serialize(request.payload_size()
-        .has_value() ? request.payload_size().value() : zero);)
-
     LOG_ONLY(const auto version = "http/" + serialize(request.version() / 10) +
         "." + serialize(request.version() % 10);)
         
-    LOGA("Request [" << request.method_string()
-        << "] " << version << " (" << (request.chunked() ? "c" : size)
+    LOGA("Http [" << request.method_string()
+        << "] " << version
+        << " (" << (request.chunked() ? "c" : serialize(bytes))
         << ") " << (request.keep_alive() ? "keep" : "drop")
         << " [" << authority() << "]"
         << " {" << (split(request[field::accept], ",").front()) << "...}"
         << " "  << request.target());
 }
 
-void channel_http::log_message(const response& response) const NOEXCEPT
+void channel_http::log_message(const response& LOG_ONLY(response),
+    size_t LOG_ONLY(bytes)) const NOEXCEPT
 {
-    LOG_ONLY(const auto size = serialize(response.payload_size()
-        .has_value() ? response.payload_size().value() : zero);)
-
     LOG_ONLY(const auto version = "http/" + serialize(response.version() / 10)
         + "." + serialize(response.version() % 10);)
         
-    LOGA("Response [" << status_string(response.result())
-        << "] " << version << " (" << (response.chunked() ? "c" : size)
+    LOGA("Http [" << status_string(response.result())
+        << "] " << version
+        << " (" << (response.chunked() ? "c" : serialize(bytes))
         << ") " << (response.keep_alive() ? "keep" : "drop")
         << " [" << authority() << "]"
         << " {" << (response[field::content_type]) << "}");
