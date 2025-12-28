@@ -205,6 +205,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { bad_close_payload, "bad close payload" },
 
     // rpc error
+    { message_overflow, "message overflow" },
     { undefined_type, "undefined type" },
     { unexpected_method, "unexpected method" },
     { unexpected_type, "unexpected type" },
