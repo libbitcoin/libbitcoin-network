@@ -89,6 +89,9 @@ public:
     /// Configuration settings.
     const settings_t& settings() const NOEXCEPT;
 
+    /// TCP server options.
+    const options_t& options() const NOEXCEPT;
+
 protected:
     /// Construct a channel to encapsulated and communicate on the socket.
     channel(const logger& log, const socket::ptr& socket, uint64_t identifier,
@@ -112,6 +115,7 @@ private:
     void handle_monitor(const code& ec) NOEXCEPT;
 
     // These are thread safe (const).
+    const options_t& options_;
     const settings_t& settings_;
     const uint64_t identifier_;
     const uint64_t nonce_

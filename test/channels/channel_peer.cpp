@@ -102,7 +102,6 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     BOOST_REQUIRE_EQUAL(channel_ptr->settings().maximum_payload(), payload_maximum(set));
     BOOST_REQUIRE_EQUAL(channel_ptr->settings().identifier, set.identifier);
     BOOST_REQUIRE_EQUAL(channel_ptr->settings().validate_checksum, set.validate_checksum);
-    BOOST_REQUIRE_EQUAL(channel_ptr->settings().minimum_buffer, set.minimum_buffer);
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.

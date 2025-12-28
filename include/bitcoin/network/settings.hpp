@@ -28,6 +28,14 @@
 namespace libbitcoin {
 namespace network {
 
+/// The largest p2p payload request when configured for witness blocks.
+constexpr uint32_t maximum_request_
+{
+    system::possible_narrow_cast<uint32_t>(
+        messages::peer::heading::maximum_payload(
+            messages::peer::level::canonical, true))
+};
+
 /// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
 {
@@ -44,6 +52,8 @@ struct BCT_API settings
         uint16_t connections{ 0 };
         uint32_t inactivity_minutes{ 10 };
         uint32_t expiration_minutes{ 60 };
+        uint32_t maximum_request{ maximum_request_ };
+        uint32_t minimum_buffer{ maximum_request_ };
 
         /// Helpers.
         virtual bool enabled() const NOEXCEPT;
@@ -220,12 +230,6 @@ struct BCT_API settings
     uint32_t handshake_timeout_seconds{ 15 };
     uint32_t channel_heartbeat_minutes{ 5 };
     uint32_t maximum_skew_minutes{ 120 };
-    uint32_t minimum_buffer
-    {
-        system::possible_narrow_cast<uint32_t>(
-            messages::peer::heading::maximum_payload(
-                messages::peer::level::canonical, true))
-    };
     uint32_t rate_limit{ 1024  };
     std::string user_agent{ BC_USER_AGENT };
     std::filesystem::path path{};
