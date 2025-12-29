@@ -160,7 +160,8 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
         return;
     }
 
-    write(response, std::move(complete));
+    // response has been moved to ptr.
+    write(*ptr, std::move(complete));
 }
 
 void channel_http::handle_send(const code& ec, size_t bytes,
