@@ -41,7 +41,9 @@ namespace error {
 /// These are platform-specific error codes, for which we have seen variance.
 /// boost::system::errc::errc_t is the boost::system error condition enum.
 /// By comparing against conditions we obtain platform-independent error codes.
+typedef boost::json::error json_error_t;
 typedef boost::beast::http::error http_error_t;
+typedef boost::beast::websocket::error ws_error_t;
 typedef boost::system::errc::errc_t boost_error_t;
 typedef boost::asio::error::misc_errors asio_misc_error_t;
 typedef boost::asio::error::netdb_errors asio_netdb_error_t;
@@ -229,6 +231,47 @@ enum error_t : uint8_t
     bad_close_size,
     bad_close_payload,
 
+    // boost json error
+    syntax,
+    extra_data,
+    incomplete,
+    exponent_overflow,
+    too_deep,
+    illegal_leading_surrogate,
+    illegal_trailing_surrogate,
+    expected_hex_digit,
+    expected_utf16_escape,
+    object_too_large,
+    array_too_large,
+    key_too_large,
+    string_too_large,
+    number_too_large,
+    input_error,
+    exception,
+    out_of_range,
+    test_failure,
+    missing_slash,
+    invalid_escape,
+    token_not_number,
+    value_is_scalar,
+    json_not_found,
+    token_overflow,
+    past_the_end,
+    not_number,
+    not_exact,
+    not_null,
+    not_bool,
+    not_array,
+    not_object,
+    not_string,
+    not_int64,
+    not_uint64,
+    not_double,
+    not_integer,
+    size_mismatch,
+    exhausted_variants,
+    unknown_name,
+
     // rpc error
     message_overflow,
     undefined_type,
@@ -244,21 +287,25 @@ enum error_t : uint8_t
 // No current need for error_code equivalence mapping.
 DECLARE_ERROR_T_CODE_CATEGORY(error);
 
-/// Construct a boost_code object from a boost system errc_t.
-/// Unfortunately boost_code does not have this std::error_code construction.
-inline boost_code to_boost_code(boost_error_t ec) NOEXCEPT
+inline boost_code to_system_code(boost_error_t ec) NOEXCEPT
 {
-    return boost_code{ ec, boost::system::generic_category() };
+    return boost::system::errc::make_error_code(ec);
 }
 
-/// Unfortunately boost_code does not have this std::error_code construction.
 inline boost_code to_http_code(http_error_t ec) NOEXCEPT
 {
     return boost::beast::http::make_error_code(ec);
 }
 
-/// Shortcircuit common boost code mapping.
-BCT_API bool asio_is_canceled(const boost_code& ec) NOEXCEPT;
+inline boost_code to_ws_code(ws_error_t ec) NOEXCEPT
+{
+    return boost::beast::websocket::make_error_code(ec);
+}
+
+inline boost_code to_json_code(json_error_t ec) NOEXCEPT
+{
+    return boost::json::make_error_code(ec);
+}
 
 /// Unfortunately std::error_code and boost::system::error_code are distinct
 /// types, so they do not compare as would be expected across distinct
@@ -269,13 +316,21 @@ BCT_API bool asio_is_canceled(const boost_code& ec) NOEXCEPT;
 /// codes to network::error_t codes. This cannot be done using the equivalence
 /// operator overloads of either, since the error_code types are distinct,
 /// despite being effectively identical. So we provide this explicit mapping.
+
+/// Shortcircuit common boost code mapping.
+BCT_API bool asio_is_canceled(const boost_code& ec) NOEXCEPT;
+
+/// mapping of boost::asio error codes to network (or error::unknown).
 BCT_API code asio_to_error_code(const boost_code& ec) NOEXCEPT;
 
 /// 1:1 mapping of boost::beast:http::error to network (or error::unknown).
 BCT_API code http_to_error_code(const boost_code& ec) NOEXCEPT;
 
-/// 1:1 mapping of boost::beast:websocket::error to network (or error::unknown).
+/// 1:1 mapping of boost::beast::websocket::error to network (or error::unknown).
 BCT_API code ws_to_error_code(const boost_code& ec) NOEXCEPT;
+
+/// 1:1 mapping of boost::json::error to network (or error::unknown).
+BCT_API code json_to_error_code(const boost_code& ec) NOEXCEPT;
 
 } // namespace error
 } // namespace network

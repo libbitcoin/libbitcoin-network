@@ -425,6 +425,7 @@ void socket::do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
 
     if (ec)
     {
+        // Json parser emits http and json codes.
         const auto code = error::http_to_error_code(ec);
         if (code == error::unknown) logx("rpc-read", ec);
         handler(code, total);
@@ -444,6 +445,7 @@ void socket::do_rpc_write(boost_code ec, size_t total,
     const auto buffer = ec ? write_rpc::out_buffer{} : out->writer.get(ec);
     if (ec)
     {
+        // Json serializer emits http and json codes.
         const auto code = error::http_to_error_code(ec);
         if (code == error::unknown) logx("rpc-write", ec);
         handler(code, total);

@@ -52,7 +52,7 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 
     if (is_null(buffer.data()))
     {
-        ec = to_boost_code(boost_error_t::bad_address);
+        ec = to_system_code(boost_error_t::bad_address);
         return {};
     }
 
@@ -129,21 +129,21 @@ finish(boost_code& ec) NOEXCEPT
     if (value_.message.method.empty() ||
         !value_.message.params.has_value())
     {
-        ec = to_boost_code(boost_error_t::bad_message);
+        ec = to_system_code(boost_error_t::bad_message);
         return;
     }
 
     if (value_.message.jsonrpc == version::v1)
     {
         if (!value_.message.id.has_value())
-            ec = to_boost_code(boost_error_t::bad_message);
+            ec = to_system_code(boost_error_t::bad_message);
         else if (!std::holds_alternative<array_t>(
             value_.message.params.value()))
-            ec = to_boost_code(boost_error_t::bad_message);
+            ec = to_system_code(boost_error_t::bad_message);
 
         // TODO: v1 batch is not allowed.
         ////else if (value_.message.is_batch())
-        ////    ec = to_boost_code(boost_error_t::bad_message);
+        ////    ec = to_system_code(boost_error_t::bad_message);
     }
 }
 

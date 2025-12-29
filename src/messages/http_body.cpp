@@ -39,7 +39,7 @@ void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
     {
         [&](std::monostate&) NOEXCEPT
         {
-            ec = to_boost_code(boost_error_t::io_error);
+            ec = to_system_code(boost_error_t::io_error);
         },
         [&](auto& read) NOEXCEPT
         {
@@ -49,7 +49,7 @@ void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = to_system_code(boost_error_t::io_error);
             }
         }
     }, reader_);
@@ -61,7 +61,7 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     {
         [&](std::monostate&) NOEXCEPT
         {
-            ec = to_boost_code(boost_error_t::io_error);
+            ec = to_system_code(boost_error_t::io_error);
             return size_t{};
         },
         [&](auto& read) NOEXCEPT
@@ -72,7 +72,7 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = to_system_code(boost_error_t::io_error);
                 return size_t{};
             }
         }
@@ -96,7 +96,7 @@ void body::reader::finish(boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = to_system_code(boost_error_t::io_error);
             }
         }
     }, reader_);
@@ -120,7 +120,7 @@ void body::writer::init(boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = to_system_code(boost_error_t::io_error);
             }
         }
     }, writer_);
@@ -142,7 +142,7 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
             }
             catch (...)
             {
-                ec = to_boost_code(boost_error_t::io_error);
+                ec = to_system_code(boost_error_t::io_error);
                 return out_buffer{};
             }
         }
