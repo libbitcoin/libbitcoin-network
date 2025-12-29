@@ -431,9 +431,6 @@ void socket::do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
         return;
     }
 
-    if (is_null(in->value.buffer))
-        in->value.buffer = to_shared<http::flat_buffer>();
-
     get_transport().async_receive(in->value.buffer->prepare(size),
         std::bind(&socket::handle_rpc_read,
             shared_from_this(), _1, _2, total, in, handler));
