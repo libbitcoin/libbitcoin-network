@@ -204,6 +204,47 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { bad_close_size, "bad close size" },
     { bad_close_payload, "bad close payload" },
 
+    // boost json error
+    { syntax, "syntax error" },
+    { extra_data, "extra data" },
+    { incomplete, "incomplete json" },
+    { exponent_overflow, "exponent too large" },
+    { too_deep, "too deep" },
+    { illegal_leading_surrogate, "illegal leading surrogate" },
+    { illegal_trailing_surrogate, "illegal trailing surrogate" },
+    { expected_hex_digit, "expected hex digit" },
+    { expected_utf16_escape, "expected utf16 escape" },
+    { object_too_large, "object too large" },
+    { array_too_large, "array too large" },
+    { key_too_large, "key too large" },
+    { string_too_large, "string too large" },
+    { number_too_large, "number too large" },
+    { input_error, "input error" },
+    { exception, "exception" },
+    { out_of_range, "out of range" },
+    { test_failure, "test failure" },
+    { missing_slash, "missing slash" },
+    { invalid_escape, "invalid escape" },
+    { token_not_number, "token not number" },
+    { value_is_scalar, "value is scalar" },
+    { json_not_found, "json not found" },
+    { token_overflow, "token overflow" },
+    { past_the_end, "past the end" },
+    { not_number, "not number" },
+    { not_exact, "not exact" },
+    { not_null, "not null" },
+    { not_bool, "not bool" },
+    { not_array, "not array" },
+    { not_object, "not object" },
+    { not_string, "not string" },
+    { not_int64, "not int64" },
+    { not_uint64, "not uint64" },
+    { not_double, "not double" },
+    { not_integer, "not integer" },
+    { size_mismatch, "size mismatch" },
+    { exhausted_variants, "exhausted variants" },
+    { unknown_name, "unknown name" },
+
     // rpc error
     { message_overflow, "message overflow" },
     { undefined_type, "undefined type" },
@@ -218,6 +259,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
 
+// boost_code overloads the `==` operator to include category.
 bool asio_is_canceled(const boost_code& ec) NOEXCEPT
 {
     // self termination
@@ -227,7 +269,7 @@ bool asio_is_canceled(const boost_code& ec) NOEXCEPT
 
 // The success and operation_canceled codes are the only expected in normal
 // operation, so these are first, to optimize the case where asio_is_canceled
-// is not used.
+// is not used. boost_code overloads the `==` operator to include category.
 code asio_to_error_code(const boost_code& ec) NOEXCEPT
 {
     if (ec == boost_error_t::success)
@@ -350,140 +392,153 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
     return error::unknown;
 }
 
+// includes json codes
 code http_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    namespace http = boost::beast::http;
+    static const auto& category = boost::beast::http::
+        make_error_code(http_error_t::end_of_stream).category();
 
     if (!ec)
-        return {};
+        return error::success;
 
-    if (ec == http::error::end_of_stream)
-        return error::end_of_stream;
-    if (ec == http::error::partial_message)
-        return error::partial_message;
-    if (ec == http::error::need_more)
-        return error::need_more;
-    if (ec == http::error::unexpected_body)
-        return error::unexpected_body;
-    if (ec == http::error::need_buffer)
-        return error::need_buffer;
-    if (ec == http::error::end_of_chunk)
-        return error::end_of_chunk;
-    if (ec == http::error::buffer_overflow)
-        return error::buffer_overflow;
-    if (ec == http::error::header_limit)
-        return error::header_limit;
-    if (ec == http::error::body_limit)
-        return error::body_limit;
-    if (ec == http::error::bad_alloc)
-        return error::bad_alloc;
-    if (ec == http::error::bad_line_ending)
-        return error::bad_line_ending;
-    if (ec == http::error::bad_method)
-        return error::bad_method;
-    if (ec == http::error::bad_target)
-        return error::bad_target;
-    if (ec == http::error::bad_version)
-        return error::bad_version;
-    if (ec == http::error::bad_status)
-        return error::bad_status;
-    if (ec == http::error::bad_reason)
-        return error::bad_reason;
-    if (ec == http::error::bad_field)
-        return error::bad_field;
-    if (ec == http::error::bad_value)
-        return error::bad_value;
-    if (ec == http::error::bad_content_length)
-        return error::bad_content_length;
-    if (ec == http::error::bad_transfer_encoding)
-        return error::bad_transfer_encoding;
-    if (ec == http::error::bad_chunk)
-        return error::bad_chunk;
-    if (ec == http::error::bad_chunk_extension)
-        return error::bad_chunk_extension;
-    if (ec == http::error::bad_obs_fold)
-        return error::bad_obs_fold;
-    if (ec == http::error::multiple_content_length)
-        return error::multiple_content_length;
-    if (ec == http::error::stale_parser)
-        return error::stale_parser;
-    if (ec == http::error::short_read)
-        return error::short_read;
+    if (ec.category() != category)
+        return json_to_error_code(ec);
 
-    return asio_to_error_code(ec);
+    switch (static_cast<http_error_t>(ec.value()))
+    {
+        case http_error_t::end_of_stream: return error::end_of_stream;
+        case http_error_t::partial_message: return error::partial_message;
+        case http_error_t::need_more: return error::need_more;
+        case http_error_t::unexpected_body: return error::unexpected_body;
+        case http_error_t::need_buffer: return error::need_buffer;
+        case http_error_t::end_of_chunk: return error::end_of_chunk;
+        case http_error_t::buffer_overflow: return error::buffer_overflow;
+        case http_error_t::header_limit: return error::header_limit;
+        case http_error_t::body_limit: return error::body_limit;
+        case http_error_t::bad_alloc: return error::bad_alloc;
+        case http_error_t::bad_line_ending: return error::bad_line_ending;
+        case http_error_t::bad_method: return error::bad_method;
+        case http_error_t::bad_target: return error::bad_target;
+        case http_error_t::bad_version: return error::bad_version;
+        case http_error_t::bad_status: return error::bad_status;
+        case http_error_t::bad_reason: return error::bad_reason;
+        case http_error_t::bad_field: return error::bad_field;
+        case http_error_t::bad_value: return error::bad_value;
+        case http_error_t::bad_content_length: return error::bad_content_length;
+        case http_error_t::bad_transfer_encoding: return error::bad_transfer_encoding;
+        case http_error_t::bad_chunk: return error::bad_chunk;
+        case http_error_t::bad_chunk_extension: return error::bad_chunk_extension;
+        case http_error_t::bad_obs_fold: return error::bad_obs_fold;
+        case http_error_t::multiple_content_length: return error::multiple_content_length;
+        case http_error_t::stale_parser: return error::stale_parser;
+        case http_error_t::short_read: return error::short_read;
+        default: return error::unknown;
+    }
 }
 
+// includes json codes
 code ws_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    namespace ws = boost::beast::websocket;
+    static const auto& category = boost::beast::websocket::
+        make_error_code(ws_error_t::closed).category();
 
     if (!ec)
-        return {};
+        return error::success;
 
-    if (ec == ws::error::closed)
-        return error::websocket_closed;
-    if (ec == ws::error::buffer_overflow)
-        return error::websocket_buffer_overflow;
-    if (ec == ws::error::partial_deflate_block)
-        return error::partial_deflate_block;
-    if (ec == ws::error::message_too_big)
-        return error::message_too_big;
-    if (ec == ws::error::bad_http_version)
-        return error::bad_http_version;
-    if (ec == ws::error::bad_method)
-        return error::websocket_bad_method;
-    if (ec == ws::error::no_host)
-        return error::no_host;
-    if (ec == ws::error::no_connection)
-        return error::no_connection;
-    if (ec == ws::error::no_connection_upgrade)
-        return error::no_connection_upgrade;
-    if (ec == ws::error::no_upgrade)
-        return error::no_upgrade;
-    if (ec == ws::error::no_upgrade_websocket)
-        return error::no_upgrade_websocket;
-    if (ec == ws::error::no_sec_key)
-        return error::no_sec_key;
-    if (ec == ws::error::bad_sec_key)
-        return error::bad_sec_key;
-    if (ec == ws::error::no_sec_version)
-        return error::no_sec_version;
-    if (ec == ws::error::bad_sec_version)
-        return error::bad_sec_version;
-    if (ec == ws::error::no_sec_accept)
-        return error::no_sec_accept;
-    if (ec == ws::error::bad_sec_accept)
-        return error::bad_sec_accept;
-    if (ec == ws::error::upgrade_declined)
-        return error::upgrade_declined;
-    if (ec == ws::error::bad_opcode)
-        return error::bad_opcode;
-    if (ec == ws::error::bad_data_frame)
-        return error::bad_data_frame;
-    if (ec == ws::error::bad_continuation)
-        return error::bad_continuation;
-    if (ec == ws::error::bad_reserved_bits)
-        return error::bad_reserved_bits;
-    if (ec == ws::error::bad_control_fragment)
-        return error::bad_control_fragment;
-    if (ec == ws::error::bad_control_size)
-        return error::bad_control_size;
-    if (ec == ws::error::bad_unmasked_frame)
-        return error::bad_unmasked_frame;
-    if (ec == ws::error::bad_masked_frame)
-        return error::bad_masked_frame;
-    if (ec == ws::error::bad_size)
-        return error::bad_size;
-    if (ec == ws::error::bad_frame_payload)
-        return error::bad_frame_payload;
-    if (ec == ws::error::bad_close_code)
-        return error::bad_close_code;
-    if (ec == ws::error::bad_close_size)
-        return error::bad_close_size;
-    if (ec == ws::error::bad_close_payload)
-        return error::bad_close_payload;
+    if (ec.category() != category)
+        return http_to_error_code(ec);
 
-    return http_to_error_code(ec);
+    switch (static_cast<ws_error_t>(ec.value()))
+    {
+        case ws_error_t::closed: return error::websocket_closed;
+        case ws_error_t::buffer_overflow: return error::websocket_buffer_overflow;
+        case ws_error_t::partial_deflate_block: return error::partial_deflate_block;
+        case ws_error_t::message_too_big: return error::message_too_big;
+        case ws_error_t::bad_http_version: return error::bad_http_version;
+        case ws_error_t::bad_method: return error::websocket_bad_method;
+        case ws_error_t::no_host: return error::no_host;
+        case ws_error_t::no_connection: return error::no_connection;
+        case ws_error_t::no_connection_upgrade: return error::no_connection_upgrade;
+        case ws_error_t::no_upgrade: return error::no_upgrade;
+        case ws_error_t::no_upgrade_websocket: return error::no_upgrade_websocket;
+        case ws_error_t::no_sec_key: return error::no_sec_key;
+        case ws_error_t::bad_sec_key: return error::bad_sec_key;
+        case ws_error_t::no_sec_version: return error::no_sec_version;
+        case ws_error_t::bad_sec_version: return error::bad_sec_version;
+        case ws_error_t::no_sec_accept: return error::no_sec_accept;
+        case ws_error_t::bad_sec_accept: return error::bad_sec_accept;
+        case ws_error_t::upgrade_declined: return error::upgrade_declined;
+        case ws_error_t::bad_opcode: return error::bad_opcode;
+        case ws_error_t::bad_data_frame: return error::bad_data_frame;
+        case ws_error_t::bad_continuation: return error::bad_continuation;
+        case ws_error_t::bad_reserved_bits: return error::bad_reserved_bits;
+        case ws_error_t::bad_control_fragment: return error::bad_control_fragment;
+        case ws_error_t::bad_control_size: return error::bad_control_size;
+        case ws_error_t::bad_unmasked_frame: return error::bad_unmasked_frame;
+        case ws_error_t::bad_masked_frame: return error::bad_masked_frame;
+        case ws_error_t::bad_size: return error::bad_size;
+        case ws_error_t::bad_frame_payload: return error::bad_frame_payload;
+        case ws_error_t::bad_close_code: return error::bad_close_code;
+        case ws_error_t::bad_close_size: return error::bad_close_size;
+        case ws_error_t::bad_close_payload: return error::bad_close_payload;
+        default: return error::unknown;
+    }
+}
+
+code json_to_error_code(const boost_code& ec) NOEXCEPT
+{
+    static const auto& category = boost::json::
+        make_error_code(json_error_t::syntax).category();
+
+    if (!ec)
+        return error::success;
+
+    if (ec.category() != category)
+        return asio_to_error_code(ec);
+
+    switch (static_cast<json_error_t>(ec.value()))
+    {
+        case json_error_t::syntax: return error::syntax;
+        case json_error_t::extra_data: return error::extra_data;
+        case json_error_t::incomplete: return error::incomplete;
+        case json_error_t::exponent_overflow: return error::exponent_overflow;
+        case json_error_t::too_deep: return error::too_deep;
+        case json_error_t::illegal_leading_surrogate: return error::illegal_leading_surrogate;
+        case json_error_t::illegal_trailing_surrogate: return error::illegal_trailing_surrogate;
+        case json_error_t::expected_hex_digit: return error::expected_hex_digit;
+        case json_error_t::expected_utf16_escape: return error::expected_utf16_escape;
+        case json_error_t::object_too_large: return error::object_too_large;
+        case json_error_t::array_too_large: return error::array_too_large;
+        case json_error_t::key_too_large: return error::key_too_large;
+        case json_error_t::string_too_large: return error::string_too_large;
+        case json_error_t::number_too_large: return error::number_too_large;
+        case json_error_t::input_error: return error::input_error;
+        case json_error_t::exception: return error::exception;
+        case json_error_t::out_of_range: return error::out_of_range;
+        case json_error_t::test_failure: return error::test_failure;
+        case json_error_t::missing_slash: return error::missing_slash;
+        case json_error_t::invalid_escape: return error::invalid_escape;
+        case json_error_t::token_not_number: return error::token_not_number;
+        case json_error_t::value_is_scalar: return error::value_is_scalar;
+        case json_error_t::not_found: return error::not_found;
+        case json_error_t::token_overflow: return error::token_overflow;
+        case json_error_t::past_the_end: return error::past_the_end;
+        case json_error_t::not_number: return error::not_number;
+        case json_error_t::not_exact: return error::not_exact;
+        case json_error_t::not_null: return error::not_null;
+        case json_error_t::not_bool: return error::not_bool;
+        case json_error_t::not_array: return error::not_array;
+        case json_error_t::not_object: return error::not_object;
+        case json_error_t::not_string: return error::not_string;
+        case json_error_t::not_int64: return error::not_int64;
+        case json_error_t::not_uint64: return error::not_uint64;
+        case json_error_t::not_double: return error::not_double;
+        case json_error_t::not_integer: return error::not_integer;
+        case json_error_t::size_mismatch: return error::size_mismatch;
+        case json_error_t::exhausted_variants: return error::exhausted_variants;
+        case json_error_t::unknown_name: return error::unknown_name;
+        default: return error::unknown;
+    }
 }
 
 } // namespace error

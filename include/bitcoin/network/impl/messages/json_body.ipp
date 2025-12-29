@@ -35,7 +35,7 @@ void CLASS::reader::init(const http::length_type& length,
     boost_code& ec) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    const auto value = length.get_value_or(zero);
+    const auto value = length.get_value_or(max_size_t);
     BC_POP_WARNING()
         
     using namespace system;

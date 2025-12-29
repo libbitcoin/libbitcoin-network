@@ -1381,6 +1381,359 @@ BOOST_AUTO_TEST_CASE(error_t__code__bad_close_payload__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "bad close payload");
 }
 
+// boost json error
+
+BOOST_AUTO_TEST_CASE(error_t__code__syntax__true_expected_message)
+{
+    constexpr auto value = error::syntax;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "syntax error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__extra_data__true_expected_message)
+{
+    constexpr auto value = error::extra_data;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "extra data");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__incomplete__true_expected_message)
+{
+    constexpr auto value = error::incomplete;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "incomplete json");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__exponent_overflow__true_expected_message)
+{
+    constexpr auto value = error::exponent_overflow;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "exponent too large");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__too_deep__true_expected_message)
+{
+    constexpr auto value = error::too_deep;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "too deep");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__illegal_leading_surrogate__true_expected_message)
+{
+    constexpr auto value = error::illegal_leading_surrogate;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "illegal leading surrogate");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__illegal_trailing_surrogate__true_expected_message)
+{
+    constexpr auto value = error::illegal_trailing_surrogate;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "illegal trailing surrogate");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__expected_hex_digit__true_expected_message)
+{
+    constexpr auto value = error::expected_hex_digit;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "expected hex digit");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__expected_utf16_escape__true_expected_message)
+{
+    constexpr auto value = error::expected_utf16_escape;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "expected utf16 escape");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__object_too_large__true_expected_message)
+{
+    constexpr auto value = error::object_too_large;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "object too large");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__array_too_large__true_expected_message)
+{
+    constexpr auto value = error::array_too_large;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "array too large");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__key_too_large__true_expected_message)
+{
+    constexpr auto value = error::key_too_large;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "key too large");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__string_too_large__true_expected_message)
+{
+    constexpr auto value = error::string_too_large;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "string too large");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__number_too_large__true_expected_message)
+{
+    constexpr auto value = error::number_too_large;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "number too large");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__input_error__true_expected_message)
+{
+    constexpr auto value = error::input_error;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "input error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__exception__true_expected_message)
+{
+    constexpr auto value = error::exception;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "exception");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__out_of_range__true_expected_message)
+{
+    constexpr auto value = error::out_of_range;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "out of range");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__test_failure__true_expected_message)
+{
+    constexpr auto value = error::test_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "test failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__missing_slash__true_expected_message)
+{
+    constexpr auto value = error::missing_slash;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing slash");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__invalid_escape__true_expected_message)
+{
+    constexpr auto value = error::invalid_escape;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "invalid escape");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__token_not_number__true_expected_message)
+{
+    constexpr auto value = error::token_not_number;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "token not number");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__value_is_scalar__true_expected_message)
+{
+    constexpr auto value = error::value_is_scalar;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "value is scalar");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__json_not_found__true_expected_message)
+{
+    constexpr auto value = error::json_not_found;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "json not found");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__token_overflow__true_expected_message)
+{
+    constexpr auto value = error::token_overflow;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "token overflow");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__past_the_end__true_expected_message)
+{
+    constexpr auto value = error::past_the_end;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "past the end");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_number__true_expected_message)
+{
+    constexpr auto value = error::not_number;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not number");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_exact__true_expected_message)
+{
+    constexpr auto value = error::not_exact;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not exact");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_null__true_expected_message)
+{
+    constexpr auto value = error::not_null;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not null");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_bool__true_expected_message)
+{
+    constexpr auto value = error::not_bool;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not bool");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_array__true_expected_message)
+{
+    constexpr auto value = error::not_array;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not array");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_object__true_expected_message)
+{
+    constexpr auto value = error::not_object;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not object");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_string__true_expected_message)
+{
+    constexpr auto value = error::not_string;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not string");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_int64__true_expected_message)
+{
+    constexpr auto value = error::not_int64;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not int64");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_uint64__true_expected_message)
+{
+    constexpr auto value = error::not_uint64;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not uint64");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_double__true_expected_message)
+{
+    constexpr auto value = error::not_double;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not double");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_integer__true_expected_message)
+{
+    constexpr auto value = error::not_integer;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not integer");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__size_mismatch__true_expected_message)
+{
+    constexpr auto value = error::size_mismatch;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "size mismatch");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__exhausted_variants__true_expected_message)
+{
+    constexpr auto value = error::exhausted_variants;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "exhausted variants");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__unknown_name__true_expected_message)
+{
+    constexpr auto value = error::unknown_name;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unknown name");
+}
+
 // rpc error
 
 BOOST_AUTO_TEST_CASE(error_t__code__message_overflow__true_expected_message)
