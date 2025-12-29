@@ -238,7 +238,6 @@ struct BCT_API settings
 
     /// Helpers.
     virtual bool witness_node() const NOEXCEPT;
-    virtual size_t maximum_payload() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
     virtual steady_clock::duration connect_timeout() const NOEXCEPT;
     virtual steady_clock::duration channel_handshake() const NOEXCEPT;

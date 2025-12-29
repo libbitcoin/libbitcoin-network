@@ -52,7 +52,7 @@ public:
     /// Construct an instance.
     connector(const logger& log, asio::strand& strand,
         asio::io_context& service, const steady_clock::duration& timeout,
-        std::atomic_bool& suspended) NOEXCEPT;
+        size_t maximum_request, std::atomic_bool& suspended) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~connector() NOEXCEPT;
@@ -88,6 +88,7 @@ protected:
         const config::address& host, socket_handler&& handler) NOEXCEPT;
 
     // These are thread safe
+    const size_t maximum_;
     asio::io_context& service_;
     asio::strand& strand_;
     std::atomic_bool& suspended_;

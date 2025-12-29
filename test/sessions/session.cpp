@@ -117,19 +117,24 @@ public:
         return session_peer::stranded();
     }
 
-    acceptor::ptr create_acceptor() NOEXCEPT override
+    acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT override
     {
-        return session_peer::create_acceptor();
-    }
-
-    connector::ptr create_connector(bool seed=false) NOEXCEPT override
-    {
-        return session_peer::create_connector(seed);
+        return session_peer::create_acceptor(maximum);
     }
 
     connectors_ptr create_connectors(size_t count) NOEXCEPT override
     {
         return session_peer::create_connectors(count);
+    }
+
+    connector::ptr create_connector(size_t maximum) NOEXCEPT override
+    {
+        return session_peer::create_connector(maximum);
+    }
+
+    connector::ptr create_connector() NOEXCEPT override
+    {
+        return session_peer::create_connector();
     }
 
     ////size_t address_count() const NOEXCEPT override
@@ -201,10 +206,10 @@ class mock_net
 public:
     using net::net;
 
-    acceptor::ptr create_acceptor() NOEXCEPT override
+    acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT override
     {
         ++acceptors_;
-        return net::create_acceptor();
+        return net::create_acceptor(maximum);
     }
 
     size_t acceptors() const NOEXCEPT
@@ -212,10 +217,16 @@ public:
         return acceptors_;
     }
 
-    connector::ptr create_connector(bool seed=false) NOEXCEPT override
+    connector::ptr create_connector() NOEXCEPT override
     {
         ++connectors_;
-        return net::create_connector(seed);
+        return net::create_connector();
+    }
+
+    connector::ptr create_connector(size_t maximum) NOEXCEPT override
+    {
+        ++connectors_;
+        return net::create_connector(maximum);
     }
 
     size_t connectors() const NOEXCEPT
@@ -384,18 +395,8 @@ BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
     settings set(selection::mainnet);
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_acceptor());
+    BOOST_REQUIRE(session.create_acceptor(42));
     BOOST_REQUIRE_EQUAL(net.acceptors(), 1u);
-}
-
-BOOST_AUTO_TEST_CASE(session__create_connector__always__expected)
-{
-    const logger log{};
-    settings set(selection::mainnet);
-    mock_net net(set, log);
-    mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_connector());
-    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
@@ -409,6 +410,26 @@ BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
     BOOST_REQUIRE(connectors);
     BOOST_REQUIRE_EQUAL(connectors->size(), expected);
     BOOST_REQUIRE_EQUAL(net.connectors(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(session__create_connector__always__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    mock_net net(set, log);
+    mock_session session(net, 1);
+    BOOST_REQUIRE(session.create_connector(42u));
+    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(session__create_connector_seed__always__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    mock_net net(set, log);
+    mock_session session(net, 1);
+    BOOST_REQUIRE(session.create_connector());
+    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
 }
 
 // utilities
@@ -596,7 +617,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     auto session = std::make_shared<mock_session>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service());
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
     const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->settings(), options);
 
     std::promise<code> started_channel;
@@ -652,7 +673,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service());
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
     const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->settings(), options);
 
     // Stop the channel (started by default).
@@ -742,7 +763,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service());
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
     const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->settings(), options);
     
     std::promise<code> started_channel;
@@ -824,7 +845,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service());
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
     const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->settings(), options);
     
     std::promise<code> started_channel;
@@ -908,7 +929,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service());
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
     const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->settings(), options);
     
     std::promise<code> started_channel;

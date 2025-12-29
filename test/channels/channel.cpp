@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
     threadpool pool{ one };
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, expected, set, set.outbound);
     BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);

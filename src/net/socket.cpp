@@ -47,18 +47,19 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // ----------------------------------------------------------------------------
 
 // authority_.port() zero implies inbound connection.
-socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
-  : socket(log, service, config::address{})
+socket::socket(const logger& log, asio::io_context& service,
+    size_t maximum_request) NOEXCEPT
+  : socket(log, service, maximum_request, config::address{})
 {
 }
 
 // authority_.port() nonzero implies outbound connection.
 socket::socket(const logger& log, asio::io_context& service,
-    const config::address& address) NOEXCEPT
-  : strand_(service.get_executor()),
-    maximum_(5u * 1024u * 1024u),
-    socket_(strand_),
+    size_t maximum_request, const config::address& address) NOEXCEPT
+  : maximum_(maximum_request),
+    strand_(service.get_executor()),
     service_(service),
+    socket_(strand_),
     address_(address),
     reporter(log),
     tracker<socket>(log)

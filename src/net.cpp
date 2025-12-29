@@ -68,30 +68,39 @@ net::~net() NOEXCEPT
 // I/O factories.
 // ----------------------------------------------------------------------------
 
-acceptor::ptr net::create_acceptor() NOEXCEPT
+// inbound/server
+acceptor::ptr net::create_acceptor(size_t maximum) NOEXCEPT
 {
-    return emplace_shared<acceptor>(log, strand(), service(),
+    return emplace_shared<acceptor>(log, strand(), service(), maximum,
         accept_suspended_);
 }
 
-connector::ptr net::create_connector(bool seed) NOEXCEPT
-{
-    const auto timeout = seed ? settings_.outbound.seeding_timeout() :
-        settings_.connect_timeout();
-
-    return emplace_shared<connector>(log, strand(), service(), timeout,
-        connect_suspended_);
-}
-
+// outbound (batch)
 connectors_ptr net::create_connectors(size_t count) NOEXCEPT
 {
     const auto connects = to_shared<connectors>();
     connects->reserve(count);
 
+    const auto maximum = settings_.outbound.maximum_request;
     for (size_t connect{}; connect < count; ++connect)
-        connects->push_back(create_connector());
+        connects->push_back(create_connector(maximum));
 
     return connects;
+}
+
+// manual/outbound
+connector::ptr net::create_connector(size_t maximum) NOEXCEPT
+{
+    return emplace_shared<connector>(log, strand(), service(),
+        settings_.connect_timeout(), maximum, connect_suspended_);
+}
+
+// seed
+connector::ptr net::create_connector() NOEXCEPT
+{
+    return emplace_shared<connector>(log, strand(), service(),
+        settings_.outbound.seeding_timeout(),
+        settings_.outbound.maximum_request, connect_suspended_);
 }
 
 // Start sequence.

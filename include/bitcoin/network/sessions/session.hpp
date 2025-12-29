@@ -187,10 +187,13 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Call to create channel acceptor.
-    virtual acceptor::ptr create_acceptor() NOEXCEPT;
+    virtual acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT;
 
-    /// Call to create channel connector (option for seed connection timeout).
-    virtual connector::ptr create_connector(bool seed=false) NOEXCEPT;
+    /// Call to create channel connector for seed connections.
+    virtual connector::ptr create_connector() NOEXCEPT;
+
+    /// Call to create channel connector for manual/outbound connections.
+    virtual connector::ptr create_connector(size_t maximum) NOEXCEPT;
 
     /// Call to create a set of channel connectors.
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;

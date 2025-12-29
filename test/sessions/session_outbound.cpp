@@ -85,7 +85,7 @@ public:
             port_ = port;
         }
 
-        const auto socket = std::make_shared<network::socket>(log, service_);
+        const auto socket = std::make_shared<network::socket>(log, service_, 42);
 
         // Must be asynchronous or is an infinite recursion.
         boost::asio::post(strand_, [=]() NOEXCEPT
@@ -236,10 +236,11 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(bool =false) NOEXCEPT override
+    connector::ptr create_connector(size_t maximum) NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings().connect_timeout(), suspended_)));
+            service(), network_settings().connect_timeout(), maximum,
+            suspended_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -305,10 +306,10 @@ public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
 
     mock_connector_stop_connect(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings,
+        asio::io_context& service, const settings& settings, size_t maximum,
         mock_session_outbound::ptr session) NOEXCEPT
       : mock_connector_connect_success(log, strand, service,
-          settings.connect_timeout(), suspended_),
+          settings.connect_timeout(), maximum, suspended_),
         session_(session)
     {
     }
@@ -349,13 +350,13 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(bool =false) NOEXCEPT override
+    connector::ptr create_connector(size_t maximum) NOEXCEPT override
     {
         if (connector_)
             return connector_;
 
         return ((connector_ = std::make_shared<mock_connector_stop_connect>(
-            log, strand(), service(), network_settings(), session_)));
+            log, strand(), service(), network_settings(), maximum, session_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override

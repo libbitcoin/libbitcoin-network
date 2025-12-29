@@ -40,27 +40,15 @@ public:
     {
         return authority_;
     }
-};
 
-class acceptor_accessor
-  : public acceptor
-{
-public:
-    using acceptor::acceptor;
-
-    const asio::io_context& get_service() const NOEXCEPT
+    const config::address& get_address() const NOEXCEPT
     {
-        return service_;
+        return address_;
     }
 
-    const asio::strand& get_strand() const NOEXCEPT
+    size_t get_maximum_request() const NOEXCEPT
     {
-        return strand_;
-    }
-
-    asio::acceptor& get_acceptor() NOEXCEPT
-    {
-        return acceptor_;
+        return maximum_;
     }
 };
 
@@ -68,13 +56,17 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
 {
     const logger log{};
     threadpool pool(1);
-    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
+    constexpr auto maximum = 42u;
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), maximum);
 
     BOOST_REQUIRE(!instance->stranded());
     BOOST_REQUIRE(!instance->get_socket().is_open());
     BOOST_REQUIRE(&instance->get_strand() == &instance->strand());
     BOOST_REQUIRE(instance->get_authority() == instance->authority());
     BOOST_REQUIRE(instance->get_authority().ip().is_unspecified());
+    BOOST_REQUIRE(instance->get_address() == instance->address());
+    BOOST_REQUIRE(instance->get_address() == config::address{});
+    BOOST_REQUIRE_EQUAL(instance->get_maximum_request(), maximum);
     instance->stop();
 }
 
@@ -82,7 +74,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 {
     const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
 
@@ -130,7 +122,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////{
 ////    const logger log{};
 ////    threadpool pool(2);
-////    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
+////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
 ////    asio::strand strand(pool.service().get_executor());
 ////
 ////    const asio::endpoint endpoint(asio::tcp::v6(), 42);
@@ -168,7 +160,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////{
 ////    const logger log{};
 ////    threadpool pool(2);
-////    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
+////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
 ////
 ////    system::data_array<42> data{};
 ////    instance->read_some(asio::mutable_buffer{ data.data(), data.size() },
@@ -193,7 +185,7 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
 {
     const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
 
     system::data_array<42> data;
     instance->read(asio::mutable_buffer{ data.data(), data.size() },
@@ -218,7 +210,7 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
 {
     const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
 
     system::data_array<42> data;
     instance->write(asio::const_buffer{ data.data(), data.size() },

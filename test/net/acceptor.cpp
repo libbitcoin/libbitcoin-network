@@ -41,6 +41,11 @@ public:
         return acceptor_;
     }
 
+    size_t get_maximum_request() const NOEXCEPT
+    {
+        return maximum_;
+    }
+
     bool get_stopped() const NOEXCEPT
     {
         return stopped_;
@@ -53,14 +58,16 @@ BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
 {
     const logger log{};
     threadpool pool(1);
+    constexpr auto maximum = 42u;
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), maximum, suspended);
 
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
     BOOST_REQUIRE(!instance->get_acceptor().is_open());
     BOOST_REQUIRE(instance->get_stopped());
+    BOOST_REQUIRE_EQUAL(instance->get_maximum_request(), maximum);
 }
 
 // TODO: There is no way to fake failures in start.
@@ -70,7 +77,7 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     threadpool pool(1);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), 42, suspended);
 
     // Result codes inconsistent due to context.
     instance->start(messages::peer::address_item{ 0, 0, 0, 42 });
@@ -93,7 +100,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_stopped_or_suspen
     threadpool pool(2);
     std::atomic_bool suspended{ true };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), 42, suspended);
 
     // Result codes inconsistent due to context.
     instance->start(messages::peer::address_item{ 0, 0, 0, 42 });
@@ -125,7 +132,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), 42, suspended);
 
     // Result codes inconsistent due to context.
     instance->start(messages::peer::address_item{ 0, 0, 0, 42 });

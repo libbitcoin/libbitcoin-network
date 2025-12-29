@@ -214,9 +214,10 @@ protected:
     friend class session;
 
     /// I/O factories.
-    virtual acceptor::ptr create_acceptor() NOEXCEPT;
-    virtual connector::ptr create_connector(bool seed=false) NOEXCEPT;
+    virtual acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT;
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
+    virtual connector::ptr create_connector(size_t maximum) NOEXCEPT;
+    virtual connector::ptr create_connector() NOEXCEPT;
 
     /// Sequences.
     virtual void do_start(const result_handler& handler) NOEXCEPT;

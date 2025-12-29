@@ -85,7 +85,7 @@ void session_manual::connect(const config::endpoint& peer,
     BC_ASSERT(stranded());
 
     // Create a persistent connector for the manual connection.
-    const auto connector = create_connector();
+    const auto connector = create_connector(settings().manual.maximum_request);
 
     subscribe_stop([=](const code&) NOEXCEPT
     {

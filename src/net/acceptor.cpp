@@ -43,8 +43,10 @@ using namespace std::placeholders;
 // Calls are stranded to protect the acceptor member.
 
 acceptor::acceptor(const logger& log, asio::strand& strand,
-    asio::io_context& service, std::atomic_bool& suspended) NOEXCEPT
-  : service_(service),
+    asio::io_context& service, size_t maximum_request,
+    std::atomic_bool& suspended) NOEXCEPT
+  : maximum_(maximum_request),
+    service_(service),
     strand_(strand),
     suspended_(suspended),
     acceptor_(strand_),
@@ -144,7 +146,8 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
     }
 
     // Create the socket.
-    const auto socket = std::make_shared<network::socket>(log, service_);
+    const auto socket = std::make_shared<network::socket>(log, service_,
+        maximum_);
 
     // Posts handle_accept to the acceptor's strand.
     // Establishes a socket connection by waiting on the socket.

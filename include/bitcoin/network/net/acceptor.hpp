@@ -47,8 +47,8 @@ public:
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    acceptor(const logger& log, asio::strand& strand,
-        asio::io_context& service, std::atomic_bool& suspended) NOEXCEPT;
+    acceptor(const logger& log, asio::strand& strand, asio::io_context& service,
+        size_t maximum_request, std::atomic_bool& suspended) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~acceptor() NOEXCEPT;
@@ -81,6 +81,7 @@ protected:
     virtual code start(const asio::endpoint& point) NOEXCEPT;
 
     // These are thread safe.
+    const size_t maximum_;
     asio::io_context& service_;
     asio::strand& strand_;
     std::atomic_bool& suspended_;

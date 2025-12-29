@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__default__false)
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
     auto channel_ptr = std::make_shared<channel_peer>(memory, log, socket_ptr, expected, set, options);
     BOOST_REQUIRE(!channel_ptr->stopped());
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
     const auto payload_maximum = [](const settings& settings) NOEXCEPT
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     // TODO: compare to default instance.
     BOOST_REQUIRE(channel_ptr->peer_version());
 
-    BOOST_REQUIRE_EQUAL(channel_ptr->settings().maximum_payload(), payload_maximum(set));
+    BOOST_REQUIRE_EQUAL(channel_ptr->options().maximum_request, payload_maximum(set));
     BOOST_REQUIRE_EQUAL(channel_ptr->settings().identifier, set.identifier);
     BOOST_REQUIRE_EQUAL(channel_ptr->settings().validate_checksum, set.validate_checksum);
 
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
     constexpr auto expected_ec = error::invalid_magic;
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
     auto channel_ptr = std::make_shared<mock_channel_peer>(log, socket_ptr, 42, set, options);
     constexpr auto expected_ec = error::invalid_magic;
 
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
     auto result = true;
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
     auto result = true;
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__paused__resume_after_read_fail__true)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
     auto channel_ptr = std::make_shared<mock_channel_peer>(log, socket_ptr, 42, set, options);
 
     std::promise<bool> paused_after_resume;
