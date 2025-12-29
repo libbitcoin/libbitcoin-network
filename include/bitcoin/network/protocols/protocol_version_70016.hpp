@@ -47,7 +47,7 @@ public:
         const channel::ptr& channel, uint64_t minimum_services,
         uint64_t maximum_services, bool relay, bool reject) NOEXCEPT;
 
-    /// Perform the handshake (strand required), handler invoked on completion.
+    /// Perform the handshake (requires strand), handler invoked on completion.
     void shake(result_handler&& handle_event) NOEXCEPT override;
 
 protected:

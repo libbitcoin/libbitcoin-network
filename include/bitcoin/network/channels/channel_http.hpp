@@ -77,7 +77,7 @@ protected:
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
 
-    /// Read request buffer (not thread safe).
+    /// Read request buffer (requires strand).
     virtual http::flat_buffer& request_buffer() NOEXCEPT;
 
     /// Dispatch request to subscribers by verb type.

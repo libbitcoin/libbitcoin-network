@@ -41,7 +41,7 @@ public:
     protocol_ping_106(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
-    /// Start protocol (strand required).
+    /// Start protocol (requires strand).
     void start() NOEXCEPT override;
 
     /// The channel is stopping (called on strand by stop subscription).

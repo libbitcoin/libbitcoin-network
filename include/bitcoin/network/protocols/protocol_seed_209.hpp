@@ -41,7 +41,7 @@ public:
     protocol_seed_209(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
-    /// Perform seeding, stops channel on completion (strand required).
+    /// Perform seeding, stops channel on completion (requires strand).
     void start() NOEXCEPT override;
 
     /// Capture stop subscription to clear timer.

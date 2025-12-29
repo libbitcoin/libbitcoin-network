@@ -75,10 +75,10 @@ protected:
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
 
-    /// Read request buffer (not thread safe).
+    /// Read request buffer (requires strand).
     virtual http::flat_buffer& request_buffer() NOEXCEPT;
 
-    /// Dispatch request to subscribers by requested method.
+    /// Override to dispatch request to subscribers by requested method.
     virtual void dispatch(const rpc::request_cptr& request) NOEXCEPT;
 
     /// Size and assign response_buffer_ (value type is json-rpc::json).

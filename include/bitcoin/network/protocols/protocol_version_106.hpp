@@ -47,7 +47,7 @@ public:
         const channel::ptr& channel, uint64_t minimum_services,
         uint64_t maximum_services) NOEXCEPT;
 
-    /// Perform the handshake (strand required), handler invoked on completion.
+    /// Perform the handshake (requires strand), handler invoked on completion.
     virtual void shake(result_handler&& handler) NOEXCEPT;
 
     /// The channel is stopping (called on strand by stop subscription).
