@@ -44,13 +44,13 @@ public:
     using options_t = channel_t::options_t;
 
 protected:
-    DECLARE_SEND();
-    DECLARE_SUBSCRIBE_CHANNEL();
-
     /// Construct an instance.
     /// -----------------------------------------------------------------------
     protocol_peer(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
+
+    DECLARE_SEND()
+    DECLARE_SUBSCRIBE_CHANNEL()
 
     /// Properties.
     /// -----------------------------------------------------------------------
