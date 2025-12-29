@@ -45,7 +45,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/channels/channel.cpp \
     src/channels/channel_http.cpp \
     src/channels/channel_peer.cpp \
-    src/channels/channel_rpc.cpp \
     src/channels/channel_ws.cpp \
     src/config/address.cpp \
     src/config/authority.cpp \
@@ -330,6 +329,10 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_speed.ipp \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
+
+include_bitcoin_network_impl_channelsdir = ${includedir}/bitcoin/network/impl/channels
+include_bitcoin_network_impl_channels_HEADERS = \
+    include/bitcoin/network/impl/channels/channel_rpc.ipp
 
 include_bitcoin_network_impl_messagesdir = ${includedir}/bitcoin/network/impl/messages
 include_bitcoin_network_impl_messages_HEADERS = \

@@ -227,7 +227,6 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/channels/channel.cpp"
     "../../src/channels/channel_http.cpp"
     "../../src/channels/channel_peer.cpp"
-    "../../src/channels/channel_rpc.cpp"
     "../../src/channels/channel_ws.cpp"
     "../../src/config/address.cpp"
     "../../src/config/authority.cpp"

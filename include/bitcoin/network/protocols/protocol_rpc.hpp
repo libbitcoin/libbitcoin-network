@@ -23,17 +23,17 @@
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
-#include <bitcoin/network/protocols/protocol_rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
-
-class BCT_API protocol_rpc
+    
+template <typename Interface>
+class protocol_rpc
  : public protocol
 {
 public:
     typedef std::shared_ptr<protocol> ptr;
-    using channel_t = channel_rpc;
+    using channel_t = channel_rpc<Interface>;
     using options_t = channel_t::options_t;
 
 protected:
