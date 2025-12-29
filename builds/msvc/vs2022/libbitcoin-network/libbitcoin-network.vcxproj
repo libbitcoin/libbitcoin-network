@@ -251,10 +251,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interface\http.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interface\interface.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interface\peer_broadcast.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interface\peer_dispatch.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\http.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\levels.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp" />

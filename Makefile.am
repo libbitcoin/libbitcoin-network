@@ -343,12 +343,12 @@ include_bitcoin_network_impl_messages_rpc_HEADERS = \
     include/bitcoin/network/impl/messages/rpc/broadcaster.ipp \
     include/bitcoin/network/impl/messages/rpc/dispatcher.ipp
 
-include_bitcoin_network_interfacedir = ${includedir}/bitcoin/network/interface
-include_bitcoin_network_interface_HEADERS = \
-    include/bitcoin/network/interface/http.hpp \
-    include/bitcoin/network/interface/interface.hpp \
-    include/bitcoin/network/interface/peer_broadcast.hpp \
-    include/bitcoin/network/interface/peer_dispatch.hpp
+include_bitcoin_network_interfacesdir = ${includedir}/bitcoin/network/interfaces
+include_bitcoin_network_interfaces_HEADERS = \
+    include/bitcoin/network/interfaces/http.hpp \
+    include/bitcoin/network/interfaces/interfaces.hpp \
+    include/bitcoin/network/interfaces/peer_broadcast.hpp \
+    include/bitcoin/network/interfaces/peer_dispatch.hpp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \

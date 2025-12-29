@@ -46,7 +46,7 @@
     <Filter Include="include\bitcoin\network\impl\messages\rpc">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\interface">
+    <Filter Include="include\bitcoin\network\interfaces">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\log">
@@ -506,17 +506,17 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interface\http.hpp">
-      <Filter>include\bitcoin\network\interface</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\http.hpp">
+      <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interface\interface.hpp">
-      <Filter>include\bitcoin\network\interface</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp">
+      <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interface\peer_broadcast.hpp">
-      <Filter>include\bitcoin\network\interface</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp">
+      <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interface\peer_dispatch.hpp">
-      <Filter>include\bitcoin\network\interface</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp">
+      <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp">
       <Filter>include\bitcoin\network\log</Filter>

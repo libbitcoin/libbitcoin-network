@@ -50,10 +50,10 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
-#include <bitcoin/network/interface/http.hpp>
-#include <bitcoin/network/interface/interface.hpp>
-#include <bitcoin/network/interface/peer_broadcast.hpp>
-#include <bitcoin/network/interface/peer_dispatch.hpp>
+#include <bitcoin/network/interfaces/http.hpp>
+#include <bitcoin/network/interfaces/interfaces.hpp>
+#include <bitcoin/network/interfaces/peer_broadcast.hpp>
+#include <bitcoin/network/interfaces/peer_dispatch.hpp>
 #include <bitcoin/network/log/capture.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/log.hpp>
