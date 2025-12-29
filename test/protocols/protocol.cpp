@@ -57,8 +57,8 @@ class mock_acceptor
 {
 public:
     mock_acceptor(const logger& log, asio::strand& strand,
-        asio::io_context& service) NOEXCEPT
-      : acceptor(log, strand, service, suspended_),
+        asio::io_context& service, size_t maximum) NOEXCEPT
+      : acceptor(log, strand, service, maximum, suspended_),
         stopped_(false), port_(0)
     {
     }
@@ -91,7 +91,7 @@ public:
     // Inject mock channel.
     void accept(socket_handler&& handler) NOEXCEPT override
     {
-        const auto socket = std::make_shared<network::socket>(log, service_);
+        const auto socket = std::make_shared<network::socket>(log, service_, maximum_);
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
@@ -113,8 +113,10 @@ class mock_connector
 {
 public:
     mock_connector(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings) NOEXCEPT
-      : connector(log, strand, service, settings.connect_timeout(), suspended_),
+        asio::io_context& service, const settings& settings,
+        size_t maximum) NOEXCEPT
+      : connector(log, strand, service, settings.connect_timeout(), maximum,
+          suspended_),
         stopped_(false)
     {
     }
@@ -135,7 +137,8 @@ public:
     void start(const std::string&, uint16_t, const config::address&,
         socket_handler&& handler) NOEXCEPT override
     {
-        const auto socket = std::make_shared<network::socket>(log, service_);
+        const auto socket = std::make_shared<network::socket>(log, service_,
+            maximum_);
         handler(error::success, socket);
     }
 
@@ -152,16 +155,17 @@ public:
     using net::net;
 
     // Create mock acceptor to inject mock channel.
-    acceptor::ptr create_acceptor() NOEXCEPT override
+    acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT override
     {
-        return std::make_shared<mock_acceptor>(log, strand(), service());
+        return std::make_shared<mock_acceptor>(log, strand(), service(),
+            maximum);
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(bool =false) NOEXCEPT override
+    connector::ptr create_connector(size_t maximum) NOEXCEPT override
     {
         return std::make_shared<mock_connector>(log, strand(), service(),
-            network_settings());
+            network_settings(), maximum);
     }
 };
 

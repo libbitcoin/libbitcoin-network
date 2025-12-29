@@ -79,9 +79,10 @@ void session_inbound::handle_started(const code& ec,
     LOGN("Accepting " << settings().inbound.connections << " peers on "
         << settings().inbound.binds.size() << " bindings.");
 
+    const auto maximum = settings().inbound.maximum_request;
     for (const auto& bind: settings().inbound.binds)
     {
-        const auto acceptor = create_acceptor();
+        const auto acceptor = create_acceptor(maximum);
 
         // Require that all acceptors at least start.
         if (const auto error_code = acceptor->start(bind))

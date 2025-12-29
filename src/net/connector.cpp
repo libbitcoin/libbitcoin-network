@@ -44,8 +44,9 @@ using namespace std::placeholders;
 
 connector::connector(const logger& log, asio::strand& strand,
     asio::io_context& service, const steady_clock::duration& timeout,
-    std::atomic_bool& suspended) NOEXCEPT
-  : service_(service),
+    size_t maximum_request, std::atomic_bool& suspended) NOEXCEPT
+  : maximum_(maximum_request),
+    service_(service),
     strand_(strand),
     suspended_(suspended),
     resolver_(strand),
@@ -122,7 +123,8 @@ void connector::start(const std::string& hostname, uint16_t port,
 
     // Create a socket and shared finish context.
     const auto finish = std::make_shared<bool>(false);
-    const auto socket = std::make_shared<network::socket>(log, service_, host);
+    const auto socket = std::make_shared<network::socket>(log, service_,
+        maximum_, host);
 
     // Posts handle_timer to strand.
     timer_->start(

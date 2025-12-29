@@ -44,11 +44,12 @@ public:
     DELETE_COPY_MOVE(socket);
 
     /// Use only for incoming connections (defaults outgoing address).
-    socket(const logger& log, asio::io_context& service) NOEXCEPT;
+    socket(const logger& log, asio::io_context& service,
+        size_t maximum_request) NOEXCEPT;
 
     /// Use only for outgoing connections (retains outgoing address).
     socket(const logger& log, asio::io_context& service,
-        const config::address& address) NOEXCEPT;
+        size_t maximum_request, const config::address& address) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~socket() NOEXCEPT;
@@ -284,12 +285,12 @@ private:
 
 protected:
     // These are thread safe.
+    const size_t maximum_;
     asio::strand strand_;
     asio::io_context& service_;
     std::atomic_bool stopped_{};
 
     // These are protected by strand (see also handle_accept).
-    size_t maximum_;
     asio::socket socket_;
     config::address address_;
     config::authority authority_{};

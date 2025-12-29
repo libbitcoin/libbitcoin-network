@@ -65,7 +65,7 @@ public:
         if (is_zero(connects_++))
             peer_ = peer;
 
-        const auto socket = std::make_shared<network::socket>(log, service_);
+        const auto socket = std::make_shared<network::socket>(log, service_, 42);
 
         // Must be asynchronous or is an infinite recursion.
         boost::asio::post(strand_, [=]() NOEXCEPT
@@ -230,10 +230,11 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(bool =false) NOEXCEPT override
+    connector::ptr create_connector(size_t maximum) NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings().connect_timeout(), suspended_)));
+            service(), network_settings().connect_timeout(), maximum,
+            suspended_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override

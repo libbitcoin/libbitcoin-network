@@ -93,44 +93,6 @@ BOOST_AUTO_TEST_CASE(settings__witness_node__node_witness__true)
     BOOST_REQUIRE(instance.witness_node());
 }
 
-BOOST_AUTO_TEST_CASE(settings__maximum_payload__default__expected)
-{
-    settings instance{ system::chain::selection::mainnet };
-    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
-}
-
-BOOST_AUTO_TEST_CASE(settings__maximum_payload__zero_node_none__expected)
-{
-    settings instance{ system::chain::selection::mainnet };
-    instance.protocol_maximum = 0;
-    instance.services_maximum = service::node_none;
-    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 1'800'003u);
-}
-
-BOOST_AUTO_TEST_CASE(settings__maximum_payload__zero_node_witness__expected)
-{
-    settings instance{ system::chain::selection::mainnet };
-    instance.protocol_maximum = 0;
-    instance.services_maximum = service::node_witness;
-    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
-}
-
-BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_node_witness__expected)
-{
-    settings instance{ system::chain::selection::mainnet };
-    instance.protocol_maximum = max_uint32;
-    instance.services_maximum = service::node_witness;
-    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
-}
-
-BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_maximum_services__expected)
-{
-    settings instance{ system::chain::selection::mainnet };
-    instance.protocol_maximum = max_uint32;
-    instance.services_maximum = service::maximum_services;
-    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
-}
-
 BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__between_zero_and_retry_timeout_seconds)
 {
     settings instance{ system::chain::selection::mainnet };

@@ -170,12 +170,6 @@ bool settings::witness_node() const NOEXCEPT
     return to_bool(services_minimum & service::node_witness);
 }
 
-size_t settings::maximum_payload() const NOEXCEPT
-{
-    return heading::maximum_payload(protocol_maximum,
-        to_bool(services_maximum & service::node_witness));
-}
-
 // Randomized from 50% to maximum milliseconds (specified in seconds).
 steady_clock::duration settings::retry_timeout() const NOEXCEPT
 {

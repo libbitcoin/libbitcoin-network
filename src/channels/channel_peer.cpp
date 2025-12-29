@@ -219,7 +219,7 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
         return;
     }
 
-    if (head->payload_size > settings().maximum_payload())
+    if (head->payload_size > options().maximum_request)
     {
         LOGR("Oversized payload indicated by " << head->command
             << " heading from [" << authority() << "] ("
