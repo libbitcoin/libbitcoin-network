@@ -66,6 +66,7 @@ struct BCT_API body
 
         size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT override;
         void finish(boost_code& ec) NOEXCEPT override;
+        bool done() const NOEXCEPT override;
 
     private:
         const bool terminated_{};

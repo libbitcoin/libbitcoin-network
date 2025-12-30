@@ -23,7 +23,6 @@
 #include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-////#include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -65,31 +64,36 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     if (!terminated_)
         return parsed;
 
-    // There is no terminator.
+    // There is no terminator (terminal).
     if (is_zero(parsed))
     {
         ec = to_http_code(http_error_t::end_of_stream);
         return parsed;
     }
 
-    // There are extra characters.
-    if (size > parsed)
-    {
-        ec = to_http_code(http_error_t::unexpected_body);
-        return parsed;
-    }
-
-    // boost::json consumes whitespace, so terminator is always last.
+    // boost::json consumes whitespace, and leaves any subsequent chars
+    // unparsed, so terminator must be in the parsed segment of the buffer.
     const auto data = pointer_cast<const char>(buffer.data());
-    if (data[sub1(parsed)] == '\n')
+    for (auto index = parsed; !is_zero(index);)
     {
-        has_terminator_ = true;
-        return parsed;
+        if (data[--index] == '\n')
+        {
+            // There may be unparsed characters (ok, next message).
+            has_terminator_ = true;
+            return parsed;
+        }
     }
 
-    // There is no terminator.
-    ec = to_http_code(http_error_t::end_of_stream);
+    // There is no terminator (yet).
     return parsed;
+}
+
+template <>
+bool body<rpc::request_t>::reader::
+done() const NOEXCEPT
+{
+    // Parser may be done but with terminator still outstanding.
+    return parser_.done() && (!terminated_ || has_terminator_);
 }
 
 template <>
@@ -98,12 +102,6 @@ finish(boost_code& ec) NOEXCEPT
 {
     base::reader::finish(ec);
     if (ec) return;
-
-    if (terminated_ && !has_terminator_)
-    {
-        ec = to_http_code(http_error_t::end_of_stream);
-        return;
-    }
 
     try
     {
@@ -160,6 +158,14 @@ void body<rpc::response_t>::reader::
 finish(boost_code&) NOEXCEPT
 {
     BC_ASSERT(false);
+}
+
+template <>
+bool body<rpc::response_t>::reader::
+done() const NOEXCEPT
+{
+    BC_ASSERT(false);
+    return {};
 }
 
 // rpc::body::writer
