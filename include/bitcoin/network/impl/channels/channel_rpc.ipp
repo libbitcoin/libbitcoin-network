@@ -140,10 +140,9 @@ void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
 {
     BC_ASSERT(stranded());
     using namespace std::placeholders;
-    result_handler handler = std::bind(&CLASS::handle_complete,
-        shared_from_base<CLASS>(), _1);
     send({ .jsonrpc = version_, .id = identity_, .error = std::move(error) },
-        two * error.message.size(), std::move(handler));
+        two * error.message.size(), std::bind(&CLASS::handle_complete,
+            shared_from_base<CLASS>(), _1));
 }
 
 TEMPLATE
@@ -151,10 +150,9 @@ void CLASS::send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT
 {
     BC_ASSERT(stranded());
     using namespace std::placeholders;
-    result_handler handler = std::bind(&CLASS::handle_complete,
-        shared_from_base<CLASS>(), _1);
     send({ .jsonrpc = version_, .id = identity_, .result = std::move(result) },
-        size_hint, std::move(handler));
+        size_hint, std::bind(&CLASS::handle_complete,
+            shared_from_base<CLASS>(), _1));
 }
 
 // protected
