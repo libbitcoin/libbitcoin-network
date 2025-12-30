@@ -211,12 +211,12 @@ private:
 
 #define DECLARE_SEND() \
     template <class Derived, class Message, typename Method, typename... Args> \
-    void send(Message&& message, Method&& method, Args&&... args) NOEXCEPT \
+    inline void send(Message&& message, Method&& method, Args&&... args) NOEXCEPT \
     { channel_->send(std::forward<Message>(message), BIND_SHARED(method, args)); }
 
 #define DECLARE_SUBSCRIBE_CHANNEL() \
     template <class Derived, class Message, typename Method, typename... Args> \
-    void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT \
+    inline void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT \
     { channel_->template subscribe<Message>(BIND_SHARED(method, args)); }
 
 #define SEND(message, method, ...) \
