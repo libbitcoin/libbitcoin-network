@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_RPC_HPP
 
 #include <memory>
+#include <utility>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
@@ -33,6 +34,7 @@ class protocol_rpc
 {
 public:
     typedef std::shared_ptr<protocol> ptr;
+    using protocol_t = protocol_rpc<Interface>;
     using channel_t = channel_rpc<Interface>;
     using options_t = channel_t::options_t;
 
@@ -44,8 +46,69 @@ protected:
     {
     }
 
-    DECLARE_SEND()
     DECLARE_SUBSCRIBE_CHANNEL()
+
+    template <class Derived, typename Method, typename... Args>
+    inline void send(network::rpc::response_t&& message, size_t size_hint,
+        Method&& method, Args&&... args) NOEXCEPT
+    {
+        channel_->send(std::move(message), size_hint,
+            std::bind(std::forward<Method>(method),
+                shared_from_base<Derived>(), std::forward<Args>(args)...));
+    }
+
+    // TODO: capture and correlate version/id.
+    inline void send_result(network::rpc::value_t&& value,
+        size_t size_hint) NOEXCEPT
+    {
+        using namespace network::rpc;
+        using namespace std::placeholders;
+        send<protocol_t>(
+            {
+                .jsonrpc = version::v2,
+                .id = 42,
+                ////.error = {},
+                .result = std::move(value)
+            },
+            size_hint, &protocol_t::handle_complete, _1, error::success);
+    }
+
+    // TODO: capture and correlate version/id.
+    inline void send_error(const code& reason) NOEXCEPT
+    {
+        using namespace network::rpc;
+        using namespace std::placeholders;
+        const auto size_hint = two * reason.message().size();
+        send<protocol_t>(
+            {
+                .jsonrpc = version::v2,
+                .id = 42,
+                .error = result_t
+                {
+                    .code = reason.value(),
+                    .message = reason.message()
+                }
+                ////.result = {}
+            },
+            size_hint, &protocol_t::handle_complete, _1, reason);
+    }
+
+    inline void handle_complete(const code& ec, const code& reason) NOEXCEPT
+    {
+        BC_ASSERT(stranded());
+
+        if (stopped(ec))
+            return;
+
+        if (reason)
+        {
+            stop(reason);
+            return;
+        }
+
+        // Continue read loop.
+        channel_->receive();
+    }
 
 private:
     // This is mostly thread safe, and used in a thread safe manner.
