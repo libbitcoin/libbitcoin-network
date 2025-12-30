@@ -101,6 +101,10 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
         return;
     }
 
+    // Save response state.
+    identity_ = request->message.id;
+    version_ = request->message.jsonrpc;
+
     reading_ = false;
     log_message(*request, bytes);
     dispatch(request);
@@ -109,6 +113,7 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
 TEMPLATE
 inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
 {
+    BC_ASSERT(stranded());
     if (const auto code = dispatcher_.notify(request->message))
         stop(code);
 }
@@ -116,6 +121,7 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
 TEMPLATE
 inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 {
+    BC_ASSERT(stranded());
     return request_buffer_;
 }
 
@@ -123,15 +129,42 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+void CLASS::send_code(const code& ec) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    send_error({ .code = ec.value(), .message = ec.message() });
+}
+
+TEMPLATE
+void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    using namespace std::placeholders;
+    send({ .jsonrpc = version_, .id = identity_, .error = std::move(error) },
+        two * error.message.size(), std::bind(&CLASS::handle_complete,
+            shared_from_base<CLASS>(), _1));
+}
+
+TEMPLATE
+void CLASS::send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    using namespace std::placeholders;
+    send({ .jsonrpc = version_, .id = identity_, .result = std::move(result) },
+        size_hint, std::bind(&CLASS::handle_complete,
+            shared_from_base<CLASS>(), _1));
+}
+
+// protected
+TEMPLATE
 inline void CLASS::send(rpc::response_t&& model, size_t size_hint,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
     using namespace std::placeholders;
     const auto out = assign_message(std::move(model), size_hint);
-    count_handler complete = std::bind(&channel_rpc::handle_send,
-        shared_from_base<channel_rpc>(), _1, _2, out, std::move(handler));
+    count_handler complete = std::bind(&CLASS::handle_send,
+        shared_from_base<CLASS>(), _1, _2, out, std::move(handler));
 
     if (!out)
     {
@@ -142,15 +175,27 @@ inline void CLASS::send(rpc::response_t&& model, size_t size_hint,
     write(*out, std::move(complete));
 }
 
+// protected
 TEMPLATE
 inline void CLASS::handle_send(const code& ec, size_t bytes,
     const rpc::response_cptr& response, const result_handler& handler) NOEXCEPT
 {
-    if (ec)
-        stop(ec);
-
+    BC_ASSERT(stranded());
+    if (ec) stop(ec);
     log_message(*response, bytes);
     handler(ec);
+}
+
+// protected
+TEMPLATE
+void CLASS::handle_complete(const code&) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    if (stopped())
+        return;
+
+    // Continue read loop.
+    receive();
 }
 
 // private
@@ -158,6 +203,7 @@ TEMPLATE
 inline rpc::response_ptr CLASS::assign_message(rpc::response_t&& message,
     size_t size_hint) NOEXCEPT
 {
+    BC_ASSERT(stranded());
     response_buffer_->max_size(size_hint);
     const auto ptr = system::to_shared<rpc::response>();
     ptr->message = std::move(message);

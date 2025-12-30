@@ -57,18 +57,20 @@ public:
     {
     }
 
+    /// Public senders, rpc version and identity added to responses.
+    inline void send_code(const code& ec) NOEXCEPT;
+    inline void send_error(rpc::result_t&& error) NOEXCEPT;
+    inline void send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT;
+
+    /// Resume reading from the socket (requires strand).
+    inline void resume() NOEXCEPT override;
+
+protected:
     /// Serialize and write response to client (requires strand).
     /// Completion handler is always invoked on the channel strand.
     inline void send(rpc::response_t&& message, size_t size_hint,
         result_handler&& handler) NOEXCEPT;
 
-    /// Resume reading from the socket (requires strand).
-    inline void resume() NOEXCEPT override;
-
-    /// Must call after successful message handling if no stop.
-    virtual inline void receive() NOEXCEPT;
-
-protected:
     /// Stranded handler invoked from stop().
     inline void stopping(const code& ec) NOEXCEPT override;
 
@@ -82,12 +84,20 @@ protected:
     virtual inline rpc::response_ptr assign_message(rpc::response_t&& message,
         size_t size_hint) NOEXCEPT;
 
-    /// Handlers.
+    /// Must call after successful message handling if no stop.
+    virtual inline void receive() NOEXCEPT;
+
+    /// Handle incoming messages.
     virtual inline void handle_receive(const code& ec, size_t bytes,
         const rpc::request_cptr& request) NOEXCEPT;
+
+    /// Handle send complation, handler must invoke receive() unless stopping.
     virtual inline void handle_send(const code& ec, size_t bytes,
         const rpc::response_cptr& response,
         const result_handler& handler) NOEXCEPT;
+
+    /// Invoked upon handle_send completion to restart receive().
+    virtual void handle_complete(const code& ec) NOEXCEPT;
 
 private:
     void log_message(const rpc::request& request,
@@ -96,6 +106,8 @@ private:
         size_t bytes) const NOEXCEPT;
 
     // These are protected by strand.
+    rpc::version version_;
+    rpc::id_option identity_;
     http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
     dispatcher dispatcher_{};
