@@ -40,7 +40,7 @@ public:
 
     /// Subscribe to request from client (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Handler>
+    template <class Void, class Handler>
     inline void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());

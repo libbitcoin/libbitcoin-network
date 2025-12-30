@@ -217,7 +217,7 @@ private:
 #define DECLARE_SUBSCRIBE_CHANNEL() \
     template <class Derived, class Message, typename Method, typename... Args> \
     void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT \
-    { channel_->subscribe<Message>(BIND_SHARED(method, args)); }
+    { channel_->template subscribe<Message>(BIND_SHARED(method, args)); }
 
 #define SEND(message, method, ...) \
     send<CLASS>(message, &CLASS::method, __VA_ARGS__)

@@ -39,9 +39,18 @@ public:
 protected:
     inline protocol_rpc(const session::ptr& session,
         const channel::ptr& channel, const options_t&) NOEXCEPT
-      : protocol(session, channel)
+      : protocol(session, channel),
+        channel_(std::dynamic_pointer_cast<channel_t>(channel))
     {
     }
+
+    DECLARE_SEND()
+    DECLARE_SUBSCRIBE_CHANNEL()
+
+private:
+    // This is mostly thread safe, and used in a thread safe manner.
+    // pause/resume/paused/attach not invoked, setters limited to handshake.
+    const channel_t::ptr channel_;
 };
 
 } // namespace network
