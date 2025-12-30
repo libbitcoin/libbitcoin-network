@@ -89,6 +89,13 @@ size_t CLASS::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 TEMPLATE
 void CLASS::reader::finish(boost_code& ec) NOEXCEPT
 {
+    using namespace network::error;
+    if (!done())
+    {
+        ec = to_http_code(http_error_t::partial_message);
+        return;
+    }
+
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     parser_.finish(ec);
     BC_POP_WARNING()
@@ -107,7 +114,6 @@ void CLASS::reader::finish(boost_code& ec) NOEXCEPT
     catch (...)
     {
         // As a catch-all we blame alloc.
-        using namespace network::error;
         ec = to_http_code(http_error_t::bad_alloc);
     }
 

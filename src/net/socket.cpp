@@ -686,18 +686,10 @@ void socket::handle_rpc_read(boost_code ec, size_t size, size_t total,
         const auto parsed = in->reader.put(data, ec);
         if (!ec)
         {
-            if (parsed < data.size())
-            {
-                handler(error::unexpected_body, total);
-                return;
-            }
-
             in->value.buffer->consume(parsed);
             if (in->reader.done())
             {
                 in->reader.finish(ec);
-
-                // Finished.
                 if (!ec)
                 {
                     handler(error::success, total);
