@@ -381,6 +381,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json_body.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\broadcaster.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\dispatcher.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\protocols\protocol_rpc.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

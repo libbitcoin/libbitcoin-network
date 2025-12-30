@@ -23,6 +23,7 @@
 #include <utility>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
@@ -33,8 +34,7 @@ class protocol_rpc
  : public protocol
 {
 public:
-    typedef std::shared_ptr<protocol> ptr;
-    using protocol_t = protocol_rpc<Interface>;
+    typedef std::shared_ptr<protocol_rpc<Interface>> ptr;
     using channel_t = channel_rpc<Interface>;
     using options_t = channel_t::options_t;
 
@@ -48,67 +48,11 @@ protected:
 
     DECLARE_SUBSCRIBE_CHANNEL()
 
-    template <class Derived, typename Method, typename... Args>
-    inline void send(network::rpc::response_t&& message, size_t size_hint,
-        Method&& method, Args&&... args) NOEXCEPT
-    {
-        channel_->send(std::move(message), size_hint,
-            std::bind(std::forward<Method>(method),
-                shared_from_base<Derived>(), std::forward<Args>(args)...));
-    }
-
-    // TODO: capture and correlate version/id.
-    inline void send_result(network::rpc::value_t&& value,
-        size_t size_hint) NOEXCEPT
-    {
-        using namespace network::rpc;
-        using namespace std::placeholders;
-        send<protocol_t>(
-            {
-                .jsonrpc = version::v2,
-                .id = 42,
-                ////.error = {},
-                .result = std::move(value)
-            },
-            size_hint, &protocol_t::handle_complete, _1, error::success);
-    }
-
-    // TODO: capture and correlate version/id.
-    inline void send_error(const code& reason) NOEXCEPT
-    {
-        using namespace network::rpc;
-        using namespace std::placeholders;
-        const auto size_hint = two * reason.message().size();
-        send<protocol_t>(
-            {
-                .jsonrpc = version::v2,
-                .id = 42,
-                .error = result_t
-                {
-                    .code = reason.value(),
-                    .message = reason.message()
-                }
-                ////.result = {}
-            },
-            size_hint, &protocol_t::handle_complete, _1, reason);
-    }
-
-    inline void handle_complete(const code& ec, const code& reason) NOEXCEPT
-    {
-        BC_ASSERT(stranded());
-
-        if (stopped(ec))
-            return;
-
-        if (reason)
-        {
-            stop(reason);
-            return;
-        }
-
-        // Continue read loop.
-        channel_->receive();
-    }
+    /// Senders (requires strand).
+    virtual inline void send_code(const code& ec) NOEXCEPT;
+    virtual inline void send_error(rpc::result_t&& error) NOEXCEPT;
+    virtual inline void send_result(rpc::value_t&& result,
+        size_t size_hint) NOEXCEPT;
 
 private:
     // This is mostly thread safe, and used in a thread safe manner.
@@ -118,5 +62,13 @@ private:
 
 } // namespace network
 } // namespace libbitcoin
+
+#define TEMPLATE template <typename Interface>
+#define CLASS protocol_rpc<Interface>
+
+#include <bitcoin/network/impl/protocols/protocol_rpc.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif
