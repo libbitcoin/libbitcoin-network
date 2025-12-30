@@ -1006,4 +1006,165 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
     instance.stop(error::service_stopped);
 }
 
+// uses subscriber<> (void handler returns).
+struct mock_value_type
+{
+    static constexpr std::tuple methods
+    {
+        method<"value_type", double, value_t>{ "a", "b" },
+        method<"value_optional", double, optional<empty::value>>{ "a", "b" },
+        method<"value_nullable", double, nullable<value_t>>{ "a", "b" }
+    };
+
+    template <typename... Args>
+    using subscriber = network::subscriber<Args...>;
+
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
+    using value_type = at<0>;
+    using value_optional = at<1>;
+    using value_nullable = at<2>;
+};
+
+using mock_value_type_interface = publish<mock_value_type>;
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__value_type__expected)
+{
+    dispatcher<mock_value_type_interface> instance{};
+    using method = mock_value_type_interface::value_type;
+    double result_a{};
+    value_t result_b{};
+
+    instance.subscribe([&](const code&, method::tag, double a, const value_t& b)
+    {
+        result_a = a;
+        result_b = b;
+    });
+    
+    const auto ec1 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 }, { false } } }
+    });
+    BOOST_REQUIRE(!ec1);
+    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BOOST_REQUIRE(!std::get<bool>(result_b.value()));
+    BOOST_REQUIRE_EQUAL(result_a, 42.0);
+    
+    const auto ec2 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 22.0 }, { "b", false } } }
+    });
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BOOST_REQUIRE(!std::get<bool>(result_b.value()));
+    BOOST_REQUIRE_EQUAL(result_a, 22.0);
+    
+    const auto ec3 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "b", true }, { "a", 24.0 } } }
+    });
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BOOST_REQUIRE(std::get<bool>(result_b.value()));
+    BOOST_REQUIRE_EQUAL(result_a, 24.0);
+
+    instance.stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__value_optional__expected)
+{
+    dispatcher<mock_value_type_interface> instance{};
+    using method = mock_value_type_interface::value_optional;
+    double result_a{};
+    value_t result_b{};
+
+    instance.subscribe([&](const code&, method::tag, double a, const value_t& b)
+    {
+        result_a = a;
+        result_b = b;
+    });
+    
+    const auto ec1 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 } } }
+    });
+    BOOST_REQUIRE(!ec1);
+    BOOST_REQUIRE(std::holds_alternative<null_t>(result_b.value()));
+    BOOST_REQUIRE_EQUAL(result_a, 42.0);
+    
+    const auto ec2 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 22.0 }, { "b", false } } }
+    });
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BOOST_REQUIRE(!std::get<bool>(result_b.value()));
+    BOOST_REQUIRE_EQUAL(result_a, 22.0);
+    
+    const auto ec3 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "b", true }, { "a", 24.0 } } }
+    });
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BOOST_REQUIRE(std::get<bool>(result_b.value()));
+    BOOST_REQUIRE_EQUAL(result_a, 24.0);
+
+    instance.stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__value_nullable__expected)
+{
+    dispatcher<mock_value_type_interface> instance{};
+    using method = mock_value_type_interface::value_nullable;
+    double result_a{};
+    value_option result_b{};
+
+    instance.subscribe([&](const code&, method::tag, double a, const value_option& b)
+    {
+        result_a = a;
+        result_b = b;
+    });
+    
+    const auto ec1 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { array_t{ { 42.0 } } }
+    });
+    BOOST_REQUIRE(!ec1);
+    BOOST_REQUIRE(!result_b.has_value());
+    BOOST_REQUIRE_EQUAL(result_a, 42.0);
+    
+    const auto ec2 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "a", 22.0 }, { "b", false } } }
+    });
+    BOOST_REQUIRE(!ec2);
+    BOOST_REQUIRE(result_b.has_value());
+    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value().value()));
+    BOOST_REQUIRE(!std::get<bool>(result_b.value().value()));
+    BOOST_REQUIRE_EQUAL(result_a, 22.0);
+    
+    const auto ec3 = instance.notify(
+    {
+        .method = string_t{ method::name },
+        .params = { object_t{ { "b", true }, { "a", 24.0 } } }
+    });
+    BOOST_REQUIRE(!ec3);
+    BOOST_REQUIRE(result_b.has_value());
+    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value().value()));
+    BOOST_REQUIRE(std::get<bool>(result_b.value().value()));
+    BOOST_REQUIRE_EQUAL(result_a, 24.0);
+
+    instance.stop(error::service_stopped);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
