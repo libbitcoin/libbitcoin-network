@@ -81,15 +81,15 @@ using string_value = http::string_body::value_type;
 using json_value = http::json_body::value_type;
 using body_value = std::variant
 <
-    empty_value,
-    data_value,
-    file_value,
-    span_value,
-    buffer_value,
-    string_value,
-    json_value,
-    rpc::request,
-    rpc::response
+    empty_value,    //  1 byte
+    data_value,     // 40 bytes
+    file_value,     // 32 bytes
+    span_value,     // 16 bytes
+    buffer_value,   // 24 bytes
+    string_value,   // 40 bytes
+    json_value,     // 48 bytes
+    rpc::request,   // 248 bytes!
+    rpc::response   // 360 bytes!
 >;
 
 /// body template for all known message types.
