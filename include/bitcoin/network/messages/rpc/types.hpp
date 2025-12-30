@@ -36,7 +36,7 @@ namespace rpc {
 /// ---------------------------------------------------------------------------
 
 struct optional_tag {};
-enum class empty { array, object };
+enum class empty { array, object, value };
 
 /// Partial specializations for optional (values).
 template <auto Default>
@@ -65,6 +65,18 @@ struct optional<Default>
     /// std::unordered_map{} is not constexpr (ok).
     /// object_t optional default is only/always empty.
     static const type default_value() NOEXCEPT  { return {}; }
+};
+
+/// value_t : optional<empty::value>
+template <auto Default> requires
+is_same_type<decltype(Default), empty> && (Default == empty::value)
+struct optional<Default>
+{
+    using tag = optional_tag;
+    using type = value_t;
+
+    /// value_t optional default is only/always empty.
+    static constexpr type default_value() NOEXCEPT { return {}; }
 };
 
 /// int8_t   : optional<42_i8>  (int8_t)
@@ -139,7 +151,7 @@ template <typename Type> requires
     is_same_type<Type, object_t> || is_same_type<Type, array_t> ||
     is_same_type<Type, string_t> || is_same_type<Type, boolean_t> ||
     is_same_type<Type, number_t> || is_integral_integer<Type> ||
-    is_shared_ptr<Type>
+    is_same_type<Type, value_t>  || is_shared_ptr<Type>
 struct nullable
 {
     using tag = nullable_tag;
