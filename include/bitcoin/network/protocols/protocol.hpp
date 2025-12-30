@@ -52,7 +52,7 @@ public:
 
     /// The channel is stopping (called on strand by stop subscription).
     /// The stopped flag is set before this is invoked by subscriber stop.
-    /// This must be called only from the channel strand (not thread safe).
+    /// This must be called only from the channel strand (requires strand).
     virtual void stopping(const code& ec) NOEXCEPT;
 
 private:
@@ -142,10 +142,10 @@ protected:
     /// Asserts that protocol is stopped.
     virtual ~protocol() NOEXCEPT;
 
-    /// Set protocol started state (strand required).
+    /// Set protocol started state (requires strand).
     virtual void start() NOEXCEPT;
 
-    /// Get protocol started state (strand required).
+    /// Get protocol started state (requires required).
     virtual bool started() const NOEXCEPT;
 
     /// Channel is stopped or code set.
@@ -217,7 +217,7 @@ private:
 #define DECLARE_SUBSCRIBE_CHANNEL() \
     template <class Derived, class Message, typename Method, typename... Args> \
     void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT \
-    { channel_->subscribe<Message>(BIND_SHARED(method, args)); }
+    { channel_->template subscribe<Message>(BIND_SHARED(method, args)); }
 
 #define SEND(message, method, ...) \
     send<CLASS>(message, &CLASS::method, __VA_ARGS__)

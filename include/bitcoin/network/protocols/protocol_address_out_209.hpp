@@ -41,7 +41,7 @@ public:
     protocol_address_out_209(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
-    /// Start protocol (strand required).
+    /// Start protocol (requires strand).
     void start() NOEXCEPT override;
 
 protected:

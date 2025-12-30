@@ -45,7 +45,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/channels/channel.cpp \
     src/channels/channel_http.cpp \
     src/channels/channel_peer.cpp \
-    src/channels/channel_rpc.cpp \
     src/channels/channel_ws.cpp \
     src/config/address.cpp \
     src/config/authority.cpp \
@@ -331,6 +330,10 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
 
+include_bitcoin_network_impl_channelsdir = ${includedir}/bitcoin/network/impl/channels
+include_bitcoin_network_impl_channels_HEADERS = \
+    include/bitcoin/network/impl/channels/channel_rpc.ipp
+
 include_bitcoin_network_impl_messagesdir = ${includedir}/bitcoin/network/impl/messages
 include_bitcoin_network_impl_messages_HEADERS = \
     include/bitcoin/network/impl/messages/json_body.ipp
@@ -340,12 +343,12 @@ include_bitcoin_network_impl_messages_rpc_HEADERS = \
     include/bitcoin/network/impl/messages/rpc/broadcaster.ipp \
     include/bitcoin/network/impl/messages/rpc/dispatcher.ipp
 
-include_bitcoin_network_interfacedir = ${includedir}/bitcoin/network/interface
-include_bitcoin_network_interface_HEADERS = \
-    include/bitcoin/network/interface/http.hpp \
-    include/bitcoin/network/interface/interface.hpp \
-    include/bitcoin/network/interface/peer_broadcast.hpp \
-    include/bitcoin/network/interface/peer_dispatch.hpp
+include_bitcoin_network_interfacesdir = ${includedir}/bitcoin/network/interfaces
+include_bitcoin_network_interfaces_HEADERS = \
+    include/bitcoin/network/interfaces/http.hpp \
+    include/bitcoin/network/interfaces/interfaces.hpp \
+    include/bitcoin/network/interfaces/peer_broadcast.hpp \
+    include/bitcoin/network/interfaces/peer_dispatch.hpp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \

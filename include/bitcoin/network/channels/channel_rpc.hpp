@@ -22,7 +22,6 @@
 #include <memory>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/interface/interface.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -30,20 +29,18 @@
 namespace libbitcoin {
 namespace network {
 
-/// Read rpc-request and send rpc-response.
-class BCT_API channel_rpc
+/// Read rpc-request and send rpc-response, dispatch to Interface.
+template <typename Interface>
+class channel_rpc
   : public channel
 {
 public:
     typedef std::shared_ptr<channel_rpc> ptr;
-
-    // TODO: implement in node.
-    using interface = rpc::interface::http;
-    using dispatcher = rpc::dispatcher<interface>;
+    using dispatcher = rpc::dispatcher<Interface>;
 
     /// Subscribe to request from client (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Handler>
+    template <class Void, class Handler>
     inline void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());
@@ -62,33 +59,33 @@ public:
 
     /// Serialize and write response to client (requires strand).
     /// Completion handler is always invoked on the channel strand.
-    void send(rpc::response_t&& message, size_t size_hint,
+    inline void send(rpc::response_t&& message, size_t size_hint,
         result_handler&& handler) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
-    void resume() NOEXCEPT override;
+    inline void resume() NOEXCEPT override;
 
     /// Must call after successful message handling if no stop.
-    virtual void receive() NOEXCEPT;
+    virtual inline void receive() NOEXCEPT;
 
 protected:
     /// Stranded handler invoked from stop().
-    void stopping(const code& ec) NOEXCEPT override;
+    inline void stopping(const code& ec) NOEXCEPT override;
 
-    /// Read request buffer (not thread safe).
-    virtual http::flat_buffer& request_buffer() NOEXCEPT;
+    /// Read request buffer (requires strand).
+    virtual inline http::flat_buffer& request_buffer() NOEXCEPT;
 
-    /// Dispatch request to subscribers by requested method.
-    virtual void dispatch(const rpc::request_cptr& request) NOEXCEPT;
+    /// Override to dispatch request to subscribers by requested method.
+    virtual inline void dispatch(const rpc::request_cptr& request) NOEXCEPT;
 
     /// Size and assign response_buffer_ (value type is json-rpc::json).
-    virtual rpc::response_ptr assign_message(rpc::response_t&& message,
+    virtual inline rpc::response_ptr assign_message(rpc::response_t&& message,
         size_t size_hint) NOEXCEPT;
 
     /// Handlers.
-    virtual void handle_receive(const code& ec, size_t bytes,
+    virtual inline void handle_receive(const code& ec, size_t bytes,
         const rpc::request_cptr& request) NOEXCEPT;
-    virtual void handle_send(const code& ec, size_t bytes,
+    virtual inline void handle_send(const code& ec, size_t bytes,
         const rpc::response_cptr& response,
         const result_handler& handler) NOEXCEPT;
 
@@ -107,5 +104,13 @@ private:
 
 } // namespace network
 } // namespace libbitcoin
+
+#define TEMPLATE template <typename Interface>
+#define CLASS channel_rpc<Interface>
+
+#include <bitcoin/network/impl/channels/channel_rpc.ipp>
+
+#undef CLASS
+#undef TEMPLATE
 
 #endif

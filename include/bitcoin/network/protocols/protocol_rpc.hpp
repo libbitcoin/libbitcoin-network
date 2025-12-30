@@ -23,25 +23,34 @@
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
-#include <bitcoin/network/protocols/protocol_rpc.hpp>
 
 namespace libbitcoin {
 namespace network {
-
-class BCT_API protocol_rpc
+    
+template <typename Interface>
+class protocol_rpc
  : public protocol
 {
 public:
     typedef std::shared_ptr<protocol> ptr;
-    using channel_t = channel_rpc;
+    using channel_t = channel_rpc<Interface>;
     using options_t = channel_t::options_t;
 
 protected:
     inline protocol_rpc(const session::ptr& session,
         const channel::ptr& channel, const options_t&) NOEXCEPT
-      : protocol(session, channel)
+      : protocol(session, channel),
+        channel_(std::dynamic_pointer_cast<channel_t>(channel))
     {
     }
+
+    DECLARE_SEND()
+    DECLARE_SUBSCRIBE_CHANNEL()
+
+private:
+    // This is mostly thread safe, and used in a thread safe manner.
+    // pause/resume/paused/attach not invoked, setters limited to handshake.
+    const channel_t::ptr channel_;
 };
 
 } // namespace network

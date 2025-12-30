@@ -16,7 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/channels/channel_rpc.hpp>
+#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_RPC_IPP
+#define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_RPC_IPP
 
 #include <memory>
 #include <utility>
@@ -27,10 +28,6 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace system;
-using namespace network::rpc;
-using namespace std::placeholders;
-
 // Shared pointers required in handler parameters so closures control lifetime.
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
@@ -40,14 +37,16 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // ----------------------------------------------------------------------------
 
 // This should not be called internally, as derived rely on stop() override.
-void channel_rpc::stopping(const code& ec) NOEXCEPT
+TEMPLATE
+inline void CLASS::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::stopping(ec);
     dispatcher_.stop(ec);
 }
 
-void channel_rpc::resume() NOEXCEPT
+TEMPLATE
+inline void CLASS::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::resume();
@@ -58,7 +57,8 @@ void channel_rpc::resume() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // Failure to call after successful message handling causes stalled channel.
-void channel_rpc::receive() NOEXCEPT
+TEMPLATE
+inline void CLASS::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT_MSG(!reading_, "already reading");
@@ -67,7 +67,8 @@ void channel_rpc::receive() NOEXCEPT
         return;
 
     reading_ = true;
-    const auto in = to_shared<request>();
+    const auto in = system::to_shared<rpc::request>();
+    using namespace std::placeholders;
 
     // Post handle_read to strand upon stop, error, or buffer full.
     read(request_buffer(), *in,
@@ -75,8 +76,9 @@ void channel_rpc::receive() NOEXCEPT
             shared_from_base<channel_rpc>(), _1, _2, in));
 }
 
-void channel_rpc::handle_receive(const code& ec, size_t bytes,
-    const request_cptr& request) NOEXCEPT
+TEMPLATE
+inline void CLASS::handle_receive(const code& ec, size_t bytes,
+    const rpc::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -104,13 +106,15 @@ void channel_rpc::handle_receive(const code& ec, size_t bytes,
     dispatch(request);
 }
 
-void channel_rpc::dispatch(const request_cptr& request) NOEXCEPT
+TEMPLATE
+inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
 {
     if (const auto code = dispatcher_.notify(request->message))
         stop(code);
 }
 
-http::flat_buffer& channel_rpc::request_buffer() NOEXCEPT
+TEMPLATE
+inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 {
     return request_buffer_;
 }
@@ -118,11 +122,13 @@ http::flat_buffer& channel_rpc::request_buffer() NOEXCEPT
 // Send.
 // ----------------------------------------------------------------------------
 
-void channel_rpc::send(response_t&& model, size_t size_hint,
+TEMPLATE
+inline void CLASS::send(rpc::response_t&& model, size_t size_hint,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
+    using namespace std::placeholders;
     const auto out = assign_message(std::move(model), size_hint);
     count_handler complete = std::bind(&channel_rpc::handle_send,
         shared_from_base<channel_rpc>(), _1, _2, out, std::move(handler));
@@ -136,8 +142,9 @@ void channel_rpc::send(response_t&& model, size_t size_hint,
     write(*out, std::move(complete));
 }
 
-void channel_rpc::handle_send(const code& ec, size_t bytes,
-    const response_cptr& response, const result_handler& handler) NOEXCEPT
+TEMPLATE
+inline void CLASS::handle_send(const code& ec, size_t bytes,
+    const rpc::response_cptr& response, const result_handler& handler) NOEXCEPT
 {
     if (ec)
         stop(ec);
@@ -147,11 +154,12 @@ void channel_rpc::handle_send(const code& ec, size_t bytes,
 }
 
 // private
-response_ptr channel_rpc::assign_message(response_t&& message,
+TEMPLATE
+inline rpc::response_ptr CLASS::assign_message(rpc::response_t&& message,
     size_t size_hint) NOEXCEPT
 {
     response_buffer_->max_size(size_hint);
-    const auto ptr = to_shared<response>();
+    const auto ptr = system::to_shared<rpc::response>();
     ptr->message = std::move(message);
     ptr->buffer = response_buffer_;
     return ptr;
@@ -160,14 +168,16 @@ response_ptr channel_rpc::assign_message(response_t&& message,
 // log helpers
 // ----------------------------------------------------------------------------
 
-void channel_rpc::log_message(const request& LOG_ONLY(request),
+TEMPLATE
+inline void CLASS::log_message(const rpc::request& LOG_ONLY(request),
     size_t LOG_ONLY(bytes)) const NOEXCEPT
 {
     LOGA("Rpc request: [" << bytes << "] "
         << request.message.method << "(...).");
 }
 
-void channel_rpc::log_message(const response& LOG_ONLY(response),
+TEMPLATE
+inline void CLASS::log_message(const rpc::response& LOG_ONLY(response),
     size_t LOG_ONLY(bytes)) const NOEXCEPT
 {
     LOG_ONLY(const auto message = response.message.error.has_value() ?
@@ -182,3 +192,5 @@ BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
+
+#endif

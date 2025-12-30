@@ -24,7 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/interface/interface.hpp>
+#include <bitcoin/network/interfaces/interfaces.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -77,7 +77,7 @@ protected:
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
 
-    /// Read request buffer (not thread safe).
+    /// Read request buffer (requires strand).
     virtual http::flat_buffer& request_buffer() NOEXCEPT;
 
     /// Dispatch request to subscribers by verb type.

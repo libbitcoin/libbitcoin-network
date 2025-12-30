@@ -53,8 +53,8 @@ protected:
     protocol_http(const session::ptr& session, const channel::ptr& channel,
         const options_t& options) NOEXCEPT;
 
-    DECLARE_SEND();
-    DECLARE_SUBSCRIBE_CHANNEL();
+    DECLARE_SEND()
+    DECLARE_SUBSCRIBE_CHANNEL()
 
     /// Message handlers by http method.
     virtual void handle_receive_get(const code& ec,
