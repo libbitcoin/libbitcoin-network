@@ -66,7 +66,10 @@ inline external_t<Argument> CLASS::get_valued(const value_t& value) THROWS
     const auto& internal = value.value();
     using type = internal_t<Argument>;
 
-    if constexpr (is_shared_ptr<type>)
+    if constexpr (is_same_type<Argument, value_t> ||
+        is_same_type<type, value_t>)
+        return value;
+    else if constexpr (is_shared_ptr<type>)
         return std::get<any_t>(internal).as<pointer_t<type>>();
     else if constexpr (is_nullable<Argument>)
         return { std::get<type>(internal) };
