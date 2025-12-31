@@ -56,6 +56,9 @@ DEFINE_JSON_TO_TAG(version)
 // value_t
 // ----------------------------------------------------------------------------
 
+BC_PUSH_WARNING(NO_STATIC_CAST)
+BC_PUSH_WARNING(NO_CASTS_FOR_ARITHMETIC_CONVERSION)
+
 DEFINE_JSON_FROM_TAG(value_t)
 {
     // In the general model, all numbers serialize to double.
@@ -75,51 +78,60 @@ DEFINE_JSON_FROM_TAG(value_t)
         },
         [&](int8_t visit) THROWS
         {
-            value = value_from(visit).as_double();
+            value = static_cast<double>(visit);
         },
         [&](int16_t visit) THROWS
         {
-            value = value_from(visit).as_double();
+            value = static_cast<double>(visit);
         },
         [&](int32_t visit) THROWS
         {
-            value = value_from(visit).as_double();
+            value = static_cast<double>(visit);
         },
         [&](int64_t visit) THROWS
         {
-            value = value_from(visit).as_double();
+            value = static_cast<double>(visit);
         },
         [&](uint8_t visit) THROWS
         {
-            value = value_from(visit).as_double();
+            value = static_cast<double>(visit);
         },
         [&](uint16_t visit) THROWS
         {
-            value = value_from(visit).as_double();
+            value = static_cast<double>(visit);
         },
         [&](uint32_t visit) THROWS
         {
-            value = value_from(visit).as_double();
+            value = static_cast<double>(visit);
         },
         [&](uint64_t visit) THROWS
         {
-            value = value_from(visit).as_double();
+            value = static_cast<double>(visit);
         },
-
         [&](const string_t& visit) THROWS
         {
             value = visit;
         },
         [&](const array_t& visit) THROWS
         {
-            value = value_from(visit);
+            value.emplace_array();
+            auto& array = value.as_array();
+            array.reserve(visit.size());
+            for (const auto& element: visit)
+                array.push_back(value_from(element));
         },
         [&](const object_t& visit) THROWS
         {
-            value = value_from(visit);
+            value.emplace_object();
+            auto& object = value.as_object();
+            for (const auto& pair: visit)
+                object.emplace(pair.first, value_from(pair.second));
         }
     }, instance.value());
 }
+
+BC_POP_WARNING()
+BC_POP_WARNING()
 
 DEFINE_JSON_TO_TAG(value_t)
 {
