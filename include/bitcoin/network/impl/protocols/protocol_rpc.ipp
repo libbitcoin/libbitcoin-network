@@ -26,22 +26,23 @@ namespace libbitcoin {
 namespace network {
 
 TEMPLATE
-inline void CLASS::send_code(const code& ec) NOEXCEPT
+inline void CLASS::send_code(const code& ec, result_handler&& handler) NOEXCEPT
 {
-    channel_->send_code(ec);
+    channel_->send_code(ec, std::move(handler));
 }
 
 TEMPLATE
-inline void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
+inline void CLASS::send_error(rpc::result_t&& error,
+    result_handler&& handler) NOEXCEPT
 {
-    channel_->send_error(std::move(error));
+    channel_->send_error(std::move(error), std::move(handler));
 }
 
 TEMPLATE
-inline void CLASS::send_result(rpc::value_t&& result,
-    size_t size_hint) NOEXCEPT
+inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
+    result_handler&& handler) NOEXCEPT
 {
-    channel_->send_result(std::move(result), size_hint);
+    channel_->send_result(std::move(result), size_hint, std::move(handler));
 }
 
 } // namespace network
