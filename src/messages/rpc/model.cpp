@@ -297,23 +297,23 @@ DEFINE_JSON_FROM_TAG(response_t)
 
     if (instance.error.has_value())
     {
-        const auto& result = instance.error.value();
+        const auto& error = instance.error.value();
 
-        if (result.data.has_value())
+        if (error.data.has_value())
         {
             object["error"] =
             {
-                { "code", result.code },
-                { "message", result.message },
-                { "data", value_from(result.data.value()) }
+                { "code", error.code },
+                { "message", error.message },
+                { "data", value_from(error.data.value()) }
             };
         }
         else
         {
             object["error"] =
             {
-                { "code", result.code },
-                { "message", result.message }
+                { "code", error.code },
+                { "message", error.message }
             };
         }
     }
