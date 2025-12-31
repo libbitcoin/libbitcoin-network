@@ -57,10 +57,13 @@ public:
     {
     }
 
-    /// Public senders, rpc version and identity added to responses.
-    inline void send_code(const code& ec) NOEXCEPT;
-    inline void send_error(rpc::result_t&& error) NOEXCEPT;
-    inline void send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT;
+    /// Senders, rpc version and identity added to responses  (requires strand).
+    inline void send_code(const code& ec,
+        result_handler&& handler={}) NOEXCEPT;
+    inline void send_error(rpc::result_t&& error,
+        result_handler&& handler={}) NOEXCEPT;
+    inline void send_result(rpc::value_t&& result, size_t size_hint,
+        result_handler&& handler={}) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     inline void resume() NOEXCEPT override;
@@ -91,13 +94,10 @@ protected:
     virtual inline void handle_receive(const code& ec, size_t bytes,
         const rpc::request_cptr& request) NOEXCEPT;
 
-    /// Handle send complation, handler must invoke receive() unless stopping.
+    /// Handle send completion, invokes receive().
     virtual inline void handle_send(const code& ec, size_t bytes,
         const rpc::response_cptr& response,
         const result_handler& handler) NOEXCEPT;
-
-    /// Invoked upon handle_send completion to restart receive().
-    virtual void handle_complete(const code& ec) NOEXCEPT;
 
 private:
     void log_message(const rpc::request& request,

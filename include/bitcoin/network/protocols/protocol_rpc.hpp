@@ -49,10 +49,12 @@ protected:
     DECLARE_SUBSCRIBE_CHANNEL()
 
     /// Senders (requires strand).
-    virtual inline void send_code(const code& ec) NOEXCEPT;
-    virtual inline void send_error(rpc::result_t&& error) NOEXCEPT;
-    virtual inline void send_result(rpc::value_t&& result,
-        size_t size_hint) NOEXCEPT;
+    virtual inline void send_code(const code& ec,
+        result_handler&& handler={}) NOEXCEPT;
+    virtual inline void send_error(rpc::result_t&& error,
+        result_handler&& handler={}) NOEXCEPT;
+    virtual inline void send_result(rpc::value_t&& result, size_t size_hint,
+        result_handler&& handler={}) NOEXCEPT;
 
 private:
     // This is mostly thread safe, and used in a thread safe manner.

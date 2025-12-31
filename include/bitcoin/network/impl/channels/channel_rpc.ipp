@@ -129,30 +129,31 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-void CLASS::send_code(const code& ec) NOEXCEPT
+void CLASS::send_code(const code& ec, result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    send_error({ .code = ec.value(), .message = ec.message() });
+    send_error({ .code = ec.value(), .message = ec.message() },
+        std::move(handler));
 }
 
 TEMPLATE
-void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
+void CLASS::send_error(rpc::result_t&& error,
+    result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     using namespace std::placeholders;
     send({ .jsonrpc = version_, .id = identity_, .error = std::move(error) },
-        two * error.message.size(), std::bind(&CLASS::handle_complete,
-            shared_from_base<CLASS>(), _1));
+        two * error.message.size(), std::move(handler));
 }
 
 TEMPLATE
-void CLASS::send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT
+void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
+    result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     using namespace std::placeholders;
     send({ .jsonrpc = version_, .id = identity_, .result = std::move(result) },
-        size_hint, std::bind(&CLASS::handle_complete,
-            shared_from_base<CLASS>(), _1));
+        size_hint, std::move(handler));
 }
 
 // protected
@@ -183,18 +184,11 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     BC_ASSERT(stranded());
     if (ec) stop(ec);
     log_message(*response, bytes);
+
+    // Typically a noop, but handshake may pause channel here.
     handler(ec);
-}
 
-// protected
-TEMPLATE
-void CLASS::handle_complete(const code&) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    if (stopped())
-        return;
-
-    // Continue read loop.
+    // Continue read loop (does not unpause or restart channel).
     receive();
 }
 
