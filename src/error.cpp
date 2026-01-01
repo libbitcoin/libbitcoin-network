@@ -395,8 +395,7 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
 // includes json codes
 code http_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    static const auto& category = boost::beast::http::
-        make_error_code(http_error_t::end_of_stream).category();
+    static boost::beast::http::detail::http_error_category category{};
 
     if (!ec)
         return error::success;
@@ -439,8 +438,7 @@ code http_to_error_code(const boost_code& ec) NOEXCEPT
 // includes json codes
 code ws_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    static const auto& category = boost::beast::websocket::
-        make_error_code(ws_error_t::closed).category();
+    static boost::beast::websocket::detail::error_codes category{};
 
     if (!ec)
         return error::success;
@@ -487,8 +485,7 @@ code ws_to_error_code(const boost_code& ec) NOEXCEPT
 
 code json_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    static const auto& category = boost::json::
-        make_error_code(json_error_t::syntax).category();
+    static boost::json::detail::error_code_category_t category{};
 
     if (!ec)
         return error::success;

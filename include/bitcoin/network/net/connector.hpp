@@ -46,8 +46,8 @@ public:
 
     DELETE_COPY_MOVE(connector);
 
-    // Construct.
-    // ------------------------------------------------------------------------
+    /// Construct.
+    /// -----------------------------------------------------------------------
 
     /// Construct an instance.
     connector(const logger& log, asio::strand& strand,
@@ -57,14 +57,14 @@ public:
     /// Asserts/logs stopped.
     virtual ~connector() NOEXCEPT;
 
-    // Stop (no start).
-    // ------------------------------------------------------------------------
+    /// Stop (no start).
+    /// -----------------------------------------------------------------------
 
     /// Cancel work (idempotent), handler signals completion.
     virtual void stop() NOEXCEPT;
 
-    // Methods.
-    // ------------------------------------------------------------------------
+    /// Methods.
+    /// -----------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.
     /// The socket parameter is nullptr unless success is returned.
 
