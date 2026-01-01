@@ -43,8 +43,8 @@ public:
 
     DELETE_COPY_MOVE(acceptor);
 
-    // Construct.
-    // ------------------------------------------------------------------------
+    /// Construct.
+    /// -----------------------------------------------------------------------
 
     /// Construct an instance.
     acceptor(const logger& log, asio::strand& strand, asio::io_context& service,
@@ -53,8 +53,8 @@ public:
     /// Asserts/logs stopped.
     virtual ~acceptor() NOEXCEPT;
 
-    // Start/stop.
-    // ------------------------------------------------------------------------
+    /// Start/stop.
+    /// -----------------------------------------------------------------------
     /// Starts return operation_failed if not stopped.
 
     /// Start the listener on the specified ip address and port (call once).
@@ -63,14 +63,14 @@ public:
     /// Cancel work (idempotent), handler signals completion.
     virtual void stop() NOEXCEPT;
 
-    // Properties.
-    // ------------------------------------------------------------------------
+    /// Properties.
+    /// -----------------------------------------------------------------------
 
     /// The local endpoint to which this acceptor is bound (requires strand).
     virtual config::authority local() const NOEXCEPT;
 
-    // Methods.
-    // ------------------------------------------------------------------------
+    /// Methods.
+    /// -----------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.
     /// The socket parameter is nullptr unless success is returned.
 
