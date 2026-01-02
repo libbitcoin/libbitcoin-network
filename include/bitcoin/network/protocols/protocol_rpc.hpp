@@ -29,13 +29,13 @@
 namespace libbitcoin {
 namespace network {
     
-template <typename Interface>
+template <typename Channel>
 class protocol_rpc
  : public protocol
 {
 public:
-    typedef std::shared_ptr<protocol_rpc<Interface>> ptr;
-    using channel_t = channel_rpc<Interface>;
+    typedef std::shared_ptr<protocol_rpc<Channel>> ptr;
+    using channel_t = Channel;
     using options_t = channel_t::options_t;
 
 protected:
@@ -65,8 +65,8 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <typename Interface>
-#define CLASS protocol_rpc<Interface>
+#define TEMPLATE template <typename Channel>
+#define CLASS protocol_rpc<Channel>
 
 #include <bitcoin/network/impl/protocols/protocol_rpc.ipp>
 
