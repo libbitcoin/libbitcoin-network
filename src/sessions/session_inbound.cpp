@@ -52,7 +52,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (!settings().inbound.enabled())
+    if (!network_settings().inbound.enabled())
     {
         LOGN("Not configured for inbound peer connections.");
         handler(error::success);
@@ -76,11 +76,11 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    LOGN("Accepting " << settings().inbound.connections << " peers on "
-        << settings().inbound.binds.size() << " bindings.");
+    LOGN("Accepting " << network_settings().inbound.connections << " peers on "
+        << network_settings().inbound.binds.size() << " bindings.");
 
-    const auto maximum = settings().inbound.maximum_request;
-    for (const auto& bind: settings().inbound.binds)
+    const auto maximum = network_settings().inbound.maximum_request;
+    for (const auto& bind: network_settings().inbound.binds)
     {
         const auto acceptor = create_acceptor(maximum);
 
@@ -160,7 +160,7 @@ void session_inbound::handle_accepted(const code& ec,
     }
 
     // Could instead stop listening when at limit, though this is simpler.
-    if (inbound_channel_count() >= settings().inbound.connections)
+    if (inbound_channel_count() >= network_settings().inbound.connections)
     {
         LOGS("Dropping oversubscribed peer [" << socket->authority() << "].");
         socket->stop();
@@ -201,12 +201,12 @@ void session_inbound::handle_accepted(const code& ec,
 
 bool session_inbound::blacklisted(const config::address& address) const NOEXCEPT
 {
-    return settings().blacklisted(address);
+    return network_settings().blacklisted(address);
 }
 
 bool session_inbound::whitelisted(const config::address& address) const NOEXCEPT
 {
-    return settings().whitelisted(address);
+    return network_settings().whitelisted(address);
 }
 
 bool session_inbound::enabled() const NOEXCEPT
@@ -226,13 +226,13 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     // Inbound does not require any node services.
     using namespace messages::peer;
     constexpr auto minimum_services = service::node_none;
-    const auto maximum_services = settings().services_maximum;
+    const auto maximum_services = network_settings().services_maximum;
 
     // Protocol must pause the channel after receiving version and verack.
     const auto self = shared_from_this();
-    const auto relay = settings().enable_relay;
-    const auto reject = settings().enable_reject;
-    const auto address_v2 = settings().enable_address_v2;
+    const auto relay = network_settings().enable_relay;
+    const auto reject = network_settings().enable_reject;
+    const auto address_v2 = network_settings().enable_address_v2;
 
     // protocol_version_70016 sends and receives send_address_v2 even though
     // inbound connections do not accept addresses. There is no message to
@@ -249,7 +249,7 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
             maximum_services, relay)->shake(std::move(handler));
 
     // TODO: consider relay may be dynamic (disabled until current).
-    // settings().enable_relay is always passed to the peer during handshake.
+    // .enable_relay is always passed to the peer during handshake.
     else if (is_configured(level::bip37))
         channel->attach<protocol_version_70001>(self, minimum_services,
             maximum_services, relay)->shake(std::move(handler));
@@ -280,11 +280,11 @@ void session_inbound::attach_protocols(
     const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
 
     // Alert is deprecated, independent of version.
-    if (peer->is_negotiated(level::alert_message) && settings().enable_alert)
+    if (peer->is_negotiated(level::alert_message) && network_settings().enable_alert)
         channel->attach<protocol_alert_311>(self)->start();
 
     // Reject is deprecated, independent of version.
-    if (peer->is_negotiated(level::bip61) && settings().enable_reject)
+    if (peer->is_negotiated(level::bip61) && network_settings().enable_reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
     if (peer->is_negotiated(level::bip31))
@@ -294,14 +294,14 @@ void session_inbound::attach_protocols(
 
     // Attach is overridden to disable inbound address protocols.
 
-    if (settings().enable_address_v2)
+    if (network_settings().enable_address_v2)
     {
         ////// Sending address v2 is enabled in handshake.
         ////if (peer->send_address_v2())
         ////    channel->attach<protocol_address_out_70016>(self)->start();
     }
 
-    if (settings().enable_address)
+    if (network_settings().enable_address)
     {
         if (peer->is_negotiated(level::get_address_message))
             channel->attach<protocol_address_out_209>(self)->start();

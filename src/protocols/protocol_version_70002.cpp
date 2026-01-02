@@ -39,9 +39,9 @@ using namespace std::placeholders;
 protocol_version_70002::protocol_version_70002(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70002(session, channel,
-        session->settings().services_minimum,
-        session->settings().services_maximum,
-        session->settings().enable_relay)
+        session->network_settings().services_minimum,
+        session->network_settings().services_maximum,
+        session->network_settings().enable_relay)
 {
 }
 

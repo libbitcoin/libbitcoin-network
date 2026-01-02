@@ -207,12 +207,12 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
 
 bool session_server::blacklisted(const config::address& address) const NOEXCEPT
 {
-    return settings().blacklisted(address);
+    return network_settings().blacklisted(address);
 }
 
 bool session_server::whitelisted(const config::address& address) const NOEXCEPT
 {
-    return settings().whitelisted(address);
+    return network_settings().whitelisted(address);
 }
 
 bool session_server::enabled() const NOEXCEPT

@@ -55,7 +55,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (!settings().outbound.enabled())
+    if (!network_settings().outbound.enabled())
     {
         LOGN("Not configured for outbound connections.");
         handler(error::success);
@@ -71,7 +71,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    if (!settings().enable_address)
+    if (!network_settings().enable_address)
     {
         LOGN("Address protocol disabled, may cause empty address pool.");
     }
@@ -92,9 +92,9 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
-    const auto peers = settings().outbound.connections;
+    const auto peers = network_settings().outbound.connections;
 
-    LOG_ONLY(const auto batch = settings().outbound.connect_batch_size;)
+    LOG_ONLY(const auto batch = network_settings().outbound.connect_batch_size;)
     LOGN("Create " << peers << " connections " << batch << " at a time.");
 
     // There is currently no way to vary the number of connections at runtime.
@@ -119,7 +119,7 @@ void session_outbound::start_connect(const code&) NOEXCEPT
 
     // Create a set of connectors for batched stop.
     const auto connectors = create_connectors(
-        settings().outbound.connect_batch_size);
+        network_settings().outbound.connect_batch_size);
 
     // Subscribe connector set to stop desubscriber.
     const auto key = subscribe_stop([=](const code&) NOEXCEPT
@@ -211,7 +211,7 @@ void session_outbound::handle_connect(const code& ec,
     if (ec == error::address_not_found)
     {
         LOGS("Address pool is empty.");
-        defer(settings().connect_timeout(), BIND(start_connect, _1));
+        defer(network_settings().connect_timeout(), BIND(start_connect, _1));
         return;
     }
 
@@ -280,7 +280,7 @@ void session_outbound::handle_channel_stop(const code& ec,
 inline bool session_outbound::maybe_reclaim(const code& ec) const NOEXCEPT
 {
     // Bypass if host pool is full (don't allow these to evict others).
-    if (address_count() >= settings().outbound.host_pool_capacity)
+    if (address_count() >= network_settings().outbound.host_pool_capacity)
         return false;
 
     // Failures that might work later (timeouts can drain pool).

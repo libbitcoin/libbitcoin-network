@@ -130,7 +130,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Access network configuration settings.
-    const network::settings& settings() const NOEXCEPT;
+    const network::settings& network_settings() const NOEXCEPT;
 
     /// Arbitrary identifier of the session (for net subscriber).
     uint64_t identifier() const NOEXCEPT;

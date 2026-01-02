@@ -81,7 +81,7 @@ connectors_ptr net::create_connectors(size_t count) NOEXCEPT
     const auto connects = to_shared<connectors>();
     connects->reserve(count);
 
-    const auto maximum = settings_.outbound.maximum_request;
+    const auto maximum = network_settings().outbound.maximum_request;
     for (size_t connect{}; connect < count; ++connect)
         connects->push_back(create_connector(maximum));
 
@@ -92,15 +92,15 @@ connectors_ptr net::create_connectors(size_t count) NOEXCEPT
 connector::ptr net::create_connector(size_t maximum) NOEXCEPT
 {
     return emplace_shared<connector>(log, strand(), service(),
-        settings_.connect_timeout(), maximum, connect_suspended_);
+        network_settings().connect_timeout(), maximum, connect_suspended_);
 }
 
 // seed
 connector::ptr net::create_connector() NOEXCEPT
 {
     return emplace_shared<connector>(log, strand(), service(),
-        settings_.outbound.seeding_timeout(),
-        settings_.outbound.maximum_request, connect_suspended_);
+        network_settings().outbound.seeding_timeout(),
+        network_settings().outbound.maximum_request, connect_suspended_);
 }
 
 // Start sequence.
@@ -168,7 +168,7 @@ void net::do_run(const result_handler& handler) NOEXCEPT
     }
 
     // Start manual connections.
-    for (const auto& peer: settings_.manual.peers)
+    for (const auto& peer: network_settings().manual.peers)
         do_connect(peer);
 
     // Start inbound connections.
@@ -581,7 +581,7 @@ bool net::store_nonce(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (settings_.inbound.enable_loopback || channel.inbound())
+    if (network_settings().inbound.enable_loopback || channel.inbound())
         return true;
 
     if (!nonces_.insert(channel.nonce()).second)
@@ -597,7 +597,7 @@ bool net::unstore_nonce(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (settings_.inbound.enable_loopback || channel.inbound())
+    if (network_settings().inbound.enable_loopback || channel.inbound())
         return true;
 
     if (!to_bool(nonces_.erase(channel.nonce())))
@@ -613,7 +613,7 @@ bool net::is_loopback(const channel_peer& channel) const NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (settings_.inbound.enable_loopback || !channel.inbound())
+    if (network_settings().inbound.enable_loopback || !channel.inbound())
         return false;
 
     return to_bool(nonces_.count(channel.peer_version()->nonce));

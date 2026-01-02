@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
     set.threads = expected;
     net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE_EQUAL(session.settings().threads, expected);
+    BOOST_REQUIRE_EQUAL(session.network_settings().threads, expected);
 }
 
 // properties
@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     BOOST_REQUIRE(session->stopped());
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
-    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->settings(), options);
+    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->network_settings(), options);
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
-    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->settings(), options);
+    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->network_settings(), options);
 
     // Stop the channel (started by default).
     std::promise<bool> unstarted_channel;
@@ -764,7 +764,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
-    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->settings(), options);
+    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->network_settings(), options);
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
-    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->settings(), options);
+    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->network_settings(), options);
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -930,7 +930,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
-    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->settings(), options);
+    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->network_settings(), options);
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;

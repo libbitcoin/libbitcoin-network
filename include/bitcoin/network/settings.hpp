@@ -260,6 +260,19 @@ struct BCT_API settings
         const messages::peer::address_item& item) const NOEXCEPT;
 };
 
+/// Network configuration, thread safe.
+class BCT_API configuration
+{
+public:
+    inline configuration(system::chain::selection context) NOEXCEPT
+      : network(context)
+    {
+    }
+
+    /// Settings.
+    network::settings network;
+};
+
 } // namespace network
 } // namespace libbitcoin
 

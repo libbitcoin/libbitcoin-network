@@ -43,10 +43,10 @@ using namespace std::placeholders;
 protocol_version_70016::protocol_version_70016(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70016(session, channel,
-        session->settings().services_minimum,
-        session->settings().services_maximum,
-        session->settings().enable_relay,
-        session->settings().enable_reject)
+        session->network_settings().services_minimum,
+        session->network_settings().services_maximum,
+        session->network_settings().enable_relay,
+        session->network_settings().enable_reject)
 {
 }
 

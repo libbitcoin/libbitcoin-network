@@ -45,8 +45,8 @@ using namespace std::placeholders;
 protocol_version_106::protocol_version_106(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_106(session, channel,
-      session->settings().services_minimum,
-      session->settings().services_maximum)
+      session->network_settings().services_minimum,
+      session->network_settings().services_maximum)
 {
 }
 
@@ -57,14 +57,14 @@ protocol_version_106::protocol_version_106(const session::ptr& session,
     uint64_t maximum_services) NOEXCEPT
   : protocol_peer(session, channel),
     inbound_(channel->inbound()),
-    minimum_version_(session->settings().protocol_minimum),
-    maximum_version_(session->settings().protocol_maximum),
+    minimum_version_(session->network_settings().protocol_minimum),
+    maximum_version_(session->network_settings().protocol_maximum),
     minimum_services_(minimum_services),
     maximum_services_(maximum_services),
-    invalid_services_(session->settings().invalid_services),
-    maximum_skew_minutes_(session->settings().maximum_skew_minutes),
+    invalid_services_(session->network_settings().invalid_services),
+    maximum_skew_minutes_(session->network_settings().maximum_skew_minutes),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),
-        session->settings().channel_handshake())),
+        session->network_settings().channel_handshake())),
     tracker<protocol_version_106>(session->log)
 {
 }
@@ -110,12 +110,12 @@ messages::peer::version protocol_version_106::version_factory(
         {
             timestamp,
             maximum_services_,
-            settings().inbound.first_self().to_ip_address(),
-            settings().inbound.first_self().port(),
+            network_settings().inbound.first_self().to_ip_address(),
+            network_settings().inbound.first_self().port(),
         },
 
         nonce(),
-        settings().user_agent,
+        network_settings().user_agent,
         possible_narrow_cast<uint32_t>(start_height()),
         relay
     };

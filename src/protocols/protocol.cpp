@@ -144,9 +144,9 @@ uint64_t protocol::nonce() const NOEXCEPT
     return channel_->nonce();
 }
 
-const network::settings& protocol::settings() const NOEXCEPT
+const network::settings& protocol::network_settings() const NOEXCEPT
 {
-    return session_->settings();
+    return session_->network_settings();
 }
 
 uint64_t protocol::identifier() const NOEXCEPT
