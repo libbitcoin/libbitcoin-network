@@ -25,6 +25,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -890,7 +891,7 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
             [](http::fields& header) NOEXCEPT
             {
                 // Customize the response header.
-                header.set(http::field::server, "libbitcoin/4.0");
+                header.set(http::field::server, BC_HTTP_SERVER_NAME);
             }
         });
 

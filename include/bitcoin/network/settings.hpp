@@ -25,6 +25,8 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
+#define BC_HTTP_SERVER_NAME "libbitcoin/4.0"
+
 namespace libbitcoin {
 namespace network {
 
@@ -67,7 +69,7 @@ struct BCT_API settings
         using tcp_server::tcp_server;
 
         /// Sent via responses if configured .
-        std::string server{ "libbitcoin/4.0" };
+        std::string server{ BC_HTTP_SERVER_NAME };
 
         /// Validated against hosts/origins if configured.
         config::endpoints hosts{};
