@@ -83,8 +83,8 @@ void protocol_peer::set_negotiated_version(uint32_t value) NOEXCEPT
 address protocol_peer::selfs() const NOEXCEPT
 {
     const auto time_now = unix_time();
-    const auto services = settings().services_maximum;
-    const auto& selfs = settings().inbound.selfs;
+    const auto services = network_settings().services_maximum;
+    const auto& selfs = network_settings().inbound.selfs;
 
     address message{};
     message.addresses.reserve(selfs.size());

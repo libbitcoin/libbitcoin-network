@@ -56,8 +56,8 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 
     // Seeding is allowed even with !enable_address configured.
 
-    if (is_zero(settings().outbound.connections) ||
-        is_zero(settings().outbound.connect_batch_size))
+    if (is_zero(network_settings().outbound.connections) ||
+        is_zero(network_settings().outbound.connect_batch_size))
     {
         LOGN("Bypassed seeding because outbound connections disabled.");
         handler(error::success);
@@ -65,17 +65,17 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    if (address_count() >= settings().outbound.minimum_address_count())
+    if (address_count() >= network_settings().outbound.minimum_address_count())
     {
         LOGN("Bypassed seeding because of sufficient (" << address_count()
-            << " of " << settings().outbound.minimum_address_count()
+            << " of " << network_settings().outbound.minimum_address_count()
             << ") address quantity.");
         handler(error::success);
         unsubscribe_close();
         return;
     }
 
-    if (is_zero(settings().outbound.host_pool_capacity))
+    if (is_zero(network_settings().outbound.host_pool_capacity))
     {
         LOGN("Cannot seed because no address pool capacity configured.");
         handler(error::seeding_unsuccessful);
@@ -83,7 +83,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    if (settings().outbound.seeds.empty())
+    if (network_settings().outbound.seeds.empty())
     {
         LOGN("Cannot seed because no seeds configured");
         handler(error::seeding_unsuccessful);
@@ -106,8 +106,8 @@ void session_seed::handle_started(const code& ec,
         return;
     }
 
-    const auto seeds = settings().outbound.seeds.size();
-    const auto required = settings().outbound.minimum_address_count();
+    const auto seeds = network_settings().outbound.seeds.size();
+    const auto required = network_settings().outbound.minimum_address_count();
 
     LOGN("Seeding because of insufficient ("
         << address_count() << " of " << required << ") address quantity.");
@@ -120,7 +120,7 @@ void session_seed::handle_started(const code& ec,
     // Invoke sufficient on count, invoke complete with all seeds stopped.
     racer->start(move_copy(handler), BIND(stop_seed, _1));
 
-    for (const auto& seed: settings().outbound.seeds)
+    for (const auto& seed: network_settings().outbound.seeds)
     {
         const auto connector = create_connector();
         subscribe_stop([=](const code&) NOEXCEPT
@@ -192,8 +192,8 @@ void session_seed::attach_handshake(const channel::ptr& channel,
 
     // Protocol must pause the channel after receiving version and verack.
     const auto self = shared_from_this();
-    const auto reject = settings().enable_reject;
-    const auto address_v2 = settings().enable_address_v2;
+    const auto reject = network_settings().enable_reject;
+    const auto address_v2 = network_settings().enable_address_v2;
 
     // Address v2 can be disabled, independent of version.
     if (is_configured(level::bip155) && address_v2)
@@ -231,9 +231,9 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
 
     using namespace messages::peer;
     const auto self = shared_from_this();
-    const auto alert = settings().enable_alert;
-    const auto reject = settings().enable_reject;
-    const auto address_v2 = settings().enable_address_v2;
+    const auto alert = network_settings().enable_alert;
+    const auto reject = network_settings().enable_reject;
+    const auto address_v2 = network_settings().enable_address_v2;
     const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
 
     // Alert is deprecated, independent of version.

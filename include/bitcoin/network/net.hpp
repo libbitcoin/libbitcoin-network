@@ -62,7 +62,10 @@ public:
 
     DELETE_COPY_MOVE(net);
 
-    /// Construct an instance.
+    /// Construct an instance from config.
+    net(const configuration& config, const logger& log) NOEXCEPT;
+
+    /// Construct an instance from settings (deprecated).
     net(const settings& settings, const logger& log) NOEXCEPT;
 
     /// Calls close().

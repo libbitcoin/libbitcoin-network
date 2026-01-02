@@ -251,7 +251,7 @@ void session::do_handle_channel_stopped(const code& ec,
 void session::defer(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    defer(settings().retry_timeout(), std::move(handler));
+    defer(network_settings().retry_timeout(), std::move(handler));
 }
 
 void session::defer(const steady_clock::duration& timeout,
@@ -387,7 +387,7 @@ asio::strand& session::strand() NOEXCEPT
     return network_.strand();
 }
 
-const network::settings& session::settings() const NOEXCEPT
+const network::settings& session::network_settings() const NOEXCEPT
 {
     return network_.network_settings();
 }

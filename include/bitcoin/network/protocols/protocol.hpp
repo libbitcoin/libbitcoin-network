@@ -182,7 +182,7 @@ protected:
     virtual uint64_t nonce() const NOEXCEPT;
 
     /// Network settings.
-    virtual const network::settings& settings() const NOEXCEPT;
+    virtual const network::settings& network_settings() const NOEXCEPT;
 
     /// Channel identifier (for broadcast identification).
     virtual uint64_t identifier() const NOEXCEPT;

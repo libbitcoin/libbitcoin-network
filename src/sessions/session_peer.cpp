@@ -148,15 +148,15 @@ void session_peer::attach_handshake(const channel::ptr& channel,
     const auto self = shared_from_this();
 
     // Address v2 can be disabled, independent of version.
-    if (is_configured(level::bip155) && settings().enable_address_v2)
+    if (is_configured(level::bip155) && network_settings().enable_address_v2)
         channel->attach<protocol_version_70016>(self)->shake(std::move(handler));
 
     // Protocol versions are cumulative, but reject is deprecated.
-    else if (is_configured(level::bip61) && settings().enable_reject)
+    else if (is_configured(level::bip61) && network_settings().enable_reject)
         channel->attach<protocol_version_70002>(self)->shake(std::move(handler));
 
     // TODO: consider relay may be dynamic (disabled until current).
-    // settings().enable_relay is always passed to the peer during handshake.
+    // .enable_relay is always passed to the peer during handshake.
     else if (is_configured(level::bip37))
         channel->attach<protocol_version_70001>(self)->shake(std::move(handler));
 
@@ -175,11 +175,12 @@ void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
     const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
 
     // Alert is deprecated, independent of version.
-    if (peer->is_negotiated(level::alert_message) && settings().enable_alert)
+    if (peer->is_negotiated(level::alert_message) &&
+        network_settings().enable_alert)
         channel->attach<protocol_alert_311>(self)->start();
 
     // Reject is deprecated, independent of version.
-    if (peer->is_negotiated(level::bip61) && settings().enable_reject)
+    if (peer->is_negotiated(level::bip61) && network_settings().enable_reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
     if (peer->is_negotiated(level::bip31))
@@ -187,7 +188,7 @@ void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
     else if (peer->is_negotiated(level::version_message))
         channel->attach<protocol_ping_106>(self)->start();
 
-    if (settings().enable_address_v2)
+    if (network_settings().enable_address_v2)
     {
         ////// Address v2 can be disabled, independent of version.
         ////if (peer->is_negotiated(level::bip155)
@@ -198,7 +199,7 @@ void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
         ////    channel->attach<protocol_address_out_70016>(self)->start();
     }
 
-    if (settings().enable_address)
+    if (network_settings().enable_address)
     {
         if (peer->is_negotiated(level::get_address_message))
         {
@@ -223,7 +224,7 @@ channel::ptr session_peer::create_channel(const socket::ptr& socket) NOEXCEPT
     // Channel id must be created using create_key().
     // Default message memory resource, override create_channel to replace.
     return emplace_shared<channel_peer>(log, socket, create_key(),
-        settings(), options_);
+        network_settings(), options_);
 }
 
 // Properties.
@@ -251,7 +252,7 @@ size_t session_peer::outbound_channel_count() const NOEXCEPT
 
 bool session_peer::is_configured(messages::peer::level level) const NOEXCEPT
 {
-    return settings().protocol_maximum >= level;
+    return network_settings().protocol_maximum >= level;
 }
 
 const session_peer::options_t& session_peer::options() const NOEXCEPT
