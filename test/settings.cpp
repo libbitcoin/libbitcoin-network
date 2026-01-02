@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
     BOOST_REQUIRE(instance.expiration() == minutes(60));
 
     // http_server
-    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE_EQUAL(instance.server, BC_HTTP_SERVER_NAME);
     BOOST_REQUIRE(instance.hosts.empty());
     BOOST_REQUIRE(instance.origins.empty());
     BOOST_REQUIRE(instance.host_names().empty());
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
     BOOST_REQUIRE(instance.expiration() == minutes(60));
 
     // http_server
-    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE_EQUAL(instance.server, BC_HTTP_SERVER_NAME);
     BOOST_REQUIRE(instance.hosts.empty());
     BOOST_REQUIRE(instance.origins.empty());
     BOOST_REQUIRE(instance.host_names().empty());
