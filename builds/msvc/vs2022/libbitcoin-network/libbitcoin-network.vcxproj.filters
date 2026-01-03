@@ -333,6 +333,9 @@
     <ClCompile Include="..\..\..\..\src\net\connector.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\connector_socks.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -756,6 +759,9 @@
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp">
+      <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector_socks.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp">

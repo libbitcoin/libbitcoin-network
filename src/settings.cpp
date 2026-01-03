@@ -29,6 +29,23 @@ namespace network {
 using namespace system;
 using namespace messages::peer;
 
+// socks5_client
+// ----------------------------------------------------------------------------
+
+settings::socks5_client::socks5_client() NOEXCEPT
+{
+}
+
+bool settings::socks5_client::proxied() const NOEXCEPT
+{
+    return is_nonzero(socks.port());
+}
+
+bool settings::socks5_client::secured() const NOEXCEPT
+{
+    return !(username.empty() && password.empty());
+}
+
 // tcp_server
 // ----------------------------------------------------------------------------
 
