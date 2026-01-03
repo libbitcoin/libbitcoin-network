@@ -81,19 +81,18 @@ void connector_socks::handle_timer(const code& ec, const finish_ptr&,
             shared_from_base<connector_socks>(), ec, socket));
 }
 
-// socks5 handshake
+// socks5 handshake (private)
 // ----------------------------------------------------------------------------
-// private
-
 // datatracker.ietf.org/doc/html/rfc1928
+
 enum socks : uint8_t
 {
-    /// flags
+    // flags
     version = 0x05,
     connect = 0x01,
     reserved = 0x00,
 
-    /// reply type
+    // reply type
     success = 0x00,
     failure = 0x01,
     disallowed = 0x02,
@@ -104,18 +103,18 @@ enum socks : uint8_t
     unsupported_command = 0x07,
     unsupported_address = 0x08,
 
-    /// method (authentication) type
+    // method (authentication) type
     method_none = 0xff,
     method_clear = 0x00,
     method_gssapi = 0x01,
     method_password = 0x02,
 
-    /// command type
+    // command type
     command_connect = 0x01,
     command_bind = 0x02,
     command_udp = 0x03,
 
-    /// address type
+    // address type
     address_ipv4 = 0x01,
     address_fqdn = 0x03,
     address_ipv6 = 0x04
