@@ -31,7 +31,7 @@ namespace libbitcoin {
 namespace network {
 
 /// The largest p2p payload request when configured for witness blocks.
-constexpr uint32_t maximum_request_
+constexpr uint32_t maximum_request_default
 {
     system::possible_narrow_cast<uint32_t>(
         messages::peer::heading::maximum_payload(
@@ -41,6 +41,25 @@ constexpr uint32_t maximum_request_
 /// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
 {
+    struct socks5_client
+    {
+        DEFAULT_COPY_MOVE_DESTRUCT(socks5_client);
+        socks5_client() NOEXCEPT;
+
+        /// Proxy credentials are stored and passed in cleartext.
+        std::string username{};
+        std::string password{};
+
+        /// Socks5 proxy (default port convention is 1080, but not defaulted).
+        config::endpoint socks{};
+
+        /// True if socks::port is non-zero.
+        virtual bool proxied() const NOEXCEPT;
+
+        /// False if both username and password are empty.
+        virtual bool secured() const NOEXCEPT;
+    };
+
     struct tcp_server
     {
         DEFAULT_COPY_MOVE_DESTRUCT(tcp_server);
@@ -54,8 +73,8 @@ struct BCT_API settings
         uint16_t connections{ 0 };
         uint32_t inactivity_minutes{ 10 };
         uint32_t expiration_minutes{ 60 };
-        uint32_t maximum_request{ maximum_request_ };
-        uint32_t minimum_buffer{ maximum_request_ };
+        uint32_t maximum_request{ maximum_request_default };
+        uint32_t minimum_buffer{ maximum_request_default };
 
         /// Helpers.
         virtual bool enabled() const NOEXCEPT;
@@ -91,11 +110,30 @@ struct BCT_API settings
         // TODO: settings unique to the websocket aspect.
     };
 
+    struct peer_manual
+      : public tcp_server, public socks5_client
+    {
+        // The friends field must be initialized after peers is set.
+        peer_manual(system::chain::selection) NOEXCEPT
+          : tcp_server("manual"), socks5_client()
+        {
+        }
+
+        config::endpoints peers{};
+        config::authorities friends{};
+
+        /// Helpers.
+        void initialize() NOEXCEPT;
+        bool enabled() const NOEXCEPT override;
+        virtual bool peered(
+            const messages::peer::address_item& item) const NOEXCEPT;
+    };
+
     struct peer_outbound
-      : public tcp_server
+      : public tcp_server, public socks5_client
     {
         peer_outbound(system::chain::selection context) NOEXCEPT
-          : tcp_server("outbound")
+          : tcp_server("outbound"), socks5_client()
         {
             connections = 10;
 
@@ -176,25 +214,6 @@ struct BCT_API settings
         bool advertise() const NOEXCEPT;
         bool enabled() const NOEXCEPT override;
         config::authority first_self() const NOEXCEPT;
-    };
-
-    struct peer_manual
-      : public tcp_server
-    {
-        // The friends field must be initialized after peers is set.
-        peer_manual(system::chain::selection) NOEXCEPT
-          : tcp_server("manual")
-        {
-        }
-
-        config::endpoints peers{};
-        config::authorities friends{};
-
-        /// Helpers.
-        void initialize() NOEXCEPT;
-        bool enabled() const NOEXCEPT override;
-        virtual bool peered(
-            const messages::peer::address_item& item) const NOEXCEPT;
     };
 
     // [network]

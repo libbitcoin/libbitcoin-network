@@ -131,6 +131,7 @@
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/connector.hpp>
+#include <bitcoin/network/net/connector_socks.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/hosts.hpp>
 #include <bitcoin/network/net/net.hpp>

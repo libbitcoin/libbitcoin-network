@@ -25,10 +25,8 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/socket.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -38,7 +36,7 @@ namespace network {
 /// All public/protected methods must be called from strand.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API connector
-  : public std::enable_shared_from_this<connector>, public reporter,
+  : public enable_shared_from_base<connector>, public reporter,
     protected tracker<connector>
 {
 public:
@@ -82,10 +80,19 @@ public:
 
 protected:
     typedef race_speed<two, const code&, const socket::ptr&> racer;
+    typedef std::shared_ptr<bool> finish_ptr;
 
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,
         const config::address& host, socket_handler&& handler) NOEXCEPT;
+
+    virtual void handle_connected(const code& ec, const finish_ptr& finish,
+        socket::ptr socket) NOEXCEPT;
+    virtual void handle_timer(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
+
+    /// Running in the strand.
+    bool stranded() NOEXCEPT;
 
     // These are thread safe
     const size_t maximum_;
@@ -99,16 +106,12 @@ protected:
     racer racer_{};
 
 private:
-    typedef std::shared_ptr<bool> finish_ptr;
-
     void handle_resolve(const boost_code& ec,
         const asio::endpoints& range, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
     void do_handle_connect(const code& ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
-    void handle_connect(const code& ec, const finish_ptr& finish,
-        const socket::ptr& socket) NOEXCEPT;
-    void handle_timer(const code& ec, const finish_ptr& finish,
+    void handle_connect(code ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
 };
 

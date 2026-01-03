@@ -109,7 +109,7 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
 
 void acceptor::stop() NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT(stranded());
 
     // Posts handle_accept to strand (if not already posted).
     boost_code ignore;
@@ -122,8 +122,14 @@ void acceptor::stop() NOEXCEPT
 
 config::authority acceptor::local() const NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT(stranded());
     return { stopped_ ? asio::endpoint{} : acceptor_.local_endpoint() };
+}
+
+// protected
+bool acceptor::stranded() const NOEXCEPT
+{
+    return strand_.running_in_this_thread();
 }
 
 // Methods.
@@ -131,7 +137,7 @@ config::authority acceptor::local() const NOEXCEPT
 
 void acceptor::accept(socket_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT(stranded());
 
     if (stopped_)
     {
@@ -160,7 +166,7 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
 void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
     const socket_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT(stranded());
 
     if (ec)
     {

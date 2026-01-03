@@ -307,6 +307,17 @@ BOOST_AUTO_TEST_CASE(settings__excluded__default__true)
 // ----------------------------------------------------------------------------
 constexpr auto maximum_request = system::chain::max_block_weight;
 
+BOOST_AUTO_TEST_CASE(settings__socks5_client__defaults__expected)
+{
+    const settings::socks5_client instance{};
+
+    BOOST_REQUIRE(!instance.secured());
+    BOOST_REQUIRE(instance.username.empty());
+    BOOST_REQUIRE(instance.password.empty());
+    BOOST_REQUIRE(!instance.proxied());
+    BOOST_REQUIRE(instance.socks == config::endpoint{});
+}
+
 BOOST_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
 {
     constexpr auto name = "test";
@@ -382,6 +393,13 @@ BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
 BOOST_AUTO_TEST_CASE(settings__peer_outbound__mainnet__expected)
 {
     const settings::peer_outbound instance{ system::chain::selection::mainnet };
+
+    // socks5_client
+    BOOST_REQUIRE(!instance.secured());
+    BOOST_REQUIRE(instance.username.empty());
+    BOOST_REQUIRE(instance.password.empty());
+    BOOST_REQUIRE(!instance.proxied());
+    BOOST_REQUIRE(instance.socks == config::endpoint{});
 
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, "outbound");
@@ -650,6 +668,13 @@ BOOST_AUTO_TEST_CASE(settings__peer_inbound_first_self__multiple_selfs__front)
 BOOST_AUTO_TEST_CASE(settings__peer_manual__mainnet__expected)
 {
     const settings::peer_manual instance{ system::chain::selection::mainnet };
+
+    // socks5_client
+    BOOST_REQUIRE(!instance.secured());
+    BOOST_REQUIRE(instance.username.empty());
+    BOOST_REQUIRE(instance.password.empty());
+    BOOST_REQUIRE(!instance.proxied());
+    BOOST_REQUIRE(instance.socks == config::endpoint{});
 
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, "manual");

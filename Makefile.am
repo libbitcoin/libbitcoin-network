@@ -102,6 +102,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/rpc/model.cpp \
     src/net/acceptor.cpp \
     src/net/connector.cpp \
+    src/net/connector_socks.cpp \
     src/net/deadline.cpp \
     src/net/hosts.cpp \
     src/net/proxy.cpp \
@@ -231,6 +232,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/rpc/types.cpp \
     test/net/acceptor.cpp \
     test/net/connector.cpp \
+    test/net/connector_socks.cpp \
     test/net/deadline.cpp \
     test/net/hosts.cpp \
     test/net/proxy.cpp \
@@ -460,6 +462,7 @@ include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/acceptor.hpp \
     include/bitcoin/network/net/connector.hpp \
+    include/bitcoin/network/net/connector_socks.hpp \
     include/bitcoin/network/net/deadline.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \

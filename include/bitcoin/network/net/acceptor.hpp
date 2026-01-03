@@ -78,7 +78,11 @@ public:
     virtual void accept(socket_handler&& handler) NOEXCEPT;
 
 protected:
+    /// Start listening on the endpoint.
     virtual code start(const asio::endpoint& point) NOEXCEPT;
+
+    /// Running in the strand.
+    bool stranded() const NOEXCEPT;
 
     // These are thread safe.
     const size_t maximum_;
