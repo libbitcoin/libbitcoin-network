@@ -96,7 +96,6 @@ enum error_t : uint8_t
     address_in_use,
     resolve_failed,
     connect_failed,
-    authentication_failed,
 
     // heading read failures
     invalid_heading,
@@ -126,6 +125,22 @@ enum error_t : uint8_t
     subscriber_exists,
     subscriber_stopped,
     desubscribed,
+
+    // socks5
+    socks_method,
+    socks_username,
+    socks_password,
+    socks_server_name,
+    socks_authentication,
+    socks_disallowed,
+    socks_net_unreachable,
+    socks_host_unreachable,
+    socks_connection_refused,
+    socks_connection_expired,
+    socks_unsupported_command,
+    socks_unsupported_address,
+    socks_response_invalid,
+    socks_failure,
 
     ////// http 4xx client error
     bad_request,

@@ -69,7 +69,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { address_in_use, "address already in use" },
     { resolve_failed, "resolving hostname failed" },
     { connect_failed, "unable to reach remote host" },
-    { authentication_failed, "unable to authenticate" },
 
     // heading read failures
     { invalid_heading, "invalid message heading" },
@@ -99,6 +98,22 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { subscriber_exists, "subscriber exists" },
     { subscriber_stopped, "subscriber stopped" },
     { desubscribed, "subscriber desubscribed" },
+
+    // socks5
+    { socks_method, "socks method not supported" },
+    { socks_username, "socks username too long" },
+    { socks_password, "socks password too long" },
+    { socks_server_name, "socks server name too long" },
+    { socks_authentication, "socks authentication failed" },
+    { socks_disallowed, "socks connection disallowed" },
+    { socks_net_unreachable, "socks network unreachable" },
+    { socks_host_unreachable, "socks host unreachable" },
+    { socks_connection_refused, "socks connection refused" },
+    { socks_connection_expired, "socks connection expired" },
+    { socks_unsupported_command, "socks unsupported command" },
+    { socks_unsupported_address, "socks unsupported address" },
+    { socks_response_invalid, "socks response invalid" },
+    { socks_failure, "socks failure" },
 
     ////// http 4xx client error
     { bad_request, "bad request" },
