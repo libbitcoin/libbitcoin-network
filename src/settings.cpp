@@ -41,7 +41,7 @@ bool settings::socks5::proxied() const NOEXCEPT
     return is_nonzero(socks.port());
 }
 
-bool settings::socks5::secured() const NOEXCEPT
+bool settings::socks5::authenticated() const NOEXCEPT
 {
     return !(username.empty() && password.empty());
 }

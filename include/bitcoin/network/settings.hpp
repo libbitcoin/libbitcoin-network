@@ -57,7 +57,7 @@ struct BCT_API settings
         virtual bool proxied() const NOEXCEPT;
 
         /// False if both username and password are empty.
-        virtual bool secured() const NOEXCEPT;
+        virtual bool authenticated() const NOEXCEPT;
     };
 
     struct tcp_server
