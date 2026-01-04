@@ -52,10 +52,11 @@ public:
         const settings::socks5& socks) NOEXCEPT;
 
 protected:
-    void start(const std::string& hostname, uint16_t port,
-        const config::address& host, socket_handler&& handler) NOEXCEPT override;
+    static code socks_response(uint8_t value) NOEXCEPT;
 
     /// Connector overrides.
+    void start(const std::string& hostname, uint16_t port,
+        const config::address& host, socket_handler&& handler) NOEXCEPT override;
     void handle_connect(const code& ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT override;
 

@@ -82,6 +82,23 @@ enum socks : uint8_t
     address_ipv6 = 0x04
 };
 
+// static
+code connector_socks::socks_response(uint8_t value) NOEXCEPT
+{
+    switch (value)
+    {
+        case socks::success: return error::success;
+        case socks::disallowed: return error::socks_disallowed;
+        case socks::net_unreachable: return error::socks_net_unreachable;
+        case socks::host_unreachable: return error::socks_host_unreachable;
+        case socks::connection_refused: return error::socks_connection_refused;
+        case socks::connection_expired: return error::socks_connection_expired;
+        case socks::unsupported_command: return error::socks_unsupported_command;
+        case socks::unsupported_address: return error::socks_unsupported_address;
+        default:
+        case socks::failure: return error::socks_failure;
+    };
+}
 connector_socks::connector_socks(const logger& log, asio::strand& strand,
     asio::io_context& service, const steady_clock::duration& timeout,
     size_t maximum_request, std::atomic_bool& suspended,
@@ -174,7 +191,7 @@ void connector_socks::handle_socks_greeting_write(const code& ec, size_t size,
 
     if (size != sizeof(*greeting))
     {
-        do_socks_finish(error::connect_failed, finish, socket);
+        do_socks_finish(error::operation_failed, finish, socket);
         return;
     }
 
@@ -207,10 +224,11 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
         response->at(0) != socks::version ||
         response->at(1) != method_)
     {
-        do_socks_finish(error::connect_failed, finish, socket);
+        do_socks_finish(error::socks_method, finish, socket);
         return;
     }
 
+    // Bypass authentication.
     if (method_ == socks::method_clear)
     {
         do_socks_connect_write(finish, socket);
@@ -218,14 +236,22 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
     }
 
     const auto& username = socks5_.username;
-    const auto& password = socks5_.password;
     const auto username_length = username.size();
+
+    // Socks5 limits valid username length to one byte.
+    if (limit<uint8_t>(username_length))
+    {
+        do_socks_finish(error::socks_username, finish, socket);
+        return;
+    }
+
+    const auto& password = socks5_.password;
     const auto password_length = password.size();
 
-    // Socks5 limits valid username and password lengths to one byte.
-    if (limit<uint8_t>(username_length) || limit<uint8_t>(password_length))
+    // Socks5 limits valid  password length to one byte.
+    if (limit<uint8_t>(password_length))
     {
-        do_socks_finish(error::connect_failed, finish, socket);
+        do_socks_finish(error::socks_password, finish, socket);
         return;
     }
 
@@ -263,7 +289,7 @@ void connector_socks::handle_socks_authentication_write(const code& ec,
 
     if (size != authenticator->size())
     {
-        do_socks_finish(error::connect_failed, finish, socket);
+        do_socks_finish(error::operation_failed, finish, socket);
         return;
     }
 
@@ -296,7 +322,7 @@ void connector_socks::handle_socks_authentication_read(const code& ec,
         response->at(0) != socks::method_basic_version ||
         response->at(1) != socks::method_basic_success)
     {
-        do_socks_finish(error::authentication_failed, finish, socket);
+        do_socks_finish(error::socks_authentication, finish, socket);
         return;
     }
 
@@ -315,7 +341,7 @@ void connector_socks::do_socks_connect_write(const finish_ptr& finish,
     // Socks5 limits valid host lengths to one byte.
     if (limit<uint8_t>(host_length))
     {
-        do_socks_finish(error::connect_failed, finish, socket);
+        do_socks_finish(error::socks_server_name, finish, socket);
         return;
     }
 
@@ -355,7 +381,7 @@ void connector_socks::handle_socks_connect_write(const code& ec, size_t size,
 
     if (size != request->size())
     {
-        do_socks_finish(error::connect_failed, finish, socket);
+        do_socks_finish(error::operation_failed, finish, socket);
         return;
     }
 
@@ -386,10 +412,16 @@ void connector_socks::handle_socks_response_read(const code& ec, size_t size,
     // +----+-----+-------+------+
     if (size != sizeof(*response) ||
         response->at(0) != socks::version ||
-        response->at(1) != socks::success ||
         response->at(2) != socks::reserved)
     {
-        do_socks_finish(error::connect_failed, finish, socket);
+        do_socks_finish(error::socks_response_invalid, finish, socket);
+        return;
+    }
+
+    // Map response code to error code.
+    if (const auto code = socks_response(response->at(1)))
+    {
+        do_socks_finish(code, finish, socket);
         return;
     }
 
@@ -432,7 +464,8 @@ void connector_socks::handle_socks_response_read(const code& ec, size_t size,
         }
         default:
         {
-            do_socks_finish(error::operation_failed, finish, socket);
+            // There are no other types defined.
+            do_socks_finish(error::socks_response_invalid, finish, socket);
             return;
         }
     }
@@ -452,7 +485,7 @@ void connector_socks::handle_socks_length_read(const code& ec, size_t size,
 
     if (size != sizeof(*host_length))
     {
-        do_socks_finish(error::connect_failed, finish, socket);
+        do_socks_finish(error::socks_response_invalid, finish, socket);
         return;
     }
 
@@ -484,7 +517,7 @@ void connector_socks::handle_socks_address_read(const code& ec, size_t size,
     // +----------+----------+
     if (size != address->size())
     {
-        do_socks_finish(error::connect_failed, finish, socket);
+        do_socks_finish(error::socks_response_invalid, finish, socket);
         return;
     }
 
