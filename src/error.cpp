@@ -69,6 +69,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { address_in_use, "address already in use" },
     { resolve_failed, "resolving hostname failed" },
     { connect_failed, "unable to reach remote host" },
+    { authentication_failed, "unable to authenticate" },
 
     // heading read failures
     { invalid_heading, "invalid message heading" },

@@ -265,8 +265,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__oversubscribed__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "service oversubscribed");
 }
 
-// outgoing connection failures
-
 BOOST_AUTO_TEST_CASE(error_t__code__address_blocked__true_expected_message)
 {
     constexpr auto value = error::address_blocked;
@@ -275,6 +273,8 @@ BOOST_AUTO_TEST_CASE(error_t__code__address_blocked__true_expected_message)
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "address blocked by policy");
 }
+
+// outgoing connection failures
 
 BOOST_AUTO_TEST_CASE(error_t__code__address_in_use__true_expected_message)
 {
@@ -301,6 +301,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__connect_failed__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "unable to reach remote host");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__authentication_failed__true_expected_message)
+{
+    constexpr auto value = error::authentication_failed;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unable to authenticate");
 }
 
 // heading read failures

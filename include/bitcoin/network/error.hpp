@@ -96,6 +96,7 @@ enum error_t : uint8_t
     address_in_use,
     resolve_failed,
     connect_failed,
+    authentication_failed,
 
     // heading read failures
     invalid_heading,
