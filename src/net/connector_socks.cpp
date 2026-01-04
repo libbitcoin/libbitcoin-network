@@ -36,43 +36,12 @@ namespace network {
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 
 using namespace system;
 using namespace std::placeholders;
 
-connector_socks::connector_socks(const logger& log, asio::strand& strand,
-    asio::io_context& service, const steady_clock::duration& timeout,
-    size_t maximum_request, std::atomic_bool& suspended,
-    const settings::socks5& socks) NOEXCEPT
-  : connector(log, strand, service, timeout, maximum_request, suspended),
-    socks5_(socks), proxied_(socks.proxied()),
-    tracker<connector_socks>(log)
-{
-}
-
-// protected/override
-void connector_socks::start(const std::string& hostname, uint16_t port,
-    const config::address& host, socket_handler&& handler) NOEXCEPT
-{
-    // hostname and port are redundant with host.
-    // For proxy substitute for its connection and retain host for tunnel.
-    const auto& host_ = proxied_ ? socks5_.socks.host() : hostname;
-    const auto  port_ = proxied_ ? socks5_.socks.port() : port;
-    connector::start(host_, port_, host, std::move(handler));
-}
-
-// protected/override
-void connector_socks::handle_connect(const code& ec, const finish_ptr& finish,
-    const socket::ptr& socket) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    do_socks(ec, finish, socket);
-}
-
-// socks5 handshake (private)
-// ----------------------------------------------------------------------------
-// datatracker.ietf.org/doc/html/rfc1928
+constexpr auto port_size = sizeof(uint16_t);
+constexpr auto length_size = sizeof(uint8_t);
 
 enum socks : uint8_t
 {
@@ -96,7 +65,11 @@ enum socks : uint8_t
     method_none = 0xff,
     method_clear = 0x00,
     method_gssapi = 0x01,
-    method_password = 0x02,
+    method_basic = 0x02,
+
+    // method basic (subnegotiation)
+    method_basic_version = 0x01,
+    method_basic_success = 0x00,
 
     // command type
     command_connect = 0x01,
@@ -109,10 +82,57 @@ enum socks : uint8_t
     address_ipv6 = 0x04
 };
 
-constexpr auto port_size = sizeof(uint16_t);
+connector_socks::connector_socks(const logger& log, asio::strand& strand,
+    asio::io_context& service, const steady_clock::duration& timeout,
+    size_t maximum_request, std::atomic_bool& suspended,
+    const settings::socks5& socks) NOEXCEPT
+  : connector(log, strand, service, timeout, maximum_request, suspended),
+    socks5_(socks),
+    proxied_(socks.proxied()),
+    method_(socks.authenticated() ? socks::method_basic : socks::method_clear),
+    tracker<connector_socks>(log)
+{
+}
 
-void connector_socks::do_socks(const code& ec, const finish_ptr& finish,
+// protected/override
+void connector_socks::start(const std::string& hostname, uint16_t port,
+    const config::address& host, socket_handler&& handler) NOEXCEPT
+{
+    // Caller can avoid this condition by using connector when not proxied.
+    if (!proxied_)
+    {
+        connector::start(hostname, port, host, std::move(handler));
+        return;
+    }
+
+    // hostname and port are redundant with host.
+    connector::start(socks5_.socks.host(), socks5_.socks.port(), host,
+        std::move(handler));
+}
+
+// protected/override
+void connector_socks::handle_connect(const code& ec, const finish_ptr& finish,
     const socket::ptr& socket) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // Caller can avoid this condition by using connector when not proxied.
+    if (!proxied_)
+    {
+        connector::handle_connect(ec, finish, socket);
+        return;
+    }
+
+    do_socks_greeting_write(ec, finish, socket);
+}
+
+// socks5 handshake (private)
+// ----------------------------------------------------------------------------
+// datatracker.ietf.org/doc/html/rfc1928 (socks5)
+// datatracker.ietf.org/doc/html/rfc1929 (basic authentication)
+
+void connector_socks::do_socks_greeting_write(const code& ec,
+    const finish_ptr& finish, const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -129,9 +149,7 @@ void connector_socks::do_socks(const code& ec, const finish_ptr& finish,
     // +----+----------+----------+
     const auto greeting = to_shared<data_array<3>>(
     {
-        socks::version,
-        1_u8,
-        socks::method_clear
+        socks::version, 1_u8, method_
     });
 
     // Start of socket strand sequence.
@@ -188,7 +206,115 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
     // +----+--------+
     if (size != sizeof(*response) ||
         response->at(0) != socks::version ||
-        response->at(1) != socks::method_clear)
+        response->at(1) != method_)
+    {
+        do_socks_finish(error::connect_failed, finish, socket);
+        return;
+    }
+
+    if (method_ == socks::method_clear)
+    {
+        do_socks_connect_write(finish, socket);
+        return;
+    }
+
+    const auto& username = socks5_.username;
+    const auto& password = socks5_.password;
+    const auto username_length = username.size();
+    const auto password_length = password.size();
+
+    // Socks5 limits valid username and password lengths to one byte.
+    if (limit<uint8_t>(username_length) || limit<uint8_t>(password_length))
+    {
+        do_socks_finish(error::connect_failed, finish, socket);
+        return;
+    }
+
+    // +----+------+----------+------+----------+
+    // |VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+    // +----+------+----------+------+----------+
+    // | 1  |  1   | 1 to 255 |  1   | 1 to 255 |
+    // +----+------+----------+------+----------+
+    const auto length = 1u + 1u + username_length + 1u + password_length;
+    const auto authenticator = emplace_shared<data_chunk>(length);
+    auto it = authenticator->begin();
+    *it++ = socks::method_basic_version;
+    *it++ = narrow_cast<uint8_t>(username_length);
+    it = std::copy(username.begin(), username.end(), it);
+    *it++ = narrow_cast<uint8_t>(password_length);
+    it = std::copy(password.begin(), password.end(), it);
+
+    socket->write({ authenticator->data(), authenticator->size() },
+        std::bind(&connector_socks::handle_socks_authentication_write,
+            shared_from_base<connector_socks>(),
+                _1, _2, finish, socket, authenticator));
+}
+
+void connector_socks::handle_socks_authentication_write(const code& ec,
+    size_t size, const finish_ptr& finish, const socket::ptr& socket,
+    const chunk_ptr& authenticator) NOEXCEPT
+{
+    BC_ASSERT(socket->stranded());
+
+    if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
+    {
+        do_socks_finish(result, finish, socket);
+        return;
+    }
+
+    if (size != authenticator->size())
+    {
+        do_socks_finish(error::connect_failed, finish, socket);
+        return;
+    }
+
+    const auto auth_res = emplace_shared<data_array<2>>();
+
+    socket->read({ auth_res->data(), auth_res->size() },
+        std::bind(&connector_socks::handle_socks_authentication_read,
+            shared_from_base<connector_socks>(),
+                _1, _2, finish, socket, auth_res));
+}
+
+void connector_socks::handle_socks_authentication_read(const code& ec,
+    size_t size, const finish_ptr& finish, const socket::ptr& socket,
+    const data_ptr<2>& response) NOEXCEPT
+{
+    BC_ASSERT(socket->stranded());
+
+    if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
+    {
+        do_socks_finish(result, finish, socket);
+        return;
+    }
+
+    // +----+--------+
+    // |VER | STATUS |
+    // +----+--------+
+    // | 1  |   1    |
+    // +----+--------+
+    if (size != sizeof(*response) ||
+        response->at(0) != socks::method_basic_version ||
+        response->at(1) != socks::method_basic_success)
+    {
+        do_socks_finish(error::authentication_failed, finish, socket);
+        return;
+    }
+
+    do_socks_connect_write(finish, socket);
+}
+
+void connector_socks::do_socks_connect_write(const finish_ptr& finish,
+    const socket::ptr& socket) NOEXCEPT
+{
+    BC_ASSERT(socket->stranded());
+
+    const auto port = to_big_endian(socket->address().port());
+    const auto host = socket->address().to_host();
+    const auto host_length = host.length();
+
+    // Socks5 limits valid host lengths to one byte.
+    if (limit<uint8_t>(host_length))
     {
         do_socks_finish(error::connect_failed, finish, socket);
         return;
@@ -199,16 +325,14 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
     // +----+-----+-------+------+----------+----------+
     // | 1  |  1  | X'00' |  1   | Variable |    2     |
     // +----+-----+-------+------+----------+----------+
-    const auto host = socket->address().to_host();
-    const auto port = to_big_endian(socket->address().port());
-    const auto length = 5u + host.length() + port_size;
+    const auto length = 5u + host_length + port_size;
     const auto request = emplace_shared<data_chunk>(length);
-    request->at(0) = socks::version;
-    request->at(1) = socks::command_connect;
-    request->at(2) = socks::reserved;
-    request->at(3) = socks::address_fqdn;
-    request->at(4) = narrow_cast<uint8_t>(host.size());
-    auto it = std::next(request->begin(), 5u);
+    auto it = request->begin();
+    *it++ = socks::version;
+    *it++ = socks::command_connect;
+    *it++ = socks::reserved;
+    *it++ = socks::address_fqdn;
+    *it++ = narrow_cast<uint8_t>(host_length);
     it = std::copy(host.begin(), host.end(), it);
     it = std::copy(port.begin(), port.end(), it);
 
@@ -220,7 +344,7 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
 
 void connector_socks::handle_socks_connect_write(const code& ec, size_t size,
     const finish_ptr& finish, const socket::ptr& socket,
-    const system::chunk_ptr& request) NOEXCEPT
+    const chunk_ptr& request) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
@@ -388,7 +512,6 @@ void connector_socks::socks_finish(const code& ec, const finish_ptr& finish,
     connector::handle_connect(ec, finish, socket);
 }
 
-BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()

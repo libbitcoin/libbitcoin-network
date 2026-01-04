@@ -66,17 +66,28 @@ private:
     using data_cptr = std::shared_ptr<const system::data_array<Size>>;
 
     // socks5 handshake
-    void do_socks(const code& ec, const finish_ptr& finish,
+    void do_socks_greeting_write(const code& ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
     void handle_socks_greeting_write(const code& ec, size_t size,
         const finish_ptr& finish, const socket::ptr& socket,
         const data_cptr<3>& greeting) NOEXCEPT;
+
     void handle_socks_method_read(const code& ec, size_t size,
         const finish_ptr& finish, const socket::ptr& socket,
         const data_ptr<2>& response) NOEXCEPT;
+    void handle_socks_authentication_write(const code& ec,
+        size_t size, const finish_ptr& finish, const socket::ptr& socket,
+        const system::chunk_ptr& authenticator) NOEXCEPT;
+    void handle_socks_authentication_read(const code& ec,
+        size_t size, const finish_ptr& finish, const socket::ptr& socket,
+        const data_ptr<2>& response) NOEXCEPT;
+
+    void do_socks_connect_write(const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
     void handle_socks_connect_write(const code& ec, size_t size,
         const finish_ptr& finish, const socket::ptr& socket,
         const system::chunk_ptr& request) NOEXCEPT;
+
     void handle_socks_response_read(const code& ec, size_t size,
         const finish_ptr& finish, const socket::ptr& socket,
         const data_ptr<4>& response) NOEXCEPT;
@@ -86,6 +97,7 @@ private:
     void handle_socks_address_read(const code& ec, size_t size,
         const finish_ptr& finish, const socket::ptr& socket,
         const system::chunk_ptr& address) NOEXCEPT;
+
     void do_socks_finish(const code& ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
     void socks_finish(const code& ec, const finish_ptr& finish,
@@ -93,6 +105,7 @@ private:
 
     // These are thread safe.
     const settings::socks5& socks5_;
+    const uint8_t method_;
     const bool proxied_;
 };
 
