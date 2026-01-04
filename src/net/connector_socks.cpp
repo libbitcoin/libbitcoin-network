@@ -239,7 +239,7 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
     const auto username_length = username.size();
 
     // Socks5 limits valid username length to one byte.
-    if (limit<uint8_t>(username_length))
+    if (is_limited<uint8_t>(username_length))
     {
         do_socks_finish(error::socks_username, finish, socket);
         return;
@@ -249,7 +249,7 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
     const auto password_length = password.size();
 
     // Socks5 limits valid  password length to one byte.
-    if (limit<uint8_t>(password_length))
+    if (is_limited<uint8_t>(password_length))
     {
         do_socks_finish(error::socks_password, finish, socket);
         return;
@@ -339,7 +339,7 @@ void connector_socks::do_socks_connect_write(const finish_ptr& finish,
     const auto host_length = host.length();
 
     // Socks5 limits valid host lengths to one byte.
-    if (limit<uint8_t>(host_length))
+    if (is_limited<uint8_t>(host_length))
     {
         do_socks_finish(error::socks_server_name, finish, socket);
         return;
