@@ -228,11 +228,12 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() NOEXCEPT override
+    connector::ptr create_connector(const settings::socks5& ,
+        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
     {
+        // TODO: socks.
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings().connect_timeout(),
-            network_settings().outbound.maximum_request, suspended_)));
+            service(), timeout, maximum, suspended_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -321,11 +322,10 @@ public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
 
     mock_connector_stop_connect(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings,
-        mock_session_seed::ptr session) NOEXCEPT
-      : mock_connector_connect_success(log, strand, service,
-          settings.outbound.seeding_timeout(),
-          settings.outbound.maximum_request, suspended_),
+        asio::io_context& service, const steady_clock::duration& timeout,
+        uint32_t maximum, mock_session_seed::ptr session) NOEXCEPT
+      : mock_connector_connect_success(log, strand, service, timeout, maximum,
+          suspended_),
         session_(session)
     {
     }
@@ -366,13 +366,15 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() NOEXCEPT override
+    connector::ptr create_connector(const settings::socks5& ,
+        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
     {
         if (connector_)
             return connector_;
 
+        // TODO: socks.
         return ((connector_ = std::make_shared<mock_connector_stop_connect>(
-            log, strand(), service(), network_settings(), session_)));
+            log, strand(), service(), timeout, maximum, session_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override

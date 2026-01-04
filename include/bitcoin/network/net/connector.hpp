@@ -86,8 +86,8 @@ protected:
     virtual void start(const std::string& hostname, uint16_t port,
         const config::address& host, socket_handler&& handler) NOEXCEPT;
 
-    virtual void handle_connected(const code& ec, const finish_ptr& finish,
-        socket::ptr socket) NOEXCEPT;
+    virtual void handle_connect(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
     virtual void handle_timer(const code& ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
 
@@ -110,8 +110,6 @@ private:
         const asio::endpoints& range, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
     void do_handle_connect(const code& ec, const finish_ptr& finish,
-        const socket::ptr& socket) NOEXCEPT;
-    void handle_connect(code ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
 };
 

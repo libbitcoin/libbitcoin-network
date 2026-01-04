@@ -924,7 +924,7 @@ void socket::logx(const std::string& context,
     const boost_code& ec) const NOEXCEPT
 {
     LOGX("Socket " << context << " error (" << ec.value() << ") "
-        << ec.category().name() << ":" << ec.message());
+        << ec.category().name() << " : " << ec.message());
 }
 
 BC_POP_WARNING()

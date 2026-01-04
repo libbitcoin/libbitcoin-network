@@ -195,48 +195,48 @@ void connector::do_handle_connect(const code& ec, const finish_ptr& finish,
             shared_from_this(), ec, finish, socket));
 }
 
-// private
-void connector::handle_connect(code ec, const finish_ptr& finish,
+// protected/virtual
+void connector::handle_connect(const code& ec, const finish_ptr& finish,
     const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     // Timer stopped the socket, it wins (with timeout/failure).
     if (socket->stopped())
-        ec = error::operation_canceled;
-    else if (suspended_.load())
-        ec = error::service_suspended;
+    {
+        racer_.finish(error::operation_canceled, nullptr);
+        return;
+    }
 
-    handle_connected(ec, finish, socket);
-}
+    if (suspended_.load())
+    {
+        socket->stop();
+        timer_->stop();
+        racer_.finish(error::service_suspended, nullptr);
+        return;
+    }
 
-// protected/virtual
-void connector::handle_connected(const code& ec, const finish_ptr& finish,
-    socket::ptr socket) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
+    // Failure in connect, connector wins (with connect failure).
     if (ec)
     {
         socket->stop();
-        socket.reset();
-    }
-    else
-    {
-        *finish = true;
+        timer_->stop();
+        racer_.finish(ec, nullptr);
+        return;
     }
 
+    // Successful connect (error::success), inform and cancel timer.
+    *finish = true;
     timer_->stop();
-    racer_.finish(ec, socket);
+    racer_.finish(error::success, socket);
 }
 
-// private
+// protected/virtual
 void connector::handle_timer(const code& ec, const finish_ptr& finish,
     const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Successful connect, connector wins (error::success).
     if (*finish)
     {
         racer_.finish(error::operation_canceled, nullptr);
@@ -247,6 +247,7 @@ void connector::handle_timer(const code& ec, const finish_ptr& finish,
     // Stopped socket returned with failure code for option of host recovery.
     if (ec)
     {
+        // Socket stop is thread safe, dispatching to its own strand.
         socket->stop();
         resolver_.cancel();
         racer_.finish(ec, socket);

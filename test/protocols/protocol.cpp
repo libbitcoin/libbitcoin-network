@@ -113,10 +113,9 @@ class mock_connector
 {
 public:
     mock_connector(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings,
+        asio::io_context& service, const steady_clock::duration& timeout,
         size_t maximum) NOEXCEPT
-      : connector(log, strand, service, settings.connect_timeout(), maximum,
-          suspended_),
+      : connector(log, strand, service, timeout, maximum, suspended_),
         stopped_(false)
     {
     }
@@ -155,17 +154,19 @@ public:
     using net::net;
 
     // Create mock acceptor to inject mock channel.
-    acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT override
+    acceptor::ptr create_acceptor() NOEXCEPT override
     {
-        return std::make_shared<mock_acceptor>(log, strand(), service(),
-            maximum);
+        const auto maximum = network_settings().inbound.maximum_request;
+        return std::make_shared<mock_acceptor>(log, strand(), service(), maximum);
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(size_t maximum) NOEXCEPT override
+    connector::ptr create_connector(const settings::socks5& ,
+        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
     {
+        // TODO: socks.
         return std::make_shared<mock_connector>(log, strand(), service(),
-            network_settings(), maximum);
+            timeout, maximum);
     }
 };
 

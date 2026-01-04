@@ -230,11 +230,12 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(size_t maximum) NOEXCEPT override
+    connector::ptr create_connector(const settings::socks5& ,
+        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
     {
+        // TODO: socks.
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings().connect_timeout(), maximum,
-            suspended_)));
+            service(), timeout, maximum, suspended_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override

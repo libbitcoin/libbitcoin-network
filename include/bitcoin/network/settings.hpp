@@ -41,10 +41,10 @@ constexpr uint32_t maximum_request_default
 /// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
 {
-    struct socks5_client
+    struct socks5
     {
-        DEFAULT_COPY_MOVE_DESTRUCT(socks5_client);
-        socks5_client() NOEXCEPT;
+        DEFAULT_COPY_MOVE_DESTRUCT(socks5);
+        socks5() NOEXCEPT;
 
         /// Proxy credentials are stored and passed in cleartext.
         std::string username{};
@@ -111,11 +111,11 @@ struct BCT_API settings
     };
 
     struct peer_manual
-      : public tcp_server, public socks5_client
+      : public tcp_server, public socks5
     {
         // The friends field must be initialized after peers is set.
         peer_manual(system::chain::selection) NOEXCEPT
-          : tcp_server("manual"), socks5_client()
+          : tcp_server("manual"), socks5()
         {
         }
 
@@ -130,10 +130,10 @@ struct BCT_API settings
     };
 
     struct peer_outbound
-      : public tcp_server, public socks5_client
+      : public tcp_server, public socks5
     {
         peer_outbound(system::chain::selection context) NOEXCEPT
-          : tcp_server("outbound"), socks5_client()
+          : tcp_server("outbound"), socks5()
         {
             connections = 10;
 

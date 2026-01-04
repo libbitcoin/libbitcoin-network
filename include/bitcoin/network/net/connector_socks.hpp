@@ -27,6 +27,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/socket.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -46,18 +47,16 @@ public:
 
     /// Resolves socks5 endpoint and stores address as member for each connect.
     connector_socks(const logger& log, asio::strand& strand,
-        asio::io_context& service, const config::endpoint& socks5_proxy,
-        const steady_clock::duration& timeout, size_t maximum_request,
-        std::atomic_bool& suspended) NOEXCEPT;
+        asio::io_context& service, const steady_clock::duration& timeout,
+        size_t maximum_request, std::atomic_bool& suspended,
+        const settings::socks5& socks) NOEXCEPT;
 
 protected:
     void start(const std::string& hostname, uint16_t port,
         const config::address& host, socket_handler&& handler) NOEXCEPT override;
 
     /// Connector overrides.
-    void handle_connected(const code& ec, const finish_ptr& finish,
-        socket::ptr socket) NOEXCEPT override;
-    void handle_timer(const code& ec, const finish_ptr& finish,
+    void handle_connect(const code& ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT override;
 
 private:
@@ -67,24 +66,34 @@ private:
     using data_cptr = std::shared_ptr<const system::data_array<Size>>;
 
     // socks5 handshake
-    void do_socks(const code& ec, const socket::ptr& socket) NOEXCEPT;
+    void do_socks(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
     void handle_socks_greeting_write(const code& ec, size_t size,
-        const socket::ptr& socket, const data_cptr<3>& greeting) NOEXCEPT;
+        const finish_ptr& finish, const socket::ptr& socket,
+        const data_cptr<3>& greeting) NOEXCEPT;
     void handle_socks_method_read(const code& ec, size_t size,
-        const socket::ptr& socket, const data_ptr<2>& response) NOEXCEPT;
+        const finish_ptr& finish, const socket::ptr& socket,
+        const data_ptr<2>& response) NOEXCEPT;
     void handle_socks_connect_write(const code& ec, size_t size,
-        const socket::ptr& socket, const system::chunk_ptr& request) NOEXCEPT;
+        const finish_ptr& finish, const socket::ptr& socket,
+        const system::chunk_ptr& request) NOEXCEPT;
     void handle_socks_response_read(const code& ec, size_t size,
-        const socket::ptr& socket, const data_ptr<4>& response) NOEXCEPT;
+        const finish_ptr& finish, const socket::ptr& socket,
+        const data_ptr<4>& response) NOEXCEPT;
     void handle_socks_length_read(const code& ec, size_t size,
-        const socket::ptr& socket, const data_ptr<1>& host_length) NOEXCEPT;
+        const finish_ptr& finish, const socket::ptr& socket,
+        const data_ptr<1>& host_length) NOEXCEPT;
     void handle_socks_address_read(const code& ec, size_t size,
-        const socket::ptr& socket, const system::chunk_ptr& address) NOEXCEPT;
-    void do_socks_finish(const code& ec, const socket::ptr& socket) NOEXCEPT;
-    void socks_finish(const code& ec, const socket::ptr& socket) NOEXCEPT;
+        const finish_ptr& finish, const socket::ptr& socket,
+        const system::chunk_ptr& address) NOEXCEPT;
+    void do_socks_finish(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
+    void socks_finish(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
 
-    // This is protected by strand.
-    const config::endpoint socks5_;
+    // These are thread safe.
+    const settings::socks5& socks5_;
+    const bool proxied_;
 };
 
 typedef std_vector<connector_socks::ptr> socks_connectors;

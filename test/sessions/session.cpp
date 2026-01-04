@@ -117,24 +117,24 @@ public:
         return session_peer::stranded();
     }
 
-    acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT override
+    acceptor::ptr create_acceptor() NOEXCEPT override
     {
-        return session_peer::create_acceptor(maximum);
+        return session_peer::create_acceptor();
+    }
+
+    connector::ptr create_seed_connector() NOEXCEPT override
+    {
+        return session_peer::create_seed_connector();
+    }
+
+    connector::ptr create_manual_connector() NOEXCEPT override
+    {
+        return session_peer::create_manual_connector();
     }
 
     connectors_ptr create_connectors(size_t count) NOEXCEPT override
     {
         return session_peer::create_connectors(count);
-    }
-
-    connector::ptr create_connector(size_t maximum) NOEXCEPT override
-    {
-        return session_peer::create_connector(maximum);
-    }
-
-    connector::ptr create_connector() NOEXCEPT override
-    {
-        return session_peer::create_connector();
     }
 
     ////size_t address_count() const NOEXCEPT override
@@ -206,27 +206,22 @@ class mock_net
 public:
     using net::net;
 
-    acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT override
+    acceptor::ptr create_acceptor() NOEXCEPT override
     {
         ++acceptors_;
-        return net::create_acceptor(maximum);
+        return net::create_acceptor();
+    }
+
+    connector::ptr create_connector(const settings::socks5& socks,
+        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
+    {
+        ++connectors_;
+        return net::create_connector(socks, timeout, maximum);
     }
 
     size_t acceptors() const NOEXCEPT
     {
         return acceptors_;
-    }
-
-    connector::ptr create_connector() NOEXCEPT override
-    {
-        ++connectors_;
-        return net::create_connector();
-    }
-
-    connector::ptr create_connector(size_t maximum) NOEXCEPT override
-    {
-        ++connectors_;
-        return net::create_connector(maximum);
     }
 
     size_t connectors() const NOEXCEPT
@@ -395,8 +390,28 @@ BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
     settings set(selection::mainnet);
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_acceptor(42));
+    BOOST_REQUIRE(session.create_acceptor());
     BOOST_REQUIRE_EQUAL(net.acceptors(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(session__create_manual_connector__always__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    mock_net net(set, log);
+    mock_session session(net, 1);
+    BOOST_REQUIRE(session.create_manual_connector());
+    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(session__create_seed_connector__always__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    mock_net net(set, log);
+    mock_session session(net, 1);
+    BOOST_REQUIRE(session.create_seed_connector());
+    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
 }
 
 BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
@@ -410,26 +425,6 @@ BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
     BOOST_REQUIRE(connectors);
     BOOST_REQUIRE_EQUAL(connectors->size(), expected);
     BOOST_REQUIRE_EQUAL(net.connectors(), expected);
-}
-
-BOOST_AUTO_TEST_CASE(session__create_connector__always__expected)
-{
-    const logger log{};
-    settings set(selection::mainnet);
-    mock_net net(set, log);
-    mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_connector(42u));
-    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
-}
-
-BOOST_AUTO_TEST_CASE(session__create_connector_seed__always__expected)
-{
-    const logger log{};
-    settings set(selection::mainnet);
-    mock_net net(set, log);
-    mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_connector());
-    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
 }
 
 // utilities

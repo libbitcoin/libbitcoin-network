@@ -122,7 +122,7 @@ void session_seed::handle_started(const code& ec,
 
     for (const auto& seed: network_settings().outbound.seeds)
     {
-        const auto connector = create_connector();
+        const auto connector = create_seed_connector();
         subscribe_stop([=](const code&) NOEXCEPT
         {
             connector->stop();
