@@ -132,7 +132,6 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
 
     if (ec == error::service_suspended)
     {
-        ////LOGS("Suspended manual channel start [" << peer << "].");
         defer(BIND(start_connect, _1, peer, connector, handler));
         return;
     }

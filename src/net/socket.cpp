@@ -623,6 +623,7 @@ void socket::handle_connect(const boost_code& ec,
 {
     BC_ASSERT(stranded());
 
+    // For socks proxy this will be the local binding.
     authority_ = peer;
 
     // Outgoing connection requires address_ for .inbound() resolution.
