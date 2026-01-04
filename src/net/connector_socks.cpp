@@ -95,35 +95,34 @@ connector_socks::connector_socks(const logger& log, asio::strand& strand,
 }
 
 // protected/override
+// Caller can avoid proxied_ condition by using connector when not proxied.
 void connector_socks::start(const std::string& hostname, uint16_t port,
     const config::address& host, socket_handler&& handler) NOEXCEPT
 {
-    // Caller can avoid this condition by using connector when not proxied.
-    if (!proxied_)
+    if (proxied_)
     {
-        connector::start(hostname, port, host, std::move(handler));
+        const auto& sox = socks5_.socks;
+        connector::start(sox.host(), sox.port(), host, std::move(handler));
         return;
     }
 
-    // hostname and port are redundant with host.
-    connector::start(socks5_.socks.host(), socks5_.socks.port(), host,
-        std::move(handler));
+    connector::start(hostname, port, host, std::move(handler));
 }
 
 // protected/override
+// Caller can avoid proxied_ condition by using connector when not proxied.
 void connector_socks::handle_connect(const code& ec, const finish_ptr& finish,
     const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Caller can avoid this condition by using connector when not proxied.
-    if (!proxied_)
+    if (proxied_)
     {
-        connector::handle_connect(ec, finish, socket);
+        do_socks_greeting_write(ec, finish, socket);
         return;
     }
 
-    do_socks_greeting_write(ec, finish, socket);
+    connector::handle_connect(ec, finish, socket);
 }
 
 // socks5 handshake (private)
