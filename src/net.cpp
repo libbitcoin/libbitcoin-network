@@ -82,8 +82,13 @@ acceptor::ptr net::create_acceptor() NOEXCEPT
 connector::ptr net::create_connector(const settings::socks5& socks,
     const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT
 {
-    return emplace_shared<connector_socks>(log, strand(), service(),
-        timeout, maximum, connect_suspended_, socks);
+    if (socks.proxied())
+        return emplace_shared<connector_socks>(log, strand(), service(),
+            timeout, maximum, connect_suspended_, socks);
+
+    // Above can handle both proxy and non-proxy, but this is more efficient.
+    return emplace_shared<connector>(log, strand(), service(),
+        timeout, maximum, connect_suspended_);
 }
 
 // outbound (seed)
