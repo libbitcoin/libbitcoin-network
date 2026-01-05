@@ -105,6 +105,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { socks_password, "socks password too long" },
     { socks_server_name, "socks server name too long" },
     { socks_authentication, "socks authentication failed" },
+    { socks_failure, "socks failure" },
     { socks_disallowed, "socks connection disallowed" },
     { socks_net_unreachable, "socks network unreachable" },
     { socks_host_unreachable, "socks host unreachable" },
@@ -112,8 +113,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { socks_connection_expired, "socks connection expired" },
     { socks_unsupported_command, "socks unsupported command" },
     { socks_unsupported_address, "socks unsupported address" },
+    { socks_unassigned_failure, "socks unassigned failure" },
     { socks_response_invalid, "socks response invalid" },
-    { socks_failure, "socks failure" },
 
     ////// http 4xx client error
     { bad_request, "bad request" },

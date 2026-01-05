@@ -547,6 +547,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__socks_authentication__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "socks authentication failed");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__socks_failure__true_expected_message)
+{
+    constexpr auto value = error::socks_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks failure");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__socks_disallowed__true_expected_message)
 {
     constexpr auto value = error::socks_disallowed;
@@ -610,6 +619,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__socks_unsupported_address__true_expected_mes
     BOOST_REQUIRE_EQUAL(ec.message(), "socks unsupported address");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__socks_unassigned_failure__true_expected_message)
+{
+    constexpr auto value = error::socks_unassigned_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks unassigned failure");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__socks_response_invalid__true_expected_message)
 {
     constexpr auto value = error::socks_response_invalid;
@@ -617,15 +635,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__socks_response_invalid__true_expected_messag
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "socks response invalid");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__socks_failure__true_expected_message)
-{
-    constexpr auto value = error::socks_failure;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "socks failure");
 }
 
 // http 4xx client error
