@@ -216,20 +216,15 @@ void session_outbound::handle_connect(const code& ec,
     }
 
     // There was an error connecting a channel, so try again after delay.
-
-    if (ec != error::connect_failed &&
-        ec != error::operation_timeout &&
-        ec != error::service_suspended)
-    {
-        LOGS("Failed to connect outbound address: " << ec.message());
-
-        // Avoid tight loop with delay timer.
-        defer(BIND(start_connect, _1));
-        return;
-    }
-
     if (ec)
     {
+        if (ec != error::connect_failed &&
+            ec != error::operation_timeout &&
+            ec != error::service_suspended)
+        {
+            LOGS("Failed to connect outbound address: " << ec.message());
+        }
+
         // Avoid tight loop with delay timer.
         defer(BIND(start_connect, _1));
         return;
