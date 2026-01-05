@@ -336,6 +336,16 @@ void connector_socks::handle_socks_authentication_read(const code& ec,
     do_socks_connect_write(finish, socket);
 }
 
+// A DNS name (e.g. manual endpont) works when not proxied, as the name is
+// passed through resolution below. However when the connection is proxied,
+// the proxy name goes through resolution, but the host name does not. As a
+// result proxied manual connections are currently limited to numeric IP
+// addresses (authorities), despite being parsed as names (endpoints). BUT,
+// this is easily resolvable by allowing the proxy to perform the secondary
+// name resolution (preferred anyway). That would work here, except that host
+// is presently passed via socket->address(), which results in a default
+// address (due to failed lexical conversion from name to address in socket).
+// This also prevents seeds from resolving via a proxy.
 void connector_socks::do_socks_connect_write(const finish_ptr& finish,
     const socket::ptr& socket) NOEXCEPT
 {

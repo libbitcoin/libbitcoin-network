@@ -106,10 +106,6 @@ void connector::connect(const authority& host,
         std::move(handler));
 }
 
-// TODO: this is getting a zero port for seeds (and maybe manual).
-// TODO: that results in the connection being interpreted as inbound.
-// TODO: this results from the use of a DNS name, which does not convert to an
-// TODO: address when host is passed to start().
 // This used by seed, manual, and socks5 (endpoint from config).
 void connector::connect(const endpoint& host,
     socket_handler&& handler) NOEXCEPT

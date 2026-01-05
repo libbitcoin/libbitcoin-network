@@ -633,7 +633,9 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
     BC_ASSERT(stranded());
 
     // For socks proxy, peer will be the server's local binding. In this case
-    // authority_ is set to address_ as passed on start() (trusting the proxy).
+    // authority_ is set to address_ as passed on start(). When this is a fqdn
+    // it fails lexical parse and results in a default address (see also:
+    // do_socks_connect_write).
     authority_ = proxied_ ? config::authority{ address_ } :
         config::authority{ peer };
 
