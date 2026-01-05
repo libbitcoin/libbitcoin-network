@@ -55,6 +55,7 @@ protected:
     static code socks_response(uint8_t value) NOEXCEPT;
 
     /// Connector overrides.
+    bool proxied() const NOEXCEPT override;
     void start(const std::string& hostname, uint16_t port,
         const config::address& host, socket_handler&& handler) NOEXCEPT override;
     void handle_connect(const code& ec, const finish_ptr& finish,

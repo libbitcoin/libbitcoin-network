@@ -99,6 +99,8 @@ code connector_socks::socks_response(uint8_t value) NOEXCEPT
         case socks::failure: return error::socks_failure;
     };
 }
+
+// Caller can avoid proxied_ condition by using connector when not proxied.
 connector_socks::connector_socks(const logger& log, asio::strand& strand,
     asio::io_context& service, const steady_clock::duration& timeout,
     size_t maximum_request, std::atomic_bool& suspended,
@@ -112,11 +114,16 @@ connector_socks::connector_socks(const logger& log, asio::strand& strand,
 }
 
 // protected/override
-// Caller can avoid proxied_ condition by using connector when not proxied.
+bool connector_socks::proxied() const NOEXCEPT
+{
+    return proxied_;
+}
+
+// protected/override
 void connector_socks::start(const std::string& hostname, uint16_t port,
     const config::address& host, socket_handler&& handler) NOEXCEPT
 {
-    if (proxied_)
+    if (proxied())
     {
         const auto& sox = socks5_.socks;
         connector::start(sox.host(), sox.port(), host, std::move(handler));
@@ -127,13 +134,12 @@ void connector_socks::start(const std::string& hostname, uint16_t port,
 }
 
 // protected/override
-// Caller can avoid proxied_ condition by using connector when not proxied.
 void connector_socks::handle_connect(const code& ec, const finish_ptr& finish,
     const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (proxied_)
+    if (proxied())
     {
         do_socks_greeting_write(ec, finish, socket);
         return;
