@@ -39,6 +39,10 @@ public:
 
     using system::config::endpoint::endpoint;
 
+    /// Properties.
+    /// -----------------------------------------------------------------------
+    bool is_address() const NOEXCEPT;
+
     /// Operators.
     /// -----------------------------------------------------------------------
 
