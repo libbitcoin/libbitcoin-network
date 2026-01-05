@@ -56,8 +56,10 @@ socket::socket(const logger& log, asio::io_context& service,
 
 // authority_.port() nonzero implies outbound connection.
 socket::socket(const logger& log, asio::io_context& service,
-    size_t maximum_request, const config::address& address) NOEXCEPT
-  : maximum_(maximum_request),
+    size_t maximum_request, const config::address& address,
+    bool proxied) NOEXCEPT
+  : proxied_(proxied),
+    maximum_(maximum_request),
     strand_(service.get_executor()),
     service_(service),
     socket_(strand_),
@@ -618,17 +620,22 @@ void socket::handle_accept(boost_code ec,
     handler(code);
 }
 
-void socket::handle_connect(const boost_code& ec,
-    const asio::endpoint& peer, const result_handler& handler) NOEXCEPT
+// The peer is what the socket connected to. For socks proxy this will be the
+// proxy server's address:port. address_ is the value set at construct, and for
+// outbound this is the intended peer. For inbound this is defaulted (and then
+// set to socket_.remote_endpoint in handle_accept). For outbound this is the
+// host value of type config::address passed to connector::start. The inbound()
+// method depends upon this being defaulted (not set) for incoming connections
+// and set for outgoing.
+void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // For socks proxy this will be the local binding.
-    authority_ = peer;
-
-    // Outgoing connection requires address_ for .inbound() resolution.
-    if (is_zero(address_.port()))
-        address_ = { peer };
+    // For socks proxy, peer will be the server's local binding. In this case
+    // authority_ is set to address_ as passed on start() (trusting the proxy).
+    authority_ = proxied_ ? config::authority{ address_ } :
+        config::authority{ peer };
 
     if (error::asio_is_canceled(ec))
     {

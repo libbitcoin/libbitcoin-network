@@ -49,7 +49,8 @@ public:
 
     /// Use only for outgoing connections (retains outgoing address).
     socket(const logger& log, asio::io_context& service,
-        size_t maximum_request, const config::address& address) NOEXCEPT;
+        size_t maximum_request, const config::address& address,
+        bool proxied=false) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~socket() NOEXCEPT;
@@ -86,6 +87,7 @@ public:
         result_handler&& handler) NOEXCEPT;
 
     /// Create an outbound connection, handler posted to socket strand.
+    /// Authority will be set to the connected endpoint unless proxied is set.
     virtual void connect(const asio::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
@@ -140,9 +142,10 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    /// Get the authority (incoming) of the remote endpoint.
+    /// Get the authority (outgoing/incoming) of the remote endpoint.
     virtual const config::authority& authority() const NOEXCEPT;
 
+    /// TODO: this can be set to the binding for incoming sockets.
     /// Get the address (outgoing) of the remote endpoint.
     virtual const config::address& address() const NOEXCEPT;
 
@@ -285,6 +288,7 @@ private:
 
 protected:
     // These are thread safe.
+    const bool proxied_;
     const size_t maximum_;
     asio::strand strand_;
     asio::io_context& service_;
