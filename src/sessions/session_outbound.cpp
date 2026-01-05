@@ -218,9 +218,14 @@ void session_outbound::handle_connect(const code& ec,
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
-        if (ec != error::connect_failed &&
-            ec != error::operation_timeout &&
-            ec != error::service_suspended)
+        if (ec == error::connect_failed ||
+            ec == error::operation_timeout ||
+            ec == error::service_suspended ||
+            ec == error::socks_failure)
+        {
+            LOGV("Failed to connect outbound address: " << ec.message());
+        }
+        else
         {
             LOGS("Failed to connect outbound address: " << ec.message());
         }
