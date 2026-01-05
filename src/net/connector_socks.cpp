@@ -60,6 +60,7 @@ enum socks : uint8_t
     connection_expired = 0x06,
     unsupported_command = 0x07,
     unsupported_address = 0x08,
+    unassigned = 0xff,
 
     // method (authentication) type
     method_none = 0xff,
@@ -88,6 +89,7 @@ code connector_socks::socks_response(uint8_t value) NOEXCEPT
     switch (value)
     {
         case socks::success: return error::success;
+        case socks::failure: return error::socks_failure;
         case socks::disallowed: return error::socks_disallowed;
         case socks::net_unreachable: return error::socks_net_unreachable;
         case socks::host_unreachable: return error::socks_host_unreachable;
@@ -95,8 +97,7 @@ code connector_socks::socks_response(uint8_t value) NOEXCEPT
         case socks::connection_expired: return error::socks_connection_expired;
         case socks::unsupported_command: return error::socks_unsupported_command;
         case socks::unsupported_address: return error::socks_unsupported_address;
-        default:
-        case socks::failure: return error::socks_failure;
+        default: return error::socks_unassigned_failure;
     };
 }
 
