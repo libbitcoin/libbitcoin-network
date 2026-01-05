@@ -41,7 +41,6 @@ using namespace system;
 using namespace std::placeholders;
 
 constexpr auto port_size = sizeof(uint16_t);
-constexpr auto length_size = sizeof(uint8_t);
 
 enum socks : uint8_t
 {
