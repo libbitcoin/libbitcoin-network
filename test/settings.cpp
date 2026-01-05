@@ -307,11 +307,11 @@ BOOST_AUTO_TEST_CASE(settings__excluded__default__true)
 // ----------------------------------------------------------------------------
 constexpr auto maximum_request = system::chain::max_block_weight;
 
-BOOST_AUTO_TEST_CASE(settings__socks5_client__defaults__expected)
+BOOST_AUTO_TEST_CASE(settings__socks5__defaults__expected)
 {
-    const settings::socks5_client instance{};
+    const settings::socks5 instance{};
 
-    BOOST_REQUIRE(!instance.secured());
+    BOOST_REQUIRE(!instance.authenticated());
     BOOST_REQUIRE(instance.username.empty());
     BOOST_REQUIRE(instance.password.empty());
     BOOST_REQUIRE(!instance.proxied());
@@ -394,8 +394,8 @@ BOOST_AUTO_TEST_CASE(settings__peer_outbound__mainnet__expected)
 {
     const settings::peer_outbound instance{ system::chain::selection::mainnet };
 
-    // socks5_client
-    BOOST_REQUIRE(!instance.secured());
+    // socks5
+    BOOST_REQUIRE(!instance.authenticated());
     BOOST_REQUIRE(instance.username.empty());
     BOOST_REQUIRE(instance.password.empty());
     BOOST_REQUIRE(!instance.proxied());
@@ -669,8 +669,8 @@ BOOST_AUTO_TEST_CASE(settings__peer_manual__mainnet__expected)
 {
     const settings::peer_manual instance{ system::chain::selection::mainnet };
 
-    // socks5_client
-    BOOST_REQUIRE(!instance.secured());
+    // socks5
+    BOOST_REQUIRE(!instance.authenticated());
     BOOST_REQUIRE(instance.username.empty());
     BOOST_REQUIRE(instance.password.empty());
     BOOST_REQUIRE(!instance.proxied());

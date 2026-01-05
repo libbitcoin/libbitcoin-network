@@ -186,16 +186,16 @@ protected:
     /// Factories.
     /// -----------------------------------------------------------------------
 
-    /// Call to create channel acceptor.
-    virtual acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT;
+    /// Create a channel acceptor (inbound).
+    virtual acceptor::ptr create_acceptor() NOEXCEPT;
 
-    /// Call to create channel connector for seed connections.
-    virtual connector::ptr create_connector() NOEXCEPT;
+    /// Create a seed channel connector.
+    virtual connector::ptr create_seed_connector() NOEXCEPT;
 
-    /// Call to create channel connector for manual/outbound connections.
-    virtual connector::ptr create_connector(size_t maximum) NOEXCEPT;
+    /// Create a manual channel connector.
+    virtual connector::ptr create_manual_connector() NOEXCEPT;
 
-    /// Call to create a set of channel connectors.
+    /// Create a batch of outbound channel connectors.
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     /// Create a channel from the started socket.

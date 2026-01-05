@@ -27,6 +27,12 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
+bool endpoint::is_address() const NOEXCEPT
+{
+    // Serialize to address, cast to bool, true if not default (address).
+    return to_address();
+}
+
 // protected
 address endpoint::to_address() const NOEXCEPT
 {

@@ -29,19 +29,19 @@ namespace network {
 using namespace system;
 using namespace messages::peer;
 
-// socks5_client
+// socks5
 // ----------------------------------------------------------------------------
 
-settings::socks5_client::socks5_client() NOEXCEPT
+settings::socks5::socks5() NOEXCEPT
 {
 }
 
-bool settings::socks5_client::proxied() const NOEXCEPT
+bool settings::socks5::proxied() const NOEXCEPT
 {
     return is_nonzero(socks.port());
 }
 
-bool settings::socks5_client::secured() const NOEXCEPT
+bool settings::socks5::authenticated() const NOEXCEPT
 {
     return !(username.empty() && password.empty());
 }

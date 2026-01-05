@@ -321,8 +321,9 @@ public:
     }
 
     // Create mock acceptor to inject mock channel.
-    acceptor::ptr create_acceptor(size_t maximum) NOEXCEPT override
+    acceptor::ptr create_acceptor() NOEXCEPT override
     {
+        const auto maximum = network_settings().inbound.maximum_request;
         return ((acceptor_ = std::make_shared<Acceptor>(log, strand(),
             service(), maximum, suspended_)));
     }

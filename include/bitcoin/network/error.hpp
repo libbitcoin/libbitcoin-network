@@ -126,6 +126,23 @@ enum error_t : uint8_t
     subscriber_stopped,
     desubscribed,
 
+    // socks5
+    socks_method,
+    socks_username,
+    socks_password,
+    socks_server_name,
+    socks_authentication,
+    socks_failure,
+    socks_disallowed,
+    socks_net_unreachable,
+    socks_host_unreachable,
+    socks_connection_refused,
+    socks_connection_expired,
+    socks_unsupported_command,
+    socks_unsupported_address,
+    socks_unassigned_failure,
+    socks_response_invalid,
+
     ////// http 4xx client error
     bad_request,
     ////unauthorized,

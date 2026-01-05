@@ -343,27 +343,27 @@ void session::unsubscribe_close() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // inbound/server
-acceptor::ptr session::create_acceptor(size_t maximum) NOEXCEPT
+acceptor::ptr session::create_acceptor() NOEXCEPT
 {
-    return network_.create_acceptor(maximum);
+    return network_.create_acceptor();
+}
+
+// outbound (seed)
+connector::ptr session::create_seed_connector() NOEXCEPT
+{
+    return network_.create_seed_connector();
+}
+
+// outbound (manual)
+connector::ptr session::create_manual_connector() NOEXCEPT
+{
+    return network_.create_manual_connector();
 }
 
 // outbound (batch)
 connectors_ptr session::create_connectors(size_t count) NOEXCEPT
 {
     return network_.create_connectors(count);
-}
-
-// manual/outbound
-connector::ptr session::create_connector(size_t maximum) NOEXCEPT
-{
-    return network_.create_connector(maximum);
-}
-
-// seed
-connector::ptr session::create_connector() NOEXCEPT
-{
-    return network_.create_connector();
 }
 
 // Properties.

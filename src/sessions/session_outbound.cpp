@@ -98,7 +98,7 @@ void session_outbound::handle_started(const code& ec,
     LOGN("Create " << peers << " connections " << batch << " at a time.");
 
     // There is currently no way to vary the number of connections at runtime.
-    for (size_t peer = 0; peer < peers; ++peer)
+    for (size_t peer{}; peer < peers; ++peer)
         start_connect(error::success);
 
     // This is the end of the start sequence (actually at connector->connect).
@@ -215,16 +215,21 @@ void session_outbound::handle_connect(const code& ec,
         return;
     }
 
-    if (ec == error::service_suspended)
-    {
-        ////LOGS("Suspended outbound channel start.");
-        defer(BIND(start_connect, _1));
-        return;
-    }
-
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
+        if (ec == error::connect_failed ||
+            ec == error::operation_timeout ||
+            ec == error::service_suspended ||
+            ec == error::socks_failure)
+        {
+            LOGV("Failed to connect outbound address: " << ec.message());
+        }
+        else
+        {
+            LOGS("Failed to connect outbound address: " << ec.message());
+        }
+
         // Avoid tight loop with delay timer.
         defer(BIND(start_connect, _1));
         return;
@@ -250,7 +255,7 @@ void session_outbound::handle_channel_start(const code&,
     BC_ASSERT(stranded());
 
     ////LOGS("Outbound channel start [" << channel->authority() << "] "
-    ////    "(" << key << ") " << ec.message());
+    ////    << ec.message());
 }
 
 void session_outbound::attach_protocols(
@@ -265,7 +270,7 @@ void session_outbound::handle_channel_stop(const code& ec,
     BC_ASSERT(stranded());
 
     ////LOGS("Outbound channel stop [" << channel->authority() << "] "
-    ////    "(" << key << ") " << ec.message());
+    ////    << ec.message());
 
     reclaim(ec, channel);
 

@@ -265,8 +265,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__oversubscribed__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "service oversubscribed");
 }
 
-// outgoing connection failures
-
 BOOST_AUTO_TEST_CASE(error_t__code__address_blocked__true_expected_message)
 {
     constexpr auto value = error::address_blocked;
@@ -275,6 +273,8 @@ BOOST_AUTO_TEST_CASE(error_t__code__address_blocked__true_expected_message)
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "address blocked by policy");
 }
+
+// outgoing connection failures
 
 BOOST_AUTO_TEST_CASE(error_t__code__address_in_use__true_expected_message)
 {
@@ -498,6 +498,143 @@ BOOST_AUTO_TEST_CASE(error_t__code__desubscribed__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "subscriber desubscribed");
+}
+
+// socks5
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_method__true_expected_message)
+{
+    constexpr auto value = error::socks_method;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks method not supported");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_username__true_expected_message)
+{
+    constexpr auto value = error::socks_username;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks username too long");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_password__true_expected_message)
+{
+    constexpr auto value = error::socks_password;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks password too long");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_server_name__true_expected_message)
+{
+    constexpr auto value = error::socks_server_name;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks server name too long");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_authentication__true_expected_message)
+{
+    constexpr auto value = error::socks_authentication;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks authentication failed");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_failure__true_expected_message)
+{
+    constexpr auto value = error::socks_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_disallowed__true_expected_message)
+{
+    constexpr auto value = error::socks_disallowed;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks connection disallowed");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_net_unreachable__true_expected_message)
+{
+    constexpr auto value = error::socks_net_unreachable;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks network unreachable");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_host_unreachable__true_expected_message)
+{
+    constexpr auto value = error::socks_host_unreachable;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks host unreachable");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_connection_refused__true_expected_message)
+{
+    constexpr auto value = error::socks_connection_refused;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks connection refused");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_connection_expired__true_expected_message)
+{
+    constexpr auto value = error::socks_connection_expired;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks connection expired");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_unsupported_command__true_expected_message)
+{
+    constexpr auto value = error::socks_unsupported_command;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks unsupported command");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_unsupported_address__true_expected_message)
+{
+    constexpr auto value = error::socks_unsupported_address;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks unsupported address");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_unassigned_failure__true_expected_message)
+{
+    constexpr auto value = error::socks_unassigned_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks unassigned failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__socks_response_invalid__true_expected_message)
+{
+    constexpr auto value = error::socks_response_invalid;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks response invalid");
 }
 
 // http 4xx client error

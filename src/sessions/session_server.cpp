@@ -81,10 +81,9 @@ void session_server::handle_started(const code& ec,
     LOGN("Accepting " << options_.connections << " " << name_
         << " connections on " << options_.binds.size() << " bindings.");
 
-    const auto maximum = options_.maximum_request;
     for (const auto& bind: options_.binds)
     {
-        const auto acceptor = create_acceptor(maximum);
+        const auto acceptor = create_acceptor();
 
         // Require that all acceptors at least start.
         if (const auto error_code = acceptor->start(bind))
