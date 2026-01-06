@@ -355,7 +355,7 @@ void connector_socks::do_socks_connect_write(
     // Socks5 limits valid host lengths to one byte.
     if (is_limited<uint8_t>(host_length))
     {
-        do_socks_finish(error::socks_server_name, socket);
+        do_socks_finish(error::socks_host_name, socket);
         return;
     }
 

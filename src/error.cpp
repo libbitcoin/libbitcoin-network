@@ -103,7 +103,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { socks_method, "socks method not supported" },
     { socks_username, "socks username too long" },
     { socks_password, "socks password too long" },
-    { socks_server_name, "socks server name too long" },
+    { socks_host_name, "socks host name too long" },
     { socks_authentication, "socks authentication failed" },
     { socks_failure, "socks failure" },
     { socks_disallowed, "socks connection disallowed" },

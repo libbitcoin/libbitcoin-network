@@ -529,13 +529,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__socks_password__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "socks password too long");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__socks_server_name__true_expected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__socks_host_name__true_expected_message)
 {
-    constexpr auto value = error::socks_server_name;
+    constexpr auto value = error::socks_host_name;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "socks server name too long");
+    BOOST_REQUIRE_EQUAL(ec.message(), "socks host name too long");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__socks_authentication__true_expected_message)

@@ -130,7 +130,7 @@ enum error_t : uint8_t
     socks_method,
     socks_username,
     socks_password,
-    socks_server_name,
+    socks_host_name,
     socks_authentication,
     socks_failure,
     socks_disallowed,
