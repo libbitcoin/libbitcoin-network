@@ -108,7 +108,6 @@ private:
     // These are thread safe.
     const settings::socks5& socks5_;
     const uint8_t method_;
-    const bool proxied_;
 };
 
 typedef std_vector<connector_socks::ptr> socks_connectors;

@@ -100,14 +100,13 @@ code connector_socks::socks_response(uint8_t value) NOEXCEPT
     };
 }
 
-// Caller can avoid proxied_ condition by using connector when not proxied.
+// Caller can avoid proxied() condition by using connector when not proxied.
 connector_socks::connector_socks(const logger& log, asio::strand& strand,
     asio::io_context& service, const steady_clock::duration& timeout,
     size_t maximum_request, std::atomic_bool& suspended,
     const settings::socks5& socks) NOEXCEPT
   : connector(log, strand, service, timeout, maximum_request, suspended),
     socks5_(socks),
-    proxied_(socks.proxied()),
     method_(socks.authenticated() ? socks::method_basic : socks::method_clear),
     tracker<connector_socks>(log)
 {
@@ -116,7 +115,7 @@ connector_socks::connector_socks(const logger& log, asio::strand& strand,
 // protected/override
 bool connector_socks::proxied() const NOEXCEPT
 {
-    return proxied_;
+    return socks5_.proxied();
 }
 
 // protected/override
