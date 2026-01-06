@@ -140,7 +140,8 @@ void connector_socks::handle_connect(const code& ec, const finish_ptr& finish,
 
     if (proxied())
     {
-        do_socks_greeting_write(ec, finish, socket);
+        finish_ = finish;
+        do_socks_greeting_write(ec, socket);
         return;
     }
 
@@ -153,13 +154,13 @@ void connector_socks::handle_connect(const code& ec, const finish_ptr& finish,
 // datatracker.ietf.org/doc/html/rfc1929 (basic authentication)
 
 void connector_socks::do_socks_greeting_write(const code& ec,
-    const finish_ptr& finish, const socket::ptr& socket) NOEXCEPT
+    const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
     {
-        socks_finish(result, finish, socket);
+        socks_finish(result, socket);
         return;
     }
 
@@ -179,24 +180,23 @@ void connector_socks::do_socks_greeting_write(const code& ec,
     socket->write({ greeting->data(), greeting->size() },
         std::bind(&connector_socks::handle_socks_greeting_write,
             shared_from_base<connector_socks>(),
-                _1, _2, finish, socket, greeting));
+                _1, _2, socket, greeting));
 }
 
 void connector_socks::handle_socks_greeting_write(const code& ec, size_t size,
-    const finish_ptr& finish, const socket::ptr& socket,
-    const data_cptr<3>& greeting) NOEXCEPT
+    const socket::ptr& socket, const data_cptr<3>& greeting) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
     if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
     {
-        do_socks_finish(result, finish, socket);
+        do_socks_finish(result, socket);
         return;
     }
 
     if (size != sizeof(*greeting))
     {
-        do_socks_finish(error::operation_failed, finish, socket);
+        do_socks_finish(error::operation_failed, socket);
         return;
     }
 
@@ -205,18 +205,17 @@ void connector_socks::handle_socks_greeting_write(const code& ec, size_t size,
     socket->read({ response->data(), response->size() },
         std::bind(&connector_socks::handle_socks_method_read,
             shared_from_base<connector_socks>(),
-                _1, _2, finish, socket, response));
+                _1, _2, socket, response));
 }
 
 void connector_socks::handle_socks_method_read(const code& ec, size_t size,
-    const finish_ptr& finish, const socket::ptr& socket,
-    const data_ptr<2>& response) NOEXCEPT
+    const socket::ptr& socket, const data_ptr<2>& response) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
     if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
     {
-        do_socks_finish(result, finish, socket);
+        do_socks_finish(result, socket);
         return;
     }
 
@@ -229,14 +228,14 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
         response->at(0) != socks::version ||
         response->at(1) != method_)
     {
-        do_socks_finish(error::socks_method, finish, socket);
+        do_socks_finish(error::socks_method, socket);
         return;
     }
 
     // Bypass authentication.
     if (method_ == socks::method_clear)
     {
-        do_socks_connect_write(finish, socket);
+        do_socks_connect_write(socket);
         return;
     }
 
@@ -246,7 +245,7 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
     // Socks5 limits valid username length to one byte.
     if (is_limited<uint8_t>(username_length))
     {
-        do_socks_finish(error::socks_username, finish, socket);
+        do_socks_finish(error::socks_username, socket);
         return;
     }
 
@@ -256,7 +255,7 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
     // Socks5 limits valid  password length to one byte.
     if (is_limited<uint8_t>(password_length))
     {
-        do_socks_finish(error::socks_password, finish, socket);
+        do_socks_finish(error::socks_password, socket);
         return;
     }
 
@@ -277,24 +276,24 @@ void connector_socks::handle_socks_method_read(const code& ec, size_t size,
     socket->write({ authenticator->data(), authenticator->size() },
         std::bind(&connector_socks::handle_socks_authentication_write,
             shared_from_base<connector_socks>(),
-                _1, _2, finish, socket, authenticator));
+                _1, _2, socket, authenticator));
 }
 
 void connector_socks::handle_socks_authentication_write(const code& ec,
-    size_t size, const finish_ptr& finish, const socket::ptr& socket,
+    size_t size, const socket::ptr& socket,
     const chunk_ptr& authenticator) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
     if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
     {
-        do_socks_finish(result, finish, socket);
+        do_socks_finish(result, socket);
         return;
     }
 
     if (size != authenticator->size())
     {
-        do_socks_finish(error::operation_failed, finish, socket);
+        do_socks_finish(error::operation_failed, socket);
         return;
     }
 
@@ -303,18 +302,18 @@ void connector_socks::handle_socks_authentication_write(const code& ec,
     socket->read({ auth_res->data(), auth_res->size() },
         std::bind(&connector_socks::handle_socks_authentication_read,
             shared_from_base<connector_socks>(),
-                _1, _2, finish, socket, auth_res));
+                _1, _2, socket, auth_res));
 }
 
 void connector_socks::handle_socks_authentication_read(const code& ec,
-    size_t size, const finish_ptr& finish, const socket::ptr& socket,
+    size_t size, const socket::ptr& socket,
     const data_ptr<2>& response) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
     if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
     {
-        do_socks_finish(result, finish, socket);
+        do_socks_finish(result, socket);
         return;
     }
 
@@ -327,11 +326,11 @@ void connector_socks::handle_socks_authentication_read(const code& ec,
         response->at(0) != socks::method_basic_version ||
         response->at(1) != socks::method_basic_success)
     {
-        do_socks_finish(error::socks_authentication, finish, socket);
+        do_socks_finish(error::socks_authentication, socket);
         return;
     }
 
-    do_socks_connect_write(finish, socket);
+    do_socks_connect_write(socket);
 }
 
 // A DNS name (e.g. manual endpont) works when not proxied, as the name is
@@ -344,7 +343,7 @@ void connector_socks::handle_socks_authentication_read(const code& ec,
 // is presently passed via socket->address(), which results in a default
 // address (due to failed lexical conversion from name to address in socket).
 // This also prevents seeds from resolving via a proxy.
-void connector_socks::do_socks_connect_write(const finish_ptr& finish,
+void connector_socks::do_socks_connect_write(
     const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
@@ -356,7 +355,7 @@ void connector_socks::do_socks_connect_write(const finish_ptr& finish,
     // Socks5 limits valid host lengths to one byte.
     if (is_limited<uint8_t>(host_length))
     {
-        do_socks_finish(error::socks_server_name, finish, socket);
+        do_socks_finish(error::socks_server_name, socket);
         return;
     }
 
@@ -379,24 +378,23 @@ void connector_socks::do_socks_connect_write(const finish_ptr& finish,
     socket->write({ request->data(), request->size() },
         std::bind(&connector_socks::handle_socks_connect_write,
             shared_from_base<connector_socks>(),
-                _1, _2, finish, socket, request));
+                _1, _2, socket, request));
 }
 
 void connector_socks::handle_socks_connect_write(const code& ec, size_t size,
-    const finish_ptr& finish, const socket::ptr& socket,
-    const chunk_ptr& request) NOEXCEPT
+    const socket::ptr& socket, const chunk_ptr& request) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
     if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
     {
-        do_socks_finish(result, finish, socket);
+        do_socks_finish(result, socket);
         return;
     }
 
     if (size != request->size())
     {
-        do_socks_finish(error::operation_failed, finish, socket);
+        do_socks_finish(error::operation_failed, socket);
         return;
     }
 
@@ -405,18 +403,17 @@ void connector_socks::handle_socks_connect_write(const code& ec, size_t size,
     socket->read({ response->data(), response->size() },
         std::bind(&connector_socks::handle_socks_response_read,
             shared_from_base<connector_socks>(),
-                _1, _2, finish, socket, response));
+                _1, _2, socket, response));
 }
 
 void connector_socks::handle_socks_response_read(const code& ec, size_t size,
-    const finish_ptr& finish, const socket::ptr& socket,
-    const data_ptr<4>& response) NOEXCEPT
+    const socket::ptr& socket, const data_ptr<4>& response) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
     if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
     {
-        do_socks_finish(result, finish, socket);
+        do_socks_finish(result, socket);
         return;
     }
 
@@ -429,14 +426,14 @@ void connector_socks::handle_socks_response_read(const code& ec, size_t size,
         response->at(0) != socks::version ||
         response->at(2) != socks::reserved)
     {
-        do_socks_finish(error::socks_response_invalid, finish, socket);
+        do_socks_finish(error::socks_response_invalid, socket);
         return;
     }
 
     // Map response code to error code.
     if (const auto code = socks_response(response->at(1)))
     {
-        do_socks_finish(code, finish, socket);
+        do_socks_finish(code, socket);
         return;
     }
 
@@ -450,7 +447,7 @@ void connector_socks::handle_socks_response_read(const code& ec, size_t size,
             socket->read({ address->data(), address->size() },
                 std::bind(&connector_socks::handle_socks_address_read,
                     shared_from_base<connector_socks>(),
-                        _1, _2, finish, socket, address));
+                        _1, _2, socket, address));
             return;
         }
         case socks::address_ipv6:
@@ -461,7 +458,7 @@ void connector_socks::handle_socks_response_read(const code& ec, size_t size,
             socket->read({ address->data(), address->size() },
                 std::bind(&connector_socks::handle_socks_address_read,
                     shared_from_base<connector_socks>(),
-                        _1, _2, finish, socket, address));
+                        _1, _2, socket, address));
             return;
         }
         case socks::address_fqdn:
@@ -474,33 +471,32 @@ void connector_socks::handle_socks_response_read(const code& ec, size_t size,
             socket->read({ length->data(), sizeof(uint8_t) },
                 std::bind(&connector_socks::handle_socks_length_read,
                     shared_from_base<connector_socks>(),
-                        _1, _2, finish, socket, length));
+                        _1, _2, socket, length));
             return;
         }
         default:
         {
             // There are no other types defined.
-            do_socks_finish(error::socks_response_invalid, finish, socket);
+            do_socks_finish(error::socks_response_invalid, socket);
             return;
         }
     }
 }
 
 void connector_socks::handle_socks_length_read(const code& ec, size_t size,
-    const finish_ptr& finish, const socket::ptr& socket,
-    const data_ptr<1>& host_length) NOEXCEPT
+    const socket::ptr& socket, const data_ptr<1>& host_length) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
     if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
     {
-        do_socks_finish(result, finish, socket);
+        do_socks_finish(result, socket);
         return;
     }
 
     if (size != sizeof(*host_length))
     {
-        do_socks_finish(error::socks_response_invalid, finish, socket);
+        do_socks_finish(error::socks_response_invalid, socket);
         return;
     }
 
@@ -510,18 +506,17 @@ void connector_socks::handle_socks_length_read(const code& ec, size_t size,
     socket->read({ address->data(), address->size() },
         std::bind(&connector_socks::handle_socks_address_read,
             shared_from_base<connector_socks>(),
-                _1, _2, finish, socket, address));
+                _1, _2, socket, address));
 }
 
 void connector_socks::handle_socks_address_read(const code& ec, size_t size,
-    const finish_ptr& finish, const socket::ptr& socket,
-    const chunk_ptr& address) NOEXCEPT
+    const socket::ptr& socket, const chunk_ptr& address) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
     if (const auto result = (socket->stopped() ? error::channel_stopped : ec))
     {
-        do_socks_finish(result, finish, socket);
+        do_socks_finish(result, socket);
         return;
     }
 
@@ -532,16 +527,16 @@ void connector_socks::handle_socks_address_read(const code& ec, size_t size,
     // +----------+----------+
     if (size != address->size())
     {
-        do_socks_finish(error::socks_response_invalid, finish, socket);
+        do_socks_finish(error::socks_response_invalid, socket);
         return;
     }
 
     // The address:port is the local binding by the socks5 server (unused).
     // The outbound address_/authority_ members are set by connect().
-    do_socks_finish(error::success, finish, socket);
+    do_socks_finish(error::success, socket);
 }
 
-void connector_socks::do_socks_finish(const code& ec, const finish_ptr& finish,
+void connector_socks::do_socks_finish(const code& ec,
     const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
@@ -549,14 +544,14 @@ void connector_socks::do_socks_finish(const code& ec, const finish_ptr& finish,
     // End of socket strand sequence.
     boost::asio::post(strand_,
         std::bind(&connector_socks::socks_finish,
-            shared_from_base<connector_socks>(), ec, finish, socket));
+            shared_from_base<connector_socks>(), ec, socket));
 }
 
-void connector_socks::socks_finish(const code& ec, const finish_ptr& finish,
+void connector_socks::socks_finish(const code& ec,
     const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    connector::handle_connect(ec, finish, socket);
+    connector::handle_connect(ec, finish_, socket);
 }
 
 BC_POP_WARNING()
