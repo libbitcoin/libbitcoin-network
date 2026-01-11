@@ -107,7 +107,7 @@ void body::reader::finish(boost_code& ec) NOEXCEPT
     
 void body::writer::init(boost_code& ec) NOEXCEPT
 {
-    return std::visit(overload
+    std::visit(overload
     {
         [&] (std::monostate&) NOEXCEPT
         {
