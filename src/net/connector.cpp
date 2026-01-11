@@ -93,29 +93,26 @@ bool connector::stranded() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // This used by outbound (address from pool).
-void connector::connect(const address& host,
+void connector::connect(const address& address,
     socket_handler&& handler) NOEXCEPT
 {
-    start(host.to_host(), host.port(), host, std::move(handler));
-}
-
-void connector::connect(const authority& host,
-    socket_handler&& handler) NOEXCEPT
-{
-    start(host.to_host(), host.port(), host.to_address_item(),
+    // Address is fully set (with metadata), endpoint is numeric.
+    start(address.to_host(), address.port(), address, address,
         std::move(handler));
 }
 
 // This used by seed, manual, and socks5 (endpoint from config).
-void connector::connect(const endpoint& host,
+void connector::connect(const endpoint& endpoint,
     socket_handler&& handler) NOEXCEPT
 {
-    start(host.host(), host.port(), host, std::move(handler));
+    // Address is not set (defaulted), endpoint is numeric or qualified name.
+    start(endpoint.host(), endpoint.port(), {}, endpoint, std::move(handler));
 }
 
 // protected
 void connector::start(const std::string& hostname, uint16_t port,
-    const config::address& host, socket_handler&& handler) NOEXCEPT
+    const config::address& address, const config::endpoint& endpoint,
+    socket_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -137,7 +134,7 @@ void connector::start(const std::string& hostname, uint16_t port,
     // Create a socket and shared finish context.
     const auto finish = std::make_shared<bool>(false);
     const auto socket = std::make_shared<network::socket>(log, service_,
-        maximum_, host, proxied());
+        maximum_, address, endpoint, proxied());
 
     // Posts handle_timer to strand.
     timer_->start(

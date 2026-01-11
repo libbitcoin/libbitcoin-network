@@ -133,7 +133,7 @@ size_t hosts::count() const NOEXCEPT
 
 size_t hosts::reserved() const NOEXCEPT
 {
-    return authorities_count_.load();
+    return endpoints_count_.load();
 }
 
 // Usage.
@@ -152,7 +152,7 @@ void hosts::take(address_item_handler&& handler) NOEXCEPT
     while (!buffer_.empty())
     {
         const auto host = pop();
-        if (!is_reserved(*host))
+        if (!is_reserved({ *host }))
         {
             hosts_count_.store(buffer_.size());
             handler(error::success, host);
@@ -251,7 +251,7 @@ void hosts::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
     for (const auto& host: message->addresses)
     {
         // O(N) <= could be resolved with O(1) search.
-        if (!is_reserved(host) && !is_pooled(host))
+        if (!is_reserved({ host }) && !is_pooled(host))
         {
             // O(1).
             buffer_.push_back(host);
@@ -329,26 +329,26 @@ inline void hosts::push(const std::string& line) NOEXCEPT
 
 // O(1).
 // private
-inline bool hosts::is_reserved(const config::authority& host) const NOEXCEPT
+inline bool hosts::is_reserved(const config::endpoint& host) const NOEXCEPT
 {
-    return authorities_.contains(host);
+    return endpoints_.contains(host);
 }
 
 // O(1).
 // Channel is connected (infrequent).
-bool hosts::reserve(const config::authority& host) NOEXCEPT
+bool hosts::reserve(const config::endpoint& host) NOEXCEPT
 {
-    const auto result = authorities_.insert(host).second;
-    if (result) ++authorities_count_;
+    const auto result = endpoints_.insert(host).second;
+    if (result) ++endpoints_count_;
     return result;
 }
 
 // O(1).
 // Channel is unconnected (infrequent).
-bool hosts::unreserve(const config::authority& host) NOEXCEPT
+bool hosts::unreserve(const config::endpoint& host) NOEXCEPT
 {
-    const auto result = to_bool(authorities_.erase(host));
-    if (result) --authorities_count_;
+    const auto result = to_bool(endpoints_.erase(host));
+    if (result) --endpoints_count_;
     return result;
 }
 

@@ -77,7 +77,8 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void start(const std::string& hostname, uint16_t port,
-        const config::address&, socket_handler&& handler) NOEXCEPT override
+        const config::address&, const config::endpoint&,
+        socket_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
         {
@@ -111,8 +112,8 @@ public:
 
     using connector::connector;
 
-    void start(const std::string&, uint16_t,
-        const config::address&, socket_handler&& handler) NOEXCEPT override
+    void start(const std::string&, uint16_t, const config::address&,
+        const config::endpoint&, socket_handler&& handler) NOEXCEPT override
     {
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
@@ -316,15 +317,16 @@ public:
     }
 
     void start(const std::string& hostname, uint16_t port,
-        const config::address& host, socket_handler&& handler) NOEXCEPT override
+        const config::address& address, const config::endpoint& endpoint,
+        socket_handler&& handler) NOEXCEPT override
     {
         BC_ASSERT_MSG(session_, "call set_session");
 
         // This connector.start_connect is invoked from network stranded method.
         session_->stop();
 
-        mock_connector_connect_success::start(hostname, port, host,
-            std::move(handler));
+        mock_connector_connect_success::start(hostname, port, address,
+            endpoint, std::move(handler));
     }
 
 private:

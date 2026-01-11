@@ -254,7 +254,7 @@ void session_outbound::handle_channel_start(const code&,
 {
     BC_ASSERT(stranded());
 
-    ////LOGS("Outbound channel start [" << channel->authority() << "] "
+    ////LOGS("Outbound channel start [" << channel->endpoint() << "] "
     ////    << ec.message());
 }
 
@@ -269,7 +269,7 @@ void session_outbound::handle_channel_stop(const code& ec,
 {
     BC_ASSERT(stranded());
 
-    ////LOGS("Outbound channel stop [" << channel->authority() << "] "
+    ////LOGS("Outbound channel stop [" << channel->endpoint() << "] "
     ////    << ec.message());
 
     reclaim(ec, channel);

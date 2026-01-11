@@ -79,7 +79,7 @@ bool protocol_address_out_209::handle_receive_get_address(const code& ec,
     // Limit get_address requests to one per session.
     if (sent_)
     {
-        LOGP("Ignoring duplicate address request from [" << authority() << "]");
+        LOGP("Ignoring duplicate address request from [" << opposite() << "]");
         ////stop(error::protocol_violation);
         return true;
     }
@@ -87,7 +87,7 @@ bool protocol_address_out_209::handle_receive_get_address(const code& ec,
     fetch(BIND(handle_fetch_address, _1, _2));
     sent_ = true;
 
-    LOGP("Address relay start [" << authority() << "].");
+    LOGP("Address relay start [" << opposite() << "].");
     SUBSCRIBE_BROADCAST(address, handle_broadcast_address, _1, _2, _3);
     return true;
 }
@@ -105,7 +105,7 @@ void protocol_address_out_209::handle_fetch_address(const code& ec,
         return;
 
     LOGP("Sending (" << message->addresses.size() << ") addresses to "
-        "[" << authority() << "]");
+        "[" << opposite() << "]");
 
     SEND(*message, handle_send, _1);
 }
@@ -119,18 +119,18 @@ bool protocol_address_out_209::handle_broadcast_address(const code& ec,
 
     if (stopped(ec))
     {
-        LOGP("Relay stop [" << authority() << "].");
+        LOGP("Relay stop [" << opposite() << "].");
         return false;
     }
 
     if (sender == identifier())
     {
-        LOGP("Relay self [" << authority() << "].");
+        LOGP("Relay self [" << opposite() << "].");
         return true;
     }
 
     LOGP("Relay (" << message->addresses.size() << ") addresses to ["
-        << authority() << "].");
+        << opposite() << "].");
 
     SEND(*message, handle_send, _1);
     return true;

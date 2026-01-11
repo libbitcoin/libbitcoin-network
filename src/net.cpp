@@ -609,7 +609,7 @@ bool net::store_nonce(const channel_peer& channel) NOEXCEPT
 
     if (!nonces_.insert(channel.nonce()).second)
     {
-        LOGF("Failed to store nonce for [" << channel.authority() << "].");
+        LOGF("Failed to store nonce for [" << channel.endpoint() << "].");
         return false;
     }
 
@@ -625,7 +625,7 @@ bool net::unstore_nonce(const channel_peer& channel) NOEXCEPT
 
     if (!to_bool(nonces_.erase(channel.nonce())))
     {
-        LOGF("Failed to unstore nonce for [" << channel.authority() << "].");
+        LOGF("Failed to unstore nonce for [" << channel.endpoint() << "].");
         return false;
     }
 
@@ -654,7 +654,7 @@ code net::count_channel(const channel_peer& channel) NOEXCEPT
 
     if (is_loopback(channel))
     {
-        LOGS("Loopback detected from [" << channel.authority() << "].");
+        LOGS("Loopback detected from [" << channel.endpoint() << "].");
         return error::accept_failed;
     }
 
@@ -670,9 +670,9 @@ code net::count_channel(const channel_peer& channel) NOEXCEPT
         return error::channel_overflow;
     }
 
-    if (!hosts_.reserve(channel.authority()))
+    if (!hosts_.reserve(channel.endpoint()))
     {
-        LOGS("Duplicate connection to [" << channel.authority() << "].");
+        LOGS("Duplicate connection to [" << channel.endpoint() << "].");
         return error::address_in_use;
     }
 
@@ -689,7 +689,7 @@ void net::uncount_channel(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    hosts_.unreserve(channel.authority());
+    hosts_.unreserve(channel.endpoint());
 
     if (channel.inbound() && is_zero(inbound_channel_count_.load()))
     {

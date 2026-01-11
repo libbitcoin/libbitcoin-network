@@ -102,7 +102,7 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
     // Both nonce incorrect and already received are protocol violations.
     if (message->nonce != nonce_)
     {
-        LOGR("Incorrect pong nonce from [" << authority() << "]");
+        LOGR("Incorrect pong nonce from [" << opposite() << "]");
         stop(error::protocol_violation);
         return false;
     }

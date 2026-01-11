@@ -57,7 +57,8 @@ protected:
     /// Connector overrides.
     bool proxied() const NOEXCEPT override;
     void start(const std::string& hostname, uint16_t port,
-        const config::address& host, socket_handler&& handler) NOEXCEPT override;
+        const config::address& address, const config::endpoint& endpoint,
+        socket_handler&& handler) NOEXCEPT override;
     void handle_connect(const code& ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT override;
 
@@ -66,6 +67,8 @@ private:
     using data_ptr = std::shared_ptr<system::data_array<Size>>;
     template <size_t Size>
     using data_cptr = std::shared_ptr<const system::data_array<Size>>;
+
+    // utility
 
     // socks5 handshake
     void do_socks_greeting_write(const code& ec,

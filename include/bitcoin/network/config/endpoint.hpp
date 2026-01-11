@@ -38,6 +38,7 @@ public:
     DEFAULT_COPY_MOVE_DESTRUCT(endpoint);
 
     using system::config::endpoint::endpoint;
+    endpoint(const address& address) NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------

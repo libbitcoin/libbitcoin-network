@@ -67,11 +67,7 @@ public:
     /// The socket parameter is nullptr unless success is returned.
 
     /// Try to connect to the address, starts timer.
-    virtual void connect(const config::address& host,
-        socket_handler&& handler) NOEXCEPT;
-
-    /// Try to connect to the authority, starts timer.
-    virtual void connect(const config::authority& host,
+    virtual void connect(const config::address& address,
         socket_handler&& handler) NOEXCEPT;
 
     /// Try to connect to the endpoint, starts timer.
@@ -84,7 +80,8 @@ protected:
 
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,
-        const config::address& host, socket_handler&& handler) NOEXCEPT;
+        const config::address& address, const config::endpoint& endpoint,
+        socket_handler&& handler) NOEXCEPT;
 
     /// Handlers, overridable for proxied connector.
     virtual void handle_connect(const code& ec, const finish_ptr& finish,

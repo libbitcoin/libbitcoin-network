@@ -120,16 +120,18 @@ bool connector_socks::proxied() const NOEXCEPT
 
 // protected/override
 void connector_socks::start(const std::string& hostname, uint16_t port,
-    const config::address& host, socket_handler&& handler) NOEXCEPT
+    const config::address& address, const config::endpoint& endpoint,
+    socket_handler&& handler) NOEXCEPT
 {
     if (proxied())
     {
         const auto& sox = socks5_.socks;
-        connector::start(sox.host(), sox.port(), host, std::move(handler));
+        connector::start(sox.host(), sox.port(), address, endpoint,
+            std::move(handler));
         return;
     }
 
-    connector::start(hostname, port, host, std::move(handler));
+    connector::start(hostname, port, address, endpoint, std::move(handler));
 }
 
 // protected/override
@@ -333,24 +335,17 @@ void connector_socks::handle_socks_authentication_read(const code& ec,
     do_socks_connect_write(socket);
 }
 
-// A DNS name (e.g. manual endpont) works when not proxied, as the name is
-// passed through resolution below. However when the connection is proxied,
-// the proxy name goes through resolution, but the host name does not. As a
-// result proxied manual connections are currently limited to numeric IP
-// addresses (authorities), despite being parsed as names (endpoints). BUT,
-// this is easily resolvable by allowing the proxy to perform the secondary
-// name resolution (preferred anyway). That would work here, except that host
-// is presently passed via socket->address(), which results in a default
-// address (due to failed lexical conversion from name to address in socket).
-// This also prevents seeds from resolving via a proxy.
+// TODO: Replace socket.endpoint() with socket.endpoint() [enable below], as
+// TODO: socket.endpoint() is only used for logging. Retain socket.address().
 void connector_socks::do_socks_connect_write(
     const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(socket->stranded());
 
-    const auto port = to_big_endian(socket->address().port());
-    const auto host = socket->address().to_host();
-    const auto host_length = host.length();
+    const auto& endpoint = socket->endpoint();
+    const config::address address = endpoint;
+    const auto host_length = address ? (address.is_v4() ? 4u : 16u) :
+        add1(endpoint.host().length());
 
     // Socks5 limits valid host lengths to one byte.
     if (is_limited<uint8_t>(host_length))
@@ -364,16 +359,52 @@ void connector_socks::do_socks_connect_write(
     // +----+-----+-------+------+----------+----------+
     // | 1  |  1  | X'00' |  1   | Variable |    2     |
     // +----+-----+-------+------+----------+----------+
-    const auto length = 5u + host_length + port_size;
+    const auto length = 4u + host_length + port_size;
     const auto request = emplace_shared<data_chunk>(length);
     auto it = request->begin();
     *it++ = socks::version;
     *it++ = socks::command_connect;
     *it++ = socks::reserved;
-    *it++ = socks::address_fqdn;
-    *it++ = narrow_cast<uint8_t>(host_length);
-    it = std::copy(host.begin(), host.end(), it);
-    it = std::copy(port.begin(), port.end(), it);
+
+    // BUGBUG: this always sees v4 addresses as v6.
+    if (address)
+    {
+        ////const auto native = config::from_address(address.ip());
+        const auto port = to_big_endian(address.port());
+
+        if (address.is_v4())
+        {
+            ////const auto host = native.to_v4().to_bytes();
+            const config::authority authority{ address };
+            const auto host = authority.ip().to_v4().to_bytes();
+
+            *it++ = socks::address_ipv4;
+            it = std::copy(host.begin(), host.end(), it);
+            it = std::copy(port.begin(), port.end(), it);
+
+        }
+        else // v6
+        {
+            ////const auto host = native.to_v6().to_bytes();
+            const config::authority authority{ address };
+            const auto host = authority.ip().to_v6().to_bytes();
+
+            *it++ = socks::address_ipv6;
+            it = std::copy(host.begin(), host.end(), it);
+            it = std::copy(port.begin(), port.end(), it);
+        }
+    }
+    else
+    {
+        // An endpoint (fqdn) gets name resolution at the socks proxy.
+        const auto host = endpoint.host();
+        const auto port = to_big_endian(endpoint.port());
+
+        *it++ = socks::address_fqdn;
+        *it++ = narrow_cast<uint8_t>(host.length());
+        it = std::copy(host.begin(), host.end(), it);
+        it = std::copy(port.begin(), port.end(), it);
+    }
 
     socket->write({ request->data(), request->size() },
         std::bind(&connector_socks::handle_socks_connect_write,

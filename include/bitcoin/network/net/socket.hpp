@@ -43,14 +43,15 @@ public:
 
     DELETE_COPY_MOVE(socket);
 
-    /// Use only for incoming connections (defaults outgoing address).
+    /// Use only for incoming connections.
     socket(const logger& log, asio::io_context& service,
         size_t maximum_request) NOEXCEPT;
 
-    /// Use only for outgoing connections (retains outgoing address).
+    /// Use only for outgoing connections. Endpoint represents the peer or
+    /// client (non-proxy) that the connector attempted to reach.
     socket(const logger& log, asio::io_context& service,
         size_t maximum_request, const config::address& address,
-        bool proxied=false) NOEXCEPT;
+        const config::endpoint& endpoint, bool proxied=false) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~socket() NOEXCEPT;
@@ -142,12 +143,14 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    /// Get the authority (outgoing/incoming) of the remote endpoint.
-    virtual const config::authority& authority() const NOEXCEPT;
-
     /// TODO: this can be set to the binding for incoming sockets.
-    /// Get the address (outgoing) of the remote endpoint.
+    /// Get the address of the outgoing endpoint passed via construct.
     virtual const config::address& address() const NOEXCEPT;
+
+    /// Get the endpoint of the remote host. Established by connection
+    /// resolution for incoming and non-proxied outgoing. For a proxied
+    /// connection (outgoing only) this is the value passed via construct.
+    virtual const config::endpoint& endpoint() const NOEXCEPT;
 
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
@@ -287,7 +290,12 @@ private:
         const count_handler& handler) NOEXCEPT;
 
 protected:
+    socket(const logger& log, asio::io_context& service,
+        size_t maximum_request, const config::address& address,
+        const config::endpoint& endpoint, bool proxied, bool inbound) NOEXCEPT;
+
     // These are thread safe.
+    const bool inbound_;
     const bool proxied_;
     const size_t maximum_;
     asio::strand strand_;
@@ -297,7 +305,7 @@ protected:
     // These are protected by strand (see also handle_accept).
     asio::socket socket_;
     config::address address_;
-    config::authority authority_{};
+    config::endpoint endpoint_;
     std::optional<ws::websocket> websocket_{};
 };
 

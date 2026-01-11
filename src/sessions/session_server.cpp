@@ -166,25 +166,23 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     if (channel_count_ >= options_.connections)
     {
         LOGS("Dropping oversubscribed " << name_ << " connection ["
-            << socket->authority() << "].");
+            << socket->endpoint() << "].");
         socket->stop();
         defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
-    const auto address = socket->authority().to_address_item();
-
-    if (!whitelisted(address))
+    if (!whitelisted(socket->address()))
     {
-        ////LOGS("Dropping not whitelisted peer [" << socket->authority() << "].");
+        ////LOGS("Dropping not whitelisted peer [" << socket->endpoint() << "].");
         socket->stop();
         start_accept(error::success, acceptor);
         return;
     }
 
-    if (blacklisted(address))
+    if (blacklisted(socket->address()))
     {
-        ////LOGS("Dropping blacklisted peer [" << socket->authority() << "].");
+        ////LOGS("Dropping blacklisted peer [" << socket->endpoint() << "].");
         socket->stop();
         start_accept(error::success, acceptor);
         return;
@@ -193,7 +191,7 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     // Creates channel_xxxx cast as channel::ptr.
     const auto channel = create_channel(socket);
 
-    LOGS("Accepted " << name_ << " connection [" << channel->authority()
+    LOGS("Accepted " << name_ << " connection [" << channel->endpoint()
         << "] on binding [" << acceptor->local() << "].");
 
     // There was no error, so listen again without delay.
@@ -246,7 +244,7 @@ void session_server::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    LOGS("Inbound " << name_ << " channel start [" << channel->authority()
+    LOGS("Inbound " << name_ << " channel start [" << channel->endpoint()
         << "] " << ec.message());
 
     BC_ASSERT(!is_zero(add1(channel_count_)));
@@ -257,7 +255,7 @@ void session_server::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    LOGS("Inbound " << name_ << " channel stop [" << channel->authority()
+    LOGS("Inbound " << name_ << " channel stop [" << channel->endpoint()
         << "] " << ec.message());
 
     BC_ASSERT(!is_zero(channel_count_));

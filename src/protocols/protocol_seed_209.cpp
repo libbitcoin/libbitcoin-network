@@ -156,7 +156,7 @@ bool protocol_seed_209::handle_receive_address(const code& ec,
     const auto start_size = message->addresses.size();
     if (is_one(start_size) && (message->addresses.front() == outbound()))
     {
-        ////LOGP("Dropping redundant address from seed [" << authority() << "]");
+        ////LOGP("Dropping redundant address from seed [" << endpoint() << "]");
         return true;
     }
 
@@ -185,7 +185,7 @@ void protocol_seed_209::handle_save_addresses(const code& ec,
         stop(ec);
 
     LOGN("Accepted (" << start_size << ">" << end_size << ">" << accepted
-        << ") addresses from seed [" << authority() << "].");
+        << ") addresses from seed [" << opposite() << "].");
 
     // Multiple address messages are allowed, but do not delay session.
     // Ignore a singleton message, conventional to send self upon connect.

@@ -95,8 +95,8 @@ messages::peer::version protocol_version_106::version_factory(
         {
             timestamp,
             service::node_none,
-            authority().to_ip_address(),
-            authority().port(),
+            outbound().ip(),
+            opposite().port()
         },
 
         // ********************************************************************
@@ -308,13 +308,13 @@ bool protocol_version_106::handle_receive_version(const code& ec,
         "/BitcoinFinance:");
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
-    LOGN(prefix << " [" << authority() << "] version ("
-        << message->value << ") " << user_agent);
+    LOGN(prefix << " [" << opposite() << "] version (" << message->value
+        << ") " << user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {
         LOGR("Unsupported services (" << message->services << ") by ["
-            << authority() << "] showing (" << outbound().services() << ") "
+            << opposite() << "] showing (" << outbound().services() << ") "
             << user_agent);
 
         rejection(error::peer_unsupported);
@@ -325,7 +325,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     if ((message->services & minimum_services_) != minimum_services_)
     {
         LOGR("Insufficient services (" << message->services << ") by ["
-            << authority() << "] showing (" << outbound().services() << ") "
+            << opposite() << "] showing (" << outbound().services() << ") "
             << user_agent);
 
         rejection(error::peer_insufficient);
@@ -335,7 +335,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     if (message->value < minimum_version_)
     {
         LOGP("Insufficient peer protocol version (" << message->value << ") "
-            "for [" << authority() << "] " << user_agent);
+            "for [" << opposite() << "] " << user_agent);
 
         rejection(error::peer_insufficient);
         return false;
@@ -346,7 +346,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     if (absolute(deviation.count()) > maximum_skew_minutes_)
     {
         LOGR("Skewed time (" << deviation.count() << ") minutes "
-            "for [" << authority() << "] " << user_agent);
+            "for [" << opposite() << "] " << user_agent);
 
         rejection(error::peer_timestamp);
         return false;
@@ -357,10 +357,10 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     set_peer_version(message);
 
     ////LOGP("Negotiated protocol version (" << version << ") "
-    ////    << "for [" << authority() << "].");
+    ////    << "for [" << opposite() << "].");
 
     ////// TODO: verbose (helpful for identifying own address for config of self).
-    ////LOGP("Peer [" << authority() << "] "
+    ////LOGP("Peer [" << opposite() << "] "
     ////    << "as {" << config::authority(message->address_sender) << "} "
     ////    << "us {" << config::authority(message->address_receiver) << "}.");
 

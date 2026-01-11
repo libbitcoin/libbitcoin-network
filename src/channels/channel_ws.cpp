@@ -60,7 +60,7 @@ void channel_ws::handle_receive_ws(const code& ec, size_t bytes) NOEXCEPT
 
     if (stopped())
     {
-        LOGQ("Websocket read abort [" << authority() << "]");
+        LOGQ("Websocket read abort [" << endpoint() << "]");
         return;
     }
 
@@ -69,7 +69,7 @@ void channel_ws::handle_receive_ws(const code& ec, size_t bytes) NOEXCEPT
         // Don't log common conditions.
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
-            LOGF("Websocket read failure [" << authority() << "] "
+            LOGF("Websocket read failure [" << endpoint() << "] "
                 << ec.message());
         }
 
@@ -83,7 +83,7 @@ void channel_ws::handle_receive_ws(const code& ec, size_t bytes) NOEXCEPT
 void channel_ws::dispatch_ws(const http::flat_buffer&,
     size_t LOG_ONLY(bytes)) NOEXCEPT
 {
-    LOGA("Websocket read of " << bytes  << " bytes [" << authority() << "]");
+    LOGA("Websocket read of " << bytes  << " bytes [" << endpoint() << "]");
 
     // TODO: dispatch and restart upon completion.
 
@@ -101,7 +101,7 @@ void channel_ws::handle_receive(const code& ec, size_t bytes,
 
     if (upgraded_)
     {
-        LOGF("Http request in websocket state [" << authority() << "]");
+        LOGF("Http request in websocket state [" << endpoint() << "]");
         stop(network::error::operation_failed);
         return;
     }
@@ -113,7 +113,7 @@ void channel_ws::handle_receive(const code& ec, size_t bytes,
     }
 
     upgraded_ = true;
-    LOGA("Websocket upgraded [" << authority() << "]");
+    LOGA("Websocket upgraded [" << endpoint() << "]");
     receive();
 }
 

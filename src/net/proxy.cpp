@@ -266,7 +266,7 @@ void proxy::do_write(const asio::const_buffer& payload,
 
     if (stopped())
     {
-        LOGQ("Payload write abort [" << authority() << "]");
+        LOGQ("Payload write abort [" << endpoint() << "]");
         handler(error::channel_stopped, {});
         return;
     }
@@ -276,7 +276,7 @@ void proxy::do_write(const asio::const_buffer& payload,
     total_ = ceilinged_add(total_.load(), payload.size());
     backlog_ = ceilinged_add(backlog_.load(), payload.size());
 
-    LOGX("Queue for [" << authority() << "]: " << queue_.size()
+    LOGX("Queue for [" << endpoint() << "]: " << queue_.size()
         << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
 
     // Start the loop if it wasn't already started.
@@ -307,7 +307,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
 
     if (stopped())
     {
-        LOGQ("Send abort [" << authority() << "]");
+        LOGQ("Send abort [" << endpoint() << "]");
         return;
     }
 
@@ -315,7 +315,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
     backlog_ = floored_subtract(backlog_.load(), queue_.front().first.size());
     queue_.pop_front();
 
-    LOGX("Dequeue for [" << authority() << "]: " << queue_.size()
+    LOGX("Dequeue for [" << endpoint() << "]: " << queue_.size()
         << " (" << backlog_.load() << " backlog)");
 
     // All handlers must be invoked, so continue regardless of error state.
@@ -331,7 +331,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
             // BUGBUG: payload changed from data_chunk_ptr to const_buffer.
             // TODO: messages dependency, move to channel.
             ////LOGF("Send failure " << heading::get_command(*payload) << " to ["
-            ////    << authority() << "] (" << payload->size() << " bytes) "
+            ////    << endpoint() << "] (" << payload->size() << " bytes) "
             ////    << ec.message());
         }
 
@@ -342,7 +342,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
     // BUGBUG: payload changed from data_chunk_ptr to const_buffer.
     // TODO: messages dependency, move to channel.
     ////LOGX("Sent " <<  heading::get_command(*payload) << " to ["
-    ////    << authority() << "] (" << payload->size() << " bytes)");
+    ////    << endpoint() << "] (" << payload->size() << " bytes)");
 
     handler(ec, bytes);
 }
@@ -380,14 +380,14 @@ bool proxy::inbound() const NOEXCEPT
     return socket_->inbound();
 }
 
-const config::authority& proxy::authority() const NOEXCEPT
-{
-    return socket_->authority();
-}
-
 const config::address& proxy::address() const NOEXCEPT
 {
     return socket_->address();
+}
+
+const config::endpoint& proxy::endpoint() const NOEXCEPT
+{
+    return socket_->endpoint();
 }
 
 BC_POP_WARNING()
