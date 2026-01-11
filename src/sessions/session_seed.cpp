@@ -221,7 +221,7 @@ void session_seed::handle_channel_start(const code& ec,
 
     if (ec)
     {
-        LOGN("Seed start [" << channel->authority() << "] " << ec.message());
+        LOGN("Seed start [" << channel->endpoint() << "] " << ec.message());
     }
 }
 
@@ -269,7 +269,7 @@ void session_seed::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel), const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    LOGN("Seed stop [" << channel->authority() << "] " << ec.message());
+    LOGN("Seed stop [" << channel->endpoint() << "] " << ec.message());
     racer->finish(address_count());
 }
 

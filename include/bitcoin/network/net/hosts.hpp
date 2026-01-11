@@ -92,11 +92,11 @@ public:
     /// Reservation.
     /// -----------------------------------------------------------------------
 
-    /// Reserve the address (currently connected), false if was reserved.
-    virtual bool reserve(const config::authority& host) NOEXCEPT;
+    /// Reserve the endpoint (currently connected), false if was reserved.
+    virtual bool reserve(const config::endpoint& host) NOEXCEPT;
 
-    /// Unreserve the address (no longer connected), false if was not reserved.
-    virtual bool unreserve(const config::authority& host) NOEXCEPT;
+    /// Unreserve the endpoint (no longer connected), false if was not reserved.
+    virtual bool unreserve(const config::endpoint& host) NOEXCEPT;
 
 private:
     typedef boost::circular_buffer<messages::peer::address_item> buffer;
@@ -120,7 +120,7 @@ private:
     // Inlines local to translation unit.
     inline messages::peer::address_item::cptr pop() NOEXCEPT;
     inline void push(const std::string& line) NOEXCEPT;
-    inline bool is_reserved(const config::authority& host) const NOEXCEPT;
+    inline bool is_reserved(const config::endpoint& host) const NOEXCEPT;
 
     void do_take(const address_item_handler& handler) NOEXCEPT;
     void do_restore(const address_item_cptr& host,
@@ -132,14 +132,12 @@ private:
     // These are thread safe.
     const settings& settings_;
     std::atomic<size_t> hosts_count_{};
-    std::atomic<size_t> authorities_count_{};
+    std::atomic<size_t> endpoints_count_{};
 
     // These are not thread safe.
     buffer buffer_;
     bool stopped_{ true };
-
-    // TODO: optimize, default bucket count is around 8.
-    std::unordered_set<config::authority> authorities_{};
+    std::unordered_set<config::endpoint> endpoints_{};
 };
 
 } // namespace network

@@ -129,9 +129,9 @@ bool protocol::stranded() const NOEXCEPT
     return channel_->stranded();
 }
 
-config::authority protocol::authority() const NOEXCEPT
+config::endpoint protocol::opposite() const NOEXCEPT
 {
-    return channel_->authority();
+    return { channel_->endpoint() };
 }
 
 const config::address& protocol::outbound() const NOEXCEPT

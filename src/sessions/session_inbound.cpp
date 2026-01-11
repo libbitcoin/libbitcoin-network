@@ -161,25 +161,23 @@ void session_inbound::handle_accepted(const code& ec,
     // Could instead stop listening when at limit, though this is simpler.
     if (inbound_channel_count() >= network_settings().inbound.connections)
     {
-        LOGS("Dropping oversubscribed peer [" << socket->authority() << "].");
+        LOGS("Dropping oversubscribed peer [" << socket->endpoint() << "].");
         socket->stop();
         defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
-    const auto address = socket->authority().to_address_item();
-
-    if (!whitelisted(address))
+    if (!whitelisted(socket->address()))
     {
-        ////LOGS("Dropping not whitelisted peer [" << socket->authority() << "].");
+        ////LOGS("Dropping not whitelisted peer [" << socket->endpoint() << "].");
         socket->stop();
         start_accept(error::success, acceptor);
         return;
     }
 
-    if (blacklisted(address))
+    if (blacklisted(socket->address()))
     {
-        ////LOGS("Dropping blacklisted peer [" << socket->authority() << "].");
+        ////LOGS("Dropping blacklisted peer [" << socket->endpoint() << "].");
         socket->stop();
         start_accept(error::success, acceptor);
         return;
@@ -187,7 +185,7 @@ void session_inbound::handle_accepted(const code& ec,
 
     const auto channel = create_channel(socket);
 
-    LOGS("Accepted peer connection [" << channel->authority()
+    LOGS("Accepted peer connection [" << channel->endpoint()
         << "] on binding [" << acceptor->local() << "].");
 
     // There was no error, so listen again without delay.
@@ -264,7 +262,7 @@ void session_inbound::handle_channel_start(const code&,
     const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    ////LOGS("Inbound channel start [" << channel->authority() << "] "
+    ////LOGS("Inbound channel start [" << channel->endpoint() << "] "
     ////    << ec.message());
 }
 
@@ -313,7 +311,7 @@ void session_inbound::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    LOGS("Inbound peer channel stop [" << channel->authority() << "] "
+    LOGS("Inbound peer channel stop [" << channel->endpoint() << "] "
         << ec.message());
 }
 

@@ -134,7 +134,7 @@ public:
 
     // Inject mock channel.
     void start(const std::string&, uint16_t, const config::address&,
-        socket_handler&& handler) NOEXCEPT override
+        const config::endpoint&, socket_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(log, service_,
             maximum_);
@@ -235,9 +235,9 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    config::authority authority() const NOEXCEPT override
+    config::endpoint opposite() const NOEXCEPT override
     {
-        return protocol::authority();
+        return protocol::opposite();
     }
 
     uint64_t nonce() const NOEXCEPT override

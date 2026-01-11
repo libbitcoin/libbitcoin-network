@@ -118,7 +118,7 @@ bool protocol_address_in_209::handle_receive_address(const code& ec,
     if (!outbound_ && !advertisement)
     {
         LOGP("Ignoring (" << start_size << ") unsolicited addresses from ["
-            << authority() << "].");
+            << opposite() << "].");
         ////stop(error::protocol_violation);
         return true;
     }
@@ -127,13 +127,13 @@ bool protocol_address_in_209::handle_receive_address(const code& ec,
     if (advertisement)
     {
         BROADCAST(address, message);
-        LOGP("Relay (" << start_size << ") addresses by ["
-            << authority() << "].");
+        LOGP("Relay (" << start_size << ") addresses by [" << opposite()
+            << "].");
     }
 
     if (is_one(start_size) && message->addresses.front() == outbound())
     {
-        ////LOGP("Dropping redundant address from [" << authority() << "].");
+        ////LOGP("Dropping redundant address from [" << opposite() << "].");
         return true;
     }
 
@@ -156,7 +156,7 @@ void protocol_address_in_209::handle_save_addresses(const code& ec,
         return;
 
     LOGP("Accepted (" << start_size << ">" << end_size << ">" << accepted << ") "
-        "addresses from [" << authority() << "].");
+        "addresses from [" << opposite() << "].");
 }
 
 BC_POP_WARNING()

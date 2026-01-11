@@ -71,7 +71,7 @@ bool protocol_alert_311::handle_receive_alert(const code& ec,
 
     // TODO: serialize cancels and sub_versions.
     // Signature not validated because is not relevant (private key published).
-    LOGN("Alert from [" << authority() << "]..."
+    LOGN("Alert from [" << opposite() << "]..."
         << "\nversion     : " << alert->payload.version
         << "\nrelay_until : " << alert->payload.relay_until
         << "\nexpiration  : " << alert->payload.expiration

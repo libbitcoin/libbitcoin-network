@@ -84,7 +84,7 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
 
     if (stopped())
     {
-        LOGQ("Rpc read abort [" << authority() << "]");
+        LOGQ("Rpc read abort [" << endpoint() << "]");
         return;
     }
 
@@ -93,7 +93,7 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
         // Don't log common conditions.
         if (ec != error::end_of_stream && ec != error::operation_canceled)
         {
-            LOGF("Rpc read failure [" << authority() << "] "
+            LOGF("Rpc read failure [" << endpoint() << "] "
                 << ec.message());
         }
 

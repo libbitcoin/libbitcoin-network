@@ -155,10 +155,10 @@ BOOST_AUTO_TEST_CASE(proxy__authority__default__expected)
 {
     const logger log{};
     threadpool pool(2);
-    const config::authority default_authority{};
+    const config::endpoint default_endpoint{};
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
-    BOOST_REQUIRE(proxy_ptr->authority() == default_authority);
+    BOOST_REQUIRE(proxy_ptr->endpoint() == default_endpoint);
 
     proxy_ptr->stop(error::invalid_magic);
 }

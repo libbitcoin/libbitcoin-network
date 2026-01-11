@@ -117,7 +117,7 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
         return false;
 
     LOGP("Reject message '" << message->message << "' ("
-        << static_cast<uint16_t>(message->code) << ") from [" << authority()
+        << static_cast<uint16_t>(message->code) << ") from [" << opposite()
         << "] with reason: " << message->reason);
 
     return true;

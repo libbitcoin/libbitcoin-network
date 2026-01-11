@@ -91,11 +91,11 @@ public:
     /// The socket was accepted (vs. connected).
     bool inbound() const NOEXCEPT;
 
-    /// Get the authority (incoming) of the remote endpoint.
-    const config::authority& authority() const NOEXCEPT;
-
-    /// Get the address (outgoing) of the remote endpoint.
+    /// Get the address of the outgoing endpoint passed via construct.
     const config::address& address() const NOEXCEPT;
+
+    /// Get the endpoint of the remote host.
+    const config::endpoint& endpoint() const NOEXCEPT;
 
 protected:
     proxy(const socket::ptr& socket) NOEXCEPT;

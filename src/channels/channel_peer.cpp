@@ -175,7 +175,7 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (stopped())
     {
-        LOGQ("Heading read abort [" << authority() << "]");
+        LOGQ("Heading read abort [" << endpoint() << "]");
         return;
     }
 
@@ -184,7 +184,7 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
         // Don't log common conditions.
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
-            LOGF("Heading read failure [" << authority() << "] "
+            LOGF("Heading read failure [" << endpoint() << "] "
                 << ec.message());
         }
 
@@ -197,7 +197,7 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (!heading_reader_)
     {
-        LOGR("Invalid heading from [" << authority() << "]");
+        LOGR("Invalid heading from [" << endpoint() << "]");
         stop(error::invalid_heading);
         return;
     }
@@ -206,13 +206,13 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
     {
         if (head->magic == http_magic || head->magic == https_magic)
         {
-            LOGR("Http/s request from [" << authority() << "]");
+            LOGR("Http/s request from [" << endpoint() << "]");
         }
         else
         {
             LOGR("Invalid heading magic (0x"
                 << encode_base16(to_little_endian(head->magic))
-                << ") from [" << authority() << "]");
+                << ") from [" << endpoint() << "]");
         }
 
         stop(error::invalid_magic);
@@ -222,7 +222,7 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
     if (head->payload_size > options().maximum_request)
     {
         LOGR("Oversized payload indicated by " << head->command
-            << " heading from [" << authority() << "] ("
+            << " heading from [" << endpoint() << "] ("
             << head->payload_size << " bytes)");
 
         stop(error::oversized_payload);
@@ -248,7 +248,7 @@ void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
 
     if (stopped())
     {
-        LOGQ("Payload read abort [" << authority() << "]");
+        LOGQ("Payload read abort [" << endpoint() << "]");
         return;
     }
 
@@ -257,7 +257,7 @@ void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
         // Don't log common conditions.
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
-            LOGF("Payload read failure [" << authority() << "] "
+            LOGF("Payload read failure [" << endpoint() << "] "
                 << ec.message());
         }
 
@@ -271,7 +271,7 @@ void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
         if (head->checksum != network_checksum(bitcoin_hash(payload_buffer_)))
         {
             LOGR("Invalid " << head->command << " payload from ["
-                << authority() << "] bad checksum.");
+                << endpoint() << "] bad checksum.");
 
             stop(error::invalid_checksum);
             return;
@@ -310,7 +310,7 @@ void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
         payload_buffer_.shrink_to_fit();
     }
 
-    LOGX("Recv " << head->command << " from [" << authority() << "] ("
+    LOGX("Recv " << head->command << " from [" << endpoint() << "] ("
         << payload_size << " bytes)");
 
     read_heading();
@@ -335,13 +335,13 @@ void channel_peer::log_message(const std::string_view& name,
         name == messages::peer::block::command)
     {
         LOGR("Invalid " << name << " payload from ["
-            << authority() << "] with hash ["
+            << endpoint() << "] with hash ["
             << encode_hash(bitcoin_hash(payload_buffer_)) << "] ");
     }
     else
     {
         LOGR("Invalid " << name << " payload from ["
-            << authority() << "] with bytes (" << encode_base16(
+            << endpoint() << "] with bytes (" << encode_base16(
                 {
                     payload_buffer_.begin(),
                     std::next(payload_buffer_.begin(),

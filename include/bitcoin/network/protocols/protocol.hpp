@@ -124,7 +124,7 @@ protected:
         session_->unsubscribe(channel_->identifier());
     }
 
-    /// Broadcast a message instance to peers (use BROADCAST).
+    /// Broadcast a message instance to channels (use BROADCAST).
     /// Channel identifier allows recipient-sender to self-identify.
     template <class Message>
     inline void broadcast(const typename Message::cptr& message) NOEXCEPT
@@ -172,10 +172,10 @@ protected:
     /// The current thread is on the channel strand.
     virtual bool stranded() const NOEXCEPT;
 
-    /// The authority of the peer.
-    virtual config::authority authority() const NOEXCEPT;
+    /// The opposite endpoint of the channel.
+    virtual config::endpoint opposite() const NOEXCEPT;
 
-    /// The outbound address of the peer.
+    /// The outbound address of the channel.
     virtual const config::address& outbound() const NOEXCEPT;
 
     /// The nonce of the channel.

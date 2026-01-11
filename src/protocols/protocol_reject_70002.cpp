@@ -80,13 +80,13 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
     // if received here (outside of handshake), a protocol error is implied.
     if (message->message == version::command)
     {
-        LOGR("Version reject after handshake [" << authority() << "]");
+        LOGR("Version reject after handshake [" << opposite() << "]");
         stop(error::protocol_violation);
         return false;
     }
 
     // system::serialize require for uint8_t serialization.
-    LOGP("Reject from [" << authority() << "]..."
+    LOGP("Reject from [" << opposite() << "]..."
         << "\ncode   : " << system::serialize(reject::reason_to_byte(
                             message->code))
         << "\nmessage: " << message->message

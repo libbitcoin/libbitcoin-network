@@ -47,23 +47,31 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // Construction.
 // ----------------------------------------------------------------------------
 
-// authority_.port() zero implies inbound connection.
 socket::socket(const logger& log, asio::io_context& service,
     size_t maximum_request) NOEXCEPT
-  : socket(log, service, maximum_request, config::address{})
+    : socket(log, service, maximum_request, {}, {}, false, true)
 {
 }
 
-// authority_.port() nonzero implies outbound connection.
 socket::socket(const logger& log, asio::io_context& service,
     size_t maximum_request, const config::address& address,
-    bool proxied) NOEXCEPT
-  : proxied_(proxied),
+    const config::endpoint& endpoint, bool proxied) NOEXCEPT
+  : socket(log, service, maximum_request, address, endpoint, proxied, false)
+{
+}
+
+// protected
+socket::socket(const logger& log, asio::io_context& service,
+    size_t maximum_request, const config::address& address,
+    const config::endpoint& endpoint, bool proxied, bool inbound) NOEXCEPT
+  : inbound_(inbound),
+    proxied_(proxied),
     maximum_(maximum_request),
     strand_(service.get_executor()),
     service_(service),
     socket_(strand_),
     address_(address),
+    endpoint_(endpoint),
     reporter(log),
     tracker<socket>(log)
 {
@@ -603,11 +611,9 @@ void socket::handle_accept(boost_code ec,
     const result_handler& handler) NOEXCEPT
 {
     // This is running in the acceptor (not socket) execution context.
-    // socket_ and authority_ are not guarded here, see comments on accept.
-    // address_ remains defaulted for inbound (accepted) connections.
-
+    // socket_ and endpoint_ are not guarded here, see comments on accept.
     if (!ec)
-        authority_ = { socket_.remote_endpoint(ec) };
+        endpoint_ = { socket_.remote_endpoint(ec) };
 
     if (error::asio_is_canceled(ec))
     {
@@ -620,24 +626,14 @@ void socket::handle_accept(boost_code ec,
     handler(code);
 }
 
-// The peer is what the socket connected to. For socks proxy this will be the
-// proxy server's address:port. address_ is the value set at construct, and for
-// outbound this is the intended peer. For inbound this is defaulted (and then
-// set to socket_.remote_endpoint in handle_accept). For outbound this is the
-// host value of type config::address passed to connector::start. The inbound()
-// method depends upon this being defaulted (not set) for incoming connections
-// and set for outgoing.
 void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // For socks proxy, peer will be the server's local binding. In this case
-    // authority_ is set to address_ as passed on start(). When this is a fqdn
-    // it fails lexical parse and results in a default address (see also:
-    // do_socks_connect_write).
-    authority_ = proxied_ ? config::authority{ address_ } :
-        config::authority{ peer };
+    // For socks proxy, peer will be the server's local binding.
+    if (!proxied_)
+        endpoint_ = peer;
 
     if (error::asio_is_canceled(ec))
     {
@@ -775,13 +771,13 @@ void socket::handle_ws_event(ws::frame_type kind,
     switch (kind)
     {
         case ws::frame_type::ping:
-            LOGX("WS ping [" << authority() << "] size: " << data.size());
+            LOGX("WS ping [" << endpoint() << "] size: " << data.size());
             break;
         case ws::frame_type::pong:
-            LOGX("WS pong [" << authority() << "] size: " << data.size());
+            LOGX("WS pong [" << endpoint() << "] size: " << data.size());
             break;
         case ws::frame_type::close:
-            LOGX("WS close [" << authority() << "] " << websocket_->reason());
+            LOGX("WS close [" << endpoint() << "] " << websocket_->reason());
             break;
     }
 }
@@ -836,20 +832,19 @@ void socket::handle_http_write(const boost_code& ec, size_t size,
 // Properties.
 // ----------------------------------------------------------------------------
 
-const config::authority& socket::authority() const NOEXCEPT
-{
-    return authority_;
-}
-
 const config::address& socket::address() const NOEXCEPT
 {
     return address_;
 }
 
+const config::endpoint& socket::endpoint() const NOEXCEPT
+{
+    return endpoint_;
+}
+
 bool socket::inbound() const NOEXCEPT
 {
-    // Relies on construction and address default port of zero.
-    return is_zero(address_.port());
+    return inbound_;
 }
 
 bool socket::stopped() const NOEXCEPT

@@ -57,7 +57,8 @@ protected:
     /// Connector overrides.
     bool proxied() const NOEXCEPT override;
     void start(const std::string& hostname, uint16_t port,
-        const config::address& host, socket_handler&& handler) NOEXCEPT override;
+        const config::address& address, const config::endpoint& endpoint,
+        socket_handler&& handler) NOEXCEPT override;
     void handle_connect(const code& ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT override;
 
@@ -67,48 +68,42 @@ private:
     template <size_t Size>
     using data_cptr = std::shared_ptr<const system::data_array<Size>>;
 
+    // utility
+
     // socks5 handshake
-    void do_socks_greeting_write(const code& ec, const finish_ptr& finish,
+    void do_socks_greeting_write(const code& ec,
         const socket::ptr& socket) NOEXCEPT;
     void handle_socks_greeting_write(const code& ec, size_t size,
-        const finish_ptr& finish, const socket::ptr& socket,
-        const data_cptr<3>& greeting) NOEXCEPT;
+        const socket::ptr& socket, const data_cptr<3>& greeting) NOEXCEPT;
 
     void handle_socks_method_read(const code& ec, size_t size,
-        const finish_ptr& finish, const socket::ptr& socket,
-        const data_ptr<2>& response) NOEXCEPT;
-    void handle_socks_authentication_write(const code& ec,
-        size_t size, const finish_ptr& finish, const socket::ptr& socket,
+        const socket::ptr& socket, const data_ptr<2>& response) NOEXCEPT;
+    void handle_socks_authentication_write(const code& ec, size_t size,
+        const socket::ptr& socket,
         const system::chunk_ptr& authenticator) NOEXCEPT;
-    void handle_socks_authentication_read(const code& ec,
-        size_t size, const finish_ptr& finish, const socket::ptr& socket,
-        const data_ptr<2>& response) NOEXCEPT;
+    void handle_socks_authentication_read(const code& ec, size_t size,
+        const socket::ptr& socket, const data_ptr<2>& response) NOEXCEPT;
 
-    void do_socks_connect_write(const finish_ptr& finish,
-        const socket::ptr& socket) NOEXCEPT;
+    void do_socks_connect_write(const socket::ptr& socket) NOEXCEPT;
     void handle_socks_connect_write(const code& ec, size_t size,
-        const finish_ptr& finish, const socket::ptr& socket,
-        const system::chunk_ptr& request) NOEXCEPT;
+        const socket::ptr& socket, const system::chunk_ptr& request) NOEXCEPT;
 
     void handle_socks_response_read(const code& ec, size_t size,
-        const finish_ptr& finish, const socket::ptr& socket,
-        const data_ptr<4>& response) NOEXCEPT;
+        const socket::ptr& socket, const data_ptr<4>& response) NOEXCEPT;
     void handle_socks_length_read(const code& ec, size_t size,
-        const finish_ptr& finish, const socket::ptr& socket,
-        const data_ptr<1>& host_length) NOEXCEPT;
+        const socket::ptr& socket, const data_ptr<1>& host_length) NOEXCEPT;
     void handle_socks_address_read(const code& ec, size_t size,
-        const finish_ptr& finish, const socket::ptr& socket,
-        const system::chunk_ptr& address) NOEXCEPT;
+        const socket::ptr& socket, const system::chunk_ptr& address) NOEXCEPT;
 
-    void do_socks_finish(const code& ec, const finish_ptr& finish,
-        const socket::ptr& socket) NOEXCEPT;
-    void socks_finish(const code& ec, const finish_ptr& finish,
-        const socket::ptr& socket) NOEXCEPT;
+    void do_socks_finish(const code& ec, const socket::ptr& socket) NOEXCEPT;
+    void socks_finish(const code& ec, const socket::ptr& socket) NOEXCEPT;
 
     // These are thread safe.
     const settings::socks5& socks5_;
     const uint8_t method_;
-    const bool proxied_;
+
+    // This is protected by mutex.
+    finish_ptr finish_{};
 };
 
 typedef std_vector<connector_socks::ptr> socks_connectors;

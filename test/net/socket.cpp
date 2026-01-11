@@ -36,9 +36,9 @@ public:
         return socket_;
     }
 
-    const config::authority& get_authority() const NOEXCEPT
+    const config::endpoint& get_endpoint() const NOEXCEPT
     {
-        return authority_;
+        return endpoint_;
     }
 
     const config::address& get_address() const NOEXCEPT
@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
     BOOST_REQUIRE(!instance->stranded());
     BOOST_REQUIRE(!instance->get_socket().is_open());
     BOOST_REQUIRE(&instance->get_strand() == &instance->strand());
-    BOOST_REQUIRE(instance->get_authority() == instance->authority());
-    BOOST_REQUIRE(instance->get_authority().ip().is_unspecified());
+    BOOST_REQUIRE(instance->get_endpoint() == instance->endpoint());
+    BOOST_REQUIRE(!instance->get_endpoint().is_address());
     BOOST_REQUIRE(instance->get_address() == instance->address());
     BOOST_REQUIRE(instance->get_address() == config::address{});
     BOOST_REQUIRE_EQUAL(instance->get_maximum_request(), maximum);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     {
         // Acceptor cancellation sets channel_stopped and unspecified address.
         BOOST_REQUIRE_EQUAL(ec, error::operation_canceled);
-        BOOST_REQUIRE(instance->get_authority().ip().is_unspecified());
+        BOOST_REQUIRE(!instance->get_endpoint().is_address());
     });
 
     // Stopping the socket does not cancel the acceptor but precludes assertion.

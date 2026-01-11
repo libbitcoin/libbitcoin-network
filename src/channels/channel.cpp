@@ -159,7 +159,7 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        LOGF("Lifetime timer fail [" << authority() << "] " << ec.message());
+        LOGF("Lifetime timer fail [" << endpoint() << "] " << ec.message());
         stop(ec);
         return;
     }
@@ -198,7 +198,7 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        LOGF("Inactivity timer fail [" << authority() << "] " << ec.message());
+        LOGF("Inactivity timer fail [" << endpoint() << "] " << ec.message());
         stop(ec);
         return;
     }

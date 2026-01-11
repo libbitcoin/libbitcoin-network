@@ -92,7 +92,7 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
 
     if (stopped())
     {
-        LOGQ("Http read abort [" << authority() << "]");
+        LOGQ("Http read abort [" << endpoint() << "]");
         return;
     }
 
@@ -101,7 +101,7 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
         // Don't log common conditions.
         if (ec != error::end_of_stream && ec != error::operation_canceled)
         {
-            LOGF("Http read failure [" << authority() << "] "
+            LOGF("Http read failure [" << endpoint() << "] "
                 << ec.message());
         }
 
@@ -199,7 +199,7 @@ void channel_http::log_message(const request& LOG_ONLY(request),
         << "] " << version
         << " (" << (request.chunked() ? "c" : serialize(bytes))
         << ") " << (request.keep_alive() ? "keep" : "drop")
-        << " [" << authority() << "]"
+        << " [" << endpoint() << "]"
         << " {" << (split(request[field::accept], ",").front()) << "...}"
         << " "  << request.target());
 }
@@ -214,7 +214,7 @@ void channel_http::log_message(const response& LOG_ONLY(response),
         << "] " << version
         << " (" << (response.chunked() ? "c" : serialize(bytes))
         << ") " << (response.keep_alive() ? "keep" : "drop")
-        << " [" << authority() << "]"
+        << " [" << endpoint() << "]"
         << " {" << (response[field::content_type]) << "}");
 }
 
