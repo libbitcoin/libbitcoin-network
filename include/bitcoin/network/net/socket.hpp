@@ -48,7 +48,8 @@ public:
         size_t maximum_request) NOEXCEPT;
 
     /// Use only for outgoing connections. Endpoint represents the peer or
-    /// client (non-proxy) that the connector attempted to reach.
+    /// client (non-proxy) that the connector attempted to reach. Address holds
+    /// a copy of the p2p address associated with the connection (or empty).
     socket(const logger& log, asio::io_context& service,
         size_t maximum_request, const config::address& address,
         const config::endpoint& endpoint, bool proxied=false) NOEXCEPT;
