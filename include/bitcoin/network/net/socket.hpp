@@ -21,7 +21,7 @@
 
 #include <atomic>
 #include <memory>
-#include <optional>
+#include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -291,6 +291,8 @@ private:
         const count_handler& handler) NOEXCEPT;
 
 protected:
+    using transport = std::variant<asio::socket, ws::websocket>;
+
     socket(const logger& log, asio::io_context& service,
         size_t maximum_request, const config::address& address,
         const config::endpoint& endpoint, bool proxied, bool inbound) NOEXCEPT;
@@ -304,10 +306,9 @@ protected:
     std::atomic_bool stopped_{};
 
     // These are protected by strand (see also handle_accept).
-    asio::socket socket_;
     config::address address_;
     config::endpoint endpoint_;
-    std::optional<ws::websocket> websocket_{};
+    transport transport_;
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;

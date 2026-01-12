@@ -31,9 +31,9 @@ public:
         return strand_;
     }
 
-    const asio::socket& get_socket() const NOEXCEPT
+    const transport& get_transport() const NOEXCEPT
     {
-        return socket_;
+        return transport_;
     }
 
     const config::endpoint& get_endpoint() const NOEXCEPT
@@ -58,9 +58,11 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
     threadpool pool(1);
     constexpr auto maximum = 42u;
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), maximum);
+    const auto& transport = instance->get_transport();
 
     BOOST_REQUIRE(!instance->stranded());
-    BOOST_REQUIRE(!instance->get_socket().is_open());
+    BOOST_REQUIRE(std::holds_alternative<asio::socket>(transport));
+    BOOST_REQUIRE(!std::get<asio::socket>(transport).is_open());
     BOOST_REQUIRE(&instance->get_strand() == &instance->strand());
     BOOST_REQUIRE(instance->get_endpoint() == instance->endpoint());
     BOOST_REQUIRE(!instance->get_endpoint().is_address());
