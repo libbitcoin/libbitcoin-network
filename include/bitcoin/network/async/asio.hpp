@@ -56,10 +56,24 @@ typedef asio::acceptor::reuse_address reuse_address;
 /// connect
 typedef tcp::socket socket;
 typedef std::shared_ptr<socket> socket_ptr;
-
 constexpr auto max_connections = 
     boost::asio::socket_base::max_listen_connections;
 
+/// ssl
+namespace ssl {
+
+typedef boost::asio::ssl::context context;
+typedef boost::asio::ssl::stream<asio::socket> socket;
+
+// Just testing out the ssl socket compile.
+inline void foobar() THROWS
+{
+    io_context my_io_context{};
+    context my_ssl_context{ context::tlsv12_server };
+    socket my_ssl_socket{ my_io_context, my_ssl_context };
+}
+
+} // namespace ssl
 } // namespace asio
 } // namespace network
 } // namespace libbitcoin
