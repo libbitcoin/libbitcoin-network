@@ -6825,7 +6825,7 @@ void wolfSSL_set_security_level(WOLFSSL * ssl, int level)
 
 
 #define WOLFSSL_SSL_LOAD_INCLUDED
-#include <src/ssl_load.c>
+#include "src/ssl_load.c"
 
 #ifndef NO_CERTS
 
@@ -24717,7 +24717,7 @@ void wolfSSL_BUF_MEM_free(WOLFSSL_BUF_MEM* buf)
  ******************************************************************************/
 
 #define WOLFSSL_CONF_INCLUDED
-#include <src/conf.c>
+#include "src/conf.c"
 
 /*******************************************************************************
  * START OF RAND API
@@ -25796,10 +25796,10 @@ void wolfSSL_aes_ctr_iv(WOLFSSL_EVP_CIPHER_CTX* ctx, int doset,
 #ifndef NO_CERTS
 
 #define WOLFSSL_X509_STORE_INCLUDED
-#include <src/x509_str.c>
+#include "src/x509_str.c"
 
 #define WOLFSSL_SSL_P7P12_INCLUDED
-#include <src/ssl_p7p12.c>
+#include "src/ssl_p7p12.c"
 
 #endif /* !NO_CERTS */
 

@@ -11,8 +11,8 @@
 
   <ItemDefinitionGroup>
     <ClCompile>
-      <!-- src\wolfssl\ is a directory clone of a subset of wolfssl sources. -->
-      <AdditionalIncludeDirectories>$(RepoRoot)src\wolfssl\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- include\bitcoin\ssl\ is a directory clone of a subset of wolfssl sources, plus config. -->
+      <AdditionalIncludeDirectories>$(RepoRoot)include\bitcoin\ssl\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories>$(RepoRoot)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <EnablePREfast>false</EnablePREfast>

@@ -124,6 +124,13 @@ AC_ARG_ENABLE([isystem],
 AC_MSG_RESULT([$enable_isystem])
 
 
+# Set preprocessor defines.
+#==============================================================================
+# Unconditionally define the preprocessor symbol WOLFSSL_USER_SETTINGS.
+#------------------------------------------------------------------------------
+AC_DEFINE([WOLFSSL_USER_SETTINGS])
+
+
 # Set flags.
 #==============================================================================
 # Require c++20 for all c++ products.
