@@ -16,23 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_BOOST_HPP
-#define LIBBITCOIN_NETWORK_BOOST_HPP
+#ifndef LIBBITCOIN_NETWORK_SSL_WOLFSSL_OPTIONS_H
+#define LIBBITCOIN_NETWORK_SSL_WOLFSSL_OPTIONS_H
 
-#include <bitcoin/network/version.hpp>
+// This ensures boost sees all configuration, but probably not used.
+#include <wolfssl/wolfcrypt/user_settings.h>
 
-// See <boost/asio/ssl/detail/openssl_types.hpp> for wolf/openssl includes.
-#define BOOST_ASIO_USE_WOLFSSL
-#define BOOST_ASIO_NO_DEPRECATED
-
-// The /ssl/openssl/ directory is provided for direct ssl import by boost,
-// which is required because <boost/asio/ssl.hpp> is included.
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/bimap.hpp>
-#include <boost/bimap/set_of.hpp>
-#include <boost/bimap/multiset_of.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/system/error_code.hpp>
+// Boost ASIO pulls in this file when BOOST_ASIO_USE_WOLFSSL is defined.
+////#if defined(BOOST_ASIO_USE_WOLFSSL)
+////    #include <wolfssl/options.h>
+////#endif
 
 #endif

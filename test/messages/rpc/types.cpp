@@ -18,6 +18,11 @@
  */
 #include "../../test.hpp"
 
+// boolean_t defined in global namespace by:
+// Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/
+// Developer/SDKs/MacOSX.sdk/usr/include/mach/arm/boolean.h:70:25
+using boolean_type = bc::network::rpc::boolean_t;
+
 using namespace rpc;
 
 // optional<Default>
@@ -46,9 +51,9 @@ static_assert(is_same_type<decltype(optional<"default"_t>{}.default_value()), st
 
 // optional<true>
 static_assert(is_optional<optional<true>>);
-static_assert(is_same_type<optional<true>::type, boolean_t>);
+static_assert(is_same_type<optional<true>::type, boolean_type>);
 static_assert(is_same_type<optional<true>::tag, optional_tag>);
-static_assert(is_same_type<decltype(optional<true>{}.default_value()), boolean_t>);
+static_assert(is_same_type<decltype(optional<true>{}.default_value()), boolean_type>);
 static_assert(optional<true>{}.default_value() == true);
 
 // optional<42_i8>
@@ -128,30 +133,30 @@ static_assert(!is_optional<array_t>);
 static_assert(!is_optional<object_t>);
 static_assert(!is_optional<number_t>);
 static_assert(!is_optional<string_t>);
-static_assert(!is_optional<boolean_t>);
+static_assert(!is_optional<boolean_type>);
 
 // nullable<Type>
 // ----------------------------------------------------------------------------
 
-static_assert(is_same_type<nullable<boolean_t>::type, boolean_t>);
+static_assert(is_same_type<nullable<boolean_type>::type, boolean_type>);
 static_assert(is_same_type<nullable<number_t>::type, number_t>);
 static_assert(is_same_type<nullable<string_t>::type, string_t>);
 static_assert(is_same_type<nullable<object_t>::type, object_t>);
 static_assert(is_same_type<nullable<array_t>::type, array_t>);
 
-static_assert(is_same_type<nullable<boolean_t>::tag, nullable_tag>);
+static_assert(is_same_type<nullable<boolean_type>::tag, nullable_tag>);
 static_assert(is_same_type<nullable<number_t>::tag, nullable_tag>);
 static_assert(is_same_type<nullable<string_t>::tag, nullable_tag>);
 static_assert(is_same_type<nullable<object_t>::tag, nullable_tag>);
 static_assert(is_same_type<nullable<array_t>::tag, nullable_tag>);
 
-static_assert(is_nullable<nullable<boolean_t>>);
-static_assert(is_nullable<nullable<boolean_t>>);
-static_assert(is_nullable<nullable<boolean_t>>);
-static_assert(is_nullable<nullable<boolean_t>>);
-static_assert(is_nullable<nullable<boolean_t>>);
+static_assert(is_nullable<nullable<boolean_type>>);
+static_assert(is_nullable<nullable<boolean_type>>);
+static_assert(is_nullable<nullable<boolean_type>>);
+static_assert(is_nullable<nullable<boolean_type>>);
+static_assert(is_nullable<nullable<boolean_type>>);
 
-static_assert(!is_nullable<boolean_t>);
+static_assert(!is_nullable<boolean_type>);
 static_assert(!is_nullable<number_t>);
 static_assert(!is_nullable<string_t>);
 static_assert(!is_nullable<object_t>);
@@ -172,19 +177,19 @@ static_assert(is_required<array_t>);
 static_assert(is_required<object_t>);
 static_assert(is_required<number_t>);
 static_assert(is_required<string_t>);
-static_assert(is_required<boolean_t>);
+static_assert(is_required<boolean_type>);
 
 static_assert(!is_required<nullable<array_t>>);
 static_assert(!is_required<nullable<object_t>>);
 static_assert(!is_required<nullable<number_t>>);
 static_assert(!is_required<nullable<string_t>>);
-static_assert(!is_required<nullable<boolean_t>>);
+static_assert(!is_required<nullable<boolean_type>>);
 
 static_assert(is_required<array_t>);
 static_assert(is_required<object_t>);
 static_assert(is_required<number_t>);
 static_assert(is_required<string_t>);
-static_assert(is_required<boolean_t>);
+static_assert(is_required<boolean_type>);
 
 // internal_t<Argument>
 // ----------------------------------------------------------------------------
@@ -205,9 +210,9 @@ static_assert(is_same_type<internal_t<string_t>, string_t>);
 static_assert(is_same_type<internal_t<nullable<string_t>>, string_t>);
 static_assert(is_same_type<internal_t<optional<"42"_t>>, string_t>);
 
-static_assert(is_same_type<internal_t<boolean_t>, boolean_t>);
-static_assert(is_same_type<internal_t<nullable<boolean_t>>, boolean_t>);
-static_assert(is_same_type<internal_t<optional<true>>, boolean_t>);
+static_assert(is_same_type<internal_t<boolean_type>, boolean_type>);
+static_assert(is_same_type<internal_t<nullable<boolean_type>>, boolean_type>);
+static_assert(is_same_type<internal_t<optional<true>>, boolean_type>);
 
 // external_t<Argument>
 // ----------------------------------------------------------------------------
@@ -228,9 +233,9 @@ static_assert(is_same_type<external_t<string_t>, string_t>);
 static_assert(is_same_type<external_t<nullable<string_t>>, std::optional<string_t>>);
 static_assert(is_same_type<external_t<optional<"42"_t>>, string_t>);
 
-static_assert(is_same_type<external_t<boolean_t>, boolean_t>);
-static_assert(is_same_type<external_t<nullable<boolean_t>>, std::optional<boolean_t>>);
-static_assert(is_same_type<external_t<optional<true>>, boolean_t>);
+static_assert(is_same_type<external_t<boolean_type>, boolean_type>);
+static_assert(is_same_type<external_t<nullable<boolean_type>>, std::optional<boolean_type>>);
+static_assert(is_same_type<external_t<optional<true>>, boolean_type>);
 
 // externals_t<Arguments>
 // ----------------------------------------------------------------------------

@@ -10630,7 +10630,11 @@ static int CertFromX509(Cert* cert, WOLFSSL_X509* x509)
     cert->isCA    = wolfSSL_X509_get_isCA(x509);
     cert->basicConstCrit = x509->basicConstCrit;
     cert->basicConstSet = x509->basicConstSet;
-    cert->pathLen = x509->pathLength;
+///////////////////////////////////////////////////////////////////////////////
+// LIBBITCOIN: implicit cast (4 bytes to 1 byte). Added runtime guard and cast:
+    if (x509->pathLength > (byte)~0) return WOLFSSL_FAILURE;
+    cert->pathLen = (byte)x509->pathLength;
+///////////////////////////////////////////////////////////////////////////////
     cert->pathLenSet = x509->pathLengthSet;
 
 #ifdef WOLFSSL_CERT_EXT
