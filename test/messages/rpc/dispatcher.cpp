@@ -20,6 +20,11 @@
 
 BOOST_AUTO_TEST_SUITE(dispatcher_tests)
 
+// boolean_t defined in global namespace by:
+// Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/
+// Developer/SDKs/MacOSX.sdk/usr/include/mach/arm/boolean.h:70:25
+using boolean_type = bc::network::rpc::boolean_t;
+
 using namespace rpc;
 
 // uses unsubscriber<> (bool handler returns).
@@ -179,7 +184,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes
 
     request_t request{};
     request.method = "all_required";
-    request.params = params_t{ array_t{ boolean_t{ true }, number_t{ 24.0 }, string_t{ "42" } } };
+    request.params = params_t{ array_t{ boolean_type{ true }, number_t{ 24.0 }, string_t{ "42" } } };
     BOOST_REQUIRE(!instance.notify(request));
     BOOST_CHECK_EQUAL(first_result_a, true);
     BOOST_CHECK_EQUAL(second_result_a, true);
@@ -268,25 +273,25 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expecte
     const auto ec1 = instance.notify(
     {
         .method = "all_required",
-        .params = { array_t{ boolean_t{ true }, value_t{ 24.0 } } }
+        .params = { array_t{ boolean_type{ true }, value_t{ 24.0 } } }
     });
 
     const auto ec2 = instance.notify(
     {
         .method = "all_required",
-        .params = { array_t{ string_t{ "42" }, number_t{ 24.0 }, boolean_t{ true } } }
+        .params = { array_t{ string_t{ "42" }, number_t{ 24.0 }, boolean_type{ true } } }
     });
 
     const auto ec3 = instance.notify(
     {
         .method = "all_required",
-        .params = { array_t{ boolean_t{ true }, number_t{ 24.0 }, string_t{ "42" }, string_t{ "42" } } }
+        .params = { array_t{ boolean_type{ true }, number_t{ 24.0 }, string_t{ "42" }, string_t{ "42" } } }
     });
 
     const auto ec4 = instance.notify(
     {
         .method = "all_required",
-        .params = { array_t{ boolean_t{ true }, number_t{ 24.0 }, string_t{ "42" } } }
+        .params = { array_t{ boolean_type{ true }, number_t{ 24.0 }, string_t{ "42" } } }
     });
 
     BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
@@ -322,14 +327,14 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
     {
         // missing_parameter (absent)
         .method = "all_required",
-        .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } } } }
+        .params = { object_t{ { "a", boolean_type{ true } }, { "b", number_t{ 24.0 } } } }
     });
 
     const auto ec2 = instance.notify(
     {
         // missing_parameter (misnamed/absent)
         .method = "all_required",
-        .params = { object_t{ { "fu", boolean_t{ true } }, { "ga", number_t{ 24.0 } }, { "zi", string_t{ "42" } } } }
+        .params = { object_t{ { "fu", boolean_type{ true } }, { "ga", number_t{ 24.0 } }, { "zi", string_t{ "42" } } } }
     });
 
     const auto ec3 = instance.notify(
@@ -343,7 +348,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
     {
         // extra_named
         .method = "all_required",
-        .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } }, { "d", string_t{ "42" } } } }
+        .params = { object_t{ { "a", boolean_type{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } }, { "d", string_t{ "42" } } } }
     });
 
     const auto ec5 = instance.notify(
@@ -353,21 +358,21 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
         // before object_t conversion occurs, so map never sees duplicates.
         // Test construction uses initializer_list -> first-writer-wins.
         .method = "all_required",
-        .params = { object_t{ { "a", boolean_t{ false } }, { "b", number_t{ 42.0 } }, { "c", string_t{ "24" } }, { "c", string_t{ "42" } } } }
+        .params = { object_t{ { "a", boolean_type{ false } }, { "b", number_t{ 42.0 } }, { "c", string_t{ "24" } }, { "c", string_t{ "42" } } } }
     });
 
     const auto ec6 = instance.notify(
     {
         // success, in order
         .method = "all_required",
-        .params = { object_t{ { "a", boolean_t{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
+        .params = { object_t{ { "a", boolean_type{ true } }, { "b", number_t{ 24.0 } }, { "c", string_t{ "42" } } } }
     });
 
     const auto ec7 = instance.notify(
     {
         // success, out of order
         .method = "all_required",
-        .params = { object_t{ { "b", number_t{ 24.0 } }, { "c", string_t{ "24" } }, { "a", boolean_t{ false } } } }
+        .params = { object_t{ { "b", number_t{ 24.0 } }, { "c", string_t{ "24" } }, { "a", boolean_type{ false } } } }
     });
 
     BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
@@ -389,7 +394,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expecte
     bool called{};
     string_t result_a{};
     number_t result_b{};
-    boolean_t result_c{};
+    boolean_type result_c{};
 
     instance.subscribe(
         [&](const code&, mock_interface::with_options, std::string a, double b, bool c)
@@ -423,7 +428,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expecte
     const auto ec4 = instance.notify(
     {
         .method = "with_options",
-        .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, boolean_t{ false } } }
+        .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, boolean_type{ false } } }
     });
 
     BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
@@ -442,7 +447,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
     bool called{};
     string_t result_a{};
     number_t result_b{};
-    boolean_t result_c{};
+    boolean_type result_c{};
 
     instance.subscribe(
         [&](const code&, mock_interface::with_options, std::string a, double b, bool c)
@@ -476,7 +481,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
     const auto ec4 = instance.notify(
     {
         .method = "with_options",
-        .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", boolean_t{ false } } } }
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", boolean_type{ false } } } }
     });
 
     BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
@@ -495,7 +500,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expecte
     bool called{};
     string_t result_a{};
     number_t result_b{};
-    boolean_t result_c{};
+    boolean_type result_c{};
 
     instance.subscribe(
         [&](const code&, mock_interface::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
@@ -523,7 +528,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expecte
     const auto ec3 = instance.notify(
     {
         .method = "with_nullify",
-        .params = { array_t{ string_t{ "42" }, null_t{}, boolean_t{ false } } }
+        .params = { array_t{ string_t{ "42" }, null_t{}, boolean_type{ false } } }
     });
 
     const auto ec4 = instance.notify(
@@ -548,7 +553,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
     bool called{};
     string_t result_a{};
     number_t result_b{};
-    boolean_t result_c{};
+    boolean_type result_c{};
 
     instance.subscribe(
         [&](const code&, mock_interface::with_nullify, std::string a, std::optional<double> b, std::optional<bool> c)
@@ -576,7 +581,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
     const auto ec3 = instance.notify(
     {
         .method = "with_nullify",
-        .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} }, { "c", boolean_t{ false } } } }
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", null_t{} }, { "c", boolean_type{ false } } } }
     });
 
     const auto ec4 = instance.notify(
@@ -600,7 +605,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expecte
     distributor_mock instance{};
     bool called{};
     string_t result_a{};
-    boolean_t result_b{};
+    boolean_type result_b{};
     number_t result_c{};
 
     instance.subscribe(
@@ -635,7 +640,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expecte
     const auto ec4 = instance.notify(
     {
         .method = "with_combine",
-        .params = { array_t{ string_t{ "42" }, boolean_t{ false }, number_t{ 42.0 } } }
+        .params = { array_t{ string_t{ "42" }, boolean_type{ false }, number_t{ 42.0 } } }
     });
 
     BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
@@ -653,7 +658,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
     distributor_mock instance{};
     bool called{};
     string_t result_a{};
-    boolean_t result_b{};
+    boolean_type result_b{};
     number_t result_c{};
 
     instance.subscribe(
@@ -688,7 +693,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
     const auto ec4 = instance.notify(
     {
         .method = "with_combine",
-        .params = { object_t{ { "a", string_t{ "42" } }, { "b", boolean_t{ false } }, { "c", number_t{ 42.0 } } } }
+        .params = { object_t{ { "a", string_t{ "42" } }, { "b", boolean_type{ false } }, { "c", number_t{ 42.0 } } } }
     });
 
     BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
@@ -705,7 +710,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expecte
 {
     distributor_mock instance{};
     bool called{};
-    boolean_t result_a{};
+    boolean_type result_a{};
     number_t result_b{};
 
     instance.subscribe(
@@ -733,13 +738,13 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expecte
     const auto ec3 = instance.notify(
     {
         .method = "not_required",
-        .params = { array_t{ boolean_t{ false } } }
+        .params = { array_t{ boolean_type{ false } } }
     });
 
     const auto ec4 = instance.notify(
     {
         .method = "not_required",
-        .params = { array_t{ boolean_t{ false }, number_t{ 42.0 } } }
+        .params = { array_t{ boolean_type{ false }, number_t{ 42.0 } } }
     });
 
     BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
@@ -755,7 +760,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
 {
     distributor_mock instance{};
     bool called{};
-    boolean_t result_a{};
+    boolean_type result_a{};
     number_t result_b{};
 
     instance.subscribe(
@@ -783,13 +788,13 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
     const auto ec3 = instance.notify(
     {
         .method = "not_required",
-        .params = { object_t{ { "a", boolean_t{ false } } } }
+        .params = { object_t{ { "a", boolean_type{ false } } } }
     });
 
     const auto ec4 = instance.notify(
     {
         .method = "not_required",
-        .params = { object_t{ { "a", boolean_t{ false } }, { "b", number_t{ 42.0 } } } }
+        .params = { object_t{ { "a", boolean_type{ false } }, { "b", number_t{ 42.0 } } } }
     });
 
     BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
