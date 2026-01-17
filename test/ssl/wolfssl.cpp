@@ -23,6 +23,11 @@ extern "C" {
 #include "wolfcrypt/test/test.h"
 }
 
+// If not defined in build config match wolfcrypt/test/test.c.
+#ifndef CERT_PREFIX
+#define CERT_PREFIX "./"
+#endif
+
 // NO_MAIN_DRIVER and NO_TESTSUITE_MAIN_DRIVER must be set.
 // These can be set, but are disabled in `unit_tests()` given current config.
 // wolfSSL_Debugging_ON()
@@ -84,6 +89,10 @@ BOOST_AUTO_TEST_CASE(wolfssl__wolfcrypt__always__success)
 
 BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
 {
+#define NO_CONST_CAST_REQUIRED 26465
+
+BC_PUSH_WARNING(NO_CONST_CAST)
+BC_PUSH_WARNING(NO_CONST_CAST_REQUIRED)
 #if !defined(NO_WOLFSSL_CIPHER_SUITE_TEST) && \
     !defined(NO_WOLFSSL_CLIENT) && \
     !defined(NO_WOLFSSL_SERVER) && \
@@ -104,15 +113,19 @@ BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
 
     // "test.conf" must have only '\n' line termination (not '\r\n').
     // Otherwise the file will be read as a single line and bypass all tests.
-    // Defaults to 'const char* fname = "tests/test.conf";'.
-    const char* configuration = CERT_PREFIX "tests/test.conf";
-    const char* argv[]{ "testsuite", configuration };
+    // SuiteTest also bypasses any test for which the cert file is not found.
+    // Path defaults to 'const char* fname = "tests/test.conf"'.
+
+    const char* path = CERT_PREFIX "tests/test.conf";
+    const char* args[]{ "testsuite", path };
+    auto argv = const_cast<char**>(args);
     constexpr int argc = 2;
 
-    // TODO: failing on connect.
-    const auto result = SuiteTest(argc, const_cast<char**>(argv));
-    BOOST_REQUIRE(!is_zero(result));
+    // TODO: failing on connect (when tests are properly pathed).
+    BOOST_REQUIRE(is_zero(SuiteTest(argc, argv)));
 #endif
+BC_POP_WARNING()
+BC_POP_WARNING()
 }
 
 BOOST_AUTO_TEST_SUITE_END()
