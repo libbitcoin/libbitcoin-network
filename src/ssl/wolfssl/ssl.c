@@ -19,13 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335, USA
  */
 
-///////////////////////////////////////////////////////////////////////////////
-// LIBBITCOIN: Four lines in this file have been modified as follows.
-// #include <src/ssl_load.c>  -> "src/ssl_load.c"
-// #include <src/conf.c>      -> "src/conf.c"
-// #include <src/x509_str.c>  -> "src/x509_str.c"
-// #include <src/ssl_p7p12.c> -> "src/ssl_p7p12.c"
-///////////////////////////////////////////////////////////////////////////////
+/* LIBBITCOIN: Four lines in this file have been modified as follows. */
+/*
+    #include <src/ssl_load.c>  -> "src/ssl_load.c"
+    #include <src/conf.c>      -> "src/conf.c"
+    #include <src/x509_str.c>  -> "src/x509_str.c"
+    #include <src/ssl_p7p12.c> -> "src/ssl_p7p12.c"
+*/
 
 #include <wolfssl/wolfcrypt/libwolfssl_sources.h>
 
@@ -186,11 +186,11 @@
 #include "src/ssl_misc.c"
 
 #define WOLFSSL_EVP_INCLUDED
-///////////////////////////////////////////////////////////////////////////////
-// LIBBITCOIN: One line modified as follows.
-// #include "wolfcrypt/src/evp.c" -> "src/evp.c"
+/* LIBBITCOIN: One line modified as follows. */
+/*
+    #include "wolfcrypt/src/evp.c" -> "src/evp.c"
+*/
 #include "src/evp.c"
-///////////////////////////////////////////////////////////////////////////////
 
 /* Crypto code uses EVP APIs. */
 #define WOLFSSL_SSL_CRYPTO_INCLUDED
