@@ -19,8 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_SSL_OPENSSL_OPENSSL_H
 #define LIBBITCOIN_NETWORK_SSL_OPENSSL_OPENSSL_H
 
-// This directory is defined by libbitcoin to provide the expected path for
-// boost::asio to #include the contained headers. Each header forwards to:
-// #include <wolfssl/openssl/*.h>
+/* This directory is defined by libbitcoin to provide the expected path for */
+/* boost::asio to #include the contained headers. Each header forwards to: */
+/* #include <wolfssl/openssl/*.h> */
 
 #endif

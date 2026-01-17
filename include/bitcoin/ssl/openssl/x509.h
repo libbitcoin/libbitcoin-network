@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_SSL_OPENSSL_X509_H
 #define LIBBITCOIN_NETWORK_SSL_OPENSSL_X509_H
 
-// Forward <boost/asio/ssl/detail/openssl_types.hpp> load of <openssl/x509.h>.
+/* Forward <boost/asio/ssl/detail/openssl_types.hpp> load of <openssl/x509.h>. */
 #include <wolfssl/openssl/x509.h>
 
 #endif

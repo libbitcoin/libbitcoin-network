@@ -19,10 +19,12 @@
 #ifndef LIBBITCOIN_NETWORK_SSL_WOLFSSL_WOLFSSL_H
 #define LIBBITCOIN_NETWORK_SSL_WOLFSSL_WOLFSSL_H
 
-// This directory is defined by libbitcoin to provide the expected path so that
-// wolfssl sources may remain unmodified and specify:
-// #include <wolfssl/*.h>
-// #include <wolfssl/openssl/*.h>
-// #include <wolfssl/wolfcrypt/*.h>
+/* This directory is defined by libbitcoin to provide the expected path so that */
+/* wolfssl sources may remain unmodified and specify: */
+/*
+#include <wolfssl/*.h>
+#include <wolfssl/openssl/*.h>
+#include <wolfssl/wolfcrypt/*.h>
+*/
 
 #endif
