@@ -120,6 +120,10 @@ int test_tls13_apis(void)
 #endif /* !NO_WOLFSSL_SERVER || !NO_WOLFSSL_CLIENT */
     int          numGroups = 2;
 #endif
+
+/* LIBBITCOIN: fux unused variable warning. */
+#ifdef HAVE_SUPPORTED_CURVES
+
 #if defined(OPENSSL_EXTRA) && defined(HAVE_ECC)
     char         groupList[] =
 #ifdef HAVE_CURVE25519
@@ -185,6 +189,8 @@ int test_tls13_apis(void)
 #endif
             "";
 #endif /* defined(OPENSSL_EXTRA) && defined(HAVE_ECC) */
+#endif /* HAVE_SUPPORTED_CURVES */
+
 #if defined(WOLFSSL_HAVE_MLKEM) && !defined(WOLFSSL_MLKEM_NO_MALLOC) && \
     !defined(WOLFSSL_MLKEM_NO_MAKE_KEY) && \
     !defined(WOLFSSL_MLKEM_NO_ENCAPSULATE) && \
