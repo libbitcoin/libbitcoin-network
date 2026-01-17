@@ -125,6 +125,7 @@
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
+    <ClCompile Include="..\..\..\..\src\boost.cpp" />
     <ClCompile Include="..\..\..\..\src\channels\channel.cpp" />
     <ClCompile Include="..\..\..\..\src\channels\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\src\channels\channel_peer.cpp" />

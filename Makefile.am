@@ -35,6 +35,7 @@ lib_LTLIBRARIES = src/libbitcoin-network.la
 src_libbitcoin_network_la_CPPFLAGS = -I${srcdir}/include -I${srcdir}/include/bitcoin/ssl ${bitcoin_system_BUILD_CPPFLAGS}
 src_libbitcoin_network_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_network_la_SOURCES = \
+    src/boost.cpp \
     src/error.cpp \
     src/memory.cpp \
     src/net.cpp \
