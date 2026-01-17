@@ -136,4 +136,7 @@
     #endif
 #endif
 
+#define NO_MAIN_DRIVER
+#define NO_TESTSUITE_MAIN_DRIVER
+
 #endif

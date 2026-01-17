@@ -28,7 +28,6 @@ extern "C" {
 #define CERT_PREFIX "./"
 #endif
 
-// NO_MAIN_DRIVER and NO_TESTSUITE_MAIN_DRIVER must be set.
 // These can be set, but are disabled in `unit_tests()` given current config.
 // wolfSSL_Debugging_ON()
 // wolfSSL_SetMemFailCount(memFailCount)
