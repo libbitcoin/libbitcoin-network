@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
     constexpr int argc = 2;
 
     // TODO: failing on connect.
-    ////const auto result = SuiteTest(argc, const_cast<char**>(argv));
-    ////BOOST_REQUIRE(!is_zero(result));
+    const auto result = SuiteTest(argc, const_cast<char**>(argv));
+    BOOST_REQUIRE(!is_zero(result));
 #endif
 }
 
