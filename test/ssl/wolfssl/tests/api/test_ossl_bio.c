@@ -1149,11 +1149,6 @@ int test_wolfSSL_BIO_get_len(void)
     BIO_free(bio);
     bio = NULL;
 
-/* LIBBITCOIN: fix break when STDERR_FILENO is already defined. */
-#ifndef STDERR_FILENO
-    int STDERR_FILENO = 2;
-#endif
-
     ExpectNotNull(bio = BIO_new_fd(STDERR_FILENO, BIO_NOCLOSE));
     ExpectIntEQ(wolfSSL_BIO_get_len(bio), WC_NO_ERR_TRACE(WOLFSSL_BAD_FILE));
     BIO_free(bio);

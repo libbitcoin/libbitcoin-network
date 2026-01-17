@@ -89,8 +89,6 @@ BOOST_AUTO_TEST_CASE(wolfssl__wolfcrypt__always__success)
 
 BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
 {
-#define NO_CONST_CAST_REQUIRED 26465
-
 BC_PUSH_WARNING(NO_CONST_CAST)
 BC_PUSH_WARNING(NO_CONST_CAST_REQUIRED)
 #if !defined(NO_WOLFSSL_CIPHER_SUITE_TEST) && \

@@ -126,8 +126,14 @@
 #define WOLFSSL_NO_CLIENT_AUTH
 #define NO_WOLFSSL_RENESAS_TSIP_TLS_SESSION
 
-#if defined(_MSC_VER)
-#define WC_MAYBE_UNUSED __pragma(warning(suppress:4505))
+#ifdef _MSC_VER
+    /* Warnings emitted due to missing define in vc++. */
+    #define WC_MAYBE_UNUSED __pragma(warning(suppress:4505))
+
+    /* Build break in test_ossl_bio.c due to missing define in vc++. */
+    #ifndef STDERR_FILENO
+    #define STDERR_FILENO _fileno(stderr)
+    #endif
 #endif
 
 #endif
