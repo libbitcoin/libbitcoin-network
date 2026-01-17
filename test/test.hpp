@@ -23,8 +23,9 @@
 
 #include <filesystem>
 #include <bitcoin/network.hpp>
+#include <wolfssl/test.h>
 
- // copied from libbitcoin-system-test
+// copied from libbitcoin-system-test
 
 #define TEST_NAME \
     boost::unit_test::framework::current_test_case().p_name.get()

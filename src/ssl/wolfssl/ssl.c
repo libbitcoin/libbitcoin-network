@@ -187,7 +187,7 @@
 
 #define WOLFSSL_EVP_INCLUDED
 ///////////////////////////////////////////////////////////////////////////////
-// LIBBITCOIN: one line modified as follows.
+// LIBBITCOIN: One line modified as follows.
 // #include "wolfcrypt/src/evp.c" -> "src/evp.c"
 #include "src/evp.c"
 ///////////////////////////////////////////////////////////////////////////////
@@ -5979,11 +5979,7 @@ int AddCA(WOLFSSL_CERT_MANAGER* cm, DerBuffer** pDer, int type, int verify)
 {
     int         ret;
     Signer*     signer = NULL;
-///////////////////////////////////////////////////////////////////////////////
-// LIBBITCOIN: fix (bogus) potentially uninitialized variable warning.
-    word32      row = 0;
-//  word32      row;
-///////////////////////////////////////////////////////////////////////////////
+    word32      row;
     byte*       subjectHash;
     WC_DECLARE_VAR(cert, DecodedCert, 1, 0);
     DerBuffer*   der = *pDer;

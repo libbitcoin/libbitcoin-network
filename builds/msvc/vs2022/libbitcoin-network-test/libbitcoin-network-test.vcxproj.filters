@@ -14,7 +14,7 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\async\races">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\channels">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
@@ -29,22 +29,22 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\http">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\http\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\peer">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer\detail">
+    <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer\enums">
+    <Filter Include="src\messages\peer">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\peer\detail">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\messages\peer\enums">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\messages\rpc">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\net">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
@@ -54,6 +54,45 @@
     </Filter>
     <Filter Include="src\sessions">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\vectors">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\vectors\certs">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\examples">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\examples\client">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\examples\server">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000010}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\tests">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\tests\api">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000A1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\testsuite">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\wolfcrypt">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\wolfcrypt\benchmark">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000B1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\wolfcrypt\test">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000C1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -408,11 +447,446 @@
     <ClCompile Include="..\..\..\..\test\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl.cpp">
+      <Filter>src\ssl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\client\client.c">
+      <Filter>src\ssl\wolfssl\examples\client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\server\server.c">
+      <Filter>src\ssl\wolfssl\examples\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api.c">
+      <Filter>src\ssl\wolfssl\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_aes.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_arc4.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_asn.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_blake2.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_camellia.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha20_poly1305.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_cmac.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve25519.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve448.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_des3.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dh.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dsa.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dtls.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ecc.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed25519.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed448.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_evp.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hash.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hmac.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md2.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md4.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md5.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mldsa.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mlkem.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_asn1.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bio.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bn.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_cipher.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dgst.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dh.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dsa.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ec.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ecx.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_mac.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_rsa.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_sk.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs12.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs7.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_poly1305.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_random.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rc2.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ripemd.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rsa.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha256.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha3.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha512.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_signature.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm2.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm3.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm4.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls13.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls_ext.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wc_encrypt.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wolfmath.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_x509.c">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\quic.c">
+      <Filter>src\ssl\wolfssl\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\srp.c">
+      <Filter>src\ssl\wolfssl\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\suites.c">
+      <Filter>src\ssl\wolfssl\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\unit.c">
+      <Filter>src\ssl\wolfssl\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\utils.c">
+      <Filter>src\ssl\wolfssl\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\w64wrapper.c">
+      <Filter>src\ssl\wolfssl\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\testsuite\utils1.c">
+      <Filter>src\ssl\wolfssl\testsuite</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.c">
+      <Filter>src\ssl\wolfssl\wolfcrypt\benchmark</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\test\test.c">
+      <Filter>src\ssl\wolfssl\wolfcrypt\test</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\examples\client\client.h">
+      <Filter>src\ssl\wolfssl\examples\client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\examples\server\server.h">
+      <Filter>src\ssl\wolfssl\examples\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\api.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\api_decl.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_aes.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_arc4.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon_kats.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_asn.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_blake2.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_camellia.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha20_poly1305.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_cmac.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve25519.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve448.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_des3.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dh.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_digest.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dsa.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dtls.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ecc.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed25519.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed448.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_evp.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hash.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hmac.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md2.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md4.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md5.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mldsa.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mlkem.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp_test_blobs.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_asn1.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bio.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bn.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_cipher.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dgst.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dh.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dsa.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ec.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ecx.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_mac.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_rsa.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_sk.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs12.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs7.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_poly1305.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_random.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rc2.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ripemd.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rsa.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha256.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha3.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha512.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_signature.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm2.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm3.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm4.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls13.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls_ext.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wc_encrypt.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wolfmath.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_x509.h">
+      <Filter>src\ssl\wolfssl\tests\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\unit.h">
+      <Filter>src\ssl\wolfssl\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\utils.h">
+      <Filter>src\ssl\wolfssl\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\testsuite\utils.h">
+      <Filter>src\ssl\wolfssl\testsuite</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.h">
+      <Filter>src\ssl\wolfssl\wolfcrypt\benchmark</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\test\test.h">
+      <Filter>src\ssl\wolfssl\wolfcrypt\test</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\test\test.hpp">
       <Filter>src</Filter>
     </ClInclude>

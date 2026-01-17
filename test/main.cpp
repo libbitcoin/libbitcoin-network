@@ -17,4 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #define BOOST_TEST_MODULE libbitcoin_network_test
+
 #include <boost/test/unit_test.hpp>
+
+#include <bitcoin/network.hpp>
+#include <wolfssl/ssl.h>
+
+// boost::asio::ssl initializes ssl via a singleton and does not uninitialize
+// it at shutdown. This results from importing <boost/asio/ssl.hpp> and invokes
+// ::SSL_library_init(), which in turn invokes wolfSSL_Init(). Because wolfssl
+// reference counts the initialization, the cleanup call must be balanced in
+// any process the include network. Otherwise it leaks at least 136 bytes.
+struct global_wolf_ssl_fixture
+{
+    global_wolf_ssl_fixture() NOEXCEPT
+    {
+        ////wolfSSL_Init();
+    }
+
+    ~global_wolf_ssl_fixture() NOEXCEPT
+    {
+        wolfSSL_Cleanup();
+    }
+};
+
+BOOST_GLOBAL_FIXTURE(global_wolf_ssl_fixture);

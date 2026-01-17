@@ -39,6 +39,7 @@ std::ostream& operator<<(std::ostream& stream,
 
 namespace test {
 
+// CERT_WRITE_TEMP_DIR defined by build should match as "tests/".
 const std::string directory = "tests";
 
 bool clear(const std::filesystem::path& file_directory) NOEXCEPT

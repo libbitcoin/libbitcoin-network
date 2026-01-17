@@ -52,34 +52,28 @@
 #define NO_WC_RSA_BLINDING
 #define WC_NO_HARDEN
 
-// On Windows OS APIs are used.
-////#define NO_DEV_RANDOM
-////#define NO_DEV_URANDOM
-
-// Keep control over socket.
 // wolfssl.com/documentation/manuals/wolfssl/chapter05.html
 #define WOLFSSL_USER_IO
-#define WOLFSSL_NO_SOCK
 
-// Required for certificate management via filesystem.
-////#define NO_FILESYSTEM
+// No reason to define this as the library does not use sockets (test only).
+////#define WOLFSSL_NO_SOCK
 
-// TODO: keygen.
-////#define WOLFSSL_PEM_TO_DER
+// Required by boost for certificate management via filesystem.
+//// #define NO_FILESYSTEM
+#define WOLFSSL_PEM_TO_DER
 #define WOLFSSL_CERT_GEN
 #define WOLFSSL_DER_LOAD
 #define WOLFSSL_KEY_GEN
 
 // TLS is required, not just cryptographic functions.
-////#define WOLFSSL_AEAD_ONLY
 #define WOLFSSL_TLS13
 #define HAVE_TLS_EXTENSIONS
 #define HAVE_FFDHE_2048
 #define HAVE_POLY1305
 #define HAVE_CHACHA
+#define HAVE_SHA256
 #define HAVE_HKDF
 #define HAVE_HMAC
-#define HAVE_SHA256
 
 // At least one encryption method is required.
 // ECC is needed for Curve25519-based key exchange in modern TLS.
@@ -88,6 +82,11 @@
 
 // Callback requires at least one union element to be defined.
 #define WOLF_CRYPTO_CB
+// This removes default RNG fallback (must set a callback RNG).
+////#define WC_NO_HASHDRBG
+// On Windows OS RNG APIs are used, these on others.
+////#define NO_DEV_RANDOM
+////#define NO_DEV_URANDOM
 
 // Used with BOOST_ASIO_USE_WOLFSSL to optimize boost integration.
 // wolfssl.com/wolfssl-support-asio-boost-asio-c-libraries
@@ -102,7 +101,6 @@
 #define OPENSSL_NO_SSL2
 
 // Remove unused or undesired components.
-#define WC_NO_HASHDRBG
 #define NO_PWDBASED
 #define NO_OLD_TLS
 #define NO_AESGCM
@@ -125,8 +123,11 @@
 #define NO_OLD_SSL_NAMES
 #define NO_OLD_WC_NAMES
 #define NO_OLD_POLY1305
-#define WOLFSSL_NO_SOCK
 #define WOLFSSL_NO_CLIENT_AUTH
 #define NO_WOLFSSL_RENESAS_TSIP_TLS_SESSION
+
+#if defined(_MSC_VER)
+#define WC_MAYBE_UNUSED __pragma(warning(suppress:4505))
+#endif
 
 #endif
