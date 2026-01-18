@@ -1,2 +1,1 @@
-test_libbitcoin_network
-ssl/vectors/test.conf eol=lf
+ssl/vectors/tests/test.conf eol=lf
