@@ -218,7 +218,6 @@ link_libraries(
 # Define ${CANONICAL_LIB_NAME} project.
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}
-    "../../src/boost.cpp"
     "../../src/error.cpp"
     "../../src/memory.cpp"
     "../../src/net.cpp"
@@ -606,6 +605,12 @@ if (with-tests)
         "../../test/ssl/vectors/certs/test/server-goodcn.pem"
         "../../test/ssl/vectors/certs/test/server-goodcnwild.pem"
         "../../test/ssl/vectors/certs/test/server-localhost.pem"
+        "../../test/ssl/vectors/tests/test-chains.conf"
+        "../../test/ssl/vectors/tests/test-dhprime.conf"
+        "../../test/ssl/vectors/tests/test-fails.conf"
+        "../../test/ssl/vectors/tests/test-tls13-down.conf"
+        "../../test/ssl/vectors/tests/test-tls13-ecc.conf"
+        "../../test/ssl/vectors/tests/test-tls13.conf"
         "../../test/ssl/vectors/tests/test.conf"
         "../../test/ssl/wolfssl/examples/client/client.c"
         "../../test/ssl/wolfssl/examples/client/client.h"

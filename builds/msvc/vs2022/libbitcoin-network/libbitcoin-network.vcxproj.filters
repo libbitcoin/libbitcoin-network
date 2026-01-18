@@ -180,9 +180,6 @@
     <ClCompile Include="..\..\..\..\src\async\time.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\boost.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\channels\channel.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
