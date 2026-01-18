@@ -60426,8 +60426,9 @@ WOLFSSL_TEST_SUBROUTINE wc_test_ret_t logging_test(void)
     int         i;
     WOLFSSL_ENTER("logging_test (debug)");
 
+    /* LIBBITCOIN: fix narrowing implicit cast warning. */
     for (i = 0; i < (int)sizeof(b); i++)
-        b[i] = i;
+        b[i] = (byte)i;
 
     ret = wolfSSL_Debugging_ON();
     if (ret != 0)
