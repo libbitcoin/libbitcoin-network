@@ -13,7 +13,6 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\libbitcoin-network\test\ssl\wolfssl\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
-      <PreprocessorDefinitions>CERT_WRITE_TEMP_DIR=&quot;tests/&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions>CERT_PREFIX=&quot;$(RepoRoot.Replace("\", "/"))test/ssl/vectors/&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(DebugOrRelease)' == 'debug'">DEBUG_SUITE_TESTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>

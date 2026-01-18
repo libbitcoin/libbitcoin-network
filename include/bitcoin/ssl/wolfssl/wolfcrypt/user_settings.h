@@ -138,5 +138,6 @@
 
 #define NO_MAIN_DRIVER
 #define NO_TESTSUITE_MAIN_DRIVER
+#define CERT_WRITE_TEMP_DIR "./"
 
 #endif

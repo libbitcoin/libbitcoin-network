@@ -36,93 +36,85 @@ extern "C" {
 // wc_RunCast_fips(setting)
 // wc_RunAllCast_fips()
 
-BOOST_FIXTURE_TEST_SUITE(wolfssl_tests, test::directory_setup_fixture)
+BOOST_FIXTURE_TEST_SUITE(wolfssl_tests, test::current_directory_setup_fixture)
 
+#if defined(WOLFSSL_W64_WRAPPER)
 BOOST_AUTO_TEST_CASE(wolfssl__w64wrapper__always__success)
 {
-#if defined(WOLFSSL_W64_WRAPPER)
     BOOST_REQUIRE(is_zero(w64wrapper_test()));
-#endif
 }
+#endif
 
+#if defined(WOLFCRYPT_HAVE_SRP) && defined(WOLFSSL_SHA512)
 BOOST_AUTO_TEST_CASE(wolfssl__srp__always__success)
 {
-#if defined(WOLFCRYPT_HAVE_SRP) && defined(WOLFSSL_SHA512)
     BOOST_REQUIRE_NO_THROW(SrpTest());
-#endif
 }
+#endif
 
+#if defined(WOLFSSL_QUIC)
 BOOST_AUTO_TEST_CASE(wolfssl__quic__always__success)
 {
-#if defined(WOLFSSL_QUIC)
     BOOST_REQUIRE(is_zero(QuicTest()));
-#endif
 }
+#endif
 
+#if !defined(NO_CRYPT_TEST)
 BOOST_AUTO_TEST_CASE(wolfssl__wolfcrypt__always__success)
 {
-#if !defined(NO_CRYPT_TEST)
-
     // requires:
     // /vectors/certs/ecc-key.der
     // /vectors/certs/ca-ecc384-key.der
     // /vectors/certs/ca-ecc384-cert.pem
     // cert paths are wired in "test.c" as:
-    // CERT_PREFIX "certs" CERT_PATH_SEP
-    // and CERT_PREFIX is defined as absolute in the project build.
-    // By default CERT_PREFIX is "./"
-    // CERT_WRITE_TEMP_DIR is defined as absolute in the project build.
 
-    // TODO: use fixture to set/reset working directory for base cert read.
-    // TODO: then restore it when the method completes.
-    // std::filesystem::current_path();
+    // By default CERT_PREFIX is "./" (relative),
+    // and combined as: CERT_PREFIX "certs" CERT_PATH_SEP
+    // and CERT_PREFIX is defined as absolute in the project build.
+
+    // By default CERT_WRITE_TEMP_DIR is CERT_PREFIX, but this is absolute, so
+    // CERT_WRITE_TEMP_DIR is predefined as relative ("./") in user_settings.h
+    // The working directory is then controlled by current_directory_setup_fixture.
 
     func_args arguments{};
     wolfCrypt_Init();
     BOOST_REQUIRE(is_zero(wolfcrypt_test(&arguments)));
     BOOST_REQUIRE(is_zero(arguments.return_code));
     wolfCrypt_Cleanup();
-
-#endif
 }
+#endif
 
-BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
-{
-BC_PUSH_WARNING(NO_CONST_CAST)
-BC_PUSH_WARNING(NO_CONST_CAST_REQUIRED)
 #if !defined(NO_WOLFSSL_CIPHER_SUITE_TEST) && \
     !defined(NO_WOLFSSL_CLIENT) && \
     !defined(NO_WOLFSSL_SERVER) && \
     !defined(NO_TLS) && \
     !defined(SINGLE_THREADED) && \
      defined(WOLFSSL_PEM_TO_DER)
+BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
+{
+    // "test.conf" must have only '\n' line termination (not '\r\n').
+    // Otherwise the file will be read as a single line and bypass all tests.
+    // SuiteTest also bypasses any test for which the cert file is not found.
 
     // requires:
     // /vectors/certs/*.pem
     // /vectors/certs/test/*.pem
     // /vectors/test.conf
-    // cert paths are configured in "test.conf" only as: "./certs"
-    // and the prefix is the relative working directory.
-
-    // TODO: use fixture to set/reset working directory for base cert read.
-    // TODO: then restore it when the method completes.
-    // std::filesystem::current_path();
-
-    // "test.conf" must have only '\n' line termination (not '\r\n').
-    // Otherwise the file will be read as a single line and bypass all tests.
-    // SuiteTest also bypasses any test for which the cert file is not found.
-    // Path defaults to 'const char* fname = "tests/test.conf"'.
+    // cert paths are configured in "test.conf" only as: "./certs" (relative).
+    // test.conf defaults to "tests/test.conf" (relative), so use CERT_PREFIX.
 
     const char* path = CERT_PREFIX "tests/test.conf";
     const char* args[]{ "testsuite", path };
-    auto argv = const_cast<char**>(args);
     constexpr int argc = 2;
+    BC_PUSH_WARNING(NO_CONST_CAST)
+    BC_PUSH_WARNING(NO_CONST_CAST_REQUIRED)
+    auto argv = const_cast<char**>(args);
+    BC_POP_WARNING()
+    BC_POP_WARNING()
 
     // TODO: failing on connect (when tests are properly pathed).
     BOOST_REQUIRE(is_zero(SuiteTest(argc, argv)));
-#endif
-BC_POP_WARNING()
-BC_POP_WARNING()
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
