@@ -120,8 +120,6 @@ BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
     auto argv = const_cast<char**>(args);
     BC_POP_WARNING()
     BC_POP_WARNING()
-
-    // TODO: failing on connect (when tests are properly pathed).
     BOOST_REQUIRE(is_zero(SuiteTest(argc, argv)));
 }
 #endif

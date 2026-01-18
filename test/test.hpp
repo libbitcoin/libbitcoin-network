@@ -106,12 +106,12 @@ struct directory_setup_fixture
 {
     DELETE_COPY_MOVE(directory_setup_fixture);
 
-    directory_setup_fixture()
+    directory_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(clear(directory));
     }
 
-    ~directory_setup_fixture()
+    ~directory_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(clear(directory));
     }
@@ -121,7 +121,7 @@ struct current_directory_setup_fixture
 {
     DELETE_COPY_MOVE(current_directory_setup_fixture);
 
-    current_directory_setup_fixture()
+    current_directory_setup_fixture() NOEXCEPT
       : error_{}, previous_(std::filesystem::current_path(error_))
     {
         BOOST_REQUIRE(!error_);
@@ -131,7 +131,7 @@ struct current_directory_setup_fixture
         BOOST_REQUIRE(!error_);
     }
 
-    ~current_directory_setup_fixture()
+    ~current_directory_setup_fixture() NOEXCEPT
     {
         std::filesystem::current_path(previous_, error_);
         BOOST_REQUIRE(!error_);

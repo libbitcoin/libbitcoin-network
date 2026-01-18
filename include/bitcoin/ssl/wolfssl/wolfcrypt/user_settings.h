@@ -53,7 +53,8 @@
 #define WC_NO_HARDEN
 
 /* wolfssl.com/documentation/manuals/wolfssl/chapter05.html */
-#define WOLFSSL_USER_IO
+/* Requires that send and receive data copy functions be defined. */
+/* #define WOLFSSL_USER_IO */
 
 /* No reason to define this as the library does not use sockets (test only). */
 /* #define WOLFSSL_NO_SOCK */
@@ -68,7 +69,7 @@
 /* TLS is required, not just cryptographic functions. */
 #define WOLFSSL_TLS13
 #define HAVE_TLS_EXTENSIONS
-#define HAVE_FFDHE_2048
+#define HAVE_SUPPORTED_CURVES
 #define HAVE_POLY1305
 #define HAVE_CHACHA
 #define HAVE_SHA256
@@ -133,6 +134,20 @@
     /* Build break in test_ossl_bio.c due to missing define in vc++. */
     #ifndef STDERR_FILENO
     #define STDERR_FILENO _fileno(stderr)
+    #endif
+#endif
+
+#ifndef NDEBUG
+    #define DEBUG_WOLFSSL
+    #define DEBUG_SUITE_TESTS
+    #define WOLFSSL_VERBOSE_ERRORS
+    #define WOLFSSL_HAVE_ERROR_QUEUE
+
+    #ifndef WOLFSSL_LOGGINGENABLED_DEFAULT
+    #define WOLFSSL_LOGGINGENABLED_DEFAULT 1
+    #endif
+    #ifndef WOLFSSL_CERT_LOG_ENABLED_DEFAULT
+    #define WOLFSSL_CERT_LOG_ENABLED_DEFAULT 1
     #endif
 #endif
 
