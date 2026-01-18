@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(wolfssl__wolfcrypt__always__success)
 
     // By default CERT_PREFIX is "./" (relative),
     // and combined as: CERT_PREFIX "certs" CERT_PATH_SEP
-    // and CERT_PREFIX is defined as absolute in the project build.
+    // but CERT_PREFIX is defined as absolute in the project build.
 
     // By default CERT_WRITE_TEMP_DIR is CERT_PREFIX, but this is absolute, so
     // CERT_WRITE_TEMP_DIR is predefined as relative ("./") in user_settings.h
@@ -102,13 +102,19 @@ BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
     // requires:
     // /vectors/certs/*.pem
     // /vectors/certs/test/*.pem
-    // /vectors/test.conf
-    // cert paths are configured in "test.conf" only as: "./certs" (relative).
-    // test.conf defaults to "tests/test.conf" (relative), so use CERT_PREFIX.
+    // /vectors/tests/test.conf
 
-    const char* path = CERT_PREFIX "tests/test.conf";
-    const char* args[]{ "testsuite", path };
-    constexpr int argc = 2;
+    // cert paths are configured in "test.conf" only as: "./certs" (relative).
+    // test.conf defaults to "tests/test.conf" (parameterizable). Since we need
+    // to set the working directory for certs, we can use it for both.
+    // Working directory is restored by current_directory_setup_fixture,
+
+    code ec{};
+    std::filesystem::current_path(CERT_PREFIX, ec);
+    BOOST_REQUIRE(!ec);
+
+    constexpr int argc{};
+    const char* args[]{ "", nullptr };
     BC_PUSH_WARNING(NO_CONST_CAST)
     BC_PUSH_WARNING(NO_CONST_CAST_REQUIRED)
     auto argv = const_cast<char**>(args);
