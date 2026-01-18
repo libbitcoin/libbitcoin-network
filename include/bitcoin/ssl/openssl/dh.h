@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_SSL_OPENSSL_DH_H
 #define LIBBITCOIN_NETWORK_SSL_OPENSSL_DH_H
 
-// Forward <boost/asio/ssl/detail/openssl_types.hpp> load of <openssl/dh.h>.
+/* Forward <boost/asio/ssl/detail/openssl_types.hpp> load of <openssl/dh.h>. */
 #include <wolfssl/openssl/dh.h>
 
 #endif

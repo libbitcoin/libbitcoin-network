@@ -11,12 +11,22 @@
 
   <ItemDefinitionGroup>
     <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\..\libbitcoin-network\test\ssl\wolfssl\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
+      <PreprocessorDefinitions>CERT_PREFIX=&quot;$(RepoRoot.Replace("\", "/"))test/ssl/vectors/&quot;;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent Condition="'$(DebugOrRelease)' == 'release'">
       <Command>"$(TargetPath)" --log_level=warning --run_test=* --show_progress=no --build_info=yes</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
+
+  <Target Name="SuppressWarningsForWolfSSLFiles" BeforeTargets="ClCompile">
+    <ItemGroup>
+      <ClCompile Update="@(ClCompile)">
+        <AdditionalOptions Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\test\ssl\wolfssl\'))">/wd4005 /wd4189 /wd4245 /wd4267 /wd4701 /wd4702 /wd4703 %(AdditionalOptions)</AdditionalOptions>
+      </ClCompile>
+    </ItemGroup>
+  </Target>
 
   <!-- Dependencies -->
 

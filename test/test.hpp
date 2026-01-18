@@ -23,8 +23,9 @@
 
 #include <filesystem>
 #include <bitcoin/network.hpp>
+#include <wolfssl/test.h>
 
- // copied from libbitcoin-system-test
+// copied from libbitcoin-system-test
 
 #define TEST_NAME \
     boost::unit_test::framework::current_test_case().p_name.get()
@@ -109,10 +110,37 @@ struct directory_setup_fixture
     {
         BOOST_REQUIRE(clear(directory));
     }
+
     ~directory_setup_fixture() NOEXCEPT
     {
         BOOST_REQUIRE(clear(directory));
     }
+};
+
+struct current_directory_setup_fixture
+{
+    DELETE_COPY_MOVE(current_directory_setup_fixture);
+
+    current_directory_setup_fixture() NOEXCEPT
+      : error_{}, previous_(std::filesystem::current_path(error_))
+    {
+        BOOST_REQUIRE(!error_);
+
+        BOOST_REQUIRE(clear(directory));
+        std::filesystem::current_path(directory, error_);
+        BOOST_REQUIRE(!error_);
+    }
+
+    ~current_directory_setup_fixture() NOEXCEPT
+    {
+        std::filesystem::current_path(previous_, error_);
+        BOOST_REQUIRE(!error_);
+        BOOST_REQUIRE(clear(directory));
+    }
+
+private:
+    std::error_code error_;
+    std::filesystem::path previous_;
 };
 
 } // namespace test

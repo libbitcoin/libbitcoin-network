@@ -128,92 +128,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/sessions/session_peer.cpp \
     src/sessions/session_seed.cpp \
     src/sessions/session_server.cpp \
-    src/ssl/wolfcrypt/aes.c \
-    src/ssl/wolfcrypt/arc4.c \
-    src/ssl/wolfcrypt/ascon.c \
-    src/ssl/wolfcrypt/asm.c \
-    src/ssl/wolfcrypt/asn.c \
-    src/ssl/wolfcrypt/blake2b.c \
-    src/ssl/wolfcrypt/blake2s.c \
-    src/ssl/wolfcrypt/camellia.c \
-    src/ssl/wolfcrypt/chacha.c \
-    src/ssl/wolfcrypt/chacha20_poly1305.c \
-    src/ssl/wolfcrypt/cmac.c \
-    src/ssl/wolfcrypt/coding.c \
-    src/ssl/wolfcrypt/compress.c \
-    src/ssl/wolfcrypt/cpuid.c \
-    src/ssl/wolfcrypt/cryptocb.c \
-    src/ssl/wolfcrypt/curve25519.c \
-    src/ssl/wolfcrypt/curve448.c \
-    src/ssl/wolfcrypt/des3.c \
-    src/ssl/wolfcrypt/dh.c \
-    src/ssl/wolfcrypt/dilithium.c \
-    src/ssl/wolfcrypt/dsa.c \
-    src/ssl/wolfcrypt/ecc.c \
-    src/ssl/wolfcrypt/eccsi.c \
-    src/ssl/wolfcrypt/ed25519.c \
-    src/ssl/wolfcrypt/ed448.c \
-    src/ssl/wolfcrypt/error1.c \
-    src/ssl/wolfcrypt/ext_lms.c \
-    src/ssl/wolfcrypt/ext_mlkem.c \
-    src/ssl/wolfcrypt/ext_xmss.c \
-    src/ssl/wolfcrypt/falcon.c \
-    src/ssl/wolfcrypt/fe_448.c \
-    src/ssl/wolfcrypt/fe_low_mem.c \
-    src/ssl/wolfcrypt/fe_operations.c \
-    src/ssl/wolfcrypt/fe_x25519_128.h \
-    src/ssl/wolfcrypt/ge_448.c \
-    src/ssl/wolfcrypt/ge_low_mem.c \
-    src/ssl/wolfcrypt/ge_operations.c \
-    src/ssl/wolfcrypt/hash.c \
-    src/ssl/wolfcrypt/hmac.c \
-    src/ssl/wolfcrypt/hpke.c \
-    src/ssl/wolfcrypt/integer.c \
-    src/ssl/wolfcrypt/kdf.c \
-    src/ssl/wolfcrypt/logging.c \
-    src/ssl/wolfcrypt/md2.c \
-    src/ssl/wolfcrypt/md4.c \
-    src/ssl/wolfcrypt/md5.c \
-    src/ssl/wolfcrypt/memory1.c \
-    src/ssl/wolfcrypt/pkcs12.c \
-    src/ssl/wolfcrypt/pkcs7.c \
-    src/ssl/wolfcrypt/poly1305.c \
-    src/ssl/wolfcrypt/pwdbased.c \
-    src/ssl/wolfcrypt/random.c \
-    src/ssl/wolfcrypt/rc2.c \
-    src/ssl/wolfcrypt/ripemd.c \
-    src/ssl/wolfcrypt/rsa.c \
-    src/ssl/wolfcrypt/sakke.c \
-    src/ssl/wolfcrypt/sha.c \
-    src/ssl/wolfcrypt/sha256.c \
-    src/ssl/wolfcrypt/sha3.c \
-    src/ssl/wolfcrypt/sha512.c \
-    src/ssl/wolfcrypt/signature.c \
-    src/ssl/wolfcrypt/siphash.c \
-    src/ssl/wolfcrypt/sp_arm32.c \
-    src/ssl/wolfcrypt/sp_arm64.c \
-    src/ssl/wolfcrypt/sp_armthumb.c \
-    src/ssl/wolfcrypt/sp_c32.c \
-    src/ssl/wolfcrypt/sp_c64.c \
-    src/ssl/wolfcrypt/sp_cortexm.c \
-    src/ssl/wolfcrypt/sp_dsp32.c \
-    src/ssl/wolfcrypt/sp_int.c \
-    src/ssl/wolfcrypt/sp_x86_64.c \
-    src/ssl/wolfcrypt/sphincs.c \
-    src/ssl/wolfcrypt/srp.c \
-    src/ssl/wolfcrypt/tfm.c \
-    src/ssl/wolfcrypt/wc_dsp.c \
-    src/ssl/wolfcrypt/wc_encrypt.c \
-    src/ssl/wolfcrypt/wc_lms.c \
-    src/ssl/wolfcrypt/wc_lms_impl.c \
-    src/ssl/wolfcrypt/wc_mlkem.c \
-    src/ssl/wolfcrypt/wc_mlkem_poly.c \
-    src/ssl/wolfcrypt/wc_pkcs11.c \
-    src/ssl/wolfcrypt/wc_port.c \
-    src/ssl/wolfcrypt/wc_xmss.c \
-    src/ssl/wolfcrypt/wc_xmss_impl.c \
-    src/ssl/wolfcrypt/wolfevent.c \
-    src/ssl/wolfcrypt/wolfmath.c \
     src/ssl/wolfssl/crl.c \
     src/ssl/wolfssl/dtls.c \
     src/ssl/wolfssl/dtls13.c \
@@ -240,7 +154,93 @@ src_libbitcoin_network_la_SOURCES = \
     src/ssl/wolfssl/src/ssl_sess.c \
     src/ssl/wolfssl/src/ssl_sk.c \
     src/ssl/wolfssl/src/x509.c \
-    src/ssl/wolfssl/src/x509_str.c
+    src/ssl/wolfssl/src/x509_str.c \
+    src/ssl/wolfssl/wolfcrypt/aes.c \
+    src/ssl/wolfssl/wolfcrypt/arc4.c \
+    src/ssl/wolfssl/wolfcrypt/ascon.c \
+    src/ssl/wolfssl/wolfcrypt/asm.c \
+    src/ssl/wolfssl/wolfcrypt/asn.c \
+    src/ssl/wolfssl/wolfcrypt/blake2b.c \
+    src/ssl/wolfssl/wolfcrypt/blake2s.c \
+    src/ssl/wolfssl/wolfcrypt/camellia.c \
+    src/ssl/wolfssl/wolfcrypt/chacha.c \
+    src/ssl/wolfssl/wolfcrypt/chacha20_poly1305.c \
+    src/ssl/wolfssl/wolfcrypt/cmac.c \
+    src/ssl/wolfssl/wolfcrypt/coding.c \
+    src/ssl/wolfssl/wolfcrypt/compress.c \
+    src/ssl/wolfssl/wolfcrypt/cpuid.c \
+    src/ssl/wolfssl/wolfcrypt/cryptocb.c \
+    src/ssl/wolfssl/wolfcrypt/curve25519.c \
+    src/ssl/wolfssl/wolfcrypt/curve448.c \
+    src/ssl/wolfssl/wolfcrypt/des3.c \
+    src/ssl/wolfssl/wolfcrypt/dh.c \
+    src/ssl/wolfssl/wolfcrypt/dilithium.c \
+    src/ssl/wolfssl/wolfcrypt/dsa.c \
+    src/ssl/wolfssl/wolfcrypt/ecc.c \
+    src/ssl/wolfssl/wolfcrypt/eccsi.c \
+    src/ssl/wolfssl/wolfcrypt/ed25519.c \
+    src/ssl/wolfssl/wolfcrypt/ed448.c \
+    src/ssl/wolfssl/wolfcrypt/error.c \
+    src/ssl/wolfssl/wolfcrypt/ext_lms.c \
+    src/ssl/wolfssl/wolfcrypt/ext_mlkem.c \
+    src/ssl/wolfssl/wolfcrypt/ext_xmss.c \
+    src/ssl/wolfssl/wolfcrypt/falcon.c \
+    src/ssl/wolfssl/wolfcrypt/fe_448.c \
+    src/ssl/wolfssl/wolfcrypt/fe_low_mem.c \
+    src/ssl/wolfssl/wolfcrypt/fe_operations.c \
+    src/ssl/wolfssl/wolfcrypt/fe_x25519_128.h \
+    src/ssl/wolfssl/wolfcrypt/ge_448.c \
+    src/ssl/wolfssl/wolfcrypt/ge_low_mem.c \
+    src/ssl/wolfssl/wolfcrypt/ge_operations.c \
+    src/ssl/wolfssl/wolfcrypt/hash.c \
+    src/ssl/wolfssl/wolfcrypt/hmac.c \
+    src/ssl/wolfssl/wolfcrypt/hpke.c \
+    src/ssl/wolfssl/wolfcrypt/integer.c \
+    src/ssl/wolfssl/wolfcrypt/kdf.c \
+    src/ssl/wolfssl/wolfcrypt/logging.c \
+    src/ssl/wolfssl/wolfcrypt/md2.c \
+    src/ssl/wolfssl/wolfcrypt/md4.c \
+    src/ssl/wolfssl/wolfcrypt/md5.c \
+    src/ssl/wolfssl/wolfcrypt/memory.c \
+    src/ssl/wolfssl/wolfcrypt/pkcs12.c \
+    src/ssl/wolfssl/wolfcrypt/pkcs7.c \
+    src/ssl/wolfssl/wolfcrypt/poly1305.c \
+    src/ssl/wolfssl/wolfcrypt/pwdbased.c \
+    src/ssl/wolfssl/wolfcrypt/random.c \
+    src/ssl/wolfssl/wolfcrypt/rc2.c \
+    src/ssl/wolfssl/wolfcrypt/ripemd.c \
+    src/ssl/wolfssl/wolfcrypt/rsa.c \
+    src/ssl/wolfssl/wolfcrypt/sakke.c \
+    src/ssl/wolfssl/wolfcrypt/sha.c \
+    src/ssl/wolfssl/wolfcrypt/sha256.c \
+    src/ssl/wolfssl/wolfcrypt/sha3.c \
+    src/ssl/wolfssl/wolfcrypt/sha512.c \
+    src/ssl/wolfssl/wolfcrypt/signature.c \
+    src/ssl/wolfssl/wolfcrypt/siphash.c \
+    src/ssl/wolfssl/wolfcrypt/sp_arm32.c \
+    src/ssl/wolfssl/wolfcrypt/sp_arm64.c \
+    src/ssl/wolfssl/wolfcrypt/sp_armthumb.c \
+    src/ssl/wolfssl/wolfcrypt/sp_c32.c \
+    src/ssl/wolfssl/wolfcrypt/sp_c64.c \
+    src/ssl/wolfssl/wolfcrypt/sp_cortexm.c \
+    src/ssl/wolfssl/wolfcrypt/sp_dsp32.c \
+    src/ssl/wolfssl/wolfcrypt/sp_int.c \
+    src/ssl/wolfssl/wolfcrypt/sp_x86_64.c \
+    src/ssl/wolfssl/wolfcrypt/sphincs.c \
+    src/ssl/wolfssl/wolfcrypt/srp.c \
+    src/ssl/wolfssl/wolfcrypt/tfm.c \
+    src/ssl/wolfssl/wolfcrypt/wc_dsp.c \
+    src/ssl/wolfssl/wolfcrypt/wc_encrypt.c \
+    src/ssl/wolfssl/wolfcrypt/wc_lms.c \
+    src/ssl/wolfssl/wolfcrypt/wc_lms_impl.c \
+    src/ssl/wolfssl/wolfcrypt/wc_mlkem.c \
+    src/ssl/wolfssl/wolfcrypt/wc_mlkem_poly.c \
+    src/ssl/wolfssl/wolfcrypt/wc_pkcs11.c \
+    src/ssl/wolfssl/wolfcrypt/wc_port.c \
+    src/ssl/wolfssl/wolfcrypt/wc_xmss.c \
+    src/ssl/wolfssl/wolfcrypt/wc_xmss_impl.c \
+    src/ssl/wolfssl/wolfcrypt/wolfevent.c \
+    src/ssl/wolfssl/wolfcrypt/wolfmath.c
 
 # local: test/libbitcoin-network-test
 #------------------------------------------------------------------------------
@@ -249,7 +249,7 @@ if WITH_TESTS
 TESTS = libbitcoin-network-test_runner.sh
 
 check_PROGRAMS = test/libbitcoin-network-test
-test_libbitcoin_network_test_CPPFLAGS = -I${srcdir}/include -I${srcdir}/include/bitcoin/ssl ${bitcoin_system_BUILD_CPPFLAGS}
+test_libbitcoin_network_test_CPPFLAGS = -I${srcdir}/include -I${srcdir}/include/bitcoin/ssl -I${srcdir}/test/ssl/wolfssl ${bitcoin_system_BUILD_CPPFLAGS}
 test_libbitcoin_network_test_LDADD = src/libbitcoin-network.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_network_test_SOURCES = \
     test/error.cpp \
@@ -370,7 +370,152 @@ test_libbitcoin_network_test_SOURCES = \
     test/sessions/session_manual.cpp \
     test/sessions/session_outbound.cpp \
     test/sessions/session_seed.cpp \
-    test/sessions/session_server.cpp
+    test/sessions/session_server.cpp \
+    test/ssl/wolfssl.cpp \
+    test/ssl/wolfssl/examples/client/client.c \
+    test/ssl/wolfssl/examples/client/client.h \
+    test/ssl/wolfssl/examples/server/server.c \
+    test/ssl/wolfssl/examples/server/server.h \
+    test/ssl/wolfssl/tests/api.c \
+    test/ssl/wolfssl/tests/quic.c \
+    test/ssl/wolfssl/tests/srp.c \
+    test/ssl/wolfssl/tests/suites.c \
+    test/ssl/wolfssl/tests/unit.c \
+    test/ssl/wolfssl/tests/unit.h \
+    test/ssl/wolfssl/tests/utils.c \
+    test/ssl/wolfssl/tests/utils.h \
+    test/ssl/wolfssl/tests/w64wrapper.c \
+    test/ssl/wolfssl/tests/api/api.h \
+    test/ssl/wolfssl/tests/api/api_decl.h \
+    test/ssl/wolfssl/tests/api/test_aes.c \
+    test/ssl/wolfssl/tests/api/test_aes.h \
+    test/ssl/wolfssl/tests/api/test_arc4.c \
+    test/ssl/wolfssl/tests/api/test_arc4.h \
+    test/ssl/wolfssl/tests/api/test_ascon.c \
+    test/ssl/wolfssl/tests/api/test_ascon.h \
+    test/ssl/wolfssl/tests/api/test_ascon_kats.h \
+    test/ssl/wolfssl/tests/api/test_asn.c \
+    test/ssl/wolfssl/tests/api/test_asn.h \
+    test/ssl/wolfssl/tests/api/test_blake2.c \
+    test/ssl/wolfssl/tests/api/test_blake2.h \
+    test/ssl/wolfssl/tests/api/test_camellia.c \
+    test/ssl/wolfssl/tests/api/test_camellia.h \
+    test/ssl/wolfssl/tests/api/test_chacha.c \
+    test/ssl/wolfssl/tests/api/test_chacha.h \
+    test/ssl/wolfssl/tests/api/test_chacha20_poly1305.c \
+    test/ssl/wolfssl/tests/api/test_chacha20_poly1305.h \
+    test/ssl/wolfssl/tests/api/test_cmac.c \
+    test/ssl/wolfssl/tests/api/test_cmac.h \
+    test/ssl/wolfssl/tests/api/test_curve25519.c \
+    test/ssl/wolfssl/tests/api/test_curve25519.h \
+    test/ssl/wolfssl/tests/api/test_curve448.c \
+    test/ssl/wolfssl/tests/api/test_curve448.h \
+    test/ssl/wolfssl/tests/api/test_des3.c \
+    test/ssl/wolfssl/tests/api/test_des3.h \
+    test/ssl/wolfssl/tests/api/test_dh.c \
+    test/ssl/wolfssl/tests/api/test_dh.h \
+    test/ssl/wolfssl/tests/api/test_digest.h \
+    test/ssl/wolfssl/tests/api/test_dsa.c \
+    test/ssl/wolfssl/tests/api/test_dsa.h \
+    test/ssl/wolfssl/tests/api/test_dtls.c \
+    test/ssl/wolfssl/tests/api/test_dtls.h \
+    test/ssl/wolfssl/tests/api/test_ecc.c \
+    test/ssl/wolfssl/tests/api/test_ecc.h \
+    test/ssl/wolfssl/tests/api/test_ed25519.c \
+    test/ssl/wolfssl/tests/api/test_ed25519.h \
+    test/ssl/wolfssl/tests/api/test_ed448.c \
+    test/ssl/wolfssl/tests/api/test_ed448.h \
+    test/ssl/wolfssl/tests/api/test_evp.c \
+    test/ssl/wolfssl/tests/api/test_evp.h \
+    test/ssl/wolfssl/tests/api/test_hash.c \
+    test/ssl/wolfssl/tests/api/test_hash.h \
+    test/ssl/wolfssl/tests/api/test_hmac.c \
+    test/ssl/wolfssl/tests/api/test_hmac.h \
+    test/ssl/wolfssl/tests/api/test_md2.c \
+    test/ssl/wolfssl/tests/api/test_md2.h \
+    test/ssl/wolfssl/tests/api/test_md4.c \
+    test/ssl/wolfssl/tests/api/test_md4.h \
+    test/ssl/wolfssl/tests/api/test_md5.c \
+    test/ssl/wolfssl/tests/api/test_md5.h \
+    test/ssl/wolfssl/tests/api/test_mldsa.c \
+    test/ssl/wolfssl/tests/api/test_mldsa.h \
+    test/ssl/wolfssl/tests/api/test_mlkem.c \
+    test/ssl/wolfssl/tests/api/test_mlkem.h \
+    test/ssl/wolfssl/tests/api/test_ocsp.c \
+    test/ssl/wolfssl/tests/api/test_ocsp.h \
+    test/ssl/wolfssl/tests/api/test_ocsp_test_blobs.h \
+    test/ssl/wolfssl/tests/api/test_ossl_asn1.c \
+    test/ssl/wolfssl/tests/api/test_ossl_asn1.h \
+    test/ssl/wolfssl/tests/api/test_ossl_bio.c \
+    test/ssl/wolfssl/tests/api/test_ossl_bio.h \
+    test/ssl/wolfssl/tests/api/test_ossl_bn.c \
+    test/ssl/wolfssl/tests/api/test_ossl_bn.h \
+    test/ssl/wolfssl/tests/api/test_ossl_cipher.c \
+    test/ssl/wolfssl/tests/api/test_ossl_cipher.h \
+    test/ssl/wolfssl/tests/api/test_ossl_dgst.c \
+    test/ssl/wolfssl/tests/api/test_ossl_dgst.h \
+    test/ssl/wolfssl/tests/api/test_ossl_dh.c \
+    test/ssl/wolfssl/tests/api/test_ossl_dh.h \
+    test/ssl/wolfssl/tests/api/test_ossl_dsa.c \
+    test/ssl/wolfssl/tests/api/test_ossl_dsa.h \
+    test/ssl/wolfssl/tests/api/test_ossl_ec.c \
+    test/ssl/wolfssl/tests/api/test_ossl_ec.h \
+    test/ssl/wolfssl/tests/api/test_ossl_ecx.c \
+    test/ssl/wolfssl/tests/api/test_ossl_ecx.h \
+    test/ssl/wolfssl/tests/api/test_ossl_mac.c \
+    test/ssl/wolfssl/tests/api/test_ossl_mac.h \
+    test/ssl/wolfssl/tests/api/test_ossl_rsa.c \
+    test/ssl/wolfssl/tests/api/test_ossl_rsa.h \
+    test/ssl/wolfssl/tests/api/test_ossl_sk.c \
+    test/ssl/wolfssl/tests/api/test_ossl_sk.h \
+    test/ssl/wolfssl/tests/api/test_pkcs12.c \
+    test/ssl/wolfssl/tests/api/test_pkcs12.h \
+    test/ssl/wolfssl/tests/api/test_pkcs7.c \
+    test/ssl/wolfssl/tests/api/test_pkcs7.h \
+    test/ssl/wolfssl/tests/api/test_poly1305.c \
+    test/ssl/wolfssl/tests/api/test_poly1305.h \
+    test/ssl/wolfssl/tests/api/test_random.c \
+    test/ssl/wolfssl/tests/api/test_random.h \
+    test/ssl/wolfssl/tests/api/test_rc2.c \
+    test/ssl/wolfssl/tests/api/test_rc2.h \
+    test/ssl/wolfssl/tests/api/test_ripemd.c \
+    test/ssl/wolfssl/tests/api/test_ripemd.h \
+    test/ssl/wolfssl/tests/api/test_rsa.c \
+    test/ssl/wolfssl/tests/api/test_rsa.h \
+    test/ssl/wolfssl/tests/api/test_sha.c \
+    test/ssl/wolfssl/tests/api/test_sha.h \
+    test/ssl/wolfssl/tests/api/test_sha256.c \
+    test/ssl/wolfssl/tests/api/test_sha256.h \
+    test/ssl/wolfssl/tests/api/test_sha3.c \
+    test/ssl/wolfssl/tests/api/test_sha3.h \
+    test/ssl/wolfssl/tests/api/test_sha512.c \
+    test/ssl/wolfssl/tests/api/test_sha512.h \
+    test/ssl/wolfssl/tests/api/test_signature.c \
+    test/ssl/wolfssl/tests/api/test_signature.h \
+    test/ssl/wolfssl/tests/api/test_sm2.c \
+    test/ssl/wolfssl/tests/api/test_sm2.h \
+    test/ssl/wolfssl/tests/api/test_sm3.c \
+    test/ssl/wolfssl/tests/api/test_sm3.h \
+    test/ssl/wolfssl/tests/api/test_sm4.c \
+    test/ssl/wolfssl/tests/api/test_sm4.h \
+    test/ssl/wolfssl/tests/api/test_tls.c \
+    test/ssl/wolfssl/tests/api/test_tls.h \
+    test/ssl/wolfssl/tests/api/test_tls13.c \
+    test/ssl/wolfssl/tests/api/test_tls13.h \
+    test/ssl/wolfssl/tests/api/test_tls_ext.c \
+    test/ssl/wolfssl/tests/api/test_tls_ext.h \
+    test/ssl/wolfssl/tests/api/test_wc_encrypt.c \
+    test/ssl/wolfssl/tests/api/test_wc_encrypt.h \
+    test/ssl/wolfssl/tests/api/test_wolfmath.c \
+    test/ssl/wolfssl/tests/api/test_wolfmath.h \
+    test/ssl/wolfssl/tests/api/test_x509.c \
+    test/ssl/wolfssl/tests/api/test_x509.h \
+    test/ssl/wolfssl/testsuite/utils.h \
+    test/ssl/wolfssl/testsuite/utils1.c \
+    test/ssl/wolfssl/wolfcrypt/benchmark/benchmark.c \
+    test/ssl/wolfssl/wolfcrypt/benchmark/benchmark.h \
+    test/ssl/wolfssl/wolfcrypt/test/test.c \
+    test/ssl/wolfssl/wolfcrypt/test/test.h
 
 endif WITH_TESTS
 
@@ -623,10 +768,6 @@ include_bitcoin_ssl_openssl_HEADERS = \
     include/bitcoin/ssl/openssl/ssl.h \
     include/bitcoin/ssl/openssl/x509.h \
     include/bitcoin/ssl/openssl/x509v3.h
-
-include_bitcoin_ssl_wolfcryptdir = ${includedir}/bitcoin/ssl/wolfcrypt
-include_bitcoin_ssl_wolfcrypt_HEADERS = \
-    include/bitcoin/ssl/wolfcrypt/wolfcrypt.h
 
 include_bitcoin_ssl_wolfssldir = ${includedir}/bitcoin/ssl/wolfssl
 include_bitcoin_ssl_wolfssl_HEADERS = \

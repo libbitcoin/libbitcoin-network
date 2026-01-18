@@ -17,4 +17,5 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #define BOOST_TEST_MODULE libbitcoin_network_test
+
 #include <boost/test/unit_test.hpp>

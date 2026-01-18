@@ -2199,7 +2199,11 @@ static WC_INLINE unsigned int my_psk_client_cs_cb(WOLFSSL* ssl,
 
 #elif defined(USE_WINDOWS_API)
 
+/* LIBBITCOIN: fix warning when WIN32_LEAN_AND_MEAN is already defined. */
+#ifndef WIN32_LEAN_AND_MEAN
     #define WIN32_LEAN_AND_MEAN
+#endif
+
     #define _WINSOCKAPI_ /* block inclusion of winsock.h header file */
     #include <windows.h>
     #undef _WINSOCKAPI_ /* undefine it for MINGW winsock2.h header file */

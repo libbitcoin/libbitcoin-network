@@ -19,12 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_SSL_WOLFSSL_OPTIONS_H
 #define LIBBITCOIN_NETWORK_SSL_WOLFSSL_OPTIONS_H
 
-// This ensures boost sees all configuration, but probably not used.
+/* This ensures boost sees all configuration, but probably not used. */
 #include <wolfssl/wolfcrypt/user_settings.h>
 
-// Boost ASIO pulls in this file when BOOST_ASIO_USE_WOLFSSL is defined.
-////#if defined(BOOST_ASIO_USE_WOLFSSL)
-////    #include <wolfssl/options.h>
-////#endif
+/* Boost ASIO pulls in this file when BOOST_ASIO_USE_WOLFSSL is defined. */
+/*
+#if defined(BOOST_ASIO_USE_WOLFSSL)
+#include <wolfssl/options.h>
+#endif
+*/
 
 #endif

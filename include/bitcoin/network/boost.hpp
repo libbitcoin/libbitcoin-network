@@ -21,18 +21,22 @@
 
 #include <bitcoin/network/version.hpp>
 
-// See <boost/asio/ssl/detail/openssl_types.hpp> for wolf/openssl includes.
-#define BOOST_ASIO_USE_WOLFSSL
-#define BOOST_ASIO_NO_DEPRECATED
-
-// The /ssl/openssl/ directory is provided for direct ssl import by boost,
-// which is required because <boost/asio/ssl.hpp> is included.
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 #include <boost/bimap.hpp>
 #include <boost/bimap/set_of.hpp>
 #include <boost/bimap/multiset_of.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/system/error_code.hpp>
+
+#define BOOST_ASIO_NO_DEPRECATED
+#include <boost/asio.hpp>
+
+// TODO: Hoist this out to build config.
+#define WITH_SSL
+
+#if defined(WITH_SSL)
+#define HAVE_SSL
+#define BOOST_ASIO_USE_WOLFSSL
+#include <boost/asio/ssl.hpp>
+#endif // WITH_SSL
 
 #endif
