@@ -2328,7 +2328,12 @@ static word32 bench_size = BENCH_SIZE;
 static int base2 = 1;
 static int digest_stream = 1;
 static int mac_stream = 1;
+
+/* LIBBITCOIN: added condition to fix unused variable warning. */
+#if defined(HAVE_AESGCM)
 static int aead_set_key = 0;
+#endif
+
 #ifdef HAVE_CHACHA
 static int encrypt_only = 0;
 #endif
