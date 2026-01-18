@@ -42,15 +42,12 @@
 /* In a library build, "HAVE_" symbols are set on the command line. But since */
 /* this is embedded they are set here just as with "NO_", "WC_" and "WOLFSSL_". */
 
+/* Used with BOOST_ASIO_USE_WOLFSSL to optimize boost integration. */
+/* wolfssl.com/wolfssl-support-asio-boost-asio-c-libraries */
+#define WOLFSSL_ASIO
+
 /* Suppress warnings on unnecessary file inclusions. */
 #define WOLFSSL_IGNORE_FILE_WARN
-
-/* Side-channel protection is not required. */
-/* #define WOLFSSL_HARDEN_TLS 128 */
-#define NO_ECC_TIMING_RESISTANT
-#define NO_TFM_TIMING_RESISTANT
-#define NO_WC_RSA_BLINDING
-#define WC_NO_HARDEN
 
 /* wolfssl.com/documentation/manuals/wolfssl/chapter05.html */
 /* Requires that send and receive data copy functions be defined. */
@@ -68,17 +65,17 @@
 
 /* TLS is required, not just cryptographic functions. */
 #define WOLFSSL_TLS13
-#define HAVE_TLS_EXTENSIONS
+
+/* At least one encryption method is required. */
+/* ECC is needed for Curve25519-based key exchange in modern TLS. */
 #define HAVE_SUPPORTED_CURVES
+#define HAVE_TLS_EXTENSIONS
+#define HAVE_CURVE25519
 #define HAVE_POLY1305
 #define HAVE_CHACHA
 #define HAVE_SHA256
 #define HAVE_HKDF
 #define HAVE_HMAC
-
-/* At least one encryption method is required. */
-/* ECC is needed for Curve25519-based key exchange in modern TLS. */
-#define HAVE_CURVE25519
 #define HAVE_ECC
 
 /* Callback requires at least one union element to be defined. */
@@ -89,22 +86,23 @@
 /* #define NO_DEV_RANDOM */
 /* #define NO_DEV_URANDOM */
 
-/* Used with BOOST_ASIO_USE_WOLFSSL to optimize boost integration. */
-/* wolfssl.com/wolfssl-support-asio-boost-asio-c-libraries */
-#define WOLFSSL_ASIO
-
-/* This is an openssl setting that affects wolfssl. */
-#define OPENSSL_EXTRA
-
-/* These are openssl settings that affect boost asio. */
+/* These are openssl settings that affect wolfssl and/or boost asio. */
+#define OPENSSL_VERSION_NUMBER 0x10101000L
 #define OPENSSL_NO_ENGINE
 #define OPENSSL_NO_SSL3
 #define OPENSSL_NO_SSL2
+#define OPENSSL_EXTRA
+
+/* Side-channel protection is not required. */
+/* #define WOLFSSL_HARDEN_TLS 128 */
+#define NO_ECC_TIMING_RESISTANT
+#define NO_TFM_TIMING_RESISTANT
+#define WC_NO_HARDEN
 
 /* Remove unused or undesired components. */
-#define NO_PWDBASED
+#define WOLFSSL_NO_CLIENT_AUTH
+#define NO_SESSION_CACHE
 #define NO_OLD_TLS
-#define NO_AESGCM
 #define NO_OCSP
 #define NO_DES3
 #define NO_PSK
@@ -112,20 +110,10 @@
 #define NO_SHA
 #define NO_DSA
 #define NO_RSA
-#define NO_DH
 #define NO_MD4
 #define NO_MD5
 #define NO_RC4
-#define NO_TLS_DH
-#define NO_CAMELLIA_CBC
-#define NO_SESSION_CACHE
-#define NO_ED448_CLIENT_AUTH
-#define NO_ED25519_CLIENT_AUTH
-#define NO_OLD_SSL_NAMES
-#define NO_OLD_WC_NAMES
-#define NO_OLD_POLY1305
-#define WOLFSSL_NO_CLIENT_AUTH
-#define NO_WOLFSSL_RENESAS_TSIP_TLS_SESSION
+#define NO_DH
 
 #ifdef _MSC_VER
     /* Warnings emitted due to missing define in vc++. */
@@ -140,7 +128,7 @@
 #ifndef NDEBUG
     #define DEBUG_WOLFSSL
     #define DEBUG_SUITE_TESTS
-    #define WOLFSSL_VERBOSE_ERRORS
+    ////#define WOLFSSL_VERBOSE_ERRORS
     #define WOLFSSL_HAVE_ERROR_QUEUE
 
     #ifndef WOLFSSL_LOGGINGENABLED_DEFAULT
