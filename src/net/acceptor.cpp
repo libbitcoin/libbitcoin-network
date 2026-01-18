@@ -92,7 +92,7 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
         acceptor_.bind(point, ec);
 
     if (!ec)
-        acceptor_.listen(asio::max_connections, ec);
+        acceptor_.listen(asio::socket::max_listen_connections, ec);
 
     if (!ec)
     {

@@ -56,8 +56,6 @@ typedef asio::acceptor::reuse_address reuse_address;
 /// connect
 typedef tcp::socket socket;
 typedef std::shared_ptr<socket> socket_ptr;
-constexpr auto max_connections = 
-    boost::asio::socket_base::max_listen_connections;
 
 /// ssl
 #if defined(HAVE_SSL)
