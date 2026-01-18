@@ -59,6 +59,9 @@ BOOST_AUTO_TEST_CASE(wolfssl__quic__always__success)
 }
 #endif
 
+// Disabled until setting CERT_PREFIX is worked out.
+#if defined(HAVE_MSC)
+
 #if !defined(NO_CRYPT_TEST)
 BOOST_AUTO_TEST_CASE(wolfssl__wolfcrypt__always__success)
 {
@@ -74,7 +77,7 @@ BOOST_AUTO_TEST_CASE(wolfssl__wolfcrypt__always__success)
 
     // By default CERT_WRITE_TEMP_DIR is CERT_PREFIX, but this is absolute, so
     // CERT_WRITE_TEMP_DIR is predefined as relative ("./") in user_settings.h
-    // The working directory is then controlled by current_directory_setup_fixture.
+    // Working directory is then controlled by current_directory_setup_fixture.
 
     func_args arguments{};
     wolfCrypt_Init();
@@ -116,5 +119,7 @@ BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
     BOOST_REQUIRE(is_zero(SuiteTest(argc, argv)));
 }
 #endif
+
+#endif // HAVE_MSC
 
 BOOST_AUTO_TEST_SUITE_END()
