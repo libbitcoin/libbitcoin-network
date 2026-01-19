@@ -24,7 +24,9 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(RepoRoot)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories>$(RepoRoot)include\bitcoin\ssl\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+
+      <!-- Prevent boost from seeing ssl includes when ssl is deselected  (requires external headers). -->
+      <AdditionalIncludeDirectories Condition="'$(Option-ssl)' == 'true'">$(RepoRoot)include\bitcoin\ssl\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <EnablePREfast>false</EnablePREfast>
       <PreprocessorDefinitions Condition="'$(ConfigurationType)' == 'DynamicLibrary'">BCT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -33,10 +35,16 @@
     </ClCompile>
   </ItemDefinitionGroup>
 
-  <Target Name="SuppressWarningsForWolfSSLFiles" BeforeTargets="ClCompile">
+  <Target Name="WolfSSLSuppressions" BeforeTargets="ClCompile">
     <ItemGroup>
       <ClCompile Update="@(ClCompile)">
         <AdditionalOptions Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\src\ssl\'))">/wd4189 /wd4245 /wd4267 /wd4701 /wd4702 /wd4703 %(AdditionalOptions)</AdditionalOptions>
+        
+        <!-- This is only used as an inlining header, so never compile it directly. -->
+        <ExcludedFromBuild Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\include\bitcoin\ssl\'))">true</ExcludedFromBuild>
+        
+        <!-- Exclude wolfssl sources when ssl is deselected (requires external linkage). -->
+        <ExcludedFromBuild Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\include\bitcoin\ssl\wolfcrypt\src\')) And '$(Option-ssl)' == 'false'">true</ExcludedFromBuild>
       </ClCompile>
     </ItemGroup>
   </Target>
