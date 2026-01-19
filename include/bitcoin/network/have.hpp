@@ -24,6 +24,10 @@
 /// WITH_ indicates build symbol.
 /// ---------------------------------------------------------------------------
 
+// TODO: this conflicts with a scneario in which the developer wants to exclude
+// the embedded wolfssl and link one externally, as this symbol must be defined
+// in this and dependent projects so that boost can link the library with
+// configuration. However that will also activate the embedded build.
 /// This enables integral ssl support via embedded wolfssl.
 /// If not defined then boost-compatible SSL must be externally linked.
 /// The build config must always define either the internal ssl include path or
