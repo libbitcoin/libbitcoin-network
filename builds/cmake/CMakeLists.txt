@@ -379,7 +379,7 @@ endif()
 #------------------------------------------------------------------------------
 target_include_directories( ${CANONICAL_LIB_NAME} PRIVATE
     "../../include"
-    "../../include/bitcoin/ssl"
+    "../../include/bitcoin/network/ssl"
     ${bitcoin_system_FOR_BUILD_INCLUDE_DIRS} )
 
 target_include_directories( ${CANONICAL_LIB_NAME} PUBLIC
@@ -712,7 +712,7 @@ if (with-tests)
 #------------------------------------------------------------------------------
     target_include_directories( libbitcoin-network-test PRIVATE
         "../../include"
-        "../../include/bitcoin/ssl"
+        "../../include/bitcoin/network/ssl"
         "../../test/ssl/wolfssl" )
 
 #     libbitcoin-network-test project specific libraries/linker flags.

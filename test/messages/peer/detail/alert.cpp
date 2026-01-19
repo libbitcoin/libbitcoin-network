@@ -20,6 +20,8 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_alert_tests)
 
+// Avoid namespace conflict with ::alert (wolfssl).
+using alert = network::messages::peer::alert;
 using namespace network::messages::peer;
 
 BOOST_AUTO_TEST_CASE(alert__properties__always__expected)
