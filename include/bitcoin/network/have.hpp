@@ -28,7 +28,7 @@
 /// If not defined then boost-compatible SSL must be externally linked.
 /// The build config must always define either the internal ssl include path or
 /// an external one, so that boost will locate the expected openssl headers.
-#if defined(WITH_SSL)
+#if defined(WOLFSSL_USER_SETTINGS)
     #define HAVE_SSL
 #endif
 

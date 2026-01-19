@@ -98,7 +98,7 @@ AC_ARG_WITH([tests],
 AC_MSG_RESULT([$with_tests])
 AM_CONDITIONAL([WITH_TESTS], [test x$with_tests != xno])
 
-# Implement --with-ssl and define WITH_SSL and output ${ssl}.
+# Implement --with-ssl and define WOLFSSL_USER_SETTINGS and output ${ssl}.
 #------------------------------------------------------------------------------
 AC_MSG_CHECKING([--with-ssl option])
 AC_ARG_WITH([ssl],
@@ -107,7 +107,7 @@ AC_ARG_WITH([ssl],
     [with_ssl=$withval],
     [with_ssl=yes])
 AC_MSG_RESULT([$with_ssl])
-AS_CASE([${with_ssl}], [yes], AC_DEFINE([WITH_SSL]))
+AS_CASE([${with_ssl}], [yes], AC_DEFINE([WOLFSSL_USER_SETTINGS]))
 AS_CASE([${with_ssl}], [yes], AC_SUBST([ssl], [-DWOLFSSL_USER_SETTINGS]))
 
 # Implement --enable-ndebug and define NDEBUG.

@@ -118,12 +118,12 @@ set( pkgconfigdir "${libdir}/pkgconfig" CACHE PATH "Path to pkgconfig directory.
 #------------------------------------------------------------------------------
 set( with-tests "yes" CACHE BOOL "Compile with unit tests." )
 
-# Implement -Dwith-ssl and define WITH_SSL and output ${ssl}.
+# Implement -Dwith-ssl and define WOLFSSL_USER_SETTINGS and output ${ssl}.
 #------------------------------------------------------------------------------
 set( with-ssl "yes" CACHE BOOL "Compile with internal ssl." )
 
 if (with-ssl)
-    add_definitions( -DWITH_SSL )
+    add_definitions( -DWOLFSSL_USER_SETTINGS )
 endif()
 
 if (with-ssl)
