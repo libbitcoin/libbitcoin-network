@@ -884,6 +884,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\have.hpp">
+      <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\http.hpp">
       <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
@@ -1151,6 +1154,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\preprocessor.hpp">
+      <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
@@ -1236,6 +1242,9 @@
       <Filter>include\bitcoin\ssl\openssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\openssl\dh.h">
+      <Filter>include\bitcoin\ssl\openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\openssl\engine.h">
       <Filter>include\bitcoin\ssl\openssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\openssl\err.h">

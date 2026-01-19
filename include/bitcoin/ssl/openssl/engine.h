@@ -16,27 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_BOOST_HPP
-#define LIBBITCOIN_NETWORK_BOOST_HPP
+#ifndef LIBBITCOIN_NETWORK_SSL_OPENSSL_ENGINE_H
+#define LIBBITCOIN_NETWORK_SSL_OPENSSL_ENGINE_H
 
-#include <bitcoin/network/preprocessor.hpp>
-
-// Pull in any base boost configuration before including boost.
-#include <bitcoin/system.hpp>
-
-#include <boost/bimap.hpp>
-#include <boost/bimap/set_of.hpp>
-#include <boost/bimap/multiset_of.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/system/error_code.hpp>
-
-// TODO: exclude ssl sources when HAVE_SSL not defined (lib and test).
-// TODO: exclude ssl include paths when HAVE_SSL not defined (lib and test).
-#if defined(HAVE_SSL)
-    #define BOOST_ASIO_USE_WOLFSSL
-#endif
-
-/// Without HAVE_SSL openssl headers must be externally defined for asio.
-#include <boost/asio/ssl.hpp>
+/* Forward <boost/asio/ssl/detail/openssl_types.hpp> load of <openssl/engine.h>. */
+#include <wolfssl/openssl/engine.h>
 
 #endif

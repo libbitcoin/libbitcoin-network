@@ -98,6 +98,18 @@ AC_ARG_WITH([tests],
 AC_MSG_RESULT([$with_tests])
 AM_CONDITIONAL([WITH_TESTS], [test x$with_tests != xno])
 
+# Implement --with-ssl and define WOLFSSL_USER_SETTINGS and output ${ssl}.
+#------------------------------------------------------------------------------
+AC_MSG_CHECKING([--with-ssl option])
+AC_ARG_WITH([ssl],
+    AS_HELP_STRING([--with-ssl],
+        [Compile with internal ssl. @<:@default=yes@:>@]),
+    [with_ssl=$withval],
+    [with_ssl=yes])
+AC_MSG_RESULT([$with_ssl])
+AS_CASE([${with_ssl}], [yes], AC_DEFINE([WOLFSSL_USER_SETTINGS]))
+AS_CASE([${with_ssl}], [yes], AC_SUBST([ssl], [-DWOLFSSL_USER_SETTINGS]))
+
 # Implement --enable-ndebug and define NDEBUG.
 #------------------------------------------------------------------------------
 AC_MSG_CHECKING([--enable-ndebug option])
@@ -122,13 +134,6 @@ AC_ARG_ENABLE([isystem],
     [enable_isystem=$enableval],
     [enable_isystem=no])
 AC_MSG_RESULT([$enable_isystem])
-
-
-# Set preprocessor defines.
-#==============================================================================
-# Unconditionally define the preprocessor symbol WOLFSSL_USER_SETTINGS.
-#------------------------------------------------------------------------------
-AC_DEFINE([WOLFSSL_USER_SETTINGS])
 
 
 # Set flags.

@@ -19,99 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_DEFINE_HPP
 #define LIBBITCOIN_NETWORK_DEFINE_HPP
 
-#include <bitcoin/system.hpp>
-
-// We use the generic helper definitions in libbitcoin to define BCT_API
-// and BCT_INTERNAL. BCT_API is used for the public API symbols. It either DLL
-// imports or DLL exports (or does nothing for static build) BCT_INTERNAL is
-// used for non-api symbols.
-
-#if defined BCT_STATIC
-    #define BCT_API
-    #define BCT_INTERNAL
-#elif defined BCT_DLL
-    #define BCT_API      BC_HELPER_DLL_EXPORT
-    #define BCT_INTERNAL BC_HELPER_DLL_LOCAL
-#else
-    #define BCT_API      BC_HELPER_DLL_IMPORT
-    #define BCT_INTERNAL BC_HELPER_DLL_LOCAL
-#endif
-
-/// WITH_ indicates build symbol.
-/// ---------------------------------------------------------------------------
-
-/// TODO: Move to build configuration.
-////#define WITH_EVENTS
-#define WITH_LOGGING
-#if !defined(NDEBUG)
-    #define WITH_LOGO
-#endif
-#define WITH_LOGA
-#define WITH_LOGN
-#define WITH_LOGS
-#define WITH_LOGP
-#define WITH_LOGX
-#define WITH_LOGR
-#define WITH_LOGF
-#define WITH_LOGQ
-#define WITH_LOGV
-
-////#if defined(WITH_EVENTS)
-////    #define HAVE_EVENTS
-////#endif
-#if defined(WITH_LOGGING)
-    #define HAVE_LOGGING
-
-    /// Objects (shared object construct/destruct).
-    #if defined(WITH_LOGO)
-        #define HAVE_LOGO
-    #endif
-
-    #if defined(WITH_LOGA)
-        #define HAVE_LOGA
-    #endif
-
-    /// News (general progression).
-    #if defined(WITH_LOGN)
-        #define HAVE_LOGN
-    #endif
-
-    /// Sessions.
-    #if defined(WITH_LOGS)
-        #define HAVE_LOGS
-    #endif
-
-    /// Protocols.
-    #if defined(WITH_LOGP)
-        #define HAVE_LOGP
-    #endif
-
-    /// ProXy.
-    #if defined(WITH_LOGX)
-        #define HAVE_LOGX
-    #endif
-
-    /// Remote (peer errors).
-    #if defined(WITH_LOGR)
-        #define HAVE_LOGR
-    #endif
-
-    /// Fault (own errors).
-    #if defined(WITH_LOGF)
-        #define HAVE_LOGF
-    #endif
-
-    /// Quitting connections (e.g. read/write/send abort).
-    #if defined(WITH_LOGQ)
-        #define HAVE_LOGQ
-    #endif
-
-    /// Verbose (ad-hoc debugging).
-    #if defined(WITH_LOGV)
-        #define HAVE_LOGV
-    #endif
-#endif
-
 #include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
@@ -138,7 +45,9 @@ namespace network {
 // Network inclusions are chained as follows.
 
 // version        : <generated>
-// boost          : version
+// have           : version
+// preprocessor   : have
+// boost          : preprocessor
 // beast          : boost
 // error          : beast
 // define         : error

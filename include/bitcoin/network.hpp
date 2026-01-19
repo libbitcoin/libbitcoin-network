@@ -19,8 +19,10 @@
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/have.hpp>
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/net.hpp>
+#include <bitcoin/network/preprocessor.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/version.hpp>
 #include <bitcoin/network/async/asio.hpp>

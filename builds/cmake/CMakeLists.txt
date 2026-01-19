@@ -118,6 +118,18 @@ set( pkgconfigdir "${libdir}/pkgconfig" CACHE PATH "Path to pkgconfig directory.
 #------------------------------------------------------------------------------
 set( with-tests "yes" CACHE BOOL "Compile with unit tests." )
 
+# Implement -Dwith-ssl and define WOLFSSL_USER_SETTINGS and output ${ssl}.
+#------------------------------------------------------------------------------
+set( with-ssl "yes" CACHE BOOL "Compile with internal ssl." )
+
+if (with-ssl)
+    add_definitions( -DWOLFSSL_USER_SETTINGS )
+endif()
+
+if (with-ssl)
+    set( ssl "-DWOLFSSL_USER_SETTINGS" )
+endif()
+
 # Implement -Denable-ndebug and define NDEBUG.
 #------------------------------------------------------------------------------
 set( enable-ndebug "yes" CACHE BOOL "Compile without debug assertions." )
@@ -132,7 +144,6 @@ if (BUILD_SHARED_LIBS)
     add_definitions( -DBOOST_ALL_DYN_LINK )
 endif()
 
-add_definitions( -DWOLFSSL_USER_SETTINGS )
 if (BUILD_SHARED_LIBS)
     set( Boost_USE_STATIC_LIBS "off" )
 else()
