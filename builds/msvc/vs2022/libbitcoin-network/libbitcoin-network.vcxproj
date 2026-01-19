@@ -373,6 +373,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\have.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp" />
@@ -462,6 +463,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\preprocessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_in_209.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_out_209.hpp" />
@@ -491,6 +493,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\openssl\conf.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\openssl\dh.h" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\openssl\engine.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\openssl\err.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\openssl\openssl.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\openssl\rsa.h" />

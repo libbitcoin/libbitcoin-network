@@ -16,27 +16,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_BOOST_HPP
-#define LIBBITCOIN_NETWORK_BOOST_HPP
+#ifndef LIBBITCOIN_NETWORK_PREPROCESSOR_HPP
+#define LIBBITCOIN_NETWORK_PREPROCESSOR_HPP
 
-#include <bitcoin/network/preprocessor.hpp>
+#include <bitcoin/network/have.hpp>
 
-// Pull in any base boost configuration before including boost.
+/// Symbols.
+/// ---------------------------------------------------------------------------
+
 #include <bitcoin/system.hpp>
 
-#include <boost/bimap.hpp>
-#include <boost/bimap/set_of.hpp>
-#include <boost/bimap/multiset_of.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/system/error_code.hpp>
+// We use the generic helper definitions in libbitcoin to define BCT_API
+// and BCT_INTERNAL. BCT_API is used for the public API symbols. It either DLL
+// imports or DLL exports (or does nothing for static build) BCT_INTERNAL is
+// used for non-api symbols.
 
-// TODO: exclude ssl sources when HAVE_SSL not defined (lib and test).
-// TODO: exclude ssl include paths when HAVE_SSL not defined (lib and test).
-#if defined(HAVE_SSL)
-    #define BOOST_ASIO_USE_WOLFSSL
+#if defined BCT_STATIC
+    #define BCT_API
+    #define BCT_INTERNAL
+#elif defined BCT_DLL
+    #define BCT_API      BC_HELPER_DLL_EXPORT
+    #define BCT_INTERNAL BC_HELPER_DLL_LOCAL
+#else
+    #define BCT_API      BC_HELPER_DLL_IMPORT
+    #define BCT_INTERNAL BC_HELPER_DLL_LOCAL
 #endif
-
-/// Without HAVE_SSL openssl headers must be externally defined for asio.
-#include <boost/asio/ssl.hpp>
 
 #endif

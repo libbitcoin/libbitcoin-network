@@ -29,7 +29,7 @@ Requires: libbitcoin-system >= 4.0.0
 
 # Include directory and any other required compiler flags.
 #------------------------------------------------------------------------------
-Cflags: -I${includedir} -DWOLFSSL_USER_SETTINGS
+Cflags: -I${includedir} @ssl@
 
 # Lib directory, lib and any required that do not publish pkg-config.
 #------------------------------------------------------------------------------

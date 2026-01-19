@@ -531,8 +531,10 @@ include_bitcoin_network_HEADERS = \
     include/bitcoin/network/boost.hpp \
     include/bitcoin/network/define.hpp \
     include/bitcoin/network/error.hpp \
+    include/bitcoin/network/have.hpp \
     include/bitcoin/network/memory.hpp \
     include/bitcoin/network/net.hpp \
+    include/bitcoin/network/preprocessor.hpp \
     include/bitcoin/network/settings.hpp \
     include/bitcoin/network/version.hpp
 
@@ -762,6 +764,7 @@ include_bitcoin_ssl_openssldir = ${includedir}/bitcoin/ssl/openssl
 include_bitcoin_ssl_openssl_HEADERS = \
     include/bitcoin/ssl/openssl/conf.h \
     include/bitcoin/ssl/openssl/dh.h \
+    include/bitcoin/ssl/openssl/engine.h \
     include/bitcoin/ssl/openssl/err.h \
     include/bitcoin/ssl/openssl/openssl.h \
     include/bitcoin/ssl/openssl/rsa.h \
