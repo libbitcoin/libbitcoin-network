@@ -450,28 +450,10 @@
     <ClCompile Include="..\..\..\..\src\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\crl.c">
-      <Filter>src\ssl\wolfssl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\dtls.c">
-      <Filter>src\ssl\wolfssl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\dtls13.c">
-      <Filter>src\ssl\wolfssl</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\internal.c">
       <Filter>src\ssl\wolfssl</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\keys.c">
-      <Filter>src\ssl\wolfssl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\ocsp.c">
-      <Filter>src\ssl\wolfssl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\quic.c">
-      <Filter>src\ssl\wolfssl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\sniffer.c">
       <Filter>src\ssl\wolfssl</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\bio.c">
@@ -528,28 +510,7 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\tls13.c">
       <Filter>src\ssl\wolfssl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\aes.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\arc4.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ascon.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\asm.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\asn.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\blake2b.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\blake2s.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\camellia.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\chacha.c">
@@ -558,16 +519,7 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\chacha20_poly1305.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\cmac.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\coding.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\compress.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\cpuid.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\cryptocb.c">
@@ -576,61 +528,13 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\curve25519.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\curve448.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\des3.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\dh.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\dilithium.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\dsa.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ecc.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\eccsi.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ed25519.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ed448.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\error.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ext_lms.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ext_mlkem.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ext_xmss.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\falcon.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\fe_448.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\fe_low_mem.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\fe_operations.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ge_448.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ge_low_mem.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ge_operations.c">
@@ -642,142 +546,34 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\hmac.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\hpke.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\integer.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\kdf.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\logging.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\md2.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\md4.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\md5.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\memory.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\pkcs12.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\pkcs7.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\poly1305.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\pwdbased.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\random.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\rc2.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ripemd.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\rsa.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sakke.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha256.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha3.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha512.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\signature.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\siphash.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sp_arm32.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sp_arm64.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sp_armthumb.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sp_c32.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sp_c64.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sp_cortexm.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sp_dsp32.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sp_int.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sp_x86_64.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sphincs.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\srp.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\tfm.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_dsp.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_encrypt.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_lms.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_lms_impl.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_mlkem.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_mlkem_poly.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_pkcs11.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_port.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_xmss.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_xmss_impl.c">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wolfevent.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wolfmath.c">
@@ -1271,12 +1067,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\certs_test.h">
       <Filter>include\bitcoin\ssl\wolfssl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\certs_test_sm.h">
-      <Filter>include\bitcoin\ssl\wolfssl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\crl.h">
-      <Filter>include\bitcoin\ssl\wolfssl</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\error-ssl.h">
       <Filter>include\bitcoin\ssl\wolfssl</Filter>
     </ClInclude>
@@ -1292,9 +1082,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\asn1.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\asn1t.h">
-      <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\bio.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
@@ -1304,13 +1091,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\buffer.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\camellia.h">
-      <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\cmac.h">
-      <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\cms.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\compat_types.h">
@@ -1388,16 +1169,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\objects.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\ocsp.h">
-      <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\opensslconf.h">
-      <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\opensslv.h">
-      <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\ossl_typ.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\pem.h">
@@ -1421,16 +1193,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\rsa.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\safestack.h">
-      <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\sha.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\sha3.h">
-      <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\srp.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\ssl.h">
@@ -1440,9 +1206,6 @@
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\tls1.h">
-      <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\txt_db.h">
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\openssl\x509.h">
@@ -1455,9 +1218,6 @@
       <Filter>include\bitcoin\ssl\wolfssl\openssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\options.h">
-      <Filter>include\bitcoin\ssl\wolfssl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\quic.h">
       <Filter>include\bitcoin\ssl\wolfssl</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\ssl.h">
@@ -1484,12 +1244,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\asn_public.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\blake2-impl.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\blake2-int.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\blake2.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
@@ -1506,9 +1260,6 @@
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\coding.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\compress.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\cpuid.h">
@@ -1529,16 +1280,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\dh.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\dilithium.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\dsa.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\ecc.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\eccsi.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\ed25519.h">
@@ -1550,31 +1295,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\error-crypt.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\ext_lms.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\ext_mlkem.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\ext_xmss.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\falcon.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\fe_448.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\fe_operations.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\fips_test.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\ge_448.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\ge_operations.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\hash.h">
@@ -1586,19 +1310,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\hpke.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\integer.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\kdf.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\libwolfssl_sources.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\libwolfssl_sources_asm.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\lms.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\logging.h">
@@ -1622,19 +1337,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\misc.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\mlkem.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\mpi_class.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\mpi_superclass.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\oid_sum.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\pkcs11.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\pkcs12.h">
@@ -1661,12 +1364,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\rsa.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\sakke.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\selftest.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\settings.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
@@ -1688,19 +1385,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\siphash.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\sp.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\sp_int.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\sphincs.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\srp.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\tfm.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\types.h">
@@ -1715,28 +1403,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\wc_encrypt.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\wc_lms.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\wc_mlkem.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\wc_pkcs11.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\wc_port.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\wc_xmss.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\wolfevent.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\wolfmath.h">
-      <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfcrypt\xmss.h">
       <Filter>include\bitcoin\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfio.h">
@@ -1744,9 +1414,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\ssl\wolfssl\wolfssl.h">
       <Filter>include\bitcoin\ssl\wolfssl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\fe_x25519_128.h">
-      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

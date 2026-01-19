@@ -128,14 +128,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/sessions/session_peer.cpp \
     src/sessions/session_seed.cpp \
     src/sessions/session_server.cpp \
-    src/ssl/wolfssl/crl.c \
-    src/ssl/wolfssl/dtls.c \
-    src/ssl/wolfssl/dtls13.c \
     src/ssl/wolfssl/internal.c \
     src/ssl/wolfssl/keys.c \
-    src/ssl/wolfssl/ocsp.c \
-    src/ssl/wolfssl/quic.c \
-    src/ssl/wolfssl/sniffer.c \
     src/ssl/wolfssl/ssl.c \
     src/ssl/wolfssl/tls.c \
     src/ssl/wolfssl/tls13.c \
@@ -155,91 +149,28 @@ src_libbitcoin_network_la_SOURCES = \
     src/ssl/wolfssl/src/ssl_sk.c \
     src/ssl/wolfssl/src/x509.c \
     src/ssl/wolfssl/src/x509_str.c \
-    src/ssl/wolfssl/wolfcrypt/aes.c \
-    src/ssl/wolfssl/wolfcrypt/arc4.c \
-    src/ssl/wolfssl/wolfcrypt/ascon.c \
-    src/ssl/wolfssl/wolfcrypt/asm.c \
     src/ssl/wolfssl/wolfcrypt/asn.c \
-    src/ssl/wolfssl/wolfcrypt/blake2b.c \
-    src/ssl/wolfssl/wolfcrypt/blake2s.c \
-    src/ssl/wolfssl/wolfcrypt/camellia.c \
     src/ssl/wolfssl/wolfcrypt/chacha.c \
     src/ssl/wolfssl/wolfcrypt/chacha20_poly1305.c \
-    src/ssl/wolfssl/wolfcrypt/cmac.c \
     src/ssl/wolfssl/wolfcrypt/coding.c \
-    src/ssl/wolfssl/wolfcrypt/compress.c \
-    src/ssl/wolfssl/wolfcrypt/cpuid.c \
     src/ssl/wolfssl/wolfcrypt/cryptocb.c \
     src/ssl/wolfssl/wolfcrypt/curve25519.c \
-    src/ssl/wolfssl/wolfcrypt/curve448.c \
-    src/ssl/wolfssl/wolfcrypt/des3.c \
-    src/ssl/wolfssl/wolfcrypt/dh.c \
-    src/ssl/wolfssl/wolfcrypt/dilithium.c \
-    src/ssl/wolfssl/wolfcrypt/dsa.c \
     src/ssl/wolfssl/wolfcrypt/ecc.c \
-    src/ssl/wolfssl/wolfcrypt/eccsi.c \
-    src/ssl/wolfssl/wolfcrypt/ed25519.c \
-    src/ssl/wolfssl/wolfcrypt/ed448.c \
     src/ssl/wolfssl/wolfcrypt/error.c \
-    src/ssl/wolfssl/wolfcrypt/ext_lms.c \
-    src/ssl/wolfssl/wolfcrypt/ext_mlkem.c \
-    src/ssl/wolfssl/wolfcrypt/ext_xmss.c \
-    src/ssl/wolfssl/wolfcrypt/falcon.c \
-    src/ssl/wolfssl/wolfcrypt/fe_448.c \
-    src/ssl/wolfssl/wolfcrypt/fe_low_mem.c \
     src/ssl/wolfssl/wolfcrypt/fe_operations.c \
-    src/ssl/wolfssl/wolfcrypt/fe_x25519_128.h \
-    src/ssl/wolfssl/wolfcrypt/ge_448.c \
-    src/ssl/wolfssl/wolfcrypt/ge_low_mem.c \
     src/ssl/wolfssl/wolfcrypt/ge_operations.c \
     src/ssl/wolfssl/wolfcrypt/hash.c \
     src/ssl/wolfssl/wolfcrypt/hmac.c \
-    src/ssl/wolfssl/wolfcrypt/hpke.c \
-    src/ssl/wolfssl/wolfcrypt/integer.c \
     src/ssl/wolfssl/wolfcrypt/kdf.c \
     src/ssl/wolfssl/wolfcrypt/logging.c \
-    src/ssl/wolfssl/wolfcrypt/md2.c \
-    src/ssl/wolfssl/wolfcrypt/md4.c \
-    src/ssl/wolfssl/wolfcrypt/md5.c \
     src/ssl/wolfssl/wolfcrypt/memory.c \
-    src/ssl/wolfssl/wolfcrypt/pkcs12.c \
-    src/ssl/wolfssl/wolfcrypt/pkcs7.c \
     src/ssl/wolfssl/wolfcrypt/poly1305.c \
-    src/ssl/wolfssl/wolfcrypt/pwdbased.c \
     src/ssl/wolfssl/wolfcrypt/random.c \
-    src/ssl/wolfssl/wolfcrypt/rc2.c \
-    src/ssl/wolfssl/wolfcrypt/ripemd.c \
-    src/ssl/wolfssl/wolfcrypt/rsa.c \
-    src/ssl/wolfssl/wolfcrypt/sakke.c \
-    src/ssl/wolfssl/wolfcrypt/sha.c \
     src/ssl/wolfssl/wolfcrypt/sha256.c \
-    src/ssl/wolfssl/wolfcrypt/sha3.c \
-    src/ssl/wolfssl/wolfcrypt/sha512.c \
     src/ssl/wolfssl/wolfcrypt/signature.c \
-    src/ssl/wolfssl/wolfcrypt/siphash.c \
-    src/ssl/wolfssl/wolfcrypt/sp_arm32.c \
-    src/ssl/wolfssl/wolfcrypt/sp_arm64.c \
-    src/ssl/wolfssl/wolfcrypt/sp_armthumb.c \
-    src/ssl/wolfssl/wolfcrypt/sp_c32.c \
-    src/ssl/wolfssl/wolfcrypt/sp_c64.c \
-    src/ssl/wolfssl/wolfcrypt/sp_cortexm.c \
-    src/ssl/wolfssl/wolfcrypt/sp_dsp32.c \
     src/ssl/wolfssl/wolfcrypt/sp_int.c \
-    src/ssl/wolfssl/wolfcrypt/sp_x86_64.c \
-    src/ssl/wolfssl/wolfcrypt/sphincs.c \
-    src/ssl/wolfssl/wolfcrypt/srp.c \
-    src/ssl/wolfssl/wolfcrypt/tfm.c \
-    src/ssl/wolfssl/wolfcrypt/wc_dsp.c \
     src/ssl/wolfssl/wolfcrypt/wc_encrypt.c \
-    src/ssl/wolfssl/wolfcrypt/wc_lms.c \
-    src/ssl/wolfssl/wolfcrypt/wc_lms_impl.c \
-    src/ssl/wolfssl/wolfcrypt/wc_mlkem.c \
-    src/ssl/wolfssl/wolfcrypt/wc_mlkem_poly.c \
-    src/ssl/wolfssl/wolfcrypt/wc_pkcs11.c \
     src/ssl/wolfssl/wolfcrypt/wc_port.c \
-    src/ssl/wolfssl/wolfcrypt/wc_xmss.c \
-    src/ssl/wolfssl/wolfcrypt/wc_xmss_impl.c \
-    src/ssl/wolfssl/wolfcrypt/wolfevent.c \
     src/ssl/wolfssl/wolfcrypt/wolfmath.c
 
 # local: test/libbitcoin-network-test
@@ -510,8 +441,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/ssl/wolfssl/tests/api/test_wolfmath.h \
     test/ssl/wolfssl/tests/api/test_x509.c \
     test/ssl/wolfssl/tests/api/test_x509.h \
+    test/ssl/wolfssl/testsuite/utils.c \
     test/ssl/wolfssl/testsuite/utils.h \
-    test/ssl/wolfssl/testsuite/utils1.c \
     test/ssl/wolfssl/wolfcrypt/benchmark/benchmark.c \
     test/ssl/wolfssl/wolfcrypt/benchmark/benchmark.h \
     test/ssl/wolfssl/wolfcrypt/test/test.c \
@@ -776,13 +707,10 @@ include_bitcoin_ssl_wolfssldir = ${includedir}/bitcoin/ssl/wolfssl
 include_bitcoin_ssl_wolfssl_HEADERS = \
     include/bitcoin/ssl/wolfssl/callbacks.h \
     include/bitcoin/ssl/wolfssl/certs_test.h \
-    include/bitcoin/ssl/wolfssl/certs_test_sm.h \
-    include/bitcoin/ssl/wolfssl/crl.h \
     include/bitcoin/ssl/wolfssl/error-ssl.h \
     include/bitcoin/ssl/wolfssl/internal.h \
     include/bitcoin/ssl/wolfssl/ocsp.h \
     include/bitcoin/ssl/wolfssl/options.h \
-    include/bitcoin/ssl/wolfssl/quic.h \
     include/bitcoin/ssl/wolfssl/ssl.h \
     include/bitcoin/ssl/wolfssl/test.h \
     include/bitcoin/ssl/wolfssl/version.h \
@@ -793,13 +721,10 @@ include_bitcoin_ssl_wolfssl_openssldir = ${includedir}/bitcoin/ssl/wolfssl/opens
 include_bitcoin_ssl_wolfssl_openssl_HEADERS = \
     include/bitcoin/ssl/wolfssl/openssl/aes.h \
     include/bitcoin/ssl/wolfssl/openssl/asn1.h \
-    include/bitcoin/ssl/wolfssl/openssl/asn1t.h \
     include/bitcoin/ssl/wolfssl/openssl/bio.h \
     include/bitcoin/ssl/wolfssl/openssl/bn.h \
     include/bitcoin/ssl/wolfssl/openssl/buffer.h \
-    include/bitcoin/ssl/wolfssl/openssl/camellia.h \
     include/bitcoin/ssl/wolfssl/openssl/cmac.h \
-    include/bitcoin/ssl/wolfssl/openssl/cms.h \
     include/bitcoin/ssl/wolfssl/openssl/compat_types.h \
     include/bitcoin/ssl/wolfssl/openssl/conf.h \
     include/bitcoin/ssl/wolfssl/openssl/crypto.h \
@@ -825,10 +750,7 @@ include_bitcoin_ssl_wolfssl_openssl_HEADERS = \
     include/bitcoin/ssl/wolfssl/openssl/modes.h \
     include/bitcoin/ssl/wolfssl/openssl/obj_mac.h \
     include/bitcoin/ssl/wolfssl/openssl/objects.h \
-    include/bitcoin/ssl/wolfssl/openssl/ocsp.h \
-    include/bitcoin/ssl/wolfssl/openssl/opensslconf.h \
     include/bitcoin/ssl/wolfssl/openssl/opensslv.h \
-    include/bitcoin/ssl/wolfssl/openssl/ossl_typ.h \
     include/bitcoin/ssl/wolfssl/openssl/pem.h \
     include/bitcoin/ssl/wolfssl/openssl/pkcs12.h \
     include/bitcoin/ssl/wolfssl/openssl/pkcs7.h \
@@ -836,14 +758,11 @@ include_bitcoin_ssl_wolfssl_openssl_HEADERS = \
     include/bitcoin/ssl/wolfssl/openssl/rc4.h \
     include/bitcoin/ssl/wolfssl/openssl/ripemd.h \
     include/bitcoin/ssl/wolfssl/openssl/rsa.h \
-    include/bitcoin/ssl/wolfssl/openssl/safestack.h \
     include/bitcoin/ssl/wolfssl/openssl/sha.h \
     include/bitcoin/ssl/wolfssl/openssl/sha3.h \
-    include/bitcoin/ssl/wolfssl/openssl/srp.h \
     include/bitcoin/ssl/wolfssl/openssl/ssl.h \
     include/bitcoin/ssl/wolfssl/openssl/stack.h \
     include/bitcoin/ssl/wolfssl/openssl/tls1.h \
-    include/bitcoin/ssl/wolfssl/openssl/txt_db.h \
     include/bitcoin/ssl/wolfssl/openssl/x509.h \
     include/bitcoin/ssl/wolfssl/openssl/x509_vfy.h \
     include/bitcoin/ssl/wolfssl/openssl/x509v3.h
@@ -855,45 +774,30 @@ include_bitcoin_ssl_wolfssl_wolfcrypt_HEADERS = \
     include/bitcoin/ssl/wolfssl/wolfcrypt/ascon.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/asn.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/asn_public.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/blake2-impl.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/blake2-int.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/blake2.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/camellia.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/chacha.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/chacha20_poly1305.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/cmac.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/coding.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/compress.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/cpuid.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/cryptocb.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/curve25519.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/curve448.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/des3.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/dh.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/dilithium.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/dsa.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/ecc.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/eccsi.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/ed25519.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/ed448.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/error-crypt.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/ext_lms.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/ext_mlkem.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/ext_xmss.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/falcon.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/fe_448.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/fe_operations.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/fips_test.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/ge_448.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/ge_operations.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/hash.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/hmac.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/hpke.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/integer.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/kdf.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/libwolfssl_sources.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/libwolfssl_sources_asm.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/lms.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/logging.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/md2.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/md4.h \
@@ -901,11 +805,7 @@ include_bitcoin_ssl_wolfssl_wolfcrypt_HEADERS = \
     include/bitcoin/ssl/wolfssl/wolfcrypt/mem_track.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/memory.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/misc.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/mlkem.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/mpi_class.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/mpi_superclass.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/oid_sum.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/pkcs11.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/pkcs12.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/pkcs7.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/poly1305.h \
@@ -914,8 +814,6 @@ include_bitcoin_ssl_wolfssl_wolfcrypt_HEADERS = \
     include/bitcoin/ssl/wolfssl/wolfcrypt/rc2.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/ripemd.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/rsa.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/sakke.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/selftest.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/settings.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/sha.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/sha256.h \
@@ -923,21 +821,12 @@ include_bitcoin_ssl_wolfssl_wolfcrypt_HEADERS = \
     include/bitcoin/ssl/wolfssl/wolfcrypt/sha512.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/signature.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/siphash.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/sp.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/sp_int.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/sphincs.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/srp.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/tfm.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/types.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/user_settings.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/visibility.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/wc_encrypt.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/wc_lms.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/wc_mlkem.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/wc_pkcs11.h \
     include/bitcoin/ssl/wolfssl/wolfcrypt/wc_port.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/wc_xmss.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/wolfevent.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/wolfmath.h \
-    include/bitcoin/ssl/wolfssl/wolfcrypt/xmss.h
+    include/bitcoin/ssl/wolfssl/wolfcrypt/wolfmath.h
 

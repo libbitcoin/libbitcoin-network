@@ -102,6 +102,7 @@
 /* Remove unused or undesired components. */
 #define WOLFSSL_NO_CLIENT_AUTH
 #define NO_SESSION_CACHE
+#define NO_PWDBASED
 #define NO_OLD_TLS
 #define NO_OCSP
 #define NO_DES3

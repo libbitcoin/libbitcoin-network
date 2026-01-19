@@ -663,7 +663,7 @@
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\w64wrapper.c">
       <Filter>src\ssl\wolfssl\tests</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\testsuite\utils1.c">
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\testsuite\utils.c">
       <Filter>src\ssl\wolfssl\testsuite</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.c">
