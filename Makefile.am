@@ -441,8 +441,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/ssl/wolfssl/tests/api/test_wolfmath.h \
     test/ssl/wolfssl/tests/api/test_x509.c \
     test/ssl/wolfssl/tests/api/test_x509.h \
+    test/ssl/wolfssl/testsuite/utils.c \
     test/ssl/wolfssl/testsuite/utils.h \
-    test/ssl/wolfssl/testsuite/utils1.c \
     test/ssl/wolfssl/wolfcrypt/benchmark/benchmark.c \
     test/ssl/wolfssl/wolfcrypt/benchmark/benchmark.h \
     test/ssl/wolfssl/wolfcrypt/test/test.c \
