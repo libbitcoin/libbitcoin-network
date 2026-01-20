@@ -106,7 +106,7 @@ public:
     const settings& network_settings() const NOEXCEPT;
 
     /// Return a reference to the network io_context (thread safe).
-    asio::io_context& service() NOEXCEPT;
+    asio::context& service() NOEXCEPT;
 
     /// Return a reference to the network strand (thread safe).
     asio::strand& strand() NOEXCEPT;

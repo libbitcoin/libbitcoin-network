@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_HPP
 
 #include <utility>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

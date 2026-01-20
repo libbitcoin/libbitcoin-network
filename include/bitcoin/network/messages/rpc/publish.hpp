@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
 
 #include <tuple>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>
 #include <bitcoin/network/messages/rpc/method.hpp>

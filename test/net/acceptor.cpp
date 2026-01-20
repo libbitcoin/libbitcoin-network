@@ -26,7 +26,7 @@ class accessor
 public:
     using acceptor::acceptor;
 
-    const asio::io_context& get_service() const NOEXCEPT
+    const asio::context& get_service() const NOEXCEPT
     {
         return service_;
     }

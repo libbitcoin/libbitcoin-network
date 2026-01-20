@@ -48,7 +48,8 @@ namespace network {
 // have           : version
 // preprocessor   : have
 // boost          : preprocessor
-// beast          : boost
+// asio           : boost
+// beast          : asio
 // error          : beast
 // define         : error
 

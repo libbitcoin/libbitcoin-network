@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_BEAST_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_BEAST_HPP
 
-#include <bitcoin/network/boost.hpp>
+#include <bitcoin/network/asio.hpp>
 
 #include <optional>
 #include <memory>
@@ -32,68 +32,77 @@
 
 namespace libbitcoin {
 namespace network {
-namespace http {
 
-/// http protocol versions
-constexpr int32_t version_1_1 = 11;
-constexpr int32_t version_1_0 = 10;
+/// http uses asio::socket (tcp)
+namespace http
+{
+    /// http protocol versions
+    constexpr int32_t version_1_1 = 11;
+    constexpr int32_t version_1_0 = 10;
 
-/// beast::http::empty_body
-using empty_body = boost::beast::http::empty_body;
+    /// beast::http::empty_body
+    using empty_body = boost::beast::http::empty_body;
 
-/// beast::http::vector_body<uint8_t, bc::allocator<uint8_t>>
-using chunk_body = boost::beast::http::vector_body<uint8_t, allocator<uint8_t>>;
+    /// beast::http::vector_body<uint8_t, bc::allocator<uint8_t>>
+    using chunk_body = boost::beast::http::vector_body<uint8_t, allocator<uint8_t>>;
 
-/// beast::http::file_body
-using file_body = boost::beast::http::file_body;
+    /// beast::http::file_body
+    using file_body = boost::beast::http::file_body;
 
-/// beast::http::span_body<uint8_t>
-/// Must cast write span uint8_t* to non-const.
-using span_body = boost::beast::http::span_body<uint8_t>;
+    /// beast::http::span_body<uint8_t>
+    /// Must cast write span uint8_t* to non-const.
+    using span_body = boost::beast::http::span_body<uint8_t>;
 
-/// beast::http::buffer_body
-/// Must cast write buffer void* to non-const.
-using buffer_body = boost::beast::http::buffer_body;
+    /// beast::http::buffer_body
+    /// Must cast write buffer void* to non-const.
+    using buffer_body = boost::beast::http::buffer_body;
 
-/// beast::http::string_body
-using string_body = boost::beast::http::string_body;
+    /// beast::http::string_body
+    using string_body = boost::beast::http::string_body;
 
-/// general purpose
-using file = file_body::value_type;
-using field = boost::beast::http::field;
-using fields = boost::beast::http::fields;
-using flat_buffer = boost::beast::flat_buffer;
-using flat_buffer_ptr = std::shared_ptr<flat_buffer>;
-using flat_buffer_cptr = std::shared_ptr<const flat_buffer>;
+    /// general purpose
+    using file = file_body::value_type;
+    using field = boost::beast::http::field;
+    using fields = boost::beast::http::fields;
+    using flat_buffer = boost::beast::flat_buffer;
+    using flat_buffer_ptr = std::shared_ptr<flat_buffer>;
+    using flat_buffer_cptr = std::shared_ptr<const flat_buffer>;
 
-/// Types required for custom http::body/head<> definitions.
-template <bool IsRequest>
-using empty_parser = boost::beast::http::parser<IsRequest, empty_body>;
-template <bool IsRequest>
-using empty_serializer = boost::beast::http::serializer<IsRequest, empty_body>;
-template <bool IsRequest>
-using empty_message = boost::beast::http::message<IsRequest, empty_body>;
-template <bool IsRequest, class Fields = fields>
-using message_header = boost::beast::http::header<IsRequest, Fields>;
-template <class Buffer>
-using get_buffer = boost::optional<std::pair<Buffer, bool>>;
-using length_type = boost::optional<uint64_t>;
-using request_header = message_header<true, fields>;
-using response_header = message_header<false, fields>;
-using empty_request = boost::beast::http::request<empty_body>;
-using empty_response = boost::beast::http::response<empty_body>;
+    /// Types required for custom http::body/head<> definitions.
+    template <bool IsRequest>
+    using empty_parser = boost::beast::http::parser<IsRequest, empty_body>;
+    template <bool IsRequest>
+    using empty_serializer = boost::beast::http::serializer<IsRequest, empty_body>;
+    template <bool IsRequest>
+    using empty_message = boost::beast::http::message<IsRequest, empty_body>;
+    template <bool IsRequest, class Fields = fields>
+    using message_header = boost::beast::http::header<IsRequest, Fields>;
+    template <class Buffer>
+    using get_buffer = boost::optional<std::pair<Buffer, bool>>;
+    using length_type = boost::optional<uint64_t>;
+    using request_header = message_header<true, fields>;
+    using response_header = message_header<false, fields>;
+    using empty_request = boost::beast::http::request<empty_body>;
+    using empty_response = boost::beast::http::response<empty_body>;
+}
 
-} // namespace http
+/// ws::socket
+namespace ws
+{
+    template <class Socket>
+    using stream = boost::beast::websocket::stream<Socket>;
+    using socket = stream<boost::asio::ip::tcp::socket>;
 
-namespace ws {
-    
-template <class Socket>
-using stream = boost::beast::websocket::stream<Socket>;
-using websocket = stream<boost::asio::ip::tcp::socket>;
-using frame_type = boost::beast::websocket::frame_type;
-using decorator = boost::beast::websocket::stream_base::decorator;
+    using frame_type = boost::beast::websocket::frame_type;
+    using decorator = boost::beast::websocket::stream_base::decorator;
 
-} // namespace ws
+    /// ws::ssl::socket
+    namespace ssl
+    {
+        using socket = stream<asio::ssl::socket>;
+    }
+}
+
 } // namespace network
 } // namespace libbitcoin
 

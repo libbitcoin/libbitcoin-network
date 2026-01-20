@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_INTERFACES_HTTP_HPP
 #define LIBBITCOIN_NETWORK_INTERFACES_HTTP_HPP
 
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 

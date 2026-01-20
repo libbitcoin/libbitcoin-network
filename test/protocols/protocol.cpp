@@ -57,7 +57,7 @@ class mock_acceptor
 {
 public:
     mock_acceptor(const logger& log, asio::strand& strand,
-        asio::io_context& service, size_t maximum) NOEXCEPT
+        asio::context& service, size_t maximum) NOEXCEPT
       : acceptor(log, strand, service, maximum, suspended_),
         stopped_(false), port_(0)
     {
@@ -113,7 +113,7 @@ class mock_connector
 {
 public:
     mock_connector(const logger& log, asio::strand& strand,
-        asio::io_context& service, const steady_clock::duration& timeout,
+        asio::context& service, const steady_clock::duration& timeout,
         size_t maximum) NOEXCEPT
       : connector(log, strand, service, timeout, maximum, suspended_),
         stopped_(false)

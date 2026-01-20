@@ -22,7 +22,6 @@
 #include <memory>
 #include <optional>
 #include <variant>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/messages/json_body.hpp>

@@ -22,7 +22,6 @@
 #include <atomic>
 #include <memory>
 #include <variant>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -35,7 +34,7 @@ namespace network {
 /// Stop is thread safe and idempotent, may be called multiple times.
 /// All handlers (except accept) are posted to the internal strand.
 class BCT_API socket
-  : public std::enable_shared_from_this<socket>, public reporter,
+  : public enable_shared_from_base<socket>, public reporter,
     protected tracker<socket>
 {
 public:
@@ -44,13 +43,13 @@ public:
     DELETE_COPY_MOVE(socket);
 
     /// Use only for incoming connections.
-    socket(const logger& log, asio::io_context& service,
+    socket(const logger& log, asio::context& service,
         size_t maximum_request) NOEXCEPT;
 
     /// Use only for outgoing connections. Endpoint represents the peer or
     /// client (non-proxy) that the connector attempted to reach. Address holds
     /// a copy of the p2p address associated with the connection (or empty).
-    socket(const logger& log, asio::io_context& service,
+    socket(const logger& log, asio::context& service,
         size_t maximum_request, const config::address& address,
         const config::endpoint& endpoint, bool proxied=false) NOEXCEPT;
 
@@ -163,7 +162,7 @@ public:
     virtual asio::strand& strand() NOEXCEPT;
 
     /// Get the network threadpool iocontext.
-    virtual asio::io_context& service() const NOEXCEPT;
+    virtual asio::context& service() const NOEXCEPT;
 
 protected:
     /// The socket was upgraded to a websocket (requires strand).
@@ -291,9 +290,9 @@ private:
         const count_handler& handler) NOEXCEPT;
 
 protected:
-    using transport = std::variant<asio::socket, ws::websocket>;
+    using transport = std::variant<asio::socket, ws::socket>;
 
-    socket(const logger& log, asio::io_context& service,
+    socket(const logger& log, asio::context& service,
         size_t maximum_request, const config::address& address,
         const config::endpoint& endpoint, bool proxied, bool inbound) NOEXCEPT;
 
@@ -302,7 +301,7 @@ protected:
     const bool proxied_;
     const size_t maximum_;
     asio::strand strand_;
-    asio::io_context& service_;
+    asio::context& service_;
     std::atomic_bool stopped_{};
 
     // These are protected by strand (see also handle_accept).

@@ -274,7 +274,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\asio.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\asio.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />

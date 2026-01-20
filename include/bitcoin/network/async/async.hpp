@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
 
-#include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/desubscriber.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>

@@ -49,7 +49,7 @@ public:
 
     /// Construct an instance.
     connector(const logger& log, asio::strand& strand,
-        asio::io_context& service, const steady_clock::duration& timeout,
+        asio::context& service, const steady_clock::duration& timeout,
         size_t maximum_request, std::atomic_bool& suspended) NOEXCEPT;
 
     /// Asserts/logs stopped.
@@ -97,7 +97,7 @@ protected:
 
     // These are thread safe
     const size_t maximum_;
-    asio::io_context& service_;
+    asio::context& service_;
     asio::strand& strand_;
     std::atomic_bool& suspended_;
 

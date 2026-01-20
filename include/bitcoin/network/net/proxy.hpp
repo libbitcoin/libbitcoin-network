@@ -74,7 +74,7 @@ public:
     asio::strand& strand() NOEXCEPT;
 
     /// Get the network threadpool iocontext.
-    asio::io_context& service() const NOEXCEPT;
+    asio::context& service() const NOEXCEPT;
 
     /// The strand is running in this thread.
     bool stranded() const NOEXCEPT;

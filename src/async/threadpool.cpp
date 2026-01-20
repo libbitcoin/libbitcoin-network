@@ -19,7 +19,6 @@
 #include <bitcoin/network/async/threadpool.hpp>
 
 #include <thread>
-#include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -28,7 +27,7 @@ namespace network {
 
 // Work keeps the threadpool alive when there are no threads running.
 threadpool::work_guard threadpool::keep_alive(
-    asio::io_context& service) NOEXCEPT
+    asio::context& service) NOEXCEPT
 {
     // If make_work_guard throws, application will abort at startup.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -102,7 +101,7 @@ bool threadpool::join() NOEXCEPT
     return true;
 }
 
-asio::io_context& threadpool::service() NOEXCEPT
+asio::context& threadpool::service() NOEXCEPT
 {
     return service_;
 }

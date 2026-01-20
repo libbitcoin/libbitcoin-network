@@ -15,6 +15,7 @@
  */
 
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/asio.hpp>
 #include <bitcoin/network/beast.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
@@ -25,7 +26,6 @@
 #include <bitcoin/network/preprocessor.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/version.hpp>
-#include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/async/desubscriber.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
