@@ -27,6 +27,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>
+#include <boost/beast/websocket/ssl.hpp>
 
 /// Convenience namespace for commonly used boost beast aliases.
 
@@ -89,17 +90,14 @@ namespace http
 /// ws::socket
 namespace ws
 {
-    template <class Socket>
-    using stream = boost::beast::websocket::stream<Socket>;
-    using socket = stream<boost::asio::ip::tcp::socket>;
-
-    using frame_type = boost::beast::websocket::frame_type;
+    using socket = boost::beast::websocket::stream<asio::tcp::socket>;
     using decorator = boost::beast::websocket::stream_base::decorator;
+    using frame_type = boost::beast::websocket::frame_type;
 
     /// ws::ssl::socket
     namespace ssl
     {
-        using socket = stream<asio::ssl::socket>;
+        using socket = boost::beast::websocket::stream<asio::ssl::socket>;
     }
 }
 

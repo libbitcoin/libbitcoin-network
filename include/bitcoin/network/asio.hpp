@@ -65,7 +65,6 @@ namespace asio
     namespace ssl
     {
         typedef boost::asio::ssl::context context;
-        typedef std::shared_ptr<context> context_ptr;
         typedef boost::asio::ssl::stream<asio::socket> socket;
     }
 }
