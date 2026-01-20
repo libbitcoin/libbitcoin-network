@@ -34,23 +34,26 @@ namespace network {
 /// Stop is thread safe and idempotent, may be called multiple times.
 /// All handlers (except accept) are posted to the internal strand.
 class BCT_API socket
-  : public enable_shared_from_base<socket>, public reporter,
+  : public std::enable_shared_from_this<socket>, public reporter,
     protected tracker<socket>
 {
 public:
     typedef std::shared_ptr<socket> ptr;
 
+    // TODO: p2p::context, zmq::context.
+    using secure_context = std::variant<std::monostate, asio::ssl::context>;
+
     DELETE_COPY_MOVE(socket);
 
     /// Use only for incoming connections.
-    socket(const logger& log, asio::context& service,
-        size_t maximum_request) NOEXCEPT;
+    socket(const logger& log, asio::context& service, secure_context& context,
+        size_t maximum) NOEXCEPT;
 
     /// Use only for outgoing connections. Endpoint represents the peer or
     /// client (non-proxy) that the connector attempted to reach. Address holds
     /// a copy of the p2p address associated with the connection (or empty).
-    socket(const logger& log, asio::context& service,
-        size_t maximum_request, const config::address& address,
+    socket(const logger& log, asio::context& service, secure_context& context,
+        size_t maximum, const config::address& address,
         const config::endpoint& endpoint, bool proxied=false) NOEXCEPT;
 
     /// Asserts/logs stopped.
@@ -168,8 +171,11 @@ protected:
     /// The socket was upgraded to a websocket (requires strand).
     virtual bool websocket() const NOEXCEPT;
 
+    /// The socket is secured with SSL (requires strand).
+    virtual bool secure() const NOEXCEPT;
+
     /// Utility.
-    asio::socket& get_transport() NOEXCEPT;
+    asio::socket& get_lowest_layer() NOEXCEPT;
     void logx(const std::string& context, const boost_code& ec) const NOEXCEPT;
 
 private:
@@ -202,6 +208,19 @@ private:
         rpc::response& value;
         rpc::writer writer;
     };
+
+    using tcp_variant = std::variant<
+        std::reference_wrapper<asio::socket>,
+        std::reference_wrapper<asio::ssl::socket>>;
+
+    using ws_variant = std::variant<
+        std::reference_wrapper<ws::socket>,
+        std::reference_wrapper<ws::ssl::socket>>;
+
+    /// Helpers for variant access (protected by strand).
+    ws_variant get_ws() NOEXCEPT;
+    tcp_variant get_tcp() NOEXCEPT;
+    ////asio::ssl::socket& get_ssl_layer() NOEXCEPT;
 
     // stop
     // ------------------------------------------------------------------------
@@ -263,6 +282,8 @@ private:
         const result_handler& handler) NOEXCEPT;
     void handle_connect(const boost_code& ec, const asio::endpoint& peer,
         const result_handler& handler) NOEXCEPT;
+    void handle_handshake(const boost_code& ec,
+        const result_handler& handler) NOEXCEPT;
 
     // tcp (generic)
     void handle_tcp(const boost_code& ec, size_t size,
@@ -290,10 +311,12 @@ private:
         const count_handler& handler) NOEXCEPT;
 
 protected:
-    using transport = std::variant<asio::socket, ws::socket>;
+    // TODO: p2p::socket, zmq::socket.
+    using transport = std::variant<asio::socket, asio::ssl::socket, ws::socket,
+        ws::ssl::socket>;
 
-    socket(const logger& log, asio::context& service,
-        size_t maximum_request, const config::address& address,
+    socket(const logger& log, asio::context& service, secure_context& context,
+        size_t maximum, const config::address& address,
         const config::endpoint& endpoint, bool proxied, bool inbound) NOEXCEPT;
 
     // These are thread safe.
@@ -302,6 +325,7 @@ protected:
     const size_t maximum_;
     asio::strand strand_;
     asio::context& service_;
+    secure_context& context_;
     std::atomic_bool stopped_{};
 
     // These are protected by strand (see also handle_accept).

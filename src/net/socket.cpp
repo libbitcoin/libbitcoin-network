@@ -48,27 +48,30 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // ----------------------------------------------------------------------------
 
 socket::socket(const logger& log, asio::context& service,
-    size_t maximum_request) NOEXCEPT
-    : socket(log, service, maximum_request, {}, {}, false, true)
+    secure_context& context, size_t maximum) NOEXCEPT
+  : socket(log, service, context, maximum, {}, {}, false, true)
 {
 }
 
 socket::socket(const logger& log, asio::context& service,
-    size_t maximum_request, const config::address& address,
-    const config::endpoint& endpoint, bool proxied) NOEXCEPT
-  : socket(log, service, maximum_request, address, endpoint, proxied, false)
+    secure_context& context, size_t maximum,
+    const config::address& address, const config::endpoint& endpoint,
+    bool proxied) NOEXCEPT
+  : socket(log, service, context, maximum, address, endpoint, proxied, false)
 {
 }
 
 // protected
 socket::socket(const logger& log, asio::context& service,
-    size_t maximum_request, const config::address& address,
-    const config::endpoint& endpoint, bool proxied, bool inbound) NOEXCEPT
+    secure_context& context, size_t maximum,
+    const config::address& address, const config::endpoint& endpoint,
+    bool proxied, bool inbound) NOEXCEPT
   : inbound_(inbound),
     proxied_(proxied),
-    maximum_(maximum_request),
+    maximum_(maximum),
     strand_(service.get_executor()),
     service_(service),
+    context_(context),
     address_(address),
     endpoint_(endpoint),
     transport_(std::in_place_type<asio::socket>, strand_),
@@ -107,20 +110,37 @@ void socket::do_stop() NOEXCEPT
     BC_ASSERT(stranded());
 
     // Release the callback closure before shutdown/close.
-    if (std::holds_alternative<ws::socket>(transport_))
-        std::get<ws::socket>(transport_).control_callback();
+    if (websocket())
+    {
+        std::visit([](auto&& ref) NOEXCEPT
+        {
+            ref.get().control_callback();
+        }, get_ws());
+    }
 
-    boost_code ignore{};
-    auto& socket = get_transport();
+    auto tcp_close = [this]() NOEXCEPT
+    {
+        boost_code ignore{};
+        auto& layer = get_lowest_layer();
+        layer.shutdown(asio::socket::shutdown_both, ignore);
+        layer.close(ignore);
+    };
 
-    // Disable future sends or receives on the socket, for graceful close.
-    socket.shutdown(asio::socket::shutdown_both, ignore);
+    auto ssl_close = [this, tcp_close](const boost_code& ec) NOEXCEPT
+    {
+        if (ec && ec != boost::asio::error::eof)
+            logx("ssl_shutdown", ec);
 
-    // Cancel asynchronous I/O operations and close socket.
-    // The underlying descriptor is closed regardless of error return.
-    // Any asynchronous send, receive or connect operations are canceled
-    // immediately, and will complete with the operation_aborted error.
-    socket.close(ignore);
+        tcp_close();
+    };
+
+    if (secure())
+    {
+        std::get<asio::ssl::socket>(transport_).async_shutdown(ssl_close);
+        return;
+    }
+
+    tcp_close();
 }
 
 // Lazy stop (graceful websocket closing).
@@ -141,21 +161,26 @@ void socket::do_async_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (!std::holds_alternative<ws::socket>(transport_))
+    if (!websocket())
     {
         do_stop();
         return;
     }
 
-    // TODO: requires a timer (use connection timeout) to prevent socket leak.
-    // TODO: this is the same type of timout race as in the connector/acceptor.
-    // TODO: so this should be wrapped in an object called a "disconnector".
-    // This will repost to the strand, but the iocontext is alive because this
-    // is not initiated by session callback invoking stop(). Any subsequent
-    // stop() call will terminate this listener by invoking socket.shutdown().
-    std::get<ws::socket>(transport_).async_close(
-        beast::websocket::close_code::normal,
-        std::bind(&socket::do_stop, shared_from_this()));
+    auto async_close = [this](const boost_code& ec) NOEXCEPT
+    {
+        if (ec)
+        {
+            logx("ws_close", ec);
+        }
+        do_stop();
+    };
+
+    std::visit([&](auto&& ref) NOEXCEPT
+    {
+        ref.get().async_close(beast::websocket::close_code::normal,
+            async_close);
+    }, get_ws());
 }
 
 // Wait.
@@ -173,7 +198,7 @@ void socket::do_wait(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    get_transport().async_wait(asio::socket::wait_read,
+    get_lowest_layer().async_wait(asio::socket::wait_read,
         std::bind(&socket::handle_wait,
             shared_from_this(), _1, handler));
 }
@@ -223,9 +248,10 @@ void socket::do_cancel(const result_handler& handler) NOEXCEPT
     {
         // Causes connect, send, and receive calls to quit with
         // asio::error::operation_aborted passed to handlers.
-        get_transport().cancel();
+        get_lowest_layer().cancel();
+        handler(error::success);
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ do_cancel: " << e.what());
         handler(error::service_stopped);
@@ -259,7 +285,7 @@ void socket::accept(asio::acceptor& acceptor,
             std::bind(&socket::handle_accept,
                 shared_from_this(), _1, handler));
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ accept: " << e.what());
         handler(error::accept_failed);
@@ -381,7 +407,7 @@ void socket::do_connect(const asio::endpoints& range,
             std::bind(&socket::handle_connect,
                 shared_from_this(), _1, _2, handler));
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ do_connect: " << e.what());
         handler(error::connect_failed);
@@ -398,12 +424,15 @@ void socket::do_read(const asio::mutable_buffer& out,
 
     try
     {
-        // This composed operation posts all intermediate handlers to strand.
-        boost::asio::async_read(std::get<asio::socket>(transport_), out,
-            std::bind(&socket::handle_tcp,
-                shared_from_this(), _1, _2, handler));
+        std::visit([&](auto&& ref) NOEXCEPT
+        {
+            // This composed operation posts all intermediate handlers to strand.
+            boost::asio::async_read(ref.get(), out,
+                std::bind(&socket::handle_tcp,
+                    shared_from_this(), _1, _2, handler));
+        }, get_tcp());
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ do_read: " << e.what());
         handler(error::operation_failed, {});
@@ -417,12 +446,15 @@ void socket::do_write(const asio::const_buffer& in,
 
     try
     {
-        // This composed operation posts all intermediate handlers to strand.
-        boost::asio::async_write(std::get<asio::socket>(transport_), in,
-            std::bind(&socket::handle_tcp,
-                shared_from_this(), _1, _2, handler));
+        std::visit([&](auto&& ref) NOEXCEPT
+        {
+            // This composed operation posts all intermediate handlers to strand.
+            boost::asio::async_write(ref.get(), in,
+                std::bind(&socket::handle_tcp,
+                    shared_from_this(), _1, _2, handler));
+        }, get_tcp());
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ do_write: " << e.what());
         handler(error::operation_failed, {});
@@ -447,9 +479,12 @@ void socket::do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
         return;
     }
 
-    get_transport().async_receive(in->value.buffer->prepare(size),
-        std::bind(&socket::handle_rpc_read,
-            shared_from_this(), _1, _2, total, in, handler));
+    std::visit([&](auto&& ref) NOEXCEPT
+    {
+        ref.get().async_read_some(in->value.buffer->prepare(size),
+            std::bind(&socket::handle_rpc_read,
+                shared_from_this(), _1, _2, total, in, handler));
+    }, get_tcp());
 }
 
 void socket::do_rpc_write(boost_code ec, size_t total,
@@ -474,9 +509,12 @@ void socket::do_rpc_write(boost_code ec, size_t total,
         return;
     }
 
-    get_transport().async_send(buffer->first,
-        std::bind(&socket::handle_rpc_write,
-            shared_from_this(), _1, _2, total, out, handler));
+    std::visit([&](auto&& ref) NOEXCEPT
+    {
+        ref.get().async_write_some(buffer->first,
+            std::bind(&socket::handle_rpc_write,
+                shared_from_this(), _1, _2, total, out, handler));
+    }, get_tcp());
 }
 
 // ws (generic).
@@ -494,13 +532,14 @@ void socket::do_ws_read(std::reference_wrapper<http::flat_buffer> out,
 
     try
     {
-        auto& socket = std::get<ws::socket>(transport_);
-
-        socket.async_read(out.get(),
-            std::bind(&socket::handle_ws_read,
-                shared_from_this(), _1, _2, handler));
+        std::visit([&](auto&& ref) NOEXCEPT
+        {
+            ref.get().async_read(out.get(),
+                std::bind(&socket::handle_ws_read,
+                    shared_from_this(), _1, _2, handler));
+        }, get_ws());
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ do_ws_read: " << e.what());
         handler(error::operation_failed, {});
@@ -515,18 +554,20 @@ void socket::do_ws_write(const asio::const_buffer& in, bool binary,
 
     try
     {
-        auto& socket = std::get<ws::socket>(transport_);
+        std::visit([&](auto&& ref) NOEXCEPT
+        {
+            auto& sock = ref.get();
+            if (binary)
+                sock.binary(true);
+            else
+                sock.text(true);
 
-        if (binary)
-            socket.binary(true);
-        else
-            socket.text(true);
-
-        socket.async_write(in,
-            std::bind(&socket::handle_ws_write,
-                shared_from_this(), _1, _2, handler));
+            sock.async_write(in,
+                std::bind(&socket::handle_ws_write,
+                    shared_from_this(), _1, _2, handler));
+        }, get_ws());
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ do_ws_write: " << e.what());
         handler(error::operation_failed, {});
@@ -564,7 +605,7 @@ void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
 
     try
     {
-        // Explicit parser orverride gives access to limits.
+        // Explicit parser override gives access to limits.
         auto parser = to_shared<http_parser>();
 
         // Causes http::error::body_limit on completion.
@@ -573,14 +614,15 @@ void socket::do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
         // Causes http::error::header_limit on completion.
         parser->header_limit(limit<uint32_t>(maximum_));
 
-        auto& socket = std::get<asio::socket>(transport_);
-
-        // This operation posts handler to the strand.
-        beast::http::async_read(socket, buffer.get(), *parser,
-            std::bind(&socket::handle_http_read,
-                shared_from_this(), _1, _2, request, parser, handler));
+        std::visit([&](auto&& ref) NOEXCEPT
+        {
+            // This operation posts handler to the strand.
+            beast::http::async_read(ref.get(), buffer.get(), *parser,
+                std::bind(&socket::handle_http_read,
+                    shared_from_this(), _1, _2, request, parser, handler));
+        }, get_tcp());
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ do_http_read: " << e.what());
         handler(error::operation_failed, {});
@@ -601,14 +643,15 @@ void socket::do_http_write(
 
     try
     {
-        auto& socket = std::get<asio::socket>(transport_);
-
-        // This operation posts handler to the strand.
-        beast::http::async_write(socket, response.get(),
-            std::bind(&socket::handle_http_write,
-                shared_from_this(), _1, _2, handler));
+        std::visit([&](auto&& ref) NOEXCEPT
+        {
+            // This operation posts handler to the strand.
+            beast::http::async_write(ref.get(), response.get(),
+                std::bind(&socket::handle_http_write,
+                    shared_from_this(), _1, _2, handler));
+        }, get_tcp());
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ do_http_write: " << e.what());
         handler(error::operation_failed, {});
@@ -626,8 +669,28 @@ void socket::handle_accept(boost_code ec,
     // socket_ and endpoint_ are not guarded here, see comments on accept.
     if (!ec)
     {
-        const auto& socket = std::get<asio::socket>(transport_);
-        endpoint_ = { socket.remote_endpoint(ec) };
+        const auto& sock = std::get<asio::socket>(transport_);
+        endpoint_ = { sock.remote_endpoint(ec) };
+    }
+
+    // TODO: conflated with ws::ssl.
+    if (secure())
+    {
+        if (ec)
+        {
+            handler(error::asio_to_error_code(ec));
+            return;
+        }
+
+        auto& plain = std::get<asio::socket>(transport_);
+        transport_.emplace<asio::ssl::socket>(std::move(plain),
+            std::get<asio::ssl::context>(context_));
+
+        std::get<asio::ssl::socket>(transport_)
+            .async_handshake(boost::asio::ssl::stream_base::server,
+                std::bind(&socket::handle_handshake,
+                    shared_from_this(), _1, handler));
+        return;
     }
 
     if (error::asio_is_canceled(ec))
@@ -650,6 +713,26 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
     if (!proxied_)
         endpoint_ = peer;
 
+    // TODO: conflated with ws::ssl.
+    if (secure())
+    {
+        if (ec)
+        {
+            handler(error::asio_to_error_code(ec));
+            return;
+        }
+
+        auto& plain = std::get<asio::socket>(transport_);
+        transport_.emplace<asio::ssl::socket>(std::move(plain),
+            std::get<asio::ssl::context>(context_));
+
+        std::get<asio::ssl::socket>(transport_)
+            .async_handshake(boost::asio::ssl::stream_base::client,
+                std::bind(&socket::handle_handshake,
+                    shared_from_this(), _1, handler));
+        return;
+    }
+
     if (error::asio_is_canceled(ec))
     {
         handler(error::operation_canceled);
@@ -658,6 +741,22 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
 
     const auto code = error::asio_to_error_code(ec);
     if (code == error::unknown) logx("connect", ec);
+    handler(code);
+}
+
+void socket::handle_handshake(const boost_code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::operation_canceled);
+        return;
+    }
+
+    const auto code = error::asio_to_error_code(ec);
+    if (code == error::unknown) logx("handshake", ec);
     handler(code);
 }
 
@@ -746,7 +845,6 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    ////BC_ASSERT(websocket());
 
     if (error::asio_is_canceled(ec))
     {
@@ -756,14 +854,13 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
 
     const auto code = error::ws_to_error_code(ec);
     if (code == error::unknown) logx("ws-read", ec);
-    handler(code, size /*, websocket_->got_binary() */);
+    handler(code, size);
 }
 
 void socket::handle_ws_write(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    ////BC_ASSERT(websocket());
 
     if (error::asio_is_canceled(ec))
     {
@@ -773,7 +870,7 @@ void socket::handle_ws_write(const boost_code& ec, size_t size,
 
     const auto code = error::ws_to_error_code(ec);
     if (code == error::unknown) logx("ws-write", ec);
-    handler(code, size /*, websocket_->got_binary() */);
+    handler(code, size);
 }
 
 void socket::handle_ws_event(ws::frame_type kind,
@@ -792,8 +889,10 @@ void socket::handle_ws_event(ws::frame_type kind,
             LOGX("WS pong [" << endpoint() << "] size: " << data.size());
             break;
         case ws::frame_type::close:
-            const auto& socket = std::get<ws::socket>(transport_);
-            LOGX("WS close [" << endpoint() << "] " << socket.reason());
+            std::visit([&](auto&& ref) NOEXCEPT
+            {
+                LOGX("WS close [" << endpoint() << "] " << ref.get().reason());
+            }, get_ws());
             break;
     }
 }
@@ -893,7 +992,16 @@ asio::context& socket::service() const NOEXCEPT
 bool socket::websocket() const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    return std::holds_alternative<ws::socket>(transport_);
+    return std::holds_alternative<ws::socket>(transport_) ||
+           std::holds_alternative<ws::ssl::socket>(transport_);
+}
+
+// protected (requires strand)
+bool socket::secure() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return std::holds_alternative<asio::ssl::socket>(transport_) ||
+           std::holds_alternative<ws::ssl::socket>(transport_);
 }
 
 code socket::set_websocket(const http::request& request) NOEXCEPT
@@ -903,54 +1011,98 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
 
     try
     {
-        transport_.emplace<ws::socket>(
-            std::move(std::get<asio::socket>(transport_)));
-
-        auto& socket = std::get<ws::socket>(transport_);
-
-        // Causes websocket::error::message_too_big on completion.
-        socket.read_message_max(maximum_);
-        socket.set_option(ws::decorator
+        // TODO: conflated with asio::ssl.
+        if (secure())
         {
-            [](http::fields& header) NOEXCEPT
+            auto& tcp = std::get<asio::ssl::socket>(transport_);
+            transport_.emplace<ws::ssl::socket>(std::move(tcp));
+            auto& sock = std::get<ws::ssl::socket>(transport_);
+            sock.read_message_max(maximum_);
+            sock.set_option(ws::decorator
             {
-                // Customize the response header.
-                header.set(http::field::server, BC_HTTP_SERVER_NAME);
-            }
-        });
-
-        // Handle ping, pong, close - must be cleared on stop.
-        socket.control_callback(std::bind(&socket::do_ws_event,
-            shared_from_this(), _1, _2));
-
-        socket.binary(true);
-        socket.accept(request);
+                [](http::fields& header) NOEXCEPT
+                {
+                    header.set(http::field::server, BC_HTTP_SERVER_NAME);
+                }
+            });
+            sock.control_callback(std::bind(&socket::do_ws_event,
+                shared_from_this(), _1, _2));
+            sock.binary(true);
+            sock.accept(request);
+        }
+        else
+        {
+            auto& tcp = std::get<asio::socket>(transport_);
+            transport_.emplace<ws::socket>(std::move(tcp));
+            auto& sock = std::get<ws::socket>(transport_);
+            sock.read_message_max(maximum_);
+            sock.set_option(ws::decorator
+            {
+                [](http::fields& header) NOEXCEPT
+                {
+                    header.set(http::field::server, BC_HTTP_SERVER_NAME);
+                }
+            });
+            sock.control_callback(std::bind(&socket::do_ws_event,
+                shared_from_this(), _1, _2));
+            sock.binary(true);
+            sock.accept(request);
+        }
         return error::upgraded;
     }
-    catch (const std::exception& LOG_ONLY(e))
+    catch (const std::exception& e)
     {
         LOGF("Exception @ set_websocket: " << e.what());
         return error::operation_failed;
     }
 }
 
-// utility
+// Variant helpers.
 // ----------------------------------------------------------------------------
 
-asio::socket& socket::get_transport() NOEXCEPT
+socket::ws_variant socket::get_ws() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    BC_ASSERT(websocket());
+
+    if (secure())
+        return std::ref(std::get<ws::ssl::socket>(transport_));
+    else
+        return std::ref(std::get<ws::socket>(transport_));
+}
+
+socket::tcp_variant socket::get_tcp() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    BC_ASSERT(!websocket());
+
+    if (secure())
+        return std::ref(std::get<asio::ssl::socket>(transport_));
+    else
+        return std::ref(std::get<asio::socket>(transport_));
+}
+
+asio::socket& socket::get_lowest_layer() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Explicit returns required to prevent reference stripping.
     return std::visit(overload
     {
-        [&](asio::socket& arg) NOEXCEPT -> asio::socket&
+        [](asio::socket& value) NOEXCEPT -> asio::socket&
         {
-            return arg;
+            return value;
         },
-        [&](ws::socket& arg) NOEXCEPT -> asio::socket&
+        [](asio::ssl::socket& value) NOEXCEPT -> asio::socket&
         {
-            return beast::get_lowest_layer(arg);
+            return beast::get_lowest_layer(value);
+        },
+        [](ws::socket& value) NOEXCEPT -> asio::socket&
+        {
+            return beast::get_lowest_layer(value);
+        },
+        [](ws::ssl::socket& value) NOEXCEPT -> asio::socket&
+        {
+            return beast::get_lowest_layer(value);
         }
     }, transport_);
 }
