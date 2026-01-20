@@ -21,7 +21,6 @@
 
 #include <tuple>
 #include <utility>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/types.hpp>
 

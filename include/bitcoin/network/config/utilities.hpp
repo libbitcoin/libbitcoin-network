@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_CONFIG_UTILITIES_HPP
 #define LIBBITCOIN_NETWORK_CONFIG_UTILITIES_HPP
 
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>

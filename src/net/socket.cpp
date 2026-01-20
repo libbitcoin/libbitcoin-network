@@ -21,7 +21,6 @@
 #include <memory>
 #include <utility>
 #include <variant>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -48,13 +47,13 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // Construction.
 // ----------------------------------------------------------------------------
 
-socket::socket(const logger& log, asio::io_context& service,
+socket::socket(const logger& log, asio::context& service,
     size_t maximum_request) NOEXCEPT
     : socket(log, service, maximum_request, {}, {}, false, true)
 {
 }
 
-socket::socket(const logger& log, asio::io_context& service,
+socket::socket(const logger& log, asio::context& service,
     size_t maximum_request, const config::address& address,
     const config::endpoint& endpoint, bool proxied) NOEXCEPT
   : socket(log, service, maximum_request, address, endpoint, proxied, false)
@@ -62,7 +61,7 @@ socket::socket(const logger& log, asio::io_context& service,
 }
 
 // protected
-socket::socket(const logger& log, asio::io_context& service,
+socket::socket(const logger& log, asio::context& service,
     size_t maximum_request, const config::address& address,
     const config::endpoint& endpoint, bool proxied, bool inbound) NOEXCEPT
   : inbound_(inbound),
@@ -108,8 +107,8 @@ void socket::do_stop() NOEXCEPT
     BC_ASSERT(stranded());
 
     // Release the callback closure before shutdown/close.
-    if (std::holds_alternative<ws::websocket>(transport_))
-        std::get<ws::websocket>(transport_).control_callback();
+    if (std::holds_alternative<ws::socket>(transport_))
+        std::get<ws::socket>(transport_).control_callback();
 
     boost_code ignore{};
     auto& socket = get_transport();
@@ -142,7 +141,7 @@ void socket::do_async_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (!std::holds_alternative<ws::websocket>(transport_))
+    if (!std::holds_alternative<ws::socket>(transport_))
     {
         do_stop();
         return;
@@ -154,7 +153,7 @@ void socket::do_async_stop() NOEXCEPT
     // This will repost to the strand, but the iocontext is alive because this
     // is not initiated by session callback invoking stop(). Any subsequent
     // stop() call will terminate this listener by invoking socket.shutdown().
-    std::get<ws::websocket>(transport_).async_close(
+    std::get<ws::socket>(transport_).async_close(
         beast::websocket::close_code::normal,
         std::bind(&socket::do_stop, shared_from_this()));
 }
@@ -495,7 +494,7 @@ void socket::do_ws_read(std::reference_wrapper<http::flat_buffer> out,
 
     try
     {
-        auto& socket = std::get<ws::websocket>(transport_);
+        auto& socket = std::get<ws::socket>(transport_);
 
         socket.async_read(out.get(),
             std::bind(&socket::handle_ws_read,
@@ -516,7 +515,7 @@ void socket::do_ws_write(const asio::const_buffer& in, bool binary,
 
     try
     {
-        auto& socket = std::get<ws::websocket>(transport_);
+        auto& socket = std::get<ws::socket>(transport_);
 
         if (binary)
             socket.binary(true);
@@ -793,7 +792,7 @@ void socket::handle_ws_event(ws::frame_type kind,
             LOGX("WS pong [" << endpoint() << "] size: " << data.size());
             break;
         case ws::frame_type::close:
-            const auto& socket = std::get<ws::websocket>(transport_);
+            const auto& socket = std::get<ws::socket>(transport_);
             LOGX("WS close [" << endpoint() << "] " << socket.reason());
             break;
     }
@@ -882,7 +881,7 @@ asio::strand& socket::strand() NOEXCEPT
     return strand_;
 }
 
-asio::io_context& socket::service() const NOEXCEPT
+asio::context& socket::service() const NOEXCEPT
 {
     return service_;
 }
@@ -894,7 +893,7 @@ asio::io_context& socket::service() const NOEXCEPT
 bool socket::websocket() const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    return std::holds_alternative<ws::websocket>(transport_);
+    return std::holds_alternative<ws::socket>(transport_);
 }
 
 code socket::set_websocket(const http::request& request) NOEXCEPT
@@ -904,10 +903,10 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
 
     try
     {
-        transport_.emplace<ws::websocket>(
+        transport_.emplace<ws::socket>(
             std::move(std::get<asio::socket>(transport_)));
 
-        auto& socket = std::get<ws::websocket>(transport_);
+        auto& socket = std::get<ws::socket>(transport_);
 
         // Causes websocket::error::message_too_big on completion.
         socket.read_message_max(maximum_);
@@ -949,7 +948,7 @@ asio::socket& socket::get_transport() NOEXCEPT
         {
             return arg;
         },
-        [&](ws::websocket& arg) NOEXCEPT -> asio::socket&
+        [&](ws::socket& arg) NOEXCEPT -> asio::socket&
         {
             return beast::get_lowest_layer(arg);
         }

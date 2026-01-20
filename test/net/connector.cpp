@@ -26,7 +26,7 @@ class accessor
 public:
     using connector::connector;
 
-    const asio::io_context& get_service() const NOEXCEPT
+    const asio::context& get_service() const NOEXCEPT
     {
         return service_;
     }

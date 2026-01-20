@@ -458,6 +458,7 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_networkdir = ${includedir}/bitcoin/network
 include_bitcoin_network_HEADERS = \
+    include/bitcoin/network/asio.hpp \
     include/bitcoin/network/beast.hpp \
     include/bitcoin/network/boost.hpp \
     include/bitcoin/network/define.hpp \
@@ -471,7 +472,6 @@ include_bitcoin_network_HEADERS = \
 
 include_bitcoin_network_asyncdir = ${includedir}/bitcoin/network/async
 include_bitcoin_network_async_HEADERS = \
-    include/bitcoin/network/async/asio.hpp \
     include/bitcoin/network/async/async.hpp \
     include/bitcoin/network/async/desubscriber.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \

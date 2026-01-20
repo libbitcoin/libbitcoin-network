@@ -21,7 +21,6 @@
 
 #include <list>
 #include <utility>
-#include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/define.hpp>
 

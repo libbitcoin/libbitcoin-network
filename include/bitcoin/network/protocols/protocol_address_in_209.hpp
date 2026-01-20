@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_IN_209_HPP
 
 #include <memory>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

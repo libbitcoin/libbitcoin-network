@@ -323,7 +323,7 @@ public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
 
     mock_connector_stop_connect(const logger& log, asio::strand& strand,
-        asio::io_context& service, const steady_clock::duration& timeout,
+        asio::context& service, const steady_clock::duration& timeout,
         uint32_t maximum, mock_session_seed::ptr session) NOEXCEPT
       : mock_connector_connect_success(log, strand, service, timeout, maximum,
           suspended_),

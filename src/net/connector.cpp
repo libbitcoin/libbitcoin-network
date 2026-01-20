@@ -21,7 +21,6 @@
 #include <atomic>
 #include <memory>
 #include <utility>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -43,7 +42,7 @@ using namespace std::placeholders;
 // seed timeout uses same timer for connect, handshake and completion.
 
 connector::connector(const logger& log, asio::strand& strand,
-    asio::io_context& service, const steady_clock::duration& timeout,
+    asio::context& service, const steady_clock::duration& timeout,
     size_t maximum_request, std::atomic_bool& suspended) NOEXCEPT
   : maximum_(maximum_request),
     service_(service),

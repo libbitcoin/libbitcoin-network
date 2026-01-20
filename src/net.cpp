@@ -309,7 +309,7 @@ const settings& net::network_settings() const NOEXCEPT
     return settings_;
 }
 
-asio::io_context& net::service() NOEXCEPT
+asio::context& net::service() NOEXCEPT
 {
     return threadpool_.service();
 }

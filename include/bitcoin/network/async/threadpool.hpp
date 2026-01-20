@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_ASYNC_THREADPOOL_HPP
 
 #include <thread>
-#include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -53,14 +52,14 @@ public:
     bool join() NOEXCEPT;
 
     /// Non-const underlying boost::io_service object (thread safe).
-    asio::io_context& service() NOEXCEPT;
+    asio::context& service() NOEXCEPT;
 
 private:
     using work_guard = boost::asio::executor_work_guard<asio::executor_type>;
-    static inline work_guard keep_alive(asio::io_context& service) NOEXCEPT;
+    static inline work_guard keep_alive(asio::context& service) NOEXCEPT;
 
     // This is thread safe.
-    asio::io_context service_{};
+    asio::context service_{};
 
     // These are not thread safe.
     std_vector<std::thread> threads_{};

@@ -21,7 +21,6 @@
 
 #include <atomic>
 #include <memory>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -47,7 +46,7 @@ public:
 
     /// Resolves socks5 endpoint and stores address as member for each connect.
     connector_socks(const logger& log, asio::strand& strand,
-        asio::io_context& service, const steady_clock::duration& timeout,
+        asio::context& service, const steady_clock::duration& timeout,
         size_t maximum_request, std::atomic_bool& suspended,
         const settings::socks5& socks) NOEXCEPT;
 

@@ -587,8 +587,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp">
       <Filter>include\bitcoin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\asio.hpp">
-      <Filter>include\bitcoin\network\async</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\asio.hpp">
+      <Filter>include\bitcoin\network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp">
       <Filter>include\bitcoin\network\async</Filter>
