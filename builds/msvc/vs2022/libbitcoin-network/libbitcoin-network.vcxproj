@@ -201,6 +201,13 @@
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\socket_connect.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\socket_http.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\socket_p2p.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\socket_rpc.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\socket_stop.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\socket_wait.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_in_209.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_out_209.cpp" />

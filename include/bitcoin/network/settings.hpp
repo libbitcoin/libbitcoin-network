@@ -68,7 +68,6 @@ struct BCT_API settings
         /// For logging only.
         std::string name;
 
-        bool secure{ false };
         config::authorities binds{};
         uint16_t connections{ 0 };
         uint32_t inactivity_minutes{ 10 };
@@ -82,10 +81,19 @@ struct BCT_API settings
         virtual steady_clock::duration expiration() const NOEXCEPT;
     };
 
-    struct http_server
+    // TODO: Add TLS parameters/methods required for context construction.
+    struct tls_server
       : public tcp_server
     {
         using tcp_server::tcp_server;
+
+        bool secure{ false };
+    };
+
+    struct http_server
+      : public tls_server
+    {
+        using tls_server::tls_server;
 
         /// Sent via responses if configured .
         std::string server{ BC_HTTP_SERVER_NAME };

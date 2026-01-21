@@ -22,10 +22,11 @@
 #include <atomic>
 #include <memory>
 #include <variant>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/deadline.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -41,20 +42,35 @@ public:
     typedef std::shared_ptr<socket> ptr;
 
     // TODO: p2p::context, zmq::context.
-    using secure_context = std::variant<std::monostate, asio::ssl::context>;
+    using context = std::variant
+    <
+        std::monostate,
+        ref<asio::ssl::context>
+    >;
+
+    struct parameters
+    {
+        size_t maximum_request{};
+        const socket::context& context{};
+        const steady_clock::duration& timeout{};
+    };
+
+    /// Construct.
+    /// -----------------------------------------------------------------------
 
     DELETE_COPY_MOVE(socket);
 
-    /// Use only for incoming connections.
-    socket(const logger& log, asio::context& service, secure_context& context,
-        size_t maximum) NOEXCEPT;
+    /// Inbound connections.
+    socket(const logger& log, asio::context& service,
+        const parameters& params) NOEXCEPT;
 
-    /// Use only for outgoing connections. Endpoint represents the peer or
-    /// client (non-proxy) that the connector attempted to reach. Address holds
-    /// a copy of the p2p address associated with the connection (or empty).
-    socket(const logger& log, asio::context& service, secure_context& context,
-        size_t maximum, const config::address& address,
-        const config::endpoint& endpoint, bool proxied=false) NOEXCEPT;
+    /// Outbound connections.
+    /// Endpoint represents the peer or client (non-proxy) that the connector
+    /// attempted to reach. Address holds a copy of the p2p address associated
+    /// with the connection (or empty).
+    socket(const logger& log, asio::context& service, const parameters& params,
+        const config::address& address, const config::endpoint& endpoint,
+        bool proxied) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~socket() NOEXCEPT;
@@ -62,18 +78,15 @@ public:
     /// Stop.
     /// -----------------------------------------------------------------------
 
-    /// Stop has been signaled, work is stopping.
-    virtual bool stopped() const NOEXCEPT;
-
     /// Cancel work and close the socket (idempotent, thread safe).
     /// This action is deferred to the strand, not immediately affected.
     /// Block on threadpool.join() to ensure termination of the connection.
     virtual void stop() NOEXCEPT;
 
     /// Same as stop but provides graceful shutdown for websocket connections.
-    virtual void async_stop() NOEXCEPT;
+    virtual void lazy_stop() NOEXCEPT;
 
-    /// Wait.
+    /// Wait (all).
     /// -----------------------------------------------------------------------
 
     /// Wait on a peer close/cancel/send, no data capture/loss.
@@ -82,7 +95,7 @@ public:
     /// Cancel wait or any asynchronous read/write operation, handlers posted.
     virtual void cancel(result_handler&& handler) NOEXCEPT;
 
-    /// Connection.
+    /// Connect (all).
     /// -----------------------------------------------------------------------
 
     /// Accept an incoming connection, handler posted to *acceptor* strand.
@@ -95,18 +108,18 @@ public:
     virtual void connect(const asio::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
-    /// TCP (generic).
+    /// P2P (bitcoin/socks).
     /// -----------------------------------------------------------------------
 
     /// Read full buffer from the socket, handler posted to socket strand.
-    virtual void read(const asio::mutable_buffer& out,
+    virtual void p2p_read(const asio::mutable_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full buffer to the socket, handler posted to socket strand.
-    virtual void write(const asio::const_buffer& in,
+    virtual void p2p_write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
-    /// TCP-RPC (e.g. electrum, stratum_v1).
+    /// RPC (ovr tcp).
     /// -----------------------------------------------------------------------
 
     /// Read rpc request from the socket, handler posted to socket strand.
@@ -124,15 +137,11 @@ public:
     virtual void ws_read(http::flat_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write full buffer to the websocket (post-upgrade), specify binary/text.
-    virtual void ws_write(const asio::const_buffer& in, bool binary,
+    /// Write full buffer to the websocket (post-upgrade), specify raw/text.
+    virtual void ws_write(const asio::const_buffer& in, bool raw,
         count_handler&& handler) NOEXCEPT;
 
-    /// WS-RPC (custom).
-    /// -----------------------------------------------------------------------
-    /// TODO.
-
-    /// HTTP (generic).
+    /// HTTP (generic/rpc).
     /// -----------------------------------------------------------------------
 
     /// Read http request from the socket, handler posted to socket strand.
@@ -158,6 +167,9 @@ public:
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
 
+    /// Stop has been signaled, work is stopping.
+    virtual bool stopped() const NOEXCEPT;
+
     /// The strand is running in this thread.
     virtual bool stranded() const NOEXCEPT;
 
@@ -168,15 +180,40 @@ public:
     virtual asio::context& service() const NOEXCEPT;
 
 protected:
+    // TODO: p2p::socket, zmq::socket.
+    using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;
+    using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
+    using socket_t = std::variant<
+        asio::socket, asio::ssl::socket, ws::socket, ws::ssl::socket>;
+
+    /// Construct.
+    /// -----------------------------------------------------------------------
+    socket(const logger& log, asio::context& service, const parameters& params,
+        const config::address& address, const config::endpoint& endpoint,
+        bool proxied, bool inbound) NOEXCEPT;
+
+
+    /// Context.
+    /// -----------------------------------------------------------------------
+
+    /// Upgrade the socket to its secure configuration.
+    bool secure() const NOEXCEPT;
+
+    /// The socket was upgraded to ssl (requires strand).
+    bool is_secure() const NOEXCEPT;
+
     /// The socket was upgraded to a websocket (requires strand).
-    virtual bool websocket() const NOEXCEPT;
+    bool is_websocket() const NOEXCEPT;
 
-    /// The socket is secured with SSL (requires strand).
-    virtual bool secure() const NOEXCEPT;
+    /// The socket is not upgraded (asio::socket).
+    bool is_base() const NOEXCEPT;
 
-    /// Utility.
-    asio::socket& get_lowest_layer() NOEXCEPT;
-    void logx(const std::string& context, const boost_code& ec) const NOEXCEPT;
+    /// Variant accessors (protected by strand).
+    /// -----------------------------------------------------------------------
+    ws_t get_ws() NOEXCEPT;
+    tcp_t get_tcp() NOEXCEPT;
+    asio::socket& get_base() NOEXCEPT;
+    asio::ssl::socket& get_ssl() NOEXCEPT;
 
 private:
     using http_parser = boost::beast::http::request_parser<http::body>;
@@ -209,42 +246,27 @@ private:
         rpc::writer writer;
     };
 
-    using tcp_variant = std::variant<
-        std::reference_wrapper<asio::socket>,
-        std::reference_wrapper<asio::ssl::socket>>;
-
-    using ws_variant = std::variant<
-        std::reference_wrapper<ws::socket>,
-        std::reference_wrapper<ws::ssl::socket>>;
-
-    /// Helpers for variant access (protected by strand).
-    ws_variant get_ws() NOEXCEPT;
-    tcp_variant get_tcp() NOEXCEPT;
-    ////asio::ssl::socket& get_ssl_layer() NOEXCEPT;
+    // do
+    // ------------------------------------------------------------------------
 
     // stop
-    // ------------------------------------------------------------------------
-
     void do_stop() NOEXCEPT;
-    void do_async_stop() NOEXCEPT;
+    void do_ws_stop() NOEXCEPT;
+    void do_ssl_stop() NOEXCEPT;
 
     // wait
-    // ------------------------------------------------------------------------
-
     void do_wait(const result_handler& handler) NOEXCEPT;
     void do_cancel(const result_handler& handler) NOEXCEPT;
-
-    // stranded
-    // ------------------------------------------------------------------------
 
     // connection
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
+    void do_handshake(const result_handler& handler) NOEXCEPT;
 
-    // tcp (generic)
-    void do_read(const asio::mutable_buffer& out,
+    // p2p
+    void do_p2p_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
-    void do_write(const asio::const_buffer& in,
+    void do_p2p_write(const asio::const_buffer& in,
         const count_handler& handler) NOEXCEPT;
 
     // tcp (rpc)
@@ -254,30 +276,34 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // ws (generic)
-    void do_ws_read(std::reference_wrapper<http::flat_buffer> out,
+    void do_ws_read(ref<http::flat_buffer> out,
         const count_handler& handler) NOEXCEPT;
-    void do_ws_write(const asio::const_buffer& in, bool binary,
+    void do_ws_write(const asio::const_buffer& in, bool raw,
         const count_handler& handler) NOEXCEPT;
     void do_ws_event(ws::frame_type kind,
         const std::string_view& data) NOEXCEPT;
 
     // http (generic)
-    void do_http_read(std::reference_wrapper<http::flat_buffer> buffer,
-        const std::reference_wrapper<http::request>& request,
+    void do_http_read(ref<http::flat_buffer> buffer,
+        const ref<http::request>& request,
         const count_handler& handler) NOEXCEPT;
-    void do_http_write(const std::reference_wrapper<http::response>& response,
+    void do_http_write(const ref<http::response>& response,
         const count_handler& handler) NOEXCEPT;
 
     code set_websocket(const http::request& request) NOEXCEPT;
 
-    // completion
+    // handle
     // ------------------------------------------------------------------------
+
+    // stop (lazy)
+    void handle_ws_close(const boost_code& ec) NOEXCEPT;
+    void handle_ssl_close(const boost_code& ec) NOEXCEPT;
 
     // wait
     void handle_wait(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
 
-    // connection
+    // connect/accept
     void handle_accept(boost_code ec,
         const result_handler& handler) NOEXCEPT;
     void handle_connect(const boost_code& ec, const asio::endpoint& peer,
@@ -285,11 +311,11 @@ private:
     void handle_handshake(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
 
-    // tcp (generic)
-    void handle_tcp(const boost_code& ec, size_t size,
+    // p2p
+    void handle_p2p(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
-    // tcp (rpc)
+    // rpc (over tcp)
     void handle_rpc_read(boost_code ec, size_t size, size_t total,
         const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT;
     void handle_rpc_write(boost_code ec, size_t size, size_t total,
@@ -303,38 +329,47 @@ private:
     void handle_ws_event(ws::frame_type kind,
         const std::string& data) NOEXCEPT;
 
-    // http (generic)
+    // http (generic/rpc)
     void handle_http_read(const boost_code& ec, size_t size,
-        const std::reference_wrapper<http::request>& request,
+        const ref<http::request>& request,
         const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void handle_http_write(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
+    // logging
+    void logx(const std::string& context, const boost_code& ec) const NOEXCEPT;
+
 protected:
-    // TODO: p2p::socket, zmq::socket.
-    using transport = std::variant<asio::socket, asio::ssl::socket, ws::socket,
-        ws::ssl::socket>;
-
-    socket(const logger& log, asio::context& service, secure_context& context,
-        size_t maximum, const config::address& address,
-        const config::endpoint& endpoint, bool proxied, bool inbound) NOEXCEPT;
-
     // These are thread safe.
     const bool inbound_;
     const bool proxied_;
     const size_t maximum_;
     asio::strand strand_;
     asio::context& service_;
-    secure_context& context_;
+    const context& context_;
     std::atomic_bool stopped_{};
 
     // These are protected by strand (see also handle_accept).
     config::address address_;
     config::endpoint endpoint_;
-    transport transport_;
+    deadline::ptr timer_;
+    socket_t socket_;
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;
+
+#define VARIANT_DISPATCH_METHOD(object, method) \
+std::visit([&](auto&& value) NOEXCEPT \
+{ \
+    value.get().method; \
+}, object)
+
+
+#define VARIANT_DISPATCH_FUNCTION(function, object, ...) \
+std::visit([&](auto&& value) NOEXCEPT \
+{ \
+    function(value.get(), __VA_ARGS__); \
+}, object)
 
 } // namespace network
 } // namespace libbitcoin

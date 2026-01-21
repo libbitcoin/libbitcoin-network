@@ -35,9 +35,9 @@ using namespace std::placeholders;
 
 // Bind throws (ok).
 // Shared pointers required in handler parameters so closures control lifetime.
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 session_inbound::session_inbound(net& network, uint64_t identifier) NOEXCEPT
   : session_peer(network, identifier, network.network_settings().inbound),
@@ -79,8 +79,12 @@ void session_inbound::handle_started(const code& ec,
     LOGN("Accepting " << network_settings().inbound.connections << " peers on "
         << network_settings().inbound.binds.size() << " bindings.");
 
+    // TODO: move inbound.enable_loopback to [network].
+    // TODO: create config section for [inbound.secure].
+    // TODO: create second loop for [inbound.secure].binds.
     for (const auto& bind: network_settings().inbound.binds)
     {
+        // TODO: pass socket::parameters to acceptor.
         const auto acceptor = create_acceptor();
 
         // Require that all acceptors at least start.

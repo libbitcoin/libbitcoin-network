@@ -74,56 +74,61 @@ acceptor::ptr net::create_acceptor() NOEXCEPT
     const auto& settings = network_settings();
     const auto maximum = settings.inbound.maximum_request;
 
-    return emplace_shared<acceptor>(log, strand(), service(), maximum,
-        accept_suspended_);
+    ////return emplace_shared<acceptor>(log, strand(), service(), maximum,
+    ////    accept_suspended_);
+    return {};
 }
 
 // outbound (general)
 connector::ptr net::create_connector(const settings::socks5& socks,
     const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT
 {
-    if (socks.proxied())
-        return emplace_shared<connector_socks>(log, strand(), service(),
-            timeout, maximum, connect_suspended_, socks);
+    ////if (socks.proxied())
+    ////    return emplace_shared<connector_socks>(log, strand(), service(),
+    ////        timeout, maximum, connect_suspended_, socks);
 
-    // Above can handle both proxy and non-proxy, but this is more efficient.
-    return emplace_shared<connector>(log, strand(), service(),
-        timeout, maximum, connect_suspended_);
+    ////// Above can handle both proxy and non-proxy, but this is more efficient.
+    ////return emplace_shared<connector>(log, strand(), service(),
+    ////    timeout, maximum, connect_suspended_);
+    return {};
 }
 
 // outbound (seed)
 connector::ptr net::create_seed_connector() NOEXCEPT
 {
-    const auto& settings = network_settings();
+    ////const auto& settings = network_settings();
 
-    return create_connector(settings.outbound,
-        settings.outbound.seeding_timeout(),
-        settings.outbound.maximum_request);
+    ////return create_connector(settings.outbound,
+    ////    settings.outbound.seeding_timeout(),
+    ////    settings.outbound.maximum_request);
+    return {};
 }
 
 // outbound (manual)
 connector::ptr net::create_manual_connector() NOEXCEPT
 {
-    const auto& settings = network_settings();
+    ////const auto& settings = network_settings();
 
-    return create_connector(settings.manual,
-        settings.connect_timeout(),
-        settings.manual.maximum_request);
+    ////return create_connector(settings.manual,
+    ////    settings.connect_timeout(),
+    ////    settings.manual.maximum_request);
+    return {};
 }
 
 // outbound (batch)
 connectors_ptr net::create_connectors(size_t count) NOEXCEPT
 {
-    const auto& settings = network_settings();
-    const auto timeout = settings.connect_timeout();
-    const auto connects = to_shared<connectors>();
-    connects->reserve(count);
+    ////const auto& settings = network_settings();
+    ////const auto timeout = settings.connect_timeout();
+    ////const auto connects = to_shared<connectors>();
+    ////connects->reserve(count);
 
-    for (size_t connect{}; connect < count; ++connect)
-        connects->push_back(create_connector(settings.outbound, timeout,
-            settings.outbound.maximum_request));
+    ////for (size_t connect{}; connect < count; ++connect)
+    ////    connects->push_back(create_connector(settings.outbound, timeout,
+    ////        settings.outbound.maximum_request));
 
-    return connects;
+    ////return connects;
+    return {};
 }
 
 // Start sequence.

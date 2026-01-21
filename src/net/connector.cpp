@@ -30,7 +30,11 @@
 
 namespace libbitcoin {
 namespace network {
-
+    
+// Bind throws (ok).
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace system;
@@ -42,14 +46,14 @@ using namespace std::placeholders;
 // seed timeout uses same timer for connect, handshake and completion.
 
 connector::connector(const logger& log, asio::strand& strand,
-    asio::context& service, const steady_clock::duration& timeout,
-    size_t maximum_request, std::atomic_bool& suspended) NOEXCEPT
-  : maximum_(maximum_request),
+    asio::context& service, std::atomic_bool& suspended,
+    const parameters& parameters) NOEXCEPT
+  : strand_(strand),
     service_(service),
-    strand_(strand),
     suspended_(suspended),
+    parameters_(parameters),
     resolver_(strand),
-    timer_(emplace_shared<deadline>(log, strand, timeout)),
+    timer_(emplace_shared<deadline>(log, strand, parameters.timeout)),
     reporter(log),
     tracker<connector>(log)
 {
@@ -130,10 +134,10 @@ void connector::start(const std::string& hostname, uint16_t port,
     // Capture the handler.
     racer_.start(std::move(handler));
 
-    // Create a socket and shared finish context.
+    // Create the outbound socket and shared finish context.
     const auto finish = std::make_shared<bool>(false);
     const auto socket = std::make_shared<network::socket>(log, service_,
-        maximum_, address, endpoint, proxied());
+        parameters_, address, endpoint, proxied());
 
     // Posts handle_timer to strand.
     timer_->start(
@@ -262,6 +266,8 @@ void connector::handle_timer(const code& ec, const finish_ptr& finish,
     racer_.finish(error::operation_timeout, socket);
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

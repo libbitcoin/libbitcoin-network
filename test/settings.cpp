@@ -325,6 +325,23 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
 
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, name);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
+    BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
+    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.inactivity() == minutes(10));
+    BOOST_REQUIRE(instance.expiration() == minutes(60));
+}
+
+BOOST_AUTO_TEST_CASE(settings__tls_server__defaults__expected)
+{
+    constexpr auto name = "test";
+    const settings::tls_server instance{ name };
+
+    // tcp_server
+    BOOST_REQUIRE_EQUAL(instance.name, name);
     BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);

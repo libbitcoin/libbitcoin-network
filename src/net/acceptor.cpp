@@ -24,8 +24,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/channels/channel.hpp>
-#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/net/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -42,12 +41,12 @@ using namespace std::placeholders;
 // Calls are stranded to protect the acceptor member.
 
 acceptor::acceptor(const logger& log, asio::strand& strand,
-    asio::context& service, size_t maximum_request,
-    std::atomic_bool& suspended) NOEXCEPT
-  : maximum_(maximum_request),
+    asio::context& service, std::atomic_bool& suspended,
+    const parameters& parameters) NOEXCEPT
+  : strand_(strand),
     service_(service),
-    strand_(strand),
     suspended_(suspended),
+    parameters_(parameters),
     acceptor_(strand_),
     reporter(log),
     tracker<acceptor>(log)
@@ -150,9 +149,9 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
         return;
     }
 
-    // Create the socket.
+    // Create the inbound socket.
     const auto socket = std::make_shared<network::socket>(log, service_,
-        maximum_);
+        parameters_);
 
     // Posts handle_accept to the acceptor's strand.
     // Establishes a socket connection by waiting on the socket.

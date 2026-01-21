@@ -118,7 +118,7 @@ protected:
     /// Cancel wait or any asynchronous read/write operation, handlers posted.
     virtual void cancel(result_handler&& handler) NOEXCEPT;
 
-    /// TCP (generic).
+    /// TCP (generic/p2p).
     /// -----------------------------------------------------------------------
 
     /// Read fixed-size TCP message from the remote endpoint into buffer.
@@ -129,7 +129,7 @@ protected:
     virtual void write(const asio::const_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
-    /// TCP-RPC (e.g. electrum, stratum_v1).
+    /// RPC (electrum/stratum_v1).
     /// -----------------------------------------------------------------------
 
     /// Read rpc request from the socket, using provided buffer.
@@ -150,10 +150,6 @@ protected:
     /// Write full buffer to the websocket (post-upgrade), specify binary/text.
     virtual void ws_write(const asio::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
-
-    /// WS-RPC (custom).
-    /// -----------------------------------------------------------------------
-    /// TODO.
 
     /// HTTP (generic).
     /// -----------------------------------------------------------------------
