@@ -25,7 +25,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
-#define BC_HTTP_SERVER_NAME "libbitcoin/4.0"
+#define BC_HTTP_SERVER_NAME "libbitcoin/4"
 
 namespace libbitcoin {
 namespace network {
