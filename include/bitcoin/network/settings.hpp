@@ -81,13 +81,37 @@ struct BCT_API settings
         virtual steady_clock::duration expiration() const NOEXCEPT;
     };
 
-    // TODO: Add TLS parameters/methods required for context construction.
     struct tls_server
       : public tcp_server
     {
         using tcp_server::tcp_server;
 
-        bool secure{ false };
+        /// Require client authentication.
+        bool authenticate{};
+
+        /// Transport layer security bindings.
+        config::authorities secure_binds{};
+
+        /// Path to custom CA for client authentication (optional).
+        std::filesystem::path certificate_authority{};
+
+        /// Path to server certificate file (PEM).
+        std::filesystem::path certificate_path{};
+
+        /// Path to server private key file (PEM).
+        std::filesystem::path key_path{};
+
+        /// Path to server private key decryption password (optional).
+        std::string key_password{};
+
+        /// Thread safe after initialize().
+        mutable asio::ssl::context context{ asio::ssl::version };
+
+        /// Initialize the ssl::context.
+        virtual code initialize() NOEXCEPT;
+
+        /// False if binds, certificate_path, or key_path is empty.
+        virtual bool secure() const NOEXCEPT;
     };
 
     struct http_server
@@ -95,7 +119,7 @@ struct BCT_API settings
     {
         using tls_server::tls_server;
 
-        /// Sent via responses if configured .
+        /// Sent via responses if configured.
         std::string server{ BC_HTTP_SERVER_NAME };
 
         /// Validated against hosts/origins if configured.

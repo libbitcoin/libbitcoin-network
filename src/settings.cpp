@@ -69,20 +69,64 @@ steady_clock::duration settings::tcp_server::expiration() const NOEXCEPT
     return minutes{ expiration_minutes };
 }
 
+// tls_server
+// ----------------------------------------------------------------------------
+
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+code settings::tls_server::initialize() NOEXCEPT
+{
+    if (!secure())
+        return error::success;
+
+    boost_code ec{};
+    context.set_options(asio::ssl::options, ec);
+
+    if (!ec)
+        context.use_certificate_chain_file(certificate_path.string(), ec);
+
+    if (!ec)
+        context.use_private_key_file(key_path.string(),
+            asio::ssl::context::pem, ec);
+
+    if (!ec && !key_password.empty())
+        context.set_password_callback([&](auto, auto) NOEXCEPT
+        {
+            return key_password;
+        });
+
+    if (!ec && authenticate)
+    {
+        context.set_verify_mode(asio::ssl::authenticate);
+        if (certificate_authority.empty())
+            context.set_default_verify_paths(ec);
+        else
+            context.add_verify_path(certificate_authority.string(), ec);
+    }
+
+    return error::asio_to_error_code(ec);
+}
+BC_POP_WARNING();
+
+bool settings::tls_server::secure() const NOEXCEPT
+{
+    return !secure_binds.empty() && !certificate_path.empty() &&
+        !key_path.empty();
+}
+
 // http_server
 // ----------------------------------------------------------------------------
 
 system::string_list settings::http_server::host_names() const NOEXCEPT
 {
     // secure changes default port from 80 to 443.
-    const auto port = secure ? http::default_tls : http::default_http;
+    const auto port = secure() ? http::default_tls : http::default_http;
     return config::to_host_names(hosts, port);
 }
 
 system::string_list settings::http_server::origin_names() const NOEXCEPT
 {
     // secure changes default port from 80 to 443.
-    const auto port = secure ? http::default_tls : http::default_http;
+    const auto port = secure() ? http::default_tls : http::default_http;
     return config::to_host_names(hosts, port);
 }
 

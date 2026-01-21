@@ -36,6 +36,7 @@ class channel_rpc
 {
 public:
     typedef std::shared_ptr<channel_rpc> ptr;
+    using options_t = network::settings::tls_server;
     using dispatcher = rpc::dispatcher<Interface>;
 
     /// Subscribe to request from client (requires strand).
