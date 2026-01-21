@@ -84,16 +84,11 @@ struct BCT_API settings
     struct tls_server
       : public tcp_server
     {
+        DELETE_COPY(tls_server);
         using tcp_server::tcp_server;
-
-        /// Require client authentication.
-        bool authenticate{};
 
         /// Transport layer security bindings.
         config::authorities secure_binds{};
-
-        /// Path to custom CA for client authentication (optional).
-        std::filesystem::path certificate_authority{};
 
         /// Path to server certificate file (PEM).
         std::filesystem::path certificate_path{};
@@ -103,6 +98,12 @@ struct BCT_API settings
 
         /// Path to server private key decryption password (optional).
         std::string key_password{};
+
+        /// Path to custom CA for client authentication (optional).
+        std::filesystem::path certificate_authority{};
+
+        /// Require client authentication.
+        bool authenticate{};
 
         /// Thread safe after initialize().
         mutable asio::ssl::context context{ asio::ssl::version };
@@ -290,6 +291,7 @@ struct BCT_API settings
     config::authorities whitelists{};
 
     /// Helpers.
+    virtual bool encrypt_node() const NOEXCEPT;
     virtual bool witness_node() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
     virtual steady_clock::duration connect_timeout() const NOEXCEPT;

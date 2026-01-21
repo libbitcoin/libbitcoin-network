@@ -226,6 +226,11 @@ settings::settings(chain::selection context) NOEXCEPT
 {
 }
 
+bool settings::encrypt_node() const NOEXCEPT
+{
+    return to_bool(services_minimum & service::node_encrypted_transport);
+}
+
 bool settings::witness_node() const NOEXCEPT
 {
     return to_bool(services_minimum & service::node_witness);

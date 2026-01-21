@@ -80,6 +80,19 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
 
 // helpers
 
+BOOST_AUTO_TEST_CASE(settings__encrypt_node__default__false)
+{
+    settings instance{ system::chain::selection::mainnet };
+    BOOST_REQUIRE(!instance.encrypt_node());
+}
+
+BOOST_AUTO_TEST_CASE(settings__encrypt_node__node_encrypted_transport__true)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.services_minimum = service::node_encrypted_transport;
+    BOOST_REQUIRE(instance.encrypt_node());
+}
+
 BOOST_AUTO_TEST_CASE(settings__witness_node__default__false)
 {
     settings instance{ system::chain::selection::mainnet };
@@ -342,7 +355,6 @@ BOOST_AUTO_TEST_CASE(settings__tls_server__defaults__expected)
 
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, name);
-    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
@@ -351,6 +363,14 @@ BOOST_AUTO_TEST_CASE(settings__tls_server__defaults__expected)
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
+
+    // tls_server
+    BOOST_REQUIRE(!instance.secure());
+    BOOST_REQUIRE(instance.secure_binds.empty());
+    BOOST_REQUIRE(instance.certificate_authority.empty());
+    BOOST_REQUIRE(instance.certificate_path.empty());
+    BOOST_REQUIRE(instance.key_path.empty());
+    BOOST_REQUIRE(instance.key_password.empty());
 }
 
 BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
@@ -360,7 +380,6 @@ BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
 
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, name);
-    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
@@ -369,6 +388,14 @@ BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
+
+    // tls_server
+    BOOST_REQUIRE(!instance.secure());
+    BOOST_REQUIRE(instance.secure_binds.empty());
+    BOOST_REQUIRE(instance.certificate_authority.empty());
+    BOOST_REQUIRE(instance.certificate_path.empty());
+    BOOST_REQUIRE(instance.key_path.empty());
+    BOOST_REQUIRE(instance.key_password.empty());
 
     // http_server
     BOOST_REQUIRE_EQUAL(instance.server, BC_HTTP_SERVER_NAME);
@@ -386,7 +413,6 @@ BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
 
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, name);
-    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
@@ -395,6 +421,14 @@ BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
+
+    // tls_server
+    BOOST_REQUIRE(!instance.secure());
+    BOOST_REQUIRE(instance.secure_binds.empty());
+    BOOST_REQUIRE(instance.certificate_authority.empty());
+    BOOST_REQUIRE(instance.certificate_path.empty());
+    BOOST_REQUIRE(instance.key_path.empty());
+    BOOST_REQUIRE(instance.key_password.empty());
 
     // http_server
     BOOST_REQUIRE_EQUAL(instance.server, BC_HTTP_SERVER_NAME);
@@ -420,7 +454,6 @@ BOOST_AUTO_TEST_CASE(settings__peer_outbound__mainnet__expected)
 
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, "outbound");
-    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE_EQUAL(instance.connections, 10u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
@@ -541,7 +574,6 @@ BOOST_AUTO_TEST_CASE(settings__peer_inbound__mainnet__expected)
 
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, "inbound");
-    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE_EQUAL(instance.binds.size(), 1u);
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
@@ -695,7 +727,6 @@ BOOST_AUTO_TEST_CASE(settings__peer_manual__mainnet__expected)
 
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, "manual");
-    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
