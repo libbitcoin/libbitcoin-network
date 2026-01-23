@@ -53,7 +53,7 @@ connector::connector(const logger& log, asio::strand& strand,
     suspended_(suspended),
     parameters_(parameters),
     resolver_(strand),
-    timer_(emplace_shared<deadline>(log, strand, parameters.timeout)),
+    timer_(emplace_shared<deadline>(log, strand, parameters.connect_timeout)),
     reporter(log),
     tracker<connector>(log)
 {

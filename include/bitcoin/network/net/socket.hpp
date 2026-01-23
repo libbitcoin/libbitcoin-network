@@ -41,7 +41,7 @@ class BCT_API socket
 public:
     typedef std::shared_ptr<socket> ptr;
 
-    // TODO: p2p::context, zmq::context.
+    // TODO: zmq::context.
     using context = std::variant
     <
         std::monostate,
@@ -50,9 +50,11 @@ public:
 
     struct parameters
     {
+        using duration = steady_clock::duration;
+
+        duration connect_timeout{};
         size_t maximum_request{};
-        const socket::context& context{};
-        const steady_clock::duration& timeout{};
+        socket::context context{};
     };
 
     /// Construct.

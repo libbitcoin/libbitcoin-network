@@ -68,7 +68,7 @@ socket::socket(const logger& log, asio::context& service,
     context_(params.context),
     address_(address),
     endpoint_(endpoint),
-    timer_(emplace_shared<deadline>(log, strand_, params.timeout)),
+    timer_(emplace_shared<deadline>(log, strand_, params.connect_timeout)),
     socket_(std::in_place_type<asio::socket>, strand_),
     reporter(log),
     tracker<socket>(log)
@@ -125,7 +125,7 @@ asio::context& socket::service() const NOEXCEPT
 
 bool socket::secure() const NOEXCEPT
 {
-    // TODO: p2p::context, zmq::context.
+    // TODO: zmq::context.
     return std::holds_alternative<ref<asio::ssl::context>>(context_);
 }
 

@@ -341,9 +341,9 @@ void session::unsubscribe_close() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // inbound/server
-acceptor::ptr session::create_acceptor() NOEXCEPT
+acceptor::ptr session::create_acceptor(const socket::context& context) NOEXCEPT
 {
-    return network_.create_acceptor();
+    return network_.create_acceptor(context);
 }
 
 // outbound (seed)

@@ -42,7 +42,7 @@ class BCT_API session_server
 {
 public:
     typedef std::shared_ptr<session_server> ptr;
-    using options_t = network::settings::tcp_server;
+    using options_t = network::settings::tls_server;
 
     /// Start accepting connections as configured (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
@@ -83,6 +83,9 @@ protected:
     virtual bool enabled() const NOEXCEPT;
 
 private:
+    code do_accept(const config::authorities& binds,
+        const socket::context& context={}) NOEXCEPT;
+
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_accepted(const code& ec, const socket::ptr& socket,

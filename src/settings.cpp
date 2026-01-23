@@ -73,44 +73,50 @@ steady_clock::duration settings::tcp_server::expiration() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-code settings::tls_server::initialize() NOEXCEPT
+code settings::tls_server::initialize() const NOEXCEPT
 {
     if (!secure())
         return error::success;
 
     boost_code ec{};
     context.set_options(asio::ssl::options, ec);
+    if (ec) return error::tls_set_options;
 
-    if (!ec)
-        context.use_certificate_chain_file(certificate_path.string(), ec);
+    context.use_certificate_chain_file(certificate_path.string(), ec);
+    if (ec) return error::tls_use_certificate;
 
-    if (!ec)
-        context.use_private_key_file(key_path.string(),
-            asio::ssl::context::pem, ec);
+    constexpr auto pem = asio::ssl::context::pem;
+    context.use_private_key_file(key_path.string(), pem, ec);
+    if (ec) return error::tls_use_private_key;
 
-    if (!ec && !key_password.empty())
-        context.set_password_callback([&](auto, auto) NOEXCEPT
-        {
-            return key_password;
-        });
+    if (!key_password.empty())
+    {
+        context.set_password_callback([&](auto, auto){ return key_password; });
+        if (ec) return error::tls_use_private_key;
+    }
 
-    if (!ec && authenticate)
+    if (authenticate)
     {
         context.set_verify_mode(asio::ssl::authenticate);
         if (certificate_authority.empty())
+        {
             context.set_default_verify_paths(ec);
+            if (ec) return error::tls_set_default_verify;
+        }
         else
+        {
             context.add_verify_path(certificate_authority.string(), ec);
+            if (ec) return error::tls_set_add_verify;
+        }
     }
 
-    return error::asio_to_error_code(ec);
+    return error::success;
 }
 BC_POP_WARNING();
 
 bool settings::tls_server::secure() const NOEXCEPT
 {
-    return !secure_binds.empty() && !certificate_path.empty() &&
-        !key_path.empty();
+    return !safes.empty() && !certificate_path.empty() && !key_path.empty();
 }
 
 // http_server

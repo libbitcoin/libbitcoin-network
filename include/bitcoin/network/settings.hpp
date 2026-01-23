@@ -88,7 +88,7 @@ struct BCT_API settings
         using tcp_server::tcp_server;
 
         /// Transport layer security bindings.
-        config::authorities secure_binds{};
+        config::authorities safes{};
 
         /// Path to server certificate file (PEM).
         std::filesystem::path certificate_path{};
@@ -108,8 +108,8 @@ struct BCT_API settings
         /// Thread safe after initialize().
         mutable asio::ssl::context context{ asio::ssl::version };
 
-        /// Initialize the ssl::context.
-        virtual code initialize() NOEXCEPT;
+        /// Initialize the ssl::context (const-mutable).
+        virtual code initialize() const NOEXCEPT;
 
         /// False if binds, certificate_path, or key_path is empty.
         virtual bool secure() const NOEXCEPT;

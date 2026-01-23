@@ -79,20 +79,21 @@ void session_inbound::handle_started(const code& ec,
     LOGN("Accepting " << network_settings().inbound.connections << " peers on "
         << network_settings().inbound.binds.size() << " bindings.");
 
-    // TODO: move inbound.enable_loopback to [network].
-    // TODO: create config section for [inbound.secure].
-    // TODO: create second loop for [inbound.secure].binds.
-    for (const auto& bind: network_settings().inbound.binds)
+    handler(do_accept(network_settings().inbound.binds));
+}
+
+// private
+code session_inbound::do_accept(const config::authorities& binds) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    for (const auto& bind: binds)
     {
-        // TODO: pass socket::parameters to acceptor.
         const auto acceptor = create_acceptor();
 
         // Require that all acceptors at least start.
-        if (const auto error_code = acceptor->start(bind))
-        {
-            handler(error_code);
-            return;
-        }
+        if (const auto ec = acceptor->start(bind))
+            return ec;
 
         LOGN("Bound to peer endpoint [" << acceptor->local() << "].");
 
@@ -106,7 +107,7 @@ void session_inbound::handle_started(const code& ec,
         start_accept(error::success, acceptor);
     }
 
-    handler(error::success);
+    return error::success;
 }
 
 // Accept cycle.
