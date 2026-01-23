@@ -48,6 +48,7 @@
 
 /* Suppress warnings on unnecessary file inclusions. */
 #define WOLFSSL_IGNORE_FILE_WARN
+#define WOLFSSL_VERBOSE_ERRORS
 
 /* wolfssl.com/documentation/manuals/wolfssl/chapter05.html */
 /* Requires that send and receive data copy functions be defined. */
@@ -126,22 +127,30 @@
     #endif
 #endif
 
-#ifndef NDEBUG
-    #define DEBUG_WOLFSSL
-    #define DEBUG_SUITE_TESTS
-    ////#define WOLFSSL_VERBOSE_ERRORS
-    #define WOLFSSL_HAVE_ERROR_QUEUE
+// Not setting this results in generic codes return from ssl via boost, but
+// otherwise some failed calls return success due to lack of error queue being
+// populated after a failed API call.
+////#define WOLFSSL_HAVE_ERROR_QUEUE
 
-    #ifndef WOLFSSL_LOGGINGENABLED_DEFAULT
-    #define WOLFSSL_LOGGINGENABLED_DEFAULT 1
-    #endif
-    #ifndef WOLFSSL_CERT_LOG_ENABLED_DEFAULT
-    #define WOLFSSL_CERT_LOG_ENABLED_DEFAULT 1
-    #endif
+/// Debugging information.
+#if !defined(NDEBUG)
+    // This will crash msvcrt on initialization if locale has been set.
+    // Work around using logging callback and avoid locale-dependent writes.
+    ////#define DEBUG_WOLFSSL
+
+    // These require DEBUG_WOLFSSL.
+    ////#ifndef WOLFSSL_LOGGINGENABLED_DEFAULT
+    ////#define WOLFSSL_LOGGINGENABLED_DEFAULT 1
+    ////#endif
+    ////#ifndef WOLFSSL_CERT_LOG_ENABLED_DEFAULT
+    ////#define WOLFSSL_CERT_LOG_ENABLED_DEFAULT 1
+    ////#endif
 #endif
 
+/// WolfSSL tests.
 #define NO_MAIN_DRIVER
 #define NO_TESTSUITE_MAIN_DRIVER
 #define CERT_WRITE_TEMP_DIR "./"
+#define DEBUG_SUITE_TESTS
 
 #endif
