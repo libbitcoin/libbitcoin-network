@@ -162,6 +162,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
     ////BC_ASSERT(stranded());
 
+    // Invokes handler on acceptor (network) or connector (socket) strand.
     if (!secure())
     {
         handler(error::success);
@@ -185,7 +186,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 void socket::handle_handshake(const boost_code& ec,
     const result_handler& handler) NOEXCEPT
 {
-    ////BC_ASSERT(stranded());
+    BC_ASSERT(stranded());
 
     if (error::asio_is_canceled(ec))
     {

@@ -164,7 +164,15 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
 void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
     const socket_handler& handler) NOEXCEPT
 {
-    BC_ASSERT(stranded());
+    // Return from socket handshake (TLS) is socket-stranded.
+    // Return from socket accept (no TLS) is acceptor (network) stranded.
+    if (!stranded())
+    {
+        boost::asio::post(strand_,
+            std::bind(&acceptor::handle_accept,
+                shared_from_this(), ec, socket, handler));
+        return;
+    }
 
     if (ec)
     {
