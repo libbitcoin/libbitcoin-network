@@ -47,7 +47,7 @@ public:
     /// Resolves socks5 endpoint and stores address as member for each connect.
     connector_socks(const logger& log, asio::strand& strand,
         asio::context& service, std::atomic_bool& suspended,
-        const parameters& parameters, const settings::socks5& socks) NOEXCEPT;
+        parameters&& parameters, const settings::socks5& socks) NOEXCEPT;
 
 protected:
     static code socks_response(uint8_t value) NOEXCEPT;

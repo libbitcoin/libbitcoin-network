@@ -51,7 +51,7 @@ public:
     /// Construct an instance.
     connector(const logger& log, asio::strand& strand,
         asio::context& service, std::atomic_bool& suspended,
-        const parameters& parameters) NOEXCEPT;
+        parameters&& parameters) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~connector() NOEXCEPT;
@@ -100,7 +100,7 @@ protected:
     asio::strand& strand_;
     asio::context& service_;
     std::atomic_bool& suspended_;
-    const parameters& parameters_;
+    const parameters parameters_;
 
     // These are protected by strand.
     asio::resolver resolver_;

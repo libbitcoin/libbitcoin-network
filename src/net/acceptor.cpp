@@ -42,11 +42,11 @@ using namespace std::placeholders;
 
 acceptor::acceptor(const logger& log, asio::strand& strand,
     asio::context& service, std::atomic_bool& suspended,
-    const parameters& parameters) NOEXCEPT
+    parameters&& parameters) NOEXCEPT
   : strand_(strand),
     service_(service),
     suspended_(suspended),
-    parameters_(parameters),
+    parameters_(std::move(parameters)),
     acceptor_(strand_),
     reporter(log),
     tracker<acceptor>(log)

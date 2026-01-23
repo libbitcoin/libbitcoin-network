@@ -72,7 +72,7 @@ net::~net() NOEXCEPT
 acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
 {
     const auto& settings = network_settings();
-    const socket::parameters params
+    socket::parameters params
     {
         .connect_timeout = settings.connect_timeout(),
         .maximum_request = settings.inbound.maximum_request,
@@ -80,7 +80,7 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
     };
 
     return emplace_shared<acceptor>(log, strand(), service(),
-        accept_suspended_, params);
+        accept_suspended_, std::move(params));
 }
 
 // outbound (general)
@@ -88,7 +88,7 @@ connector::ptr net::create_connector(const settings::socks5& socks,
     const steady_clock::duration& connect_timeout,
     uint32_t maximum_request) NOEXCEPT
 {
-    const socket::parameters params
+    socket::parameters params
     {
         .connect_timeout = connect_timeout,
         .maximum_request = maximum_request
@@ -96,11 +96,11 @@ connector::ptr net::create_connector(const settings::socks5& socks,
 
     if (socks.proxied())
         return emplace_shared<connector_socks>(log, strand(), service(),
-            connect_suspended_, params, socks);
+            connect_suspended_, std::move(params), socks);
 
     // Above can handle both proxy and non-proxy, but this is more efficient.
     return emplace_shared<connector>(log, strand(), service(),
-        connect_suspended_, params);
+        connect_suspended_, std::move(params));
 }
 
 // outbound (seed)
