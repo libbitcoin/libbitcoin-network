@@ -92,6 +92,7 @@ void socket::handle_accept(boost_code ec,
         return;
     }
 
+    // Not in socket strand.
     do_handshake(handler);
 }
 
@@ -150,6 +151,7 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
         handler(code);
     }
 
+    // In socket strand.
     do_handshake(handler);
 }
 
@@ -158,7 +160,7 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
 
 void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT(stranded());
+    ////BC_ASSERT(stranded());
 
     if (!secure())
     {
@@ -180,7 +182,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 void socket::handle_handshake(const boost_code& ec,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT(stranded());
+    ////BC_ASSERT(stranded());
 
     if (error::asio_is_canceled(ec))
     {
