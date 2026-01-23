@@ -637,6 +637,62 @@ BOOST_AUTO_TEST_CASE(error_t__code__socks_response_invalid__true_expected_messag
     BOOST_REQUIRE_EQUAL(ec.message(), "socks response invalid");
 }
 
+// tls
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_set_options__true_expected_message)
+{
+    constexpr auto value = error::tls_set_options;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls options");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_use_certificate__true_expected_message)
+{
+    constexpr auto value = error::tls_use_certificate;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls certificate");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_use_private_key__true_expected_message)
+{
+    constexpr auto value = error::tls_use_private_key;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls private key");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_set_password__true_expected_message)
+{
+    constexpr auto value = error::tls_set_password;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls private key password");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_set_default_verify__true_expected_message)
+{
+    constexpr auto value = error::tls_set_default_verify;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls default certificate authority");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_set_add_verify__true_expected_message)
+{
+    constexpr auto value = error::tls_set_add_verify;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls certificate authority");
+}
+
 // http 4xx client error
 
 BOOST_AUTO_TEST_CASE(error_t__code__bad_request__true_expected_message)

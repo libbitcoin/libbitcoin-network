@@ -115,6 +115,14 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { socks_unassigned_failure, "socks unassigned failure" },
     { socks_response_invalid, "socks response invalid" },
 
+    // tls
+    { tls_set_options, "failed to set tls options" },
+    { tls_use_certificate, "failed to set tls certificate" },
+    { tls_use_private_key, "failed to set tls private key" },
+    { tls_set_password, "failed to set tls private key password" },
+    { tls_set_default_verify, "failed to set tls default certificate authority" },
+    { tls_set_add_verify, "failed to set tls certificate authority" },
+
     ////// http 4xx client error
     { bad_request, "bad request" },
     ////{ unauthorized, "unauthorized" },
@@ -288,7 +296,7 @@ bool asio_is_canceled(const boost_code& ec) NOEXCEPT
 // is not used. boost_code overloads the `==` operator to include category.
 code asio_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    if (ec == boost_error_t::success)
+    if (!ec)
         return error::success;
 
     // self termination
