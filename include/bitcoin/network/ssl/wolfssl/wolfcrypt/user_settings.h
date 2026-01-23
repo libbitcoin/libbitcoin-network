@@ -63,6 +63,8 @@
 #define WOLFSSL_CERT_GEN
 #define WOLFSSL_DER_LOAD
 #define WOLFSSL_KEY_GEN
+#define WOLFSSL_SHA512
+#define WOLFSSL_SHA384
 
 /* TLS is required, not just cryptographic functions. */
 #define WOLFSSL_TLS13
@@ -73,8 +75,9 @@
 #define HAVE_TLS_EXTENSIONS
 #define HAVE_CURVE25519
 #define HAVE_POLY1305
+#define HAVE_ED25519
 #define HAVE_CHACHA
-#define HAVE_SHA256
+#define HAVE_AESGCM
 #define HAVE_HKDF
 #define HAVE_HMAC
 #define HAVE_ECC
@@ -108,7 +111,6 @@
 #define NO_OCSP
 #define NO_DES3
 #define NO_PSK
-#define NO_AES
 #define NO_SHA
 #define NO_DSA
 #define NO_RSA

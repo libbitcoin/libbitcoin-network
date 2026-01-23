@@ -65,13 +65,13 @@ namespace asio
     namespace ssl
     {
         static constexpr auto version =
-            boost::asio::ssl::context::tlsv13_server;
+            boost::asio::ssl::context::tls_server;
         static constexpr auto options =
             boost::asio::ssl::context::no_sslv2 |
             boost::asio::ssl::context::no_sslv3 |
             boost::asio::ssl::context::no_tlsv1 |
             boost::asio::ssl::context::no_tlsv1_1 |
-            boost::asio::ssl::context::single_dh_use |
+            ////boost::asio::ssl::context::single_dh_use |
             boost::asio::ssl::context::default_workarounds;
         static constexpr auto authenticate =
             boost::asio::ssl::verify_peer |

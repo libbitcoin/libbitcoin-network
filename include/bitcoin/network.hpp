@@ -255,6 +255,7 @@
 #include <bitcoin/network/ssl/wolfssl/wolfcrypt/error-crypt.h>
 #include <bitcoin/network/ssl/wolfssl/wolfcrypt/fe_operations.h>
 #include <bitcoin/network/ssl/wolfssl/wolfcrypt/fips_test.h>
+#include <bitcoin/network/ssl/wolfssl/wolfcrypt/ge_operations.h>
 #include <bitcoin/network/ssl/wolfssl/wolfcrypt/hash.h>
 #include <bitcoin/network/ssl/wolfssl/wolfcrypt/hmac.h>
 #include <bitcoin/network/ssl/wolfssl/wolfcrypt/hpke.h>
