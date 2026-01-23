@@ -288,7 +288,7 @@ bool asio_is_canceled(const boost_code& ec) NOEXCEPT
 {
     // self termination
     return ec == boost_error_t::operation_canceled
-        || ec == boost::asio::error::operation_aborted;
+        || ec == asio_system_error_t::operation_aborted;
 }
 
 // The success and operation_canceled codes are the only expected in normal
@@ -299,131 +299,144 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
     if (!ec)
         return error::success;
 
-    // self termination
-    if (ec == boost_error_t::connection_aborted ||
-        ec == boost_error_t::operation_canceled)
-        return error::operation_canceled;
+    static const auto& system_category = boost::system::system_category();
+    if (ec.category() == system_category)
+    {
+        switch (static_cast<boost_error_t>(ec.value()))
+        {
+            case boost_error_t::connection_aborted:
+            case boost_error_t::operation_canceled:
+                return error::operation_canceled;
+                
+            // peer termination
+            // stackoverflow.com/a/19891985/1172329
+            case boost_error_t::connection_reset:
+                return error::peer_disconnect;
 
-    // peer termination
-    // stackoverflow.com/a/19891985/1172329
-    if (ec == asio_misc_error_t::eof ||
-        ec == boost_error_t::connection_reset)
-        return error::peer_disconnect;
+            // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
+            // connect-tcp-greater-than-5000-error-wsaenobufs-10055
+            case boost_error_t::no_buffer_space:
+                return error::invalid_configuration;
 
-    // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
-    // connect-tcp-greater-than-5000-error-wsaenobufs-10055
-    if (ec == asio_system_error_t::no_buffer_space)
-        return error::invalid_configuration;
+            // network
+            case boost_error_t::operation_not_permitted:
+            case boost_error_t::operation_not_supported:
+            case boost_error_t::owner_dead:
+            case boost_error_t::permission_denied:
+                return error::not_allowed;
 
-    // network
-    if (ec == boost_error_t::operation_not_permitted ||
-        ec == boost_error_t::operation_not_supported ||
-        ec == boost_error_t::owner_dead ||
-        ec == boost_error_t::permission_denied)
-        return error::not_allowed;
+            // connect-resolve
+            case boost_error_t::address_family_not_supported:
+            case boost_error_t::bad_address:
+            case boost_error_t::destination_address_required:
+                return error::resolve_failed;
 
-    // connect-resolve
-    if (ec == boost_error_t::address_family_not_supported ||
-        ec == boost_error_t::bad_address ||
-        ec == boost_error_t::destination_address_required ||
-        ec == asio_netdb_error_t::host_not_found ||
-        ec == asio_netdb_error_t::host_not_found_try_again)
-        return error::resolve_failed;
+            // connect-connect
+            case boost_error_t::address_not_available:
+            case boost_error_t::not_connected:
+            case boost_error_t::connection_refused:
+            case boost_error_t::broken_pipe:
+            case boost_error_t::host_unreachable:
+            case boost_error_t::network_down:
+            case boost_error_t::network_reset:
+            case boost_error_t::network_unreachable:
+            case boost_error_t::no_link:
+            case boost_error_t::no_protocol_option:
+            case boost_error_t::no_such_file_or_directory:
+            case boost_error_t::not_a_socket:
+            case boost_error_t::protocol_not_supported:
+            case boost_error_t::wrong_protocol_type:
+                return error::connect_failed;
 
-    // connect-connect
-    if (ec == boost_error_t::address_not_available ||
-        ec == boost_error_t::not_connected ||
-        ec == boost_error_t::connection_refused ||
-        ec == boost_error_t::broken_pipe ||
-        ec == boost_error_t::host_unreachable ||
-        ec == boost_error_t::network_down ||
-        ec == boost_error_t::network_reset ||
-        ec == boost_error_t::network_unreachable ||
-        ec == boost_error_t::no_link ||
-        ec == boost_error_t::no_protocol_option ||
-        ec == boost_error_t::no_such_file_or_directory ||
-        ec == boost_error_t::not_a_socket ||
-        ec == boost_error_t::protocol_not_supported ||
-        ec == boost_error_t::wrong_protocol_type)
-        return error::connect_failed;
+            // connect-address
+            case boost_error_t::address_in_use:
+            case boost_error_t::already_connected:
+            case boost_error_t::connection_already_in_progress:
+            case boost_error_t::operation_in_progress:
+                return error::address_in_use;
 
-    // connect-address
-    if (ec == boost_error_t::address_in_use ||
-        ec == boost_error_t::already_connected ||
-        ec == boost_error_t::connection_already_in_progress ||
-        ec == boost_error_t::operation_in_progress)
-        return error::address_in_use;
+            // I/O (bad_file_descriptor if socket is not initialized)
+            case boost_error_t::bad_file_descriptor:
+            case boost_error_t::bad_message:
+            case boost_error_t::illegal_byte_sequence:
+            case boost_error_t::io_error:
+            case boost_error_t::message_size:
+            case boost_error_t::no_message_available:
+            case boost_error_t::no_message:
+            case boost_error_t::no_stream_resources:
+            case boost_error_t::not_a_stream:
+            case boost_error_t::protocol_error:
+                return error::bad_stream;
 
-    // I/O (bad_file_descriptor if socket is not initialized)
-    if (ec == boost_error_t::bad_file_descriptor ||
-        ec == boost_error_t::bad_message ||
-        ec == boost_error_t::illegal_byte_sequence ||
-        ec == boost_error_t::io_error ||
-        ec == boost_error_t::message_size ||
-        ec == boost_error_t::no_message_available ||
-        ec == boost_error_t::no_message ||
-        ec == boost_error_t::no_stream_resources ||
-        ec == boost_error_t::not_a_stream ||
-        ec == boost_error_t::protocol_error)
-        return error::bad_stream;
+            // timeout
+            case boost_error_t::stream_timeout:
+            case boost_error_t::timed_out:
+                return error::channel_timeout;
 
-    // timeout
-    if (ec == boost_error_t::stream_timeout ||
-        ec == boost_error_t::timed_out)
-        return error::channel_timeout;
+            // file system errors (bad_file_descriptor used in I/O)
+            case boost_error_t::cross_device_link:
+            case boost_error_t::device_or_resource_busy:
+            case boost_error_t::directory_not_empty:
+            case boost_error_t::executable_format_error:
+            case boost_error_t::file_exists:
+            case boost_error_t::file_too_large:
+            case boost_error_t::filename_too_long:
+            case boost_error_t::invalid_seek:
+            case boost_error_t::is_a_directory:
+            case boost_error_t::no_space_on_device:
+            case boost_error_t::no_such_device:
+            case boost_error_t::no_such_device_or_address:
+            case boost_error_t::read_only_file_system:
+            case boost_error_t::resource_unavailable_try_again:
+            case boost_error_t::text_file_busy:
+            case boost_error_t::too_many_files_open:
+            case boost_error_t::too_many_files_open_in_system:
+            case boost_error_t::too_many_links:
+            case boost_error_t::too_many_symbolic_link_levels:
+                return error::file_system;
+            default:
+                return error::unknown;
+        }
+    }
 
-    // file system errors (bad_file_descriptor used in I/O)
-    if (ec == boost_error_t::cross_device_link ||
-        ec == boost_error_t::device_or_resource_busy ||
-        ec == boost_error_t::directory_not_empty ||
-        ec == boost_error_t::executable_format_error ||
-        ec == boost_error_t::file_exists ||
-        ec == boost_error_t::file_too_large ||
-        ec == boost_error_t::filename_too_long ||
-        ec == boost_error_t::invalid_seek ||
-        ec == boost_error_t::is_a_directory ||
-        ec == boost_error_t::no_space_on_device ||
-        ec == boost_error_t::no_such_device ||
-        ec == boost_error_t::no_such_device_or_address ||
-        ec == boost_error_t::read_only_file_system ||
-        ec == boost_error_t::resource_unavailable_try_again ||
-        ec == boost_error_t::text_file_busy ||
-        ec == boost_error_t::too_many_files_open ||
-        ec == boost_error_t::too_many_files_open_in_system ||
-        ec == boost_error_t::too_many_links ||
-        ec == boost_error_t::too_many_symbolic_link_levels)
-        return error::file_system;
+    static const auto& misc_category = boost::asio::error::get_misc_category();
+    if (ec.category() == misc_category)
+    {
+        switch (static_cast<asio_misc_error_t>(ec.value()))
+        {
+            // peer termination
+            // stackoverflow.com/a/19891985/1172329
+            case asio_misc_error_t::eof:
+                return error::peer_disconnect;
+            default:
+                return error::unknown;
+        }
+    }
 
-    ////// unknown
-    ////if (ec == boost_error_t::argument_list_too_long ||
-    ////    ec == boost_error_t::argument_out_of_domain ||
-    ////    ec == boost_error_t::function_not_supported ||
-    ////    ec == boost_error_t::identifier_removed ||
-    ////    ec == boost_error_t::inappropriate_io_control_operation ||
-    ////    ec == boost_error_t::interrupted ||
-    ////    ec == boost_error_t::invalid_argument ||
-    ////    ec == boost_error_t::no_buffer_space ||
-    ////    ec == boost_error_t::no_child_process ||
-    ////    ec == boost_error_t::no_lock_available ||
-    ////    ec == boost_error_t::no_such_process ||
-    ////    ec == boost_error_t::not_a_directory ||
-    ////    ec == boost_error_t::not_enough_memory ||
-    ////    ec == boost_error_t::operation_would_block ||
-    ////    ec == boost_error_t::resource_deadlock_would_occur ||
-    ////    ec == boost_error_t::result_out_of_range ||
-    ////    ec == boost_error_t::state_not_recoverable ||
-    ////    ec == boost_error_t::value_too_large)
+    static const auto& netdb_category = boost::asio::error::get_netdb_category();
+    if (ec.category() == netdb_category)
+    {
+        switch (static_cast<asio_netdb_error_t>(ec.value()))
+        {
+            // connect-resolve
+            case asio_netdb_error_t::host_not_found:
+            case asio_netdb_error_t::host_not_found_try_again:
+                return error::resolve_failed;
+            default:
+                return error::unknown;
+        }
+    }
+
     return error::unknown;
 }
 
 // includes json codes
 code http_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    static boost::beast::http::detail::http_error_category category{};
-
     if (!ec)
         return error::success;
 
+    static const auto& category = boost::beast::http::detail::http_error_category();
     if (ec.category() != category)
         return json_to_error_code(ec);
 
@@ -462,11 +475,10 @@ code http_to_error_code(const boost_code& ec) NOEXCEPT
 // includes json codes
 code ws_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    static boost::beast::websocket::detail::error_codes category{};
-
     if (!ec)
         return error::success;
 
+    static boost::beast::websocket::detail::error_codes category{};
     if (ec.category() != category)
         return http_to_error_code(ec);
 
@@ -509,11 +521,10 @@ code ws_to_error_code(const boost_code& ec) NOEXCEPT
 
 code json_to_error_code(const boost_code& ec) NOEXCEPT
 {
-    static boost::json::detail::error_code_category_t category{};
-
     if (!ec)
         return error::success;
 
+    static boost::json::detail::error_code_category_t category{};
     if (ec.category() != category)
         return asio_to_error_code(ec);
 
@@ -688,7 +699,7 @@ enum boost::asio::error::basic_errors
 };
 
 // Boost: system error enum for error_conditions (platform-independent codes).
-enum boost::system::errc::errc_t
+enum boost::system::boost_error_t::boost_error_t
 {
     success = 0,
     address_family_not_supported = EAFNOSUPPORT,
