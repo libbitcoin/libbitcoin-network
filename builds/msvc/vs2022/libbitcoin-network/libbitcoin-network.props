@@ -43,9 +43,6 @@
         <!-- These are only used as inlined headers, so never compile them directly. -->
         <ExcludedFromBuild Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\scr\ssl\wolfssl\src\'))">true</ExcludedFromBuild>
         <ExcludedFromBuild Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\include\bitcoin\network\ssl\wolfcrypt\src\'))">true</ExcludedFromBuild>
-
-        <!-- Exclude wolfssl sources when ssl is deselected (requires external linkage). -->
-        <ExcludedFromBuild Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\include\bitcoin\network\ssl\wolfcrypt\src\')) And '$(Option-ssl)' == 'false'">true</ExcludedFromBuild>
       </ClCompile>
     </ItemGroup>
   </Target>
