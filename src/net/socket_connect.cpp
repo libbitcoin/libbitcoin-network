@@ -168,11 +168,14 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
         return;
     }
 
-    // TLS context is applied to the socket.
-    socket_.emplace<asio::ssl::socket>(
-        std::move(std::get<asio::socket>(socket_)),
-            std::get<ref<asio::ssl::context>>(context_));
+    // Extract to temporary to avoid dangling reference after destruction.
+    auto socket = std::move(std::get<asio::socket>(socket_));
 
+    // TLS context is applied to the socket.
+    socket_.emplace<asio::ssl::socket>(std::move(socket),
+        std::get<ref<asio::ssl::context>>(context_));
+
+    // Posts handler to socket strand.
     std::get<asio::ssl::socket>(socket_)
         .async_handshake(boost::asio::ssl::stream_base::server,
             std::bind(&socket::handle_handshake,
