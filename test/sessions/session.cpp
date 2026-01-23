@@ -117,9 +117,9 @@ public:
         return session_peer::stranded();
     }
 
-    acceptor::ptr create_acceptor() NOEXCEPT override
+    acceptor::ptr create_acceptor(const socket::context& context) NOEXCEPT override
     {
-        return session_peer::create_acceptor();
+        return session_peer::create_acceptor(context);
     }
 
     connector::ptr create_seed_connector() NOEXCEPT override
@@ -206,10 +206,10 @@ class mock_net
 public:
     using net::net;
 
-    acceptor::ptr create_acceptor() NOEXCEPT override
+    acceptor::ptr create_acceptor(const socket::context& context) NOEXCEPT override
     {
         ++acceptors_;
-        return net::create_acceptor();
+        return net::create_acceptor(context);
     }
 
     connector::ptr create_connector(const settings::socks5& socks,
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
     settings set(selection::mainnet);
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_acceptor());
+    BOOST_REQUIRE(session.create_acceptor({}));
     BOOST_REQUIRE_EQUAL(net.acceptors(), 1u);
 }
 

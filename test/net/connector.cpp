@@ -43,7 +43,7 @@ public:
 
     size_t get_maximum_request() const NOEXCEPT
     {
-        return maximum_;
+        return parameters_.maximum_request;
     }
 
     bool get_stopped() const NOEXCEPT

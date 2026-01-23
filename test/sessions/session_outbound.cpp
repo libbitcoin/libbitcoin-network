@@ -310,8 +310,12 @@ public:
     mock_connector_stop_connect(const logger& log, asio::strand& strand,
         asio::context& service, const steady_clock::duration& timeout, 
         size_t maximum, mock_session_outbound::ptr session) NOEXCEPT
-      : mock_connector_connect_success(log, strand, service, timeout, maximum,
-          suspended_),
+      : mock_connector_connect_success(log, strand, service, suspended_,
+          socket::parameters
+          {
+              .connect_timeout = timeout,
+              .maximum_request = maximum
+          }),
         session_(session)
     {
     }

@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(settings__tls_server__defaults__expected)
 
     // tls_server
     BOOST_REQUIRE(!instance.secure());
-    BOOST_REQUIRE(instance.secure_binds.empty());
+    BOOST_REQUIRE(instance.safes.empty());
     BOOST_REQUIRE(instance.certificate_authority.empty());
     BOOST_REQUIRE(instance.certificate_path.empty());
     BOOST_REQUIRE(instance.key_path.empty());
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
 
     // tls_server
     BOOST_REQUIRE(!instance.secure());
-    BOOST_REQUIRE(instance.secure_binds.empty());
+    BOOST_REQUIRE(instance.safes.empty());
     BOOST_REQUIRE(instance.certificate_authority.empty());
     BOOST_REQUIRE(instance.certificate_path.empty());
     BOOST_REQUIRE(instance.key_path.empty());
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
 
     // tls_server
     BOOST_REQUIRE(!instance.secure());
-    BOOST_REQUIRE(instance.secure_binds.empty());
+    BOOST_REQUIRE(instance.safes.empty());
     BOOST_REQUIRE(instance.certificate_authority.empty());
     BOOST_REQUIRE(instance.certificate_path.empty());
     BOOST_REQUIRE(instance.key_path.empty());
