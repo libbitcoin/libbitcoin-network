@@ -169,6 +169,9 @@ public:
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
 
+    /// The socket upgrades to its secure configuration upon connect.
+    virtual bool secure() const NOEXCEPT;
+
     /// Stop has been signaled, work is stopping.
     virtual bool stopped() const NOEXCEPT;
 
@@ -182,7 +185,6 @@ public:
     virtual asio::context& service() const NOEXCEPT;
 
 protected:
-    // TODO: p2p::socket, zmq::socket.
     using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;
     using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
     using socket_t = std::variant<
@@ -197,9 +199,6 @@ protected:
 
     /// Context.
     /// -----------------------------------------------------------------------
-
-    /// Upgrade the socket to its secure configuration.
-    bool secure() const NOEXCEPT;
 
     /// The socket was upgraded to ssl (requires strand).
     bool is_secure() const NOEXCEPT;
