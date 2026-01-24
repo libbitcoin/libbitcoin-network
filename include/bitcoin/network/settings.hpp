@@ -99,14 +99,14 @@ struct BCT_API settings
         /// Path to server private key decryption password (optional).
         std::string key_password{};
 
-        /// Path to custom CA for client authentication (optional).
-        std::filesystem::path certificate_authority{};
-
-        /// Require client authentication.
-        bool authenticate{};
+        /// Directory for CA certificates for client authentication (optional).
+        std::filesystem::path certificate_authorities{};
 
         /// False if binds, certificate_path, or key_path is empty.
         virtual bool secure() const NOEXCEPT;
+
+        /// Requires client authentication (certificate authority specified).
+        virtual bool authenticate() const NOEXCEPT;
 
         /// Initialize the ssl::context (required before use).
         virtual code initialize_context() const NOEXCEPT;

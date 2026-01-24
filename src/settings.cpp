@@ -90,26 +90,23 @@ code settings::tls_server::initialize_context() const NOEXCEPT
     if (ec) return error::tls_use_certificate;
 
     if (!key_password.empty())
-    {
         context->set_password_callback([&](auto, auto){ return key_password; });
-        if (ec) return error::tls_use_private_key;
-    }
 
     constexpr auto pem = asio::ssl::context::pem;
     context->use_private_key_file(key_path.string(), pem, ec);
     if (ec) return error::tls_use_private_key;
 
-    if (authenticate)
+    if (authenticate())
     {
         context->set_verify_mode(asio::ssl::authenticate);
-        if (certificate_authority.empty())
+        if (certificate_authorities.empty())
         {
             context->set_default_verify_paths(ec);
             if (ec) return error::tls_set_default_verify;
         }
         else
         {
-            context->add_verify_path(certificate_authority.string(), ec);
+            context->add_verify_path(certificate_authorities.string(), ec);
             if (ec) return error::tls_set_add_verify;
         }
     }
@@ -121,6 +118,11 @@ BC_POP_WARNING();
 bool settings::tls_server::secure() const NOEXCEPT
 {
     return !safes.empty() && !certificate_path.empty() && !key_path.empty();
+}
+
+bool settings::tls_server::authenticate() const NOEXCEPT
+{
+    return !certificate_authorities.empty();
 }
 
 // http_server
