@@ -143,6 +143,14 @@ enum error_t : uint8_t
     socks_unassigned_failure,
     socks_response_invalid,
 
+    // tls
+    tls_set_options,
+    tls_use_certificate,
+    tls_use_private_key,
+    tls_set_password,
+    tls_set_default_verify,
+    tls_set_add_verify,
+
     ////// http 4xx client error
     bad_request,
     ////unauthorized,

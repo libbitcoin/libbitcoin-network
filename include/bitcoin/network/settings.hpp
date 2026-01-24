@@ -25,7 +25,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
-#define BC_HTTP_SERVER_NAME "libbitcoin/4.0"
+#define BC_HTTP_SERVER_NAME "libbitcoin/4"
 
 namespace libbitcoin {
 namespace network {
@@ -68,7 +68,6 @@ struct BCT_API settings
         /// For logging only.
         std::string name;
 
-        bool secure{ false };
         config::authorities binds{};
         uint16_t connections{ 0 };
         uint32_t inactivity_minutes{ 10 };
@@ -82,12 +81,46 @@ struct BCT_API settings
         virtual steady_clock::duration expiration() const NOEXCEPT;
     };
 
-    struct http_server
+    struct tls_server
       : public tcp_server
     {
+        DELETE_COPY(tls_server);
         using tcp_server::tcp_server;
 
-        /// Sent via responses if configured .
+        /// Transport layer security bindings.
+        config::authorities safes{};
+
+        /// Path to server certificate file (PEM).
+        std::filesystem::path certificate_path{};
+
+        /// Path to server private key file (PEM).
+        std::filesystem::path key_path{};
+
+        /// Path to server private key decryption password (optional).
+        std::string key_password{};
+
+        /// Path to custom CA for client authentication (optional).
+        std::filesystem::path certificate_authority{};
+
+        /// Require client authentication.
+        bool authenticate{};
+
+        /// False if binds, certificate_path, or key_path is empty.
+        virtual bool secure() const NOEXCEPT;
+
+        /// Initialize the ssl::context (required before use).
+        virtual code initialize_context() const NOEXCEPT;
+
+        /// Thread safe socket ssl context (deferred construction).
+        mutable std::unique_ptr<asio::ssl::context> context{};
+    };
+
+    struct http_server
+      : public tls_server
+    {
+        using tls_server::tls_server;
+
+        /// Sent via responses if configured.
         std::string server{ BC_HTTP_SERVER_NAME };
 
         /// Validated against hosts/origins if configured.
@@ -258,6 +291,7 @@ struct BCT_API settings
     config::authorities whitelists{};
 
     /// Helpers.
+    virtual bool encrypt_node() const NOEXCEPT;
     virtual bool witness_node() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
     virtual steady_clock::duration connect_timeout() const NOEXCEPT;

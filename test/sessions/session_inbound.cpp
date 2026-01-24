@@ -73,7 +73,9 @@ public:
     void accept(socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
-        const auto socket = std::make_shared<network::socket>(log, service_, 42);
+        socket::parameters params{ .maximum_request = 42 };
+        const auto socket = std::make_shared<network::socket>(log, service_,
+            std::move(params));
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
@@ -321,11 +323,16 @@ public:
     }
 
     // Create mock acceptor to inject mock channel.
-    acceptor::ptr create_acceptor() NOEXCEPT override
+    acceptor::ptr create_acceptor(
+        const socket::context& context) NOEXCEPT override
     {
         const auto maximum = network_settings().inbound.maximum_request;
         return ((acceptor_ = std::make_shared<Acceptor>(log, strand(),
-            service(), maximum, suspended_)));
+            service(), suspended_, socket::parameters
+            {
+                .maximum_request = maximum,
+                .context = context
+            })));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override

@@ -41,6 +41,7 @@ class BCT_API connector
 {
 public:
     typedef std::shared_ptr<connector> ptr;
+    using parameters = socket::parameters;
 
     DELETE_COPY_MOVE(connector);
 
@@ -49,8 +50,8 @@ public:
 
     /// Construct an instance.
     connector(const logger& log, asio::strand& strand,
-        asio::context& service, const steady_clock::duration& timeout,
-        size_t maximum_request, std::atomic_bool& suspended) NOEXCEPT;
+        asio::context& service, std::atomic_bool& suspended,
+        parameters&& parameters) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~connector() NOEXCEPT;
@@ -96,10 +97,10 @@ protected:
     bool stranded() NOEXCEPT;
 
     // These are thread safe
-    const size_t maximum_;
-    asio::context& service_;
     asio::strand& strand_;
+    asio::context& service_;
     std::atomic_bool& suspended_;
+    const parameters parameters_;
 
     // These are protected by strand.
     asio::resolver resolver_;

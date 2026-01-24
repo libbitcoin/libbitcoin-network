@@ -31,11 +31,6 @@ public:
         return strand_;
     }
 
-    const transport& get_transport() const NOEXCEPT
-    {
-        return transport_;
-    }
-
     const config::endpoint& get_endpoint() const NOEXCEPT
     {
         return endpoint_;
@@ -57,12 +52,10 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
     const logger log{};
     threadpool pool(1);
     constexpr auto maximum = 42u;
-    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), maximum);
-    const auto& transport = instance->get_transport();
+    connector::parameters params{.maximum_request = maximum };
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 
     BOOST_REQUIRE(!instance->stranded());
-    BOOST_REQUIRE(std::holds_alternative<asio::socket>(transport));
-    BOOST_REQUIRE(!std::get<asio::socket>(transport).is_open());
     BOOST_REQUIRE(&instance->get_strand() == &instance->strand());
     BOOST_REQUIRE(instance->get_endpoint() == instance->endpoint());
     BOOST_REQUIRE(!instance->get_endpoint().is_address());
@@ -76,7 +69,8 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 {
     const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
+    connector::parameters params{ .maximum_request = 42u };
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
 
@@ -119,12 +113,13 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     BOOST_REQUIRE(pool.join());
 }
 
-// Test is a race condition, periodically fails.
+////// Test is a race condition, periodically fails.
 ////BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
 ////{
 ////    const logger log{};
 ////    threadpool pool(2);
-////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
+////    connector::parameters params{ .maximum_request = 42u };
+////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 ////    asio::strand strand(pool.service().get_executor());
 ////
 ////    const asio::endpoint endpoint(asio::tcp::v6(), 42);
@@ -157,12 +152,13 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////    pool.stop();
 ////    BOOST_REQUIRE(pool.join());
 ////}
-
+////
 ////BOOST_AUTO_TEST_CASE(socket__read_some__disconnected__error)
 ////{
 ////    const logger log{};
 ////    threadpool pool(2);
-////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
+////    connector::parameters params{ .maximum_request = 42u };
+////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 ////
 ////    system::data_array<42> data{};
 ////    instance->read_some(asio::mutable_buffer{ data.data(), data.size() },
@@ -187,10 +183,11 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
 {
     const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
+    connector::parameters params{ .maximum_request = 42u };
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 
     system::data_array<42> data;
-    instance->read(asio::mutable_buffer{ data.data(), data.size() },
+    instance->p2p_read(asio::mutable_buffer{ data.data(), data.size() },
         [instance](const code& ec, size_t size)
         {
             // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
@@ -212,10 +209,11 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
 {
     const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), 42);
+    connector::parameters params{ .maximum_request = 42u };
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 
     system::data_array<42> data;
-    instance->write(asio::const_buffer{ data.data(), data.size() },
+    instance->p2p_write(asio::const_buffer{ data.data(), data.size() },
         [instance](const code& ec, size_t size)
         {
             // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.

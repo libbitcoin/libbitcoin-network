@@ -34,9 +34,9 @@ using namespace std::placeholders;
 
 // Bind throws (ok).
 // Shared pointers required in handler parameters so closures control lifetime.
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 session_server::session_server(net& network, uint64_t identifier,
     const options_t& options) NOEXCEPT
@@ -79,18 +79,41 @@ void session_server::handle_started(const code& ec,
     }
 
     LOGN("Accepting " << options_.connections << " " << name_
-        << " connections on " << options_.binds.size() << " bindings.");
+        << " connections on "
+        << options_.binds.size() << " clear and "
+        << options_.safes.size() << " safe bindings.");
 
-    for (const auto& bind: options_.binds)
+    if (options_.secure())
     {
-        const auto acceptor = create_acceptor();
-
-        // Require that all acceptors at least start.
-        if (const auto error_code = acceptor->start(bind))
+        if (const auto code = options_.initialize_context())
         {
-            handler(error_code);
+            handler(code);
             return;
         }
+
+        if (const auto code = do_accept(options_.safes, *options_.context))
+        {
+            handler(code);
+            return;
+        }
+    }
+
+    handler(do_accept(options_.binds));
+}
+
+// private
+code session_server::do_accept(const config::authorities& binds,
+    const socket::context& context) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    for (const auto& bind: binds)
+    {
+        const auto acceptor = create_acceptor(context);
+
+        // Require that all acceptors at least start.
+        if (const auto ec = acceptor->start(bind))
+            return ec;
 
         LOGN("Bound to " << name_ << " endpoint ["
             << acceptor->local() << "].");
@@ -105,7 +128,7 @@ void session_server::handle_started(const code& ec,
         start_accept(error::success, acceptor);
     }
 
-    handler(error::success);
+    return error::success;
 }
 
 // Accept cycle.

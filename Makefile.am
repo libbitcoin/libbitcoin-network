@@ -107,6 +107,13 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/hosts.cpp \
     src/net/proxy.cpp \
     src/net/socket.cpp \
+    src/net/socket_connect.cpp \
+    src/net/socket_http.cpp \
+    src/net/socket_p2p.cpp \
+    src/net/socket_rpc.cpp \
+    src/net/socket_stop.cpp \
+    src/net/socket_wait.cpp \
+    src/net/socket_ws.cpp \
     src/protocols/protocol.cpp \
     src/protocols/protocol_address_in_209.cpp \
     src/protocols/protocol_address_out_209.cpp \
@@ -149,6 +156,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/ssl/wolfssl/src/ssl_sk.c \
     src/ssl/wolfssl/src/x509.c \
     src/ssl/wolfssl/src/x509_str.c \
+    src/ssl/wolfssl/wolfcrypt/aes.c \
     src/ssl/wolfssl/wolfcrypt/asn.c \
     src/ssl/wolfssl/wolfcrypt/chacha.c \
     src/ssl/wolfssl/wolfcrypt/chacha20_poly1305.c \
@@ -156,6 +164,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/ssl/wolfssl/wolfcrypt/cryptocb.c \
     src/ssl/wolfssl/wolfcrypt/curve25519.c \
     src/ssl/wolfssl/wolfcrypt/ecc.c \
+    src/ssl/wolfssl/wolfcrypt/ed25519.c \
     src/ssl/wolfssl/wolfcrypt/error.c \
     src/ssl/wolfssl/wolfcrypt/fe_operations.c \
     src/ssl/wolfssl/wolfcrypt/ge_operations.c \
@@ -167,6 +176,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/ssl/wolfssl/wolfcrypt/poly1305.c \
     src/ssl/wolfssl/wolfcrypt/random.c \
     src/ssl/wolfssl/wolfcrypt/sha256.c \
+    src/ssl/wolfssl/wolfcrypt/sha512.c \
     src/ssl/wolfssl/wolfcrypt/signature.c \
     src/ssl/wolfssl/wolfcrypt/sp_int.c \
     src/ssl/wolfssl/wolfcrypt/wc_encrypt.c \
@@ -793,6 +803,7 @@ include_bitcoin_network_ssl_wolfssl_wolfcrypt_HEADERS = \
     include/bitcoin/network/ssl/wolfssl/wolfcrypt/error-crypt.h \
     include/bitcoin/network/ssl/wolfssl/wolfcrypt/fe_operations.h \
     include/bitcoin/network/ssl/wolfssl/wolfcrypt/fips_test.h \
+    include/bitcoin/network/ssl/wolfssl/wolfcrypt/ge_operations.h \
     include/bitcoin/network/ssl/wolfssl/wolfcrypt/hash.h \
     include/bitcoin/network/ssl/wolfssl/wolfcrypt/hmac.h \
     include/bitcoin/network/ssl/wolfssl/wolfcrypt/hpke.h \

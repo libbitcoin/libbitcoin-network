@@ -111,10 +111,10 @@ void proxy::async_stop(const code& ec) NOEXCEPT
         return;
 
     // Stop the read loop, stop accepting new work, cancel pending work.
-    // Allows for graceful websocket::close, which would hang the threadpool if
+    // Allows for graceful ws/ssl::close, which would hang the threadpool if
     // attempted within socket::stop(), as it issues a follow-on iocontext job.
-    // A subsequent call to socket::stop() will terminate any websocket::close.
-    socket_->async_stop();
+    // A subsequent call to socket::stop() will terminate directly.
+    socket_->lazy_stop();
 
     // Overruled by stop, set only for consistency.
     paused_.store(true);
@@ -190,7 +190,7 @@ void proxy::read(const asio::mutable_buffer& buffer,
     boost::asio::dispatch(strand(),
         std::bind(&proxy::waiting, shared_from_this()));
 
-    socket_->read(buffer, std::move(handler));
+    socket_->p2p_read(buffer, std::move(handler));
 }
 
 void proxy::write(const asio::const_buffer& buffer,
@@ -293,7 +293,7 @@ void proxy::write() NOEXCEPT
         return;
 
     auto& job = queue_.front();
-    socket_->write({ job.first.data(), job.first.size() },
+    socket_->p2p_write({ job.first.data(), job.first.size() },
         std::bind(&proxy::handle_write,
             shared_from_this(), _1, _2, job.first, job.second));
 }

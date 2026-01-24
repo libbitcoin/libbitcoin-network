@@ -41,7 +41,8 @@ BOOST_AUTO_TEST_CASE(proxy__paused__default__true)
 {
     const logger log{};
     threadpool pool(1);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
@@ -58,7 +59,8 @@ BOOST_AUTO_TEST_CASE(proxy__paused__pause__true)
 {
     const logger log{};
     threadpool pool(1);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
@@ -76,7 +78,8 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
 {
     const logger log{};
     threadpool pool(1);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
@@ -104,7 +107,8 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
 {
     const logger log{};
     threadpool pool(1);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
@@ -133,7 +137,8 @@ BOOST_AUTO_TEST_CASE(proxy__stopped__default__false)
 {
     const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BOOST_REQUIRE(!proxy_ptr->stopped());
 
@@ -144,7 +149,8 @@ BOOST_AUTO_TEST_CASE(proxy__stranded__default__false)
 {
     const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BOOST_REQUIRE(!proxy_ptr->stranded());
 
@@ -156,7 +162,8 @@ BOOST_AUTO_TEST_CASE(proxy__authority__default__expected)
     const logger log{};
     threadpool pool(2);
     const config::endpoint default_endpoint{};
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BOOST_REQUIRE(proxy_ptr->endpoint() == default_endpoint);
 
@@ -167,7 +174,8 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
 
@@ -195,7 +203,8 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
 

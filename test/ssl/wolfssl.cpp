@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
     // requires:
     // /vectors/certs/*.pem
     // /vectors/certs/test/*.pem
-    // /vectors/tests/test.conf
+    // /vectors/tests/test*.conf
 
     // cert paths are configured in "test.conf" only as: "./certs" (relative).
     // test.conf defaults to "tests/test.conf" (parameterizable). Since we need

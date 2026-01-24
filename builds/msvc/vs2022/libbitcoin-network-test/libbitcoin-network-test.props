@@ -25,7 +25,7 @@
   <Target Name="WolfSSLTestSuppressions" BeforeTargets="ClCompile">
     <ItemGroup>
       <ClCompile Update="@(ClCompile)">
-        <AdditionalOptions Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\test\ssl\wolfssl\'))">/wd4005 /wd4189 /wd4245 /wd4267 /wd4701 /wd4702 /wd4703 %(AdditionalOptions)</AdditionalOptions>
+        <AdditionalOptions Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\test\ssl\wolfssl\'))">/wd4005 /wd4189 /wd4244 /wd4245 /wd4267 /wd4701 /wd4702 /wd4703 %(AdditionalOptions)</AdditionalOptions>
       </ClCompile>
     </ItemGroup>
   </Target>

@@ -217,12 +217,14 @@ protected:
     friend class session;
 
     /// I/O factories.
-    virtual acceptor::ptr create_acceptor() NOEXCEPT;
+    virtual acceptor::ptr create_acceptor(
+        const socket::context& context={}) NOEXCEPT;
     virtual connector::ptr create_seed_connector() NOEXCEPT;
     virtual connector::ptr create_manual_connector() NOEXCEPT;
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
     virtual connector::ptr create_connector(const settings::socks5& socks,
-        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT;
+        const socket::parameters::duration& connect_timeout,
+        uint32_t maximum_request) NOEXCEPT;
 
     /// Sequences.
     virtual void do_start(const result_handler& handler) NOEXCEPT;

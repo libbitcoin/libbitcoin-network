@@ -69,20 +69,74 @@ steady_clock::duration settings::tcp_server::expiration() const NOEXCEPT
     return minutes{ expiration_minutes };
 }
 
+// tls_server
+// ----------------------------------------------------------------------------
+
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+code settings::tls_server::initialize_context() const NOEXCEPT
+{
+    if (context)
+        return error::operation_failed;
+
+    context = std::make_unique<asio::ssl::context>(asio::ssl::version);
+    if (!secure())
+        return error::success;
+
+    boost_code ec{};
+    context->set_options(asio::ssl::options, ec);
+    if (ec) return error::tls_set_options;
+
+    context->use_certificate_chain_file(certificate_path.string(), ec);
+    if (ec) return error::tls_use_certificate;
+
+    constexpr auto pem = asio::ssl::context::pem;
+    context->use_private_key_file(key_path.string(), pem, ec);
+    if (ec) return error::tls_use_private_key;
+
+    if (!key_password.empty())
+    {
+        context->set_password_callback([&](auto, auto){ return key_password; });
+        if (ec) return error::tls_use_private_key;
+    }
+
+    if (authenticate)
+    {
+        context->set_verify_mode(asio::ssl::authenticate);
+        if (certificate_authority.empty())
+        {
+            context->set_default_verify_paths(ec);
+            if (ec) return error::tls_set_default_verify;
+        }
+        else
+        {
+            context->add_verify_path(certificate_authority.string(), ec);
+            if (ec) return error::tls_set_add_verify;
+        }
+    }
+
+    return error::success;
+}
+BC_POP_WARNING();
+
+bool settings::tls_server::secure() const NOEXCEPT
+{
+    return !safes.empty() && !certificate_path.empty() && !key_path.empty();
+}
+
 // http_server
 // ----------------------------------------------------------------------------
 
 system::string_list settings::http_server::host_names() const NOEXCEPT
 {
     // secure changes default port from 80 to 443.
-    const auto port = secure ? http::default_tls : http::default_http;
+    const auto port = secure() ? http::default_tls : http::default_http;
     return config::to_host_names(hosts, port);
 }
 
 system::string_list settings::http_server::origin_names() const NOEXCEPT
 {
     // secure changes default port from 80 to 443.
-    const auto port = secure ? http::default_tls : http::default_http;
+    const auto port = secure() ? http::default_tls : http::default_http;
     return config::to_host_names(hosts, port);
 }
 
@@ -180,6 +234,11 @@ settings::settings(chain::selection context) NOEXCEPT
     manual{ context },
     identifier(identifier_from_context(context))
 {
+}
+
+bool settings::encrypt_node() const NOEXCEPT
+{
+    return to_bool(services_minimum & service::node_encrypted_transport);
 }
 
 bool settings::witness_node() const NOEXCEPT

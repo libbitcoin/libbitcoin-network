@@ -67,6 +67,8 @@ protected:
     virtual bool enabled() const NOEXCEPT;
 
 private:
+    code do_accept(const config::authorities& binds) NOEXCEPT;
+
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_accepted(const code& ec, const socket::ptr& socket,

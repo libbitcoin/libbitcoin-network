@@ -384,6 +384,27 @@
     <ClCompile Include="..\..\..\..\src\net\socket.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_connect.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_http.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_p2p.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_rpc.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_stop.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_wait.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
@@ -510,6 +531,9 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\tls13.c">
       <Filter>src\ssl\wolfssl</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\aes.c">
+      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\asn.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
@@ -529,6 +553,9 @@
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ecc.c">
+      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\ed25519.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\error.c">
@@ -562,6 +589,9 @@
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha256.c">
+      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha512.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\signature.c">
@@ -1296,6 +1326,9 @@
       <Filter>include\bitcoin\network\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\fips_test.h">
+      <Filter>include\bitcoin\network\ssl\wolfssl\wolfcrypt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\ge_operations.h">
       <Filter>include\bitcoin\network\ssl\wolfssl\wolfcrypt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\hash.h">

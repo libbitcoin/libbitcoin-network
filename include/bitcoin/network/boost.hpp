@@ -21,7 +21,7 @@
 
 #include <bitcoin/network/preprocessor.hpp>
 
-// Pull in any base boost configuration before including boost.
+// Must pull in any base boost configuration before including boost.
 #include <bitcoin/system.hpp>
 
 #include <boost/bimap.hpp>
@@ -30,13 +30,11 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/system/error_code.hpp>
 
-// TODO: exclude ssl sources when HAVE_SSL not defined (lib and test).
-// TODO: exclude ssl include paths when HAVE_SSL not defined (lib and test).
 #if defined(HAVE_SSL)
     #define BOOST_ASIO_USE_WOLFSSL
 #endif
 
-/// Without HAVE_SSL openssl headers must be externally defined for asio.
+/// SSL is always defined, must be externally linked if !HAVE_SSL.
 #include <boost/asio/ssl.hpp>
 
 #endif

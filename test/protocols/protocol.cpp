@@ -57,8 +57,8 @@ class mock_acceptor
 {
 public:
     mock_acceptor(const logger& log, asio::strand& strand,
-        asio::context& service, size_t maximum) NOEXCEPT
-      : acceptor(log, strand, service, maximum, suspended_),
+        asio::context& service, acceptor::parameters&& params) NOEXCEPT
+      : acceptor(log, strand, service, suspended_, std::move(params)),
         stopped_(false), port_(0)
     {
     }
@@ -91,7 +91,8 @@ public:
     // Inject mock channel.
     void accept(socket_handler&& handler) NOEXCEPT override
     {
-        const auto socket = std::make_shared<network::socket>(log, service_, maximum_);
+        const auto socket = std::make_shared<network::socket>(log, service_,
+            parameters_);
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
@@ -113,9 +114,8 @@ class mock_connector
 {
 public:
     mock_connector(const logger& log, asio::strand& strand,
-        asio::context& service, const steady_clock::duration& timeout,
-        size_t maximum) NOEXCEPT
-      : connector(log, strand, service, timeout, maximum, suspended_),
+        asio::context& service, connector::parameters&& params) NOEXCEPT
+      : connector(log, strand, service, suspended_, std::move(params)),
         stopped_(false)
     {
     }
@@ -137,7 +137,7 @@ public:
         const config::endpoint&, socket_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(log, service_,
-            maximum_);
+            parameters_);
         handler(error::success, socket);
     }
 
@@ -154,19 +154,28 @@ public:
     using net::net;
 
     // Create mock acceptor to inject mock channel.
-    acceptor::ptr create_acceptor() NOEXCEPT override
+    acceptor::ptr create_acceptor(const socket::context& context) NOEXCEPT override
     {
-        const auto maximum = network_settings().inbound.maximum_request;
-        return std::make_shared<mock_acceptor>(log, strand(), service(), maximum);
+        acceptor::parameters params
+        {
+            .maximum_request = network_settings().inbound.maximum_request,
+            .context = context
+        };
+
+        return std::make_shared<mock_acceptor>(log, strand(), service(), std::move(params));
     }
 
     // Create mock connector to inject mock channel.
     connector::ptr create_connector(const settings::socks5& ,
         const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
     {
-        // TODO: socks.
-        return std::make_shared<mock_connector>(log, strand(), service(),
-            timeout, maximum);
+        connector::parameters params
+        {
+            .connect_timeout = timeout,
+            .maximum_request = maximum
+        };
+
+        return std::make_shared<mock_connector>(log, strand(), service(), std::move(params));
     }
 };
 

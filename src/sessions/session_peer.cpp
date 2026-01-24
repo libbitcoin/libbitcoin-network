@@ -38,8 +38,9 @@ using namespace system;
 using namespace std::placeholders;
 
 // Shared pointers required in handler parameters so closures control lifetime.
-BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 session_peer::session_peer(net& network, uint64_t identifier,
     const options_t& options) NOEXCEPT
@@ -284,6 +285,7 @@ void session_peer::save(const address_cptr& message,
     network_.save(message, std::move(handler));
 }
 
+BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()
 

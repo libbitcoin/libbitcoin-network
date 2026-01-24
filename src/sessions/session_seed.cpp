@@ -36,9 +36,9 @@ using namespace std::placeholders;
 
 // Bind throws (ok).
 // Shared pointers required in handler parameters so closures control lifetime.
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 session_seed::session_seed(net& network, uint64_t identifier) NOEXCEPT
   : session_peer(network, identifier, network.network_settings().outbound),

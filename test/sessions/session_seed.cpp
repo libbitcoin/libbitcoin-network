@@ -79,7 +79,8 @@ public:
             port_ = port;
         }
 
-        const auto socket = std::make_shared<network::socket>(log, service_, 42);
+        socket::parameters params{ .maximum_request = 42 };
+        const auto socket = std::make_shared<network::socket>(log, service_, std::move(params));
 
         // Must be asynchronous or is an infinite recursion.
         boost::asio::post(strand_, [=]() NOEXCEPT
@@ -232,9 +233,14 @@ public:
     connector::ptr create_connector(const settings::socks5& ,
         const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
     {
-        // TODO: socks.
+        connector::parameters params
+        {
+            .connect_timeout = timeout,
+            .maximum_request = maximum
+        };
+
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), timeout, maximum, suspended_)));
+            service(), suspended_, std::move(params))));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -323,10 +329,10 @@ public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
 
     mock_connector_stop_connect(const logger& log, asio::strand& strand,
-        asio::context& service, const steady_clock::duration& timeout,
-        uint32_t maximum, mock_session_seed::ptr session) NOEXCEPT
-      : mock_connector_connect_success(log, strand, service, timeout, maximum,
-          suspended_),
+        asio::context& service, connector::parameters&& params,
+        mock_session_seed::ptr session) NOEXCEPT
+      : mock_connector_connect_success(log, strand, service, suspended_,
+          std::move(params)),
         session_(session)
     {
     }
@@ -374,9 +380,14 @@ public:
         if (connector_)
             return connector_;
 
-        // TODO: socks.
+        connector::parameters params
+        {
+            .connect_timeout = timeout,
+            .maximum_request = maximum
+        };
+
         return ((connector_ = std::make_shared<mock_connector_stop_connect>(
-            log, strand(), service(), timeout, maximum, session_)));
+            log, strand(), service(), std::move(params), session_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override

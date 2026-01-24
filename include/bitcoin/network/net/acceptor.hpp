@@ -40,6 +40,7 @@ class BCT_API acceptor
 {
 public:
     typedef std::shared_ptr<acceptor> ptr;
+    using parameters = socket::parameters;
 
     DELETE_COPY_MOVE(acceptor);
 
@@ -48,7 +49,7 @@ public:
 
     /// Construct an instance.
     acceptor(const logger& log, asio::strand& strand, asio::context& service,
-        size_t maximum_request, std::atomic_bool& suspended) NOEXCEPT;
+        std::atomic_bool& suspended, parameters&& parameters) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~acceptor() NOEXCEPT;
@@ -85,10 +86,10 @@ protected:
     bool stranded() const NOEXCEPT;
 
     // These are thread safe.
-    const size_t maximum_;
-    asio::context& service_;
     asio::strand& strand_;
+    asio::context& service_;
     std::atomic_bool& suspended_;
+    const parameters parameters_;
 
     // These are protected by strand.
     asio::acceptor acceptor_;

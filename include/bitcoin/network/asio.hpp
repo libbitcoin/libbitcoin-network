@@ -64,8 +64,20 @@ namespace asio
     /// asio::ssl::context
     namespace ssl
     {
+        static constexpr auto version =
+            boost::asio::ssl::context::tls_server;
+        static constexpr auto options =
+            boost::asio::ssl::context::no_sslv2 |
+            boost::asio::ssl::context::no_sslv3 |
+            boost::asio::ssl::context::no_tlsv1 |
+            boost::asio::ssl::context::no_tlsv1_1 |
+            ////boost::asio::ssl::context::single_dh_use |
+            boost::asio::ssl::context::default_workarounds;
+        static constexpr auto authenticate =
+            boost::asio::ssl::verify_peer |
+            boost::asio::ssl::verify_fail_if_no_peer_cert;
+
         typedef boost::asio::ssl::context context;
-        typedef std::shared_ptr<context> context_ptr;
         typedef boost::asio::ssl::stream<asio::socket> socket;
     }
 }

@@ -69,26 +69,38 @@ net::~net() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // inbound/server
-acceptor::ptr net::create_acceptor() NOEXCEPT
+acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
 {
     const auto& settings = network_settings();
-    const auto maximum = settings.inbound.maximum_request;
+    socket::parameters params
+    {
+        .connect_timeout = settings.connect_timeout(),
+        .maximum_request = settings.inbound.maximum_request,
+        .context = context
+    };
 
-    return emplace_shared<acceptor>(log, strand(), service(), maximum,
-        accept_suspended_);
+    return emplace_shared<acceptor>(log, strand(), service(),
+        accept_suspended_, std::move(params));
 }
 
 // outbound (general)
 connector::ptr net::create_connector(const settings::socks5& socks,
-    const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT
+    const steady_clock::duration& connect_timeout,
+    uint32_t maximum_request) NOEXCEPT
 {
+    socket::parameters params
+    {
+        .connect_timeout = connect_timeout,
+        .maximum_request = maximum_request
+    };
+
     if (socks.proxied())
         return emplace_shared<connector_socks>(log, strand(), service(),
-            timeout, maximum, connect_suspended_, socks);
+            connect_suspended_, std::move(params), socks);
 
     // Above can handle both proxy and non-proxy, but this is more efficient.
     return emplace_shared<connector>(log, strand(), service(),
-        timeout, maximum, connect_suspended_);
+        connect_suspended_, std::move(params));
 }
 
 // outbound (seed)
@@ -115,12 +127,12 @@ connector::ptr net::create_manual_connector() NOEXCEPT
 connectors_ptr net::create_connectors(size_t count) NOEXCEPT
 {
     const auto& settings = network_settings();
-    const auto timeout = settings.connect_timeout();
     const auto connects = to_shared<connectors>();
     connects->reserve(count);
 
     for (size_t connect{}; connect < count; ++connect)
-        connects->push_back(create_connector(settings.outbound, timeout,
+        connects->push_back(create_connector(settings.outbound,
+            settings.connect_timeout(),
             settings.outbound.maximum_request));
 
     return connects;

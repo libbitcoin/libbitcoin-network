@@ -117,9 +117,9 @@ public:
         return session_peer::stranded();
     }
 
-    acceptor::ptr create_acceptor() NOEXCEPT override
+    acceptor::ptr create_acceptor(const socket::context& context) NOEXCEPT override
     {
-        return session_peer::create_acceptor();
+        return session_peer::create_acceptor(context);
     }
 
     connector::ptr create_seed_connector() NOEXCEPT override
@@ -206,10 +206,10 @@ class mock_net
 public:
     using net::net;
 
-    acceptor::ptr create_acceptor() NOEXCEPT override
+    acceptor::ptr create_acceptor(const socket::context& context) NOEXCEPT override
     {
         ++acceptors_;
-        return net::create_acceptor();
+        return net::create_acceptor(context);
     }
 
     connector::ptr create_connector(const settings::socks5& socks,
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
     settings set(selection::mainnet);
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_acceptor());
+    BOOST_REQUIRE(session.create_acceptor({}));
     BOOST_REQUIRE_EQUAL(net.acceptors(), 1u);
 }
 
@@ -612,7 +612,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     auto session = std::make_shared<mock_session>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->network_settings(), options);
 
     std::promise<code> started_channel;
@@ -668,7 +669,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->network_settings(), options);
 
     // Stop the channel (started by default).
@@ -758,7 +760,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->network_settings(), options);
     
     std::promise<code> started_channel;
@@ -840,7 +843,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->network_settings(), options);
     
     std::promise<code> started_channel;
@@ -924,7 +928,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.log, net.service(), 42);
+    socket::parameters params{ .maximum_request = 42 };
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->network_settings(), options);
     
     std::promise<code> started_channel;

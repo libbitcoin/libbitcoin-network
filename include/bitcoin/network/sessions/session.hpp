@@ -187,7 +187,8 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Create a channel acceptor (inbound).
-    virtual acceptor::ptr create_acceptor() NOEXCEPT;
+    virtual acceptor::ptr create_acceptor(
+        const socket::context& context={}) NOEXCEPT;
 
     /// Create a seed channel connector.
     virtual connector::ptr create_seed_connector() NOEXCEPT;
@@ -214,7 +215,6 @@ protected:
     asio::strand& strand() NOEXCEPT;
 
 protected:
-    // TODO: it would be preferrable for these to be made private again.
     virtual void handle_channel_starting(const code& ec,
         const channel::ptr& channel, const result_handler& started,
         const result_handler& stopped) NOEXCEPT;

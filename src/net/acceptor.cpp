@@ -24,8 +24,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/channels/channel.hpp>
-#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/net/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -42,12 +41,12 @@ using namespace std::placeholders;
 // Calls are stranded to protect the acceptor member.
 
 acceptor::acceptor(const logger& log, asio::strand& strand,
-    asio::context& service, size_t maximum_request,
-    std::atomic_bool& suspended) NOEXCEPT
-  : maximum_(maximum_request),
+    asio::context& service, std::atomic_bool& suspended,
+    parameters&& parameters) NOEXCEPT
+  : strand_(strand),
     service_(service),
-    strand_(strand),
     suspended_(suspended),
+    parameters_(std::move(parameters)),
     acceptor_(strand_),
     reporter(log),
     tracker<acceptor>(log)
@@ -75,13 +74,13 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
         return error::operation_failed;
 
     boost_code ec{};
-    const auto isv6 = point.address().is_v6();
+    const auto ipv6 = point.address().is_v6();
 
     // Open the socket.
     acceptor_.open(point.protocol(), ec);
 
     // An ipv6 socket cannot also accept IPv4 connections.
-    if (!ec && isv6)
+    if (!ec && ipv6)
         acceptor_.set_option(asio::v6_only(true), ec);
 
     if (!ec)
@@ -150,9 +149,9 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
         return;
     }
 
-    // Create the socket.
+    // Create the inbound socket.
     const auto socket = std::make_shared<network::socket>(log, service_,
-        maximum_);
+        parameters_);
 
     // Posts handle_accept to the acceptor's strand.
     // Establishes a socket connection by waiting on the socket.
@@ -165,7 +164,15 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
 void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
     const socket_handler& handler) NOEXCEPT
 {
-    BC_ASSERT(stranded());
+    // Return from socket handshake (TLS) is socket-stranded.
+    // Return from socket accept (no TLS) is acceptor (network) stranded.
+    if (!stranded())
+    {
+        boost::asio::post(strand_,
+            std::bind(&acceptor::handle_accept,
+                shared_from_this(), ec, socket, handler));
+        return;
+    }
 
     if (ec)
     {
