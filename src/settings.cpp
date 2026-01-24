@@ -89,15 +89,15 @@ code settings::tls_server::initialize_context() const NOEXCEPT
     context->use_certificate_chain_file(certificate_path.string(), ec);
     if (ec) return error::tls_use_certificate;
 
-    constexpr auto pem = asio::ssl::context::pem;
-    context->use_private_key_file(key_path.string(), pem, ec);
-    if (ec) return error::tls_use_private_key;
-
     if (!key_password.empty())
     {
         context->set_password_callback([&](auto, auto){ return key_password; });
         if (ec) return error::tls_use_private_key;
     }
+
+    constexpr auto pem = asio::ssl::context::pem;
+    context->use_private_key_file(key_path.string(), pem, ec);
+    if (ec) return error::tls_use_private_key;
 
     if (authenticate)
     {

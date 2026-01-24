@@ -173,8 +173,11 @@ src_libbitcoin_network_la_SOURCES = \
     src/ssl/wolfssl/wolfcrypt/kdf.c \
     src/ssl/wolfssl/wolfcrypt/logging.c \
     src/ssl/wolfssl/wolfcrypt/memory.c \
+    src/ssl/wolfssl/wolfcrypt/pkcs12.c \
     src/ssl/wolfssl/wolfcrypt/poly1305.c \
+    src/ssl/wolfssl/wolfcrypt/pwdbased.c \
     src/ssl/wolfssl/wolfcrypt/random.c \
+    src/ssl/wolfssl/wolfcrypt/sha.c \
     src/ssl/wolfssl/wolfcrypt/sha256.c \
     src/ssl/wolfssl/wolfcrypt/sha512.c \
     src/ssl/wolfssl/wolfcrypt/signature.c \

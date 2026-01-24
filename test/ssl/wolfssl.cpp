@@ -124,6 +124,45 @@ BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
 }
 #endif
 
+// This can be used to generate an encrypted key for testing.
+// Key is deleted after test by current_directory_setup_fixture.
+BOOST_AUTO_TEST_CASE(encrypt_ecc_key)
+{
+    wolfSSL_Init();
+
+    // Load unencrypted private key from file.
+    auto in_fp = fopen(CERT_PREFIX "certs/server-ecc384-key.pem", "rb");
+    BOOST_REQUIRE(!is_null(in_fp));
+
+    auto pkey = PEM_read_PrivateKey(in_fp, nullptr, nullptr, nullptr);
+    fclose(in_fp);
+    BOOST_REQUIRE(!is_null(pkey));
+
+    // Ensure it's an ECC key (optional).
+    auto ec_key = EVP_PKEY_get1_EC_KEY(pkey);
+    BOOST_REQUIRE(!is_null(ec_key));
+    EC_KEY_free(ec_key);
+
+    // Create BIO for output file.
+    auto out = BIO_new_file("server-ecc384-key-enc.pem", "wb");
+    BOOST_REQUIRE(!is_null(out));
+
+    // Write encrypted PEM using AES-256-CBC encryption.
+    using namespace system;
+    std::string password{ "libbitcoin" };
+    const auto cipher = EVP_aes_256_cbc();
+    const auto data = pointer_cast<uint8_t>(password.data());
+    const auto size = possible_narrow_sign_cast<int>(password.size());
+    const auto result = PEM_write_bio_PrivateKey(out, pkey, cipher, data, size, nullptr, nullptr);
+
+    // Clean up BIO and key.
+    BIO_free(out);
+    EVP_PKEY_free(pkey);
+    BOOST_REQUIRE_EQUAL(result, 1);
+
+    wolfSSL_Cleanup();
+}
+
 #endif // HAVE_MSC
 
 BOOST_AUTO_TEST_SUITE_END()
