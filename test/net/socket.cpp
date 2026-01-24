@@ -31,11 +31,6 @@ public:
         return strand_;
     }
 
-    const auto get_tcp() NOEXCEPT
-    {
-        return network::socket::get_tcp();
-    }
-
     const config::endpoint& get_endpoint() const NOEXCEPT
     {
         return endpoint_;
