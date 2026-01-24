@@ -191,10 +191,11 @@ void channel_http::assign_json_buffer(response& response) NOEXCEPT
 void channel_http::log_message(const request& LOG_ONLY(request),
     size_t LOG_ONLY(bytes)) const NOEXCEPT
 {
+    LOG_ONLY(const auto scheme = secure() ? "https" : "http";)
     LOG_ONLY(const auto version = "http/" + serialize(request.version() / 10) +
         "." + serialize(request.version() % 10);)
-        
-    LOGA("Http [" << request.method_string()
+
+    LOGA(scheme << " [" << request.method_string()
         << "] " << version
         << " (" << (request.chunked() ? "c" : serialize(bytes))
         << ") " << (request.keep_alive() ? "keep" : "drop")
@@ -206,10 +207,11 @@ void channel_http::log_message(const request& LOG_ONLY(request),
 void channel_http::log_message(const response& LOG_ONLY(response),
     size_t LOG_ONLY(bytes)) const NOEXCEPT
 {
+    LOG_ONLY(const auto scheme = secure() ? "https" : "http";)
     LOG_ONLY(const auto version = "http/" + serialize(response.version() / 10)
         + "." + serialize(response.version() % 10);)
-        
-    LOGA("Http [" << status_string(response.result())
+
+    LOGA(scheme << " [" << status_string(response.result())
         << "] " << version
         << " (" << (response.chunked() ? "c" : serialize(bytes))
         << ") " << (response.keep_alive() ? "keep" : "drop")

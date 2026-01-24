@@ -82,6 +82,9 @@ public:
     /// The proxy (socket) is stopped.
     bool stopped() const NOEXCEPT;
 
+    /// Connection is currently secured (TLS or comparable for socket type).
+    bool secure() const NOEXCEPT;
+
     /// The number of bytes in the write backlog.
     uint64_t backlog() const NOEXCEPT;
 

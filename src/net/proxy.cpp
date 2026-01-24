@@ -365,6 +365,11 @@ bool proxy::stranded() const NOEXCEPT
     return socket_->stranded();
 }
 
+bool proxy::secure() const NOEXCEPT
+{
+    return socket_->secure();
+}
+
 uint64_t proxy::backlog() const NOEXCEPT
 {
     return backlog_.load(std::memory_order_relaxed);
