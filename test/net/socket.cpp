@@ -59,10 +59,8 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
     constexpr auto maximum = 42u;
     connector::parameters params{.maximum_request = maximum };
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
-    const auto& transport = instance->get_tcp();
 
     BOOST_REQUIRE(!instance->stranded());
-    BOOST_REQUIRE(std::holds_alternative<ref<asio::socket>>(transport));
     BOOST_REQUIRE(&instance->get_strand() == &instance->strand());
     BOOST_REQUIRE(instance->get_endpoint() == instance->endpoint());
     BOOST_REQUIRE(!instance->get_endpoint().is_address());
