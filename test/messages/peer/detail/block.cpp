@@ -20,20 +20,20 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_block_tests)
 
-using namespace network::messages::peer;
+using namespace network::messages;
 
 BOOST_AUTO_TEST_CASE(block__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(block::command, "block");
-    BOOST_REQUIRE(block::id == identifier::block);
-    BOOST_REQUIRE_EQUAL(block::version_minimum, level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(block::version_maximum, level::maximum_protocol);
+    BOOST_REQUIRE_EQUAL(peer::block::command, "block");
+    BOOST_REQUIRE(peer::block::id == peer::identifier::block);
+    BOOST_REQUIRE_EQUAL(peer::block::version_minimum, peer::level::minimum_protocol);
+    BOOST_REQUIRE_EQUAL(peer::block::version_maximum, peer::level::maximum_protocol);
 }
 
 BOOST_AUTO_TEST_CASE(block__size__default__zero)
 {
-    BOOST_REQUIRE_EQUAL(block{}.size(level::canonical, true), zero);
-    BOOST_REQUIRE_EQUAL(block{}.size(level::canonical, false), zero);
+    BOOST_REQUIRE_EQUAL(peer::block{}.size(peer::level::canonical, true), zero);
+    BOOST_REQUIRE_EQUAL(peer::block{}.size(peer::level::canonical, false), zero);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

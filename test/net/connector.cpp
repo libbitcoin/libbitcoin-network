@@ -60,7 +60,8 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
     constexpr auto maximum = 42u;
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), seconds(10), maximum, suspended);
+    connector::parameters params{ .connect_timeout = seconds(10), .maximum_request = maximum };
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
@@ -76,7 +77,8 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address_suspended__servic
     threadpool pool(2);
     std::atomic_bool suspended{ true };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), microseconds(1), 42, suspended);
+    connector::parameters params{ .connect_timeout = microseconds(1), .maximum_request = 42 };
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -105,7 +107,8 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeou
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), microseconds(1), 42, suspended);
+    connector::parameters params{ .connect_timeout = microseconds(1), .maximum_request = 42 };
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -135,7 +138,8 @@ BOOST_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_ti
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), microseconds(1), 42, suspended);
+    connector::parameters params{ .connect_timeout = microseconds(1), .maximum_request = 42 };
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
     boost::asio::post(strand, [&, instance]() NOEXCEPT
@@ -165,7 +169,8 @@ BOOST_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), microseconds(1), 42, suspended);
+    connector::parameters params{ .connect_timeout = microseconds(1), .maximum_request = 42 };
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
     boost::asio::post(strand, [&, instance]() NOEXCEPT
@@ -193,7 +198,8 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_can
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), seconds(1000), 42, suspended);
+    connector::parameters params{ .connect_timeout = seconds(1000), .maximum_request = 42 };
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
     boost::asio::post(strand, [&, instance]()NOEXCEPT
@@ -222,7 +228,8 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), seconds(1000), 42, suspended);
+    connector::parameters params{ .connect_timeout = seconds(1000), .maximum_request = 42 };
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
     boost::asio::post(strand, [&, instance]() NOEXCEPT

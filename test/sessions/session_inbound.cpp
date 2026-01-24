@@ -73,7 +73,9 @@ public:
     void accept(socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
-        const auto socket = std::make_shared<network::socket>(log, service_, 42);
+        socket::parameters params{ .maximum_request = 42 };
+        const auto socket = std::make_shared<network::socket>(log, service_,
+            std::move(params));
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.

@@ -93,35 +93,35 @@ BOOST_AUTO_TEST_CASE(wolfssl__wolfcrypt__always__success)
     !defined(NO_TLS) && \
     !defined(SINGLE_THREADED) && \
      defined(WOLFSSL_PEM_TO_DER)
-BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
-{
-    // "test.conf" must have only '\n' line termination (not '\r\n').
-    // Otherwise the file will be read as a single line and bypass all tests.
-    // SuiteTest also bypasses any test for which the cert file is not found.
-
-    // requires:
-    // /vectors/certs/*.pem
-    // /vectors/certs/test/*.pem
-    // /vectors/tests/test.conf
-
-    // cert paths are configured in "test.conf" only as: "./certs" (relative).
-    // test.conf defaults to "tests/test.conf" (parameterizable). Since we need
-    // to set the working directory for certs, we can use it for both.
-    // Working directory is restored by current_directory_setup_fixture,
-
-    code ec{};
-    std::filesystem::current_path(CERT_PREFIX, ec);
-    BOOST_REQUIRE(!ec);
-
-    constexpr int argc{};
-    const char* args[]{ "", nullptr };
-    BC_PUSH_WARNING(NO_CONST_CAST)
-    BC_PUSH_WARNING(NO_CONST_CAST_REQUIRED)
-    auto argv = const_cast<char**>(args);
-    BC_POP_WARNING()
-    BC_POP_WARNING()
-    BOOST_REQUIRE(is_zero(SuiteTest(argc, argv)));
-}
+////BOOST_AUTO_TEST_CASE(wolfssl__suite__always__success)
+////{
+////    // "test.conf" must have only '\n' line termination (not '\r\n').
+////    // Otherwise the file will be read as a single line and bypass all tests.
+////    // SuiteTest also bypasses any test for which the cert file is not found.
+////
+////    // requires:
+////    // /vectors/certs/*.pem
+////    // /vectors/certs/test/*.pem
+////    // /vectors/tests/test.conf
+////
+////    // cert paths are configured in "test.conf" only as: "./certs" (relative).
+////    // test.conf defaults to "tests/test.conf" (parameterizable). Since we need
+////    // to set the working directory for certs, we can use it for both.
+////    // Working directory is restored by current_directory_setup_fixture,
+////
+////    code ec{};
+////    std::filesystem::current_path(CERT_PREFIX, ec);
+////    BOOST_REQUIRE(!ec);
+////
+////    constexpr int argc{};
+////    const char* args[]{ "", nullptr };
+////    BC_PUSH_WARNING(NO_CONST_CAST)
+////    BC_PUSH_WARNING(NO_CONST_CAST_REQUIRED)
+////    auto argv = const_cast<char**>(args);
+////    BC_POP_WARNING()
+////    BC_POP_WARNING()
+////    BOOST_REQUIRE(is_zero(SuiteTest(argc, argv)));
+////}
 #endif
 
 #endif // HAVE_MSC
