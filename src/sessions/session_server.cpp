@@ -85,13 +85,13 @@ void session_server::handle_started(const code& ec,
 
     if (options_.secure())
     {
-        if (const auto code = options_.initialize())
+        if (const auto code = options_.initialize_context())
         {
             handler(code);
             return;
         }
 
-        if (const auto code = do_accept(options_.safes, options_.context))
+        if (const auto code = do_accept(options_.safes, *options_.context))
         {
             handler(code);
             return;

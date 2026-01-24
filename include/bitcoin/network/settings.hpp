@@ -105,14 +105,14 @@ struct BCT_API settings
         /// Require client authentication.
         bool authenticate{};
 
-        /// Thread safe after initialize().
-        mutable asio::ssl::context context{ asio::ssl::version };
-
-        /// Initialize the ssl::context (const-mutable).
-        virtual code initialize() const NOEXCEPT;
-
         /// False if binds, certificate_path, or key_path is empty.
         virtual bool secure() const NOEXCEPT;
+
+        /// Initialize the ssl::context (required before use).
+        virtual code initialize_context() const NOEXCEPT;
+
+        /// Thread safe socket ssl context (deferred construction).
+        mutable std::unique_ptr<asio::ssl::context> context{};
     };
 
     struct http_server

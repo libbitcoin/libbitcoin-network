@@ -73,39 +73,43 @@ steady_clock::duration settings::tcp_server::expiration() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-code settings::tls_server::initialize() const NOEXCEPT
+code settings::tls_server::initialize_context() const NOEXCEPT
 {
+    if (context)
+        return error::operation_failed;
+
+    context = std::make_unique<asio::ssl::context>(asio::ssl::version);
     if (!secure())
         return error::success;
 
     boost_code ec{};
-    context.set_options(asio::ssl::options, ec);
+    context->set_options(asio::ssl::options, ec);
     if (ec) return error::tls_set_options;
 
-    context.use_certificate_chain_file(certificate_path.string(), ec);
+    context->use_certificate_chain_file(certificate_path.string(), ec);
     if (ec) return error::tls_use_certificate;
 
     constexpr auto pem = asio::ssl::context::pem;
-    context.use_private_key_file(key_path.string(), pem, ec);
+    context->use_private_key_file(key_path.string(), pem, ec);
     if (ec) return error::tls_use_private_key;
 
     if (!key_password.empty())
     {
-        context.set_password_callback([&](auto, auto){ return key_password; });
+        context->set_password_callback([&](auto, auto){ return key_password; });
         if (ec) return error::tls_use_private_key;
     }
 
     if (authenticate)
     {
-        context.set_verify_mode(asio::ssl::authenticate);
+        context->set_verify_mode(asio::ssl::authenticate);
         if (certificate_authority.empty())
         {
-            context.set_default_verify_paths(ec);
+            context->set_default_verify_paths(ec);
             if (ec) return error::tls_set_default_verify;
         }
         else
         {
-            context.add_verify_path(certificate_authority.string(), ec);
+            context->add_verify_path(certificate_authority.string(), ec);
             if (ec) return error::tls_set_add_verify;
         }
     }
