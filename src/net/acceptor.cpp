@@ -74,13 +74,13 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
         return error::operation_failed;
 
     boost_code ec{};
-    const auto isv6 = point.address().is_v6();
+    const auto ipv6 = point.address().is_v6();
 
     // Open the socket.
     acceptor_.open(point.protocol(), ec);
 
     // An ipv6 socket cannot also accept IPv4 connections.
-    if (!ec && isv6)
+    if (!ec && ipv6)
         acceptor_.set_option(asio::v6_only(true), ec);
 
     if (!ec)
