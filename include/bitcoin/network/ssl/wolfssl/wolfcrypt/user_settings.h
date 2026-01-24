@@ -147,6 +147,10 @@
     ////#ifndef WOLFSSL_CERT_LOG_ENABLED_DEFAULT
     ////#define WOLFSSL_CERT_LOG_ENABLED_DEFAULT 1
     ////#endif
+
+    // These don't compile in vc++ (undefined pthread_mutex_lock).
+    ////#define WOLFSSL_TRACK_MEMORY
+    ////#define WOLFSSL_DEBUG_MEMORY
 #endif
 
 /// WolfSSL tests.
