@@ -582,10 +582,19 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\memory.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\pkcs12.c">
+      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\poly1305.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\pwdbased.c">
+      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\random.c">
+      <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha.c">
       <Filter>src\ssl\wolfssl\wolfcrypt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha256.c">

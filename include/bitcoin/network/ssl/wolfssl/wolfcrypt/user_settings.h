@@ -106,18 +106,19 @@
 /* Remove unused or undesired components. */
 #define WOLFSSL_NO_CLIENT_AUTH
 #define NO_SESSION_CACHE
-#define NO_PWDBASED
 #define NO_OLD_TLS
 #define NO_OCSP
 #define NO_DES3
 #define NO_PSK
-#define NO_SHA
 #define NO_DSA
 #define NO_RSA
 #define NO_MD4
 #define NO_MD5
 #define NO_RC4
 #define NO_DH
+
+// SHA1 required for key signing test code (only).
+//#define NO_SHA
 
 #ifdef _MSC_VER
     /* Warnings emitted due to missing define in vc++. */

@@ -271,8 +271,11 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\memory.c">
       <ObjectFileName>$(IntDir)src_ssl_wolfssl_wolfcrypt_memory.c.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\pkcs12.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\poly1305.c" />
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\pwdbased.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\random.c" />
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha256.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\sha512.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\signature.c" />
