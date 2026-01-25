@@ -122,7 +122,7 @@ bool settings::tls_server::secure() const NOEXCEPT
 
 bool settings::tls_server::authenticate() const NOEXCEPT
 {
-    return !certificate_authorities.empty();
+    return secure() && !certificate_authorities.empty();
 }
 
 // http_server
