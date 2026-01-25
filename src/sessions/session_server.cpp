@@ -108,6 +108,9 @@ code session_server::do_accept(const config::authorities& binds,
 {
     BC_ASSERT(stranded());
 
+    // Currently only ssl context is secure.
+    const auto secure = std::holds_alternative<ref<asio::ssl::context>>(context);
+
     for (const auto& bind: binds)
     {
         const auto acceptor = create_acceptor(context);
@@ -116,8 +119,8 @@ code session_server::do_accept(const config::authorities& binds,
         if (const auto ec = acceptor->start(bind))
             return ec;
 
-        LOGN("Bound to " << name_ << " endpoint ["
-            << acceptor->local() << "].");
+        LOGN("Bound to " << (secure ? "private " : "clear ")
+            << name_ << " endpoint [" << acceptor->local() << "].");
 
         // Subscribe acceptor to stop desubscriber.
         subscribe_stop([=](const code&) NOEXCEPT
@@ -126,7 +129,7 @@ code session_server::do_accept(const config::authorities& binds,
             return false;
         });
 
-        start_accept(error::success, acceptor);
+        start_accept(error::success, acceptor, secure);
     }
 
     return error::success;
@@ -137,7 +140,7 @@ code session_server::do_accept(const config::authorities& binds,
 
 // Attempt to accept peers on each configured endpoint.
 void session_server::start_accept(const code&,
-    const acceptor::ptr& acceptor) NOEXCEPT
+    const acceptor::ptr& acceptor, bool secure) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -145,11 +148,11 @@ void session_server::start_accept(const code&,
     if (stopped())
         return;
 
-    acceptor->accept(BIND(handle_accepted, _1, _2, acceptor));
+    acceptor->accept(BIND(handle_accepted, _1, _2, acceptor, secure));
 }
 
 void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
-    const acceptor::ptr& acceptor) NOEXCEPT
+    const acceptor::ptr& acceptor, bool secure) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -164,7 +167,7 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     if (ec == error::service_suspended)
     {
         ////LOGS("Suspended " << name_ << " channel start.");
-        defer(BIND(start_accept, _1, acceptor));
+        defer(BIND(start_accept, _1, acceptor, secure));
         return;
     }
 
@@ -172,16 +175,18 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     if (ec)
     {
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
-        LOGF("Failed to accept " << name_ << " connection, " << ec.message());
-        defer(BIND(start_accept, _1, acceptor));
+        LOGF("Failed to accept " << (secure ? "private " : "clear ")
+            << name_ << " connection, " << ec.message());
+        defer(BIND(start_accept, _1, acceptor, secure));
         return;
     }
 
     if (!enabled())
     {
-        LOGS("Dropping " << name_ << " connection (disabled).");
+        LOGS("Dropping " << (secure ? "private " : "clear ")
+            << name_ << " connection (disabled).");
         socket->stop();
-        defer(BIND(start_accept, _1, acceptor));
+        defer(BIND(start_accept, _1, acceptor, secure));
         return;
     }
 
@@ -189,10 +194,11 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     // Could instead stop listening when at limit, though this is simpler.
     if (channel_count_ >= options_.connections)
     {
-        LOGS("Dropping oversubscribed " << name_ << " connection ["
-            << socket->endpoint() << "].");
+        LOGS("Dropping " << (secure ? "private " : "clear ")
+            << name_ << " connection [" << socket->endpoint()
+            << "] (oversubscribed).");
         socket->stop();
-        defer(BIND(start_accept, _1, acceptor));
+        defer(BIND(start_accept, _1, acceptor, secure));
         return;
     }
 
@@ -200,7 +206,7 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     {
         ////LOGS("Dropping not whitelisted peer [" << socket->endpoint() << "].");
         socket->stop();
-        start_accept(error::success, acceptor);
+        start_accept(error::success, acceptor, secure);
         return;
     }
 
@@ -208,18 +214,19 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     {
         ////LOGS("Dropping blacklisted peer [" << socket->endpoint() << "].");
         socket->stop();
-        start_accept(error::success, acceptor);
+        start_accept(error::success, acceptor, secure);
         return;
     }
 
     // Creates channel_xxxx cast as channel::ptr.
     const auto channel = create_channel(socket);
 
-    LOGS("Accepted " << name_ << " connection [" << channel->endpoint()
+    LOGS("Accepted " << (secure ? "private " : "clear ") 
+        << name_ << " connection [" << channel->endpoint()
         << "] on binding [" << acceptor->local() << "].");
 
     // There was no error, so listen again without delay.
-    start_accept(error::success, acceptor);
+    start_accept(error::success, acceptor, secure);
 
     start_channel(channel,
         BIND(handle_channel_start, _1, channel),

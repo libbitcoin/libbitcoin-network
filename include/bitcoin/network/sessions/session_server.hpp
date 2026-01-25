@@ -57,7 +57,7 @@ protected:
 
     /// Start accepting based on constructed configuration (called from start).
     virtual void start_accept(const code& ec,
-        const acceptor::ptr& acceptor) NOEXCEPT;
+        const acceptor::ptr& acceptor, bool secure) NOEXCEPT;
 
     /// Channel sequence.
     /// -----------------------------------------------------------------------
@@ -89,7 +89,7 @@ private:
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_accepted(const code& ec, const socket::ptr& socket,
-        const acceptor::ptr& acceptor) NOEXCEPT;
+        const acceptor::ptr& acceptor, bool secure) NOEXCEPT;
 
     // Completion sequence.
     void handle_channel_start(const code& ec,
