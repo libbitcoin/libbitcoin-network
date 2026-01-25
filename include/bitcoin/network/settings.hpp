@@ -90,23 +90,23 @@ struct BCT_API settings
         /// Transport layer security bindings.
         config::authorities safes{};
 
-        /// Path to server certificate file (PEM).
-        std::filesystem::path certificate_path{};
+        /// Path to server private key decryption password (optional).
+        std::string key_pass{};
 
         /// Path to server private key file (PEM).
         std::filesystem::path key_path{};
 
-        /// Path to server private key decryption password (optional).
-        std::string key_password{};
+        /// Path to server certificate file (PEM).
+        std::filesystem::path cert_path{};
 
-        /// Path to custom CA for client authentication (optional).
-        std::filesystem::path certificate_authority{};
-
-        /// Require client authentication.
-        bool authenticate{};
+        /// Directory for CA certificates for client authentication (optional).
+        std::filesystem::path cert_auth{};
 
         /// False if binds, certificate_path, or key_path is empty.
         virtual bool secure() const NOEXCEPT;
+
+        /// Requires client authentication (certificate authority specified).
+        virtual bool authenticate() const NOEXCEPT;
 
         /// Initialize the ssl::context (required before use).
         virtual code initialize_context() const NOEXCEPT;

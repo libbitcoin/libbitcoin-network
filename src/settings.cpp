@@ -86,30 +86,27 @@ code settings::tls_server::initialize_context() const NOEXCEPT
     context->set_options(asio::ssl::options, ec);
     if (ec) return error::tls_set_options;
 
-    context->use_certificate_chain_file(certificate_path.string(), ec);
+    context->use_certificate_chain_file(cert_path.string(), ec);
     if (ec) return error::tls_use_certificate;
 
-    if (!key_password.empty())
-    {
-        context->set_password_callback([&](auto, auto){ return key_password; });
-        if (ec) return error::tls_use_private_key;
-    }
+    if (!key_pass.empty())
+        context->set_password_callback([&](auto, auto){ return key_pass; });
 
     constexpr auto pem = asio::ssl::context::pem;
     context->use_private_key_file(key_path.string(), pem, ec);
     if (ec) return error::tls_use_private_key;
 
-    if (authenticate)
+    if (authenticate())
     {
         context->set_verify_mode(asio::ssl::authenticate);
-        if (certificate_authority.empty())
+        if (cert_auth.empty())
         {
             context->set_default_verify_paths(ec);
             if (ec) return error::tls_set_default_verify;
         }
         else
         {
-            context->add_verify_path(certificate_authority.string(), ec);
+            context->add_verify_path(cert_auth.string(), ec);
             if (ec) return error::tls_set_add_verify;
         }
     }
@@ -120,7 +117,12 @@ BC_POP_WARNING();
 
 bool settings::tls_server::secure() const NOEXCEPT
 {
-    return !safes.empty() && !certificate_path.empty() && !key_path.empty();
+    return !safes.empty() && !cert_path.empty() && !key_path.empty();
+}
+
+bool settings::tls_server::authenticate() const NOEXCEPT
+{
+    return secure() && !cert_auth.empty();
 }
 
 // http_server

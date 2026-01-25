@@ -79,9 +79,10 @@ void session_server::handle_started(const code& ec,
     }
 
     LOGN("Accepting " << options_.connections << " " << name_
-        << " connections on "
-        << options_.binds.size() << " clear and "
-        << options_.safes.size() << " safe bindings.");
+        << " connections on " << options_.binds.size()
+        << " clear and " << options_.safes.size()
+        << (options_.authenticate() ? " authenticated " : " private ")
+        << "bindings.");
 
     if (options_.secure())
     {
