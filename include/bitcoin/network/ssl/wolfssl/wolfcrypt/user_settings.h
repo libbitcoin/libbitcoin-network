@@ -137,11 +137,13 @@
 
 /// Debugging information.
 #if !defined(NDEBUG)
-    // This will crash msvcrt on initialization if locale has been set.
-    // Work around using logging callback and avoid locale-dependent writes.
+    // This will crash msvcrt on initialization if locale has been set due to
+    // direct stdio writes. Disable set_utf8_stdio() in main to prevent this.
+    // The result will be console interleaving with the libbitcoin log and lack
+    // of utf8 everywhere support at the console.
     ////#define DEBUG_WOLFSSL
 
-    // These require DEBUG_WOLFSSL.
+    ////// These require DEBUG_WOLFSSL.
     ////#ifndef WOLFSSL_LOGGINGENABLED_DEFAULT
     ////#define WOLFSSL_LOGGINGENABLED_DEFAULT 1
     ////#endif
