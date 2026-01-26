@@ -28,6 +28,8 @@
 namespace libbitcoin {
 namespace network {
 
+using namespace std::placeholders;
+
 // Shared pointers required in handler parameters so closures control lifetime.
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
@@ -105,8 +107,10 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
     identity_ = request->message.id;
     version_ = request->message.jsonrpc;
 
+    LOGA("Rpc request: [" << bytes << "] "
+        << request->message.method << "(...).");
+
     reading_ = false;
-    log_message(*request, bytes);
     dispatch(request);
 }
 
@@ -129,9 +133,26 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+void CLASS::send_code(const code& ec) NOEXCEPT
+{
+    send_code(ec, std::bind(&CLASS::complete, _1));
+}
+
+TEMPLATE
+void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
+{
+    send_error(std::move(error), std::bind(&CLASS::complete, _1));
+}
+
+TEMPLATE
+void CLASS::send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT
+{
+    send_result(std::move(result), size_hint, std::bind(&CLASS::complete, _1));
+}
+
+TEMPLATE
 void CLASS::send_code(const code& ec, result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT(stranded());
     send_error({ .code = ec.value(), .message = ec.message() },
         std::move(handler));
 }
@@ -141,7 +162,6 @@ void CLASS::send_error(rpc::result_t&& error,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    using namespace std::placeholders;
     send({ .jsonrpc = version_, .id = identity_, .error = std::move(error) },
         two * error.message.size(), std::move(handler));
 }
@@ -151,7 +171,6 @@ void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    using namespace std::placeholders;
     send({ .jsonrpc = version_, .id = identity_, .result = std::move(result) },
         size_hint, std::move(handler));
 }
@@ -162,7 +181,6 @@ inline void CLASS::send(rpc::response_t&& model, size_t size_hint,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    using namespace std::placeholders;
     const auto out = assign_message(std::move(model), size_hint);
     count_handler complete = std::bind(&CLASS::handle_send,
         shared_from_base<CLASS>(), _1, _2, out, std::move(handler));
@@ -183,10 +201,12 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
 {
     BC_ASSERT(stranded());
     if (ec) stop(ec);
-    log_message(*response, bytes);
 
     // Typically a noop, but handshake may pause channel here.
     handler(ec);
+
+    LOGA("Rpc response: [" << bytes << "], " << 
+        response->message.error.value_or(rpc::result_t{}).message);
 
     // Continue read loop (does not unpause or restart channel).
     receive();
@@ -203,27 +223,6 @@ inline rpc::response_ptr CLASS::assign_message(rpc::response_t&& message,
     ptr->message = std::move(message);
     ptr->buffer = response_buffer_;
     return ptr;
-}
-
-// log helpers
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-inline void CLASS::log_message(const rpc::request& LOG_ONLY(request),
-    size_t LOG_ONLY(bytes)) const NOEXCEPT
-{
-    LOGA("Rpc request: [" << bytes << "] "
-        << request.message.method << "(...).");
-}
-
-TEMPLATE
-inline void CLASS::log_message(const rpc::response& LOG_ONLY(response),
-    size_t LOG_ONLY(bytes)) const NOEXCEPT
-{
-    LOG_ONLY(const auto message = response.message.error.has_value() ?
-        response.message.error.value().message : "success");
-
-    LOGA("Rpc response: [" << bytes << "], " << message << ".");
 }
 
 BC_POP_WARNING()
