@@ -145,15 +145,9 @@ void socket::do_rpc_write(boost_code ec, size_t total,
         return;
     }
 
-    // Finished.
-    if (!buffer->second)
-    {
-        handler(error::success, total);
-        return;
-    }
-
+    BC_ASSERT(buffer.has_value());
     VARIANT_DISPATCH_METHOD(get_tcp(),
-        async_write_some(buffer->first,
+        async_write_some(buffer.value().first,
             std::bind(&socket::handle_rpc_write,
                 shared_from_this(), _1, _2, total, out, handler)));
 }
@@ -167,6 +161,12 @@ void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
     if (error::asio_is_canceled(ec))
     {
         handler(error::channel_stopped, total);
+        return;
+    }
+
+    if (!ec && out->writer.done())
+    {
+        handler(error::success, total);
         return;
     }
 
