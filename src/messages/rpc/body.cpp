@@ -195,6 +195,7 @@ init(boost_code& ec) NOEXCEPT
         return;
     }
 
+    set_terminator_ = false;
     serializer_.reset(&value_.model);
 }
 
@@ -203,19 +204,29 @@ body<rpc::response_t>::writer::out_buffer
 body<rpc::response_t>::writer::
 get(boost_code& ec) NOEXCEPT
 {
-    auto out = base::writer::get(ec);
-    if (ec || !terminate_) return out;
+    auto out = base::writer::done() ? out_buffer{} : base::writer::get(ec);
+    if (ec) return out;
 
-    constexpr char more = true;
-    if (out)
+    // Override json reader !more so terminator can be added.
+    if (out.has_value())
     {
-        out->second = more;
+        out.value().second = true;
         return out;
     }
 
+    // Add terminator and signal done.
+    set_terminator_ = true;
     using namespace boost::asio;
     static constexpr auto line = '\n';
-    return out_buffer{ std::make_pair(buffer(&line, sizeof(line)), !more) };
+    return out_buffer{ std::make_pair(buffer(&line, sizeof(line)), false) };
+}
+
+template <>
+bool body<rpc::response_t>::writer::
+done() const NOEXCEPT
+{
+    // Done is redundant with !out.second, but provides a cleaner interface.
+    return base::writer::done() && (!terminate_ || set_terminator_);
 }
 
 template <>
@@ -229,6 +240,14 @@ template <>
 body<rpc::request_t>::writer::out_buffer
 body<rpc::request_t>::writer::
 get(boost_code&) NOEXCEPT
+{
+    BC_ASSERT(false);
+    return {};
+}
+
+template <>
+bool body<rpc::request_t>::writer::
+done() const NOEXCEPT
 {
     BC_ASSERT(false);
     return {};

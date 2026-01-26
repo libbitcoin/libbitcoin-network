@@ -105,6 +105,7 @@ struct body
         virtual ~writer() = default;
         virtual void init(boost_code& ec) NOEXCEPT;
         virtual out_buffer get(boost_code& ec) NOEXCEPT;
+        virtual bool done() const NOEXCEPT;
         
     protected:
         value_type& value_;

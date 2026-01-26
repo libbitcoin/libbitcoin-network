@@ -45,7 +45,8 @@ namespace http
     using empty_body = boost::beast::http::empty_body;
 
     /// beast::http::vector_body<uint8_t, bc::allocator<uint8_t>>
-    using chunk_body = boost::beast::http::vector_body<uint8_t, allocator<uint8_t>>;
+    using chunk_body = boost::beast::http::vector_body<uint8_t,
+        allocator<uint8_t>>;
 
     /// beast::http::file_body
     using file_body = boost::beast::http::file_body;

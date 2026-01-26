@@ -94,9 +94,11 @@ struct BCT_API body
 
         void init(boost_code& ec) NOEXCEPT override;
         out_buffer get(boost_code& ec) NOEXCEPT override;
+        bool done() const NOEXCEPT override;
 
     private:
         const bool terminate_{};
+        bool set_terminator_{};
     };
 };
 

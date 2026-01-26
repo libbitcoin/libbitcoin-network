@@ -152,11 +152,13 @@ TEMPLATE
 CLASS::writer::out_buffer
 CLASS::writer::get(boost_code& ec) NOEXCEPT
 {
-    ec.clear();
-    if (serializer_.done())
-        return {};
-
     using namespace network::error;
+    if (serializer_.done())
+    {
+        ec = to_http_code(http_error_t::end_of_stream);
+        return {};
+    }
+
     const auto size = value_.buffer->max_size();
     if (is_zero(size))
     {
@@ -178,6 +180,7 @@ CLASS::writer::get(boost_code& ec) NOEXCEPT
             return {};
         }
 
+        ec.clear();
         value_.buffer->commit(view.size());
         value_.buffer->consume(view.size());
         const auto more = !serializer_.done();
@@ -195,6 +198,12 @@ CLASS::writer::get(boost_code& ec) NOEXCEPT
     }
 
     return {};
+}
+
+TEMPLATE
+bool CLASS::writer::done() const NOEXCEPT
+{
+    return serializer_.done();
 }
 
 } // namespace json
