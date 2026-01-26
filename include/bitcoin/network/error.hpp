@@ -48,6 +48,7 @@ typedef boost::system::errc::errc_t boost_error_t;
 typedef boost::asio::error::misc_errors asio_misc_error_t;
 typedef boost::asio::error::netdb_errors asio_netdb_error_t;
 typedef boost::asio::error::basic_errors asio_system_error_t;
+typedef boost::asio::ssl::error::stream_errors asio_ssl_stream_error_t;
 
 /// Asio failures are normalized to the error codes below.
 /// Stop by explicit call is mapped to channel_stopped or service_stopped
@@ -150,6 +151,9 @@ enum error_t : uint8_t
     tls_set_password,
     tls_set_default_verify,
     tls_set_add_verify,
+    tls_stream_truncated,
+    tls_unspecified_system_error,
+    tls_unexpected_result,
 
     ////// http 4xx client error
     bad_request,
@@ -344,6 +348,9 @@ inline boost_code to_json_code(json_error_t ec) NOEXCEPT
 
 /// Shortcircuit common boost code mapping.
 BCT_API bool asio_is_canceled(const boost_code& ec) NOEXCEPT;
+
+/// mapping of boost::asio::ssl stream error codes to network (or error::unknown).
+BCT_API code ssl_to_error_code(const boost_code& ec) NOEXCEPT;
 
 /// mapping of boost::asio error codes to network (or error::unknown).
 BCT_API code asio_to_error_code(const boost_code& ec) NOEXCEPT;
