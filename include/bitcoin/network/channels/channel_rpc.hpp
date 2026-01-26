@@ -58,13 +58,17 @@ public:
     {
     }
 
-    /// Senders, rpc version and identity added to responses  (requires strand).
-    inline void send_code(const code& ec,
-        result_handler&& handler={}) NOEXCEPT;
+    /// Senders, rpc version and identity added to responses (requires strand).
+    inline void send_code(const code& ec) NOEXCEPT;
+    inline void send_error(rpc::result_t&& error) NOEXCEPT;
+    inline void send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT;
+
+    /// Senders with completion handlers (requires strand).
+    inline void send_code(const code& ec, result_handler&& handler) NOEXCEPT;
     inline void send_error(rpc::result_t&& error,
-        result_handler&& handler={}) NOEXCEPT;
+        result_handler&& handler) NOEXCEPT;
     inline void send_result(rpc::value_t&& result, size_t size_hint,
-        result_handler&& handler={}) NOEXCEPT;
+        result_handler&& handler) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     inline void resume() NOEXCEPT override;
@@ -99,6 +103,9 @@ protected:
     virtual inline void handle_send(const code& ec, size_t bytes,
         const rpc::response_cptr& response,
         const result_handler& handler) NOEXCEPT;
+
+    /// Default noop completion handler.
+    virtual inline void complete(const code&) NOEXCEPT {};
 
 private:
     // These are protected by strand.
