@@ -1,4 +1,4 @@
-# server
+# server (uses wolfssl signed test certs)
 # =============================================================================
 
 [clear]
@@ -25,7 +25,7 @@ key_path = m:/certs/server/server-ecc384-key-enc.pem
 cert_path = m:/certs/server/server-ecc384-cert.pem
 cert_auth = m:/certs/server
 
-# client
+# client (uses wolfssl signed test certs)
 # =============================================================================
     
 # place in cert_auth configured directory.
@@ -44,7 +44,7 @@ curl <URL>
     --key    client-ecc384-key.pem
     --cacert ca-ecc384-cert.pem
 
-# client example
+# client example (uses wolfssl signed test certs)
 # =============================================================================
 
 m:/certs/server> curl --verbose --insecure --cert client-ecc384-cert.pem --key client-ecc384-key.pem --cacert ca-ecc384-cert.pem https://localhost:443/v1/top?format=json
@@ -90,3 +90,29 @@ Note: Using embedded CA bundle, for proxies (225076 bytes)
 < Transfer-Encoding: chunked
 <
 900000
+
+# electrum (requires either trusted cert or self-signed)
+# =============================================================================
+
+# This uses a pair (ecc256 and ecc384 provided) self signed localhost certs.
+# Electrum does not support mutual auth, so there are no client certs.
+# Electrum logging to a file can be enabled in its user interface.
+
+[private]
+key_path = m:/certs/server/localhost-ecc384-key.pem
+cert_path = m:/certs/server/localhost-ecc384-cert.pem
+
+# One the Electrum > Tools > Network > Server configuration tab select:
+# "Connect only to a single server" and enter the Server: "localhost:50002:s".
+# This is the proper host for the key, conventional tls port, and :s is TLS.
+# The non-TLS (clear) analog is Server: "localhost:50001:t".
+
+# Note that the first TLS connection from Electrum should fail, obtain the
+# cert, retry, and then succeed. After this it will use the cached cert and
+# continue to succeed.
+
+# Note that if the single server is changed on the above tab, it will cause a
+# connection to the new server, but will NOT drop the previous connnection.
+# This is verified in version 4.6.2 (Windows). Changing it back to the previous
+# or forward again to the second, will not cause a conenction, because at that
+# point both connections are held, and remain so until process shutdown.

@@ -122,6 +122,9 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tls_set_password, "failed to set tls private key password" },
     { tls_set_default_verify, "failed to set tls default certificate authority" },
     { tls_set_add_verify, "failed to set tls certificate authority" },
+    { tls_stream_truncated, "tls stream truncated" },
+    { tls_unspecified_system_error, "tls unspecified system error" },
+    { tls_unexpected_result, "tls unexpected result" },
 
     ////// http 4xx client error
     { bad_request, "bad request" },
@@ -413,12 +416,43 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
     ////    ec == boost_error_t::result_out_of_range ||
     ////    ec == boost_error_t::state_not_recoverable ||
     ////    ec == boost_error_t::value_too_large)
+
+    // TODO: return asio category generic error.
     return error::unknown;
+}
+
+// Boost defines this for error numbers produced by openssl. But we get generic
+// error codes because WOLFSSL_HAVE_ERROR_QUEUE is not defined. This is because
+// otherwise in some cases we fail to get failure results when necessary.
+////typedef boost::asio::error::ssl_errors asio_ssl_error_t;
+////const auto& category = boost::asio::error::get_ssl_category();
+
+// includes asio codes
+code ssl_to_error_code(const boost_code& ec) NOEXCEPT
+{
+    const auto& category = boost::asio::ssl::error::get_stream_category();
+
+    if (!ec)
+        return error::success;
+
+    if (ec.category() != category)
+        return asio_to_error_code(ec);
+
+    switch (static_cast<asio_ssl_stream_error_t>(ec.value()))
+    {
+        case asio_ssl_stream_error_t::stream_truncated: return error::tls_stream_truncated;
+        case asio_ssl_stream_error_t::unspecified_system_error: return error::tls_unspecified_system_error;
+        case asio_ssl_stream_error_t::unexpected_result: return error::tls_unexpected_result;
+
+        // TODO: return ssl category generic error.
+        default: return error::unknown;
+    }
 }
 
 // includes json codes
 code http_to_error_code(const boost_code& ec) NOEXCEPT
 {
+    // TODO: use boost static initializer.
     static boost::beast::http::detail::http_error_category category{};
 
     if (!ec)
@@ -455,6 +489,8 @@ code http_to_error_code(const boost_code& ec) NOEXCEPT
         case http_error_t::multiple_content_length: return error::multiple_content_length;
         case http_error_t::stale_parser: return error::stale_parser;
         case http_error_t::short_read: return error::short_read;
+
+        // TODO: return http category generic error.
         default: return error::unknown;
     }
 }
@@ -462,6 +498,7 @@ code http_to_error_code(const boost_code& ec) NOEXCEPT
 // includes json codes
 code ws_to_error_code(const boost_code& ec) NOEXCEPT
 {
+    // TODO: use boost static initializer.
     static boost::beast::websocket::detail::error_codes category{};
 
     if (!ec)
@@ -503,12 +540,15 @@ code ws_to_error_code(const boost_code& ec) NOEXCEPT
         case ws_error_t::bad_close_code: return error::bad_close_code;
         case ws_error_t::bad_close_size: return error::bad_close_size;
         case ws_error_t::bad_close_payload: return error::bad_close_payload;
+
+        // TODO: return ws category generic error.
         default: return error::unknown;
     }
 }
 
 code json_to_error_code(const boost_code& ec) NOEXCEPT
 {
+    // TODO: use boost static initializer.
     static boost::json::detail::error_code_category_t category{};
 
     if (!ec)
@@ -558,6 +598,8 @@ code json_to_error_code(const boost_code& ec) NOEXCEPT
         case json_error_t::size_mismatch: return error::size_mismatch;
         case json_error_t::exhausted_variants: return error::exhausted_variants;
         case json_error_t::unknown_name: return error::unknown_name;
+
+        // TODO: return json category generic error.
         default: return error::unknown;
     }
 }

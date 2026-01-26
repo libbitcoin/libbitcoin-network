@@ -166,7 +166,7 @@ void session_inbound::handle_accepted(const code& ec,
     // Could instead stop listening when at limit, though this is simpler.
     if (inbound_channel_count() >= network_settings().inbound.connections)
     {
-        LOGS("Dropping oversubscribed peer [" << socket->endpoint() << "].");
+        LOGS("Dropping peer [" << socket->endpoint() << "]. (oversubscribed)");
         socket->stop();
         defer(BIND(start_accept, _1, acceptor));
         return;

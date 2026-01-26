@@ -693,6 +693,33 @@ BOOST_AUTO_TEST_CASE(error_t__code__tls_set_add_verify__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls certificate authority");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__tls_stream_truncated__true_expected_message)
+{
+    constexpr auto value = error::tls_stream_truncated;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls stream truncated");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_unspecified_system_error__true_expected_message)
+{
+    constexpr auto value = error::tls_unspecified_system_error;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls unspecified system error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_unexpected_result__true_expected_message)
+{
+    constexpr auto value = error::tls_unexpected_result;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls unexpected result");
+}
+
 // http 4xx client error
 
 BOOST_AUTO_TEST_CASE(error_t__code__bad_request__true_expected_message)

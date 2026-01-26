@@ -194,7 +194,7 @@ void socket::handle_handshake(const boost_code& ec,
         return;
     }
 
-    const auto code = error::asio_to_error_code(ec);
+    const auto code = error::ssl_to_error_code(ec);
     if (code == error::unknown) logx("handshake", ec);
     handler(code);
 }
