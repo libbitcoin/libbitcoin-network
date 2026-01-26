@@ -105,8 +105,10 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
     identity_ = request->message.id;
     version_ = request->message.jsonrpc;
 
+    LOGA("Rpc request: [" << bytes << "] "
+        << request->message.method << "(...).");
+
     reading_ = false;
-    log_message(*request, bytes);
     dispatch(request);
 }
 
@@ -183,10 +185,12 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
 {
     BC_ASSERT(stranded());
     if (ec) stop(ec);
-    log_message(*response, bytes);
 
     // Typically a noop, but handshake may pause channel here.
     handler(ec);
+
+    LOGA("Rpc response: [" << bytes << "], " << 
+        response->message.error.value_or(code{}).message);
 
     // Continue read loop (does not unpause or restart channel).
     receive();
@@ -203,27 +207,6 @@ inline rpc::response_ptr CLASS::assign_message(rpc::response_t&& message,
     ptr->message = std::move(message);
     ptr->buffer = response_buffer_;
     return ptr;
-}
-
-// log helpers
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-inline void CLASS::log_message(const rpc::request& LOG_ONLY(request),
-    size_t LOG_ONLY(bytes)) const NOEXCEPT
-{
-    LOGA("Rpc request: [" << bytes << "] "
-        << request.message.method << "(...).");
-}
-
-TEMPLATE
-inline void CLASS::log_message(const rpc::response& LOG_ONLY(response),
-    size_t LOG_ONLY(bytes)) const NOEXCEPT
-{
-    LOG_ONLY(const auto message = response.message.error.has_value() ?
-        response.message.error.value().message : "success");
-
-    LOGA("Rpc response: [" << bytes << "], " << message << ".");
 }
 
 BC_POP_WARNING()

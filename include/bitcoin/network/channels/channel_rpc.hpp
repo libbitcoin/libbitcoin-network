@@ -101,11 +101,6 @@ protected:
         const result_handler& handler) NOEXCEPT;
 
 private:
-    void log_message(const rpc::request& request,
-        size_t bytes) const NOEXCEPT;
-    void log_message(const rpc::response& response,
-        size_t bytes) const NOEXCEPT;
-
     // These are protected by strand.
     rpc::version version_;
     rpc::id_option identity_;
