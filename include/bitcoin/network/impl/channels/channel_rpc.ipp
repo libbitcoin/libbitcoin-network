@@ -133,24 +133,6 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-void CLASS::send_code(const code& ec) NOEXCEPT
-{
-    send_code(ec, std::bind(&CLASS::complete, _1));
-}
-
-TEMPLATE
-void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
-{
-    send_error(std::move(error), std::bind(&CLASS::complete, _1));
-}
-
-TEMPLATE
-void CLASS::send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT
-{
-    send_result(std::move(result), size_hint, std::bind(&CLASS::complete, _1));
-}
-
-TEMPLATE
 void CLASS::send_code(const code& ec, result_handler&& handler) NOEXCEPT
 {
     send_error({ .code = ec.value(), .message = ec.message() },
