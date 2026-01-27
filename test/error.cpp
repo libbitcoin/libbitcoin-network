@@ -1954,7 +1954,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__unknown_name__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "unknown name");
 }
 
-// rpc error
+// query string parse error
 
 BOOST_AUTO_TEST_CASE(error_t__code__message_overflow__true_expected_message)
 {
@@ -2048,13 +2048,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_requires_method__true_expected_messa
     BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc requires method");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_requires_params__true_expected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_params__true_expected_message)
 {
-    constexpr auto value = error::jsonrpc_requires_params;
+    constexpr auto value = error::jsonrpc_v1_requires_params;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc requires params");
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc v1 requires params");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_array_params__true_expected_message)

@@ -118,20 +118,20 @@ finish(boost_code& ec) NOEXCEPT
         ec = code{ error::jsonrpc_reader_exception };
     }
 
-    // Post-parse semantic validation.
-
+    // Set version default.
     if (value_.message.jsonrpc == version::undefined)
         value_.message.jsonrpc = version::v1;
 
+    // Post-parse semantic validation.
     if (value_.message.method.empty())
     {
         ec = code{ error::jsonrpc_requires_method };
-        return;
     }
-
-    if (value_.message.jsonrpc == version::v1)
+    else if (value_.message.jsonrpc == version::v1)
     {
-        if (!value_.message.id.has_value())
+        if (!value_.message.params.has_value())
+            ec = code{ error::jsonrpc_v1_requires_params };
+        else if (!value_.message.id.has_value())
             ec = code{ error::jsonrpc_v1_requires_id };
         else if (!std::holds_alternative<array_t>(
             value_.message.params.value()))

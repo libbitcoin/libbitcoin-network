@@ -285,7 +285,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // json-rpc error
     { jsonrpc_requires_method, "jsonrpc requires method" },
-    { jsonrpc_requires_params, "jsonrpc requires params" },
+    { jsonrpc_v1_requires_params, "jsonrpc v1 requires params" },
     { jsonrpc_v1_requires_array_params, "jsonrpc v1 requires array params" },
     { jsonrpc_v1_requires_id, "jsonrpc v1 requires id" },
     { jsonrpc_reader_bad_buffer, "jsonrpc reader bad buffer " },

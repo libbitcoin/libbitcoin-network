@@ -314,7 +314,7 @@ enum error_t : uint8_t
 
     // json-rpc error
     jsonrpc_requires_method,
-    jsonrpc_requires_params,
+    jsonrpc_v1_requires_params,
     jsonrpc_v1_requires_array_params,
     jsonrpc_v1_requires_id,
     jsonrpc_reader_bad_buffer,
