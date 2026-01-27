@@ -2034,7 +2034,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__missing_parameter__true_expected_message)
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "missing optional");
+    BOOST_REQUIRE_EQUAL(ec.message(), "missing parameter");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

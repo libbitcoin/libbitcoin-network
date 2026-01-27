@@ -281,7 +281,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { extra_named, "extra named" },
     { missing_array, "missing array" },
     { missing_object, "missing object" },
-    { missing_parameter, "missing optional" }
+    { missing_parameter, "missing parameter" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
