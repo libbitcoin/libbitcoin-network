@@ -107,7 +107,7 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
     identity_ = request->message.id;
     version_ = request->message.jsonrpc;
 
-    LOGA("Rpc request: [" << bytes << "] "
+    LOGA("Rpc request: (" << bytes << ") bytes from [" << endpoint() << "] "
         << request->message.method << "(...).");
 
     reading_ = false;
@@ -187,8 +187,8 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     // Typically a noop, but handshake may pause channel here.
     handler(ec);
 
-    LOGA("Rpc response: [" << bytes << "], " << 
-        response->message.error.value_or(rpc::result_t{}).message);
+    LOGA("Rpc response: (" << bytes << ") bytes to [" << endpoint() << "] "
+        << response->message.error.value_or(rpc::result_t{}).message);
 
     // Continue read loop (does not unpause or restart channel).
     receive();
