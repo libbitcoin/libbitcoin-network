@@ -107,7 +107,7 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
     identity_ = request->message.id;
     version_ = request->message.jsonrpc;
 
-    LOGA("Rpc request: [" << bytes << "] "
+    LOGA("Rpc request: (" << bytes << ") bytes from [" << endpoint() << "] "
         << request->message.method << "(...).");
 
     reading_ = false;
@@ -131,24 +131,6 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 
 // Send.
 // ----------------------------------------------------------------------------
-
-TEMPLATE
-void CLASS::send_code(const code& ec) NOEXCEPT
-{
-    send_code(ec, std::bind(&CLASS::complete, _1));
-}
-
-TEMPLATE
-void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
-{
-    send_error(std::move(error), std::bind(&CLASS::complete, _1));
-}
-
-TEMPLATE
-void CLASS::send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT
-{
-    send_result(std::move(result), size_hint, std::bind(&CLASS::complete, _1));
-}
 
 TEMPLATE
 void CLASS::send_code(const code& ec, result_handler&& handler) NOEXCEPT
@@ -205,8 +187,8 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     // Typically a noop, but handshake may pause channel here.
     handler(ec);
 
-    LOGA("Rpc response: [" << bytes << "], " << 
-        response->message.error.value_or(rpc::result_t{}).message);
+    LOGA("Rpc response: (" << bytes << ") bytes to [" << endpoint() << "] "
+        << response->message.error.value_or(rpc::result_t{}).message);
 
     // Continue read loop (does not unpause or restart channel).
     receive();

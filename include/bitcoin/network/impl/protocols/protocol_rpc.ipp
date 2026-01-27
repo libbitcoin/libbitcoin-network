@@ -26,6 +26,30 @@ namespace libbitcoin {
 namespace network {
 
 TEMPLATE
+inline void CLASS::send_code(const code& ec) NOEXCEPT
+{
+    using namespace std::placeholders;
+    send_code(ec,std::bind(&CLASS::complete,
+        shared_from_base<CLASS>(), _1));
+}
+
+TEMPLATE
+inline void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
+{
+    using namespace std::placeholders;
+    send_error(std::move(error), std::bind(&CLASS::complete,
+        shared_from_base<CLASS>(), _1));
+}
+
+TEMPLATE
+inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT
+{
+    using namespace std::placeholders;
+    send_result(std::move(result), size_hint, std::bind(&CLASS::complete,
+        shared_from_base<CLASS>(), _1));
+}
+
+TEMPLATE
 inline void CLASS::send_code(const code& ec, result_handler&& handler) NOEXCEPT
 {
     channel_->send_code(ec, std::move(handler));

@@ -210,7 +210,9 @@ bool settings::peer_manual::peered(const address_item& item) const NOEXCEPT
 
 bool settings::peer_manual::enabled() const NOEXCEPT
 {
-    return settings::tcp_server::enabled() && !peers.empty();
+    // connections field is not currently used, and this applies only to
+    // initial configuration of manual connections, as they can be added.
+    return /* settings::tcp_server::enabled() && */ !peers.empty();
 }
 
 // [network]

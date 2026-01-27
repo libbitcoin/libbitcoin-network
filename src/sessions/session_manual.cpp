@@ -53,6 +53,13 @@ session_manual::session_manual(net& network, uint64_t identifier) NOEXCEPT
 void session_manual::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    // This applies only to "configured" manual connections (can be added).
+    if (!network_settings().manual.enabled())
+    {
+        LOGN("Not configured for manual peer connections.");
+    }
+
     session_peer::start(BIND(handle_started, _1, std::move(handler)));
 }
 
