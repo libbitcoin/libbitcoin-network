@@ -56,7 +56,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
 
     if (!network_settings().outbound.enabled())
     {
-        LOGN("Not configured for outbound connections.");
+        LOGN("Not configured for outbound peer connections.");
         handler(error::success);
         unsubscribe_close();
         return;
