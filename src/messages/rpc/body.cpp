@@ -51,7 +51,7 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 
     if (is_null(buffer.data()))
     {
-        ec = to_system_code(boost_error_t::bad_address);
+        ec = code{ error::jsonrpc_reader_bad_buffer };
         return {};
     }
 
@@ -67,7 +67,7 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     // There is no terminator (terminal).
     if (is_zero(parsed))
     {
-        ec = to_http_code(http_error_t::end_of_stream);
+        ec = code{ error::jsonrpc_reader_stall };
         return parsed;
     }
 
@@ -115,33 +115,27 @@ finish(boost_code& ec) NOEXCEPT
     }
     catch (...)
     {
-        // As a catch-all we blame alloc.
-        ec = to_http_code(http_error_t::bad_alloc);
+        ec = code{ error::jsonrpc_reader_exception };
     }
 
-    // Post-parse semantic validation.
-
+    // Set version default.
     if (value_.message.jsonrpc == version::undefined)
         value_.message.jsonrpc = version::v1;
 
-    if (value_.message.method.empty() ||
-        !value_.message.params.has_value())
+    // Post-parse semantic validation.
+    if (value_.message.method.empty())
     {
-        ec = to_system_code(boost_error_t::bad_message);
-        return;
+        ec = code{ error::jsonrpc_requires_method };
     }
-
-    if (value_.message.jsonrpc == version::v1)
+    else if (value_.message.jsonrpc == version::v1)
     {
-        if (!value_.message.id.has_value())
-            ec = to_system_code(boost_error_t::bad_message);
+        if (!value_.message.params.has_value())
+            ec = code{ error::jsonrpc_v1_requires_params };
+        else if (!value_.message.id.has_value())
+            ec = code{ error::jsonrpc_v1_requires_id };
         else if (!std::holds_alternative<array_t>(
             value_.message.params.value()))
-            ec = to_system_code(boost_error_t::bad_message);
-
-        // TODO: v1 batch is not allowed.
-        ////else if (value_.message.is_batch())
-        ////    ec = to_system_code(boost_error_t::bad_message);
+            ec = code{ error::jsonrpc_v1_requires_array_params };
     }
 }
 
@@ -190,8 +184,7 @@ init(boost_code& ec) NOEXCEPT
     }
     catch (...)
     {
-        // As a catch-all we blame alloc.
-        ec = to_http_code(http_error_t::bad_alloc);
+        ec = code{ error::jsonrpc_writer_exception };
         return;
     }
 

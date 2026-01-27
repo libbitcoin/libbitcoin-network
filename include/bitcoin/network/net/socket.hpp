@@ -224,13 +224,14 @@ private:
     {
         typedef std::shared_ptr<read_rpc> ptr;
 
-        read_rpc(rpc::request& request) NOEXCEPT
-          : value{ request }, reader{ value }
+        read_rpc(rpc::request& request, http::flat_buffer& buffer) NOEXCEPT
+          : value{ request }, reader{ value }, buffer{ buffer }
         {
         }
 
         rpc::request& value;
         rpc::reader reader;
+        http::flat_buffer& buffer;
     };
 
     struct write_rpc

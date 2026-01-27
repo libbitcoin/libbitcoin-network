@@ -1954,7 +1954,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__unknown_name__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "unknown name");
 }
 
-// rpc error
+// query string parse error
 
 BOOST_AUTO_TEST_CASE(error_t__code__message_overflow__true_expected_message)
 {
@@ -2035,6 +2035,80 @@ BOOST_AUTO_TEST_CASE(error_t__code__missing_parameter__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "missing parameter");
+}
+
+// json-rpc error
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_requires_method__true_expected_message)
+{
+    constexpr auto value = error::jsonrpc_requires_method;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc requires method");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_params__true_expected_message)
+{
+    constexpr auto value = error::jsonrpc_v1_requires_params;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc v1 requires params");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_array_params__true_expected_message)
+{
+    constexpr auto value = error::jsonrpc_v1_requires_array_params;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc v1 requires array params");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_id__true_expected_message)
+{
+    constexpr auto value = error::jsonrpc_v1_requires_id;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc v1 requires id");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_reader_bad_buffer__true_expected_message)
+{
+    constexpr auto value = error::jsonrpc_reader_bad_buffer;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc reader bad buffer");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_reader_stall__true_expected_message)
+{
+    constexpr auto value = error::jsonrpc_reader_stall;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc reader stall");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_reader_exception__true_expected_message)
+{
+    constexpr auto value = error::jsonrpc_reader_exception;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc reader exception");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_writer_exception__true_expected_message)
+{
+    constexpr auto value = error::jsonrpc_writer_exception;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc writer exception");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
