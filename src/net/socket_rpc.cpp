@@ -43,8 +43,7 @@ void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
-    const auto in = emplace_shared<read_rpc>(request);
-    in->value.buffer = emplace_shared<http::flat_buffer>(buffer);
+    const auto in = emplace_shared<read_rpc>(request, buffer);
     in->reader.init({}, ec);
 
     boost::asio::dispatch(strand_,
@@ -68,7 +67,7 @@ void socket::do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
     }
 
     VARIANT_DISPATCH_METHOD(get_tcp(),
-        async_read_some(in->value.buffer->prepare(size),
+        async_read_some(in->buffer.prepare(size),
             std::bind(&socket::handle_rpc_read,
                 shared_from_this(), _1, _2, total, in, handler)));
 }
@@ -93,12 +92,12 @@ void socket::handle_rpc_read(boost_code ec, size_t size, size_t total,
 
     if (!ec)
     {
-        in->value.buffer->commit(size);
-        const auto data = in->value.buffer->data();
+        in->buffer.commit(size);
+        const auto data = in->buffer.data();
         const auto parsed = in->reader.put(data, ec);
         if (!ec)
         {
-            in->value.buffer->consume(parsed);
+            in->buffer.consume(parsed);
             if (in->reader.done())
             {
                 in->reader.finish(ec);
