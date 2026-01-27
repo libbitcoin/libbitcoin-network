@@ -114,6 +114,7 @@ void CLASS::reader::finish(boost_code& ec) NOEXCEPT
     catch (...)
     {
         // As a catch-all we blame alloc.
+        using namespace network::error;
         ec = to_http_code(http_error_t::bad_alloc);
     }
 

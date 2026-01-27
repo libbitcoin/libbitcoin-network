@@ -301,7 +301,7 @@ enum error_t : uint8_t
     exhausted_variants,
     unknown_name,
 
-    // rpc error
+    // query string parse error
     message_overflow,
     undefined_type,
     unexpected_method,
@@ -310,7 +310,17 @@ enum error_t : uint8_t
     extra_named,
     missing_array,
     missing_object,
-    missing_parameter
+    missing_parameter,
+
+    // json-rpc error
+    jsonrpc_requires_method,
+    jsonrpc_requires_params,
+    jsonrpc_v1_requires_array_params,
+    jsonrpc_v1_requires_id,
+    jsonrpc_reader_bad_buffer,
+    jsonrpc_reader_stall,
+    jsonrpc_reader_exception,
+    jsonrpc_writer_exception
 };
 
 // No current need for error_code equivalence mapping.
@@ -363,6 +373,9 @@ BCT_API code ws_to_error_code(const boost_code& ec) NOEXCEPT;
 
 /// 1:1 mapping of boost::json::error to network (or error::unknown).
 BCT_API code json_to_error_code(const boost_code& ec) NOEXCEPT;
+
+/// 1:1 mapping of wrapped json-rpc codes back to network (or error::unknown).
+BCT_API code rpc_to_error_code(const boost_code& ec) NOEXCEPT;
 
 } // namespace error
 } // namespace network

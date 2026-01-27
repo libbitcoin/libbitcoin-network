@@ -272,7 +272,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { exhausted_variants, "exhausted variants" },
     { unknown_name, "unknown name" },
 
-    // rpc error
+    // query string parse error
     { message_overflow, "message overflow" },
     { undefined_type, "undefined type" },
     { unexpected_method, "unexpected method" },
@@ -281,7 +281,17 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { extra_named, "extra named" },
     { missing_array, "missing array" },
     { missing_object, "missing object" },
-    { missing_parameter, "missing parameter" }
+    { missing_parameter, "missing parameter" },
+
+    // json-rpc error
+    { jsonrpc_requires_method, "jsonrpc requires method" },
+    { jsonrpc_requires_params, "jsonrpc requires params" },
+    { jsonrpc_v1_requires_array_params, "jsonrpc v1 requires array params" },
+    { jsonrpc_v1_requires_id, "jsonrpc v1 requires id" },
+    { jsonrpc_reader_bad_buffer, "jsonrpc reader bad buffer " },
+    { jsonrpc_reader_stall, "jsonrpc reader stall " },
+    { jsonrpc_reader_exception, "jsonrpc reader exception " },
+    { jsonrpc_writer_exception, "jsonrpc writer exception " }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
@@ -294,6 +304,7 @@ bool asio_is_canceled(const boost_code& ec) NOEXCEPT
         || ec == boost::asio::error::operation_aborted;
 }
 
+// TODO: change to cast model (like others).
 // The success and operation_canceled codes are the only expected in normal
 // operation, so these are first, to optimize the case where asio_is_canceled
 // is not used. boost_code overloads the `==` operator to include category.
@@ -440,13 +451,28 @@ code ssl_to_error_code(const boost_code& ec) NOEXCEPT
 
     switch (static_cast<asio_ssl_stream_error_t>(ec.value()))
     {
-        case asio_ssl_stream_error_t::stream_truncated: return error::tls_stream_truncated;
-        case asio_ssl_stream_error_t::unspecified_system_error: return error::tls_unspecified_system_error;
-        case asio_ssl_stream_error_t::unexpected_result: return error::tls_unexpected_result;
+        case asio_ssl_stream_error_t::stream_truncated:
+            return error::tls_stream_truncated;
+        case asio_ssl_stream_error_t::unspecified_system_error:
+            return error::tls_unspecified_system_error;
+        case asio_ssl_stream_error_t::unexpected_result:
+            return error::tls_unexpected_result;
 
         // TODO: return ssl category generic error.
         default: return error::unknown;
     }
+}
+
+// includes http codes
+code rpc_to_error_code(const boost_code& ec) NOEXCEPT
+{
+    if (!ec)
+        return error::success;
+
+    if (ec.category() == network::error::error_category::singleton)
+        return { static_cast<error_t>(ec.value()) };
+
+    return http_to_error_code(ec);
 }
 
 // includes json codes
