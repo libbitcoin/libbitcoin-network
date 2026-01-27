@@ -288,10 +288,10 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { jsonrpc_v1_requires_params, "jsonrpc v1 requires params" },
     { jsonrpc_v1_requires_array_params, "jsonrpc v1 requires array params" },
     { jsonrpc_v1_requires_id, "jsonrpc v1 requires id" },
-    { jsonrpc_reader_bad_buffer, "jsonrpc reader bad buffer " },
-    { jsonrpc_reader_stall, "jsonrpc reader stall " },
-    { jsonrpc_reader_exception, "jsonrpc reader exception " },
-    { jsonrpc_writer_exception, "jsonrpc writer exception " }
+    { jsonrpc_reader_bad_buffer, "jsonrpc reader bad buffer" },
+    { jsonrpc_reader_stall, "jsonrpc reader stall" },
+    { jsonrpc_reader_exception, "jsonrpc reader exception" },
+    { jsonrpc_writer_exception, "jsonrpc writer exception" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
