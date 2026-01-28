@@ -175,6 +175,25 @@ void protocol_http::send_internal_server_error(const code& reason,
     SEND(std::move(out), handle_complete, _1, error::internal_server_error);
 }
 
+// Closes channel.
+void protocol_http::send_redirect(const system::wallet::uri& uri,
+    status status_3xx, const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    BC_ASSERT(status_3xx != status::not_modified);
+    BC_ASSERT(300 <= to_value(status_3xx) && to_value(status_3xx) <= 399);
+    std::string details{ "from=" };
+    details += request.target();
+    const auto code = status_3xx;
+    const auto media = to_media_type(request[field::accept]);
+    response out{ code, request.version() };
+    add_common_headers(out, request, true);
+    out.set(field::location, uri.encoded());
+    out.body() = string_status(code, out.reason(), media, details);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::success);
+}
+
 void protocol_http::send_bad_target(const code& reason,
     const request& request) NOEXCEPT
 {

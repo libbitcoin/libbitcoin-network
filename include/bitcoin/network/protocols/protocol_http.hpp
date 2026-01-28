@@ -86,6 +86,8 @@ protected:
     virtual void send_method_not_allowed(const http::request& request={}) NOEXCEPT;
     virtual void send_internal_server_error(const code& reason,
         const http::request& request={}) NOEXCEPT;
+    virtual void send_redirect(const system::wallet::uri& uri,
+        http::status status_3xx, const http::request& request={}) NOEXCEPT;
     virtual void send_bad_target(const code& reason={},
         const http::request& request={}) NOEXCEPT;
 
