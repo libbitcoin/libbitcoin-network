@@ -637,7 +637,45 @@ BOOST_AUTO_TEST_CASE(error_t__code__socks_response_invalid__true_expected_messag
     BOOST_REQUIRE_EQUAL(ec.message(), "socks response invalid");
 }
 
-// tls
+// boost
+
+BOOST_AUTO_TEST_CASE(error_t__code__system_unknown__true_expected_message)
+{
+    constexpr auto value = error::system_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "system error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__misc_unknown__true_expected_message)
+{
+    constexpr auto value = error::misc_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "misc error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__errc_unknown__true_expected_message)
+{
+    constexpr auto value = error::errc_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "errc error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__ssl_unknown__true_expected_message)
+{
+    constexpr auto value = error::ssl_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "ssl error");
+}
+
+// boost tls
 
 BOOST_AUTO_TEST_CASE(error_t__code__tls_set_options__true_expected_message)
 {
@@ -1320,6 +1358,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__short_read__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "short read");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__http_unknown__true_expected_message)
+{
+    constexpr auto value = error::http_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "http error");
+}
+
 // boost beast websocket error
 
 BOOST_AUTO_TEST_CASE(error_t__code__websocket_closed__true_expected_message)
@@ -1599,6 +1646,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__bad_close_payload__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "bad close payload");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__websocket_unknown__true_expected_message)
+{
+    constexpr auto value = error::websocket_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "websocket error");
 }
 
 // boost json error
@@ -1952,6 +2008,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__unknown_name__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "unknown name");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__json_unknown__true_expected_message)
+{
+    constexpr auto value = error::json_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "json error");
 }
 
 // query string parse error
