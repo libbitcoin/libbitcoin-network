@@ -347,9 +347,17 @@ typedef boost::beast::websocket::error ws_error_t;
 typedef boost::beast::http::error http_error_t;
 typedef boost::json::error json_error_t;
 
+inline boost_code to_errc_code(boost_errc_t ec) NOEXCEPT
+{
+    // boost::system::generic_category();
+    return boost::system::errc::make_error_code(ec);
+}
+
 inline boost_code to_asio_basic_code(asio_basic_error_t ec) NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return { ec, boost::asio::error::get_system_category() };
+    BC_POP_WARNING()
 }
 
 inline boost_code to_http_code(http_error_t ec) NOEXCEPT
@@ -380,12 +388,6 @@ inline boost_code to_json_code(json_error_t ec) NOEXCEPT
 {
     // boost::json::detail::error_code_category;
     return boost::json::make_error_code(ec);
-}
-
-inline boost_code to_errc_code(boost_errc_t ec) NOEXCEPT
-{
-    // boost::system::generic_category();
-    return boost::system::errc::make_error_code(ec);
 }
 
 /// Shortcircuit common boost code mapping.
