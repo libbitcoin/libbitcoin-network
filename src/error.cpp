@@ -313,25 +313,129 @@ bool asio_is_canceled(const boost_code& ec) NOEXCEPT
         || ec == boost::system::errc::errc_t::operation_canceled;
 }
 
-// includes asio_is_canceled
-code asio_to_error_code(const boost_code& ec) NOEXCEPT
+// Boost cross platform codes (not asio).
+code errc_to_error_code(const boost_code& ec) NOEXCEPT
 {
     if (!ec)
         return error::success;
 
-    if (asio_is_canceled(ec))
-        return error::operation_canceled;
+    if (ec.category() == boost::system::generic_category())
+    {
+        switch (static_cast<boost_errc_t>(ec.value()))
+        {
+            case boost_errc_t::connection_aborted:
+            case boost_errc_t::operation_canceled:
+                return error::operation_canceled;
+                
+            // peer termination
+            // stackoverflow.com/a/19891985/1172329
+            case boost_errc_t::connection_reset:
+                return error::peer_disconnect;
+
+            // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
+            // connect-tcp-greater-than-5000-error-wsaenobufs-10055
+            case boost_errc_t::no_buffer_space:
+                return error::invalid_configuration;
+
+            // network
+            case boost_errc_t::operation_not_permitted:
+            case boost_errc_t::operation_not_supported:
+            case boost_errc_t::owner_dead:
+            case boost_errc_t::permission_denied:
+                return error::not_allowed;
+
+            // connect-resolve
+            case boost_errc_t::address_family_not_supported:
+            case boost_errc_t::bad_address:
+            case boost_errc_t::destination_address_required:
+                return error::resolve_failed;
+
+            // connect-connect
+            case boost_errc_t::address_not_available:
+            case boost_errc_t::not_connected:
+            case boost_errc_t::connection_refused:
+            case boost_errc_t::broken_pipe:
+            case boost_errc_t::host_unreachable:
+            case boost_errc_t::network_down:
+            case boost_errc_t::network_reset:
+            case boost_errc_t::network_unreachable:
+            case boost_errc_t::no_link:
+            case boost_errc_t::no_protocol_option:
+            case boost_errc_t::no_such_file_or_directory:
+            case boost_errc_t::not_a_socket:
+            case boost_errc_t::protocol_not_supported:
+            case boost_errc_t::wrong_protocol_type:
+                return error::connect_failed;
+
+            // connect-address
+            case boost_errc_t::address_in_use:
+            case boost_errc_t::already_connected:
+            case boost_errc_t::connection_already_in_progress:
+            case boost_errc_t::operation_in_progress:
+                return error::address_in_use;
+
+            // I/O (bad_file_descriptor if socket is not initialized)
+            case boost_errc_t::bad_file_descriptor:
+            case boost_errc_t::bad_message:
+            case boost_errc_t::illegal_byte_sequence:
+            case boost_errc_t::io_error:
+            case boost_errc_t::message_size:
+            case boost_errc_t::no_message_available:
+            case boost_errc_t::no_message:
+            case boost_errc_t::no_stream_resources:
+            case boost_errc_t::not_a_stream:
+            case boost_errc_t::protocol_error:
+                return error::bad_stream;
+
+            // timeout
+            case boost_errc_t::stream_timeout:
+            case boost_errc_t::timed_out:
+                return error::channel_timeout;
+
+            // file system errors (bad_file_descriptor used in I/O)
+            case boost_errc_t::cross_device_link:
+            case boost_errc_t::device_or_resource_busy:
+            case boost_errc_t::directory_not_empty:
+            case boost_errc_t::executable_format_error:
+            case boost_errc_t::file_exists:
+            case boost_errc_t::file_too_large:
+            case boost_errc_t::filename_too_long:
+            case boost_errc_t::invalid_seek:
+            case boost_errc_t::is_a_directory:
+            case boost_errc_t::no_space_on_device:
+            case boost_errc_t::no_such_device:
+            case boost_errc_t::no_such_device_or_address:
+            case boost_errc_t::read_only_file_system:
+            case boost_errc_t::resource_unavailable_try_again:
+            case boost_errc_t::text_file_busy:
+            case boost_errc_t::too_many_files_open:
+            case boost_errc_t::too_many_files_open_in_system:
+            case boost_errc_t::too_many_links:
+            case boost_errc_t::too_many_symbolic_link_levels:
+                return error::file_system;
+
+            default:
+                return error::errc_unknown;
+        }
+    }
+
+    return error::unknown;
+}
+
+// includes errc_to_error_code
+code asio_to_error_code(const boost_code& ec) NOEXCEPT
+{
+    if (!ec)
+        return error::success;
 
     // boost::system::system_category() is aliased for netdb and addrinfo.
     if (ec.category() == boost::asio::error::get_system_category())
     {
         switch (static_cast<asio_basic_error_t>(ec.value()))
         {
+            case asio_basic_error_t::operation_aborted:
             case asio_basic_error_t::connection_aborted:
                 return error::operation_canceled;
-
-            case asio_basic_error_t::operation_aborted:
-                return error::operation_failed;
 
             case asio_basic_error_t::address_family_not_supported:
                 return error::resolve_failed;
@@ -424,7 +528,7 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
         }
     }
 
-    return error::system_unknown;
+    return errc_to_error_code(ec);
 }
 
 // includes json codes
@@ -511,7 +615,6 @@ code ssl_to_error_code(const boost_code& ec) NOEXCEPT
 
     return asio_to_error_code(ec);
 }
-
 
 // includes json codes
 code ws_to_error_code(const boost_code& ec) NOEXCEPT
@@ -627,115 +730,6 @@ code rpc_to_error_code(const boost_code& ec) NOEXCEPT
         return { static_cast<error_t>(ec.value()) };
 
     return http_to_error_code(ec);
-}
-
-// Boost cross platform codes (not asio).
-code errc_to_error_code(const boost_code& ec) NOEXCEPT
-{
-    if (!ec)
-        return error::success;
-
-    if (ec.category() == boost::system::generic_category())
-    {
-        switch (static_cast<boost_errc_t>(ec.value()))
-        {
-            case boost_errc_t::connection_aborted:
-            case boost_errc_t::operation_canceled:
-                return error::operation_canceled;
-                
-            // peer termination
-            // stackoverflow.com/a/19891985/1172329
-            case boost_errc_t::connection_reset:
-                return error::peer_disconnect;
-
-            // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
-            // connect-tcp-greater-than-5000-error-wsaenobufs-10055
-            case boost_errc_t::no_buffer_space:
-                return error::invalid_configuration;
-
-            // network
-            case boost_errc_t::operation_not_permitted:
-            case boost_errc_t::operation_not_supported:
-            case boost_errc_t::owner_dead:
-            case boost_errc_t::permission_denied:
-                return error::not_allowed;
-
-            // connect-resolve
-            case boost_errc_t::address_family_not_supported:
-            case boost_errc_t::bad_address:
-            case boost_errc_t::destination_address_required:
-                return error::resolve_failed;
-
-            // connect-connect
-            case boost_errc_t::address_not_available:
-            case boost_errc_t::not_connected:
-            case boost_errc_t::connection_refused:
-            case boost_errc_t::broken_pipe:
-            case boost_errc_t::host_unreachable:
-            case boost_errc_t::network_down:
-            case boost_errc_t::network_reset:
-            case boost_errc_t::network_unreachable:
-            case boost_errc_t::no_link:
-            case boost_errc_t::no_protocol_option:
-            case boost_errc_t::no_such_file_or_directory:
-            case boost_errc_t::not_a_socket:
-            case boost_errc_t::protocol_not_supported:
-            case boost_errc_t::wrong_protocol_type:
-                return error::connect_failed;
-
-            // connect-address
-            case boost_errc_t::address_in_use:
-            case boost_errc_t::already_connected:
-            case boost_errc_t::connection_already_in_progress:
-            case boost_errc_t::operation_in_progress:
-                return error::address_in_use;
-
-            // I/O (bad_file_descriptor if socket is not initialized)
-            case boost_errc_t::bad_file_descriptor:
-            case boost_errc_t::bad_message:
-            case boost_errc_t::illegal_byte_sequence:
-            case boost_errc_t::io_error:
-            case boost_errc_t::message_size:
-            case boost_errc_t::no_message_available:
-            case boost_errc_t::no_message:
-            case boost_errc_t::no_stream_resources:
-            case boost_errc_t::not_a_stream:
-            case boost_errc_t::protocol_error:
-                return error::bad_stream;
-
-            // timeout
-            case boost_errc_t::stream_timeout:
-            case boost_errc_t::timed_out:
-                return error::channel_timeout;
-
-            // file system errors (bad_file_descriptor used in I/O)
-            case boost_errc_t::cross_device_link:
-            case boost_errc_t::device_or_resource_busy:
-            case boost_errc_t::directory_not_empty:
-            case boost_errc_t::executable_format_error:
-            case boost_errc_t::file_exists:
-            case boost_errc_t::file_too_large:
-            case boost_errc_t::filename_too_long:
-            case boost_errc_t::invalid_seek:
-            case boost_errc_t::is_a_directory:
-            case boost_errc_t::no_space_on_device:
-            case boost_errc_t::no_such_device:
-            case boost_errc_t::no_such_device_or_address:
-            case boost_errc_t::read_only_file_system:
-            case boost_errc_t::resource_unavailable_try_again:
-            case boost_errc_t::text_file_busy:
-            case boost_errc_t::too_many_files_open:
-            case boost_errc_t::too_many_files_open_in_system:
-            case boost_errc_t::too_many_links:
-            case boost_errc_t::too_many_symbolic_link_levels:
-                return error::file_system;
-
-            default:
-                return error::errc_unknown;
-        }
-    }
-
-    return error::unknown;
 }
 
 BC_POP_WARNING()
