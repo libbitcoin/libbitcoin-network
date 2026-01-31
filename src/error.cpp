@@ -371,7 +371,8 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
             case asio_basic_error_t::no_buffer_space:
                 return error::invalid_configuration;
 
-            case asio_basic_error_t::try_again:
+            // This duplicates would_block except on MSVC.
+            ////case asio_basic_error_t::try_again:
             case asio_basic_error_t::no_such_device:
                 return error::file_system;
 
