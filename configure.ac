@@ -98,7 +98,7 @@ AC_ARG_WITH([tests],
 AC_MSG_RESULT([$with_tests])
 AM_CONDITIONAL([WITH_TESTS], [test x$with_tests != xno])
 
-# Implement --with-ssl and define WOLFSSL_USER_SETTINGS and output ${ssl}.
+# Implement --with-ssl and define WITH_SSL and output ${ssl}.
 #------------------------------------------------------------------------------
 AC_MSG_CHECKING([--with-ssl option])
 AC_ARG_WITH([ssl],
@@ -107,8 +107,9 @@ AC_ARG_WITH([ssl],
     [with_ssl=$withval],
     [with_ssl=yes])
 AC_MSG_RESULT([$with_ssl])
-AS_CASE([${with_ssl}], [yes], AC_DEFINE([WOLFSSL_USER_SETTINGS]))
-AS_CASE([${with_ssl}], [yes], AC_SUBST([ssl], [-DWOLFSSL_USER_SETTINGS]))
+AS_CASE([${with_ssl}], [yes], AC_DEFINE([WITH_SSL]))
+AS_CASE([${with_ssl}], [yes], AC_SUBST([ssl], [-DWITH_SSL]))
+AS_CASE([${with_ssl}], [yes], AC_SUBST([ssl_include], [-I${includedir}/bitcoin/network/ssl]))
 
 # Implement --enable-ndebug and define NDEBUG.
 #------------------------------------------------------------------------------
@@ -135,6 +136,16 @@ AC_ARG_ENABLE([isystem],
     [enable_isystem=no])
 AC_MSG_RESULT([$enable_isystem])
 
+
+# Set preprocessor defines.
+#==============================================================================
+# Conditionally define the preprocessor symbol WOLFSSL_USER_SETTINGS.
+#------------------------------------------------------------------------------
+
+AS_IF([test x${with_ssl} != "xno"], [
+    AC_DEFINE([WOLFSSL_USER_SETTINGS])
+    AC_SUBST([wolfssl], -DWOLFSSL_USER_SETTINGS])
+    ])
 
 # Set flags.
 #==============================================================================
@@ -251,15 +262,13 @@ AS_CASE([${with_tests}], [yes],
 
 # Require bitcoin-system of at least version 4.0.0 and output ${bitcoin_system_CPPFLAGS/LIBS/PKG}.
 #------------------------------------------------------------------------------
-PKG_CHECK_MODULES([bitcoin_system], [libbitcoin-system >= 4.0.0],
-    [bitcoin_system_INCLUDEDIR="`$PKG_CONFIG --variable=includedir "libbitcoin-system >= 4.0.0" 2>/dev/null`"
-     bitcoin_system_OTHER_CFLAGS="`$PKG_CONFIG --cflags-only-other "libbitcoin-system >= 4.0.0" 2>/dev/null`"],
-    [AC_MSG_ERROR([libbitcoin-system >= 4.0.0 is required but was not found.])])
+PKG_CHECK_MODULES([bitcoin_system], [libbitcoin-system >= 4.0.0], [],
+    [
+      AC_MSG_ERROR([libbitcoin-system >= 4.0.0 is required but was not found.])
+    ])
 AC_SUBST([bitcoin_system_PKG], ['libbitcoin-system >= 4.0.0'])
 AC_SUBST([bitcoin_system_CPPFLAGS], [${bitcoin_system_CFLAGS}])
-AS_IF([test x${bitcoin_system_INCLUDEDIR} != "x"],
-    [AC_SUBST([bitcoin_system_ISYS_CPPFLAGS], ["-isystem${bitcoin_system_INCLUDEDIR} ${bitcoin_system_OTHER_CFLAGS}"])],
-    [AC_SUBST([bitcoin_system_ISYS_CPPFLAGS], [${bitcoin_system_OTHER_CFLAGS}])])
+AC_SUBST([bitcoin_system_ISYS_CPPFLAGS], [`echo ${bitcoin_system_CPPFLAGS} | $SED s/^-I/-isystem/g | $SED s/' -I'/' -isystem'/g`]])
 AC_MSG_NOTICE([bitcoin_system_CPPFLAGS : ${bitcoin_system_CPPFLAGS}])
 AC_MSG_NOTICE([bitcoin_system_ISYS_CPPFLAGS : ${bitcoin_system_ISYS_CPPFLAGS}])
 AC_MSG_NOTICE([bitcoin_system_OTHER_CFLAGS : ${bitcoin_system_OTHER_CFLAGS}])

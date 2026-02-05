@@ -118,16 +118,16 @@ set( pkgconfigdir "${libdir}/pkgconfig" CACHE PATH "Path to pkgconfig directory.
 #------------------------------------------------------------------------------
 set( with-tests "yes" CACHE BOOL "Compile with unit tests." )
 
-# Implement -Dwith-ssl and define WOLFSSL_USER_SETTINGS and output ${ssl}.
+# Implement -Dwith-ssl and define WITH_SSL and output ${ssl}.
 #------------------------------------------------------------------------------
 set( with-ssl "yes" CACHE BOOL "Compile with internal ssl." )
 
 if (with-ssl)
-    add_definitions( -DWOLFSSL_USER_SETTINGS )
+    add_definitions( -DWITH_SSL )
 endif()
 
 if (with-ssl)
-    set( ssl "-DWOLFSSL_USER_SETTINGS" )
+    set( ssl "-DWITH_SSL" )
 endif()
 
 # Implement -Denable-ndebug and define NDEBUG.
@@ -144,6 +144,7 @@ if (BUILD_SHARED_LIBS)
     add_definitions( -DBOOST_ALL_DYN_LINK )
 endif()
 
+add_definitions( -DWOLFSSL_USER_SETTINGS )
 if (BUILD_SHARED_LIBS)
     set( Boost_USE_STATIC_LIBS "off" )
 else()
@@ -553,6 +554,12 @@ if (with-tests)
         "../../test/ssl/vectors/certs/server-ecc384-cert.pem"
         "../../test/ssl/vectors/certs/server-ecc384-key.pem"
         "../../test/ssl/vectors/certs/server-key.pem"
+        "../../test/ssl/vectors/certs/custom/client-ecc384.pfx"
+        "../../test/ssl/vectors/certs/custom/localhost-ecc256-cert.pem"
+        "../../test/ssl/vectors/certs/custom/localhost-ecc256-key.pem"
+        "../../test/ssl/vectors/certs/custom/localhost-ecc384-cert.pem"
+        "../../test/ssl/vectors/certs/custom/localhost-ecc384-key.pem"
+        "../../test/ssl/vectors/certs/custom/readme.txt"
         "../../test/ssl/vectors/certs/custom/server-ecc384-key-enc.pem"
         "../../test/ssl/vectors/certs/test/server-cert-ecc-badsig.pem"
         "../../test/ssl/vectors/certs/test/server-cert-rsa-badsig.pem"
