@@ -193,7 +193,7 @@ if WITH_TESTS
 TESTS = libbitcoin-network-test_runner.sh
 
 check_PROGRAMS = test/libbitcoin-network-test
-test_libbitcoin_network_test_CPPFLAGS = -I${srcdir}/include -I${srcdir}/include/bitcoin/network/ssl -I${srcdir}/test/ssl/wolfssl ${bitcoin_system_BUILD_CPPFLAGS}
+test_libbitcoin_network_test_CPPFLAGS = -I${srcdir}/include -I${srcdir}/include/bitcoin/network/ssl -I${srcdir}/test/ssl/wolfssl -DCERT_PREFIX="\"${src_dir}/test/ssl/wolfssl/wolfcrypt/test/\"" ${bitcoin_system_BUILD_CPPFLAGS}
 test_libbitcoin_network_test_LDADD = src/libbitcoin-network.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_network_test_SOURCES = \
     test/error.cpp \
