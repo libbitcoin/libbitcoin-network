@@ -171,13 +171,14 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    // There was an error accepting the channel, so try again after delay.
+    // There was an error accepting the channel, so try again.
     if (ec)
     {
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
         LOGF("Failed to accept " << (secure ? "private " : "clear ")
             << name_ << " connection, " << ec.message());
-        defer(BIND(start_accept, _1, acceptor, secure));
+        ////defer(BIND(start_accept, _1, acceptor, secure));
+        start_accept(error::success, acceptor, secure);
         return;
     }
 
