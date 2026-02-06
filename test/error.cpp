@@ -769,15 +769,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__bad_request__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "bad request");
 }
 
-////BOOST_AUTO_TEST_CASE(error_t__code__unauthorized__true_expected_message)
-////{
-////    constexpr auto value = error::unauthorized;
-////    const auto ec = code(value);
-////    BOOST_REQUIRE(ec);
-////    BOOST_REQUIRE(ec == value);
-////    BOOST_REQUIRE_EQUAL(ec.message(), "unauthorized");
-////}
-////
+BOOST_AUTO_TEST_CASE(error_t__code__unauthorized__true_expected_message)
+{
+    constexpr auto value = error::unauthorized;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unauthorized");
+}
+
 ////BOOST_AUTO_TEST_CASE(error_t__code__payment_required__true_expected_message)
 ////{
 ////    constexpr auto value = error::payment_required;

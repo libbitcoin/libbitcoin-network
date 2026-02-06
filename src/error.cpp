@@ -136,7 +136,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // boost beast http 4xx client error
     { bad_request, "bad request" },
-    ////{ unauthorized, "unauthorized" },
+    { unauthorized, "unauthorized" },
     ////{ payment_required, "payment required" },
     { forbidden, "forbidden" },
     { not_found, "not found" },
