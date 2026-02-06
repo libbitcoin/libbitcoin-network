@@ -755,7 +755,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__tls_unexpected_result__true_expected_message
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tls unexpected result");
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls handshake failure");
 }
 
 // http 4xx client error
