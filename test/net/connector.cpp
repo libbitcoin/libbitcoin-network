@@ -231,6 +231,8 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
     connector::parameters params{ .connect_timeout = seconds(1000), .maximum_request = 42 };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
+    code ec1{};
+    code ec2{};
 
     boost::asio::post(strand, [&, instance]() NOEXCEPT
     {
@@ -238,6 +240,7 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [&](const code& ec, const socket::ptr& socket) NOEXCEPT
             {
+                ec1 = ec;
                 result &= (((ec == error::resolve_failed) && !socket) || (ec == error::operation_canceled));
             });
     
@@ -245,6 +248,7 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
         instance->connect(config::endpoint{ "bogus.yyy", 24 },
             [&](const code& ec, const socket::ptr& socket) NOEXCEPT
             {
+                ec2 = ec;
                 result &= (ec == error::operation_failed);
                 result &= is_null(socket);
             });
@@ -256,6 +260,16 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE(instance->get_stopped());
+
+    // BUGBUG: macOS:
+    // Error codes have changed and the resulting race failure test is not matching expected code.
+    if (!result)
+    {
+        BOOST_CHECK_EQUAL(ec1, error::resolve_failed);
+        BOOST_CHECK_EQUAL(ec1, error::operation_canceled);
+        BOOST_CHECK_EQUAL(ec2, error::operation_failed);
+    }
+
     BOOST_REQUIRE(result);
 }
 
