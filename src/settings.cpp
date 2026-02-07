@@ -142,6 +142,19 @@ system::string_list settings::http_server::origin_names() const NOEXCEPT
     return config::to_host_names(hosts, port);
 }
 
+bool settings::http_server::authorize() const NOEXCEPT
+{
+    return !username.empty() || !password.empty();
+}
+
+std::string settings::http_server::credential() const NOEXCEPT
+{
+    static const auto value = "Basic " +
+        system::encode_base64(username + ":" + password);
+
+    return value;
+}
+
 // websocket_server
 // ----------------------------------------------------------------------------
 
