@@ -116,6 +116,16 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
 // Wrap the http request as a tagged verb request and dispatch by type.
 void channel_http::dispatch(const request_cptr& request) NOEXCEPT
 {
+    BC_ASSERT(stranded());
+
+    if (unauthorized(*request))
+    {
+        send({ status::unauthorized, request->version() },
+            std::bind(&channel_http::handle_unauthorized,
+                shared_from_base<channel_http>(), _1));
+        return;
+    }
+
     rpc::request_t model{};
     switch (request.get()->method())
     {
@@ -183,6 +193,21 @@ void channel_http::assign_json_buffer(response& response) NOEXCEPT
         response_buffer_->max_size(value.size_hint);
         value.buffer = response_buffer_;
     }
+}
+
+// unauthorized helpers
+// ----------------------------------------------------------------------------
+
+bool channel_http::unauthorized(const http::request& request) NOEXCEPT
+{
+    return options_.authorize() &&
+        (options_.credential() != request[field::authorization]);
+}
+
+void channel_http::handle_unauthorized(const code& ec) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    stop(ec ? ec : error::unauthorized);
 }
 
 // log helpers
