@@ -132,11 +132,11 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tls_set_add_verify, "failed to set tls certificate authority" },
     { tls_stream_truncated, "tls stream truncated" },
     { tls_unspecified_system_error, "tls unspecified system error" },
-    { tls_unexpected_result, "tls unexpected result" },
+    { tls_unexpected_result, "tls handshake failure" },
 
     // boost beast http 4xx client error
     { bad_request, "bad request" },
-    ////{ unauthorized, "unauthorized" },
+    { unauthorized, "unauthorized" },
     ////{ payment_required, "payment required" },
     { forbidden, "forbidden" },
     { not_found, "not found" },

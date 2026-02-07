@@ -194,6 +194,25 @@ void socket::handle_handshake(const boost_code& ec,
         return;
     }
 
+////    // Diagnostic block for backend-specific error retrieval.
+////    // Boost maps detailed wolfssl errors to a generic error code.
+////    if (ec)
+////    {
+////#ifdef HAVE_SSL
+////        const auto handle = std::get<asio::ssl::socket>(socket_).native_handle();
+////        char buffer[WOLFSSL_MAX_ERROR_SZ]{};
+////        const auto error = ::wolfSSL_get_error(handle, 0);
+////        ::wolfSSL_ERR_error_string_n(error, &buffer[0], sizeof(buffer));
+////        LOGF("wolfSSL handshake error: code=" << error << ", desc='" << buffer << "'");
+////#else
+////        // OpenSSL recommends 120 bytes for strings.
+////        char buffer[120]{};
+////        const auto error = ::ERR_get_error();
+////        ::ERR_error_string_n(error, &buffer[0], sizeof(buffer));
+////        LOGF("OpenSSL handshake error: code=" << error << ", desc='" << buffer << "'");
+////#endif
+////    }
+
     const auto code = error::ssl_to_error_code(ec);
     if (code == error::unknown) logx("handshake", ec);
     handler(code);

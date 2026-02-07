@@ -56,6 +56,7 @@ public:
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
+        options_(options),
         response_buffer_(system::to_shared<http::flat_buffer>()),
         request_buffer_(options.minimum_buffer)
     {
@@ -79,6 +80,9 @@ protected:
     /// Read request buffer (requires strand).
     virtual http::flat_buffer& request_buffer() NOEXCEPT;
 
+    /// Determine if http basic authorization is satisfied if enabled.
+    virtual bool unauthorized(const http::request& request) NOEXCEPT;
+
     /// Dispatch request to subscribers by verb type.
     virtual void dispatch(const http::request_cptr& request) NOEXCEPT;
 
@@ -93,10 +97,14 @@ protected:
         const result_handler& handler) NOEXCEPT;
 
 private:
+    void handle_unauthorized(const code& ec) NOEXCEPT;
     void log_message(const http::request& request,
         size_t bytes) const NOEXCEPT;
     void log_message(const http::response& response,
         size_t bytes) const NOEXCEPT;
+
+    // This is thread safe.
+    const options_t& options_;
 
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;

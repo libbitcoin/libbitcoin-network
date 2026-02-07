@@ -149,7 +149,7 @@ enum error_t : uint8_t
 
     // boost beast http 4xx client error
     bad_request,
-    ////unauthorized,
+    unauthorized,
     ////payment_required,
     forbidden,
     not_found,
