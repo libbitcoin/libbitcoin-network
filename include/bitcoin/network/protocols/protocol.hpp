@@ -32,6 +32,13 @@
 namespace libbitcoin {
 namespace network {
 
+class stoppable
+{
+public:
+    virtual void stop(const code& ec) = 0;
+    virtual ~stoppable() = default;
+};
+
 /// This class is thread safe, except for:
 /// * start/started must be called on strand.
 /// * setters should only be invoked during handshake.
@@ -40,7 +47,8 @@ namespace network {
 /// Protocol start has no failure condition.
 /// A protocol can only stop its channel, not the session/network.
 class BCT_API protocol
-  : public enable_shared_from_base<protocol>, public reporter
+  : public virtual stoppable,
+    public enable_shared_from_base<protocol>, public reporter
 {
 public:
     typedef std::shared_ptr<protocol> ptr;
@@ -150,8 +158,8 @@ protected:
     /// Channel is stopped or code set.
     virtual bool stopped(const code& ec=error::success) const NOEXCEPT;
 
-    /// Stop the channel.
-    virtual void stop(const code& ec) NOEXCEPT;
+    /// Stop the channel (stoppable::stop).
+    void stop(const code& ec) NOEXCEPT override;
 
     /// Pause reading from the socket, stops timers (requires strand).
     virtual void pause() NOEXCEPT;
