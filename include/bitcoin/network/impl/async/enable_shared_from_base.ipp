@@ -31,6 +31,29 @@ void enable_shared_from_base<Base>::nop() volatile NOEXCEPT
 }
 
 template <class Base>
+template <class Sibling, class Shared, if_base_of<Base, Shared>>
+std::shared_ptr<Sibling> enable_shared_from_base<Base>::
+shared_from_sibling() NOEXCEPT
+{
+    // NO_STATIC_DOWNCASTS
+    BC_PUSH_WARNING(26491)
+    BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
+    BC_PUSH_WARNING(NO_DEREFERENCE_NULL_POINTER)
+    // Allowing unsafe downcast (presumes sibling inheritance.
+    // Safe to cast this instance to its own base (CRTP), cannot be null.
+    const auto self = static_cast<Shared*>(this);
+    BC_POP_WARNING()
+    BC_POP_WARNING()
+    BC_POP_WARNING()
+
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    /// Returns nullptr if instance of Shared is not also instance of Sibling.
+    return std::dynamic_pointer_cast<Sibling>(self->shared_from_this());
+    BC_POP_WARNING()
+}
+
+// protected
+template <class Base>
 template <class Derived, if_base_of<Base, Derived>>
 std::shared_ptr<Derived> enable_shared_from_base<Base>::
 shared_from_base() NOEXCEPT
@@ -38,22 +61,6 @@ shared_from_base() NOEXCEPT
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     // this-> is required for dependent base access in CRTP.
     return std::static_pointer_cast<Derived>(this->shared_from_this());
-    BC_POP_WARNING()
-}
-
-template <class Base>
-template <class Sibling, class Shared, if_base_of<Base, Shared>>
-std::shared_ptr<Sibling> enable_shared_from_base<Base>::
-shared_from_sibling() NOEXCEPT
-{
-    BC_PUSH_WARNING(NO_DEREFERENCE_NULL_POINTER)
-    // Safe to cast this instance to its own base (CRTP), cannot be null.
-    const auto self = static_cast<Shared*>(this);
-    BC_POP_WARNING()
-
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    /// Returns nullptr if instance of Shared is not also instance of Sibling.
-    return std::dynamic_pointer_cast<Sibling>(self->shared_from_this());
     BC_POP_WARNING()
 }
 

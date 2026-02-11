@@ -131,7 +131,9 @@ bool protocol::stranded() const NOEXCEPT
 
 config::endpoint protocol::opposite() const NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return { channel_->endpoint() };
+    BC_POP_WARNING()
 }
 
 const config::address& protocol::outbound() const NOEXCEPT

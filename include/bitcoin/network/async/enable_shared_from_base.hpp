@@ -36,15 +36,15 @@ public:
     /// Simplifies capture of the shared pointer for a nop handler.
     void nop() volatile NOEXCEPT;
 
-protected:
-    /// Use in derived class to create shared pointer instance of self.
-    template <class Derived, if_base_of<Base, Derived> = true>
-    std::shared_ptr<Derived> shared_from_base() NOEXCEPT;
-
     /// Use in sibling class to create shared pointer instance of self.
     /// Returns empty if instance of Shared is not also instance of Sibling.
     template <class Sibling, class Shared, if_base_of<Base, Shared> = true>
     std::shared_ptr<Sibling> shared_from_sibling() NOEXCEPT;
+
+protected:
+    /// Use in derived class to create shared pointer instance of self.
+    template <class Derived, if_base_of<Base, Derived> = true>
+    std::shared_ptr<Derived> shared_from_base() NOEXCEPT;
 };
 
 } // namespace network
