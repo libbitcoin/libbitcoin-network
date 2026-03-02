@@ -61,7 +61,7 @@ BC_PUSH_WARNING(NO_CASTS_FOR_ARITHMETIC_CONVERSION)
 
 DEFINE_JSON_FROM_TAG(value_t)
 {
-    // In the general model, all numbers serialize to double.
+    // Boost serializes all numbers as double, but varies precision by type.
     std::visit(overload
     {
         [&](null_t) NOEXCEPT
@@ -78,35 +78,35 @@ DEFINE_JSON_FROM_TAG(value_t)
         },
         [&](int8_t visit) THROWS
         {
-            value = static_cast<double>(visit);
+            value = visit;
         },
         [&](int16_t visit) THROWS
         {
-            value = static_cast<double>(visit);
+            value = visit;
         },
         [&](int32_t visit) THROWS
         {
-            value = static_cast<double>(visit);
+            value = visit;
         },
         [&](int64_t visit) THROWS
         {
-            value = static_cast<double>(visit);
+            value = visit;
         },
         [&](uint8_t visit) THROWS
         {
-            value = static_cast<double>(visit);
+            value = visit;
         },
         [&](uint16_t visit) THROWS
         {
-            value = static_cast<double>(visit);
+            value = visit;
         },
         [&](uint32_t visit) THROWS
         {
-            value = static_cast<double>(visit);
+            value = visit;
         },
         [&](uint64_t visit) THROWS
         {
-            value = static_cast<double>(visit);
+            value = visit;
         },
         [&](const string_t& visit) THROWS
         {
