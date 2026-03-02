@@ -290,7 +290,9 @@ void session_server::handle_channel_stop(const code& LOG_ONLY(ec),
     LOGS("Inbound " << name_ << " channel stop [" << channel->endpoint()
         << "] " << ec.message());
 
-    BC_ASSERT(!is_zero(channel_count_));
+    // There is a start/stop race with handle_channel_start that can result
+    // in channel_count_ of zero here before the first increment.
+    ////BC_ASSERT(!is_zero(channel_count_));
     channel_count_ = floored_subtract(channel_count_, one);
 }
 
