@@ -120,6 +120,7 @@ bool channel_peer::is_handshaked() const NOEXCEPT
     return !is_null(peer_version_);
 }
 
+// peer_version_->user_agent is not sanitized here.
 version::cptr channel_peer::peer_version() const NOEXCEPT
 {
     // peer_version_ defaults to nullptr, which implies not handshaked.
