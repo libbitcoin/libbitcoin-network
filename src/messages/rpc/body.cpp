@@ -105,6 +105,7 @@ finish(boost_code& ec) NOEXCEPT
 
     try
     {
+        // TODO: extend support to batch (array of rpc).
         value_.message = value_to<rpc::request_t>(value_.model);
         value_.model.emplace_null();
     }

@@ -103,6 +103,14 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
         return;
     }
 
+    // TODO: Extend support to batch (array of rpc).
+    // TODO: This would consist of asynchronous recursion here, with iteration
+    // TODO: over the message array. The response is accumulated, but there is
+    // TODO: no way we would buffer it at the server until complete, which is a
+    // TODO: clear DoS vector. We would instead track the iteration and send
+    // TODO: each response with the necessary delimiters. This allows a request
+    // TODO: to safely be of any configured byte size or request element count.
+
     // Save response state.
     identity_ = request->message.id;
     version_ = request->message.jsonrpc;

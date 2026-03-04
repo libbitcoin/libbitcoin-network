@@ -75,6 +75,12 @@ void channel_http::receive() NOEXCEPT
     if (stopped() || paused() || reading_)
         return;
 
+    // TODO: Extend support to batch (array of rpc).
+    // TODO: See notes in channel_rpc.ipp. This is the same except there must
+    // TODO: be an set of socket methods for incremental http-rpc. This can
+    // TODO: be handled by writing the header, whole rpc responses, and close.
+    // TODO: Boost beast provides these independent async calls for chunking.
+
     reading_ = true;
     const auto in = to_shared<request>();
 
