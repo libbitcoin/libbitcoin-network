@@ -285,6 +285,17 @@ minutes protocol_version_106::to_deviation(uint64_t timestamp) NOEXCEPT
     return std::chrono::duration_cast<minutes>(time - now);
 }
 
+static std::string escape_user_agent(const std::string& in) NOEXCEPT
+{
+    std::string out(in.size(), '*');
+    std::transform(in.begin(), in.end(), out.begin(), [](char c) NOEXCEPT
+    {
+        return is_ascii_character(c) && !is_ascii_whitespace(c) ? c : '*';
+    });
+
+    return out;
+}
+
 bool protocol_version_106::handle_receive_version(const code& ec,
     const version::cptr& message) NOEXCEPT
 {
@@ -300,12 +311,14 @@ bool protocol_version_106::handle_receive_version(const code& ec,
         return false;
     }
 
+    const auto user_agent = escape_user_agent(message->user_agent);
+
     // Filter out user agent spam.
-    auto user_agent = system::replace_copy(message->user_agent,
-        "(not-your-file-server)/Knots:", "/Sybil:");
-    system::replace(user_agent, "(FutureBit-Apollo-Node)", "/FutureBit");
-    system::replace(user_agent, "/Satoshi-BTF(BitcoinFinance)-Main-vSeventeen:",
-        "/BitcoinFinance:");
+    ////user_agent = system::replace_copy(user_agent,
+    ////    "(not-your-file-server)/Knots:", "/Sybil:");
+    ////system::replace(user_agent, "(FutureBit-Apollo-Node)", "/FutureBit");
+    ////system::replace(user_agent, "/Satoshi-BTF(BitcoinFinance)-Main-vSeventeen:",
+    ////    "/BitcoinFinance:");
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
     LOGN(prefix << " [" << opposite() << "] version (" << message->value
