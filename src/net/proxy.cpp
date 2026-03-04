@@ -272,7 +272,7 @@ void proxy::do_write(const asio::const_buffer& payload,
     }
 
     const auto started = !queue_.empty();
-    queue_.push_back(std::make_pair(payload, std::move(handler)));
+    queue_.push_back(std::make_pair(payload, handler));
     total_ = ceilinged_add(total_.load(), payload.size());
     backlog_ = ceilinged_add(backlog_.load(), payload.size());
 
