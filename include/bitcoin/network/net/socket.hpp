@@ -360,14 +360,12 @@ protected:
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;
 
-// TODO: reimplement as template.
 #define VARIANT_DISPATCH_METHOD(object, method) \
 std::visit([&](auto&& value) NOEXCEPT \
 { \
     value.get().method; \
 }, object)
 
-// TODO: reimplement as template.
 #define VARIANT_DISPATCH_FUNCTION(function, object, ...) \
 std::visit([&](auto&& value) NOEXCEPT \
 { \

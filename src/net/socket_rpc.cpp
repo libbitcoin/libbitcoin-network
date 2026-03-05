@@ -66,6 +66,7 @@ void socket::do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
         return;
     }
 
+    // async_read_some allows variable sized or empty reads into fixed buffer.
     VARIANT_DISPATCH_METHOD(get_tcp(),
         async_read_some(in->buffer.prepare(size),
             std::bind(&socket::handle_rpc_read,
@@ -110,6 +111,7 @@ void socket::handle_rpc_read(boost_code ec, size_t size, size_t total,
         }
     }
 
+    // Handle error condition or incomplete message.
     do_rpc_read(ec, total, in, handler);
 }
 
@@ -145,10 +147,13 @@ void socket::do_rpc_write(boost_code ec, size_t total,
     }
 
     BC_ASSERT(buffer.has_value());
-    VARIANT_DISPATCH_METHOD(get_tcp(),
-        async_write_some(buffer.value().first,
+
+    // Internally this may compose multiple async_write_some to consume buffer.
+    // Writes one buffer from writer, must still iterator until writer is done.
+    VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
+        buffer.value().first,
             std::bind(&socket::handle_rpc_write,
-                shared_from_this(), _1, _2, total, out, handler)));
+                shared_from_this(), _1, _2, total, out, handler));
 }
 
 void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
@@ -169,6 +174,7 @@ void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
         return;
     }
 
+    // Handle error condition or incomplete message.
     do_rpc_write(ec, total, out, handler);
 }
 
