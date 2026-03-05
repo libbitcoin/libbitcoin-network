@@ -95,8 +95,8 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
         // Don't log common conditions.
         if (ec != error::end_of_stream && ec != error::operation_canceled)
         {
-            LOGF("Rpc read failure [" << endpoint() << "] "
-                << ec.message());
+            // These are most likely to be json-rpc parse errors (remote).
+            LOGR("Rpc read failure [" << endpoint() << "] " << ec.message());
         }
 
         stop(ec);
