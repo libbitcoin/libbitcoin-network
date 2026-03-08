@@ -315,7 +315,9 @@ enum error_t : uint8_t
     jsonrpc_reader_bad_buffer,
     jsonrpc_reader_stall,
     jsonrpc_reader_exception,
-    jsonrpc_writer_exception
+    jsonrpc_writer_exception,
+    jsonrpc_batch_empty,         // batch array must contain at least one element
+    jsonrpc_batch_item_invalid   // each batch element must be a JSON object
 };
 
 // No current need for error_code equivalence mapping.

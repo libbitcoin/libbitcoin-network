@@ -83,6 +83,21 @@ protected:
     /// Override to dispatch request to subscribers by requested method.
     virtual inline void dispatch(const rpc::request_cptr& request) NOEXCEPT;
 
+    /// Dispatch a batch of requests from a single parsed message.
+    /// Called from handle_receive() when request->is_batch() is true.
+    /// The default implementation stores the batch and calls dispatch_next()
+    /// to process items one at a time. May be overridden to reject batch on
+    /// channels that do not support it (call stop(error::not_implemented)).
+    virtual inline void dispatch_batch(
+        const rpc::request_cptr& request) NOEXCEPT;
+
+    /// Advance the batch cursor and dispatch the next item.
+    /// Skips notification items (no id) without sending a response.
+    /// Calls receive() when all items have been dispatched.
+    /// Must only be called from the strand while batch_source_ is set.
+    /// Not virtual: the sequencing contract must not be overridden.
+    inline void dispatch_next() NOEXCEPT;
+
     /// Size and assign response_buffer_ (value type is json-rpc::json).
     virtual inline rpc::response_ptr assign_message(rpc::response_t&& message,
         size_t size_hint) NOEXCEPT;
@@ -107,6 +122,15 @@ private:
     http::flat_buffer request_buffer_;
     dispatcher dispatcher_{};
     bool reading_{};
+
+    /// Non-null while a batch is in flight. Holds the parsed batch message so
+    /// individual request_t items can be accessed by index without copying.
+    /// Protected by the channel strand.
+    rpc::request_cptr batch_source_{};
+
+    /// Index of the next item to dispatch from batch_source_->batch.
+    /// Zero when no batch is in flight. Protected by the channel strand.
+    size_t batch_cursor_{};
 };
 
 } // namespace network
