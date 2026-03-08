@@ -172,6 +172,12 @@ struct request_t
     params_option params{};
 };
 
+/// An ordered sequence of request_t objects from a JSON-RPC batch message.
+/// batch_t is populated in message_type<request_t>::batch by the body reader
+/// when the incoming JSON root is an array. It is never populated for single
+/// requests. Use message_type<request_t>::is_batch() to distinguish.
+using batch_t = std::vector<request_t>;
+
 DECLARE_JSON_TAG_INVOKE(version);
 DECLARE_JSON_TAG_INVOKE(value_t);
 DECLARE_JSON_TAG_INVOKE(identity_t);

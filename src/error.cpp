@@ -302,7 +302,9 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { jsonrpc_reader_bad_buffer, "jsonrpc reader bad buffer" },
     { jsonrpc_reader_stall, "jsonrpc reader stall" },
     { jsonrpc_reader_exception, "jsonrpc reader exception" },
-    { jsonrpc_writer_exception, "jsonrpc writer exception" }
+    { jsonrpc_writer_exception, "jsonrpc writer exception" },
+    { jsonrpc_batch_empty, "json-rpc batch array must not be empty" },
+    { jsonrpc_batch_item_invalid, "json-rpc batch element is not a JSON object" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")

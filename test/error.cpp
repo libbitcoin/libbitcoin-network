@@ -2176,4 +2176,30 @@ BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_writer_exception__true_expected_mess
     BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc writer exception");
 }
 
+// json-rpc batch errors (added with batch support)
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_batch_empty__true_expected_message)
+{
+    // Emitted by body<request_t>::reader::finish() when the JSON root is an
+    // array but contains zero elements. JSON-RPC 2.0 §6 explicitly forbids
+    // this; the channel is stopped on receipt.
+    constexpr auto value = error::jsonrpc_batch_empty;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "json-rpc batch array must not be empty");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_batch_item_invalid__true_expected_message)
+{
+    // Emitted by body<request_t>::reader::finish() when any element of the
+    // batch array is not a JSON object. Each element must be a Request object
+    // per the JSON-RPC 2.0 spec; a non-object stops parsing immediately.
+    constexpr auto value = error::jsonrpc_batch_item_invalid;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "json-rpc batch element is not a JSON object");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -45,6 +45,11 @@ inline void CLASS::stopping(const code& ec) NOEXCEPT
     BC_ASSERT(stranded());
     channel::stopping(ec);
     dispatcher_.stop(ec);
+
+    // Release the batch shared_ptr on stop to avoid holding the allocation
+    // longer than necessary and to make the stopped state unambiguous.
+    batch_source_.reset();
+    batch_cursor_ = 0;
 }
 
 TEMPLATE
@@ -103,23 +108,34 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
         return;
     }
 
-    // TODO: Extend support to batch (array of rpc).
-    // TODO: This would consist of asynchronous recursion here, with iteration
-    // TODO: over the message array. The response is accumulated, but there is
-    // TODO: no way we would buffer it at the server until complete, which is a
-    // TODO: clear DoS vector. We would instead track the iteration and send
-    // TODO: each response with the necessary delimiters. This allows a request
-    // TODO: to safely be of any configured byte size or request element count.
-
-    // Save response state.
-    identity_ = request->message.id;
-    version_ = request->message.jsonrpc;
-
-    LOGA("Rpc request : (" << bytes << ") bytes [" << endpoint() << "] "
-        << request->message.method << "(...).");
+    // RESOLVED: Extend support to batch (array of rpc).
+    // RESOLVED: This would consist of asynchronous recursion here, with iteration
+    // RESOLVED: over the message array. The response is accumulated, but there is
+    // RESOLVED: no way we would buffer it at the server until complete, which is a
+    // RESOLVED: clear DoS vector. We would instead track the iteration and send
+    // RESOLVED: each response with the necessary delimiters. This allows a request
+    // RESOLVED: to safely be of any configured byte size or request element count.
+    // Implemented via dispatch_batch() + dispatch_next() + batch_source_/batch_cursor_.
+    // One response is in flight at a time; handle_send() advances the cursor.
 
     reading_ = false;
-    dispatch(request);
+
+    if (request->is_batch())
+    {
+        LOGA("Rpc batch   : (" << bytes << ") bytes [" << endpoint() << "] "
+            << request->batch.size() << " item(s).");
+        dispatch_batch(request);
+    }
+    else
+    {
+        // Save response identity for this request (single path, unchanged).
+        identity_ = request->message.id;
+        version_  = request->message.jsonrpc;
+
+        LOGA("Rpc request : (" << bytes << ") bytes [" << endpoint() << "] "
+            << request->message.method << "(...).");
+        dispatch(request);
+    }
 }
 
 TEMPLATE
@@ -128,6 +144,68 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
     BC_ASSERT(stranded());
     if (const auto code = dispatcher_.notify(request->message))
         stop(code);
+}
+
+TEMPLATE
+inline void CLASS::dispatch_batch(const rpc::request_cptr& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    BC_ASSERT(request->is_batch());
+    BC_ASSERT_MSG(!batch_source_, "nested batch");
+
+    // Hold the parsed request alive by shared_ptr; no copy of batch items.
+    batch_source_ = request;
+    batch_cursor_ = 0;
+    dispatch_next();
+}
+
+TEMPLATE
+inline void CLASS::dispatch_next() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    BC_ASSERT(batch_source_);
+
+    const auto& items = batch_source_->batch;
+
+    // Skip notification items (no id): dispatch for side-effects only.
+    // Per JSON-RPC 2.0 notifications must receive no response.
+    // Unknown method on a notification is silently ignored (not a channel error).
+    while (batch_cursor_ < items.size()
+        && !items[batch_cursor_].id.has_value())
+    {
+        dispatcher_.notify(items[batch_cursor_++]);
+
+        // A notification handler could call stop(). Bail if so.
+        if (stopped()) return;
+    }
+
+    // All remaining items consumed (may have been all notifications).
+    if (batch_cursor_ >= items.size())
+    {
+        batch_source_.reset();
+        batch_cursor_ = 0;
+        receive();
+        return;
+    }
+
+    // Dispatch the next request item (has id, must receive a response).
+    const auto& req = items[batch_cursor_++];
+    identity_ = req.id;
+    version_  = req.jsonrpc;
+
+    if (const auto ec = dispatcher_.notify(req))
+    {
+        // Unknown method: send a per-item error response.
+        // handle_send() will call dispatch_next() for us when the write
+        // completes, advancing to the next batch item.
+        send_error({ .code = ec.value(), .message = ec.message() },
+            [](const code&) NOEXCEPT {});
+        return;
+    }
+
+    // Success: the matched subscriber handler will eventually call
+    // send_result() or send_code(), which routes through handle_send(),
+    // which calls dispatch_next() to advance the cursor.
 }
 
 TEMPLATE
@@ -198,8 +276,11 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     LOGA("Rpc response: (" << bytes << ") bytes [" << endpoint() << "] "
         << response->message.error.value_or(rpc::result_t{}).message);
 
-    // Continue read loop (does not unpause or restart channel).
-    receive();
+    // Continue: advance batch or read the next top-level message.
+    if (batch_source_)
+        dispatch_next();
+    else
+        receive();
 }
 
 // private

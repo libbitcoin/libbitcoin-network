@@ -100,43 +100,106 @@ template <>
 void body<rpc::request_t>::reader::
 finish(boost_code& ec) NOEXCEPT
 {
+    // Delegate to json::body reader: parser_.finish() + model = parser_.release().
     base::reader::finish(ec);
     if (ec) return;
 
-    try
+    // Newline terminator requirement (TCP Electrum protocol).
+    if (terminated_ && !has_terminator_)
     {
-        // TODO: extend support to batch (array of rpc).
-        value_.message = value_to<rpc::request_t>(value_.model);
+        ec = code{ error::jsonrpc_reader_stall };
+        return;
+    }
+
+    const auto& model = value_.model;
+
+    if (model.is_object())
+    {
+        // ── Single request ──────────────────────────────────────────────────
+        // Existing path: deserialize the JSON object into request_t.
+        // value_.batch remains empty; is_batch() returns false.
+        try
+        {
+            value_.message = value_to<rpc::request_t>(model);
+            value_.model.emplace_null();
+        }
+        catch (const boost::system::system_error& e)
+        {
+            // Primary exception type for parsing operations.
+            ec = e.code();
+            return;
+        }
+        catch (...)
+        {
+            ec = code{ error::jsonrpc_reader_exception };
+            return;
+        }
+
+        // Set version default.
+        if (value_.message.jsonrpc == version::undefined)
+            value_.message.jsonrpc = version::v1;
+
+        // Post-parse semantic validation.
+        if (value_.message.method.empty())
+        {
+            ec = code{ error::jsonrpc_requires_method };
+        }
+        else if (value_.message.jsonrpc == version::v1)
+        {
+            if (!value_.message.params.has_value())
+                ec = code{ error::jsonrpc_v1_requires_params };
+            else if (!value_.message.id.has_value())
+                ec = code{ error::jsonrpc_v1_requires_id };
+            else if (!std::holds_alternative<array_t>(
+                value_.message.params.value()))
+                ec = code{ error::jsonrpc_v1_requires_array_params };
+        }
+    }
+    else if (model.is_array())
+    {
+        // ── Batch request ───────────────────────────────────────────────────
+        // Deserialize each array element as request_t into value_.batch.
+        // value_.message remains default-constructed; is_batch() returns true.
+        //
+        // Per JSON-RPC 2.0 §6: the batch array must not be empty.
+        const auto& arr = model.as_array();
+        if (arr.empty())
+        {
+            ec = code{ error::jsonrpc_batch_empty };
+            return;
+        }
+
+        value_.batch.reserve(arr.size());
+        for (const auto& element : arr)
+        {
+            // Per spec each element must be a Request object.
+            if (!element.is_object())
+            {
+                ec = code{ error::jsonrpc_batch_item_invalid };
+                return;
+            }
+            try
+            {
+                value_.batch.push_back(value_to<rpc::request_t>(element));
+            }
+            catch (const boost::system::system_error& e)
+            {
+                ec = e.code();
+                return;
+            }
+            catch (...)
+            {
+                ec = code{ error::jsonrpc_reader_exception };
+                return;
+            }
+        }
+
         value_.model.emplace_null();
     }
-    catch (const boost::system::system_error& e)
+    else
     {
-        // Primary exception type for parsing operations.
-        ec = e.code();
-    }
-    catch (...)
-    {
-        ec = code{ error::jsonrpc_reader_exception };
-    }
-
-    // Set version default.
-    if (value_.message.jsonrpc == version::undefined)
-        value_.message.jsonrpc = version::v1;
-
-    // Post-parse semantic validation.
-    if (value_.message.method.empty())
-    {
+        // JSON root is neither object nor array — not a valid JSON-RPC message.
         ec = code{ error::jsonrpc_requires_method };
-    }
-    else if (value_.message.jsonrpc == version::v1)
-    {
-        if (!value_.message.params.has_value())
-            ec = code{ error::jsonrpc_v1_requires_params };
-        else if (!value_.message.id.has_value())
-            ec = code{ error::jsonrpc_v1_requires_id };
-        else if (!std::holds_alternative<array_t>(
-            value_.message.params.value()))
-            ec = code{ error::jsonrpc_v1_requires_array_params };
     }
 }
 

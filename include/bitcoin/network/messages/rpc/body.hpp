@@ -35,6 +35,20 @@ struct message_type
     Type message{};
 };
 
+/// Full specialization of message_type for request_t.
+/// Adds batch support: when the incoming JSON root is an array, the reader
+/// populates batch{} and leaves message{} default-constructed. For single
+/// requests, message{} is populated and batch{} remains empty.
+template <>
+struct BCT_API message_type<request_t> : public json::json_value
+{
+    request_t message{};   ///< valid when !is_batch()
+    batch_t   batch{};     ///< valid when  is_batch()
+
+    /// True iff the body was parsed from a JSON array root.
+    inline bool is_batch() const NOEXCEPT { return !batch.empty(); }
+};
+
 /// Derived boost::beast::http body for JSON-RPC messages.
 /// Extends json::body with JSON-RPC validation.
 template <typename Message>
@@ -45,6 +59,14 @@ struct BCT_API body
     using base = typename json::body<message_value>;
     using value_type = base::value_type;
 
+    /// When Message = request_t the reader's finish() method handles two cases:
+    ///   JSON object root → single request: populates value_.message,
+    ///                                       batch remains empty.
+    ///   JSON array root  → batch request : populates value_.batch,
+    ///                                       message remains default-constructed.
+    /// An empty array, a non-object array element, or a failed per-element
+    /// deserialization sets ec and aborts the read; the channel will be stopped.
+    /// The newline terminator requirement (terminated_) applies in both cases.
     class reader
       : public json::body<message_value>::reader
     {
