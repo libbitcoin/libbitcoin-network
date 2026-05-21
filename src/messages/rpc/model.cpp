@@ -256,6 +256,9 @@ DEFINE_JSON_TO_TAG(request_t)
     // method
     if (const auto it = object.find("method"); it != object.end())
     {
+        constexpr size_t max_method_size = 256;
+        if (it->value().as_string().size() > max_method_size)
+            throw ostream_exception{ "request_t" };
         request.method = it->value().as_string();
     }
 
