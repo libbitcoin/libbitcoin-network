@@ -213,7 +213,8 @@ class mock_protocol
 public:
     typedef std::shared_ptr<mock_protocol> ptr;
 
-    mock_protocol(const session::ptr& session,
+    // network::session namespace avoids xcode global namespace pollution.
+    mock_protocol(const network::session::ptr& session,
         const channel::ptr& channel) NOEXCEPT
       : protocol_peer(session, channel)
     {
