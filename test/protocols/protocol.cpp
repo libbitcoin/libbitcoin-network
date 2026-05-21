@@ -179,8 +179,9 @@ public:
     }
 };
 
+// network::session namespace avoids xcode global namespace pollution.
 class mock_session
-  : public session
+  : public network::session
 {
 public:
     using session::session;
