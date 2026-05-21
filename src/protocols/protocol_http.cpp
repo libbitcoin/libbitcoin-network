@@ -348,7 +348,7 @@ bool protocol_http::is_allowed_host(const fields& fields,
     if (host.empty() && version >= version_1_1)
         return false;
 
-    return options_.hosts.empty() || contains(options_.hosts,
+    return options_.hosts.empty() || contains(options_.host_names(),
         config::to_normal_host(host, default_port()));
 }
 
@@ -365,7 +365,7 @@ bool protocol_http::is_allowed_origin(const fields& fields,
     if (origin == "null")
         return options_.allow_opaque_origin;
 
-    return options_.origins.empty() || contains(options_.origins,
+    return options_.origins.empty() || contains(options_.origin_names(),
         config::to_normal_host(origin, default_port()));
 }
 
