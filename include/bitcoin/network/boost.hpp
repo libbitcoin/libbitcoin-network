@@ -24,9 +24,13 @@
 // Must pull in any base boost configuration before including boost.
 #include <bitcoin/system.hpp>
 
+// MSVC false positive in boost.optional 1.91.0.
+BC_PUSH_WARNING(UNREACHABLE_CODE)
 #include <boost/bimap.hpp>
 #include <boost/bimap/set_of.hpp>
 #include <boost/bimap/multiset_of.hpp>
+BC_POP_WARNING()
+
 #include <boost/circular_buffer.hpp>
 #include <boost/system/error_code.hpp>
 

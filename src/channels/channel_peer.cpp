@@ -284,8 +284,8 @@ void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
     // Notify subscribers of the new message.
     ///////////////////////////////////////////////////////////////////////////
     // TODO: hack, move into peer::body::reader.
-    if (auto any = interface::deserialize(allocator_, head->id(),
-        payload_buffer_, negotiated_version(), settings().witness_node()))
+    if (auto any = interface::deserialize(head->id(), payload_buffer_,
+        negotiated_version(), settings().witness_node()))
     {
         // If object passes to another thread destruction cost is very high.
         if (const auto code = dispatcher_.notify(rpc::request_t
