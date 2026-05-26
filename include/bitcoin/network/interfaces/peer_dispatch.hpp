@@ -86,15 +86,15 @@ struct peer_dispatch
 
     /// TODO: this moves to peer::body::reader
     /// Type-erased implementation of peer::deserialize<Message>.
-    static inline any_t deserialize(memory& allocator,
-        messages::peer::identifier identifier, const system::data_chunk& data,
-        uint32_t version_, bool witness) NOEXCEPT
+    static inline any_t deserialize(messages::peer::identifier identifier,
+        const system::data_chunk& data, uint32_t version_,
+        bool witness) NOEXCEPT
     {
         switch (identifier)
         {
             RETURN_DESERIALIZED_PTR(address)
             RETURN_DESERIALIZED_PTR(alert)
-            RETURN_DESERIALIZED_PTR(block, witness, *allocator.get_arena())
+            RETURN_DESERIALIZED_PTR(block, witness)
             RETURN_DESERIALIZED_PTR(bloom_filter_add)
             RETURN_DESERIALIZED_PTR(bloom_filter_clear)
             RETURN_DESERIALIZED_PTR(bloom_filter_load)

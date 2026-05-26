@@ -32,8 +32,9 @@ BOOST_AUTO_TEST_CASE(block__properties__always__expected)
 
 BOOST_AUTO_TEST_CASE(block__size__default__zero)
 {
-    BOOST_REQUIRE_EQUAL(peer::block{}.size(peer::level::canonical, true), zero);
-    BOOST_REQUIRE_EQUAL(peer::block{}.size(peer::level::canonical, false), zero);
+    const peer::block default_block{ { {}, {} } };
+    BOOST_REQUIRE_EQUAL(default_block.size(peer::level::canonical, true), zero);
+    BOOST_REQUIRE_EQUAL(default_block.size(peer::level::canonical, false), zero);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
