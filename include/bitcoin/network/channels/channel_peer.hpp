@@ -84,16 +84,7 @@ public:
     inline channel_peer(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
-      : channel_peer(mallocator_, log, socket, identifier, settings, options)
-    {
-    }
-
-    /// Construct a p2p channel to encapsulate and communicate on the socket.
-    inline channel_peer(memory& allocator, const logger& log,
-        const socket::ptr& socket, uint64_t identifier,
-        const settings_t& settings, const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
-        allocator_(allocator),
         negotiated_version_(settings.protocol_maximum)
     {
     }
@@ -148,11 +139,7 @@ private:
         const system::chunk_cptr& payload,
         const result_handler& handler) NOEXCEPT;
 
-    // Only passes static member get_area(), so safe to use statically.
-    static default_memory mallocator_;
-
     // These are protected by strand/order.
-    memory& allocator_;
     uint32_t negotiated_version_;
     messages::peer::version::cptr peer_version_{};
     dispatcher dispatcher_{};
