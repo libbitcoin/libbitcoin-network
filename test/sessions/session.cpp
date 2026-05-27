@@ -605,7 +605,6 @@ const mock_channel::options_t options{ "test" };
 
 BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_service_stopped_channel_service_stopped_not_pent_or_stored)
 {
-    default_memory memory{};
     const logger log{};
     settings set(selection::mainnet);
     mock_net net(set, log);
@@ -614,7 +613,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
 
     socket::parameters params{ .maximum_request = 42 };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
-    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->network_settings(), options);
+    const auto channel = std::make_shared<mock_channel>(net.log, socket, 42, session->network_settings(), options);
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -652,7 +651,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
 
 BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_channel_stopped_channel_channel_stopped_stored_and_not_counted)
 {
-    default_memory memory{};
     const logger log{};
     settings set(selection::mainnet);
     mock_net net(set, log);
@@ -671,7 +669,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 
     socket::parameters params{ .maximum_request = 42 };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
-    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->network_settings(), options);
+    const auto channel = std::make_shared<mock_channel>(net.log, socket, 42, session->network_settings(), options);
 
     // Stop the channel (started by default).
     std::promise<bool> unstarted_channel;
@@ -731,7 +729,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 
 BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_service_stopped_stored_and_counted)
 {
-    default_memory memory{};
     const logger log{};
     settings set(selection::mainnet);
     set.outbound.host_pool_capacity = 0;
@@ -762,7 +759,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 
     socket::parameters params{ .maximum_request = 42 };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
-    const auto channel = std::make_shared<mock_channel>(memory, net.log, socket, 42, session->network_settings(), options);
+    const auto channel = std::make_shared<mock_channel>(net.log, socket, 42, session->network_settings(), options);
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -813,7 +810,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 
 BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expected_channel_success_stored_and_counted)
 {
-    default_memory memory{};
     const logger log{};
     settings set(selection::mainnet);
     set.outbound.host_pool_capacity = 0;
@@ -845,7 +841,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
 
     socket::parameters params{ .maximum_request = 42 };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
-    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->network_settings(), options);
+    const auto channel = std::make_shared<mock_channel_no_read>(net.log, socket, 42, session->network_settings(), options);
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -898,7 +894,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
 
 BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expected_channel_success_not_stored_and_counted)
 {
-    default_memory memory{};
     const logger log{};
     settings set(selection::mainnet);
     set.outbound.host_pool_capacity = 0;
@@ -930,7 +925,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
 
     socket::parameters params{ .maximum_request = 42 };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
-    const auto channel = std::make_shared<mock_channel_no_read>(memory, net.log, socket, 42, session->network_settings(), options);
+    const auto channel = std::make_shared<mock_channel_no_read>(net.log, socket, 42, session->network_settings(), options);
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
