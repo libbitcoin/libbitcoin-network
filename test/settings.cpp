@@ -80,6 +80,19 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
 
 // helpers
 
+BOOST_AUTO_TEST_CASE(settings__pruned_node__default__false)
+{
+    settings instance{ system::chain::selection::mainnet };
+    BOOST_REQUIRE(!instance.pruned_node());
+}
+
+BOOST_AUTO_TEST_CASE(settings__pruned_node__node_network_limited__true)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.services_maximum = service::node_network_limited;
+    BOOST_REQUIRE(instance.pruned_node());
+}
+
 BOOST_AUTO_TEST_CASE(settings__encrypt_node__default__false)
 {
     settings instance{ system::chain::selection::mainnet };

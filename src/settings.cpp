@@ -253,6 +253,11 @@ settings::settings(chain::selection context) NOEXCEPT
 {
 }
 
+bool settings::pruned_node() const NOEXCEPT
+{
+    return to_bool(services_maximum & service::node_network_limited);
+}
+
 bool settings::encrypt_node() const NOEXCEPT
 {
     return to_bool(services_minimum & service::node_encrypted_transport);

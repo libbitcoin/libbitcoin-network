@@ -300,6 +300,7 @@ struct BCT_API settings
     config::authorities whitelists{};
 
     /// Helpers.
+    virtual bool pruned_node() const NOEXCEPT;
     virtual bool encrypt_node() const NOEXCEPT;
     virtual bool witness_node() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
