@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_CONFIG_UTILITIES_HPP
 #define LIBBITCOIN_NETWORK_CONFIG_UTILITIES_HPP
 
+#include <optional>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -46,6 +47,9 @@ BCT_API asio::address from_address(const messages::peer::ip_address& address) NO
 /// Get ascii lowered host:port form, with default substitution.
 BCT_API std::string to_normal_host(const std::string& host,
     uint16_t default_port) NOEXCEPT;
+
+/// Read a single numeric value from /proc/sys/vm/[name].
+BCT_API std::optional<uint64_t> get_memory_setting(std::string name) NOEXCEPT;
 
 } // namespace config
 } // namespace network
