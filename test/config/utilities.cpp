@@ -589,4 +589,26 @@ BOOST_AUTO_TEST_CASE(utilities__to_normal_host__numeric_nonzero_nonzero__numeric
     BOOST_REQUIRE_EQUAL(to_normal_host("127.0.0.1:80", 42), "127.0.0.1:80");
 }
 
+// get_memory_setting
+
+BOOST_AUTO_TEST_CASE(utilities__get_memory_setting__empty__expected)
+{
+    BOOST_REQUIRE(!get_memory_setting({}).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(utilities__get_memory_setting__bogus__expected)
+{
+    BOOST_REQUIRE(!get_memory_setting("this_parameter_does_not_exist_98765").has_value());
+}
+
+BOOST_AUTO_TEST_CASE(utilities__get_memory_setting__swappiness__expected)
+{
+#if defined(HAVE_LINUX)
+    const auto result = get_memory_setting("swappiness");
+
+    // swappiness is normally in range [0, 100]
+    BOOST_REQUIRE(result.has_value() && result.value() <= 100u);
+#endif
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/config/utilities.hpp>
 
+#include <optional>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
@@ -83,6 +84,26 @@ std::string to_normal_host(const std::string& host,
     {
         return {};
     }
+}
+
+std::optional<uint64_t> get_memory_setting(std::string name) NOEXCEPT
+{
+#if defined(HAVE_LINUX)
+    try
+    {
+        uint64_t value{};
+        std::string line{};
+        system::ifstream file("/proc/sys/vm/" + name);
+        if (file.is_open() && std::getline(file, line) &&
+            system::decode_base10(value, line))
+            return value;
+    }
+    catch (...)
+    {
+    }
+#endif
+
+    return {};
 }
 
 } // namespace config
