@@ -86,9 +86,9 @@ std::string to_normal_host(const std::string& host,
     }
 }
 
+#if defined(HAVE_LINUX)
 std::optional<uint64_t> get_memory_setting(std::string name) NOEXCEPT
 {
-#if defined(HAVE_LINUX)
     try
     {
         uint64_t value{};
@@ -101,10 +101,15 @@ std::optional<uint64_t> get_memory_setting(std::string name) NOEXCEPT
     catch (...)
     {
     }
-#endif
 
     return {};
 }
+#else
+std::optional<uint64_t> get_memory_setting(std::string) NOEXCEPT
+{
+    return {};
+}
+#endif
 
 } // namespace config
 } // namespace network
