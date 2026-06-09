@@ -238,9 +238,9 @@ static uint32_t identifier_from_context(chain::selection context) NOEXCEPT
 {
     switch (context)
     {
-        case chain::selection::mainnet: return 3652501241;
-        case chain::selection::testnet: return 118034699;
-        case chain::selection::regtest: return 3669344250;
+        case chain::selection::mainnet:  return 3652501241;
+        case chain::selection::testnet3: return 118034699;
+        case chain::selection::regtest:  return 3669344250;
         default: return 0;
     }
 }

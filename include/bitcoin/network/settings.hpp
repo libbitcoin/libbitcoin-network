@@ -192,7 +192,7 @@ struct BCT_API settings
                     seeds.emplace_back("mainnet4.libbitcoin.net", 8333_u16);
                     break;
                 }
-                case system::chain::selection::testnet:
+                case system::chain::selection::testnet3:
                 {
                     seeds.reserve(4);
                     seeds.emplace_back("testnet1.libbitcoin.net", 18333_u16);
@@ -235,7 +235,7 @@ struct BCT_API settings
                     binds.emplace_back(asio::address{}, 8333_u16);
                     break;
                 }
-                case system::chain::selection::testnet:
+                case system::chain::selection::testnet3:
                 {
                     binds.emplace_back(asio::address{}, 18333_u16);
                     break;
