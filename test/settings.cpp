@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
 
 BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
 {
-    settings instance{ selection::testnet };
+    settings instance{ selection::testnet3 };
     BOOST_REQUIRE_EQUAL(instance.identifier, 118034699u);
 }
 
