@@ -225,7 +225,7 @@ void channel_http::handle_send(const code& ec, size_t bytes, bool notification,
     BC_ASSERT(stranded());
 
     if (ec) stop(ec);
-    LOGA(boost::format(message) % bytes);
+    LOGA(boost_format(message) % bytes);
     handler(ec);
 
     // Restart the listener (only in response to requests).
