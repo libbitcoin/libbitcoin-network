@@ -30,9 +30,12 @@ namespace network {
 #define BIND_SHARED(method, args) \
     std::bind(std::forward<Method>(method), shared_from_base<Derived>(), \
         std::forward<Args>(args)...)
-#define BIND_THIS(method, args) \
+#define BIND_TO(method, args) \
     std::bind(std::forward<Method>(method), static_cast<Derived*>(this), \
         std::forward<Args>(args)...)
+
+#define BIND_THIS(method, ...) \
+    std::bind(&CLASS::method, this, __VA_ARGS__)
 #define BIND(method, ...) \
     bind<CLASS>(&CLASS::method, __VA_ARGS__)
 #define POST(method, ...) \
