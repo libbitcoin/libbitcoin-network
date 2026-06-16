@@ -13,97 +13,33 @@
     <ProjectName>libbitcoin-network-test</ProjectName>
   </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="DebugDEXE|Win32">
-      <Configuration>DebugDEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDEXE|Win32">
-      <Configuration>ReleaseDEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugDEXE|x64">
-      <Configuration>DebugDEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDEXE|x64">
-      <Configuration>ReleaseDEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugLEXE|Win32">
-      <Configuration>DebugLEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseLEXE|Win32">
-      <Configuration>ReleaseLEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugLEXE|x64">
-      <Configuration>DebugLEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseLEXE|x64">
-      <Configuration>ReleaseLEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="DebugSEXE|Win32">
       <Configuration>DebugSEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseSEXE|Win32">
-      <Configuration>ReleaseSEXE</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="DebugSEXE|x64">
       <Configuration>DebugSEXE</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseSEXE|x64">
-      <Configuration>ReleaseSEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugDEXE|ARM">
-      <Configuration>DebugDEXE</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDEXE|ARM">
-      <Configuration>ReleaseDEXE</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugDEXE|ARM64">
-      <Configuration>DebugDEXE</Configuration>
-      <Platform>ARM64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDEXE|ARM64">
-      <Configuration>ReleaseDEXE</Configuration>
-      <Platform>ARM64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugLEXE|ARM">
-      <Configuration>DebugLEXE</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseLEXE|ARM">
-      <Configuration>ReleaseLEXE</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugLEXE|ARM64">
-      <Configuration>DebugLEXE</Configuration>
-      <Platform>ARM64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseLEXE|ARM64">
-      <Configuration>ReleaseLEXE</Configuration>
-      <Platform>ARM64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="DebugSEXE|ARM">
       <Configuration>DebugSEXE</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseSEXE|ARM">
-      <Configuration>ReleaseSEXE</Configuration>
       <Platform>ARM</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="DebugSEXE|ARM64">
       <Configuration>DebugSEXE</Configuration>
       <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseSEXE|Win32">
+      <Configuration>ReleaseSEXE</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseSEXE|x64">
+      <Configuration>ReleaseSEXE</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseSEXE|ARM">
+      <Configuration>ReleaseSEXE</Configuration>
+      <Platform>ARM</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="ReleaseSEXE|ARM64">
       <Configuration>ReleaseSEXE</Configuration>
@@ -117,343 +53,1116 @@
     <Import Project="$(ProjectDir)..\..\properties\Output.props" />
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
+
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\races\race_all.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\races\race_quality.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\races\race_speed.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\races\race_unity.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\races\race_volume.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\thread.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\time.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp" />
-    <ClCompile Include="..\..\..\..\test\channels\channel.cpp" />
-    <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp" />
-    <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp" />
-    <ClCompile Include="..\..\..\..\test\channels\channel_rpc.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp">
+      <ObjectFileName>$(IntDir)test_async_desubscriber.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp">
+      <ObjectFileName>$(IntDir)test_async_desubscriber.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
+      <ObjectFileName>$(IntDir)test_async_enable_shared_from_base.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
+      <ObjectFileName>$(IntDir)test_async_enable_shared_from_base.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_all.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_all.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_all.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_all.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_quality.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_quality.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_quality.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_quality.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_speed.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_speed.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_speed.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_speed.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_unity.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_unity.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_unity.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_unity.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_volume.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_volume.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_volume.cpp">
+      <ObjectFileName>$(IntDir)test_async_races_race_volume.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">
+      <ObjectFileName>$(IntDir)test_async_subscriber.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">
+      <ObjectFileName>$(IntDir)test_async_subscriber.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\thread.cpp">
+      <ObjectFileName>$(IntDir)test_async_thread.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\thread.cpp">
+      <ObjectFileName>$(IntDir)test_async_thread.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\threadpool.cpp">
+      <ObjectFileName>$(IntDir)test_async_threadpool.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\threadpool.cpp">
+      <ObjectFileName>$(IntDir)test_async_threadpool.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\time.cpp">
+      <ObjectFileName>$(IntDir)test_async_time.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\time.cpp">
+      <ObjectFileName>$(IntDir)test_async_time.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp">
+      <ObjectFileName>$(IntDir)test_async_unsubscriber.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp">
+      <ObjectFileName>$(IntDir)test_async_unsubscriber.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel.cpp">
+      <ObjectFileName>$(IntDir)test_channels_channel.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel.cpp">
+      <ObjectFileName>$(IntDir)test_channels_channel.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp">
+      <ObjectFileName>$(IntDir)test_channels_channel_http.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp">
+      <ObjectFileName>$(IntDir)test_channels_channel_http.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp">
+      <ObjectFileName>$(IntDir)test_channels_channel_peer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp">
+      <ObjectFileName>$(IntDir)test_channels_channel_peer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_rpc.cpp">
+      <ObjectFileName>$(IntDir)test_channels_channel_rpc.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_rpc.cpp">
+      <ObjectFileName>$(IntDir)test_channels_channel_rpc.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\config\authority.cpp" />
-    <ClCompile Include="..\..\..\..\test\config\endpoint.cpp" />
-    <ClCompile Include="..\..\..\..\test\config\utilities.cpp" />
+    <ClCompile Include="..\..\..\..\test\config\address.cpp">
+      <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\authority.cpp">
+      <ObjectFileName>$(IntDir)test_config_authority.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\authority.cpp">
+      <ObjectFileName>$(IntDir)test_config_authority.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\endpoint.cpp">
+      <ObjectFileName>$(IntDir)test_config_endpoint.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\endpoint.cpp">
+      <ObjectFileName>$(IntDir)test_config_endpoint.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\utilities.cpp">
+      <ObjectFileName>$(IntDir)test_config_utilities.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\utilities.cpp">
+      <ObjectFileName>$(IntDir)test_config_utilities.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\error.cpp" />
-    <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
-    <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
+    <ClCompile Include="..\..\..\..\test\log\timer.cpp">
+      <ObjectFileName>$(IntDir)test_log_timer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\log\timer.cpp">
+      <ObjectFileName>$(IntDir)test_log_timer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\log\tracker.cpp">
+      <ObjectFileName>$(IntDir)test_log_tracker.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\log\tracker.cpp">
+      <ObjectFileName>$(IntDir)test_log_tracker.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
       <ObjectFileName>$(IntDir)test_messages_http_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\http\enums\media_type.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_enums_magic_numbers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\media_type.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_enums_media_type.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\media_type.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_enums_media_type.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_enums_target.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_enums_target.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_fields.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_fields.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
       <ObjectFileName>$(IntDir)test_messages_http_method.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\http_body_reader.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_method.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http_body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http_body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_body_writer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_body_writer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_json_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_json_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_json_body_writer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_json_body_writer.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\address_item.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert_item.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\block.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\bloom_filter_add.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\bloom_filter_clear.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\bloom_filter_load.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\client_filter.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\client_filter_checkpoint.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\client_filter_headers.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\compact_block.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\compact_block_item.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\compact_transactions.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\fee_filter.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_address.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_blocks.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_client_filter_checkpoint.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_client_filter_headers.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_client_filters.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_compact_transactions.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_data.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_headers.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\headers.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\inventory.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\inventory_item.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\memory_pool.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\merkle_block.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\not_found.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\ping.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\pong.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\reject.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_address_v2.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_compact.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_headers.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\transaction.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\version.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\version_acknowledge.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\detail\witness_tx_id_relay.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\enums\identifier.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\enums\level.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\address.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_address.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\address_item.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_address_item.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\address_item.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_address_item.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_alert.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_alert.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert_item.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_alert_item.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert_item.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_alert_item.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\block.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_block.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\block.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_block.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\bloom_filter_add.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_bloom_filter_add.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\bloom_filter_add.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_bloom_filter_add.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\bloom_filter_clear.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_bloom_filter_clear.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\bloom_filter_clear.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_bloom_filter_clear.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\bloom_filter_load.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_bloom_filter_load.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\bloom_filter_load.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_bloom_filter_load.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\client_filter.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_client_filter.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\client_filter.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_client_filter.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\client_filter_checkpoint.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_client_filter_checkpoint.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\client_filter_checkpoint.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_client_filter_checkpoint.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\client_filter_headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_client_filter_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\client_filter_headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_client_filter_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\compact_block.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_compact_block.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\compact_block.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_compact_block.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\compact_block_item.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_compact_block_item.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\compact_block_item.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_compact_block_item.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\compact_transactions.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_compact_transactions.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\compact_transactions.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_compact_transactions.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\fee_filter.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_fee_filter.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\fee_filter.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_fee_filter.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_address.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_address.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_address.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_address.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_blocks.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_blocks.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_blocks.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_blocks.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_client_filter_checkpoint.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_client_filter_checkpoint.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_client_filter_checkpoint.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_client_filter_checkpoint.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_client_filter_headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_client_filter_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_client_filter_headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_client_filter_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_client_filters.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_client_filters.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_client_filters.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_client_filters.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_compact_transactions.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_compact_transactions.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_compact_transactions.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_compact_transactions.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_data.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_data.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_data.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_data.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\get_headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_get_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\inventory.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_inventory.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\inventory.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_inventory.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\inventory_item.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_inventory_item.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\inventory_item.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_inventory_item.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\memory_pool.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_memory_pool.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\memory_pool.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_memory_pool.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\merkle_block.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_merkle_block.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\merkle_block.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_merkle_block.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\not_found.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_not_found.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\not_found.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_not_found.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\ping.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_ping.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\ping.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_ping.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\pong.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_pong.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\pong.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_pong.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\reject.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_reject.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\reject.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_reject.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_address_v2.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_send_address_v2.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_address_v2.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_send_address_v2.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_compact.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_send_compact.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_compact.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_send_compact.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_send_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_headers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_send_headers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\transaction.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_transaction.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\transaction.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_transaction.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\version.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_version.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\version.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_version.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\version_acknowledge.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_version_acknowledge.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\version_acknowledge.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_version_acknowledge.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\witness_tx_id_relay.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_witness_tx_id_relay.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\witness_tx_id_relay.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_detail_witness_tx_id_relay.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\identifier.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_enums_identifier.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\identifier.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_enums_identifier.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\level.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_enums_level.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\level.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_enums_level.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\enums\magic_numbers.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\peer\enums\service.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\any.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\body_reader.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\body_writer.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\broadcaster.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\dispatcher.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\magic_numbers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_enums_magic_numbers.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\service.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_enums_service.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\enums\service.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_enums_service.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_heading.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_heading.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_message.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_message.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\any.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_any.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\any.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_any.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_body_writer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_body_writer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\broadcaster.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_broadcaster.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\broadcaster.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_broadcaster.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\dispatcher.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_dispatcher.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\dispatcher.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_dispatcher.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\method.cpp">
       <ObjectFileName>$(IntDir)test_messages_rpc_method.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\method.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_method.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_types.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_types.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\connector_socks.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\socket.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_209.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_311.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_http.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_peer.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_106.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp" />
-    <ClCompile Include="..\..\..\..\test\sessions\session.cpp" />
-    <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp" />
-    <ClCompile Include="..\..\..\..\test\sessions\session_inbound.cpp" />
-    <ClCompile Include="..\..\..\..\test\sessions\session_manual.cpp" />
-    <ClCompile Include="..\..\..\..\test\sessions\session_outbound.cpp" />
-    <ClCompile Include="..\..\..\..\test\sessions\session_seed.cpp" />
-    <ClCompile Include="..\..\..\..\test\sessions\session_server.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\acceptor.cpp">
+      <ObjectFileName>$(IntDir)test_net_acceptor.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\acceptor.cpp">
+      <ObjectFileName>$(IntDir)test_net_acceptor.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\connector.cpp">
+      <ObjectFileName>$(IntDir)test_net_connector.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\connector.cpp">
+      <ObjectFileName>$(IntDir)test_net_connector.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\connector_socks.cpp">
+      <ObjectFileName>$(IntDir)test_net_connector_socks.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\connector_socks.cpp">
+      <ObjectFileName>$(IntDir)test_net_connector_socks.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\deadline.cpp">
+      <ObjectFileName>$(IntDir)test_net_deadline.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\deadline.cpp">
+      <ObjectFileName>$(IntDir)test_net_deadline.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\hosts.cpp">
+      <ObjectFileName>$(IntDir)test_net_hosts.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\hosts.cpp">
+      <ObjectFileName>$(IntDir)test_net_hosts.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\proxy.cpp">
+      <ObjectFileName>$(IntDir)test_net_proxy.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\proxy.cpp">
+      <ObjectFileName>$(IntDir)test_net_proxy.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\socket.cpp">
+      <ObjectFileName>$(IntDir)test_net_socket.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\socket.cpp">
+      <ObjectFileName>$(IntDir)test_net_socket.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_address_in_209.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_address_in_209.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_209.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_address_out_209.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_209.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_address_out_209.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_311.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_alert_311.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_311.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_alert_311.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_http.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_http.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_http.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_http.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_peer.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_peer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_peer.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_peer.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_106.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_ping_106.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_106.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_ping_106.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_ping_60001.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_ping_60001.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_reject_70002.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_reject_70002.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_seed_209.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_seed_209.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_version_106.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_version_106.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_version_70001.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_version_70001.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_version_70002.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_version_70002.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_version_70016.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp">
+      <ObjectFileName>$(IntDir)test_protocols_protocol_version_70016.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_html.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_html.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_inbound.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_inbound.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_inbound.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_inbound.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_manual.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_manual.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_manual.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_manual.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_outbound.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_outbound.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_outbound.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_outbound.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_seed.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_seed.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_seed.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_seed.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_server.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_server.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_server.cpp">
+      <ObjectFileName>$(IntDir)test_sessions_session_server.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl.cpp" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl.cpp">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl.cpp">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\client\client.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_examples_client_client.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_examples_client_client.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\client\client.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_examples_client_client.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\server\server.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_examples_server_server.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_examples_server_server.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\server\server.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_examples_server_server.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_aes.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_aes.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_aes.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_aes.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_aes.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_arc4.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_arc4.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_arc4.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_arc4.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_arc4.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ascon.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ascon.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ascon.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_asn.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_asn.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_asn.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_asn.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_asn.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_blake2.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_blake2.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_blake2.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_blake2.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_blake2.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_camellia.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_camellia.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_camellia.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_camellia.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_camellia.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_chacha.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_chacha.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_chacha.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha20_poly1305.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_chacha20_poly1305.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_chacha20_poly1305.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha20_poly1305.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_chacha20_poly1305.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_cmac.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_cmac.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_cmac.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_cmac.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_cmac.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve25519.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_curve25519.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_curve25519.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve25519.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_curve25519.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve448.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_curve448.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_curve448.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve448.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_curve448.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_des3.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_des3.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_des3.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_des3.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_des3.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dh.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dh.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dh.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dh.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dh.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dsa.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dsa.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dsa.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dsa.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dtls.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dtls.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dtls.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dtls.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dtls.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ecc.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ecc.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ecc.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ecc.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ecc.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed25519.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ed25519.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ed25519.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed25519.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ed25519.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed448.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ed448.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ed448.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed448.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ed448.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_evp.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_evp.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_evp.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_evp.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_evp.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hash.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_hash.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_hash.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hash.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_hash.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hmac.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_hmac.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_hmac.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hmac.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_hmac.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md2.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md2.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md2.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md2.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md2.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md4.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md4.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md4.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md4.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md4.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md5.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md5.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md5.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md5.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md5.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mldsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_mldsa.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_mldsa.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mldsa.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_mldsa.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mlkem.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_mlkem.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_mlkem.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mlkem.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_mlkem.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ocsp.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ocsp.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ocsp.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_asn1.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_asn1.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_asn1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_asn1.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_asn1.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bio.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_bio.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_bio.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bio.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_bio.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bn.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_bn.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_bn.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bn.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_bn.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_cipher.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_cipher.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_cipher.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_cipher.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_cipher.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dgst.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dgst.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dgst.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dgst.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dgst.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dh.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dh.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dh.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dh.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dh.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dsa.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dsa.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dsa.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dsa.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ec.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_ec.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_ec.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ec.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_ec.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ecx.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_ecx.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_ecx.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ecx.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_ecx.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_mac.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_mac.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_mac.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_mac.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_mac.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_rsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_rsa.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_rsa.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_rsa.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_rsa.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_sk.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_sk.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_sk.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_sk.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_sk.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs12.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_pkcs12.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_pkcs12.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs12.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_pkcs12.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs7.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_pkcs7.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_pkcs7.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs7.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_pkcs7.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_poly1305.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_poly1305.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_poly1305.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_poly1305.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_poly1305.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_random.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_random.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_random.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_random.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_random.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rc2.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_rc2.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_rc2.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rc2.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_rc2.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ripemd.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ripemd.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ripemd.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ripemd.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ripemd.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_rsa.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_rsa.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rsa.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_rsa.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha256.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha256.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha256.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha256.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha256.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha3.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha3.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha3.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha3.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha3.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha512.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha512.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha512.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha512.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha512.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_signature.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_signature.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_signature.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_signature.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_signature.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm2.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm2.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm2.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm2.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm2.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm3.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm3.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm3.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm3.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm3.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm4.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm4.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm4.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm4.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm4.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls13.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls13.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls13.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls13.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls13.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls_ext.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls_ext.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls_ext.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls_ext.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls_ext.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wc_encrypt.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_wc_encrypt.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_wc_encrypt.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wc_encrypt.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_wc_encrypt.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wolfmath.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_wolfmath.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_wolfmath.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wolfmath.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_wolfmath.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_x509.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_x509.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_x509.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\quic.c" />
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\srp.c" />
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\suites.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_x509.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_x509.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\quic.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_quic.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\quic.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_quic.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\srp.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_srp.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\srp.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_srp.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\suites.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_suites.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\suites.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_suites.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\unit.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_unit.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_unit.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\unit.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_unit.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\utils.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_utils.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_utils.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\w64wrapper.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\utils.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_utils.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\w64wrapper.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_w64wrapper.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\w64wrapper.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_w64wrapper.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\testsuite\utils.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_testsuite_utils.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_testsuite_utils.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\testsuite\utils.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_testsuite_utils.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_wolfcrypt_benchmark_benchmark.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_wolfcrypt_benchmark_benchmark.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_wolfcrypt_benchmark_benchmark.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\test\test.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_wolfcrypt_test_test.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_wolfcrypt_test_test.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\test\test.c">
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_wolfcrypt_test_test.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <ObjectFileName>$(IntDir)test_test.obj</ObjectFileName>
@@ -461,81 +1170,155 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\examples\client\client.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\examples\client\client.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\examples\server\server.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\examples\server\server.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\api.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\api.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\api_decl.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\api_decl.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_aes.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_aes.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_arc4.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_arc4.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon_kats.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon_kats.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_asn.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_asn.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_blake2.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_blake2.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_camellia.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_camellia.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha20_poly1305.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha20_poly1305.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_cmac.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_cmac.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve25519.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve25519.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve448.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve448.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_des3.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_des3.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dh.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dh.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_digest.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_digest.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dsa.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dsa.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dtls.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dtls.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ecc.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ecc.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed25519.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed25519.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed448.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed448.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_evp.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_evp.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hash.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hash.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hmac.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hmac.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md2.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md2.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md4.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md4.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md5.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md5.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mldsa.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mldsa.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mlkem.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mlkem.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp_test_blobs.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp_test_blobs.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_asn1.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_asn1.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bio.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bio.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bn.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bn.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_cipher.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_cipher.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dgst.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dgst.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dh.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dh.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dsa.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dsa.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ec.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ec.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ecx.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ecx.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_mac.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_mac.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_rsa.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_rsa.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_sk.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_sk.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs12.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs12.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs7.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs7.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_poly1305.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_poly1305.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_random.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_random.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rc2.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rc2.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ripemd.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ripemd.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rsa.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rsa.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha256.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha256.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha3.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha3.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha512.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha512.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_signature.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_signature.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm2.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm2.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm3.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm3.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm4.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm4.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls13.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls13.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls_ext.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls_ext.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wc_encrypt.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wc_encrypt.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wolfmath.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wolfmath.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_x509.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_x509.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\unit.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\unit.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\utils.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\tests\utils.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\testsuite\utils.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\testsuite\utils.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.h" />
+    <ClInclude Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\test\test.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\test\test.h" />
     <ClInclude Include="..\..\..\..\test\test.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
@@ -547,14 +1330,14 @@
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_locale-vc145.1.91.0\build\libbitcoin-boost_locale-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_locale-vc145.1.91.0\build\libbitcoin-boost_locale-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets')" />
+    <Import Project="$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets" Condition="Exists('$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)UltrafastSecp256k1-vc145.4.1.1.7\build\native\UltrafastSecp256k1-vc145.targets" Condition="Exists('$(NuGetPackageRoot)UltrafastSecp256k1-vc145.4.1.1.7\build\native\UltrafastSecp256k1-vc145.targets')" />
-    <Import Project="$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The Missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost.1.91.0\build\libbitcoin-boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost.1.91.0\build\libbitcoin-boost.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_container-vc145.1.91.0\build\libbitcoin-boost_container-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_container-vc145.1.91.0\build\libbitcoin-boost_container-vc145.targets'))" />
@@ -563,10 +1346,10 @@
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_locale-vc145.1.91.0\build\libbitcoin-boost_locale-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_locale-vc145.1.91.0\build\libbitcoin-boost_locale-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets'))" />
+    <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)UltrafastSecp256k1-vc145.4.1.1.7\build\native\UltrafastSecp256k1-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)UltrafastSecp256k1-vc145.4.1.1.7\build\native\UltrafastSecp256k1-vc145.targets'))" />
-    <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets'))" />
   </Target>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoin-network\libbitcoin-network.vcxproj">
