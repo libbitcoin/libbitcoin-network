@@ -13,60 +13,28 @@
     <ProjectName>libbitcoin-network-test</ProjectName>
   </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="DebugDEXE|Win32">
-      <Configuration>DebugDEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDEXE|Win32">
-      <Configuration>ReleaseDEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugDEXE|x64">
-      <Configuration>DebugDEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseDEXE|x64">
-      <Configuration>ReleaseDEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugLEXE|Win32">
-      <Configuration>DebugLEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseLEXE|Win32">
-      <Configuration>ReleaseLEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugLEXE|x64">
-      <Configuration>DebugLEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseLEXE|x64">
-      <Configuration>ReleaseLEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugSEXE|Win32">
-      <Configuration>DebugSEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseSEXE|Win32">
-      <Configuration>ReleaseSEXE</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugSEXE|x64">
-      <Configuration>DebugSEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseSEXE|x64">
-      <Configuration>ReleaseSEXE</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="DebugDEXE|ARM">
       <Configuration>DebugDEXE</Configuration>
       <Platform>ARM</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="ReleaseDEXE|ARM">
       <Configuration>ReleaseDEXE</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugLEXE|ARM">
+      <Configuration>DebugLEXE</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseLEXE|ARM">
+      <Configuration>ReleaseLEXE</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugSEXE|ARM">
+      <Configuration>DebugSEXE</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseSEXE|ARM">
+      <Configuration>ReleaseSEXE</Configuration>
       <Platform>ARM</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="DebugDEXE|ARM64">
@@ -77,14 +45,6 @@
       <Configuration>ReleaseDEXE</Configuration>
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugLEXE|ARM">
-      <Configuration>DebugLEXE</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseLEXE|ARM">
-      <Configuration>ReleaseLEXE</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="DebugLEXE|ARM64">
       <Configuration>DebugLEXE</Configuration>
       <Platform>ARM64</Platform>
@@ -92,14 +52,6 @@
     <ProjectConfiguration Include="ReleaseLEXE|ARM64">
       <Configuration>ReleaseLEXE</Configuration>
       <Platform>ARM64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugSEXE|ARM">
-      <Configuration>DebugSEXE</Configuration>
-      <Platform>ARM</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseSEXE|ARM">
-      <Configuration>ReleaseSEXE</Configuration>
-      <Platform>ARM</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="DebugSEXE|ARM64">
       <Configuration>DebugSEXE</Configuration>
@@ -109,6 +61,54 @@
       <Configuration>ReleaseSEXE</Configuration>
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugDEXE|Win32">
+      <Configuration>DebugDEXE</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseDEXE|Win32">
+      <Configuration>ReleaseDEXE</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugLEXE|Win32">
+      <Configuration>DebugLEXE</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseLEXE|Win32">
+      <Configuration>ReleaseLEXE</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugSEXE|Win32">
+      <Configuration>DebugSEXE</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseSEXE|Win32">
+      <Configuration>ReleaseSEXE</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugDEXE|x64">
+      <Configuration>DebugDEXE</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseDEXE|x64">
+      <Configuration>ReleaseDEXE</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugLEXE|x64">
+      <Configuration>DebugLEXE</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseLEXE|x64">
+      <Configuration>ReleaseLEXE</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugSEXE|x64">
+      <Configuration>DebugSEXE</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseSEXE|x64">
+      <Configuration>ReleaseSEXE</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -117,6 +117,7 @@
     <Import Project="$(ProjectDir)..\..\properties\Output.props" />
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
+
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
@@ -247,213 +248,83 @@
     <ClCompile Include="..\..\..\..\test\sessions\session_server.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl.cpp" />
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\client\client.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_examples_client_client.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\server\server.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_examples_server_server.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_aes.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_aes.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_arc4.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_arc4.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ascon.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_asn.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_asn.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_blake2.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_blake2.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_camellia.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_camellia.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_chacha.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha20_poly1305.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_chacha20_poly1305.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_cmac.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_cmac.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve25519.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_curve25519.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve448.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_curve448.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_des3.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_des3.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dh.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dh.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dsa.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dtls.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_dtls.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ecc.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ecc.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed25519.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ed25519.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed448.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ed448.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_evp.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_evp.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hash.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_hash.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hmac.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_hmac.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md2.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md2.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md4.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md4.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md5.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_md5.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mldsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_mldsa.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mlkem.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_mlkem.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ocsp.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_asn1.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_asn1.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bio.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_bio.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bn.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_bn.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_cipher.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_cipher.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dgst.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dgst.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dh.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dh.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_dsa.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ec.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_ec.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ecx.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_ecx.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_mac.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_mac.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_rsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_rsa.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_sk.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ossl_sk.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs12.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_pkcs12.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs7.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_pkcs7.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_poly1305.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_poly1305.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_random.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_random.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rc2.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_rc2.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ripemd.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_ripemd.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rsa.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_rsa.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha256.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha256.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha3.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha3.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha512.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sha512.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_signature.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_signature.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm2.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm2.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm3.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm3.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm4.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_sm4.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls13.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls13.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls_ext.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_tls_ext.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wc_encrypt.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_wc_encrypt.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wolfmath.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_wolfmath.c.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_x509.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_api_test_x509.c.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\client\client.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\examples\server\server.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_aes.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_arc4.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ascon.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_asn.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_blake2.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_camellia.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_chacha20_poly1305.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_cmac.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve25519.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_curve448.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_des3.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dh.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dsa.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_dtls.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ecc.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed25519.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ed448.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_evp.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hash.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_hmac.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md2.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md4.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_md5.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mldsa.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_mlkem.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ocsp.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_asn1.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bio.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_bn.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_cipher.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dgst.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dh.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_dsa.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ec.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_ecx.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_mac.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_rsa.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ossl_sk.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs12.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_pkcs7.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_poly1305.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_random.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rc2.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_ripemd.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_rsa.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha256.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha3.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sha512.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_signature.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm2.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm3.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_sm4.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls13.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_tls_ext.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wc_encrypt.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_wolfmath.c" />
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\api\test_x509.c" />
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\quic.c" />
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\srp.c" />
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\suites.c" />
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\unit.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_unit.c.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\unit.c" />
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\utils.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_utils.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_tests_utils.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\tests\w64wrapper.c" />
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\testsuite\utils.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_testsuite_utils.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_testsuite_utils.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_wolfcrypt_benchmark_benchmark.c.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.c" />
     <ClCompile Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\test\test.c">
-      <ObjectFileName>$(IntDir)test_ssl_wolfssl_wolfcrypt_test_test.c.obj</ObjectFileName>
+      <ObjectFileName>$(IntDir)test_ssl_wolfssl_wolfcrypt_test_test.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <ObjectFileName>$(IntDir)test_test.obj</ObjectFileName>
@@ -537,6 +408,8 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
   <ImportGroup Label="ExtensionSettings">
@@ -547,14 +420,14 @@
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_locale-vc145.1.91.0\build\libbitcoin-boost_locale-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_locale-vc145.1.91.0\build\libbitcoin-boost_locale-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets')" />
+    <Import Project="$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets" Condition="Exists('$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets')" />
     <Import Project="$(NuGetPackageRoot)UltrafastSecp256k1-vc145.4.1.1.7\build\native\UltrafastSecp256k1-vc145.targets" Condition="Exists('$(NuGetPackageRoot)UltrafastSecp256k1-vc145.4.1.1.7\build\native\UltrafastSecp256k1-vc145.targets')" />
-    <Import Project="$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The Missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost.1.91.0\build\libbitcoin-boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost.1.91.0\build\libbitcoin-boost.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_container-vc145.1.91.0\build\libbitcoin-boost_container-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_container-vc145.1.91.0\build\libbitcoin-boost_container-vc145.targets'))" />
@@ -563,10 +436,10 @@
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_locale-vc145.1.91.0\build\libbitcoin-boost_locale-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_locale-vc145.1.91.0\build\libbitcoin-boost_locale-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_program_options-vc145.1.91.0\build\libbitcoin-boost_program_options-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_thread-vc145.1.91.0\build\libbitcoin-boost_thread-vc145.targets'))" />
+    <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_url-vc145.1.91.0\build\libbitcoin-boost_url-vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)secp256k1_vc145.0.6.1.2\build\native\secp256k1_vc145.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)UltrafastSecp256k1-vc145.4.1.1.7\build\native\UltrafastSecp256k1-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)UltrafastSecp256k1-vc145.4.1.1.7\build\native\UltrafastSecp256k1-vc145.targets'))" />
-    <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost_unit_test_framework-vc145.1.91.0\build\libbitcoin-boost_unit_test_framework-vc145.targets'))" />
   </Target>
   <ItemGroup>
     <ProjectReference Include="..\libbitcoin-network\libbitcoin-network.vcxproj">

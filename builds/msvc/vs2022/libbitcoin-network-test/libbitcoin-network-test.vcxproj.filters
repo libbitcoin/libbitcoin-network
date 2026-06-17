@@ -14,88 +14,88 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\async\races">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\channels">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\config">
+    <Filter Include="src\channels">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\log">
+    <Filter Include="src\config">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages">
+    <Filter Include="src\log">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\http\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\peer">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\peer\detail">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\peer\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\rpc">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\net">
+    <Filter Include="src\messages">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\messages\http">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ssl">
+    <Filter Include="src\messages\peer">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\peer\detail">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\peer\enums">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\rpc">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\net">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\protocols">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sessions">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\ssl\vectors">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\ssl\vectors\certs">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\ssl\vectors\certs\custom">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\ssl\vectors\certs\test">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\ssl\vectors\tests">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ssl\vectors\tests">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\ssl\wolfssl">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\ssl\wolfssl\examples">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\ssl\wolfssl\examples\client">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000B1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\ssl\wolfssl\examples\server">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000C1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\ssl\wolfssl\tests">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ssl\wolfssl\tests\api">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000D1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\ssl\wolfssl\testsuite">
+    <Filter Include="src\ssl\wolfssl\examples\server">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000010}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ssl\wolfssl\wolfcrypt">
+    <Filter Include="src\ssl\wolfssl\tests">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000A1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\tests\api">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000B1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\testsuite">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000C1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\wolfcrypt">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000D1}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\ssl\wolfssl\wolfcrypt\benchmark">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000E1}</UniqueIdentifier>
