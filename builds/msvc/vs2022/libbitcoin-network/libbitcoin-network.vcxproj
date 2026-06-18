@@ -120,7 +120,6 @@
     <Import Project="$(ProjectDir)..\..\properties\Output.props" />
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
-
   <ItemGroup>
     <ClCompile Include="..\..\..\..\include\bitcoin\network\ssl\wolfcrypt\src\misc.c" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
