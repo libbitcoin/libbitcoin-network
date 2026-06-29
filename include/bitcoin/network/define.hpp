@@ -35,13 +35,13 @@ namespace network {
         std::forward<Args>(args)...)
 
 #define BIND_THIS(method, ...) \
-    std::bind(&CLASS::method, this, __VA_ARGS__)
+    std::bind(&CLASS::method, this __VA_OPT__(,) __VA_ARGS__)
 #define BIND(method, ...) \
-    bind<CLASS>(&CLASS::method, __VA_ARGS__)
+    bind<CLASS>(&CLASS::method __VA_OPT__(,) __VA_ARGS__)
 #define POST(method, ...) \
-    post<CLASS>(&CLASS::method, __VA_ARGS__)
+    post<CLASS>(&CLASS::method __VA_OPT__(,) __VA_ARGS__)
 #define PARALLEL(method, ...) \
-    parallel<CLASS>(&CLASS::method, __VA_ARGS__)
+    parallel<CLASS>(&CLASS::method __VA_OPT__(,) __VA_ARGS__)
 
 } // namespace network
 } // namespace libbitcoin
