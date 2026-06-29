@@ -1392,9 +1392,11 @@ static WC_INLINE void build_addr(SOCKADDR_IN_T* addr, const char* peer,
         #endif
 
         if (entry) {
-            XMEMCPY(&addr->sin_addr.s_addr, entry->h_addr_list[0],
-                   (size_t) entry->h_length);
-            useLookup = 1;
+            if ((size_t)entry->h_length <= sizeof(addr->sin_addr.s_addr)) {
+                XMEMCPY(&addr->sin_addr.s_addr, entry->h_addr_list[0],
+                       (size_t) entry->h_length);
+                useLookup = 1;
+            }
         }
     #else
         struct zsock_addrinfo hints, *addrInfo;
