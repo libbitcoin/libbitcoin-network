@@ -16,9 +16,9 @@
 #                               Default: OFF
 # -Denable-shani=<ON/OFF>     Use Intel/ARM SHA Extensions.
 #                               Default: OFF
-# -Dwith-ultrafast=<ON/OFF>   Use shrec/UltrafastSecp256k1.
+# -Dwith-ultrafast=<ON/OFF>   Use shrec/UltrafastSecp256k1 library.
 #                               Default: OFF
-# -Dwith-secp256k1=<ON/OFF>   Use bitcoin-core/secp256k1.
+# -Dwith-secp256k1=<ON/OFF>   Use bitcoin-core/secp256k1 library.
 #                               Default: ON
 # -Dwith-ssl=<ON/OFF>         Use embedded ssl library.
 #                               Default: ON
@@ -503,10 +503,10 @@ main()
         source_github "${secp256k1_OWNER}" "secp256k1" "${secp256k1_TAG}"
         local SAVE_CPPFLAGS="${CPPFLAGS}"
         export CPPFLAGS="${CPPFLAGS} ${secp256k1_FLAGS[@]}"
-        build_cmake "secp256k1" "." "${PARALLEL}" "${secp256k1_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
-        install_cmake "secp256k1"
+        build_cmake "secp256k1" "." "." "${PARALLEL}" "${secp256k1_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
+        install_cmake "secp256k1" "."
         if [[ "${BUILD_POST_INSTALL_CLEAN}" == "yes" ]]; then
-            clean_cmake "secp256k1"
+            clean_cmake "secp256k1" "."
         fi
         export CPPFLAGS="${SAVE_CPPFLAGS}"
     fi
@@ -515,10 +515,10 @@ main()
         source_github "${UltrafastSecp256k1_OWNER}" "UltrafastSecp256k1" "${UltrafastSecp256k1_TAG}"
         local SAVE_CPPFLAGS="${CPPFLAGS}"
         export CPPFLAGS="${CPPFLAGS} ${UltrafastSecp256k1_FLAGS[@]}"
-        build_cmake "UltrafastSecp256k1" "." "${PARALLEL}" "${UltrafastSecp256k1_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
-        install_cmake "UltrafastSecp256k1"
+        build_cmake "UltrafastSecp256k1" "." "." "${PARALLEL}" "${UltrafastSecp256k1_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
+        install_cmake "UltrafastSecp256k1" "."
         if [[ "${BUILD_POST_INSTALL_CLEAN}" == "yes" ]]; then
-            clean_cmake "UltrafastSecp256k1"
+            clean_cmake "UltrafastSecp256k1" "."
         fi
         export CPPFLAGS="${SAVE_CPPFLAGS}"
     fi
@@ -526,23 +526,23 @@ main()
     source_github "${libbitcoin_system_OWNER}" "libbitcoin-system" "${libbitcoin_system_TAG}"
     local SAVE_CPPFLAGS="${CPPFLAGS}"
     export CPPFLAGS="${CPPFLAGS} ${libbitcoin_system_FLAGS[@]}"
-    build_preset "libbitcoin-system" "builds/cmake" "${PARALLEL}" "${libbitcoin_system_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
-    install_cmake "libbitcoin-system"
+    build_preset "libbitcoin-system" "builds/cmake" "." "${PARALLEL}" "${libbitcoin_system_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
+    install_cmake "libbitcoin-system" "."
     if [[ "${BUILD_POST_INSTALL_CLEAN}" == "yes" ]]; then
-        clean_cmake "libbitcoin-system"
+        clean_cmake "libbitcoin-system" "."
     fi
     export CPPFLAGS="${SAVE_CPPFLAGS}"
 
     source_github "${libbitcoin_network_OWNER}" "libbitcoin-network" "${libbitcoin_network_TAG}"
     local SAVE_CPPFLAGS="${CPPFLAGS}"
     export CPPFLAGS="${CPPFLAGS} ${libbitcoin_network_FLAGS[@]}"
-    build_preset "libbitcoin-network" "builds/cmake" "${PARALLEL}" "${libbitcoin_network_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
+    build_preset "libbitcoin-network" "builds/cmake" "." "${PARALLEL}" "${libbitcoin_network_OPTIONS[@]}" "${CONFIGURE_OPTIONS_CMAKE[@]}"
     if ! [[ "${BUILD_SKIP_TESTS}" == "yes" ]]; then
-        test_cmake "libbitcoin-network" "test" "${PARALLEL}"
+        test_cmake "libbitcoin-network" "." "${PARALLEL}"
     fi
-    install_cmake "libbitcoin-network"
+    install_cmake "libbitcoin-network" "."
     if [[ "${BUILD_POST_INSTALL_CLEAN}" == "yes" ]]; then
-        clean_cmake "libbitcoin-network"
+        clean_cmake "libbitcoin-network" "."
     fi
     export CPPFLAGS="${SAVE_CPPFLAGS}"
 
@@ -760,9 +760,10 @@ build_boost()
 build_cmake()
 {
     local PROJECT="$1"
-    local RELATIVE_PATH="$2"
-    local JOBS="$3"
-    shift 3
+    local RELATIVE_SRC_PATH="$2"
+    local RELATIVE_OBJ_PATH="$3"
+    local JOBS="$4"
+    shift 4
 
     local VERBOSITY_CMAKE=""
     local VERBOSITY_MAKE=""
@@ -777,7 +778,7 @@ build_cmake()
 
     # directory rationalization
     push_directory "${BUILD_SRC_DIR}/${PROJECT}"
-    push_directory "${RELATIVE_PATH}"
+    push_directory "${RELATIVE_SRC_PATH}"
     local BUILD_PATH="$(pwd)"
     pop_directory
 
@@ -791,9 +792,14 @@ build_cmake()
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
     fi
 
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        create_directory_force "${RELATIVE_OBJ_PATH}"
+        push_directory "${RELATIVE_OBJ_PATH}"
+    fi
+
     display_configure_options "$@"
 
-    cmake ${VERBOSITY_CMAKE} -LA "$@" "${BUILD_SRC_DIR}/${PROJECT}/${RELATIVE_PATH}"
+    cmake ${VERBOSITY_CMAKE} -LA "$@" "${BUILD_SRC_DIR}/${PROJECT}/${RELATIVE_SRC_PATH}"
 
     # make
     if [[ ${JOBS} -gt ${SEQUENTIAL} ]]; then
@@ -804,6 +810,10 @@ build_cmake()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
+
     msg_success "'${PROJECT}' built successfully."
 }
 
@@ -811,9 +821,10 @@ build_cmake()
 build_preset()
 {
     local PROJECT="$1"
-    local RELATIVE_PATH="$2"
-    local JOBS="$3"
-    shift 3
+    local RELATIVE_SRC_PATH="$2"
+    local RELATIVE_OBJ_PATH="$3"
+    local JOBS="$4"
+    shift 4
 
     local VERBOSITY_CMAKE=""
     local VERBOSITY_MAKE=""
@@ -828,7 +839,7 @@ build_preset()
 
     # directory rationalization
     push_directory "${BUILD_SRC_DIR}/${PROJECT}"
-    push_directory "${RELATIVE_PATH}"
+    push_directory "${RELATIVE_SRC_PATH}"
     local BUILD_PATH="$(pwd)"
     pop_directory
 
@@ -842,9 +853,14 @@ build_preset()
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
     fi
 
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        create_directory_force "${RELATIVE_OBJ_PATH}"
+        push_directory "${RELATIVE_OBJ_PATH}"
+    fi
+
     display_configure_options "$@"
 
-    cmake ${VERBOSITY_CMAKE} -LA --preset="${BUILD_PRESET}" "$@" "${BUILD_SRC_DIR}/${PROJECT}/${RELATIVE_PATH}"
+    cmake ${VERBOSITY_CMAKE} -LA --preset="${BUILD_PRESET}" "$@" "${BUILD_SRC_DIR}/${PROJECT}/${RELATIVE_SRC_PATH}"
 
     # make
     if [[ ${JOBS} -gt ${SEQUENTIAL} ]]; then
@@ -855,6 +871,10 @@ build_preset()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
+
     msg_success "'${PROJECT}' built successfully."
 }
 
@@ -862,7 +882,8 @@ build_preset()
 clean_cmake()
 {
     local PROJECT="$1"
-    shift 1
+    local RELATIVE_OBJ_PATH="$2"
+    shift 2
 
     msg "Preparing to clean ${PROJECT}"
 
@@ -872,6 +893,10 @@ clean_cmake()
         push_directory "${BUILD_OBJ_DIR}"
     else
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
+    fi
+
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        push_directory "${RELATIVE_OBJ_PATH}"
     fi
 
     disable_exit_on_error
@@ -887,6 +912,9 @@ clean_cmake()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
 
     msg_success "'${PROJECT}' clean complete."
 }
@@ -894,7 +922,8 @@ clean_cmake()
 install_cmake()
 {
     local PROJECT="$1"
-    shift
+    local RELATIVE_OBJ_PATH="$2"
+    shift 2
 
     msg "Preparing to install ${PROJECT}"
 
@@ -906,6 +935,10 @@ install_cmake()
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
     fi
 
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        push_directory "${RELATIVE_OBJ_PATH}"
+    fi
+
     cmake --install .
 
     if [[ ${OS} == Linux ]] && [[ "${PREFIX}" == "/usr/local" ]]; then
@@ -914,6 +947,9 @@ install_cmake()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
 
     msg_success "'${PROJECT}' installation complete."
 }
@@ -921,8 +957,9 @@ install_cmake()
 test_cmake()
 {
     local PROJECT="$1"
-    local JOBS="$2"
-    shift 2
+    local RELATIVE_OBJ_PATH="$2"
+    local JOBS="$3"
+    shift 3
 
     msg "Preparing to test ${PROJECT}"
 
@@ -932,6 +969,10 @@ test_cmake()
         push_directory "${BUILD_OBJ_DIR}"
     else
         push_directory "${BUILD_OBJ_DIR}/${PROJECT}"
+    fi
+
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        push_directory "${RELATIVE_OBJ_PATH}"
     fi
 
     disable_exit_on_error
@@ -961,6 +1002,9 @@ test_cmake()
 
     pop_directory # BUILD_OBJ_DIR
     pop_directory # BUILD_SRC_DIR/PROJECT
+    if [[ "${RELATIVE_OBJ_PATH}" != "." ]]; then
+        pop_directory
+    fi
 
     msg_success "'${PROJECT}' test complete."
 }
@@ -1038,9 +1082,9 @@ help()
     msg "                              Default: OFF"
     msg "-Denable-shani=<ON/OFF>     Use Intel/ARM SHA Extensions."
     msg "                              Default: OFF"
-    msg "-Dwith-ultrafast=<ON/OFF>   Use shrec/UltrafastSecp256k1."
+    msg "-Dwith-ultrafast=<ON/OFF>   Use shrec/UltrafastSecp256k1 library."
     msg "                              Default: OFF"
-    msg "-Dwith-secp256k1=<ON/OFF>   Use bitcoin-core/secp256k1."
+    msg "-Dwith-secp256k1=<ON/OFF>   Use bitcoin-core/secp256k1 library."
     msg "                              Default: ON"
     msg "-Dwith-ssl=<ON/OFF>         Use embedded ssl library."
     msg "                              Default: ON"
