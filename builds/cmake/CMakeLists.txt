@@ -72,12 +72,11 @@ endif()
 # Project options.
 #------------------------------------------------------------------------------
 option( with-ssl "Use embedded ssl library." ON )
-option( with-tests "Build tests." ON )
+option( with-tests "Compile with unit tests." ON )
 
 #------------------------------------------------------------------------------
 # Dependencies.
 #------------------------------------------------------------------------------
-
 if ( BUILD_SHARED_LIBS )
   set( libbitcoin-system_USE_STATIC_LIBS "OFF" )
   set( Boost_USE_STATIC_LIBS "OFF" )
@@ -96,7 +95,6 @@ find_package( Boost 1.86.0 REQUIRED
 #------------------------------------------------------------------------------
 # Compiler options.
 #------------------------------------------------------------------------------
-
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
@@ -173,12 +171,7 @@ endif()
 #------------------------------------------------------------------------------
 # Linker options.
 #------------------------------------------------------------------------------
-
 include(CheckLinkerFlag)
-
-#------------------------------------------------------------------------------
-# Configurable file(s).
-#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # libbitcoin-network library
@@ -201,8 +194,8 @@ target_compile_options( libbitcoin-network
     $<$<COMPILE_LANGUAGE:CXX>:-Wno-comment>
     $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-copy>
     $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
-    -fstack-protector-all
-    -Wno-uninitialized
+    $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wno-uninitialized>
 )
 
 target_compile_definitions( libbitcoin-network
@@ -309,8 +302,8 @@ if ( with-tests )
       $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
       $<$<COMPILE_LANGUAGE:CXX>:-Wno-long-long>
       $<$<CXX_COMPILER_ID:GNU>:-fno-var-tracking-assignments>
-      -fstack-protector-all
-      -Wno-uninitialized
+      $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-uninitialized>
   )
 
   target_compile_definitions( libbitcoin-network-test
@@ -338,6 +331,15 @@ if ( with-tests )
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.cpp"
   )
+
+  file( GLOB_RECURSE libbitcoin_network_test_SOURCES_SSL CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.cpp"
+  )
+
+  if ( !with-ssl )
+    list( REMOVE_ITEM libbitcoin_network_test_SOURCES ${libbitcoin_network_test_SOURCES_SSL} )
+  endif()
 
   target_sources( libbitcoin-network-test
     PRIVATE
@@ -369,6 +371,7 @@ if ( with-tests )
       SOVERSION ${PROJECT_VERSION_MAJOR}
   )
 endif()
+
 #------------------------------------------------------------------------------
 # Installation routine.
 #------------------------------------------------------------------------------
