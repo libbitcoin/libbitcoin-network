@@ -32,7 +32,13 @@ public:
     {
         return shared_from_base<Derived>();
     }
-    
+
+    template <class Derived>
+    std::weak_ptr<Derived> weak() NOEXCEPT
+    {
+        return weak_from_base<Derived>();
+    }
+
     template <class Sibling, class Shared>
     typename Sibling::ptr sibling() NOEXCEPT
     {
@@ -87,7 +93,7 @@ public:
     }
 };
 
-// enable_shared_from_base
+// shared_from_base
 
 BOOST_AUTO_TEST_CASE(enable_shared_from_base__nop__nop)
 {
@@ -139,7 +145,44 @@ BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_base__from_base__deriv
     BOOST_REQUIRE(left->left_method());
 }
 
-// enable_shared_from_sibling
+// weak_from_base
+
+BOOST_AUTO_TEST_CASE(enable_shared_from_base__weak_from_base__from_base__locks_base)
+{
+    const auto base = std::make_shared<base_class>();
+    const auto weak = base->weak<base_class>();
+    const auto self = weak.lock();
+    BOOST_REQUIRE(self);
+    BOOST_REQUIRE(!self->base_method());
+}
+
+BOOST_AUTO_TEST_CASE(enable_shared_from_base__weak_from_base__from_base__derived_and_polymorphic)
+{
+    const auto base = std::static_pointer_cast<base_class>(std::make_shared<derived_left>());
+    const auto weak = base->weak<derived_left>();
+    const auto left = weak.lock();
+    BOOST_REQUIRE(left);
+
+    // Picks up the left override.
+    BOOST_REQUIRE(left->base_method());
+
+    // Derived left is directly accessible from the locked weak pointer.
+    BOOST_REQUIRE(left->left_method());
+}
+
+BOOST_AUTO_TEST_CASE(enable_shared_from_base__weak_from_base__released__expired)
+{
+    auto base = std::make_shared<derived_left>();
+    const auto weak = base->weak<derived_left>();
+
+    // The weak pointer does not retain the instance.
+    BOOST_REQUIRE(!weak.expired());
+    base.reset();
+    BOOST_REQUIRE(weak.expired());
+    BOOST_REQUIRE(!weak.lock());
+}
+
+// shared_from_sibling
 
 BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_sibling__multiple_derived__expected)
 {

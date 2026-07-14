@@ -35,8 +35,7 @@ template <class Sibling, class Shared, if_base_of<Base, Shared>>
 std::shared_ptr<Sibling> enable_shared_from_base<Base>::
 shared_from_sibling() NOEXCEPT
 {
-    // NO_STATIC_DOWNCASTS
-    BC_PUSH_WARNING(26491)
+    BC_PUSH_WARNING(NO_STATIC_DOWNCASTS)
     BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
     BC_PUSH_WARNING(NO_DEREFERENCE_NULL_POINTER)
     // Allowing unsafe downcast (presumes sibling inheritance.
@@ -62,6 +61,16 @@ shared_from_base() NOEXCEPT
     // this-> is required for dependent base access in CRTP.
     return std::static_pointer_cast<Derived>(this->shared_from_this());
     BC_POP_WARNING()
+}
+
+// protected
+template <class Base>
+template <class Derived, if_base_of<Base, Derived>>
+std::weak_ptr<Derived>
+enable_shared_from_base<Base>::weak_from_base() NOEXCEPT
+{
+    // this-> is required for dependent base access in CRTP.
+    return this->shared_from_base<Derived>();
 }
 
 } // namespace network
