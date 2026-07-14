@@ -45,6 +45,10 @@ protected:
     /// Use in derived class to create shared pointer instance of self.
     template <class Derived, if_base_of<Base, Derived> = true>
     std::shared_ptr<Derived> shared_from_base() NOEXCEPT;
+
+    /// Use in derived class to create weak pointer instance of self.
+    template <class Derived, if_base_of<Base, Derived> = true>
+    std::weak_ptr<Derived> weak_from_base() NOEXCEPT;
 };
 
 } // namespace network
