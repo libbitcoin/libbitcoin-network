@@ -97,6 +97,13 @@ protected:
             BIND_SAFE(BIND_SHARED(method, args)));
     }
 
+    /// Bind base or derived class method to weak self (use BIND_WEAK).
+    template <class Derived, typename Method, typename... Args>
+    inline auto bind_weak(Method&& method, Args&&... args) NOEXCEPT
+    {
+        return BIND_TO_WEAK(method, args);
+    }
+
     /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST).
     /// Method is invoked with error::subscriber_stopped if already stopped.
     template <class Derived, class Message, typename Method, typename... Args>

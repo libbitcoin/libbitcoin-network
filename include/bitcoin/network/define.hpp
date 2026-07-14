@@ -33,9 +33,20 @@ namespace network {
 #define BIND_TO(method, args) \
     std::bind(std::forward<Method>(method), static_cast<Derived*>(this), \
         std::forward<Args>(args)...)
+#define BIND_TO_WEAK(method, args) \
+    std::bind([](const std::weak_ptr<Derived>& weak, const Method& method, \
+        auto&&... call) NOEXCEPT \
+    { \
+        const auto strong = weak.lock(); \
+        return strong && std::invoke(method, strong, \
+            std::forward<decltype(call)>(call)...); \
+    }, weak_from_base<Derived>(), std::forward<Method>(method), \
+        std::forward<Args>(args)...)
 
 #define BIND_THIS(method, ...) \
     std::bind(&CLASS::method, this __VA_OPT__(,) __VA_ARGS__)
+#define BIND_WEAK(method, ...) \
+    bind_weak<CLASS>(&CLASS::method, __VA_ARGS__)
 #define BIND(method, ...) \
     bind<CLASS>(&CLASS::method __VA_OPT__(,) __VA_ARGS__)
 #define POST(method, ...) \
