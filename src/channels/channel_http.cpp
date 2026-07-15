@@ -114,7 +114,7 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
         return;
     }
 
-    LOGA(log_message(*request, bytes));
+    LOGV(log_message(*request, bytes));
 
     reading_ = false;
     dispatch(request);
@@ -225,7 +225,9 @@ void channel_http::handle_send(const code& ec, size_t bytes, bool notification,
     BC_ASSERT(stranded());
 
     if (ec) stop(ec);
-    LOGA(boost_format(message) % bytes);
+
+    // Do not log websocket sends as it creates log subscription feedback loop.
+    if (!websocket()) { LOGV(boost_format(message) % bytes); }
     handler(ec);
 
     // Restart the listener (only in response to requests).
@@ -270,6 +272,14 @@ void channel_http::handle_unauthorized(const code& ec) NOEXCEPT
 std::string channel_http::log_message(const request& request,
     size_t bytes) const NOEXCEPT
 {
+    if (websocket())
+    {
+        const std::string scheme = secure() ? "wss" : "ws";
+        const std::string size = serialize(bytes);
+        return scheme + " (" + size + ") [" + endpoint().to_string() + "] " +
+            std::string(request.target());
+    }
+
     const std::string scheme = secure() ? "https" : "http";
     const std::string method = request.method_string();
     const std::string keep = request.keep_alive() ? "keep" : "drop";
@@ -285,6 +295,12 @@ std::string channel_http::log_message(const request& request,
 
 std::string channel_http::log_message(const response& response) const NOEXCEPT
 {
+    if (websocket())
+    {
+        const std::string scheme = secure() ? "wss" : "ws";
+        return scheme + " [" + endpoint().to_string() + "]";
+    }
+
     const std::string scheme = secure() ? "https" : "http";
     const std::string status = status_string(response.result());
     const std::string keep = response.keep_alive() ? "keep" : "drop";
