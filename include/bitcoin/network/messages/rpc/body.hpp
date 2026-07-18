@@ -33,7 +33,18 @@ struct message_type
   : public json::json_value
 {
     Type message{};
+
+    /// Standards-strict parse by default (channel may relax for Electrum).
     bool strict{ true };
+
+    /// Caller enables json-rpc batch delimiter recognition (wire policy).
+    bool batchable{};
+
+    /// Caller provides current batch state (true while batch is open).
+    bool batch{};
+
+    /// Reader indicates batch state change (open or close, per batch).
+    bool changed{};
 };
 
 /// Derived boost::beast::http body for JSON-RPC messages.
@@ -72,6 +83,10 @@ struct BCT_API body
     private:
         const bool terminated_{};
         bool has_terminator_{};
+        bool started_{};
+        bool opened_{};
+        bool closed_{};
+        bool separated_{};
     };
 
     class writer

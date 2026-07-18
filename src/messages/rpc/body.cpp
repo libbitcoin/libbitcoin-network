@@ -37,7 +37,7 @@ BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
 constexpr bool is_rpc_terminator(char character) NOEXCEPT
 {
-    // Batched rpc messages are array-terminated.
+    // Document terminal characters (object always, array when batching).
     return character == '}' || character == ']';
 }
 
@@ -47,50 +47,169 @@ constexpr bool is_electrum_terminator(char character) NOEXCEPT
     return character == '\n';
 }
 
+constexpr bool is_json_whitespace(char character) NOEXCEPT
+{
+    return character == ' ' || character == '\t' ||
+        character == '\r' || character == '\n';
+}
+
 // rpc::body<request_t>::reader
 // ----------------------------------------------------------------------------
+// A batch is never materialized. Each read yields one element (message), with
+// batch open riding along on the first element read (value_.changed), and
+// batch close completing a read without a message (value_.changed with
+// value_.batch). The caller provides current state (value_.batch) and enables
+// delimiter recognition (value_.batchable). Delimiters are consumed here and
+// never surface to the parser, so each element parses as its own document.
 
 template <>
 size_t body<rpc::request_t>::reader::
 put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 {
     // Null and empty guarded in base reader.
-    const auto parsed = base::reader::put(buffer, ec);
-
-    // Not done until terminated and can't search for it until parser is done.
-    if (ec || !base::reader::done())
-        return parsed;
-
-    // http json does not use termination.
-    has_terminator_ = false;
-    if (!terminated_)
-        return parsed;
-
-    // There is no terminator (terminal).
-    if (is_zero(parsed))
-    {
-        ec = code{ error::jsonrpc_reader_stall };
-        return parsed;
-    }
+    if (is_zero(buffer.size()) || is_null(buffer.data()))
+        return base::reader::put(buffer, ec);
 
     const auto data = pointer_cast<const char>(buffer.data());
+    const auto size = buffer.size();
+    size_t index{};
+    ec.clear();
 
-    // boost::json consumes whitespace, and leaves any subsequent chars
-    // unparsed, so terminator must be in the parsed buffer segment.
-    for (auto index = parsed; !is_zero(index); --index)
+    // Termination applies to singleton and batch close reads only.
+    const auto requires_terminator = [this]() NOEXCEPT
     {
-        const auto character = data[sub1(index)];
-        if (is_electrum_terminator(character))
+        return terminated_ && (closed_ || (!value_.batch && !opened_));
+    };
+
+    // Prologue: consume whitespace and batch delimiters until element start,
+    // batch close, or buffer exhaustion.
+    if (!started_ && !closed_ && value_.batchable)
+    {
+        for (; index < size; ++index)
         {
-            has_terminator_ = true;
+            const auto character = data[index];
+            if (is_json_whitespace(character))
+                continue;
+
+            if (character == '[' && !opened_ && !value_.batch)
+            {
+                // Batch open rides along with the first element read.
+                opened_ = true;
+                value_.changed = true;
+                continue;
+            }
+
+            if (character == ',')
+            {
+                // Element separator (between batched elements only).
+                if (!value_.batch || separated_)
+                {
+                    ec = code{ error::jsonrpc_batch_malformed };
+                    return index;
+                }
+
+                separated_ = true;
+                continue;
+            }
+
+            if (character == ']')
+            {
+                // Batch open immediately closed (no elements).
+                if (opened_)
+                {
+                    ec = code{ error::jsonrpc_batch_empty };
+                    return index;
+                }
+
+                // Batch close (only where a separator could occur).
+                if (!value_.batch || separated_)
+                {
+                    ec = code{ error::jsonrpc_batch_malformed };
+                    return index;
+                }
+
+                // Batch close completes this read without a message.
+                closed_ = true;
+                value_.changed = true;
+                ++index;
+                break;
+            }
+
+            // Nested batch open, or batched element without separator.
+            if (character == '[' || (value_.batch && !separated_))
+            {
+                ec = code{ error::jsonrpc_batch_malformed };
+                return index;
+            }
+
+            // Element start (this character is the parser's).
+            started_ = true;
             break;
         }
 
-        if (is_rpc_terminator(character))
-            break;
+        // Buffer exhausted within prologue.
+        if (!started_ && !closed_)
+            return index;
+    }
+    else if (!started_ && !closed_)
+    {
+        // Batch disallowed, buffer is element data (array is a parse).
+        started_ = true;
     }
 
-    return parsed;
+    // Element: pass buffer remainder to the json parser.
+    if (started_ && !base::reader::done())
+    {
+        const auto start = index;
+        const buffer_type remainder{ &data[index], size - index };
+        const auto parsed = base::reader::put(remainder, ec);
+
+        index += parsed;
+        if (ec || !base::reader::done())
+            return index;
+
+        // Batched element reads complete without termination.
+        if (!requires_terminator())
+            return index;
+
+        // boost::json consumes whitespace, and leaves any subsequent chars
+        // unparsed, so a terminator it consumed must be in the parsed segment.
+        for (auto scan = index; scan > start; --scan)
+        {
+            const auto character = data[sub1(scan)];
+            if (is_electrum_terminator(character))
+            {
+                has_terminator_ = true;
+                return index;
+            }
+
+            if (is_rpc_terminator(character))
+                break;
+        }
+    }
+
+    // Terminator: consume whitespace through the terminator, allowing padded
+    // termination (electrum traffic shaping) and split reads.
+    if (requires_terminator() && !has_terminator_)
+    {
+        for (; index < size; ++index)
+        {
+            const auto character = data[index];
+            if (is_electrum_terminator(character))
+            {
+                has_terminator_ = true;
+                return add1(index);
+            }
+
+            if (!is_json_whitespace(character))
+            {
+                ec = code{ error::jsonrpc_reader_stall };
+                return index;
+            }
+        }
+    }
+
+    return index;
 }
 
 template <>
@@ -98,20 +217,30 @@ bool body<rpc::request_t>::reader::
 done() const NOEXCEPT
 {
     // Parser may be done but with terminator still outstanding.
-    return base::reader::done() && (!terminated_ || has_terminator_);
+    const auto complete = closed_ || base::reader::done();
+    const auto required = terminated_ &&
+        (closed_ || (!value_.batch && !opened_));
+
+    return complete && (!required || has_terminator_);
 }
 
 template <>
 void body<rpc::request_t>::reader::
 finish(boost_code& ec) NOEXCEPT
 {
+    // Batch close completes a read without a message.
+    if (closed_)
+    {
+        ec = done() ? boost_code{} : to_http_code(http_error_t::need_more);
+        return;
+    }
+
     // See notes in base reader.
     base::reader::finish(ec);
     if (ec) return;
 
     try
     {
-        // TODO: extend support to batch (array of rpc).
         value_.message = value_to<rpc::request_t>(value_.model);
         value_.model.emplace_null();
     }
