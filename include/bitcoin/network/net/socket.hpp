@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -165,12 +166,36 @@ public:
     /// HTTP/WS (generic/rpc).
     /// -----------------------------------------------------------------------
 
+    /// Caller-owned parser for progressive (batchable) http reads.
+    using http_parser = boost::beast::http::request_parser<http::body>;
+    using http_parser_ptr = std::shared_ptr<http_parser>;
+
     /// Read http request from the socket, handler posted to socket strand.
     virtual void http_read(http::flat_buffer& buffer, http::request& request,
         count_handler&& handler) NOEXCEPT;
 
     /// Write http response to the socket, handler posted to socket strand.
     virtual void http_write(http::response&& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// HTTP (progressive read/write, for batchable json-rpc bodies).
+    /// -----------------------------------------------------------------------
+
+    /// Read http request header from the socket (body remains unread).
+    virtual void http_read_header(http::flat_buffer& buffer,
+        http_parser& parser, count_handler&& handler) NOEXCEPT;
+
+    /// Read from the http request body (each message pauses the parse).
+    virtual void http_read_some(http::flat_buffer& buffer,
+        http_parser& parser, count_handler&& handler) NOEXCEPT;
+
+    /// Write http response header to the socket (body remains unwritten).
+    virtual void http_write_header(http::response&& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write rpc response part to the socket as http chunk data, terminating
+    /// the chunked body when the part closes its batch.
+    virtual void rpc_write_chunk(rpc::response&& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Properties.
@@ -250,9 +275,6 @@ protected:
         const count_handler& handler) NOEXCEPT;
 
 private:
-    using http_parser = boost::beast::http::request_parser<http::body>;
-    using http_parser_ptr = std::shared_ptr<http_parser>;
-
     struct read_state
     {
         typedef std::shared_ptr<read_state> ptr;
@@ -296,6 +318,46 @@ private:
         bool more{ true };
         http::request value;
         http::body::writer writer;
+    };
+
+    struct header_state
+    {
+        typedef std::shared_ptr<header_state> ptr;
+        using http_serializer =
+            boost::beast::http::response_serializer<http::body>;
+
+        header_state(http::response&& response) NOEXCEPT
+          : value{ std::move(response) }, serializer{ value }
+        {
+        }
+
+        http::response value;
+        http_serializer serializer;
+    };
+
+    struct chunk_state
+    {
+        typedef std::shared_ptr<chunk_state> ptr;
+        using out_buffer = http::body::writer::out_buffer;
+        using chunk = boost::beast::http::chunk_body<asio::const_buffer>;
+
+        chunk_state(http::response&& response) NOEXCEPT
+          : value{ std::move(response) }, writer{ value.base(), value.body() }
+        {
+        }
+
+        // The part that closes its batch terminates the chunked body.
+        inline bool last() const NOEXCEPT
+        {
+            const auto& body = value.body();
+            return body.contains<rpc::response>() &&
+                rpc::closes_batch(body.get<rpc::response>());
+        }
+
+        bool more{ true };
+        http::response value;
+        http::body::writer writer;
+        std::optional<chunk> part{};
     };
 
     // do
@@ -343,6 +405,16 @@ private:
     void do_http_write(const http::response_ptr& response,
         const count_handler& handler) NOEXCEPT;
 
+    // http (progressive)
+    void do_http_read_header(ref<http::flat_buffer> buffer,
+        const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
+    void do_http_read_some(ref<http::flat_buffer> buffer,
+        const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
+    void do_http_write_header(const header_state::ptr& out,
+        const count_handler& handler) NOEXCEPT;
+    void do_chunk_write(boost_code ec, size_t total,
+        const chunk_state::ptr& out, const count_handler& handler) NOEXCEPT;
+
     // handle
     // ------------------------------------------------------------------------
 
@@ -389,6 +461,18 @@ private:
         const count_handler& handler) NOEXCEPT;
     void handle_http_write(const boost_code& ec, size_t size,
         const http::response_ptr& request,
+        const count_handler& handler) NOEXCEPT;
+
+    // http (progressive)
+    void handle_http_read_header(const boost_code& ec, size_t size,
+        const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
+    void handle_http_read_some(const boost_code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_write_header(const boost_code& ec, size_t size,
+        const header_state::ptr& out, const count_handler& handler) NOEXCEPT;
+    void handle_chunk_write(const boost_code& ec, size_t size, size_t total,
+        const chunk_state::ptr& out, const count_handler& handler) NOEXCEPT;
+    void handle_chunk_last(const boost_code& ec, size_t size, size_t total,
         const count_handler& handler) NOEXCEPT;
 
     // utility

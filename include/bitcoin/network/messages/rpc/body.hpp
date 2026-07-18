@@ -28,6 +28,25 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
+/// Batch framing is derived from caller-assigned batch state.
+template <typename Value>
+constexpr bool opens_batch(const Value& value) NOEXCEPT
+{
+    return value.batchable && !value.batch && value.changed;
+}
+
+template <typename Value>
+constexpr bool continues_batch(const Value& value) NOEXCEPT
+{
+    return value.batchable && value.batch && !value.changed;
+}
+
+template <typename Value>
+constexpr bool closes_batch(const Value& value) NOEXCEPT
+{
+    return value.batchable && value.batch && value.changed;
+}
+
 template <typename Type>
 struct message_type
   : public json::json_value
@@ -88,6 +107,8 @@ struct BCT_API body
         bool opened_{};
         bool closed_{};
         bool separated_{};
+        bool signaled_{};
+        bool delivered_{};
     };
 
     class writer

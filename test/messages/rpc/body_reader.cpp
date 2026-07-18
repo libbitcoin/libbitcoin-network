@@ -181,14 +181,11 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_open_with_first_element__succes
     reader.init(text.size(), ec);
     BOOST_REQUIRE(!ec);
 
-    // Trailing separator is not consumed (next read prologue).
+    // Trailing separator is not consumed (next read prologue). Delivery
+    // pauses the parse (need_buffer) with the converted message.
     BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), sub1(text.size()));
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader.done());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(body.changed);
-
-    reader.finish(ec);
-    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(body.message.jsonrpc == version::v2);
     BOOST_REQUIRE(body.message.id.has_value());
     BOOST_REQUIRE_EQUAL(std::get<code_t>(body.message.id.value()), 1);
@@ -208,12 +205,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_element_with_separator__success
     BOOST_REQUIRE(!ec);
 
     BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader.done());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(!body.changed);
-
-    reader.finish(ec);
-    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(body.message.jsonrpc == version::v2);
     BOOST_REQUIRE_EQUAL(std::get<code_t>(body.message.id.value()), 2);
     BOOST_REQUIRE_EQUAL(body.message.method, "next");
@@ -232,14 +225,13 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_close_terminated__success_chang
     BOOST_REQUIRE(!ec);
 
     BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader.done());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(body.changed);
+    BOOST_REQUIRE(body.message.method.empty());
+    BOOST_REQUIRE(!body.message.id.has_value());
 
     reader.finish(ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(body.message.method.empty());
-    BOOST_REQUIRE(!body.message.id.has_value());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_close_padded_terminator__success)
@@ -255,8 +247,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_close_padded_terminator__succes
     BOOST_REQUIRE(!ec);
 
     BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader.done());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(body.changed);
 }
 
@@ -282,8 +273,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_close_split_terminator__need_mo
     BOOST_REQUIRE(ec == error::http_error_t::need_more);
 
     BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), one);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader.done());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(body.changed);
 
     reader.finish(ec);
@@ -442,12 +432,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch__three_reads_consume_buffe
     BOOST_REQUIRE(!ec);
 
     BOOST_REQUIRE_EQUAL(reader1.put(buffer1, ec), first.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader1.done());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(body1.changed);
-
-    reader1.finish(ec);
-    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(body1.message.method, "one");
 
     // Read 2: second element (separator consumed in prologue).
@@ -459,12 +445,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch__three_reads_consume_buffe
     BOOST_REQUIRE(!ec);
 
     BOOST_REQUIRE_EQUAL(reader2.put(buffer2, ec), second.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader2.done());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(!body2.changed);
-
-    reader2.finish(ec);
-    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(body2.message.method, "two");
 
     // Read 3: batch close (padded terminator), no message.
@@ -476,13 +458,12 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch__three_reads_consume_buffe
     BOOST_REQUIRE(!ec);
 
     BOOST_REQUIRE_EQUAL(reader3.put(buffer3, ec), third.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader3.done());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(body3.changed);
+    BOOST_REQUIRE(body3.message.method.empty());
 
     reader3.finish(ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(body3.message.method.empty());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_byte_at_a_time__three_reads_consume_buffer)
@@ -501,18 +482,18 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_byte_at_a_time__three_read
     reader1.init({}, ec);
     BOOST_REQUIRE(!ec);
 
-    for (const auto& byte: first)
+    for (const auto& byte: first.substr(zero, sub1(first.size())))
     {
         const asio::const_buffer buffer{ &byte, one };
         BOOST_REQUIRE_EQUAL(reader1.put(buffer, ec), one);
         BOOST_REQUIRE(!ec);
     }
 
-    BOOST_REQUIRE(reader1.done());
+    // The final element byte delivers the message (need_buffer).
+    const asio::const_buffer last1{ &first.back(), one };
+    BOOST_REQUIRE_EQUAL(reader1.put(last1, ec), one);
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(body1.changed);
-
-    reader1.finish(ec);
-    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(body1.message.method, "one");
 
     // Read 2: second element (separator consumed in prologue).
@@ -523,18 +504,17 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_byte_at_a_time__three_read
     reader2.init({}, ec);
     BOOST_REQUIRE(!ec);
 
-    for (const auto& byte: second)
+    for (const auto& byte: second.substr(zero, sub1(second.size())))
     {
         const asio::const_buffer buffer{ &byte, one };
         BOOST_REQUIRE_EQUAL(reader2.put(buffer, ec), one);
         BOOST_REQUIRE(!ec);
     }
 
-    BOOST_REQUIRE(reader2.done());
+    const asio::const_buffer last2{ &second.back(), one };
+    BOOST_REQUIRE_EQUAL(reader2.put(last2, ec), one);
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(!body2.changed);
-
-    reader2.finish(ec);
-    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(body2.message.method, "two");
 
     // Read 3: batch close (padded terminator), no message.
@@ -545,19 +525,142 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_byte_at_a_time__three_read
     reader3.init({}, ec);
     BOOST_REQUIRE(!ec);
 
-    for (const auto& byte: third)
+    for (const auto& byte: third.substr(zero, sub1(third.size())))
     {
         const asio::const_buffer buffer{ &byte, one };
         BOOST_REQUIRE_EQUAL(reader3.put(buffer, ec), one);
         BOOST_REQUIRE(!ec);
     }
 
-    BOOST_REQUIRE(reader3.done());
+    // The terminator byte delivers the close (need_buffer), no message.
+    const asio::const_buffer last3{ &third.back(), one };
+    BOOST_REQUIRE_EQUAL(reader3.put(last3, ec), one);
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(body3.changed);
+    BOOST_REQUIRE(body3.message.method.empty());
 
     reader3.finish(ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(body3.message.method.empty());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_single_reader__delivers_each_element_and_close)
+{
+    // One reader instance spans the whole message (beast/http parse), with
+    // in-batch context carried by the instance rather than caller state.
+    const std::string_view first{ R"([{"jsonrpc":"2.0","id":1,"method":"one"})" };
+    const std::string_view second{ R"(,{"jsonrpc":"2.0","id":2,"method":"two"})" };
+    const std::string_view third{ "]" };
+    const std::string_view pad{ " " };
+    const std::string text
+    {
+        R"([{"jsonrpc":"2.0","id":1,"method":"one"},)"
+        R"({"jsonrpc":"2.0","id":2,"method":"two"}] )"
+    };
+
+    // Each put is offered the remainder, consuming one delivery.
+    const auto offset2 = first.size();
+    const auto offset3 = offset2 + second.size();
+    const auto offset4 = offset3 + third.size();
+    const asio::const_buffer buffer1{ &text[zero], text.size() };
+    const asio::const_buffer buffer2{ &text[offset2], text.size() - offset2 };
+    const asio::const_buffer buffer3{ &text[offset3], text.size() - offset3 };
+    const asio::const_buffer buffer4{ &text[offset4], text.size() - offset4 };
+    request_header header{};
+    rpc::request_body::value_type body{};
+    body.batchable = true;
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), first.size());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
+    BOOST_REQUIRE(body.changed);
+    BOOST_REQUIRE_EQUAL(body.message.method, "one");
+
+    body.changed = false;
+    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), second.size());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
+    BOOST_REQUIRE(!body.changed);
+    BOOST_REQUIRE_EQUAL(body.message.method, "two");
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer3, ec), third.size());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
+    BOOST_REQUIRE(body.changed);
+
+    // Trailing body whitespace is consumed following the close.
+    BOOST_REQUIRE_EQUAL(reader.put(buffer4, ec), pad.size());
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batchable_singleton_single_reader__delivers_and_finishes)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":1,"method":"test"})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    request_header header{};
+    rpc::request_body::value_type body{};
+    body.batchable = true;
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
+    BOOST_REQUIRE(!body.changed);
+    BOOST_REQUIRE_EQUAL(body.message.method, "test");
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__second_singleton_single_reader__batch_malformed)
+{
+    // A second document following a delivered (unbatched) singleton is an
+    // invalid body parse.
+    const std::string_view first{ R"({"jsonrpc":"2.0","id":1,"method":"one"})" };
+    const std::string_view second{ R"({"jsonrpc":"2.0","id":2,"method":"two"})" };
+    const asio::const_buffer buffer1{ first.data(), first.size() };
+    const asio::const_buffer buffer2{ second.data(), second.size() };
+    request_header header{};
+    rpc::request_body::value_type body{};
+    body.batchable = true;
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), first.size());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
+    BOOST_REQUIRE_EQUAL(body.message.method, "one");
+
+    reader.put(buffer2, ec);
+    BOOST_REQUIRE(ec == error::jsonrpc_batch_malformed);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__truncated_batch_single_reader__need_more)
+{
+    // Message ends (finish) with the batch open and unclosed.
+    const std::string_view text{ R"([{"jsonrpc":"2.0","id":1,"method":"one"})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    request_header header{};
+    rpc::request_body::value_type body{};
+    body.batchable = true;
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
+    BOOST_REQUIRE(body.changed);
+    BOOST_REQUIRE_EQUAL(body.message.method, "one");
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec == error::http_error_t::need_more);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_reader__put__split_padded_terminator_after_singleton__success)

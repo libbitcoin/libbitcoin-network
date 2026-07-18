@@ -39,7 +39,12 @@ void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
     const auto in = to_shared<http::request>();
 
     // Preselect rpc::request body value type, propagating caller options.
-    in->body() = rpc::request{ .strict = request.strict };
+    in->body() = rpc::request
+    {
+        .strict = request.strict,
+        .batchable = request.batchable,
+        .batch = request.batch
+    };
 
     // Capture body and move it back into request reference.
     body_read(buffer, *in,

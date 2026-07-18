@@ -75,6 +75,15 @@ void socket::do_body_read(boost_code ec, size_t total,
     // Parse data in the buffer.
     const auto read = in->reader.put(in->buffer.data(), ec);
 
+    // Batchable bodies deliver each message by pausing the parse, with
+    // residue carried in the buffer to the next logical read.
+    if (error::http_to_error_code(ec) == error::need_buffer)
+    {
+        in->buffer.consume(read);
+        handler(error::success, total);
+        return;
+    }
+
     if (!ec && !is_zero(read))
     {
         in->buffer.consume(read);
