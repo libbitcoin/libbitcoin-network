@@ -129,7 +129,7 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
     // (batched v1) is not (the rpc channel is jrpc over tcp).
     if (request->lax_batch)
     {
-        stop(error::jsonrpc_batched_v1);
+        stop(error::jsonrpc_batch_requires_v2);
         return;
     }
 
