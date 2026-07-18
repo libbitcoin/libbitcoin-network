@@ -214,6 +214,41 @@ void socket::http_read_some(http::flat_buffer& buffer, http_parser& parser,
             std::ref(buffer), std::ref(parser), std::move(handler)));
 }
 
+void socket::http_read_body(http::flat_buffer& buffer, http_parser& parser,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_http_read_body, shared_from_this(),
+            std::ref(buffer), std::ref(parser), std::move(handler)));
+}
+
+// private
+void socket::do_http_read_body(ref<http::flat_buffer> buffer,
+    const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    try
+    {
+        // Websocket messages have no http framing.
+        if (websocket())
+        {
+            handler(error::operation_failed, {});
+            return;
+        }
+
+        VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_read,
+            get_tcp(), buffer.get(), parser.get(),
+            std::bind(&socket::handle_http_read_some,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& e)
+    {
+        LOGF("Exception @ http_read_body: " << e.what());
+        handler(error::operation_failed, {});
+    }
+}
+
 // private
 void socket::do_http_read_some(ref<http::flat_buffer> buffer,
     const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT
@@ -253,13 +288,8 @@ void socket::handle_http_read_some(const boost_code& ec, size_t size,
         return;
     }
 
-    // The batched body reader delivers a message by pausing the parse.
-    if (error::http_to_error_code(ec) == error::need_buffer)
-    {
-        handler(error::success, size);
-        return;
-    }
-
+    // A batched body reader delivers a message by pausing the parse, which
+    // maps to error::need_buffer (distinguished from progress by caller).
     const auto code = error::http_to_error_code(ec);
     if (code == error::unknown) logx("http-read-some", ec);
     handler(code, size);

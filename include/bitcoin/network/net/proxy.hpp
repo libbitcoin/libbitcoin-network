@@ -214,6 +214,22 @@ private:
         const ref<rpc::request>& request, const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;
 
+    // For rpc batch normalization (http).
+    void do_http_request_read(const ref<http::request>& request,
+        const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_header(const code& ec, size_t bytes,
+        const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_body(const code& ec, size_t bytes,
+        const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_close_write(const code& ec, size_t bytes,
+        const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_header_write(const code& ec, size_t bytes,
+        const rpc::response_ptr& part, const count_handler& handler) NOEXCEPT;
+
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
     void do_write(const writer& call) NOEXCEPT;
@@ -232,6 +248,7 @@ private:
     stop_subscriber stop_subscriber_{};
     queue queue_{};
     queue deferred_{};
+    socket::http_parser_ptr parser_{};
     bool batched_{};
     bool parted_{};
 };

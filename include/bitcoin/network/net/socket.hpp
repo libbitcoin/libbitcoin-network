@@ -189,6 +189,10 @@ public:
     virtual void http_read_some(http::flat_buffer& buffer,
         http_parser& parser, count_handler&& handler) NOEXCEPT;
 
+    /// Read the http request body (completes on done or paused parse).
+    virtual void http_read_body(http::flat_buffer& buffer,
+        http_parser& parser, count_handler&& handler) NOEXCEPT;
+
     /// Write http response header to the socket (body remains unwritten).
     virtual void http_write_header(http::response&& response,
         count_handler&& handler) NOEXCEPT;
@@ -409,6 +413,8 @@ private:
     void do_http_read_header(ref<http::flat_buffer> buffer,
         const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
     void do_http_read_some(ref<http::flat_buffer> buffer,
+        const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
+    void do_http_read_body(ref<http::flat_buffer> buffer,
         const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
     void do_http_write_header(const header_state::ptr& out,
         const count_handler& handler) NOEXCEPT;
