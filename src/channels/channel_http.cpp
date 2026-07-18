@@ -133,6 +133,25 @@ void channel_http::dispatch(const request_cptr& request) NOEXCEPT
         return;
     }
 
+    // Electrum laxness (single value params) is never allowed here, btcd
+    // laxness (batched v1) is allowed over ws (http upgrade) only.
+    const auto& value = request->body();
+    if (value.contains<rpc::request>())
+    {
+        const auto& body = value.get<rpc::request>();
+        if (body.lax_params)
+        {
+            stop(error::jsonrpc_params_not_collection);
+            return;
+        }
+
+        if (!websocket() && body.lax_batch)
+        {
+            stop(error::jsonrpc_batched_v1);
+            return;
+        }
+    }
+
     rpc::request_t model{};
     switch (request.get()->method())
     {

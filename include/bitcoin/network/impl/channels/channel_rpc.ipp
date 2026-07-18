@@ -124,6 +124,15 @@ TEMPLATE
 inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    // Electrum laxness (single value params) is allowed, btcd laxness
+    // (batched v1) is not (the rpc channel is jrpc over tcp).
+    if (request->lax_batch)
+    {
+        stop(error::jsonrpc_batched_v1);
+        return;
+    }
+
     if (const auto code = dispatcher_.notify(request->message))
         stop(code);
 }
