@@ -53,6 +53,25 @@ constexpr bool is_json_whitespace(char character) NOEXCEPT
         character == '\r' || character == '\n';
 }
 
+// Batch framing is derived from caller-assigned batch state.
+template <typename Value>
+constexpr bool opens_batch(const Value& value) NOEXCEPT
+{
+    return value.batchable && !value.batch && value.changed;
+}
+
+template <typename Value>
+constexpr bool continues_batch(const Value& value) NOEXCEPT
+{
+    return value.batchable && value.batch && !value.changed;
+}
+
+template <typename Value>
+constexpr bool closes_batch(const Value& value) NOEXCEPT
+{
+    return value.batchable && value.batch && value.changed;
+}
+
 // rpc::body<request_t>::reader
 // ----------------------------------------------------------------------------
 // A batch is never materialized. Each read yields one element (message), with
@@ -319,11 +338,28 @@ done() const NOEXCEPT
 
 // rpc::body<response_t>::writer
 // ----------------------------------------------------------------------------
+// A batch is never materialized. Each write emits one part, with framing
+// derived from caller-assigned batch state (value_.batch is the state before
+// the part, value_.changed indicates transition). The open part is prefixed
+// with '[', continuation parts with ',', and the close part is framing and
+// termination only (no message), mirroring the reader's message-less close.
+// Termination applies to singleton and batch close parts only.
 
 template <>
 void body<rpc::response_t>::writer::
 init(boost_code& ec) NOEXCEPT
 {
+    set_terminator_ = false;
+    set_prefix_ = false;
+    set_close_ = false;
+
+    // Batch close part carries no message.
+    if (closes_batch(value_))
+    {
+        ec.clear();
+        return;
+    }
+
     base::writer::init(ec);
     if (ec) return;
 
@@ -343,7 +379,6 @@ init(boost_code& ec) NOEXCEPT
         return;
     }
 
-    set_terminator_ = false;
     serializer_.reset(&value_.model);
 }
 
@@ -352,8 +387,48 @@ body<rpc::response_t>::writer::out_buffer
 body<rpc::response_t>::writer::
 get(boost_code& ec) NOEXCEPT
 {
+    using namespace boost::asio;
+    static constexpr auto open = '[';
+    static constexpr auto comma = ',';
+    static constexpr auto close = ']';
+    static constexpr auto line = '\n';
+
+    // Buffer a single static framing character.
+    const auto single = [](const char& character, bool more) NOEXCEPT
+    {
+        return out_buffer{ std::make_pair(buffer(&character, one), more) };
+    };
+
+    // Emit batch framing (open or separator) preceding the part.
+    if (!set_prefix_)
+    {
+        set_prefix_ = true;
+
+        if (opens_batch(value_))
+            return single(open, true);
+
+        if (continues_batch(value_))
+            return single(comma, true);
+    }
+
+    // Batch close part is framing and termination only (no message).
+    if (closes_batch(value_))
+    {
+        if (!set_close_)
+        {
+            set_close_ = true;
+            return single(close, true);
+        }
+
+        set_terminator_ = true;
+        return single(line, false);
+    }
+
     auto out = base::writer::done() ? out_buffer{} : base::writer::get(ec);
-    if (ec) return out;
+
+    // Batched parts are terminated by the batch close part (not per part).
+    if (ec || opens_batch(value_) || continues_batch(value_))
+        return out;
 
     // Override json reader !more so terminator can be added.
     if (out.has_value())
@@ -364,17 +439,21 @@ get(boost_code& ec) NOEXCEPT
 
     // Add terminator and signal done.
     set_terminator_ = true;
-    using namespace boost::asio;
-    static constexpr auto line = '\n';
-    return out_buffer{ std::make_pair(buffer(&line, sizeof(line)), false) };
+    return single(line, false);
 }
 
 template <>
 bool body<rpc::response_t>::writer::
 done() const NOEXCEPT
 {
+    // Batch close part is done when framing and termination are written.
+    if (closes_batch(value_))
+        return set_close_ && set_terminator_;
+
+    // Batched parts are done on serialization (terminator rides on close).
     // Done is redundant with !out.second, but provides a cleaner interface.
-    return base::writer::done() && (!terminate_ || set_terminator_);
+    return base::writer::done() && (opens_batch(value_) ||
+        continues_batch(value_) || !terminate_ || set_terminator_);
 }
 
 // rpc::body<request_t>::writer

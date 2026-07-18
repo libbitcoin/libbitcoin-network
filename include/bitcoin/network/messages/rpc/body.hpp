@@ -43,7 +43,8 @@ struct message_type
     /// Caller provides current batch state (true while batch is open).
     bool batch{};
 
-    /// Reader indicates batch state change (open or close, per batch).
+    /// Read: reader indicates batch state change (open or close read).
+    /// Write: caller indicates batch state change (open or close part).
     bool changed{};
 };
 
@@ -115,6 +116,8 @@ struct BCT_API body
     private:
         const bool terminate_{};
         bool set_terminator_{};
+        bool set_prefix_{};
+        bool set_close_{};
     };
 };
 
