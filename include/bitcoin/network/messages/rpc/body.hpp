@@ -66,6 +66,10 @@ struct message_type
 
     /// btcd non-standard v1 message within a (v2) batch.
     bool lax_batch{};
+
+    /// Socket wires message termination by transport framing (tcp/ws
+    /// stream messages are newline terminated, http chunks are not).
+    bool terminate{};
 };
 
 /// Derived boost::beast::http body for JSON-RPC messages.
@@ -120,7 +124,7 @@ struct BCT_API body
         using out_buffer = writer_type::out_buffer;
 
         inline explicit writer(value_type& value) NOEXCEPT
-          : writer_type{ value }, terminate_{ true }
+          : writer_type{ value }
         {
         }
 
@@ -136,7 +140,6 @@ struct BCT_API body
         bool done() const NOEXCEPT override;
 
     private:
-        const bool terminate_{};
         bool set_terminator_{};
         bool set_prefix_{};
         bool set_close_{};

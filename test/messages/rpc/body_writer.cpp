@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__init__default__success)
     BOOST_REQUIRE(!ec);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success_expected_more)
+BOOST_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success_expected_no_more)
 {
     const std::string_view expected{ R"({"error":null,"result":null})" };
     const asio::const_buffer out{ expected.data(), expected.size() };
@@ -77,10 +77,11 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
     BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(buffer.get().second);
+    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__success_expected_more)
+BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__success_expected_no_more)
 {
     const std::string_view expected{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
     const asio::const_buffer out{ expected.data(), expected.size() };
@@ -96,7 +97,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__succe
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
     BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(buffer.get().second);
+    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(writer.done());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_expected_with_newline_no_more)
@@ -105,6 +107,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_e
     const std::string_view expected_newline{ "\n" };
     rpc::response_body::value_type body{};
     body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
+    body.terminate = true;
     rpc::response_body::writer writer(body);
     boost_code ec{};
     writer.init(ec);
@@ -140,6 +143,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_terminated__open_pref
     rpc::response_body::value_type body{};
     body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
     body.changed = true;
+    body.terminate = true;
     rpc::response_body::writer writer(body);
     boost_code ec{};
     writer.init(ec);
@@ -170,6 +174,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_continuation_part_terminated__s
     rpc::response_body::value_type body{};
     body.message = response_t{ version::v2, identity_t{ 2 }, {}, value_t{ true } };
     body.batch = true;
+    body.terminate = true;
     rpc::response_body::writer writer(body);
     boost_code ec{};
     writer.init(ec);
@@ -200,6 +205,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_terminated__close_te
     rpc::response_body::value_type body{};
     body.batch = true;
     body.changed = true;
+    body.terminate = true;
     rpc::response_body::writer writer(body);
     boost_code ec{};
     writer.init(ec);
@@ -218,6 +224,28 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_terminated__close_te
     BOOST_REQUIRE(buffer2.has_value());
     BOOST_REQUIRE(buffer2.get().first == out2);
     BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(writer.done());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_non_terminated__close_only_no_message)
+{
+    const std::string_view close{ "]" };
+    const asio::const_buffer out1{ close.data(), close.size() };
+    response_header header{};
+    rpc::response_body::value_type body{};
+    body.batch = true;
+    body.changed = true;
+    rpc::response_body::writer writer(header, body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(!writer.done());
+
+    const auto buffer1 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer1.has_value());
+    BOOST_REQUIRE(buffer1.get().first == out1);
+    BOOST_REQUIRE(!buffer1.get().second);
     BOOST_REQUIRE(writer.done());
 }
 

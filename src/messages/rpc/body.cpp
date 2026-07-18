@@ -455,7 +455,7 @@ get(boost_code& ec) NOEXCEPT
         if (!set_close_)
         {
             set_close_ = true;
-            return single(close, true);
+            return single(close, value_.terminate);
         }
 
         set_terminator_ = true;
@@ -464,8 +464,10 @@ get(boost_code& ec) NOEXCEPT
 
     auto out = base::writer::done() ? out_buffer{} : base::writer::get(ec);
 
-    // Batched parts are terminated by the batch close part (not per part).
-    if (ec || opens_batch(value_) || continues_batch(value_))
+    // Batched parts are terminated by the batch close part (not per part),
+    // and unterminated (http) messages complete on serialization.
+    if (ec || !value_.terminate ||
+        opens_batch(value_) || continues_batch(value_))
         return out;
 
     // Override json reader !more so terminator can be added.
@@ -486,12 +488,12 @@ done() const NOEXCEPT
 {
     // Batch close part is done when framing and termination are written.
     if (closes_batch(value_))
-        return set_close_ && set_terminator_;
+        return set_close_ && (!value_.terminate || set_terminator_);
 
     // Batched parts are done on serialization (terminator rides on close).
     // Done is redundant with !out.second, but provides a cleaner interface.
     return base::writer::done() && (opens_batch(value_) ||
-        continues_batch(value_) || !terminate_ || set_terminator_);
+        continues_batch(value_) || !value_.terminate || set_terminator_);
 }
 
 // rpc::body<request_t>::writer
@@ -530,7 +532,10 @@ body<rpc::request_t>::writer::
 get(boost_code& ec) NOEXCEPT
 {
     auto out = base::writer::done() ? out_buffer{} : base::writer::get(ec);
-    if (ec) return out;
+
+    // Unterminated (http) messages complete on serialization.
+    if (ec || !value_.terminate)
+        return out;
 
     // Override json reader !more so terminator can be added.
     if (out.has_value())
@@ -551,7 +556,7 @@ bool body<rpc::request_t>::writer::
 done() const NOEXCEPT
 {
     // Done is redundant with !out.second, but provides a cleaner interface.
-    return base::writer::done() && (!terminate_ || set_terminator_);
+    return base::writer::done() && (!value_.terminate || set_terminator_);
 }
 
 BC_POP_WARNING()
