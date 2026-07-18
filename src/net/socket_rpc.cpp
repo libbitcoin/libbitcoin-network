@@ -38,8 +38,8 @@ void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
     // Create variant http request to capture read.
     const auto in = to_shared<http::request>();
 
-    // Preselect rpc::request body value type.
-    in->body() = rpc::request{};
+    // Preselect rpc::request body value type, propagating caller options.
+    in->body() = rpc::request{ .strict = request.strict };
 
     // Capture body and move it back into request reference.
     body_read(buffer, *in,

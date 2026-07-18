@@ -142,7 +142,9 @@ TEMPLATE
 inline rpc::request_ptr CLASS::create_request() const NOEXCEPT
 {
     const auto out = system::to_shared<rpc::request>();
-    out->strict = true;
+
+    // Relax standards-strict parse (Electrum non-standard params).
+    out->strict = false;
     return out;
 }
 

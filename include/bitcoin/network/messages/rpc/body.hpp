@@ -33,7 +33,7 @@ struct message_type
   : public json::json_value
 {
     Type message{};
-    bool strict{};
+    bool strict{ true };
 };
 
 /// Derived boost::beast::http body for JSON-RPC messages.
