@@ -32,19 +32,19 @@ namespace rpc {
 template <typename Value>
 constexpr bool opens_batch(const Value& value) NOEXCEPT
 {
-    return value.batchable && !value.batch && value.changed;
+    return !value.batch && value.changed;
 }
 
 template <typename Value>
 constexpr bool continues_batch(const Value& value) NOEXCEPT
 {
-    return value.batchable && value.batch && !value.changed;
+    return value.batch && !value.changed;
 }
 
 template <typename Value>
 constexpr bool closes_batch(const Value& value) NOEXCEPT
 {
-    return value.batchable && value.batch && value.changed;
+    return value.batch && value.changed;
 }
 
 template <typename Type>
@@ -53,18 +53,19 @@ struct message_type
 {
     Type message{};
 
-    /// Standards-strict parse by default (channel may relax for Electrum).
-    bool strict{ true };
-
-    /// Caller enables json-rpc batch delimiter recognition (wire policy).
-    bool batchable{};
-
     /// Caller provides current batch state (true while batch is open).
     bool batch{};
 
     /// Read: reader indicates batch state change (open or close read).
     /// Write: caller indicates batch state change (open or close part).
     bool changed{};
+
+    /// Tolerated jrpc violations observed by the parse (channel validates).
+    /// Electrum non-standard single value params (converted to array).
+    bool lax_params{};
+
+    /// btcd non-standard v1 message within a (v2) batch.
+    bool lax_batch{};
 };
 
 /// Derived boost::beast::http body for JSON-RPC messages.

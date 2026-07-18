@@ -134,7 +134,7 @@ void socket::handle_http_write(const boost_code& ec, size_t size,
 // HTTP (progressive read).
 // ----------------------------------------------------------------------------
 // The caller owns the parser, which owns http framing (content length and
-// chunk decoding) across the message. A batchable json-rpc body delivers each
+// chunk decoding) across the message. A batched json-rpc body delivers each
 // message from the paused parse (need_buffer), mapped to success here.
 
 void socket::http_read_header(http::flat_buffer& buffer, http_parser& parser,
@@ -253,7 +253,7 @@ void socket::handle_http_read_some(const boost_code& ec, size_t size,
         return;
     }
 
-    // The batchable body reader delivers a message by pausing the parse.
+    // The batched body reader delivers a message by pausing the parse.
     if (error::http_to_error_code(ec) == error::need_buffer)
     {
         handler(error::success, size);

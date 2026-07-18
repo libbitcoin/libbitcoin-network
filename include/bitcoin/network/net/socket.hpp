@@ -166,7 +166,7 @@ public:
     /// HTTP/WS (generic/rpc).
     /// -----------------------------------------------------------------------
 
-    /// Caller-owned parser for progressive (batchable) http reads.
+    /// Caller-owned parser for progressive (batched) http reads.
     using http_parser = boost::beast::http::request_parser<http::body>;
     using http_parser_ptr = std::shared_ptr<http_parser>;
 
@@ -178,7 +178,7 @@ public:
     virtual void http_write(http::response&& response,
         count_handler&& handler) NOEXCEPT;
 
-    /// HTTP (progressive read/write, for batchable json-rpc bodies).
+    /// HTTP (progressive read/write, for batched json-rpc bodies).
     /// -----------------------------------------------------------------------
 
     /// Read http request header from the socket (body remains unread).

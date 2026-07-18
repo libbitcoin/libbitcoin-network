@@ -58,19 +58,27 @@ constexpr bool is_json_whitespace(char character) NOEXCEPT
 // A batch is never materialized. Each read yields one element (message), with
 // batch open riding along on the first element read (value_.changed), and
 // batch close completing a read without a message (value_.changed with
-// value_.batch). The caller provides current state (value_.batch) and enables
-// delimiter recognition (value_.batchable). Delimiters are consumed here and
-// never surface to the parser, so each element parses as its own document.
+// value_.batch). The caller provides current state (value_.batch), and the
+// parse is always lax: batch framing is always recognized, with tolerated
+// jrpc violations reported (lax flags) for channel policy. Delimiters are
+// consumed here and never surface to the parser, so each element parses as
+// its own document.
 //
-// A batchable read delivers each message from put by pausing the parse
-// (need_buffer) at the element boundary and re-arming for the next element,
-// uniformly across framings: a beast (http) parse pauses natively, a stream
-// read completes on the pause with buffer residue carried to the next read.
-// For batchable reads finish only validates message-end state.
+// Delivery is self-selecting on observed framing. A batched read delivers
+// each message from put by pausing the parse (need_buffer) at the element
+// boundary and re-arming for the next element, uniformly across framings: a
+// beast (http) parse pauses natively, a stream read completes on the pause
+// with buffer residue carried to the next read; for batched reads finish
+// only validates message-end state. A singleton delivers classically from
+// finish, compatible with one-shot (beast) body reads.
 
-// Convert the parsed model to a request message and validate.
+// Convert the parsed model to a request message and validate. Tolerated
+// jrpc violations are reported as lax flags (the channel validates policy).
 static void to_request(rpc::request& value, boost_code& ec) NOEXCEPT
 {
+    value.lax_params = false;
+    value.lax_batch = false;
+
     try
     {
         value.message = value_to<rpc::request_t>(value.model);
@@ -108,18 +116,12 @@ static void to_request(rpc::request& value, boost_code& ec) NOEXCEPT
     else if (value.message.params.has_value() &&
         std::holds_alternative<value_t>(value.message.params.value()))
     {
-        if (!value.strict)
+        // Tolerated: Electrum non-standard single value params (converted).
+        value.lax_params = true;
+        value.message.params.emplace(array_t
         {
-            // Convert non-standard rpc, required for Electrum compat.
-            value.message.params.emplace(array_t
-            {
-                std::get<value_t>(std::move(value.message.params.value()))
-            });
-        }
-        else
-        {
-            ec = code{ error::jsonrpc_params_not_collection };
-        }
+            std::get<value_t>(std::move(value.message.params.value()))
+        });
     }
 }
 
@@ -144,7 +146,7 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 
     // Prologue: consume whitespace and batch delimiters until element start,
     // batch close, or buffer exhaustion.
-    if (!started_ && !closed_ && value_.batchable)
+    if (!started_ && !closed_)
     {
         for (; index < size; ++index)
         {
@@ -197,12 +199,10 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
                 break;
             }
 
-            // Nested batch open, batched element without separator, or a
-            // second document following a delivered (unbatched) singleton.
+            // Nested batch open, or batched element without separator.
             if (character == '[' ||
                 ((value_.batch || opened_) &&
-                    !separated_ && !(opened_ && !delivered_)) ||
-                (delivered_ && !opened_ && !value_.batch))
+                    !separated_ && !(opened_ && !delivered_)))
             {
                 ec = code{ error::jsonrpc_batch_malformed };
                 return index;
@@ -216,11 +216,6 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         // Buffer exhausted within prologue.
         if (!started_ && !closed_)
             return index;
-    }
-    else if (!started_ && !closed_)
-    {
-        // Batch disallowed, buffer is element data (array is a parse).
-        started_ = true;
     }
 
     // Epilogue: consume whitespace trailing a delivered batch close.
@@ -286,8 +281,10 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         }
     }
 
-    // Delivery: batchable messages are delivered from put by pausing.
-    if (value_.batchable && (!requires_terminator() || has_terminator_))
+    // Delivery: batched messages are delivered from put by pausing (a
+    // singleton delivers classically, from finish following completion).
+    if ((closed_ || opened_ || value_.batch) &&
+        (!requires_terminator() || has_terminator_))
     {
         if (closed_ && !signaled_)
         {
@@ -303,6 +300,9 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 
             to_request(value_, ec);
             if (ec) return index;
+
+            // Tolerated: v1 has no batch (btcd), noted for the channel.
+            value_.lax_batch = (value_.message.jsonrpc == version::v1);
 
             // Deliver the message and re-arm for the next element.
             delivered_ = true;
@@ -332,13 +332,12 @@ template <>
 void body<rpc::request_t>::reader::
 finish(boost_code& ec) NOEXCEPT
 {
-    // Batchable messages are delivered from put, so finish only validates
-    // message-end state: delivered close or delivered singleton (no batch).
-    if (value_.batchable && !started_)
+    // Batched messages are delivered from put, so finish only validates
+    // message-end state (delivered close, otherwise incomplete).
+    if ((closed_ || opened_ || value_.batch) && !started_)
     {
-        ec = ((closed_ && signaled_) ||
-            (!closed_ && delivered_ && !opened_)) ? boost_code{} :
-                to_http_code(http_error_t::need_more);
+        ec = (closed_ && signaled_) ? boost_code{} :
+            to_http_code(http_error_t::need_more);
         return;
     }
 

@@ -141,11 +141,9 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 TEMPLATE
 inline rpc::request_ptr CLASS::create_request() const NOEXCEPT
 {
-    const auto out = system::to_shared<rpc::request>();
-
-    // Relax standards-strict parse (Electrum non-standard params).
-    out->strict = false;
-    return out;
+    // The parse is always lax, with tolerated jrpc violations and batch
+    // state reflected on the value (validated by channel dispatch).
+    return system::to_shared<rpc::request>();
 }
 
 // Send.

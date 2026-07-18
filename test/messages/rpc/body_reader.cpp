@@ -175,7 +175,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_open_with_first_element__succes
     const std::string_view text{ R"([{"jsonrpc":"2.0","id":1,"method":"test"},)" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
     reader.init(text.size(), ec);
@@ -186,6 +185,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_open_with_first_element__succes
     BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), sub1(text.size()));
     BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
     BOOST_REQUIRE(body.changed);
+    BOOST_REQUIRE(!body.lax_batch);
     BOOST_REQUIRE(body.message.jsonrpc == version::v2);
     BOOST_REQUIRE(body.message.id.has_value());
     BOOST_REQUIRE_EQUAL(std::get<code_t>(body.message.id.value()), 1);
@@ -197,7 +197,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_element_with_separator__success
     const std::string_view text{ R"(,{"jsonrpc":"2.0","id":2,"method":"next"})" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     body.batch = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
@@ -217,7 +216,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_close_terminated__success_chang
     const std::string_view text{ "]\n" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     body.batch = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
@@ -239,7 +237,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_close_padded_terminator__succes
     const std::string_view text{ "] \t\r\n" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     body.batch = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
@@ -258,7 +255,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_close_split_terminator__need_mo
     const asio::const_buffer buffer1{ close.data(), close.size() };
     const asio::const_buffer buffer2{ line.data(), line.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     body.batch = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
@@ -285,7 +281,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__empty_batch__batch_empty)
     const std::string_view text{ "[ ]" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
     reader.init(text.size(), ec);
@@ -300,7 +295,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__nested_open__batch_malformed)
     const std::string_view text{ "[[" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
     reader.init(text.size(), ec);
@@ -315,7 +309,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__reopen_within_batch__batch_malformed)
     const std::string_view text{ ",[" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     body.batch = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
@@ -331,7 +324,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__separator_outside_batch__batch_malfor
     const std::string_view text{ "," };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
     reader.init(text.size(), ec);
@@ -346,7 +338,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__close_outside_batch__batch_malformed)
     const std::string_view text{ "]" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
     reader.init(text.size(), ec);
@@ -361,7 +352,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__double_separator__batch_malformed)
     const std::string_view text{ ",," };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     body.batch = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
@@ -377,7 +367,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__close_after_separator__batch_malforme
     const std::string_view text{ ",]" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     body.batch = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
@@ -393,7 +382,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_element_without_separator__batc
     const std::string_view text{ R"({"jsonrpc":"2.0","id":2,"method":"next"})" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
-    body.batchable = true;
     body.batch = true;
     rpc::request_body::reader reader(body);
     boost_code ec{};
@@ -426,7 +414,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch__three_reads_consume_buffe
 
     // Read 1: batch open rides along with first element.
     rpc::request_body::value_type body1{};
-    body1.batchable = true;
     rpc::request_body::reader reader1(body1);
     reader1.init({}, ec);
     BOOST_REQUIRE(!ec);
@@ -438,7 +425,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch__three_reads_consume_buffe
 
     // Read 2: second element (separator consumed in prologue).
     rpc::request_body::value_type body2{};
-    body2.batchable = true;
     body2.batch = true;
     rpc::request_body::reader reader2(body2);
     reader2.init({}, ec);
@@ -451,7 +437,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch__three_reads_consume_buffe
 
     // Read 3: batch close (padded terminator), no message.
     rpc::request_body::value_type body3{};
-    body3.batchable = true;
     body3.batch = true;
     rpc::request_body::reader reader3(body3);
     reader3.init({}, ec);
@@ -477,7 +462,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_byte_at_a_time__three_read
 
     // Read 1: batch open rides along with first element.
     rpc::request_body::value_type body1{};
-    body1.batchable = true;
     rpc::request_body::reader reader1(body1);
     reader1.init({}, ec);
     BOOST_REQUIRE(!ec);
@@ -498,7 +482,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_byte_at_a_time__three_read
 
     // Read 2: second element (separator consumed in prologue).
     rpc::request_body::value_type body2{};
-    body2.batchable = true;
     body2.batch = true;
     rpc::request_body::reader reader2(body2);
     reader2.init({}, ec);
@@ -519,7 +502,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_byte_at_a_time__three_read
 
     // Read 3: batch close (padded terminator), no message.
     rpc::request_body::value_type body3{};
-    body3.batchable = true;
     body3.batch = true;
     rpc::request_body::reader reader3(body3);
     reader3.init({}, ec);
@@ -567,7 +549,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_single_reader__delivers_ea
     const asio::const_buffer buffer4{ &text[offset4], text.size() - offset4 };
     request_header header{};
     rpc::request_body::value_type body{};
-    body.batchable = true;
     rpc::request_body::reader reader(header, body);
     boost_code ec{};
     reader.init(text.size(), ec);
@@ -596,51 +577,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_single_reader__delivers_ea
     BOOST_REQUIRE(!ec);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batchable_singleton_single_reader__delivers_and_finishes)
-{
-    const std::string_view text{ R"({"jsonrpc":"2.0","id":1,"method":"test"})" };
-    const asio::const_buffer buffer{ text.data(), text.size() };
-    request_header header{};
-    rpc::request_body::value_type body{};
-    body.batchable = true;
-    rpc::request_body::reader reader(header, body);
-    boost_code ec{};
-    reader.init(text.size(), ec);
-    BOOST_REQUIRE(!ec);
-
-    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
-    BOOST_REQUIRE(!body.changed);
-    BOOST_REQUIRE_EQUAL(body.message.method, "test");
-
-    reader.finish(ec);
-    BOOST_REQUIRE(!ec);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_body_reader__put__second_singleton_single_reader__batch_malformed)
-{
-    // A second document following a delivered (unbatched) singleton is an
-    // invalid body parse.
-    const std::string_view first{ R"({"jsonrpc":"2.0","id":1,"method":"one"})" };
-    const std::string_view second{ R"({"jsonrpc":"2.0","id":2,"method":"two"})" };
-    const asio::const_buffer buffer1{ first.data(), first.size() };
-    const asio::const_buffer buffer2{ second.data(), second.size() };
-    request_header header{};
-    rpc::request_body::value_type body{};
-    body.batchable = true;
-    rpc::request_body::reader reader(header, body);
-    boost_code ec{};
-    reader.init({}, ec);
-    BOOST_REQUIRE(!ec);
-
-    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), first.size());
-    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
-    BOOST_REQUIRE_EQUAL(body.message.method, "one");
-
-    reader.put(buffer2, ec);
-    BOOST_REQUIRE(ec == error::jsonrpc_batch_malformed);
-}
-
 BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__truncated_batch_single_reader__need_more)
 {
     // Message ends (finish) with the batch open and unclosed.
@@ -648,7 +584,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__truncated_batch_single_reader__nee
     const asio::const_buffer buffer{ text.data(), text.size() };
     request_header header{};
     rpc::request_body::value_type body{};
-    body.batchable = true;
     rpc::request_body::reader reader(header, body);
     boost_code ec{};
     reader.init(text.size(), ec);
@@ -712,11 +647,13 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__garbage_where_terminator_expected__re
     BOOST_REQUIRE(ec == error::jsonrpc_reader_stall);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_not_batchable__parsed_as_document_error)
+// lax
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__single_value_params__converted_lax_params)
 {
-    // Without batchable the array parses as a single document, which then
-    // fails conversion to a request (current http behavior unchanged).
-    const std::string_view text{ R"([{"jsonrpc":"2.0","id":1,"method":"test"}])" };
+    // Tolerated: Electrum non-standard single value params (converted).
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":1,"method":"m","params":"x"})" };
     const asio::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
     request_header header{};
@@ -725,12 +662,35 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_not_batchable__parsed_as_docume
     reader.init(text.size(), ec);
     BOOST_REQUIRE(!ec);
 
-    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    reader.put(buffer, ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!body.changed);
 
     reader.finish(ec);
-    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(body.lax_params);
+    BOOST_REQUIRE(!body.lax_batch);
+    BOOST_REQUIRE(body.message.params.has_value());
+    BOOST_REQUIRE(std::holds_alternative<array_t>(body.message.params.value()));
+    BOOST_REQUIRE_EQUAL(std::get<array_t>(body.message.params.value()).size(), one);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__v1_batch_element__delivered_lax_batch)
+{
+    // Tolerated: btcd non-standard v1 message within a (v2) batch.
+    const std::string_view text{ R"([{"id":1,"method":"m","params":[]},)" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    rpc::request_body::reader reader(body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), sub1(text.size()));
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
+    BOOST_REQUIRE(body.changed);
+    BOOST_REQUIRE(body.lax_batch);
+    BOOST_REQUIRE(!body.lax_params);
+    BOOST_REQUIRE(body.message.jsonrpc == version::v1);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_reader__put__over_length__body_limit)

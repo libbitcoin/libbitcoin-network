@@ -109,13 +109,96 @@ void proxy::do_tcp_write(const asio::const_buffer& payload,
 
 // RPC (TCP: electrum/stratum_v1, WS: btcd).
 // ----------------------------------------------------------------------------
+// Batch normalization: the channel is batch-blind. The proxy stamps batch
+// state on reads and response parts, absorbs the batch close (writing the
+// close part and re-arming the read), and defers notifications while open.
 
 // flat_buffer must have configured max_size, which will be allocated.
 void proxy::read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
 {
+    BC_ASSERT(stranded());
     do_reading();
-    socket_->rpc_read(buffer, request, std::move(handler));
+
+    // Stamp current batch state (the parse is always lax).
+    request.batch = batched_;
+    request.changed = false;
+
+    socket_->rpc_read(buffer, request,
+        std::bind(&proxy::handle_rpc_read,
+            shared_from_this(), _1, _2, std::ref(request), std::ref(buffer),
+            std::move(handler)));
+}
+
+// private
+void proxy::handle_rpc_read(const code& ec, size_t bytes,
+    const ref<rpc::request>& request, const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        handler(ec, bytes);
+        return;
+    }
+
+    auto& value = request.get();
+
+    // Batch open rides along with the first element (message delivered).
+    if (value.changed && !value.batch)
+        batched_ = true;
+
+    // Batch close carries no message, absorbed here (channel never sees it).
+    if (value.changed && value.batch)
+    {
+        batched_ = false;
+        parted_ = false;
+
+        // Queue the batch close part (do_response_write does not restamp).
+        const auto out = to_shared<rpc::response>();
+        out->batch = true;
+        out->changed = true;
+
+        const count_handler complete = std::bind(&proxy::handle_close_write,
+            shared_from_this(), _1, _2, request, buffer, handler);
+
+        do_write(std::bind(&proxy::do_response_write,
+            shared_from_this(), out, complete));
+        return;
+    }
+
+    handler(ec, bytes);
+}
+
+// private
+void proxy::handle_close_write(const code& ec, size_t bytes,
+    const ref<rpc::request>& request, const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        handler(ec, bytes);
+        return;
+    }
+
+    // Drain notifications deferred while the batch was open.
+    while (!deferred_.empty())
+    {
+        do_write(deferred_.front());
+        deferred_.pop_front();
+    }
+
+    // Re-arm the read (the channel read handler remains pending).
+    auto& value = request.get();
+    value.batch = batched_;
+    value.changed = false;
+
+    socket_->rpc_read(buffer.get(), value,
+        std::bind(&proxy::handle_rpc_read,
+            shared_from_this(), _1, _2, request, buffer, handler));
 }
 
 void proxy::write(rpc::response&& response, count_handler&& handler) NOEXCEPT
@@ -138,14 +221,40 @@ void proxy::write(rpc::request&& notification, count_handler&& handler) NOEXCEPT
         shared_from_this(), out, std::move(handler));
 
     boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
+        std::bind(&proxy::do_defer_write,
             shared_from_this(), std::move(call)));
+}
+
+// private
+void proxy::do_defer_write(const writer& call) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // Notifications are deferred while a batch is open (drained on close).
+    if (batched_)
+    {
+        deferred_.push_back(call);
+        return;
+    }
+
+    do_write(call);
 }
 
 // private
 void proxy::do_response_write(const rpc::response_ptr& response,
     const count_handler& handler) NOEXCEPT
 {
+    BC_ASSERT(stranded());
+
+    // Stamp the response part with current batch state (open rides on the
+    // first part). The close part is proxy-created after the batch resets.
+    if (batched_)
+    {
+        response->batch = parted_;
+        response->changed = !parted_;
+        parted_ = true;
+    }
+
     socket_->rpc_write(std::move(*response),
         std::bind(&proxy::handle_write,
             shared_from_this(), _1, _2, handler));

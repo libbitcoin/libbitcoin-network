@@ -139,7 +139,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_terminated__open_pref
     const asio::const_buffer out2{ expected.data(), expected.size() };
     rpc::response_body::value_type body{};
     body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
-    body.batchable = true;
     body.changed = true;
     rpc::response_body::writer writer(body);
     boost_code ec{};
@@ -170,7 +169,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_continuation_part_terminated__s
     const asio::const_buffer out2{ expected.data(), expected.size() };
     rpc::response_body::value_type body{};
     body.message = response_t{ version::v2, identity_t{ 2 }, {}, value_t{ true } };
-    body.batchable = true;
     body.batch = true;
     rpc::response_body::writer writer(body);
     boost_code ec{};
@@ -200,7 +198,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_terminated__close_te
     const asio::const_buffer out1{ close.data(), close.size() };
     const asio::const_buffer out2{ line.data(), line.size() };
     rpc::response_body::value_type body{};
-    body.batchable = true;
     body.batch = true;
     body.changed = true;
     rpc::response_body::writer writer(body);
@@ -232,7 +229,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_non_terminated__open_
     const asio::const_buffer out2{ expected.data(), expected.size() };
     rpc::response_body::value_type body{};
     body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
-    body.batchable = true;
     body.changed = true;
     response_header header{};
     rpc::response_body::writer writer(header, body);
@@ -245,35 +241,6 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_non_terminated__open_
     BOOST_REQUIRE(buffer1.has_value());
     BOOST_REQUIRE(buffer1.get().first == out1);
     BOOST_REQUIRE(buffer1.get().second);
-
-    const auto buffer2 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(!buffer2.get().second);
-    BOOST_REQUIRE(writer.done());
-}
-
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batchable_singleton_terminated__message_terminator)
-{
-    const std::string_view expected{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
-    const std::string_view line{ "\n" };
-    const asio::const_buffer out1{ expected.data(), expected.size() };
-    const asio::const_buffer out2{ line.data(), line.size() };
-    rpc::response_body::value_type body{};
-    body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
-    body.batchable = true;
-    rpc::response_body::writer writer(body);
-    boost_code ec{};
-    writer.init(ec);
-    BOOST_REQUIRE(!ec);
-
-    const auto buffer1 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
-    BOOST_REQUIRE(!writer.done());
 
     const auto buffer2 = writer.get(ec);
     BOOST_REQUIRE(!ec);
