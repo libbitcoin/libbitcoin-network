@@ -318,7 +318,8 @@ enum error_t : uint8_t
     jsonrpc_writer_exception,
     jsonrpc_batch_empty,
     jsonrpc_batch_malformed,
-    jsonrpc_batched_v1
+    jsonrpc_batched_v1,
+    jsonrpc_batch_unsupported
 };
 
 // No current need for error_code equivalence mapping.

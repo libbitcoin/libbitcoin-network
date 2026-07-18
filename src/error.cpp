@@ -305,7 +305,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { jsonrpc_writer_exception, "jsonrpc writer exception" },
     { jsonrpc_batch_empty, "jsonrpc batch empty" },
     { jsonrpc_batch_malformed, "jsonrpc batch malformed" },
-    { jsonrpc_batched_v1, "jsonrpc batched v1" }
+    { jsonrpc_batched_v1, "jsonrpc batched v1" },
+    { jsonrpc_batch_unsupported, "jsonrpc batch unsupported" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")

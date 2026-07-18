@@ -150,6 +150,13 @@ void channel_http::dispatch(const request_cptr& request) NOEXCEPT
             stop(error::jsonrpc_batched_v1);
             return;
         }
+
+        // Batch is not supported over ws (btcd clients batch over http only).
+        if (websocket() && (body.batch || body.changed))
+        {
+            stop(error::jsonrpc_batch_unsupported);
+            return;
+        }
     }
 
     rpc::request_t model{};
