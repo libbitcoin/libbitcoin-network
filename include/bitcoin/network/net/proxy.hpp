@@ -57,6 +57,7 @@ public:
 
     /// Idempotent, may be called multiple times.
     /// Stop socket, no delay, called by stop notify when iocontext is closing.
+    /// An open batch response is closed (written) before the socket stops.
     virtual void stop(const code& ec) NOEXCEPT;
 
     /// Subscribe to stop notification with completion handler.
@@ -213,6 +214,12 @@ private:
     void handle_close_write(const code& ec, size_t bytes,
         const ref<rpc::request>& request, const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;
+
+    // For graceful batch closure on stop.
+    void do_stop(const code& ec) NOEXCEPT;
+    void finish_stop(const code& ec) NOEXCEPT;
+    void handle_stop_write(const code& ec, size_t bytes,
+        const code& reason) NOEXCEPT;
 
     // For rpc batch normalization (http).
     void do_http_request_read(const ref<http::request>& request,
