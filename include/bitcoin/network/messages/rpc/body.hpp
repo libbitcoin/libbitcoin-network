@@ -28,12 +28,48 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
+/// Batch framing is derived from caller-assigned batch state.
+template <typename Value>
+constexpr bool opens_batch(const Value& value) NOEXCEPT
+{
+    return !value.batch && value.changed;
+}
+
+template <typename Value>
+constexpr bool continues_batch(const Value& value) NOEXCEPT
+{
+    return value.batch && !value.changed;
+}
+
+template <typename Value>
+constexpr bool closes_batch(const Value& value) NOEXCEPT
+{
+    return value.batch && value.changed;
+}
+
 template <typename Type>
 struct message_type
   : public json::json_value
 {
     Type message{};
-    bool strict{};
+
+    /// Caller provides current batch state (true while batch is open).
+    bool batch{};
+
+    /// Read: reader indicates batch state change (open or close read).
+    /// Write: caller indicates batch state change (open or close part).
+    bool changed{};
+
+    /// Tolerated jrpc violations observed by the parse (channel validates).
+    /// Electrum non-standard single value params (converted to array).
+    bool lax_params{};
+
+    /// btcd non-standard v1 message within a (v2) batch.
+    bool lax_batch{};
+
+    /// Socket wires message termination by transport framing (tcp/ws
+    /// stream messages are newline terminated, http chunks are not).
+    bool terminate{};
 };
 
 /// Derived boost::beast::http body for JSON-RPC messages.
@@ -72,6 +108,12 @@ struct BCT_API body
     private:
         const bool terminated_{};
         bool has_terminator_{};
+        bool started_{};
+        bool opened_{};
+        bool closed_{};
+        bool separated_{};
+        bool signaled_{};
+        bool delivered_{};
     };
 
     class writer
@@ -82,7 +124,7 @@ struct BCT_API body
         using out_buffer = writer_type::out_buffer;
 
         inline explicit writer(value_type& value) NOEXCEPT
-          : writer_type{ value }, terminate_{ true }
+          : writer_type{ value }
         {
         }
 
@@ -98,8 +140,9 @@ struct BCT_API body
         bool done() const NOEXCEPT override;
 
     private:
-        const bool terminate_{};
         bool set_terminator_{};
+        bool set_prefix_{};
+        bool set_close_{};
     };
 };
 

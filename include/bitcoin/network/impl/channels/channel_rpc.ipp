@@ -124,6 +124,15 @@ TEMPLATE
 inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    // Electrum laxness (single value params) is allowed, btcd laxness
+    // (batched v1) is not (the rpc channel is jrpc over tcp).
+    if (request->lax_batch)
+    {
+        stop(error::jsonrpc_batch_requires_v2);
+        return;
+    }
+
     if (const auto code = dispatcher_.notify(request->message))
         stop(code);
 }
@@ -141,9 +150,9 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 TEMPLATE
 inline rpc::request_ptr CLASS::create_request() const NOEXCEPT
 {
-    const auto out = system::to_shared<rpc::request>();
-    out->strict = true;
-    return out;
+    // The parse is always lax, with tolerated jrpc violations and batch
+    // state reflected on the value (validated by channel dispatch).
+    return system::to_shared<rpc::request>();
 }
 
 // Send.

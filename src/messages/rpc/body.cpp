@@ -37,7 +37,7 @@ BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
 constexpr bool is_rpc_terminator(char character) NOEXCEPT
 {
-    // Batched rpc messages are array-terminated.
+    // Document terminal characters (object always, array when batching).
     return character == '}' || character == ']';
 }
 
@@ -47,73 +47,42 @@ constexpr bool is_electrum_terminator(char character) NOEXCEPT
     return character == '\n';
 }
 
+constexpr bool is_json_whitespace(char character) NOEXCEPT
+{
+    return character == ' ' || character == '\t' ||
+        character == '\r' || character == '\n';
+}
+
 // rpc::body<request_t>::reader
 // ----------------------------------------------------------------------------
+// A batch is never materialized. Each read yields one element (message), with
+// batch open riding along on the first element read (value_.changed), and
+// batch close completing a read without a message (value_.changed with
+// value_.batch). The caller provides current state (value_.batch), and the
+// parse is always lax: batch framing is always recognized, with tolerated
+// jrpc violations reported (lax flags) for channel policy. Delimiters are
+// consumed here and never surface to the parser, so each element parses as
+// its own document.
+//
+// Delivery is self-selecting on observed framing. A batched read delivers
+// each message from put by pausing the parse (need_buffer) at the element
+// boundary and re-arming for the next element, uniformly across framings: a
+// beast (http) parse pauses natively, a stream read completes on the pause
+// with buffer residue carried to the next read; for batched reads finish
+// only validates message-end state. A singleton delivers classically from
+// finish, compatible with one-shot (beast) body reads.
 
-template <>
-size_t body<rpc::request_t>::reader::
-put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
+// Convert the parsed model to a request message and validate. Tolerated
+// jrpc violations are reported as lax flags (the channel validates policy).
+static void to_request(rpc::request& value, boost_code& ec) NOEXCEPT
 {
-    // Null and empty guarded in base reader.
-    const auto parsed = base::reader::put(buffer, ec);
-
-    // Not done until terminated and can't search for it until parser is done.
-    if (ec || !base::reader::done())
-        return parsed;
-
-    // http json does not use termination.
-    has_terminator_ = false;
-    if (!terminated_)
-        return parsed;
-
-    // There is no terminator (terminal).
-    if (is_zero(parsed))
-    {
-        ec = code{ error::jsonrpc_reader_stall };
-        return parsed;
-    }
-
-    const auto data = pointer_cast<const char>(buffer.data());
-
-    // boost::json consumes whitespace, and leaves any subsequent chars
-    // unparsed, so terminator must be in the parsed buffer segment.
-    for (auto index = parsed; !is_zero(index); --index)
-    {
-        const auto character = data[sub1(index)];
-        if (is_electrum_terminator(character))
-        {
-            has_terminator_ = true;
-            break;
-        }
-
-        if (is_rpc_terminator(character))
-            break;
-    }
-
-    return parsed;
-}
-
-template <>
-bool body<rpc::request_t>::reader::
-done() const NOEXCEPT
-{
-    // Parser may be done but with terminator still outstanding.
-    return base::reader::done() && (!terminated_ || has_terminator_);
-}
-
-template <>
-void body<rpc::request_t>::reader::
-finish(boost_code& ec) NOEXCEPT
-{
-    // See notes in base reader.
-    base::reader::finish(ec);
-    if (ec) return;
+    value.lax_params = false;
+    value.lax_batch = false;
 
     try
     {
-        // TODO: extend support to batch (array of rpc).
-        value_.message = value_to<rpc::request_t>(value_.model);
-        value_.model.emplace_null();
+        value.message = value_to<rpc::request_t>(value.model);
+        value.model.emplace_null();
     }
     catch (const boost::system::system_error& e)
     {
@@ -126,40 +95,257 @@ finish(boost_code& ec) NOEXCEPT
     }
 
     // Set version default.
-    if (value_.message.jsonrpc == version::undefined)
-        value_.message.jsonrpc = version::v1;
+    if (value.message.jsonrpc == version::undefined)
+        value.message.jsonrpc = version::v1;
 
     // Post-parse semantic validation.
-    if (value_.message.method.empty())
+    if (value.message.method.empty())
     {
         ec = code{ error::jsonrpc_requires_method };
     }
-    else if (value_.message.jsonrpc == version::v1)
+    else if (value.message.jsonrpc == version::v1)
     {
-        if (!value_.message.params.has_value())
+        if (!value.message.params.has_value())
             ec = code{ error::jsonrpc_v1_requires_params };
-        else if (!value_.message.id.has_value())
+        else if (!value.message.id.has_value())
             ec = code{ error::jsonrpc_v1_requires_id };
         else if (!std::holds_alternative<array_t>(
-            value_.message.params.value()))
+            value.message.params.value()))
             ec = code{ error::jsonrpc_v1_requires_array_params };
     }
-    else if (value_.message.params.has_value() &&
-            std::holds_alternative<value_t>(value_.message.params.value()))
+    else if (value.message.params.has_value() &&
+        std::holds_alternative<value_t>(value.message.params.value()))
     {
-        if (!value_.strict)
+        // Tolerated: Electrum non-standard single value params (converted).
+        value.lax_params = true;
+        value.message.params.emplace(array_t
         {
-            // Convert non-standard rpc, required for Electrum compat.
-            value_.message.params.emplace(array_t
+            std::get<value_t>(std::move(value.message.params.value()))
+        });
+    }
+}
+
+template <>
+size_t body<rpc::request_t>::reader::
+put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
+{
+    // Null and empty guarded in base reader.
+    if (is_zero(buffer.size()) || is_null(buffer.data()))
+        return base::reader::put(buffer, ec);
+
+    const auto data = pointer_cast<const char>(buffer.data());
+    const auto size = buffer.size();
+    size_t index{};
+    ec.clear();
+
+    // Termination applies to singleton and batch close reads only.
+    const auto requires_terminator = [this]() NOEXCEPT
+    {
+        return terminated_ && (closed_ || (!value_.batch && !opened_));
+    };
+
+    // Prologue: consume whitespace and batch delimiters until element start,
+    // batch close, or buffer exhaustion.
+    if (!started_ && !closed_)
+    {
+        for (; index < size; ++index)
+        {
+            const auto character = data[index];
+            if (is_json_whitespace(character))
+                continue;
+
+            if (character == '[' && !opened_ && !value_.batch)
             {
-                std::get<value_t>(std::move(value_.message.params.value()))
-            });
+                // Batch open rides along with the first element read.
+                opened_ = true;
+                value_.changed = true;
+                continue;
+            }
+
+            if (character == ',')
+            {
+                // Element separator (between batched elements only).
+                if ((!value_.batch && !opened_) || separated_ ||
+                    (opened_ && !delivered_))
+                {
+                    ec = code{ error::jsonrpc_batch_malformed };
+                    return index;
+                }
+
+                separated_ = true;
+                continue;
+            }
+
+            if (character == ']')
+            {
+                // Batch open immediately closed (no elements).
+                if (opened_ && !delivered_)
+                {
+                    ec = code{ error::jsonrpc_batch_empty };
+                    return index;
+                }
+
+                // Batch close (only where a separator could occur).
+                if ((!value_.batch && !opened_) || separated_)
+                {
+                    ec = code{ error::jsonrpc_batch_malformed };
+                    return index;
+                }
+
+                // Batch close completes this read without a message.
+                closed_ = true;
+                value_.changed = true;
+                ++index;
+                break;
+            }
+
+            // Nested batch open, or batched element without separator.
+            if (character == '[' ||
+                ((value_.batch || opened_) &&
+                    !separated_ && !(opened_ && !delivered_)))
+            {
+                ec = code{ error::jsonrpc_batch_malformed };
+                return index;
+            }
+
+            // Element start (this character is the parser's).
+            started_ = true;
+            break;
         }
-        else
+
+        // Buffer exhausted within prologue.
+        if (!started_ && !closed_)
+            return index;
+    }
+
+    // Epilogue: consume whitespace trailing a delivered batch close.
+    if (closed_ && signaled_)
+    {
+        for (; index < size; ++index)
         {
-            ec = code{ error::jsonrpc_params_not_collection };
+            if (!is_json_whitespace(data[index]))
+            {
+                ec = code{ error::jsonrpc_batch_malformed };
+                return index;
+            }
         }
     }
+
+    // Element: pass buffer remainder to the json parser.
+    if (started_ && !base::reader::done())
+    {
+        const auto start = index;
+        const buffer_type remainder{ &data[index], size - index };
+        const auto parsed = base::reader::put(remainder, ec);
+
+        index += parsed;
+        if (ec || !base::reader::done())
+            return index;
+
+        // boost::json consumes whitespace, and leaves any subsequent chars
+        // unparsed, so a terminator it consumed must be in the parsed segment.
+        if (requires_terminator())
+            for (auto scan = index; scan > start; --scan)
+            {
+                const auto character = data[sub1(scan)];
+                if (is_electrum_terminator(character))
+                {
+                    has_terminator_ = true;
+                    break;
+                }
+
+                if (is_rpc_terminator(character))
+                    break;
+            }
+    }
+
+    // Terminator: consume whitespace through the terminator, allowing padded
+    // termination (electrum traffic shaping) and split reads.
+    if (requires_terminator() && !has_terminator_)
+    {
+        for (; index < size; ++index)
+        {
+            const auto character = data[index];
+            if (is_electrum_terminator(character))
+            {
+                has_terminator_ = true;
+                ++index;
+                break;
+            }
+
+            if (!is_json_whitespace(character))
+            {
+                ec = code{ error::jsonrpc_reader_stall };
+                return index;
+            }
+        }
+    }
+
+    // Delivery: batched messages are delivered from put by pausing (a
+    // singleton delivers classically, from finish following completion).
+    if ((closed_ || opened_ || value_.batch) &&
+        (!requires_terminator() || has_terminator_))
+    {
+        if (closed_ && !signaled_)
+        {
+            // Batch close is delivered without a message.
+            signaled_ = true;
+            ec = to_http_code(http_error_t::need_buffer);
+        }
+        else if (started_ && base::reader::done())
+        {
+            // Convert and validate the parsed element (releases the model).
+            base::reader::finish(ec);
+            if (ec) return index;
+
+            to_request(value_, ec);
+            if (ec) return index;
+
+            // Tolerated: v1 has no batch (btcd), noted for the channel.
+            value_.lax_batch = (value_.message.jsonrpc == version::v1);
+
+            // Deliver the message and re-arm for the next element.
+            delivered_ = true;
+            started_ = false;
+            separated_ = false;
+            has_terminator_ = false;
+            ec = to_http_code(http_error_t::need_buffer);
+        }
+    }
+
+    return index;
+}
+
+template <>
+bool body<rpc::request_t>::reader::
+done() const NOEXCEPT
+{
+    // Parser may be done but with terminator still outstanding.
+    const auto complete = closed_ || base::reader::done();
+    const auto required = terminated_ &&
+        (closed_ || (!value_.batch && !opened_));
+
+    return complete && (!required || has_terminator_);
+}
+
+template <>
+void body<rpc::request_t>::reader::
+finish(boost_code& ec) NOEXCEPT
+{
+    // Batched messages are delivered from put, so finish only validates
+    // message-end state (delivered close, otherwise incomplete).
+    if ((closed_ || opened_ || value_.batch) && !started_)
+    {
+        ec = (closed_ && signaled_) ? boost_code{} :
+            to_http_code(http_error_t::need_more);
+        return;
+    }
+
+    // See notes in base reader.
+    base::reader::finish(ec);
+    if (ec) return;
+
+    to_request(value_, ec);
 }
 
 // rpc::body<response_t>::reader (unused)
@@ -190,11 +376,28 @@ done() const NOEXCEPT
 
 // rpc::body<response_t>::writer
 // ----------------------------------------------------------------------------
+// A batch is never materialized. Each write emits one part, with framing
+// derived from caller-assigned batch state (value_.batch is the state before
+// the part, value_.changed indicates transition). The open part is prefixed
+// with '[', continuation parts with ',', and the close part is framing and
+// termination only (no message), mirroring the reader's message-less close.
+// Termination applies to singleton and batch close parts only.
 
 template <>
 void body<rpc::response_t>::writer::
 init(boost_code& ec) NOEXCEPT
 {
+    set_terminator_ = false;
+    set_prefix_ = false;
+    set_close_ = false;
+
+    // Batch close part carries no message.
+    if (closes_batch(value_))
+    {
+        ec.clear();
+        return;
+    }
+
     base::writer::init(ec);
     if (ec) return;
 
@@ -214,7 +417,6 @@ init(boost_code& ec) NOEXCEPT
         return;
     }
 
-    set_terminator_ = false;
     serializer_.reset(&value_.model);
 }
 
@@ -223,8 +425,50 @@ body<rpc::response_t>::writer::out_buffer
 body<rpc::response_t>::writer::
 get(boost_code& ec) NOEXCEPT
 {
+    using namespace boost::asio;
+    static constexpr auto open = '[';
+    static constexpr auto comma = ',';
+    static constexpr auto close = ']';
+    static constexpr auto line = '\n';
+
+    // Buffer a single static framing character.
+    const auto single = [](const char& character, bool more) NOEXCEPT
+    {
+        return out_buffer{ std::make_pair(buffer(&character, one), more) };
+    };
+
+    // Emit batch framing (open or separator) preceding the part.
+    if (!set_prefix_)
+    {
+        set_prefix_ = true;
+
+        if (opens_batch(value_))
+            return single(open, true);
+
+        if (continues_batch(value_))
+            return single(comma, true);
+    }
+
+    // Batch close part is framing and termination only (no message).
+    if (closes_batch(value_))
+    {
+        if (!set_close_)
+        {
+            set_close_ = true;
+            return single(close, value_.terminate);
+        }
+
+        set_terminator_ = true;
+        return single(line, false);
+    }
+
     auto out = base::writer::done() ? out_buffer{} : base::writer::get(ec);
-    if (ec) return out;
+
+    // Batched parts are terminated by the batch close part (not per part),
+    // and unterminated (http) messages complete on serialization.
+    if (ec || !value_.terminate ||
+        opens_batch(value_) || continues_batch(value_))
+        return out;
 
     // Override json reader !more so terminator can be added.
     if (out.has_value())
@@ -235,17 +479,21 @@ get(boost_code& ec) NOEXCEPT
 
     // Add terminator and signal done.
     set_terminator_ = true;
-    using namespace boost::asio;
-    static constexpr auto line = '\n';
-    return out_buffer{ std::make_pair(buffer(&line, sizeof(line)), false) };
+    return single(line, false);
 }
 
 template <>
 bool body<rpc::response_t>::writer::
 done() const NOEXCEPT
 {
+    // Batch close part is done when framing and termination are written.
+    if (closes_batch(value_))
+        return set_close_ && (!value_.terminate || set_terminator_);
+
+    // Batched parts are done on serialization (terminator rides on close).
     // Done is redundant with !out.second, but provides a cleaner interface.
-    return base::writer::done() && (!terminate_ || set_terminator_);
+    return base::writer::done() && (opens_batch(value_) ||
+        continues_batch(value_) || !value_.terminate || set_terminator_);
 }
 
 // rpc::body<request_t>::writer
@@ -284,7 +532,10 @@ body<rpc::request_t>::writer::
 get(boost_code& ec) NOEXCEPT
 {
     auto out = base::writer::done() ? out_buffer{} : base::writer::get(ec);
-    if (ec) return out;
+
+    // Unterminated (http) messages complete on serialization.
+    if (ec || !value_.terminate)
+        return out;
 
     // Override json reader !more so terminator can be added.
     if (out.has_value())
@@ -305,7 +556,7 @@ bool body<rpc::request_t>::writer::
 done() const NOEXCEPT
 {
     // Done is redundant with !out.second, but provides a cleaner interface.
-    return base::writer::done() && (!terminate_ || set_terminator_);
+    return base::writer::done() && (!value_.terminate || set_terminator_);
 }
 
 BC_POP_WARNING()

@@ -156,8 +156,12 @@ protected:
 
     /// RPC (TCP: electrum/stratum_v1, WS: btcd).
     /// -----------------------------------------------------------------------
+    /// The channel is batch-blind: the proxy stamps batch state on reads and
+    /// response parts, absorbs the batch close (writing the close part and
+    /// re-arming the read), and defers notifications while a batch is open.
 
     /// Read rpc request from the socket, using provided buffer.
+    /// The proxy stamps batch state (the parse is always lax).
     virtual void read(http::flat_buffer& buffer, rpc::request& request,
         count_handler&& handler) NOEXCEPT;
 
@@ -166,6 +170,7 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
     /// Write rpc notification (request) to the socket (json buffer in body).
+    /// Deferred while a batch is open, drained following the close part.
     virtual void write(rpc::request&& notification,
         count_handler&& handler) NOEXCEPT;
 
@@ -200,6 +205,31 @@ private:
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;
 
+    // For rpc batch normalization.
+    void do_defer_write(const writer& call) NOEXCEPT;
+    void handle_rpc_read(const code& ec, size_t bytes,
+        const ref<rpc::request>& request, const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_close_write(const code& ec, size_t bytes,
+        const ref<rpc::request>& request, const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+
+    // For rpc batch normalization (http).
+    void do_http_request_read(const ref<http::request>& request,
+        const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_header(const code& ec, size_t bytes,
+        const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_body(const code& ec, size_t bytes,
+        const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_close_write(const code& ec, size_t bytes,
+        const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_header_write(const code& ec, size_t bytes,
+        const rpc::response_ptr& part, const count_handler& handler) NOEXCEPT;
+
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
     void do_write(const writer& call) NOEXCEPT;
@@ -217,6 +247,10 @@ private:
     // These are protected by strand.
     stop_subscriber stop_subscriber_{};
     queue queue_{};
+    queue deferred_{};
+    socket::http_parser_ptr parser_{};
+    bool batched_{};
+    bool parted_{};
 };
 
 } // namespace network

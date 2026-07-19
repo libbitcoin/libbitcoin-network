@@ -38,8 +38,8 @@ void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
     // Create variant http request to capture read.
     const auto in = to_shared<http::request>();
 
-    // Preselect rpc::request body value type.
-    in->body() = rpc::request{};
+    // Preselect rpc::request body value type, propagating caller state.
+    in->body() = rpc::request{ .batch = request.batch };
 
     // Capture body and move it back into request reference.
     body_read(buffer, *in,
@@ -65,6 +65,9 @@ void socket::handle_rpc_read(const code& ec, size_t bytes,
 void socket::rpc_write(rpc::response&& response,
     count_handler&& handler) NOEXCEPT
 {
+    // Stream (tcp/ws) messages are newline terminated (http chunks are not).
+    response.terminate = true;
+
     http::response out{};
     out.body() = std::move(response);
     body_write(std::move(out), std::move(handler));
@@ -73,6 +76,9 @@ void socket::rpc_write(rpc::response&& response,
 void socket::rpc_notify(rpc::request&& notification,
     count_handler&& handler) NOEXCEPT
 {
+    // Stream (tcp/ws) messages are newline terminated (http chunks are not).
+    notification.terminate = true;
+
     http::request out{};
     out.body() = std::move(notification);
     body_notify(std::move(out), std::move(handler));
