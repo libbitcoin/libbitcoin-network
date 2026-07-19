@@ -13,12 +13,6 @@
     <PropertyPageSchema Include="$(MSBuildThisFileDirectory)$(ProjectName).xml" />
   </ItemGroup>
 
-  <!-- Options -->
-
-  <PropertyGroup>
-    <Option-ssl>true</Option-ssl>
-  </PropertyGroup>
-
   <!-- Configuration -->
 
   <ItemDefinitionGroup>
@@ -41,7 +35,7 @@
         <AdditionalOptions Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\src\ssl\'))">/wd4189 /wd4245 /wd4267 /wd4701 /wd4702 /wd4703 %(AdditionalOptions)</AdditionalOptions>
         
         <!-- These are only used as inlined headers, so never compile them directly. -->
-        <ExcludedFromBuild Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\scr\ssl\wolfssl\src\'))">true</ExcludedFromBuild>
+        <ExcludedFromBuild Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\src\ssl\wolfssl\src\'))">true</ExcludedFromBuild>
         <ExcludedFromBuild Condition="$([System.String]::new('%(RelativeDir)').StartsWith('..\..\..\..\include\bitcoin\network\ssl\wolfcrypt\src\'))">true</ExcludedFromBuild>
       </ClCompile>
     </ItemGroup>
@@ -73,7 +67,7 @@
   <!-- Options -->
 
   <PropertyGroup>
-    <Option-ssl>true</Option-ssl>
+    <Option-ssl Condition="'$(Option-ssl)' == ''">true</Option-ssl>
   </PropertyGroup>
   
   <!-- Messages -->
