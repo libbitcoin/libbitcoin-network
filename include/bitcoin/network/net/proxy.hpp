@@ -246,11 +246,11 @@ private:
 
     // These are protected by strand.
     stop_subscriber stop_subscriber_{};
-    queue queue_{};
-    queue deferred_{};
     socket::http_parser_ptr parser_{};
-    bool batched_{};
+    queue deferred_{};
+    queue queue_{};
     bool parted_{};
+    bool batched_{};
 };
 
 } // namespace network
