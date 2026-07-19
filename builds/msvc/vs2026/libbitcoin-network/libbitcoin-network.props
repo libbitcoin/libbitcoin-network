@@ -13,12 +13,6 @@
     <PropertyPageSchema Include="$(MSBuildThisFileDirectory)$(ProjectName).xml" />
   </ItemGroup>
 
-  <!-- Options -->
-
-  <PropertyGroup>
-    <Option-ssl>true</Option-ssl>
-  </PropertyGroup>
-
   <!-- Configuration -->
 
   <ItemDefinitionGroup>
