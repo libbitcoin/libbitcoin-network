@@ -135,6 +135,10 @@ void session::handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
 
+    // Stop in channel context (allows graceful batch response closure).
+    if (ec)
+        channel->stop(ec);
+
     // Return to network context.
     boost::asio::post(network_.strand(),
         BIND(do_handle_handshake, ec, channel, start));
@@ -148,7 +152,6 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
     if (ec)
     {
         unpend(channel);
-        channel->stop(ec);
         start(ec);
         return;
     }

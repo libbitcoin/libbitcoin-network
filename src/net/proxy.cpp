@@ -52,6 +52,63 @@ void proxy::stop(const code& ec) NOEXCEPT
     if (stopped())
         return;
 
+    // Overruled by stop, set only for consistency.
+    paused_.store(true);
+
+    // An open batch response is closed (written) before the socket stops.
+    // Batch state is protected by the strand, so only a stranded stop can
+    // close gracefully (an unstranded stop, e.g. shutdown, is immediate).
+    if (stranded() && batched_ && parted_)
+    {
+        do_stop(ec);
+        return;
+    }
+
+    finish_stop(ec);
+}
+
+// private
+// Close the open batch response, then stop (batch open rides on the first
+// part, so there is nothing to close unless parted).
+void proxy::do_stop(const code& ec) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    using namespace std::placeholders;
+
+    batched_ = false;
+    parted_ = false;
+
+    rpc::response close{};
+    close.batch = true;
+    close.changed = true;
+
+    const count_handler complete = std::bind(&proxy::handle_stop_write,
+        shared_from_this(), _1, _2, ec);
+
+    // The close part is written per framing (http chunk or stream).
+    if (parser_)
+    {
+        socket_->rpc_write_chunk(std::move(close), move_copy(complete));
+        return;
+    }
+
+    const auto out = system::move_shared(std::move(close));
+    do_write(std::bind(&proxy::do_response_write,
+        shared_from_this(), out, complete));
+}
+
+// private
+void proxy::handle_stop_write(const code&, size_t,
+    const code& reason) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    finish_stop(reason);
+}
+
+// private
+// Thread safe (called directly from stop or from the strand).
+void proxy::finish_stop(const code& ec) NOEXCEPT
+{
     // Client websocket or timer initated (when ws) stop is async (graceful).
     // error::service_stopped will invoke socket stop() below, which will
     // immediately terminate outstanding lazy_stop().
@@ -70,9 +127,6 @@ void proxy::stop(const code& ec) NOEXCEPT
         // Stop the read loop, stop accepting new work, cancel pending work.
         socket_->stop();
     }
-
-    // Overruled by stop, set only for consistency.
-    paused_.store(true);
 
     boost::asio::post(strand(),
         std::bind(&proxy::stopping, shared_from_this(), ec));
