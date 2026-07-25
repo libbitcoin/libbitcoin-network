@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2026 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2026 libbitcoin developers
  *
  * This file is part of libbitcoin.
  *
@@ -75,8 +75,9 @@ struct optional<Default>
     using tag = optional_tag;
     using type = value_t;
 
+    /// value_t is not a literal type, precluding constexpr until P2448 (ok).
     /// value_t optional default is only/always empty.
-    static constexpr type default_value() NOEXCEPT { return {}; }
+    static const type default_value() NOEXCEPT { return {}; }
 };
 
 /// int8_t   : optional<42_i8>  (int8_t)
