@@ -18,6 +18,8 @@
  */
 #include "../test.hpp"
 
+#include <future>
+
 BOOST_AUTO_TEST_SUITE(socket_tests)
 
 class socket_accessor
@@ -227,6 +229,117 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
     // Stopping the socket precludes assertion.
     instance->stop();
 
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
+// Regression test for a fix to socket::async_write: it used to write every
+// body_write() chunk as its own whole websocket message (finish always
+// true), splitting one logical response into N independent messages. The
+// fix passes finish = !out->more, so only the final chunk closes the
+// message. A real (non-library) websocket client is used as ground truth:
+// beast's blocking read() returns only once a full message (finish) is
+// received, so a single read() call assembling the entire multi-chunk body
+// proves the chunks were sent as one multi-frame message rather than as
+// several.
+BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_message)
+{
+    using namespace std::chrono_literals;
+
+    const logger log{};
+    threadpool pool(2);
+    connector::parameters params{ .maximum_request = 1'000'000u };
+
+    // Bind a loopback acceptor on an ephemeral port.
+    asio::strand accept_strand(pool.service().get_executor());
+    asio::acceptor acceptor(accept_strand);
+    boost_code ec{};
+    const asio::endpoint bind_endpoint(asio::ipv4::loopback(), 0);
+
+    acceptor.open(bind_endpoint.protocol(), ec);
+    BOOST_REQUIRE(!ec);
+    acceptor.set_option(asio::reuse_address(true), ec);
+    BOOST_REQUIRE(!ec);
+    acceptor.bind(bind_endpoint, ec);
+    BOOST_REQUIRE(!ec);
+    acceptor.listen(1, ec);
+    BOOST_REQUIRE(!ec);
+    const auto port = acceptor.local_endpoint().port();
+
+    const auto server = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
+    const auto buffer = std::make_shared<http::flat_buffer>();
+    const auto request = std::make_shared<http::request>();
+
+    // Small size_hint relative to the payload forces writer.get() across
+    // many passes, i.e. many socket::async_write calls for one logical body.
+    json::body<>::value_type content{};
+    content.model = boost::json::object{ { "key", std::string(4000, 'x') } };
+    content.size_hint = 32;
+    const auto expected = boost::json::serialize(content.model);
+
+    const auto response = std::make_shared<http::response>();
+    response->result(boost::beast::http::status::ok);
+    response->body() = std::move(content);
+
+    const auto upgrade_result = std::make_shared<std::promise<code>>();
+    const auto write_result = std::make_shared<std::promise<code>>();
+    auto upgrade_future = upgrade_result->get_future();
+    auto write_future = write_result->get_future();
+
+    server->accept(acceptor,
+        [=](const code& accept_ec) mutable
+        {
+            if (accept_ec)
+            {
+                upgrade_result->set_value(accept_ec);
+                write_result->set_value(accept_ec);
+                return;
+            }
+
+            server->http_read(*buffer, *request,
+                [=](const code& read_ec, size_t) mutable
+                {
+                    upgrade_result->set_value(read_ec);
+                    if (read_ec != error::upgraded)
+                    {
+                        write_result->set_value(read_ec);
+                        return;
+                    }
+
+                    server->body_write(std::move(*response),
+                        [=](const code& write_ec, size_t) NOEXCEPT
+                        {
+                            write_result->set_value(write_ec);
+                        });
+                });
+        });
+
+    // Real (blocking) websocket client, independent of the code under test.
+    asio::context client_service;
+    asio::socket raw(client_service);
+    boost_code client_ec{};
+    raw.connect({ asio::ipv4::loopback(), port }, client_ec);
+    BOOST_REQUIRE(!client_ec);
+
+    ws::socket client(std::move(raw));
+    client.handshake("127.0.0.1", "/", client_ec);
+    BOOST_REQUIRE(!client_ec);
+
+    // One blocking read of a "complete message" must assemble every chunk.
+    http::flat_buffer read_buffer{};
+    client.read(read_buffer, client_ec);
+    BOOST_REQUIRE(!client_ec);
+    BOOST_REQUIRE(client.got_text());
+
+    const auto received = boost::beast::buffers_to_string(read_buffer.data());
+    BOOST_REQUIRE_EQUAL(received, expected);
+
+    BOOST_REQUIRE(upgrade_future.wait_for(2s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(upgrade_future.get(), error::upgraded);
+    BOOST_REQUIRE(write_future.wait_for(2s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(write_future.get(), error::success);
+
+    server->stop();
     pool.stop();
     BOOST_REQUIRE(pool.join());
 }
