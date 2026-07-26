@@ -200,7 +200,10 @@ void socket::do_body_write(boost_code ec, size_t total,
     out->more = buffer.value().second;
     const auto& data = buffer.value().first;
 
-    async_write(data, out->writer.binary(),
+    // A ws message closes on the final chunk (finish = !more), so a body
+    // that spans multiple get() passes is delivered as one multi-frame
+    // message rather than one whole message per chunk.
+    async_write(data, out->writer.binary(), !out->more,
         std::bind(&socket::handle_body_write,
             shared_from_this(), _1, _2, total, out, handler));
 }
@@ -275,7 +278,7 @@ void socket::do_body_notify(boost_code ec, size_t total,
     const auto& data = buffer.value().first;
 
     // TODO: derive websocket binary/text from body type mapping.
-    async_write(data, false,
+    async_write(data, false, !out->more,
         std::bind(&socket::handle_body_notify,
             shared_from_this(), _1, _2, total, out, handler));
 }

@@ -70,7 +70,10 @@ void socket::do_ws_write(const asio::const_buffer& in, bool binary,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    async_write(in, binary, handler);
+
+    // Single-shot write of an already-whole buffer, always closes the
+    // message (finish = true).
+    async_write(in, binary, true, handler);
 }
 
 // WS (event).

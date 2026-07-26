@@ -263,9 +263,12 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
 // ----------------------------------------------------------------------------
 // protected
 
-// write message in a single frame (ws) or unframed fixed size bytes (tcp).
+// write message frame (ws, finish closes the message) or unframed fixed
+// size bytes (tcp). Beast applies the binary/text setting only at the start
+// of a message, so it is harmless to pass it on every frame of a
+// multi-frame message (see boost::beast::websocket::stream::binary).
 void socket::async_write(const asio::const_buffer& buffer, bool binary,
-    const count_handler& handler) NOEXCEPT
+    bool finish, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -275,7 +278,7 @@ void socket::async_write(const asio::const_buffer& buffer, bool binary,
         {
             VARIANT_DISPATCH_METHOD(get_ws(), binary(binary));
             VARIANT_DISPATCH_METHOD(get_ws(),
-                async_write(buffer, std::bind(&socket::handle_async,
+                async_write_some(finish, buffer, std::bind(&socket::handle_async,
                     shared_from_this(), _1, _2, handler, "async_write")));
         }
         else

@@ -272,7 +272,7 @@ protected:
     void async_read_some(const asio::mutable_buffer& buffer,
         const count_handler& handler) NOEXCEPT;
     void async_write(const asio::const_buffer& buffer, bool binary,
-        const count_handler& handler) NOEXCEPT;
+        bool finish, const count_handler& handler) NOEXCEPT;
     void async_read_http(http::flat_buffer& buffer, http::request& request,
         const count_handler& handler) NOEXCEPT;
     void async_write_http(http::response&& response,
