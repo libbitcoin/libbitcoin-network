@@ -137,6 +137,9 @@ struct BCT_API settings
         /// Requires basic authorization.
         virtual bool authorize() const NOEXCEPT;
 
+        /// True if two credentials imply the same authorization header.
+        virtual bool duplicated() const NOEXCEPT;
+
         /// True if the digest is authorized (for the method).
         virtual bool authorized(
             const system::hash_digest& digest) const NOEXCEPT;

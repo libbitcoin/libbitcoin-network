@@ -160,6 +160,17 @@ bool settings::http_server::authorize() const NOEXCEPT
     return !credentials.empty();
 }
 
+bool settings::http_server::duplicated() const NOEXCEPT
+{
+    hashes digests{};
+    digests.reserve(credentials.size());
+    for (const auto& credential: credentials)
+        digests.push_back(credential.digest());
+
+    std::sort(digests.begin(), digests.end());
+    return std::adjacent_find(digests.begin(), digests.end()) != digests.end();
+}
+
 bool settings::http_server::authorized(const hash_digest& digest) const NOEXCEPT
 {
     return to_credential(credentials, digest) != credentials.end();

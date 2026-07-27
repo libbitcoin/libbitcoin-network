@@ -447,6 +447,28 @@ BOOST_AUTO_TEST_CASE(settings__http_server_permitted__methoded_credential__liste
     BOOST_REQUIRE(!instance.permitted(digest, "getblock"));
 }
 
+BOOST_AUTO_TEST_CASE(settings__http_server_duplicated__distinct_credentials__false)
+{
+    settings::http_server instance{ "test" };
+    instance.credentials.emplace_back("username:password");
+    instance.credentials.emplace_back("username:other:getblock");
+    BOOST_REQUIRE(!instance.duplicated());
+}
+
+BOOST_AUTO_TEST_CASE(settings__http_server_duplicated__repeated_credential__true)
+{
+    settings::http_server instance{ "test" };
+    instance.credentials.emplace_back("username:password");
+    instance.credentials.emplace_back("username:password:getblock");
+    BOOST_REQUIRE(instance.duplicated());
+}
+
+BOOST_AUTO_TEST_CASE(settings__http_server_duplicated__default__false)
+{
+    const settings::http_server instance{ "test" };
+    BOOST_REQUIRE(!instance.duplicated());
+}
+
 BOOST_AUTO_TEST_CASE(settings__http_server_authorized__unconfigured_credential__false)
 {
     settings::http_server instance{ "test" };
