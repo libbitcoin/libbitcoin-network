@@ -707,10 +707,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp">
       <Filter>include\bitcoin\network\config</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\config\credential.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp">
       <Filter>include\bitcoin\network\config</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\config\credential.hpp">
       <Filter>include\bitcoin\network\config</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\endpoint.hpp">
