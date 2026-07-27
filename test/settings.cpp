@@ -418,12 +418,40 @@ BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
     BOOST_REQUIRE(instance.origin_names().empty());
     BOOST_REQUIRE(!instance.allow_opaque_origin);
     BOOST_REQUIRE(!instance.authorize());
-    BOOST_REQUIRE(instance.username.empty());
-    BOOST_REQUIRE(instance.password.empty());
+    BOOST_REQUIRE(instance.credentials.empty());
 
-    using namespace system;
-    constexpr auto credential = base16_array("d9fa291efa0c924851f3ea14e73b1847506ab451fb834b7101e5a1a88f94f500");
-    BOOST_REQUIRE_EQUAL(instance.credential(), credential);
+    constexpr auto digest = system::base16_array("d9fa291efa0c924851f3ea14e73b1847506ab451fb834b7101e5a1a88f94f500");
+    BOOST_REQUIRE_EQUAL(config::credential{ ":" }.digest(), digest);
+}
+
+BOOST_AUTO_TEST_CASE(settings__http_server_permitted__unmethoded_credential__all_methods)
+{
+    settings::http_server instance{ "test" };
+    instance.credentials.emplace_back("username:password");
+
+    const auto digest = config::credential{ "username:password" }.digest();
+    BOOST_REQUIRE(instance.authorize());
+    BOOST_REQUIRE(instance.authorized(digest));
+    BOOST_REQUIRE(instance.permitted(digest, "getblockcount"));
+}
+
+BOOST_AUTO_TEST_CASE(settings__http_server_permitted__methoded_credential__listed_methods)
+{
+    settings::http_server instance{ "test" };
+    instance.credentials.emplace_back("username:password:getblockcount,getbestblockhash");
+
+    const auto digest = config::credential{ "username:password" }.digest();
+    BOOST_REQUIRE(instance.authorized(digest));
+    BOOST_REQUIRE(instance.permitted(digest, "getblockcount"));
+    BOOST_REQUIRE(instance.permitted(digest, "getbestblockhash"));
+    BOOST_REQUIRE(!instance.permitted(digest, "getblock"));
+}
+
+BOOST_AUTO_TEST_CASE(settings__http_server_authorized__unconfigured_credential__false)
+{
+    settings::http_server instance{ "test" };
+    instance.credentials.emplace_back("username:password");
+    BOOST_REQUIRE(!instance.authorized(config::credential{ "username:other" }.digest()));
 }
 
 BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
@@ -458,13 +486,7 @@ BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
     BOOST_REQUIRE(instance.origin_names().empty());
     BOOST_REQUIRE(!instance.allow_opaque_origin);
     BOOST_REQUIRE(!instance.authorize());
-    BOOST_REQUIRE(instance.username.empty());
-    BOOST_REQUIRE(instance.password.empty());
-
-
-    using namespace system;
-    constexpr auto credential = base16_array("d9fa291efa0c924851f3ea14e73b1847506ab451fb834b7101e5a1a88f94f500");
-    BOOST_REQUIRE_EQUAL(instance.credential(), credential);
+    BOOST_REQUIRE(instance.credentials.empty());
     // websocket_server (no unique settings yet)
 }
 

@@ -78,6 +78,9 @@ public:
     /// Must call after successful message handling if no stop.
     virtual void receive() NOEXCEPT;
 
+    /// True if the authorized credential permits the rpc method.
+    virtual bool permitted(const std::string& method) const NOEXCEPT;
+
 protected:
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
@@ -119,6 +122,7 @@ private:
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
+    system::hash_digest digest_{};
     dispatcher dispatcher_{};
     bool reading_{};
     bool authorized_;

@@ -296,9 +296,16 @@ void channel_http::set_authorized(const request& request) NOEXCEPT
 
     if (!authorized_)
     {
-        const std::string header{ request[field::authorization] };
-        authorized_ = (options_.credential() == sha256_hash(header));
+        const auto digest = sha256_hash(request[field::authorization]);
+        authorized_ = options_.authorized(digest);
+        if (authorized_)
+            digest_ = digest;
     }
+}
+
+bool channel_http::permitted(const std::string& method) const NOEXCEPT
+{
+    return !options_.authorize() || options_.permitted(digest_, method);
 }
 
 void channel_http::handle_unauthorized(const code& ec) NOEXCEPT

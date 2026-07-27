@@ -130,14 +130,18 @@ struct BCT_API settings
         /// Opaque origins are always serialized as "null".
         bool allow_opaque_origin{ false };
 
-        /// Basic authorization credential stored and passed in cleartext.
+        /// Basic authorization credentials stored and passed in cleartext.
         /// This is not security, just compat for bitcoind on secured LAN.
-        std::string username{};
-        std::string password{};
+        config::credentials credentials{};
 
         /// Requires basic authorization.
         virtual bool authorize() const NOEXCEPT;
-        virtual system::hash_digest credential() const NOEXCEPT;
+
+        /// True if the digest is authorized (for the method).
+        virtual bool authorized(
+            const system::hash_digest& digest) const NOEXCEPT;
+        virtual bool permitted(const system::hash_digest& digest,
+            const std::string& method) const NOEXCEPT;
 
         /// Normalized configured hosts/origins helpers.
         virtual system::string_list host_names() const NOEXCEPT;
