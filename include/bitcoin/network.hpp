@@ -49,6 +49,7 @@
 #include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/config/credential.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/network/interfaces/http.hpp>
