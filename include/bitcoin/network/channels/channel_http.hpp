@@ -58,7 +58,8 @@ public:
       : channel(log, socket, identifier, settings, options),
         options_(options),
         response_buffer_(system::to_shared<http::flat_buffer>()),
-        request_buffer_(options.minimum_buffer)
+        request_buffer_(options.minimum_buffer),
+        authorized_(!options.authorize())
     {
     }
 
@@ -87,8 +88,11 @@ protected:
     /// Override to set default websocket reader body.
     virtual http::body::value_type websocket_body() const NOEXCEPT;
 
-    /// Determine if http basic authorization is satisfied if enabled.
-    virtual bool unauthorized(const http::request& request) NOEXCEPT;
+    /// True if basic authorization is not required or has been satisfied.
+    virtual bool authorized() const NOEXCEPT;
+
+    /// Latch authorization from request headers (requires strand).
+    virtual void set_authorized(const http::request& request) NOEXCEPT;
 
     /// Dispatch request to subscribers by verb type.
     virtual void dispatch(const http::request_cptr& request) NOEXCEPT;
@@ -117,6 +121,7 @@ private:
     http::flat_buffer request_buffer_;
     dispatcher dispatcher_{};
     bool reading_{};
+    bool authorized_;
 };
 
 } // namespace network
