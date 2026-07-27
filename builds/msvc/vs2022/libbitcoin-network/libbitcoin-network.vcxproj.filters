@@ -192,6 +192,9 @@
     <ClCompile Include="..\..\..\..\src\config\authority.cpp">
       <Filter>src\config</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\config\credential.cpp">
+      <Filter>src\config</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\config\endpoint.cpp">
       <Filter>src\config</Filter>
     </ClCompile>
@@ -705,6 +708,9 @@
       <Filter>include\bitcoin\network\config</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp">
+      <Filter>include\bitcoin\network\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\config\credential.hpp">
       <Filter>include\bitcoin\network\config</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\endpoint.hpp">
