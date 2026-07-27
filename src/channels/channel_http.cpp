@@ -295,7 +295,10 @@ void channel_http::set_authorized(const request& request) NOEXCEPT
     BC_ASSERT(stranded());
 
     if (!authorized_)
-        authorized_ = (options_.credential() == request[field::authorization]);
+    {
+        const std::string header{ request[field::authorization] };
+        authorized_ = (options_.credential() == sha256_hash(header));
+    }
 }
 
 void channel_http::handle_unauthorized(const code& ec) NOEXCEPT

@@ -137,7 +137,7 @@ struct BCT_API settings
 
         /// Requires basic authorization.
         virtual bool authorize() const NOEXCEPT;
-        virtual std::string credential() const NOEXCEPT;
+        virtual system::hash_digest credential() const NOEXCEPT;
 
         /// Normalized configured hosts/origins helpers.
         virtual system::string_list host_names() const NOEXCEPT;

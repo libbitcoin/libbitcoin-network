@@ -420,7 +420,10 @@ BOOST_AUTO_TEST_CASE(settings__http_server__defaults__expected)
     BOOST_REQUIRE(!instance.authorize());
     BOOST_REQUIRE(instance.username.empty());
     BOOST_REQUIRE(instance.password.empty());
-    BOOST_REQUIRE_EQUAL(instance.credential(), "Basic Og==");
+
+    using namespace system;
+    constexpr auto credential = base16_array("d9fa291efa0c924851f3ea14e73b1847506ab451fb834b7101e5a1a88f94f500");
+    BOOST_REQUIRE_EQUAL(instance.credential(), credential);
 }
 
 BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
@@ -457,8 +460,11 @@ BOOST_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
     BOOST_REQUIRE(!instance.authorize());
     BOOST_REQUIRE(instance.username.empty());
     BOOST_REQUIRE(instance.password.empty());
-    BOOST_REQUIRE_EQUAL(instance.credential(), "Basic Og==");
 
+
+    using namespace system;
+    constexpr auto credential = base16_array("d9fa291efa0c924851f3ea14e73b1847506ab451fb834b7101e5a1a88f94f500");
+    BOOST_REQUIRE_EQUAL(instance.credential(), credential);
     // websocket_server (no unique settings yet)
 }
 

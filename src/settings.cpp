@@ -147,12 +147,9 @@ bool settings::http_server::authorize() const NOEXCEPT
     return !username.empty() || !password.empty();
 }
 
-std::string settings::http_server::credential() const NOEXCEPT
+hash_digest settings::http_server::credential() const NOEXCEPT
 {
-    static const auto value = "Basic " +
-        system::encode_base64(username + ":" + password);
-
-    return value;
+    return sha256_hash("Basic " + encode_base64(username + ":" + password));
 }
 
 // websocket_server
