@@ -124,6 +124,9 @@ protected:
     uint16_t default_port() const NOEXCEPT;
     bool websocket() const NOEXCEPT;
 
+    /// True if the authorized credential permits the rpc method.
+    bool permitted(const std::string& method) const NOEXCEPT;
+
 private:
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.

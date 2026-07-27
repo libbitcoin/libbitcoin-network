@@ -58,7 +58,8 @@ public:
       : channel(log, socket, identifier, settings, options),
         options_(options),
         response_buffer_(system::to_shared<http::flat_buffer>()),
-        request_buffer_(options.minimum_buffer)
+        request_buffer_(options.minimum_buffer),
+        authorized_(!options.authorize())
     {
     }
 
@@ -77,6 +78,9 @@ public:
     /// Must call after successful message handling if no stop.
     virtual void receive() NOEXCEPT;
 
+    /// True if the authorized credential permits the rpc method.
+    virtual bool permitted(const std::string& method) const NOEXCEPT;
+
 protected:
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
@@ -87,8 +91,11 @@ protected:
     /// Override to set default websocket reader body.
     virtual http::body::value_type websocket_body() const NOEXCEPT;
 
-    /// Determine if http basic authorization is satisfied if enabled.
-    virtual bool unauthorized(const http::request& request) NOEXCEPT;
+    /// True if basic authorization is not required or has been satisfied.
+    virtual bool authorized() const NOEXCEPT;
+
+    /// Latch authorization from request headers (requires strand).
+    virtual void set_authorized(const http::request& request) NOEXCEPT;
 
     /// Dispatch request to subscribers by verb type.
     virtual void dispatch(const http::request_cptr& request) NOEXCEPT;
@@ -115,8 +122,10 @@ private:
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
+    system::hash_digest digest_{};
     dispatcher dispatcher_{};
     bool reading_{};
+    bool authorized_;
 };
 
 } // namespace network

@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/settings.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -142,17 +143,44 @@ system::string_list settings::http_server::origin_names() const NOEXCEPT
     return config::to_host_names(hosts, port);
 }
 
-bool settings::http_server::authorize() const NOEXCEPT
+// local
+static config::credentials::const_iterator to_credential(
+    const config::credentials& credentials,
+    const hash_digest& digest) NOEXCEPT
 {
-    return !username.empty() || !password.empty();
+    return std::find_if(credentials.begin(), credentials.end(),
+        [&digest](const config::credential& credential) NOEXCEPT
+        {
+            return credential.digest() == digest;
+        });
 }
 
-std::string settings::http_server::credential() const NOEXCEPT
+bool settings::http_server::authorize() const NOEXCEPT
 {
-    static const auto value = "Basic " +
-        system::encode_base64(username + ":" + password);
+    return !credentials.empty();
+}
 
-    return value;
+bool settings::http_server::duplicated() const NOEXCEPT
+{
+    hashes digests{};
+    digests.reserve(credentials.size());
+    for (const auto& credential: credentials)
+        digests.push_back(credential.digest());
+
+    std::sort(digests.begin(), digests.end());
+    return std::adjacent_find(digests.begin(), digests.end()) != digests.end();
+}
+
+bool settings::http_server::authorized(const hash_digest& digest) const NOEXCEPT
+{
+    return to_credential(credentials, digest) != credentials.end();
+}
+
+bool settings::http_server::permitted(const hash_digest& digest,
+    const std::string& method) const NOEXCEPT
+{
+    const auto credential = to_credential(credentials, digest);
+    return credential != credentials.end() && credential->permitted(method);
 }
 
 // websocket_server

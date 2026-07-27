@@ -159,6 +159,9 @@
     <ClCompile Include="..\..\..\..\test\config\authority.cpp">
       <Filter>src\config</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\credential.cpp">
+      <Filter>src\config</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\endpoint.cpp">
       <Filter>src\config</Filter>
     </ClCompile>

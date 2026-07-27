@@ -444,6 +444,11 @@ bool protocol_http::websocket() const NOEXCEPT
     return channel_->websocket();
 }
 
+bool protocol_http::permitted(const std::string& method) const NOEXCEPT
+{
+    return channel_->permitted(method);
+}
+
 BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()

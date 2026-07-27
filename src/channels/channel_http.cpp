@@ -95,7 +95,8 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
 
     if (ec == error::upgraded)
     {
-        // Don't dispatch the upgrade request, just restart the reader.
+        // Don't dispatch the upgrade request, just authorize and restart.
+        set_authorized(*request);
         reading_ = false;
         receive();
         return;
@@ -116,6 +117,10 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
 
     LOGV(log_message(*request, bytes));
 
+    // Websocket requests are synthesized (no headers).
+    if (!websocket())
+        set_authorized(*request);
+
     reading_ = false;
     dispatch(request);
 }
@@ -125,7 +130,7 @@ void channel_http::dispatch(const request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (unauthorized(*request))
+    if (!authorized())
     {
         send({ status::unauthorized, request->version() },
             std::bind(&channel_http::handle_unauthorized,
@@ -280,10 +285,27 @@ void channel_http::assign_json_buffer(response& response) NOEXCEPT
 // unauthorized helpers
 // ----------------------------------------------------------------------------
 
-bool channel_http::unauthorized(const request& request) NOEXCEPT
+bool channel_http::authorized() const NOEXCEPT
 {
-    return options_.authorize() &&
-        (options_.credential() != request[field::authorization]);
+    return authorized_;
+}
+
+void channel_http::set_authorized(const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (!authorized_)
+    {
+        const auto digest = sha256_hash(request[field::authorization]);
+        authorized_ = options_.authorized(digest);
+        if (authorized_)
+            digest_ = digest;
+    }
+}
+
+bool channel_http::permitted(const std::string& method) const NOEXCEPT
+{
+    return !options_.authorize() || options_.permitted(digest_, method);
 }
 
 void channel_http::handle_unauthorized(const code& ec) NOEXCEPT

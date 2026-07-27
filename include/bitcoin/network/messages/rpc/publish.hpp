@@ -37,6 +37,16 @@ struct publish
     using type = decltype(Methods::methods);
     static constexpr auto size = std::tuple_size_v<type>;
     static constexpr grouping mode = Mode;
+
+    /// The set of method names, for configuration validation.
+    static constexpr auto names = []<size_t... Index>(
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        return std::array<std::string_view, size>
+        {
+            std::tuple_element_t<Index, type>::name...
+        };
+    }(std::make_index_sequence<size>{});
 };
 
 template <auto& Methods, size_t Index>

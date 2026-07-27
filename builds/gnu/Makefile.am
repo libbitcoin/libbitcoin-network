@@ -60,6 +60,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/channels/channel_peer.cpp \
     ${srcdir}/../../src/config/address.cpp \
     ${srcdir}/../../src/config/authority.cpp \
+    ${srcdir}/../../src/config/credential.cpp \
     ${srcdir}/../../src/config/endpoint.cpp \
     ${srcdir}/../../src/config/utilities.cpp \
     ${srcdir}/../../src/log/capture.cpp \
@@ -271,6 +272,7 @@ include_bitcoin_network_config_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/config/address.hpp \
     ${srcdir}/../../include/bitcoin/network/config/authority.hpp \
     ${srcdir}/../../include/bitcoin/network/config/config.hpp \
+    ${srcdir}/../../include/bitcoin/network/config/credential.hpp \
     ${srcdir}/../../include/bitcoin/network/config/endpoint.hpp \
     ${srcdir}/../../include/bitcoin/network/config/utilities.hpp
 
@@ -698,6 +700,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/channels/channel_rpc.cpp \
     ${srcdir}/../../test/config/address.cpp \
     ${srcdir}/../../test/config/authority.cpp \
+    ${srcdir}/../../test/config/credential.cpp \
     ${srcdir}/../../test/config/endpoint.cpp \
     ${srcdir}/../../test/config/utilities.cpp \
     ${srcdir}/../../test/log/timer.cpp \
