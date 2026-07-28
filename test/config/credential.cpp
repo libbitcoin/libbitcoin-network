@@ -35,6 +35,8 @@ constexpr auto test_empty_digest = system::base16_array("d9fa291efa0c924851f3ea1
 BOOST_AUTO_TEST_CASE(credential__construct__default__empty)
 {
     const credential instance{};
+    BOOST_REQUIRE(instance.username().empty());
+    BOOST_REQUIRE(instance.password().empty());
     BOOST_REQUIRE(instance.methods().empty());
     BOOST_REQUIRE_EQUAL(instance.digest(), system::hash_digest{});
 }
@@ -52,6 +54,8 @@ BOOST_AUTO_TEST_CASE(credential__construct__overtokenized__throws_invalid_option
 BOOST_AUTO_TEST_CASE(credential__construct__empty_tokens__expected_digest)
 {
     const credential instance{ ":" };
+    BOOST_REQUIRE(instance.username().empty());
+    BOOST_REQUIRE(instance.password().empty());
     BOOST_REQUIRE(instance.methods().empty());
     BOOST_REQUIRE_EQUAL(instance.digest(), test_empty_digest);
 }
@@ -59,6 +63,8 @@ BOOST_AUTO_TEST_CASE(credential__construct__empty_tokens__expected_digest)
 BOOST_AUTO_TEST_CASE(credential__construct__unmethoded__expected_digest)
 {
     const credential instance{ "username:password" };
+    BOOST_REQUIRE_EQUAL(instance.username(), "username");
+    BOOST_REQUIRE_EQUAL(instance.password(), "password");
     BOOST_REQUIRE(instance.methods().empty());
     BOOST_REQUIRE_EQUAL(instance.digest(), test_digest);
 }
@@ -66,6 +72,8 @@ BOOST_AUTO_TEST_CASE(credential__construct__unmethoded__expected_digest)
 BOOST_AUTO_TEST_CASE(credential__construct__methoded__expected_digest)
 {
     const credential instance{ "username:password:getblock,getblockcount" };
+    BOOST_REQUIRE_EQUAL(instance.username(), "username");
+    BOOST_REQUIRE_EQUAL(instance.password(), "password");
     BOOST_REQUIRE_EQUAL(instance.digest(), test_digest);
     BOOST_REQUIRE_EQUAL(instance.methods().size(), 2u);
     BOOST_REQUIRE_EQUAL(instance.methods().front(), "getblock");
