@@ -42,6 +42,16 @@ credential::credential(const std::string& value) THROWS
 // Properties.
 // ----------------------------------------------------------------------------
 
+const std::string& credential::username() const NOEXCEPT
+{
+    return username_;
+}
+
+const std::string& credential::password() const NOEXCEPT
+{
+    return password_;
+}
+
 const hash_digest& credential::digest() const NOEXCEPT
 {
     return digest_;

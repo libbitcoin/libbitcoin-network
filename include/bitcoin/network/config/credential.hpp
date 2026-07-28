@@ -43,6 +43,12 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
+    /// The user name.
+    const std::string& username() const NOEXCEPT;
+
+    /// The password.
+    const std::string& password() const NOEXCEPT;
+
     /// Digest of the implied http basic authorization header value.
     const system::hash_digest& digest() const NOEXCEPT;
 
