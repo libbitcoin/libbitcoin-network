@@ -46,7 +46,7 @@ inline deadline::ptr make_timer(const logger& log, asio::strand& strand,
 channel::channel(const logger& log, const socket::ptr& socket,
     uint64_t identifier, const settings_t& settings,
     const options_t& options) NOEXCEPT
-  : proxy(socket),
+  : proxy(socket, settings.rate_limit),
     options_(options),
     settings_(settings),
     identifier_(identifier),
@@ -112,7 +112,9 @@ void channel::handle_monitor(const code& ec) NOEXCEPT
 
 // Timers.
 // ----------------------------------------------------------------------------
-// TODO: build DoS protection around rate_limit_, total(), and time.
+// Send throttling (settings.rate_limit) is implemented by the proxy. A channel
+// whose accrued deferral exceeds inactivity is dropped by that timer, which is
+// the intended outcome (the throttle degrades to disconnection under abuse).
 // A restarted timer invokes completion handler with error::operation_canceled.
 // Called from start or strand.
 

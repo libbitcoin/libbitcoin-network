@@ -28,6 +28,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/socket.hpp>
 
 namespace libbitcoin {
@@ -40,6 +41,11 @@ namespace network {
 /// Completion handler is invoked once write is complete, at which point the
 /// next queued write is invoked. When a channel stops with pending writes the
 /// write queue is purged without invoke of the purged handlers.
+/// Each send is allocated (bytes/rate_limit) of time, and its completion is
+/// deferred by whatever portion of that allocation the write did not consume.
+/// Since nothing is produced until the completion handler is invoked, this
+/// throttles the channel without queueing. Reads are not metered, as they are
+/// bounded by protocol correctness. Zero rate_limit disables the throttle.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, public reporter
 {
@@ -111,7 +117,7 @@ public:
     const config::endpoint& endpoint() const NOEXCEPT;
 
 protected:
-    proxy(const socket::ptr& socket) NOEXCEPT;
+    proxy(const socket::ptr& socket, uint32_t rate_limit) NOEXCEPT;
 
     /// Stranded event, allows timer reset.
     virtual void reading() NOEXCEPT;
@@ -121,6 +127,15 @@ protected:
 
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;
+
+    /// Throttle.
+    /// -----------------------------------------------------------------------
+
+    /// Unconsumed portion of the byte allocation, by which a send completing
+    /// now is deferred. Zero if unlimited, stopped, or fully consumed by the
+    /// transmission (requires strand).
+    steady_clock::duration unconsumed(size_t bytes,
+        const steady_clock::time_point& start) const NOEXCEPT;
 
     /// Wait.
     /// -----------------------------------------------------------------------
@@ -243,15 +258,25 @@ private:
     void handle_write(const code& ec, size_t bytes,
         const count_handler& handler) NOEXCEPT;
 
+    // Meter sent bytes and defer the completion by the unconsumed allocation.
+    count_handler metered(count_handler&& handler) NOEXCEPT;
+    void handle_metered(const code& ec, size_t bytes,
+        const steady_clock::time_point& start,
+        const count_handler& handler) NOEXCEPT;
+    void handle_charge(const code&, const code& ec, size_t bytes,
+        const count_handler& handler) NOEXCEPT;
+
     // Invoke reading() on strand.
     void do_reading() NOEXCEPT;
 
     // These are thread safe.
     std::atomic_bool paused_{ true };
     std::atomic<uint64_t> total_{};
+    const uint32_t rate_limit_;
     socket::ptr socket_;
 
     // These are protected by strand.
+    deadline::ptr throttle_;
     stop_subscriber stop_subscriber_{};
     socket::http_parser_ptr parser_{};
     queue deferred_{};

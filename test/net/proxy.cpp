@@ -30,12 +30,89 @@ public:
         proxy::subscribe_stop(std::move(handler));
     }
 
+    // Call must be stranded.
+    steady_clock::duration unconsumed1(size_t bytes,
+        const steady_clock::time_point& start) const NOEXCEPT
+    {
+        return proxy::unconsumed(bytes, start);
+    }
+
     // Access protected constructor.
-    mock_proxy(const socket::ptr& socket) NOEXCEPT
-      : proxy(socket)
+    mock_proxy(const socket::ptr& socket, uint32_t rate_limit=0) NOEXCEPT
+      : proxy(socket, rate_limit)
     {
     }
 };
+
+// Obtain the deferral for a send of bytes that started at the given offset.
+static milliseconds get_unconsumed(uint32_t rate_limit, size_t bytes,
+    const steady_clock::duration& elapsed) NOEXCEPT
+{
+    const logger log{};
+    threadpool pool(1);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, rate_limit);
+
+    std::promise<milliseconds> deferral;
+    boost::asio::post(proxy_ptr->strand(), [=, &deferral]() NOEXCEPT
+    {
+        deferral.set_value(std::chrono::duration_cast<milliseconds>(
+            proxy_ptr->unconsumed1(bytes, steady_clock::now() - elapsed)));
+    });
+
+    const auto result = deferral.get_future().get();
+    proxy_ptr->stop(error::invalid_magic);
+    pool.stop();
+    return result;
+}
+
+BOOST_AUTO_TEST_CASE(proxy__unconsumed__unlimited__zero)
+{
+    BOOST_REQUIRE_EQUAL(get_unconsumed(0, 1000, seconds(0)), milliseconds(0));
+}
+
+BOOST_AUTO_TEST_CASE(proxy__unconsumed__untransmitted__full_allocation)
+{
+    // 1000 bytes at 1000 bytes/second is allocated one second, unconsumed.
+    const auto deferral = get_unconsumed(1000, 1000, seconds(0));
+    BOOST_REQUIRE_GT(deferral, milliseconds(900));
+    BOOST_REQUIRE_LE(deferral, milliseconds(1000));
+}
+
+BOOST_AUTO_TEST_CASE(proxy__unconsumed__partly_transmitted__remainder)
+{
+    // Transmission consumed 250ms of the 1000ms allocation.
+    const auto deferral = get_unconsumed(1000, 1000, milliseconds(250));
+    BOOST_REQUIRE_GT(deferral, milliseconds(650));
+    BOOST_REQUIRE_LE(deferral, milliseconds(750));
+}
+
+BOOST_AUTO_TEST_CASE(proxy__unconsumed__fully_transmitted__zero)
+{
+    // Transmission was slower than the rate limit, so there is nothing to add.
+    BOOST_REQUIRE_EQUAL(get_unconsumed(1000, 1000, seconds(2)),
+        milliseconds(0));
+}
+
+BOOST_AUTO_TEST_CASE(proxy__unconsumed__stopped__zero)
+{
+    const logger log{};
+    threadpool pool(1);
+    socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 1000);
+    proxy_ptr->stop(error::invalid_magic);
+
+    std::promise<steady_clock::duration::rep> deferral;
+    boost::asio::post(proxy_ptr->strand(), [=, &deferral]() NOEXCEPT
+    {
+        deferral.set_value(
+            proxy_ptr->unconsumed1(1000, steady_clock::now()).count());
+    });
+
+    BOOST_REQUIRE_EQUAL(deferral.get_future().get(), 0);
+}
 
 BOOST_AUTO_TEST_CASE(proxy__paused__default__true)
 {
