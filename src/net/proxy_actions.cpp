@@ -73,8 +73,8 @@ void proxy::do_ws_write(const asio::const_buffer& payload, bool binary,
     const count_handler& handler) NOEXCEPT
 {
     socket_->ws_write({ payload.data(), payload.size() }, binary,
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
+        metered(std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler)));
 }
 
 //  TCP (generic, fixed size).
@@ -103,8 +103,8 @@ void proxy::do_tcp_write(const asio::const_buffer& payload,
     const count_handler& handler) NOEXCEPT
 {
     socket_->tcp_write({ payload.data(), payload.size() },
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
+        metered(std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler)));
 }
 
 // RPC (TCP: electrum/stratum_v1, WS: btcd).
@@ -256,8 +256,8 @@ void proxy::do_response_write(const rpc::response_ptr& response,
     }
 
     socket_->rpc_write(std::move(*response),
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
+        metered(std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler)));
 }
 
 // private
@@ -265,8 +265,8 @@ void proxy::do_notification_write(const rpc::request_ptr& notification,
     const count_handler& handler) NOEXCEPT
 {
     socket_->rpc_notify(std::move(*notification),
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
+        metered(std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler)));
 }
 
 // HTTP/WS (generic/rpc).
@@ -466,7 +466,8 @@ void proxy::write(http::response&& response,
 
         if (parted_)
         {
-            socket_->rpc_write_chunk(std::move(part), std::move(handler));
+            socket_->rpc_write_chunk(std::move(part),
+                metered(std::move(handler)));
             return;
         }
 
@@ -477,13 +478,13 @@ void proxy::write(http::response&& response,
 
         const auto out = move_shared(std::move(part));
         socket_->http_write_header(std::move(response),
-            std::bind(&proxy::handle_http_header_write,
-                shared_from_this(), _1, _2, out, std::move(handler)));
+            metered(std::bind(&proxy::handle_http_header_write,
+                shared_from_this(), _1, _2, out, std::move(handler))));
         return;
     }
 
     // http is half duplex so there is no interleave risk.
-    socket_->http_write(std::move(response), std::move(handler));
+    socket_->http_write(std::move(response), metered(std::move(handler)));
 }
 
 // private
@@ -498,7 +499,7 @@ void proxy::handle_http_header_write(const code& ec, size_t bytes,
         return;
     }
 
-    socket_->rpc_write_chunk(std::move(*part), move_copy(handler));
+    socket_->rpc_write_chunk(std::move(*part), metered(move_copy(handler)));
 }
 
 // private
@@ -506,8 +507,8 @@ void proxy::do_http_write(const http::response_ptr& response,
     const count_handler& handler) NOEXCEPT
 {
     socket_->http_write(std::move(*response),
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
+        metered(std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler)));
 }
 
 BC_POP_WARNING()

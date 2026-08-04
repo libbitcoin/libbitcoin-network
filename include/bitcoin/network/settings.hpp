@@ -75,6 +75,10 @@ struct BCT_API settings
         uint32_t maximum_request{ maximum_request_default };
         uint32_t minimum_buffer{ maximum_request_default };
 
+        /// Service send rate limit, overlapping the network rate limit (see
+        /// settings::rate_limited). Zero is unlimited.
+        uint32_t rate_limit{ 0 };
+
         /// Helpers.
         virtual bool enabled() const NOEXCEPT;
         virtual steady_clock::duration inactivity() const NOEXCEPT;
@@ -297,7 +301,12 @@ struct BCT_API settings
     uint32_t handshake_timeout_seconds{ 15 };
     uint32_t channel_heartbeat_minutes{ 5 };
     uint32_t maximum_skew_minutes{ 120 };
-    uint32_t rate_limit{ 1024  };
+
+    /// Bytes/second allocated to each channel for sending, zero is unlimited.
+    /// A send is deferred by the unconsumed portion of its byte allocation,
+    /// which the next send of the channel cannot start until it expires.
+    /// Overlaps tcp_server::rate_limit (see settings::rate_limited).
+    uint32_t rate_limit{ 0 };
     std::string user_agent{ BC_USER_AGENT };
     std::filesystem::path path{};
     config::authorities blacklists{};

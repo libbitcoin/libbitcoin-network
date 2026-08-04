@@ -28,11 +28,21 @@ namespace network {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// Factory for variable deadline timer pointer construction (or null).
+inline deadline::ptr make_throttle(const logger& log, asio::strand& strand,
+    uint32_t rate_limit) NOEXCEPT
+{
+    return to_bool(rate_limit) ?
+        system::emplace_shared<deadline>(log, strand) : nullptr;
+}
+
 // This is created in a started state and must be stopped, as the subscribers
 // assert if not stopped. Subscribers may hold protocols even if the service
 // is not started.
-proxy::proxy(const socket::ptr& socket) NOEXCEPT
-  : socket_(socket),
+proxy::proxy(const socket::ptr& socket, uint32_t rate_limit) NOEXCEPT
+  : rate_limit_(rate_limit),
+    socket_(socket),
+    throttle_(make_throttle(socket->log, socket->strand(), rate_limit)),
     reporter(socket->log)
 {
 }
@@ -74,6 +84,10 @@ void proxy::do_stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
     using namespace std::placeholders;
+
+    // The socket is not yet stopped, so a deferred send still holds the queue.
+    // Release it here so that the close part is not delayed by the throttle.
+    if (throttle_) throttle_->stop();
 
     batched_ = false;
     parted_ = false;
@@ -137,6 +151,9 @@ void proxy::finish_stop(const code& ec) NOEXCEPT
 void proxy::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    // Release any deferred send (fires pending charge with canceled).
+    if (throttle_) throttle_->stop();
 
     // Release any http message parse in progress.
     parser_.reset();

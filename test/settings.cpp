@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
-    BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
+    BOOST_REQUIRE_EQUAL(instance.rate_limit, 0u);
     BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BOOST_REQUIRE(instance.path.empty());
     BOOST_REQUIRE(instance.blacklists.empty());
@@ -356,6 +356,7 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
     BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
+    BOOST_REQUIRE_EQUAL(instance.rate_limit, 0u);
     BOOST_REQUIRE(!instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));

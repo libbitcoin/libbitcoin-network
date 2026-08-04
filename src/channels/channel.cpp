@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/channels/channel.hpp>
 
+#include <algorithm>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -41,12 +42,21 @@ inline deadline::ptr make_timer(const logger& log, asio::strand& strand,
         emplace_shared<deadline>(log, strand, span) : nullptr;
 }
 
+// protected/static
+uint32_t channel::rate_limited(const settings_t& settings,
+    const options_t& options) NOEXCEPT
+{
+    return to_bool(settings.rate_limit) && to_bool(options.rate_limit) ?
+        std::min(settings.rate_limit, options.rate_limit) :
+        std::max(settings.rate_limit, options.rate_limit);
+}
+
 // Protocols invoke channel stop for application layer protocol violations.
 // Channels invoke channel stop for channel timouts and communcation failures.
 channel::channel(const logger& log, const socket::ptr& socket,
     uint64_t identifier, const settings_t& settings,
     const options_t& options) NOEXCEPT
-  : proxy(socket),
+  : proxy(socket, rate_limited(settings, options)),
     options_(options),
     settings_(settings),
     identifier_(identifier),
@@ -112,7 +122,9 @@ void channel::handle_monitor(const code& ec) NOEXCEPT
 
 // Timers.
 // ----------------------------------------------------------------------------
-// TODO: build DoS protection around rate_limit_, total(), and time.
+// Send throttling (settings.rate_limit) is implemented by the proxy. A channel
+// whose accrued deferral exceeds inactivity is dropped by that timer, which is
+// the intended outcome (the throttle degrades to disconnection under abuse).
 // A restarted timer invokes completion handler with error::operation_canceled.
 // Called from start or strand.
 
