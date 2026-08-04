@@ -31,7 +31,55 @@ struct accessor
       : channel(log, socket, identifier, settings, options)
     {
     }
+
+    static uint32_t rate_limited1(const network::settings& settings,
+        const channel::options_t& options) NOEXCEPT
+    {
+        return channel::rate_limited(settings, options);
+    }
 };
+
+// rate_limited
+
+BOOST_AUTO_TEST_CASE(channel__rate_limited__both_zero__zero)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.rate_limit = 0;
+    set.outbound.rate_limit = 0;
+    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(channel__rate_limited__network_zero__service)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.rate_limit = 0;
+    set.outbound.rate_limit = 42;
+    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 42u);
+}
+
+BOOST_AUTO_TEST_CASE(channel__rate_limited__service_zero__network)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.rate_limit = 42;
+    set.outbound.rate_limit = 0;
+    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 42u);
+}
+
+BOOST_AUTO_TEST_CASE(channel__rate_limited__network_lesser__network)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.rate_limit = 24;
+    set.outbound.rate_limit = 42;
+    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 24u);
+}
+
+BOOST_AUTO_TEST_CASE(channel__rate_limited__service_lesser__service)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.rate_limit = 42;
+    set.outbound.rate_limit = 24;
+    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 24u);
+}
 
 BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
 {

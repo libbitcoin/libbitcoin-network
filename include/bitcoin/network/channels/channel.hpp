@@ -93,6 +93,12 @@ public:
     const options_t& options() const NOEXCEPT;
 
 protected:
+    /// The network and service rate limits overlap, so the more restrictive
+    /// applies. Zero is unlimited, and therefore the less restrictive, so the
+    /// maximum applies if either is zero (zero only if both are zero).
+    static uint32_t rate_limited(const settings_t& settings,
+        const options_t& options) NOEXCEPT;
+
     /// Construct a channel to encapsulated and communicate on the socket.
     channel(const logger& log, const socket::ptr& socket, uint64_t identifier,
         const settings_t& settings, const options_t& options) NOEXCEPT;
