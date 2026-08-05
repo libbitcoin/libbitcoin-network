@@ -130,7 +130,9 @@ void channel_http::dispatch(const request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (!authorized())
+    // Basic authorization is carried by http headers. ws frames carry none,
+    // so ws authorization is dispatched to the protocol with the message.
+    if (!websocket() && !authorized())
     {
         send({ status::unauthorized, request->version() },
             std::bind(&channel_http::handle_unauthorized,
@@ -290,17 +292,24 @@ bool channel_http::authorized() const NOEXCEPT
     return authorized_;
 }
 
-void channel_http::set_authorized(const request& request) NOEXCEPT
+void channel_http::set_authorized(const hash_digest& digest) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     if (!authorized_)
     {
-        const auto digest = sha256_hash(request[field::authorization]);
         authorized_ = options_.authorized(digest);
         if (authorized_)
             digest_ = digest;
     }
+}
+
+void channel_http::set_authorized(const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (!authorized_)
+        set_authorized(sha256_hash(request[field::authorization]));
 }
 
 bool channel_http::permitted(const std::string& method) const NOEXCEPT

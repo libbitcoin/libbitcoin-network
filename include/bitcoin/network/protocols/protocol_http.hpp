@@ -127,6 +127,12 @@ protected:
     /// True if the authorized credential permits the rpc method.
     bool permitted(const std::string& method) const NOEXCEPT;
 
+    /// True if basic authorization is not required or has been satisfied.
+    bool authorized() const NOEXCEPT;
+
+    /// Latch authorization from credential digest.
+    void set_authorized(const system::hash_digest& digest) NOEXCEPT;
+
 private:
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
