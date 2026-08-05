@@ -81,6 +81,12 @@ public:
     /// True if the authorized credential permits the rpc method.
     virtual bool permitted(const std::string& method) const NOEXCEPT;
 
+    /// True if basic authorization is not required or has been satisfied.
+    virtual bool authorized() const NOEXCEPT;
+
+    /// Latch authorization from credential digest (requires strand).
+    virtual void set_authorized(const system::hash_digest& digest) NOEXCEPT;
+
 protected:
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
@@ -90,9 +96,6 @@ protected:
 
     /// Override to set default websocket reader body.
     virtual http::body::value_type websocket_body() const NOEXCEPT;
-
-    /// True if basic authorization is not required or has been satisfied.
-    virtual bool authorized() const NOEXCEPT;
 
     /// Latch authorization from request headers (requires strand).
     virtual void set_authorized(const http::request& request) NOEXCEPT;

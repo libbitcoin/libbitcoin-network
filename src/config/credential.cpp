@@ -70,6 +70,14 @@ bool credential::permitted(const std::string& method) const NOEXCEPT
     return methods_.empty() || contains(methods_, method);
 }
 
+hash_digest credential::to_digest(const std::string& username,
+    const std::string& password) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return sha256_hash("Basic " + encode_base64(username + ":" + password));
+    BC_POP_WARNING()
+}
+
 std::string credential::to_string() const NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -98,10 +106,8 @@ std::istream& operator>>(std::istream& input, credential& argument) THROWS
     if (tokens.size() == add1(two) && !tokens.back().empty())
         argument.methods_ = split(tokens.back(), ",");
 
-    const auto header = "Basic " + encode_base64(argument.username_ + ":" +
+    argument.digest_ = credential::to_digest(argument.username_,
         argument.password_);
-
-    argument.digest_ = sha256_hash(header);
     return input;
 }
 

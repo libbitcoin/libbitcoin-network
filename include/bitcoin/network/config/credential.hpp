@@ -61,6 +61,10 @@ public:
     /// True if methods is empty or contains the method.
     bool permitted(const std::string& method) const NOEXCEPT;
 
+    /// Digest of the http basic authorization header implied by the values.
+    static system::hash_digest to_digest(const std::string& username,
+        const std::string& password) NOEXCEPT;
+
     /// The value is of the form: username:password[:method[,method]...].
     std::string to_string() const NOEXCEPT;
 

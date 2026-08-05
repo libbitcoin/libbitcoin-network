@@ -449,6 +449,16 @@ bool protocol_http::permitted(const std::string& method) const NOEXCEPT
     return channel_->permitted(method);
 }
 
+bool protocol_http::authorized() const NOEXCEPT
+{
+    return channel_->authorized();
+}
+
+void protocol_http::set_authorized(const system::hash_digest& digest) NOEXCEPT
+{
+    channel_->set_authorized(digest);
+}
+
 BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()
