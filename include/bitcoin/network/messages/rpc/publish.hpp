@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
 
+#include <array>
 #include <tuple>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>
@@ -42,6 +43,49 @@ struct publish
 template <auto& Methods, size_t Index>
 using method_at = std::tuple_element_t<Index,
     std::remove_reference_t<decltype(Methods)>>;
+
+BC_PUSH_WARNING(NO_ARRAY_INDEXING)
+
+/// The implemented method names, space delimited, in interface order.
+/// Unimplemented methods are dispatchable but not published.
+template <auto& Methods>
+constexpr auto method_names() NOEXCEPT
+{
+    constexpr auto size = []() NOEXCEPT
+    {
+        size_t total{};
+        std::apply([&](const auto&... items) NOEXCEPT
+        {
+            ((total += items.implemented() ? add1(items.name.size()) :
+                zero), ...);
+        }, Methods);
+
+        return is_zero(total) ? total : sub1(total);
+    }();
+
+    size_t at{};
+    std::array<char, size> out{};
+    std::apply([&](const auto&... items) NOEXCEPT
+    {
+        const auto append = [&](const auto& item) NOEXCEPT
+        {
+            if (!item.implemented())
+                return;
+
+            if (!is_zero(at))
+                out[at++] = ' ';
+
+            for (const auto character: item.name)
+                out[at++] = character;
+        };
+
+        (append(items), ...);
+    }, Methods);
+
+    return out;
+}
+
+BC_POP_WARNING()
 
 } // namespace rpc
 } // namespace network

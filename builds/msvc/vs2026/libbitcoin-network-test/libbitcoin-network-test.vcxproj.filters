@@ -363,6 +363,9 @@
     <ClCompile Include="..\..\..\..\test\messages\rpc\method.cpp">
       <Filter>src\messages\rpc</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\publish.cpp">
+      <Filter>src\messages\rpc</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp">
       <Filter>src\messages\rpc</Filter>
     </ClCompile>
