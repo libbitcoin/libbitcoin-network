@@ -47,6 +47,12 @@ BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
 /// the same public signature while being bound by a unqiue argument list. The
 /// notifier always injects a code as the zeroth argument. This must also be
 /// provided by the method handler. So a minimal handler always has two args.
+
+/// A method may be declared unimplemented, which excludes it from the
+/// published names while leaving it dispatchable (recognized and refused).
+struct unimplemented_t {};
+constexpr unimplemented_t unimplemented{};
+
 template <text_t Text, typename ...Args>
 struct method
 {
@@ -62,7 +68,7 @@ struct method
 
     /// Required for construction of tag{} and passage of default value.
     inline constexpr method() NOEXCEPT
-      : names_{}
+      : implemented_(true), names_{}
     {
     }
 
@@ -71,7 +77,16 @@ struct method
         bool_if<std::conjunction_v<std::is_convertible<std::decay_t<Names>,
             std::string_view>...>> = true>
     inline constexpr method(Names&&... names) NOEXCEPT
-      : names_{ std::forward<Names>(names)... }
+      : implemented_(true), names_{ std::forward<Names>(names)... }
+    {
+    }
+
+    /// Defines an unimplemented method assignable to an rpc interface.
+    template <typename ...Names, if_equal<sizeof...(Names), size> = true,
+        bool_if<std::conjunction_v<std::is_convertible<std::decay_t<Names>,
+            std::string_view>...>> = true>
+    inline constexpr method(unimplemented_t, Names&&... names) NOEXCEPT
+      : implemented_(false), names_{ std::forward<Names>(names)... }
     {
     }
 
@@ -81,7 +96,14 @@ struct method
         return names_;
     }
 
+    /// The method is dispatchable but not served.
+    inline constexpr bool implemented() const NOEXCEPT
+    {
+        return implemented_;
+    }
+
 private:
+    const bool implemented_;
     const names names_;
 };
 

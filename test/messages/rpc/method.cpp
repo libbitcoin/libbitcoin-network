@@ -85,11 +85,21 @@ static_assert(is_same_type<method_t<2, test_methods0>, method2>);
 // method<>
 // -----------------------------------------------------------------------------
 
-static_assert(is_same_type<method<"test2">, method<"test2">>);
+static_assert( is_same_type<method<"test2">, method<"test2">>);
 static_assert(!is_same_type<method<"test1">, method<"test2">>);
 static_assert(!is_same_type<method<"test1", bool>, method<"test1", int>>);
 static_assert(!is_same_type<method<"test1", bool>, method<"test2", bool>>);
-static_assert(is_same_type<method<"test1", bool>, method<"test1", bool>>);
+static_assert( is_same_type<method<"test1", bool>, method<"test1", bool>>);
+
+// method<>::implemented
+// -----------------------------------------------------------------------------
+
+static_assert( method<"test1">{}.implemented());
+static_assert( method<"test1", bool>{ "flag" }.implemented());
+static_assert(!method<"test1">{ unimplemented }.implemented());
+static_assert(!method<"test1", bool>{ unimplemented, "flag" }.implemented());
+static_assert( method<"test1", bool>{ unimplemented, "flag" }.parameter_names().front() == "flag");
+static_assert(is_same_type<decltype(method<"test1", bool>{ "flag" }), decltype(method<"test1", bool>{ unimplemented, "flag" })>);
 
 // names_t<>
 // -----------------------------------------------------------------------------

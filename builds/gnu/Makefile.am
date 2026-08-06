@@ -765,6 +765,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/messages/rpc/broadcaster.cpp \
     ${srcdir}/../../test/messages/rpc/dispatcher.cpp \
     ${srcdir}/../../test/messages/rpc/method.cpp \
+    ${srcdir}/../../test/messages/rpc/publish.cpp \
     ${srcdir}/../../test/messages/rpc/types.cpp \
     ${srcdir}/../../test/net/acceptor.cpp \
     ${srcdir}/../../test/net/connector.cpp \
