@@ -114,6 +114,10 @@ public:
     /// WS (generic, framed).
     /// -----------------------------------------------------------------------
 
+    /// Accept a read upgrade request, switching the socket to websocket
+    /// framing (requires strand). Refusal is an http response (no state).
+    virtual code accept_websocket(const http::request& request) NOEXCEPT;
+
     /// Read framed message from websocket, handler posted to socket strand.
     virtual void ws_read(http::flat_buffer& out,
         count_handler&& handler) NOEXCEPT;
@@ -484,7 +488,6 @@ private:
     // utility
     // ------------------------------------------------------------------------
 
-    code set_websocket(const http::request& request) NOEXCEPT;
     void logx(const std::string& context, const boost_code& ec) const NOEXCEPT;
 
 protected:

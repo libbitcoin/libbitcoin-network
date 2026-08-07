@@ -326,7 +326,10 @@ void proxy::handle_http_header(const code& ec, size_t bytes,
 
     if (ec)
     {
-        // Includes error::upgraded (channel restarts read as websocket).
+        // The upgrade request is published, the channel accepts or refuses.
+        if (ec == error::upgrade)
+            request.get() = parser_->release();
+
         parser_.reset();
         handler(ec, bytes);
         return;

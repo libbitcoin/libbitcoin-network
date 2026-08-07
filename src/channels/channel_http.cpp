@@ -93,11 +93,29 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
         return;
     }
 
-    if (ec == error::upgraded)
+    if (ec == error::upgrade)
     {
-        // Don't dispatch the upgrade request, just authorize and restart.
+        // Basic authorization is carried by the upgrade request headers.
         set_authorized(*request);
         reading_ = false;
+
+        // Refuse an unauthorized upgrade unless authorization is in-band.
+        if (!authorized() && !in_band_)
+        {
+            send({ status::unauthorized, request->version() },
+                std::bind(&channel_http::handle_unauthorized,
+                    shared_from_base<channel_http>(), _1));
+            return;
+        }
+
+        // Accept sends the 101 and switches the socket to ws framing.
+        // Don't dispatch the upgrade request, just accept and restart.
+        if (const auto code = accept_websocket(*request))
+        {
+            stop(code);
+            return;
+        }
+
         receive();
         return;
     }

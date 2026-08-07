@@ -73,9 +73,9 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
 
     if (!ec && boost::beast::websocket::is_upgrade(parser->get()))
     {
-        // Publish the upgrade request (headers required for authorization).
+        // Publish the upgrade request, the channel accepts or refuses it.
         request.get() = parser->release();
-        handler(set_websocket(request.get()), size);
+        handler(error::upgrade, size);
         return;
     }
 
@@ -192,7 +192,7 @@ void socket::handle_http_read_header(const boost_code& ec, size_t size,
 
     if (!ec && boost::beast::websocket::is_upgrade(parser.get().get()))
     {
-        handler(set_websocket(parser.get().get()), size);
+        handler(error::upgrade, size);
         return;
     }
 
