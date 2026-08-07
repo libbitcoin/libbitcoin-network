@@ -56,7 +56,7 @@ enum service: uint64_t
     node_network_limited = system::bit_right<uint64_t>(10),
 
     /// Independent of network protocol level.
-    /// Opportunistic encryption of net protocol (no intent to support).
+    /// The node is capable of bip324 (v2) encrypted transport.
     node_encrypted_transport = system::bit_right<uint64_t>(11),
 
     /// The minimum supported capability.
