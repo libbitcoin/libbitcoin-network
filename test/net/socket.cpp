@@ -281,31 +281,26 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
     response->result(boost::beast::http::status::ok);
     response->body() = std::move(content);
 
+    const auto accept_result = std::make_shared<std::promise<code>>();
     const auto upgrade_result = std::make_shared<std::promise<code>>();
+    const auto switch_result = std::make_shared<std::promise<code>>();
     const auto write_result = std::make_shared<std::promise<code>>();
+    auto accept_future = accept_result->get_future();
     auto upgrade_future = upgrade_result->get_future();
+    auto switch_future = switch_result->get_future();
     auto write_future = write_result->get_future();
 
+    // Each stage records unconditionally, results asserted after join.
     server->accept(acceptor,
         [=](const code& accept_ec) mutable
         {
-            if (accept_ec)
-            {
-                upgrade_result->set_value(accept_ec);
-                write_result->set_value(accept_ec);
-                return;
-            }
-
+            accept_result->set_value(accept_ec);
             server->http_read(*buffer, *request,
                 [=](const code& read_ec, size_t) mutable
                 {
+                    // The upgrade request is published, accept sends the 101.
                     upgrade_result->set_value(read_ec);
-                    if (read_ec != error::upgraded)
-                    {
-                        write_result->set_value(read_ec);
-                        return;
-                    }
-
+                    switch_result->set_value(server->accept_websocket(*request));
                     server->body_write(std::move(*response),
                         [=](const code& write_ec, size_t) NOEXCEPT
                         {
@@ -334,8 +329,12 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
     const auto received = boost::beast::buffers_to_string(read_buffer.data());
     BOOST_REQUIRE_EQUAL(received, expected);
 
+    BOOST_REQUIRE(accept_future.wait_for(2s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(accept_future.get(), error::success);
     BOOST_REQUIRE(upgrade_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(upgrade_future.get(), error::upgraded);
+    BOOST_REQUIRE_EQUAL(upgrade_future.get(), error::upgrade);
+    BOOST_REQUIRE(switch_future.wait_for(2s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(switch_future.get(), error::success);
     BOOST_REQUIRE(write_future.wait_for(2s) == std::future_status::ready);
     BOOST_REQUIRE_EQUAL(write_future.get(), error::success);
 

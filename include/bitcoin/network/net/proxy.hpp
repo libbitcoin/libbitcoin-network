@@ -119,6 +119,9 @@ public:
 protected:
     proxy(const socket::ptr& socket, uint32_t rate_limit) NOEXCEPT;
 
+    /// Accept a websocket upgrade request (requires strand).
+    code accept_websocket(const http::request& request) NOEXCEPT;
+
     /// Stranded event, allows timer reset.
     virtual void reading() NOEXCEPT;
 

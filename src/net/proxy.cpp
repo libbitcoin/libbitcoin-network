@@ -270,6 +270,11 @@ bool proxy::websocket() const NOEXCEPT
     return socket_->websocket();
 }
 
+code proxy::accept_websocket(const http::request& request) NOEXCEPT
+{
+    return socket_->accept_websocket(request);
+}
+
 uint64_t proxy::total() const NOEXCEPT
 {
     return total_.load(std::memory_order_relaxed);

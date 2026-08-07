@@ -42,6 +42,7 @@ enum error_t : uint8_t
 {
     success,
     unknown,
+    upgrade,
     upgraded,
 
     // addresses

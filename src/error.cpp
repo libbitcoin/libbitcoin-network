@@ -30,6 +30,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
     { success, "success" },
     { unknown, "unknown error" },
+    { upgrade, "upgrade requested" },
     { upgraded, "upgraded" },
 
     // addresses

@@ -52,11 +52,13 @@ public:
     }
 
     /// Construct http channel to encapsulate and communicate on the socket.
+    /// An in-band service authorizes after upgrade, so its upgrade is open.
     inline channel_http(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
-        const options_t& options) NOEXCEPT
+        const options_t& options, bool in_band=false) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
         options_(options),
+        in_band_(in_band),
         response_buffer_(system::to_shared<http::flat_buffer>()),
         request_buffer_(options.minimum_buffer),
         authorized_(!options.authorize())
@@ -119,8 +121,9 @@ private:
     std::string log_message(const http::request& request,
         size_t bytes) const NOEXCEPT;
 
-    // This is thread safe.
+    // These are thread safe.
     const options_t& options_;
+    const bool in_band_;
 
     // These are protected by strand.
     http::flat_buffer_ptr response_buffer_;

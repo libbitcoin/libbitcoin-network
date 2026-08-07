@@ -126,9 +126,8 @@ void socket::handle_ws_event(ws::frame_type kind,
 // This is a unique aspect of websockets. Encodng is set to text by default.
 // This allows full generalization between tcp and websockets for json-rpc.
 
-// private
 // TODO: inject server name from config.
-code socket::set_websocket(const http::request& request) NOEXCEPT
+code socket::accept_websocket(const http::request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT(!websocket());
@@ -177,11 +176,11 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
         }
 
         websocket_.store(true);
-        return error::upgraded;
+        return error::success;
     }
     catch (const std::exception& e)
     {
-        LOGF("Exception @ set_websocket: " << e.what());
+        LOGF("Exception @ accept_websocket: " << e.what());
         return error::operation_failed;
     }
 }
