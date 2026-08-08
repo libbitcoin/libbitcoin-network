@@ -109,7 +109,7 @@ typedef std::vector<address> addresses;
 // TODO: define, advertise, and store proper URI, such as:
 // ipv4 uri: [btc://]1.2.3.4[:8333]
 // ipv6 uri: [btc://]\[ab:cd::30:40\][:8333]
-// name uri: [btc://]mainnet.libbitcoin.org[:8333]
+// name uri: [btc://]mainnet.libbitcoin.net[:8333]
 // [?name[=value][&name[=value]]...]
 // ?time=12345&version=700015&services=1033&sendaddrv2
 
