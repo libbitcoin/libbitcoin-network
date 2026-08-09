@@ -20,6 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_merkle_block_tests)
 
+using namespace bc::system;
 using namespace network::messages::peer;
 
 BOOST_AUTO_TEST_CASE(merkle_block__properties__always__expected)
@@ -38,6 +39,47 @@ BOOST_AUTO_TEST_CASE(merkle_block__size__default__expected)
         + variable_size(zero);
 
     BOOST_REQUIRE_EQUAL(merkle_block{}.size(level::canonical), expected);
+}
+
+// With a header present, size() must include the tx count, hashes, and flags,
+// not just the header (the terms trail a ternary and require grouping).
+BOOST_AUTO_TEST_CASE(merkle_block__size__with_header__includes_all_fields)
+{
+    const hashes branch{ one_hash, one_hash };
+    const data_chunk flags{ 0x1d };
+    const merkle_block instance
+    {
+        to_shared<chain::header>(), 42_u32, branch, flags
+    };
+
+    const auto expected = chain::header::serialized_size()
+        + sizeof(uint32_t)
+        + variable_size(branch.size()) + (branch.size() * hash_size)
+        + variable_size(flags.size()) + flags.size();
+
+    BOOST_REQUIRE_EQUAL(instance.size(level::canonical), expected);
+}
+
+// A populated merkle_block round-trips through its own wire form.
+BOOST_AUTO_TEST_CASE(merkle_block__serialize__with_header__round_trips)
+{
+    const hashes branch{ one_hash, one_hash };
+    const data_chunk flags{ 0x1d };
+    const merkle_block instance
+    {
+        to_shared<chain::header>(), 42_u32, branch, flags
+    };
+
+    const auto version = merkle_block::version_maximum;
+    data_chunk data(instance.size(version));
+    BOOST_REQUIRE(instance.serialize(version, data));
+
+    const auto message = merkle_block::deserialize(version, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(message->header);
+    BOOST_REQUIRE_EQUAL(message->transactions, 42_u32);
+    BOOST_REQUIRE_EQUAL(message->hashes, branch);
+    BOOST_REQUIRE_EQUAL(message->flags, flags);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

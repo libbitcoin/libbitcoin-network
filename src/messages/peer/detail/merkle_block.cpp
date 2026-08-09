@@ -100,7 +100,7 @@ void merkle_block::serialize(uint32_t BC_DEBUG_ONLY(version),
 
 size_t merkle_block::size(uint32_t) const NOEXCEPT
 {
-    return header ? header->serialized_size() : zero
+    return (header ? header->serialized_size() : zero)
         + sizeof(uint32_t)
         + variable_size(hashes.size()) + (hashes.size() * hash_size)
         + variable_size(flags.size()) + flags.size();
