@@ -127,6 +127,18 @@ protected:
     /// True if the authorized credential permits the rpc method.
     bool permitted(const std::string& method) const NOEXCEPT;
 
+    /// True if the current request is claimed by a protocol (requires strand).
+    bool claimed() const NOEXCEPT;
+
+    /// Latch protocol claim of the current request (requires strand).
+    void set_claimed() NOEXCEPT;
+
+    /// Append method names served by this protocol (requires strand).
+    void register_methods(const std::string_view& names) NOEXCEPT;
+
+    /// The method names served by attached protocols (requires strand).
+    const std::string& methods() const NOEXCEPT;
+
     /// True if basic authorization is not required or has been satisfied.
     bool authorized() const NOEXCEPT;
 

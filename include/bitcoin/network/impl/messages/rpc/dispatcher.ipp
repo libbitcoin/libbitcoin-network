@@ -355,6 +355,12 @@ inline CLASS::dispatcher() NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::contains(const std::string& method) NOEXCEPT
+{
+    return CLASS::notifiers_.contains(method);
+}
+
+TEMPLATE
 inline code CLASS::notify(const request_t& request) NOEXCEPT
 {
     // Search unordered map by method name for the notify() functor.

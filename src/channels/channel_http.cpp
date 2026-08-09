@@ -148,6 +148,10 @@ void channel_http::dispatch(const request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
+    // Subscribers are notified in attach order, a claiming subscriber informs
+    // subsequent subscribers (e.g. a terminal default responder).
+    claimed_ = false;
+
     // Basic authorization is carried by http headers. ws frames carry none,
     // so ws authorization is dispatched to the protocol with the message.
     if (!websocket() && !authorized())
@@ -333,6 +337,37 @@ void channel_http::set_authorized(const request& request) NOEXCEPT
 bool channel_http::permitted(const std::string& method) const NOEXCEPT
 {
     return !options_.authorize() || options_.permitted(digest_, method);
+}
+
+bool channel_http::claimed() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return claimed_;
+}
+
+void channel_http::set_claimed() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    claimed_ = true;
+}
+
+void channel_http::register_methods(const std::string_view& names) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (names.empty())
+        return;
+
+    if (!methods_.empty())
+        methods_.push_back(' ');
+
+    methods_.append(names);
+}
+
+const std::string& channel_http::methods() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return methods_;
 }
 
 void channel_http::handle_unauthorized(const code& ec) NOEXCEPT

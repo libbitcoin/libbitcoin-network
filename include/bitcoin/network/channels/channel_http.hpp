@@ -83,6 +83,18 @@ public:
     /// True if the authorized credential permits the rpc method.
     virtual bool permitted(const std::string& method) const NOEXCEPT;
 
+    /// True if the current request is claimed by a protocol (requires strand).
+    virtual bool claimed() const NOEXCEPT;
+
+    /// Latch protocol claim of the current request (requires strand).
+    virtual void set_claimed() NOEXCEPT;
+
+    /// Append method names served by an attached protocol (requires strand).
+    virtual void register_methods(const std::string_view& names) NOEXCEPT;
+
+    /// The method names served by attached protocols (requires strand).
+    virtual const std::string& methods() const NOEXCEPT;
+
     /// True if basic authorization is not required or has been satisfied.
     virtual bool authorized() const NOEXCEPT;
 
@@ -130,7 +142,9 @@ private:
     http::flat_buffer request_buffer_;
     system::hash_digest digest_{};
     dispatcher dispatcher_{};
+    std::string methods_{};
     bool reading_{};
+    bool claimed_{};
     bool authorized_;
 };
 

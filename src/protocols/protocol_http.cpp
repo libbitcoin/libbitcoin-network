@@ -449,6 +449,26 @@ bool protocol_http::permitted(const std::string& method) const NOEXCEPT
     return channel_->permitted(method);
 }
 
+bool protocol_http::claimed() const NOEXCEPT
+{
+    return channel_->claimed();
+}
+
+void protocol_http::set_claimed() NOEXCEPT
+{
+    channel_->set_claimed();
+}
+
+void protocol_http::register_methods(const std::string_view& names) NOEXCEPT
+{
+    channel_->register_methods(names);
+}
+
+const std::string& protocol_http::methods() const NOEXCEPT
+{
+    return channel_->methods();
+}
+
 bool protocol_http::authorized() const NOEXCEPT
 {
     return channel_->authorized();
