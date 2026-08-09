@@ -52,6 +52,9 @@ public:
     inline dispatcher() NOEXCEPT;
     virtual ~dispatcher() = default;
 
+    /// True if the method name is defined by the interface.
+    static bool contains(const std::string& method) NOEXCEPT;
+
     /// Dispatch request to subscribed method handler(s).
     virtual inline code notify(const request_t& request) NOEXCEPT;
 
