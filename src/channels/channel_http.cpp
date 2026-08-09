@@ -351,17 +351,45 @@ void channel_http::set_claimed() NOEXCEPT
     claimed_ = true;
 }
 
+// private
+// A name may be defined by more than one attached interface (an override), so
+// names are accumulated by token, first registration winning.
+bool channel_http::registered(const std::string_view& name) const NOEXCEPT
+{
+    for (auto at = methods_.find(name); at != std::string::npos;
+        at = methods_.find(name, at + name.size()))
+    {
+        const auto tail = at + name.size();
+        if ((is_zero(at) || methods_.at(sub1(at)) == ' ') &&
+            (tail == methods_.size() || methods_.at(tail) == ' '))
+            return true;
+    }
+
+    return false;
+}
+
 void channel_http::register_methods(const std::string_view& names) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (names.empty())
-        return;
+    for (size_t start{}; start < names.size();)
+    {
+        const auto end = names.find(' ', start);
+        const auto name = names.substr(start, end - start);
 
-    if (!methods_.empty())
-        methods_.push_back(' ');
+        if (!name.empty() && !registered(name))
+        {
+            if (!methods_.empty())
+                methods_.push_back(' ');
 
-    methods_.append(names);
+            methods_.append(name);
+        }
+
+        if (end == std::string_view::npos)
+            break;
+
+        start = add1(end);
+    }
 }
 
 const std::string& channel_http::methods() const NOEXCEPT
