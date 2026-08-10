@@ -117,14 +117,12 @@ connector::ptr net::create_connector(const settings::socks5& socks,
         .maximum_request = maximum_request
     };
 
+    if (network_settings().encrypt_node())
+        params.context = std::cref(encryption_);
+
     if (socks.proxied())
         return emplace_shared<connector_socks>(log, strand(), service(),
             connect_suspended_, std::move(params), socks);
-
-    // bip324 (v2) initiation, address selection is gated on the service bit
-    // by the services_minimum requirement (socks excluded, handshake order).
-    if (network_settings().encrypt_node())
-        params.context = std::cref(encryption_);
 
     // Above can handle both proxy and non-proxy, but this is more efficient.
     return emplace_shared<connector>(log, strand(), service(),

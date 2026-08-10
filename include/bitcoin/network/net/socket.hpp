@@ -114,6 +114,12 @@ public:
     virtual void connect(const asio::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
+    /// Upgrade the socket to its configured transport, handler posted to
+    /// socket strand. Applied automatically upon accept and non-proxied
+    /// connect. A proxied connector must invoke this once its negotiation
+    /// has established the connection to the peer.
+    virtual void handshake(result_handler&& handler) NOEXCEPT;
+
     /// WS (generic, framed).
     /// -----------------------------------------------------------------------
 

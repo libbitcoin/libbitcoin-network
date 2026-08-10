@@ -150,6 +150,14 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
         const auto code = error::asio_to_error_code(ec);
         if (code == error::unknown) logx("connect", ec);
         handler(code);
+        return;
+    }
+
+    // Defer handshake to the connector when connection is proxied.
+    if (proxied_)
+    {
+        handler(error::success);
+        return;
     }
 
     // In socket strand.
@@ -158,6 +166,13 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
 
 // Handshake (accept & connect).
 // ----------------------------------------------------------------------------
+
+void socket::handshake(result_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_handshake,
+            shared_from_this(), std::move(handler)));
+}
 
 void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
