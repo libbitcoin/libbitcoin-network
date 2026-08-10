@@ -139,11 +139,22 @@ bool socket::secure() const NOEXCEPT
     return std::holds_alternative<ref<asio::ssl::context>>(context_);
 }
 
+bool socket::encrypted() const NOEXCEPT
+{
+    return std::holds_alternative<ref<const privacy::context>>(context_);
+}
+
 bool socket::is_secure() const NOEXCEPT
 {
     BC_ASSERT(stranded());
     return std::holds_alternative<asio::ssl::socket>(socket_) ||
         std::holds_alternative<ws::ssl::socket>(socket_);
+}
+
+bool socket::is_encrypted() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return std::holds_alternative<privacy::stream>(socket_);
 }
 
 bool socket::is_base() const NOEXCEPT
@@ -178,6 +189,10 @@ socket::ws_t socket::get_ws() NOEXCEPT
         [](ws::ssl::socket& value) NOEXCEPT -> socket::ws_t
         {
             return std::ref(value);
+        },
+        [](privacy::stream&) NOEXCEPT -> socket::ws_t
+        {
+            std::terminate();
         }
     }, socket_);
 }
@@ -204,6 +219,10 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
         [](ws::ssl::socket&) NOEXCEPT -> socket::tcp_t
         {
             std::terminate();
+        },
+        [](privacy::stream& value) NOEXCEPT -> socket::tcp_t
+        {
+            return std::ref(value);
         }
     }, socket_);
 }
@@ -227,6 +246,10 @@ asio::socket& socket::get_base() NOEXCEPT
             return boost::beast::get_lowest_layer(value);
         },
         [](ws::ssl::socket& value) NOEXCEPT -> asio::socket&
+        {
+            return boost::beast::get_lowest_layer(value);
+        },
+        [](privacy::stream& value) NOEXCEPT -> asio::socket&
         {
             return boost::beast::get_lowest_layer(value);
         }
@@ -255,6 +278,10 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
         [](ws::ssl::socket& value) NOEXCEPT -> asio::ssl::socket&
         {
             return value.next_layer();
+        },
+        [](privacy::stream&) NOEXCEPT -> asio::ssl::socket&
+        {
+            std::terminate();
         }
     }, socket_);
 }

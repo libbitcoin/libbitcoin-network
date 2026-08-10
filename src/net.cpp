@@ -42,6 +42,7 @@ using namespace std::placeholders;
 
 net::net(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
+    encryption_{ settings.identifier },
     threadpool_(std::max(settings.threads, 1_u32)),
     strand_(threadpool_.service().get_executor()),
     hosts_(settings, log),
@@ -88,11 +89,17 @@ acceptor::ptr net::create_service(const socket::context& context) NOEXCEPT
 acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
 {
     const auto& settings = network_settings();
+
+    // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
+    const auto accept = settings.encrypt_node() &&
+        std::holds_alternative<std::monostate>(context) ?
+            socket::context{ std::cref(encryption_) } : context;
+
     socket::parameters params
     {
         .connect_timeout = settings.connect_timeout(),
         .maximum_request = settings.inbound.maximum_request,
-        .context = context
+        .context = accept
     };
 
     return emplace_shared<acceptor>(log, strand(), service(),
@@ -113,6 +120,11 @@ connector::ptr net::create_connector(const settings::socks5& socks,
     if (socks.proxied())
         return emplace_shared<connector_socks>(log, strand(), service(),
             connect_suspended_, std::move(params), socks);
+
+    // bip324 (v2) initiation, address selection is gated on the service bit
+    // by the services_minimum requirement (socks excluded, handshake order).
+    if (network_settings().encrypt_node())
+        params.context = std::cref(encryption_);
 
     // Above can handle both proxy and non-proxy, but this is more efficient.
     return emplace_shared<connector>(log, strand(), service(),

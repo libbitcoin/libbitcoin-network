@@ -28,6 +28,8 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/deadline.hpp>
+#include <bitcoin/network/privacy/context.hpp>
+#include <bitcoin/network/privacy/stream.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -42,11 +44,12 @@ class BCT_API socket
 public:
     typedef std::shared_ptr<socket> ptr;
 
-    // TODO: zmq::context, p2p::context(?).
+    // TODO: zmq::context.
     using context = std::variant
     <
         std::monostate,
-        ref<asio::ssl::context>
+        ref<asio::ssl::context>,
+        ref<const privacy::context>
     >;
 
     struct parameters
@@ -227,6 +230,9 @@ public:
     /// The socket upgrades to its secure configuration upon connect.
     virtual bool secure() const NOEXCEPT;
 
+    /// The socket upgrades to bip324 (v2) transport upon connect.
+    virtual bool encrypted() const NOEXCEPT;
+
     /// The socket was upgraded to a websocket.
     virtual bool websocket() const NOEXCEPT;
 
@@ -241,9 +247,10 @@ public:
 
 protected:
     using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;
-    using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
+    using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>,
+        ref<privacy::stream>>;
     using socket_t = std::variant<asio::socket, asio::ssl::socket, ws::socket,
-        ws::ssl::socket>;
+        ws::ssl::socket, privacy::stream>;
 
     /// Construct.
     /// -----------------------------------------------------------------------
@@ -256,6 +263,9 @@ protected:
 
     /// The socket was upgraded to ssl (requires strand).
     bool is_secure() const NOEXCEPT;
+
+    /// The socket was upgraded to bip324 (requires strand).
+    bool is_encrypted() const NOEXCEPT;
 
     /// The socket is not upgraded (asio::socket).
     bool is_base() const NOEXCEPT;
@@ -446,6 +456,8 @@ private:
     void handle_connect(const boost_code& ec, const asio::endpoint& peer,
         const result_handler& handler) NOEXCEPT;
     void handle_handshake(const boost_code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void handle_encrypted_handshake(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
 
     // read/write (tcp/ws)
