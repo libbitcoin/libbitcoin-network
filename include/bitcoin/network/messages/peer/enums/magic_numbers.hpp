@@ -52,6 +52,9 @@ constexpr size_t maximum_advertisement = 10;
 /// Limit given 10 and max supported height chain (stop hash excluded).
 constexpr size_t max_locator = 10_size + system::floored_log2(max_size_t);
 
+// bip125 signals replace-by-fee via a sequence below 0xfffffffe.
+constexpr auto bip125_sequence = 0xfffffffd_u32;
+
 } // namespace peer
 } // namespace messages
 } // namespace network
