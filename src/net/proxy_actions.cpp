@@ -32,6 +32,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace system;
+using namespace messages::peer;
 using namespace std::placeholders;
 
 // Wait (all).
@@ -107,15 +108,11 @@ void proxy::do_tcp_write(const asio::const_buffer& payload,
             shared_from_this(), _1, _2, handler)));
 }
 
-// RPC (TCP: electrum/stratum_v1, WS: btcd).
+// PEER (TCP: bitcoin p2p).
 // ----------------------------------------------------------------------------
-// Batch normalization: the channel is batch-blind. The proxy stamps batch
-// state on reads and response parts, absorbs the batch close (writing the
-// close part and re-arming the read), and defers notifications while open.
 
-// flat_buffer must have configured max_size, which will be allocated.
-void proxy::read(http::flat_buffer& buffer,
-    messages::peer::frame& message, count_handler&& handler) NOEXCEPT
+void proxy::read(data_chunk& buffer, frame& message,
+    count_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     do_reading();
@@ -123,8 +120,7 @@ void proxy::read(http::flat_buffer& buffer,
     socket_->peer_read(buffer, message, std::move(handler));
 }
 
-void proxy::write(messages::peer::frame&& message,
-    count_handler&& handler) NOEXCEPT
+void proxy::write(frame&& message, count_handler&& handler) NOEXCEPT
 {
     // Pointer ships moveable message through the send queue.
     const auto out = move_shared(std::move(message));
@@ -137,7 +133,7 @@ void proxy::write(messages::peer::frame&& message,
 }
 
 // private
-void proxy::do_peer_write(const messages::peer::frame_ptr& message,
+void proxy::do_peer_write(const frame_ptr& message,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -147,6 +143,13 @@ void proxy::do_peer_write(const messages::peer::frame_ptr& message,
             shared_from_this(), _1, _2, handler)));
 }
 
+// RPC (TCP: electrum/stratum_v1, WS: btcd).
+// ----------------------------------------------------------------------------
+// Batch normalization: the channel is batch-blind. The proxy stamps batch
+// state on reads and response parts, absorbs the batch close (writing the
+// close part and re-arming the read), and defers notifications while open.
+
+// flat_buffer must have configured max_size, which will be allocated.
 void proxy::read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
 {

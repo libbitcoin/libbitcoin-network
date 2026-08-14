@@ -86,9 +86,7 @@ public:
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
-        negotiated_version_(settings.protocol_maximum),
-        read_buffer_(system::ceilinged_add(messages::peer::heading::size(),
-            options.maximum_request))
+        negotiated_version_(settings.protocol_maximum)
     {
     }
 
@@ -113,6 +111,9 @@ public:
     /// Negotiated version should be written only in handshake (safety).
     uint32_t negotiated_version() const NOEXCEPT;
     void set_negotiated_version(uint32_t value) NOEXCEPT;
+
+    /// Chain is current (node override), reduces read buffer to minimum.
+    virtual bool current() const NOEXCEPT;
 
     /// Peer version should be written only in handshake.
     messages::peer::version::cptr peer_version() const NOEXCEPT;
@@ -143,13 +144,11 @@ private:
     // These are protected by strand/order.
     uint32_t negotiated_version_;
     messages::peer::version::cptr peer_version_{};
+    system::data_chunk payload_buffer_{};
     dispatcher dispatcher_{};
     size_t start_height_{};
     bool reading_{};
     bool quiet_{};
-
-    // Message read buffer, sized and retained by channel policy.
-    http::flat_buffer read_buffer_;
 };
 
 } // namespace network

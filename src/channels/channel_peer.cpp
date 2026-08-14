@@ -113,6 +113,11 @@ void channel_peer::set_negotiated_version(uint32_t value) NOEXCEPT
     negotiated_version_ = value;
 }
 
+bool channel_peer::current() const NOEXCEPT
+{
+    return false;
+}
+
 bool channel_peer::is_handshaked() const NOEXCEPT
 {
     return !is_null(peer_version_);
@@ -170,7 +175,7 @@ void channel_peer::receive() NOEXCEPT
     in->maximum = options().maximum_request;
 
     // Post handle_receive to strand upon message, stop, or error.
-    read(read_buffer_, *in,
+    read(payload_buffer_, *in,
         std::bind(&channel_peer::handle_receive,
             shared_from_base<channel_peer>(), _1, _2, in));
 }
@@ -215,15 +220,14 @@ void channel_peer::handle_receive(const code& ec, size_t,
         return;
     }
 
-    // Don't retain larger than configured (time-space tradeoff).
-    if (read_buffer_.capacity() > ceilinged_add<size_t>(heading::size(),
-        options().minimum_buffer))
-        read_buffer_.shrink_to_fit();
+    // Don't retain larger than configured when current (time-space tradeoff).
+    if (current() && payload_buffer_.capacity() > options().minimum_buffer)
+    {
+        payload_buffer_.resize(options().minimum_buffer);
+        payload_buffer_.shrink_to_fit();
+    }
 
-    // Post so that buffered messages are not drained by recursion.
-    boost::asio::post(strand(),
-        std::bind(&channel_peer::receive,
-            shared_from_base<channel_peer>()));
+    receive();
 }
 
 void channel_peer::handle_send(const code& ec, size_t,
@@ -301,11 +305,9 @@ void channel_peer::log_fault(const code& LOG_ONLY(fault),
         }
         case error::invalid_message:
         {
-            // The frame is fully buffered upon deserialization failure.
-            LOG_ONLY(const auto start = std::next(pointer_cast<const uint8_t>(
-                read_buffer_.data().data()), heading::size());)
+            LOG_ONLY(const auto start = payload_buffer_.begin();)
             LOG_ONLY(const auto end = std::next(start, std::min<size_t>(
-                in.head.payload_size, invalid_payload_dump_size));)
+                payload_buffer_.size(), invalid_payload_dump_size));)
 
             LOGR("Invalid " << name << " payload from ["
                 << endpoint() << "] with bytes (" << encode_base16({ start, end })

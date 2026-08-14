@@ -77,10 +77,18 @@ struct BCT_API body
         void finish(boost_code& ec) NOEXCEPT;
         bool done() const NOEXCEPT;
 
+        /// Bytes required to advance the parse (zero when done).
+        size_t need() const NOEXCEPT;
+
     protected:
         value_type& value_;
 
     private:
+        bool accept(const system::data_slice& payload,
+            boost_code& ec) NOEXCEPT;
+
+        size_t need_{};
+        bool headed_{};
         bool done_{};
     };
 

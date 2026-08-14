@@ -70,9 +70,42 @@ static size_t set_fault(frame& value, const code& fault,
 
 void body::reader::init(const http::length_type&, boost_code& ec) NOEXCEPT
 {
+    need_ = heading::size();
+    headed_ = false;
     done_ = false;
     value_.fault = error::success;
     ec = {};
+}
+
+size_t body::reader::need() const NOEXCEPT
+{
+    return need_;
+}
+
+// private
+bool body::reader::accept(const data_slice& payload, boost_code& ec) NOEXCEPT
+{
+    if (value_.checksum && value_.head.checksum !=
+        network_checksum(bitcoin_hash(payload.size(), payload.data())))
+    {
+        set_fault(value_, error::invalid_checksum, ec);
+        return false;
+    }
+
+    system::stream::in::fast stream{ payload };
+    system::read::bytes::fast source{ stream };
+    value_.payload = to_any(value_.head.id(), source, value_.version,
+        value_.witness);
+
+    if (!value_.payload)
+    {
+        set_fault(value_, error::invalid_message, ec);
+        return false;
+    }
+
+    need_ = zero;
+    done_ = true;
+    return true;
 }
 
 size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
@@ -81,46 +114,42 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     const auto size = buffer.size();
     ec = {};
 
-    // Defer until the heading is complete.
+    // Payload.
+    if (headed_)
+    {
+        if (size < need_)
+            return zero;
+
+        const data_slice payload{ data, std::next(data, need_) };
+        return accept(payload, ec) ? payload.size() : zero;
+    }
+
+    // Heading.
     if (size < heading::size())
         return zero;
 
-    const data_slice head_slice{ data, std::next(data, heading::size()) };
-    system::stream::in::fast head_stream{ head_slice };
-    system::read::bytes::fast head_reader{ head_stream };
-    value_.head = heading::deserialize(head_reader);
+    const data_slice head{ data, std::next(data, heading::size()) };
+    system::stream::in::fast stream{ head };
+    system::read::bytes::fast source{ stream };
+    value_.head = heading::deserialize(source);
 
-    if (!head_reader)
+    if (!source)
         return set_fault(value_, error::invalid_heading, ec);
 
     if (value_.head.magic != value_.magic)
         return set_fault(value_, error::invalid_magic, ec);
 
-    const auto payload_size = value_.head.payload_size;
-    if (payload_size > value_.maximum)
+    if (value_.head.payload_size > value_.maximum)
         return set_fault(value_, error::oversized_payload, ec);
 
-    // Defer until the payload is complete.
-    const auto frame_size = ceilinged_add(heading::size(), payload_size);
-    if (size < frame_size)
+    headed_ = true;
+    need_ = value_.head.payload_size;
+
+    // An empty payload completes the message.
+    if (is_zero(need_) && !accept({}, ec))
         return zero;
 
-    const auto payload = std::next(data, heading::size());
-    if (value_.checksum && value_.head.checksum !=
-        network_checksum(bitcoin_hash(payload_size, payload)))
-        return set_fault(value_, error::invalid_checksum, ec);
-
-    const data_slice payload_slice{ payload, std::next(payload, payload_size) };
-    system::stream::in::fast payload_stream{ payload_slice };
-    system::read::bytes::fast payload_reader{ payload_stream };
-    value_.payload = to_any(value_.head.id(), payload_reader, value_.version,
-        value_.witness);
-
-    if (!value_.payload)
-        return set_fault(value_, error::invalid_message, ec);
-
-    done_ = true;
-    return frame_size;
+    return heading::size();
 }
 
 void body::reader::finish(boost_code& ec) NOEXCEPT

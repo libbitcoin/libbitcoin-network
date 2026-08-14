@@ -35,36 +35,74 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// The peer_ methods are a specialization of the body_ methods, passing the
-// messages::peer::body type (see socket_body.cpp for the taxonomy). Reads
-// surface one message per completion, writes emit the frame serialized by
-// peer::serialize (typed serialization requires the caller's static type).
+// The message is framed, so reads are exact (see socket_body.cpp for the
+// taxonomy), obtaining the heading and then the payload it indicates. Writes
+// pass the messages::peer::body type to the body_ methods.
 
-void socket::peer_read(http::flat_buffer& buffer,
-    frame& message, count_handler&& handler) NOEXCEPT
+void socket::peer_read(data_chunk& buffer, frame& message,
+    count_handler&& handler) NOEXCEPT
 {
-    // Create variant http request to capture read.
-    const auto in = to_shared<http::request>();
+    boost_code ec{};
+    const auto in = emplace_shared<peer_state>(message, buffer);
+    in->reader.init({}, ec);
 
-    // Preselect peer frame body value type, propagating parse context.
-    in->body() = frame{ message };
-
-    // Capture body and move it back into message reference.
-    body_read(buffer, *in,
-        std::bind(&socket::handle_peer_read,
-            shared_from_this(), _1, _2, std::ref(message), in,
-            std::move(handler)));
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_peer_read,
+            shared_from_this(), zero, in, std::move(handler)));
 }
 
 // private
-void socket::handle_peer_read(const code& ec, size_t bytes,
-    const ref<frame>& out, const http::request_ptr& in,
+void socket::do_peer_read(size_t total, const peer_state::ptr& in,
     const count_handler& handler) NOEXCEPT
 {
-    // Move peer frame from http body value to caller out param.
-    // Moved on failure as well, as the frame carries parse fault detail.
-    out.get() = std::move(std::get<frame>(in->body().value()));
-    handler(ec, bytes);
+    BC_ASSERT(stranded());
+
+    // The heading is read into fixed storage, the payload into the caller
+    // buffer, sized by the heading.
+    const auto need = in->reader.need();
+
+    if (in->headed)
+        in->payload.resize(need);
+
+    const auto data = in->headed ? in->payload.data() : in->head.data();
+
+    async_read(asio::mutable_buffer{ data, need },
+        std::bind(&socket::handle_peer_read,
+            shared_from_this(), _1, _2, total, in, handler));
+}
+
+// private
+void socket::handle_peer_read(const code& ec, size_t size, size_t total,
+    const peer_state::ptr& in, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    total = ceilinged_add(total, size);
+
+    if (ec)
+    {
+        handler(ec, total);
+        return;
+    }
+
+    boost_code code{};
+    const auto data = in->headed ? in->payload.data() : in->head.data();
+    in->reader.put(asio::const_buffer{ data, size }, code);
+
+    if (code)
+    {
+        handler(error::http_to_error_code(code), total);
+        return;
+    }
+
+    if (in->reader.done())
+    {
+        in->reader.finish(code);
+        handler(error::http_to_error_code(code), total);
+        return;
+    }
+
+    in->headed = true;
+    do_peer_read(total, in, handler);
 }
 
 void socket::peer_write(frame&& message,

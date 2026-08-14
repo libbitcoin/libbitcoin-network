@@ -35,6 +35,16 @@ static data_chunk ping_frame()
     return *data;
 }
 
+static data_chunk frame_head(const data_chunk& framed)
+{
+    return { framed.begin(), std::next(framed.begin(), heading::size()) };
+}
+
+static data_chunk frame_payload(const data_chunk& framed)
+{
+    return { std::next(framed.begin(), heading::size()), framed.end() };
+}
+
 static frame test_frame()
 {
     return frame
@@ -47,14 +57,32 @@ static frame test_frame()
     };
 }
 
-static code put_fault(frame& value, const data_chunk& data)
+static code put_fault(frame& value, const data_chunk& framed)
 {
     boost_code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
-    reader.put({ data.data(), data.size() }, ec);
+
+    const auto head = frame_head(framed);
+    reader.put({ head.data(), head.size() }, ec);
+    if (ec)
+        return value.fault;
+
+    const auto payload = frame_payload(framed);
+    reader.put({ payload.data(), payload.size() }, ec);
     BOOST_REQUIRE(ec);
     return value.fault;
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__need__initial__heading_size)
+{
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(reader.need(), heading::size());
+    BOOST_REQUIRE(!reader.done());
 }
 
 BOOST_AUTO_TEST_CASE(peer_body__put__empty_buffer__defers)
@@ -63,7 +91,6 @@ BOOST_AUTO_TEST_CASE(peer_body__put__empty_buffer__defers)
     boost_code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
-    BOOST_REQUIRE(!ec);
 
     const auto consumed = reader.put({ nullptr, 0 }, ec);
     BOOST_REQUIRE(!ec);
@@ -74,80 +101,86 @@ BOOST_AUTO_TEST_CASE(peer_body__put__empty_buffer__defers)
     BOOST_REQUIRE(ec);
 }
 
-BOOST_AUTO_TEST_CASE(peer_body__put__whole_frame__message)
+BOOST_AUTO_TEST_CASE(peer_body__put__framed_sequence__message)
 {
     const auto data = ping_frame();
+    const auto head = frame_head(data);
+    const auto payload = frame_payload(data);
+
     auto value = test_frame();
     boost_code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
-    const auto consumed = reader.put({ data.data(), data.size() }, ec);
+    BOOST_REQUIRE_EQUAL(reader.put({ head.data(), head.size() }, ec), heading::size());
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(consumed, data.size());
+    BOOST_REQUIRE(!reader.done());
+    BOOST_REQUIRE_EQUAL(reader.need(), sizeof(uint64_t));
+    BOOST_REQUIRE_EQUAL(value.head.command, "ping");
+    BOOST_REQUIRE_EQUAL(value.head.payload_size, sizeof(uint64_t));
+
+    BOOST_REQUIRE_EQUAL(reader.put({ payload.data(), payload.size() }, ec), payload.size());
+    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(reader.done());
+    BOOST_REQUIRE_EQUAL(reader.need(), 0u);
 
     reader.finish(ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(value.head.command, "ping");
-    BOOST_REQUIRE_EQUAL(value.head.payload_size, sizeof(uint64_t));
 
     const auto message = value.payload.get<const ping>();
     BOOST_REQUIRE(message);
     BOOST_REQUIRE_EQUAL(message->nonce, nonce);
 }
 
-BOOST_AUTO_TEST_CASE(peer_body__put__incremental__defers_until_complete)
+BOOST_AUTO_TEST_CASE(peer_body__put__short_reads__defer)
 {
     const auto data = ping_frame();
+    const auto head = frame_head(data);
+    const auto payload = frame_payload(data);
+
     auto value = test_frame();
     boost_code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
-    // Partial heading.
-    BOOST_REQUIRE_EQUAL(reader.put({ data.data(), 10 }, ec), 0u);
+    // Partial heading defers.
+    BOOST_REQUIRE_EQUAL(reader.put({ head.data(), 10 }, ec), 0u);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(reader.need(), heading::size());
+
+    BOOST_REQUIRE_EQUAL(reader.put({ head.data(), head.size() }, ec), heading::size());
     BOOST_REQUIRE(!ec);
 
-    // Heading only.
-    BOOST_REQUIRE_EQUAL(reader.put({ data.data(), heading::size() }, ec), 0u);
+    // Partial payload defers.
+    BOOST_REQUIRE_EQUAL(reader.put({ payload.data(), payload.size() - 1 }, ec), 0u);
     BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(!reader.done());
 
-    // Partial payload.
-    BOOST_REQUIRE_EQUAL(reader.put({ data.data(), data.size() - 1 }, ec), 0u);
-    BOOST_REQUIRE(!ec);
-
-    // Complete frame.
-    BOOST_REQUIRE_EQUAL(reader.put({ data.data(), data.size() }, ec), data.size());
+    BOOST_REQUIRE_EQUAL(reader.put({ payload.data(), payload.size() }, ec), payload.size());
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(reader.done());
 }
 
-BOOST_AUTO_TEST_CASE(peer_body__put__two_frames__consumes_first_only)
+BOOST_AUTO_TEST_CASE(peer_body__put__empty_payload__completes_on_heading)
 {
-    const auto one = ping_frame();
-    auto data = ping_frame();
-    data.insert(data.end(), one.begin(), one.end());
+    const data_chunk payload{};
+    data_chunk data(heading::size());
+    const auto head = heading::factory(magic, "verack", payload);
+    BOOST_REQUIRE(head.serialize({ data.data(), std::next(data.data(), heading::size()) }));
 
     auto value = test_frame();
     boost_code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
-    // First message consumed, residue remains for the next logical read.
-    const auto consumed = reader.put({ data.data(), data.size() }, ec);
+    BOOST_REQUIRE_EQUAL(reader.put({ data.data(), data.size() }, ec), heading::size());
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(consumed, one.size());
+    BOOST_REQUIRE(reader.done());
+    BOOST_REQUIRE_EQUAL(reader.need(), 0u);
 
-    // Second message parsed from the residue by a fresh reader.
-    auto next = test_frame();
-    body::reader second{ next };
-    second.init({}, ec);
-
-    const auto residue = second.put({ std::next(data.data(), consumed), data.size() - consumed }, ec);
+    reader.finish(ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(residue, one.size());
-    BOOST_REQUIRE(second.done());
+    BOOST_REQUIRE(value.payload.get<const version_acknowledge>());
 }
 
 BOOST_AUTO_TEST_CASE(peer_body__put__invalid_magic__fault)
@@ -175,11 +208,6 @@ BOOST_AUTO_TEST_CASE(peer_body__put__invalid_checksum__fault)
 BOOST_AUTO_TEST_CASE(peer_body__put__corrupt_payload_without_checksum__invalid_message_fault)
 {
     // A short payload deserializes as invalid (checksum disabled to reach it).
-    const ping message{ nonce };
-    const auto framed = serialize(message, magic, messages::peer::level::bip31);
-    BOOST_REQUIRE(framed);
-
-    // Rebuild the frame with a truncated payload.
     const data_chunk payload(3, 0x42);
     data_chunk data(heading::size() + payload.size());
     const auto head = heading::factory(magic, "ping", payload);
@@ -193,15 +221,15 @@ BOOST_AUTO_TEST_CASE(peer_body__put__corrupt_payload_without_checksum__invalid_m
 
 BOOST_AUTO_TEST_CASE(peer_body__put__invalid_block_payload__invalid_message_fault)
 {
+    // Serialization validity only (not consensus), checksum disabled.
     const data_chunk payload(10, 0x42);
     data_chunk data(heading::size() + payload.size());
     const auto head = heading::factory(magic, "block", payload);
     BOOST_REQUIRE(head.serialize({ data.data(), std::next(data.data(), heading::size()) }));
+    std::copy(payload.begin(), payload.end(), std::next(data.begin(), heading::size()));
 
-    // Checksum disabled to reach deserialize.
     auto value = test_frame();
     value.checksum = false;
-    std::copy(payload.begin(), payload.end(), std::next(data.begin(), heading::size()));
     BOOST_REQUIRE_EQUAL(put_fault(value, data), error::invalid_message);
 }
 
@@ -213,7 +241,35 @@ BOOST_AUTO_TEST_CASE(peer_body__put__unknown_command__invalid_message_fault)
     BOOST_REQUIRE(head.serialize({ data.data(), std::next(data.data(), heading::size()) }));
 
     auto value = test_frame();
-    BOOST_REQUIRE_EQUAL(put_fault(value, data), error::invalid_message);
+    boost_code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put({ data.data(), data.size() }, ec);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE_EQUAL(value.fault, error::invalid_message);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put__checksum_disabled__message)
+{
+    auto data = ping_frame();
+
+    // Corrupt the checksum field only (bytes 20-23), validation disabled.
+    data.at(20) ^= 0x01;
+    const auto head = frame_head(data);
+    const auto payload = frame_payload(data);
+
+    auto value = test_frame();
+    value.checksum = false;
+
+    boost_code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+    BOOST_REQUIRE_EQUAL(reader.put({ head.data(), head.size() }, ec), heading::size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(reader.put({ payload.data(), payload.size() }, ec), payload.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
 }
 
 BOOST_AUTO_TEST_CASE(peer_body__writer__frame__emitted)
@@ -243,23 +299,6 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__no_frame__error)
     body::writer writer{ value };
     writer.init(ec);
     BOOST_REQUIRE(ec);
-}
-
-BOOST_AUTO_TEST_CASE(peer_body__put__checksum_disabled__message)
-{
-    auto data = ping_frame();
-
-    // Corrupt the checksum field only (bytes 20-23), validation disabled.
-    data.at(20) ^= 0x01;
-    auto value = test_frame();
-    value.checksum = false;
-
-    boost_code ec{};
-    body::reader reader{ value };
-    reader.init({}, ec);
-    BOOST_REQUIRE_EQUAL(reader.put({ data.data(), data.size() }, ec), data.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader.done());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

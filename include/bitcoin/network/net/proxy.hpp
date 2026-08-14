@@ -189,7 +189,7 @@ protected:
 
     /// Read peer message from the socket, using provided buffer.
     /// The caller stamps parse context (magic/version/witness) on the frame.
-    virtual void read(http::flat_buffer& buffer,
+    virtual void read(system::data_chunk& buffer,
         messages::peer::frame& message, count_handler&& handler) NOEXCEPT;
 
     /// Write peer message to the socket (peer::serialize frame in body).
