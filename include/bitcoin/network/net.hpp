@@ -218,7 +218,7 @@ protected:
     friend class session;
 
     /// I/O factories.
-    virtual acceptor::ptr create_service(
+    virtual acceptor::ptr create_service(uint32_t maximum_request,
         const socket::context& context={}) NOEXCEPT;
     virtual acceptor::ptr create_acceptor(
         const socket::context& context={}) NOEXCEPT;

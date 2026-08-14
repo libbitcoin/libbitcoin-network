@@ -70,14 +70,13 @@ net::~net() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // server
-// TODO: could move this to server by extending context.
-acceptor::ptr net::create_service(const socket::context& context) NOEXCEPT
+acceptor::ptr net::create_service(uint32_t maximum_request,
+    const socket::context& context) NOEXCEPT
 {
-    const auto& settings = network_settings();
     socket::parameters params
     {
-        .connect_timeout = settings.connect_timeout(),
-        .maximum_request = settings.inbound.maximum_request,
+        .connect_timeout = network_settings().connect_timeout(),
+        .maximum_request = maximum_request,
         .context = context
     };
 

@@ -55,7 +55,7 @@ public:
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
-        request_buffer_(options.minimum_buffer)
+        request_buffer_(options.maximum_request)
     {
     }
 

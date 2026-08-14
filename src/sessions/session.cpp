@@ -344,9 +344,10 @@ void session::unsubscribe_close() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // server
-acceptor::ptr session::create_service(const socket::context& context) NOEXCEPT
+acceptor::ptr session::create_service(uint32_t maximum_request,
+    const socket::context& context) NOEXCEPT
 {
-    return network_.create_service(context);
+    return network_.create_service(maximum_request, context);
 }
 
 // inbound

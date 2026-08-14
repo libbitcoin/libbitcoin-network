@@ -187,7 +187,7 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Create a channel acceptor (service).
-    virtual acceptor::ptr create_service(
+    virtual acceptor::ptr create_service(uint32_t maximum_request,
         const socket::context& context={}) NOEXCEPT;
 
     /// Create a channel acceptor (inbound).

@@ -76,8 +76,15 @@ void channel_http::receive() NOEXCEPT
 
     reading_ = true;
     const auto in = create_request();
+    auto& buffer = request_buffer();
+    const auto minimum = options().minimum_buffer;
+    if (buffer.capacity() > minimum)
+    {
+        buffer.shrink_to_fit();
+        buffer.reserve(minimum);
+    }
 
-    read(request_buffer(), *in,
+    read(buffer, *in,
         std::bind(&channel_http::handle_receive,
             shared_from_base<channel_http>(), _1, _2, in));
 }

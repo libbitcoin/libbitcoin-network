@@ -113,7 +113,8 @@ code session_server::do_accept(const config::authorities& binds,
 
     for (const auto& bind: binds)
     {
-        const auto acceptor = create_service(context);
+        const auto acceptor = create_service(options_.maximum_request,
+            context);
 
         // Require that all acceptors at least start.
         if (const auto ec = acceptor->start(bind))

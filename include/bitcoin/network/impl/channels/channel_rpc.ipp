@@ -70,8 +70,15 @@ inline void CLASS::receive() NOEXCEPT
 
     reading_ = true;
     const auto in = create_request();
-    
-    read(request_buffer(), *in,
+    auto& buffer = request_buffer();
+    const auto minimum = options().minimum_buffer;
+    if (buffer.capacity() > minimum)
+    {
+        buffer.shrink_to_fit();
+        buffer.reserve(minimum);
+    }
+
+    read(buffer, *in,
         std::bind(&channel_rpc::handle_receive,
             shared_from_base<channel_rpc>(), _1, _2, in));
 }
