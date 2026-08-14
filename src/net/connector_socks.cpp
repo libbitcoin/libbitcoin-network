@@ -570,6 +570,24 @@ void connector_socks::do_socks_finish(const code& ec,
 {
     BC_ASSERT(socket->stranded());
 
+    if (ec)
+    {
+        handle_socks_handshake(ec, socket);
+        return;
+    }
+
+    // The socket handshake applies to the peer and not the proxy server, so
+    // it is deferred by the socket and invoked here, upon peer connection.
+    socket->handshake(
+        std::bind(&connector_socks::handle_socks_handshake,
+            shared_from_base<connector_socks>(), _1, socket));
+}
+
+void connector_socks::handle_socks_handshake(const code& ec,
+    const socket::ptr& socket) NOEXCEPT
+{
+    BC_ASSERT(socket->stranded());
+
     // End of socket strand sequence.
     boost::asio::post(strand_,
         std::bind(&connector_socks::socks_finish,

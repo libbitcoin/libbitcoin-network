@@ -313,6 +313,7 @@ private:
 
     // These are thread safe.
     const settings& settings_;
+    const privacy::context encryption_{};
     std::atomic_bool closed_{ false };
     std::atomic_bool accept_suspended_{ false };
     std::atomic_bool service_suspended_{ false };

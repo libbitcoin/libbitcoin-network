@@ -140,6 +140,11 @@
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/net/socket.hpp>
+#include <bitcoin/network/privacy/cipher.hpp>
+#include <bitcoin/network/privacy/commands.hpp>
+#include <bitcoin/network/privacy/context.hpp>
+#include <bitcoin/network/privacy/privacy.hpp>
+#include <bitcoin/network/privacy/stream.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_address_in_209.hpp>
 #include <bitcoin/network/protocols/protocol_address_out_209.hpp>

@@ -94,6 +94,8 @@ private:
         const socket::ptr& socket, const system::chunk_ptr& address) NOEXCEPT;
 
     void do_socks_finish(const code& ec, const socket::ptr& socket) NOEXCEPT;
+    void handle_socks_handshake(const code& ec,
+        const socket::ptr& socket) NOEXCEPT;
     void socks_finish(const code& ec, const socket::ptr& socket) NOEXCEPT;
 
     // These are thread safe.
