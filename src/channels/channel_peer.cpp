@@ -216,7 +216,10 @@ void channel_peer::handle_receive(const code& ec, size_t,
         options().minimum_buffer))
         read_buffer_.shrink_to_fit();
 
-    receive();
+    // Post so that buffered messages are not drained by recursion.
+    boost::asio::post(strand(),
+        std::bind(&channel_peer::receive,
+            shared_from_base<channel_peer>()));
 }
 
 void channel_peer::handle_send(const code& ec, size_t,
