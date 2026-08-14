@@ -58,7 +58,6 @@ void channel_peer::stopping(const code& ec) NOEXCEPT
     dispatcher_.stop(ec);
 }
 
-// TODO: resume of an idle channel results in termination for invalid_magic.
 void channel_peer::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -152,12 +151,15 @@ void channel_peer::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Both terminate read loop, paused can be resumed, stopped cannot.
+    // All prevent read loop start, reading indicates it is already started
+    // (making resume idempotent), paused can be resumed, stopped cannot.
     // Pause only prevents start of the read loop, it does not prevent messages
     // from being issued for sockets already past that point (e.g. waiting).
     // This is mainly for startup coordination, preventing missed messages.
-    if (stopped() || paused())
+    if (stopped() || paused() || reading_)
         return;
+
+    reading_ = true;
 
     // Fresh frame stamped with parse context, fault detail carried out.
     const auto in = to_shared<frame>();
@@ -198,6 +200,8 @@ void channel_peer::handle_receive(const code& ec, size_t,
 
     LOGX("Recv " << in->head.command << " from [" << endpoint() << "] ("
         << in->head.payload_size << " bytes)");
+
+    reading_ = false;
 
     // Notify subscribers of the new message.
     // If object passes to another thread destruction cost is very high.

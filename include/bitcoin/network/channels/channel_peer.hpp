@@ -145,6 +145,7 @@ private:
     messages::peer::version::cptr peer_version_{};
     dispatcher dispatcher_{};
     size_t start_height_{};
+    bool reading_{};
     bool quiet_{};
 
     // Message read buffer, sized and retained by channel policy.
