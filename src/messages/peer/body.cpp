@@ -94,6 +94,14 @@ static rpc::any_t to_any(identifier id, system::reader& source,
 // nothing) until the complete frame is buffered by the caller. The fault
 // member carries parse failure detail (the boost code is generic).
 
+static size_t set_fault(frame& value, const code& fault,
+    boost_code& ec) NOEXCEPT
+{
+    value.fault = fault;
+    ec = error::to_http_code(error::http_error_t::bad_value);
+    return zero;
+}
+
 void body::reader::init(const http::length_type&, boost_code& ec) NOEXCEPT
 {
     done_ = false;
@@ -117,26 +125,14 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     value_.head = heading::deserialize(head_reader);
 
     if (!head_reader)
-    {
-        value_.fault = error::invalid_heading;
-        ec = error::to_http_code(error::http_error_t::bad_value);
-        return zero;
-    }
+        return set_fault(value_, error::invalid_heading, ec);
 
     if (value_.head.magic != value_.magic)
-    {
-        value_.fault = error::invalid_magic;
-        ec = error::to_http_code(error::http_error_t::bad_value);
-        return zero;
-    }
+        return set_fault(value_, error::invalid_magic, ec);
 
     const auto payload_size = value_.head.payload_size;
     if (payload_size > value_.maximum)
-    {
-        value_.fault = error::oversized_payload;
-        ec = error::to_http_code(error::http_error_t::bad_value);
-        return zero;
-    }
+        return set_fault(value_, error::oversized_payload, ec);
 
     // Defer until the payload is complete.
     const auto frame_size = ceilinged_add(heading::size(), payload_size);
@@ -146,11 +142,7 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     const auto payload = std::next(data, heading::size());
     if (value_.checksum && value_.head.checksum !=
         network_checksum(bitcoin_hash(payload_size, payload)))
-    {
-        value_.fault = error::invalid_checksum;
-        ec = error::to_http_code(error::http_error_t::bad_value);
-        return zero;
-    }
+        return set_fault(value_, error::invalid_checksum, ec);
 
     const data_slice payload_slice{ payload, std::next(payload, payload_size) };
     system::stream::in::fast payload_stream{ payload_slice };
@@ -159,11 +151,7 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         value_.witness);
 
     if (!value_.payload)
-    {
-        value_.fault = error::invalid_message;
-        ec = error::to_http_code(error::http_error_t::bad_value);
-        return zero;
-    }
+        return set_fault(value_, error::invalid_message, ec);
 
     done_ = true;
     return frame_size;
