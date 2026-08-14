@@ -37,13 +37,14 @@ static data_chunk ping_frame()
 
 static frame test_frame()
 {
-    frame value{};
-    value.magic = magic;
-    value.version = messages::peer::level::bip31;
-    value.witness = true;
-    value.checksum = true;
-    value.maximum = heading::maximum_payload(messages::peer::level::bip31, true);
-    return value;
+    return frame
+    {
+        .magic = magic,
+        .version = messages::peer::level::bip31,
+        .witness = true,
+        .checksum = true,
+        .maximum = heading::maximum_payload(messages::peer::level::bip31, true)
+    };
 }
 
 static code put_fault(frame& value, const data_chunk& data)
@@ -187,6 +188,20 @@ BOOST_AUTO_TEST_CASE(peer_body__put__corrupt_payload_without_checksum__invalid_m
 
     auto value = test_frame();
     value.checksum = false;
+    BOOST_REQUIRE_EQUAL(put_fault(value, data), error::invalid_message);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put__invalid_block_payload__invalid_message_fault)
+{
+    const data_chunk payload(10, 0x42);
+    data_chunk data(heading::size() + payload.size());
+    const auto head = heading::factory(magic, "block", payload);
+    BOOST_REQUIRE(head.serialize({ data.data(), std::next(data.data(), heading::size()) }));
+
+    // Checksum disabled to reach deserialize.
+    auto value = test_frame();
+    value.checksum = false;
+    std::copy(payload.begin(), payload.end(), std::next(data.begin(), heading::size()));
     BOOST_REQUIRE_EQUAL(put_fault(value, data), error::invalid_message);
 }
 

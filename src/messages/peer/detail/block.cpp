@@ -58,9 +58,14 @@ block block::deserialize(uint32_t version, reader& source,
     bool witness) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
+    {
+        source.invalidate();
         return { chain::block_view{ data_chunk{}, witness } };
+    }
 
-    return { chain::block_view{ source.read_bytes(), witness } };
+    chain::block_view view{ source.read_bytes(), witness };
+    if (!view.is_valid()) source.invalidate();
+    return { std::move(view) };
 }
 
 bool block::serialize(uint32_t version, const data_slab& data,
