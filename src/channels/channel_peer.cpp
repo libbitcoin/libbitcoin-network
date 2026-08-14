@@ -302,26 +302,14 @@ void channel_peer::log_fault(const code& LOG_ONLY(fault),
         case error::invalid_message:
         {
             // The frame is fully buffered upon deserialization failure.
-            const auto size = in.head.payload_size;
-            const auto data = std::next(static_cast<const uint8_t*>(
-                read_buffer_.data().data()), heading::size());
+            LOG_ONLY(const auto start = std::next(pointer_cast<const uint8_t>(
+                read_buffer_.data().data()), heading::size());)
+            LOG_ONLY(const auto end = std::next(start, std::min<size_t>(
+                in.head.payload_size, invalid_payload_dump_size));)
 
-            if (name == transaction::command || name == block::command)
-            {
-                LOGR("Invalid " << name << " payload from ["
-                    << endpoint() << "] with hash ["
-                    << encode_hash(bitcoin_hash(size, data)) << "] ");
-            }
-            else
-            {
-                LOGR("Invalid " << name << " payload from ["
-                    << endpoint() << "] with bytes (" <<encode_base16(
-                        {
-                            data, std::next(data, std::min<size_t>(size,
-                                invalid_payload_dump_size))
-                        })
-                    << "...) ");
-            }
+            LOGR("Invalid " << name << " payload from ["
+                << endpoint() << "] with bytes (" << encode_base16({ start, end })
+                << "...) ");
 
             break;
         }
