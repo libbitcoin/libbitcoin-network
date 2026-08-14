@@ -26,45 +26,52 @@ namespace network {
 namespace messages {
 namespace peer {
 
+// Single source for the message set. The second argument (witness) is used
+// only by witness-carrying messages, and is ignored by the identifier.
+#define PEER_MESSAGE_LIST(MESSAGE) \
+    MESSAGE(address) \
+    MESSAGE(alert) \
+    MESSAGE(block, witness) \
+    MESSAGE(bloom_filter_add) \
+    MESSAGE(bloom_filter_clear) \
+    MESSAGE(bloom_filter_load) \
+    MESSAGE(client_filter) \
+    MESSAGE(client_filter_checkpoint) \
+    MESSAGE(client_filter_headers) \
+    MESSAGE(compact_block, witness) \
+    MESSAGE(compact_transactions, witness) \
+    MESSAGE(fee_filter) \
+    MESSAGE(get_address) \
+    MESSAGE(get_blocks) \
+    MESSAGE(get_client_filter_checkpoint) \
+    MESSAGE(get_client_filter_headers) \
+    MESSAGE(get_client_filters) \
+    MESSAGE(get_compact_transactions) \
+    MESSAGE(get_data) \
+    MESSAGE(get_headers) \
+    MESSAGE(headers) \
+    MESSAGE(inventory) \
+    MESSAGE(memory_pool) \
+    MESSAGE(merkle_block) \
+    MESSAGE(not_found) \
+    MESSAGE(ping) \
+    MESSAGE(pong) \
+    MESSAGE(reject) \
+    MESSAGE(send_address_v2) \
+    MESSAGE(send_compact) \
+    MESSAGE(send_headers) \
+    MESSAGE(transaction, witness) \
+    MESSAGE(version) \
+    MESSAGE(version_acknowledge) \
+    MESSAGE(witness_tx_id_relay)
+
+#define PEER_IDENTIFIER(name, ...) name,
 enum class identifier
 {
     unknown,
-    address,
-    alert,
-    block,
-    bloom_filter_add,
-    bloom_filter_clear,
-    bloom_filter_load,
-    client_filter,
-    client_filter_checkpoint,
-    client_filter_headers,
-    compact_block,
-    compact_transactions,
-    fee_filter,
-    get_address,
-    get_blocks,
-    get_client_filter_checkpoint,
-    get_client_filter_headers,
-    get_client_filters,
-    get_compact_transactions,
-    get_data,
-    get_headers,
-    headers,
-    inventory,
-    memory_pool,
-    merkle_block,
-    not_found,
-    ping,
-    pong,
-    reject,
-    send_address_v2,
-    send_compact,
-    send_headers,
-    transaction,
-    version,
-    version_acknowledge,
-    witness_tx_id_relay
+    PEER_MESSAGE_LIST(PEER_IDENTIFIER)
 };
+#undef PEER_IDENTIFIER
 
 } // namespace peer
 } // namespace messages
