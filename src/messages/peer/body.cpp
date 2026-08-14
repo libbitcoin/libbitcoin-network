@@ -29,6 +29,10 @@ namespace peer {
 
 using namespace system;
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
+BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
+
 #define PEER_DESERIALIZE_ANY(name, ...) \
 case identifier::name: \
 { \
@@ -204,6 +208,10 @@ bool body::writer::done() const NOEXCEPT
 {
     return done_;
 }
+
+BC_POP_WARNING()
+BC_POP_WARNING()
+BC_POP_WARNING()
 
 } // namespace peer
 } // namespace messages
