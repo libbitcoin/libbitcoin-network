@@ -49,7 +49,7 @@ using body_reader = std::variant
     span_reader,    //     8 bytes
     buffer_reader,  //     8 bytes
     string_reader,  //     8 bytes
-    peer_reader,    //    16 bytes
+    peer_reader,    //    32 bytes
     json_reader,    //   320 bytes!
     rpc::reader     //   328 bytes!
 >;

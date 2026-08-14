@@ -65,10 +65,15 @@ struct BCT_API body
         {
         }
 
+        inline reader(value_type& value, system::data_chunk& payload) NOEXCEPT
+          : value_{ value }, payload_{ &payload }
+        {
+        }
+
         template <bool IsRequest, class Fields>
-        inline explicit reader(http::message_header<IsRequest, Fields>&,
+        inline reader(http::message_header<IsRequest, Fields>&,
             value_type& value) NOEXCEPT
-          : value_{ value }
+          : reader{ value }
         {
         }
 
@@ -83,8 +88,11 @@ struct BCT_API body
     protected:
         value_type& value_;
 
+        // Parse source, null when constructed without a caller buffer (put).
+        const system::data_chunk* payload_{};
+
     private:
-        bool accept(const system::data_slice& payload,
+        bool accept(const system::data_chunk& payload,
             boost_code& ec) NOEXCEPT;
 
         size_t need_{};

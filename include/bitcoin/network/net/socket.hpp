@@ -316,7 +316,7 @@ private:
 
         peer_state(messages::peer::frame& value,
             system::data_chunk& payload) NOEXCEPT
-          : reader{ value }, payload{ payload }
+          : reader{ value, payload }, payload{ payload }
         {
         }
 

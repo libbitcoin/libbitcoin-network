@@ -19,6 +19,7 @@
 #include <bitcoin/network/messages/peer/detail/block.hpp>
 
 #include <iterator>
+#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/peer/detail/transaction.hpp>
 #include <bitcoin/network/messages/peer/enums/identifier.hpp>
@@ -63,8 +64,11 @@ block block::deserialize(uint32_t version, reader& source,
         return { chain::block_view{ data_chunk{}, witness } };
     }
 
+    // source.read_bytes() iterates the stream (slow).
     chain::block_view view{ source.read_bytes(), witness };
-    if (!view.is_valid()) source.invalidate();
+    if (!view.is_valid())
+        source.invalidate();
+
     return { std::move(view) };
 }
 

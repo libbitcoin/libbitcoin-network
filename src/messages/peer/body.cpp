@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/messages/peer/body.hpp>
 
+#include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
@@ -36,13 +37,13 @@ BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 #define PEER_DESERIALIZE_ANY(name, ...) \
 case identifier::name: \
 { \
-    const name::cptr ptr = to_shared(name::deserialize(version_, source \
-        __VA_OPT__(,) __VA_ARGS__)); \
-    return source ? rpc::any_t{ ptr } : rpc::any_t{}; \
+    const name::cptr ptr = name::deserialize(version_, data \
+        __VA_OPT__(,) __VA_ARGS__); \
+    return ptr ? rpc::any_t{ ptr } : rpc::any_t{}; \
 }
 
 // Type-erased deserialization of the identified message payload.
-static rpc::any_t to_any(identifier id, system::reader& source,
+static rpc::any_t to_any(identifier id, const data_chunk& data,
     uint32_t version_, bool witness) NOEXCEPT
 {
     switch (id)
@@ -83,7 +84,7 @@ size_t body::reader::need() const NOEXCEPT
 }
 
 // private
-bool body::reader::accept(const data_slice& payload, boost_code& ec) NOEXCEPT
+bool body::reader::accept(const data_chunk& payload, boost_code& ec) NOEXCEPT
 {
     if (value_.checksum && value_.head.checksum !=
         network_checksum(bitcoin_hash(payload.size(), payload.data())))
@@ -92,9 +93,7 @@ bool body::reader::accept(const data_slice& payload, boost_code& ec) NOEXCEPT
         return false;
     }
 
-    system::stream::in::fast stream{ payload };
-    system::read::bytes::fast source{ stream };
-    value_.payload = to_any(value_.head.id(), source, value_.version,
+    value_.payload = to_any(value_.head.id(), payload, value_.version,
         value_.witness);
 
     if (!value_.payload)
@@ -110,7 +109,7 @@ bool body::reader::accept(const data_slice& payload, boost_code& ec) NOEXCEPT
 
 size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 {
-    const auto data = static_cast<const uint8_t*>(buffer.data());
+    const auto data = pointer_cast<const uint8_t>(buffer.data());
     const auto size = buffer.size();
     ec = {};
 
@@ -120,8 +119,11 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         if (size < need_)
             return zero;
 
-        const data_slice payload{ data, std::next(data, need_) };
-        return accept(payload, ec) ? payload.size() : zero;
+        // The framed read parses the caller buffer in place.
+        const auto copy = is_null(payload_) ?
+            data_chunk{ data, std::next(data, need_) } : data_chunk{};
+        const auto& payload = is_null(payload_) ? copy : *payload_;
+        return accept(payload, ec) ? value_.head.payload_size : zero;
     }
 
     // Heading.
