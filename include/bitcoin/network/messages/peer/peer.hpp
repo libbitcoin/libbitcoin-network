@@ -62,6 +62,7 @@
 #include <bitcoin/network/messages/peer/detail/version.hpp>
 #include <bitcoin/network/messages/peer/detail/version_acknowledge.hpp>
 #include <bitcoin/network/messages/peer/detail/witness_tx_id_relay.hpp>
+#include <bitcoin/network/messages/peer/body.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 

@@ -75,6 +75,7 @@
 #include <bitcoin/network/messages/http/enums/status.hpp>
 #include <bitcoin/network/messages/http/enums/target.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
+#include <bitcoin/network/messages/peer/body.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>

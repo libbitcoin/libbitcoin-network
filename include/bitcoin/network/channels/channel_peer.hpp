@@ -59,25 +59,26 @@ public:
     {
         BC_ASSERT(stranded());
         using namespace messages::peer;
-
-        // TODO: move to serializer.
-        const auto magic = settings().identifier;
-        const auto version = negotiated_version();
-        const auto payload = serialize(message, magic, version);
-
-        LOGX("Sent " << heading::get_command(*payload) << " to ["
-            << endpoint() << "] (" << system::floored_subtract(payload->size(),
-            heading::command_size) << " bytes)");
-
         using namespace std::placeholders;
+        const auto id = settings().identifier;
+        frame out{ .data = serialize(message, id, negotiated_version()) };
+
         count_handler complete = std::bind(&channel_peer::handle_send,
-            shared_from_base<channel_peer>(),  _1, _2, payload,
+            shared_from_base<channel_peer>(),  _1, _2, out.data,
             std::move(handler));
 
-        if (!payload)
+        if (!out.data)
+        {
             complete(error::bad_alloc, {});
+        }
         else
-            write({ payload->data(), payload->size() }, std::move(complete));
+        {
+            LOGX("Sent " << Message::command << " to [" << endpoint() << "] ("
+                << system::floored_subtract(out.data->size(),
+                heading::command_size) << " bytes)");
+
+            write(std::move(out), std::move(complete));
+        }
     }
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.
@@ -85,7 +86,9 @@ public:
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
-        negotiated_version_(settings.protocol_maximum)
+        negotiated_version_(settings.protocol_maximum),
+        read_buffer_(system::ceilinged_add(messages::peer::heading::size(),
+            options.maximum_request))
     {
     }
 
@@ -119,22 +122,20 @@ public:
     address_item_cptr get_updated_address() const NOEXCEPT;
 
 protected:
-    typedef messages::peer::heading::cptr heading_ptr;
-
     /// Stranded handler invoked from channel::stop().
     void stopping(const code& ec) NOEXCEPT override;
 
-    /// Protocol-specific read and dispatch.
-    void read_heading() NOEXCEPT;
-    void handle_read_heading(const code& ec, size_t) NOEXCEPT;
-    void handle_read_payload(const code& ec, size_t payload_size,
-        const heading_ptr& head) NOEXCEPT;
+    /// Message read and dispatch (framing is owned by peer::body).
+    void receive() NOEXCEPT;
+    void handle_receive(const code& ec, size_t bytes,
+        const messages::peer::frame_ptr& in) NOEXCEPT;
 
     /// For protocol version context.
     bool is_handshaked() const NOEXCEPT;
 
 private:
-    void log_message(const std::string_view& name, size_t size) const NOEXCEPT;
+    void log_fault(const code& ec,
+        const messages::peer::frame& in) const NOEXCEPT;
     void handle_send(const code& ec, size_t size,
         const system::chunk_cptr& payload,
         const result_handler& handler) NOEXCEPT;
@@ -146,12 +147,8 @@ private:
     size_t start_height_{};
     bool quiet_{};
 
-    system::data_chunk payload_buffer_{};
-    system::data_array<messages::peer::heading::size()> heading_buffer_{};
-
-    // Because heading buffer is fixed the stream can be reused as well.
-    system::stream::in::fast heading_stream_{ heading_buffer_ };
-    system::read::bytes::fast heading_reader_{ heading_stream_ };
+    // Message read buffer, sized and retained by channel policy.
+    http::flat_buffer read_buffer_;
 };
 
 } // namespace network

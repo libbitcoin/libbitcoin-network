@@ -452,7 +452,7 @@ bool stream::synthesize(const data_chunk& contents) NOEXCEPT
     const auto head = heading::factory(identifier_, command,
         data_slice{ payload, std::next(payload, payload_size) });
 
-    plain_.resize(heading::size() + payload_size);
+    plain_.resize(ceilinged_add(heading::size(), payload_size));
     if (!head.serialize({ plain_.data(), std::next(plain_.data(),
         heading::size()) }))
         return false;
@@ -515,7 +515,7 @@ bool stream::encrypt_frames() NOEXCEPT
         if (!reader || head.magic != identifier_)
             return false;
 
-        const auto frame = heading::size() + head.payload_size;
+        const auto frame = ceilinged_add(heading::size(), head.payload_size);
         if (head.payload_size > cipher::maximum_content)
             return false;
 

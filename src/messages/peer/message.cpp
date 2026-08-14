@@ -34,7 +34,7 @@ system::chunk_ptr serialize<transaction>(const transaction& message,
 {
     using namespace system;
     const auto body_size = message.size(version);
-    const auto size = heading::size() + body_size;
+    const auto size = ceilinged_add(heading::size(), body_size);
     const auto data = emplace_shared<data_chunk>(size);
     const auto start = std::next(data->begin(), heading::size());
     const data_slab body(start, data->end());

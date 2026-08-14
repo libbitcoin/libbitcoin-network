@@ -114,6 +114,39 @@ void proxy::do_tcp_write(const asio::const_buffer& payload,
 // close part and re-arming the read), and defers notifications while open.
 
 // flat_buffer must have configured max_size, which will be allocated.
+void proxy::read(http::flat_buffer& buffer,
+    messages::peer::frame& message, count_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    do_reading();
+
+    socket_->peer_read(buffer, message, std::move(handler));
+}
+
+void proxy::write(messages::peer::frame&& message,
+    count_handler&& handler) NOEXCEPT
+{
+    // Pointer ships moveable message through the send queue.
+    const auto out = move_shared(std::move(message));
+    writer call = std::bind(&proxy::do_peer_write,
+        shared_from_this(), out, std::move(handler));
+
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), std::move(call)));
+}
+
+// private
+void proxy::do_peer_write(const messages::peer::frame_ptr& message,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    socket_->peer_write(std::move(*message),
+        metered(std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler)));
+}
+
 void proxy::read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
 {

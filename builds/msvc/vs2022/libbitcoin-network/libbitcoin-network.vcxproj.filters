@@ -234,6 +234,9 @@
     <ClCompile Include="..\..\..\..\src\messages\http_body.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\peer\body.cpp">
+      <Filter>src\messages\peer</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\address.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
@@ -400,6 +403,9 @@
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_http.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_peer.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_rpc.cpp">
@@ -814,6 +820,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\messages.hpp">
       <Filter>include\bitcoin\network\messages</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\body.hpp">
+      <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address.hpp">
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>

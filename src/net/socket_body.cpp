@@ -53,7 +53,10 @@ void socket::body_read(http::flat_buffer& buffer, http::request& request,
     const auto in = emplace_shared<read_state>(request, buffer);
     in->reader.init({}, ec);
 
-    boost::asio::dispatch(strand_,
+    // Post (vs. dispatch) so that a message already buffered (batched or
+    // pipelined residue) cannot complete the read synchronously, which would
+    // recurse the caller's read loop unbounded over the buffered messages.
+    boost::asio::post(strand_,
         std::bind(&socket::do_body_read,
             shared_from_this(), ec, zero, in, std::move(handler)));
 }

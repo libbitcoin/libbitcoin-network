@@ -88,6 +88,7 @@ acceptor::ptr net::create_service(const socket::context& context) NOEXCEPT
 // inbound
 acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
 {
+    using namespace messages::peer;
     const auto& settings = network_settings();
 
     // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
@@ -95,10 +96,12 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
         std::holds_alternative<std::monostate>(context) ?
             socket::context{ std::cref(encryption_) } : context;
 
+    // The socket bound is a frame (headed payload) for p2p sockets.
     socket::parameters params
     {
         .connect_timeout = settings.connect_timeout(),
-        .maximum_request = settings.inbound.maximum_request,
+        .maximum_request = ceilinged_add(heading::size(),
+            settings.inbound.maximum_request),
         .context = accept
     };
 
@@ -111,10 +114,12 @@ connector::ptr net::create_connector(const settings::socks5& socks,
     const steady_clock::duration& connect_timeout,
     uint32_t maximum_request) NOEXCEPT
 {
+    // The socket bound is a frame (headed payload) for p2p sockets.
+    using namespace messages::peer;
     socket::parameters params
     {
         .connect_timeout = connect_timeout,
-        .maximum_request = maximum_request
+        .maximum_request = ceilinged_add(heading::size(), maximum_request)
     };
 
     if (network_settings().encrypt_node())

@@ -184,6 +184,18 @@ protected:
     virtual void read(http::flat_buffer& buffer, rpc::request& request,
         count_handler&& handler) NOEXCEPT;
 
+    /// PEER (TCP: bitcoin p2p).
+    /// -----------------------------------------------------------------------
+
+    /// Read peer message from the socket, using provided buffer.
+    /// The caller stamps parse context (magic/version/witness) on the frame.
+    virtual void read(http::flat_buffer& buffer,
+        messages::peer::frame& message, count_handler&& handler) NOEXCEPT;
+
+    /// Write peer message to the socket (peer::serialize frame in body).
+    virtual void write(messages::peer::frame&& message,
+        count_handler&& handler) NOEXCEPT;
+
     /// Write rpc response to the socket (json buffer in body).
     virtual void write(rpc::response&& response,
         count_handler&& handler) NOEXCEPT;
@@ -216,6 +228,8 @@ private:
     void do_ws_write(const asio::const_buffer& payload, bool binary,
         const count_handler& handler) NOEXCEPT;
     void do_tcp_write(const asio::const_buffer& payload,
+        const count_handler& handler) NOEXCEPT;
+    void do_peer_write(const messages::peer::frame_ptr& message,
         const count_handler& handler) NOEXCEPT;
     void do_response_write(const rpc::response_ptr& response,
         const count_handler& handler) NOEXCEPT;
