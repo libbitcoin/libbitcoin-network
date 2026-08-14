@@ -115,7 +115,13 @@ void channel_peer::set_negotiated_version(uint32_t value) NOEXCEPT
 
 bool channel_peer::current() const NOEXCEPT
 {
-    return false;
+    return current_;
+}
+
+void channel_peer::set_current(bool value) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    current_ = value;
 }
 
 bool channel_peer::is_handshaked() const NOEXCEPT

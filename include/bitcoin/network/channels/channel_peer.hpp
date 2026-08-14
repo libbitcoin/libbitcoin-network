@@ -112,8 +112,9 @@ public:
     uint32_t negotiated_version() const NOEXCEPT;
     void set_negotiated_version(uint32_t value) NOEXCEPT;
 
-    /// Chain is current (node override), reduces read buffer to minimum.
-    virtual bool current() const NOEXCEPT;
+    /// Chain is current, reduces the read buffer to the configured minimum.
+    bool current() const NOEXCEPT;
+    void set_current(bool value) NOEXCEPT;
 
     /// Peer version should be written only in handshake.
     messages::peer::version::cptr peer_version() const NOEXCEPT;
@@ -149,6 +150,7 @@ private:
     size_t start_height_{};
     bool reading_{};
     bool quiet_{};
+    bool current_{};
 };
 
 } // namespace network
