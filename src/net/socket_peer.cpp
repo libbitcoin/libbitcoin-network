@@ -27,6 +27,7 @@ namespace libbitcoin {
 namespace network {
 
 using namespace system;
+using namespace messages::peer;
 using namespace std::placeholders;
 
 // Shared pointers required in handler parameters so closures control lifetime.
@@ -40,13 +41,13 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // peer::serialize (typed serialization requires the caller's static type).
 
 void socket::peer_read(http::flat_buffer& buffer,
-    messages::peer::frame& message, count_handler&& handler) NOEXCEPT
+    frame& message, count_handler&& handler) NOEXCEPT
 {
     // Create variant http request to capture read.
     const auto in = to_shared<http::request>();
 
     // Preselect peer frame body value type, propagating parse context.
-    in->body() = messages::peer::frame{ message };
+    in->body() = frame{ message };
 
     // Capture body and move it back into message reference.
     body_read(buffer, *in,
@@ -57,16 +58,16 @@ void socket::peer_read(http::flat_buffer& buffer,
 
 // private
 void socket::handle_peer_read(const code& ec, size_t bytes,
-    const ref<messages::peer::frame>& out, const http::request_ptr& in,
+    const ref<frame>& out, const http::request_ptr& in,
     const count_handler& handler) NOEXCEPT
 {
     // Move peer frame from http body value to caller out param.
     // Moved on failure as well, as the frame carries parse fault detail.
-    out.get() = std::move(std::get<messages::peer::frame>(in->body().value()));
+    out.get() = std::move(std::get<frame>(in->body().value()));
     handler(ec, bytes);
 }
 
-void socket::peer_write(messages::peer::frame&& message,
+void socket::peer_write(frame&& message,
     count_handler&& handler) NOEXCEPT
 {
     http::response out{};
