@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 
 namespace libbitcoin {
@@ -62,7 +61,8 @@ struct BCT_API heading
     bool serialize(const system::data_slab& data) const NOEXCEPT;
     void serialize(system::writer& sink) const NOEXCEPT;
 
-    identifier id() const NOEXCEPT;
+    /// Registry index of the command, unknown if not a registered message.
+    size_t index() const NOEXCEPT;
 
     uint32_t magic;
     std::string command;

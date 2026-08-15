@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(witness_tx_id_relay__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(witness_tx_id_relay::command, "wtxidrelay");
-    BOOST_REQUIRE(witness_tx_id_relay::id == identifier::witness_tx_id_relay);
+    constexpr auto index = rpc::peer_registry::index_of<witness_tx_id_relay>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), witness_tx_id_relay::command);
     BOOST_REQUIRE_EQUAL(witness_tx_id_relay::version_minimum, level::bip339);
     BOOST_REQUIRE_EQUAL(witness_tx_id_relay::version_maximum, level::maximum_protocol);
 }

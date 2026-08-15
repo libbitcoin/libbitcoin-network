@@ -22,7 +22,6 @@
 #include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/detail/alert_item.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -33,7 +32,6 @@ struct BCT_API alert
 {
     typedef std::shared_ptr<const alert> cptr;
 
-    static const identifier id;
     static const std::string command;
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;

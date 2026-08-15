@@ -18,44 +18,8 @@
  */
 #include <bitcoin/network/messages/peer/heading.hpp>
 
-#include <map>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/peer/detail/address.hpp>
-#include <bitcoin/network/messages/peer/detail/alert.hpp>
-#include <bitcoin/network/messages/peer/detail/block.hpp>
-#include <bitcoin/network/messages/peer/detail/bloom_filter_add.hpp>
-#include <bitcoin/network/messages/peer/detail/bloom_filter_clear.hpp>
-#include <bitcoin/network/messages/peer/detail/bloom_filter_load.hpp>
-#include <bitcoin/network/messages/peer/detail/client_filter.hpp>
-#include <bitcoin/network/messages/peer/detail/client_filter_checkpoint.hpp>
-#include <bitcoin/network/messages/peer/detail/client_filter_headers.hpp>
-#include <bitcoin/network/messages/peer/detail/compact_block.hpp>
-#include <bitcoin/network/messages/peer/detail/compact_transactions.hpp>
-#include <bitcoin/network/messages/peer/detail/fee_filter.hpp>
-#include <bitcoin/network/messages/peer/detail/get_address.hpp>
-#include <bitcoin/network/messages/peer/detail/get_blocks.hpp>
-#include <bitcoin/network/messages/peer/detail/get_client_filter_checkpoint.hpp>
-#include <bitcoin/network/messages/peer/detail/get_client_filter_headers.hpp>
-#include <bitcoin/network/messages/peer/detail/get_client_filters.hpp>
-#include <bitcoin/network/messages/peer/detail/get_compact_transactions.hpp>
-#include <bitcoin/network/messages/peer/detail/get_data.hpp>
-#include <bitcoin/network/messages/peer/detail/get_headers.hpp>
-#include <bitcoin/network/messages/peer/detail/headers.hpp>
-#include <bitcoin/network/messages/peer/detail/inventory.hpp>
-#include <bitcoin/network/messages/peer/detail/memory_pool.hpp>
-#include <bitcoin/network/messages/peer/detail/merkle_block.hpp>
-#include <bitcoin/network/messages/peer/detail/not_found.hpp>
-#include <bitcoin/network/messages/peer/detail/ping.hpp>
-#include <bitcoin/network/messages/peer/detail/pong.hpp>
-#include <bitcoin/network/messages/peer/detail/reject.hpp>
-#include <bitcoin/network/messages/peer/detail/send_address_v2.hpp>
-#include <bitcoin/network/messages/peer/detail/send_compact.hpp>
-#include <bitcoin/network/messages/peer/detail/send_headers.hpp>
-#include <bitcoin/network/messages/peer/detail/transaction.hpp>
-#include <bitcoin/network/messages/peer/detail/version.hpp>
-#include <bitcoin/network/messages/peer/detail/version_acknowledge.hpp>
-#include <bitcoin/network/messages/peer/detail/witness_tx_id_relay.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
+#include <bitcoin/network/interfaces/peer_registry.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
 namespace libbitcoin {
@@ -159,56 +123,10 @@ void heading::serialize(writer& sink) const NOEXCEPT
     sink.write_4_bytes_little_endian(checksum);
 }
 
-#define COMMAND_ID(name) { name::command, name::id }
-
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-identifier heading::id() const NOEXCEPT
+size_t heading::index() const NOEXCEPT
 {
-    // Internal to function avoids static initialization race.
-    static const std::map<std::string, identifier> identifiers
-    {
-        COMMAND_ID(address),
-        COMMAND_ID(alert),
-        COMMAND_ID(block),
-        COMMAND_ID(bloom_filter_add),
-        COMMAND_ID(bloom_filter_clear),
-        COMMAND_ID(bloom_filter_load),
-        COMMAND_ID(client_filter),
-        COMMAND_ID(client_filter_checkpoint),
-        COMMAND_ID(client_filter_headers),
-        COMMAND_ID(compact_block),
-        COMMAND_ID(compact_transactions),
-        COMMAND_ID(fee_filter),
-        COMMAND_ID(get_address),
-        COMMAND_ID(get_blocks),
-        COMMAND_ID(get_client_filter_checkpoint),
-        COMMAND_ID(get_client_filter_headers),
-        COMMAND_ID(get_client_filters),
-        COMMAND_ID(get_compact_transactions),
-        COMMAND_ID(get_data),
-        COMMAND_ID(get_headers),
-        COMMAND_ID(headers),
-        COMMAND_ID(inventory),
-        COMMAND_ID(memory_pool),
-        COMMAND_ID(merkle_block),
-        COMMAND_ID(not_found),
-        COMMAND_ID(ping),
-        COMMAND_ID(pong),
-        COMMAND_ID(reject),
-        COMMAND_ID(send_address_v2),
-        COMMAND_ID(send_compact),
-        COMMAND_ID(send_headers),
-        COMMAND_ID(transaction),
-        COMMAND_ID(version),
-        COMMAND_ID(version_acknowledge)
-    };
-
-    const auto it = identifiers.find(command);
-    return (it == identifiers.end() ? identifier::unknown : it->second);
+    return rpc::peer_registry::index(command);
 }
-BC_POP_WARNING()
-
-#undef COMMAND_ID
 
 } // namespace peer
 } // namespace messages

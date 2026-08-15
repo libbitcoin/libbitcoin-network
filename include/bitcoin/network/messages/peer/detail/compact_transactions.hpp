@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -33,7 +32,6 @@ struct BCT_API compact_transactions
 {
     typedef std::shared_ptr<const compact_transactions> cptr;
 
-    static const identifier id;
     static const std::string command;
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;

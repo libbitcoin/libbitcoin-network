@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/ping.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
 
 // ping.nonce added by bip31.
-const identifier ping::id = identifier::ping;
 const std::string ping::command = "ping";
 const uint32_t ping::version_minimum = level::minimum_protocol;
 const uint32_t ping::version_maximum = level::maximum_protocol;

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/send_address_v2.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
 
 const std::string send_address_v2::command = "sendaddrv2";
-const identifier send_address_v2::id = identifier::send_address_v2;
 const uint32_t send_address_v2::version_minimum = level::bip155;
 const uint32_t send_address_v2::version_maximum = level::maximum_protocol;
 

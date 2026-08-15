@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(send_address_v2__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(send_address_v2::command, "sendaddrv2");
-    BOOST_REQUIRE(send_address_v2::id == identifier::send_address_v2);
+    constexpr auto index = rpc::peer_registry::index_of<send_address_v2>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), send_address_v2::command);
     BOOST_REQUIRE_EQUAL(send_address_v2::version_minimum, level::bip155);
     BOOST_REQUIRE_EQUAL(send_address_v2::version_maximum, level::maximum_protocol);
 }

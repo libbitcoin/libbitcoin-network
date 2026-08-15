@@ -22,7 +22,6 @@
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/peer/detail/transaction.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -37,7 +36,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
     
 const std::string block::command = "block";
-const identifier block::id = identifier::block;
 const uint32_t block::version_minimum = level::minimum_protocol;
 const uint32_t block::version_maximum = level::maximum_protocol;
 

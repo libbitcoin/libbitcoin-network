@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(version_acknowledge__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(version_acknowledge::command, "verack");
-    BOOST_REQUIRE(version_acknowledge::id == identifier::version_acknowledge);
+    constexpr auto index = rpc::peer_registry::index_of<version_acknowledge>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), version_acknowledge::command);
     BOOST_REQUIRE_EQUAL(version_acknowledge::version_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(version_acknowledge::version_maximum, level::maximum_protocol);
 }

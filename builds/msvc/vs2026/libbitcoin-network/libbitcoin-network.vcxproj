@@ -335,6 +335,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_registry.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\levels.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp" />
@@ -395,7 +396,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\version_acknowledge.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\witness_tx_id_relay.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\identifier.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\level.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\magic_numbers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\service.hpp" />

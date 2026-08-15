@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 
 namespace libbitcoin {
 namespace network {

@@ -21,7 +21,6 @@
 
 #include <bitcoin/network/messages/peer/detail/get_client_filter_headers.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -33,7 +32,6 @@ namespace peer {
 using namespace system;
     
 const std::string get_client_filter_headers::command = "getcfheaders";
-const identifier get_client_filter_headers::id = identifier::get_client_filter_headers;
 const uint32_t get_client_filter_headers::version_minimum = level::bip157;
 const uint32_t get_client_filter_headers::version_maximum = level::maximum_protocol;
 

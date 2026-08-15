@@ -20,7 +20,6 @@
 
 #include <numeric>
 #include <bitcoin/network/messages/peer/detail/compact_block_item.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -32,7 +31,6 @@ namespace peer {
 using namespace system;
     
 const std::string compact_block::command = "cmpctblock";
-const identifier compact_block::id = identifier::compact_block;
 const uint32_t compact_block::version_minimum = level::bip152;
 const uint32_t compact_block::version_maximum = level::maximum_protocol;
 

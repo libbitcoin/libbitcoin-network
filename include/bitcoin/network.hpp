@@ -56,6 +56,7 @@
 #include <bitcoin/network/interfaces/interfaces.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
+#include <bitcoin/network/interfaces/peer_registry.hpp>
 #include <bitcoin/network/log/capture.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -118,7 +119,6 @@
 #include <bitcoin/network/messages/peer/detail/version.hpp>
 #include <bitcoin/network/messages/peer/detail/version_acknowledge.hpp>
 #include <bitcoin/network/messages/peer/detail/witness_tx_id_relay.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>

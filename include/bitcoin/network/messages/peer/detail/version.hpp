@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/detail/address_item.hpp>
 
 namespace libbitcoin {
@@ -34,7 +33,6 @@ struct BCT_API version
 {
     typedef std::shared_ptr<const version> cptr;
 
-    static const identifier id;
     static const std::string command;
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;

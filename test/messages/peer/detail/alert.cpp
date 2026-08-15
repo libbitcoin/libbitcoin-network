@@ -27,7 +27,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(alert__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(alert::command, "alert");
-    BOOST_REQUIRE(alert::id == identifier::alert);
+    constexpr auto index = rpc::peer_registry::index_of<alert>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), alert::command);
     BOOST_REQUIRE_EQUAL(alert::version_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(alert::version_maximum, level::maximum_protocol);
 }

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/pong.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
     
 const std::string pong::command = "pong";
-const identifier pong::id = identifier::pong;
 const uint32_t pong::version_minimum = level::bip31;
 const uint32_t pong::version_maximum = level::maximum_protocol;
 

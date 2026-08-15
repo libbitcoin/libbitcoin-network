@@ -332,7 +332,8 @@ include_bitcoin_network_interfaces_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/interfaces/http.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/interfaces.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_broadcast.hpp \
-    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp
+    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp \
+    ${srcdir}/../../include/bitcoin/network/interfaces/peer_registry.hpp
 
 include_bitcoin_network_logdir = \
     ${includedir}/bitcoin/network/log
@@ -430,7 +431,6 @@ include_bitcoin_network_messages_peer_enumsdir = \
     ${includedir}/bitcoin/network/messages/peer/enums
 
 include_bitcoin_network_messages_peer_enums_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/messages/peer/enums/identifier.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/enums/level.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/enums/magic_numbers.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/enums/service.hpp

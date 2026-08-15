@@ -19,7 +19,6 @@
 #include <bitcoin/network/messages/peer/detail/address.hpp>
 
 #include <bitcoin/network/messages/peer/detail/address_item.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
@@ -32,7 +31,6 @@ namespace peer {
 using namespace system;
 
 const std::string address::command = "addr";
-const identifier address::id = identifier::address;
 const uint32_t address::version_minimum = level::minimum_protocol;
 const uint32_t address::version_maximum = level::maximum_protocol;
 

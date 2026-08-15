@@ -19,7 +19,6 @@
 #include <bitcoin/network/messages/peer/detail/alert_item.hpp>
 
 #include <numeric>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>

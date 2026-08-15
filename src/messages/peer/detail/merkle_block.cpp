@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/merkle_block.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
     
 const std::string merkle_block::command = "merkleblock";
-const identifier merkle_block::id = identifier::merkle_block;
 const uint32_t merkle_block::version_minimum = level::bip37;
 const uint32_t merkle_block::version_maximum = level::maximum_protocol;
 

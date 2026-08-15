@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/bloom_filter_load.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
@@ -31,7 +30,6 @@ namespace peer {
 using namespace system;
     
 const std::string bloom_filter_load::command = "filterload";
-const identifier bloom_filter_load::id = identifier::bloom_filter_load;
 const uint32_t bloom_filter_load::version_minimum = level::bip37;
 const uint32_t bloom_filter_load::version_maximum = level::maximum_protocol;
 

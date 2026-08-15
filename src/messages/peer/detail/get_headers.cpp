@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/get_headers.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/detail/get_blocks.hpp>
@@ -32,7 +31,6 @@ namespace peer {
 using namespace system;
     
 const std::string get_headers::command = "getheaders";
-const identifier get_headers::id = identifier::get_headers;
 const uint32_t get_headers::version_minimum = level::headers_protocol;
 const uint32_t get_headers::version_maximum = level::maximum_protocol;
 

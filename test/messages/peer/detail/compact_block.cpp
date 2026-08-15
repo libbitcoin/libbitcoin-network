@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(compact_block__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(compact_block::command, "cmpctblock");
-    BOOST_REQUIRE(compact_block::id == identifier::compact_block);
+    constexpr auto index = rpc::peer_registry::index_of<compact_block>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), compact_block::command);
     BOOST_REQUIRE_EQUAL(compact_block::version_minimum, level::bip152);
     BOOST_REQUIRE_EQUAL(compact_block::version_maximum, level::maximum_protocol);
 }

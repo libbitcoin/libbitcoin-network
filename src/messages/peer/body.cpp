@@ -20,6 +20,7 @@
 
 #include <utility>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/interfaces/peer_registry.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
 
@@ -33,27 +34,6 @@ using namespace system;
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
 BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
-
-#define PEER_DESERIALIZE_ANY(name, ...) \
-case identifier::name: \
-{ \
-    const name::cptr ptr = name::deserialize(version_, data \
-        __VA_OPT__(,) __VA_ARGS__); \
-    return ptr ? rpc::any_t{ ptr } : rpc::any_t{}; \
-}
-
-// Type-erased deserialization of the identified message payload.
-static rpc::any_t to_any(identifier id, const data_chunk& data,
-    uint32_t version_, bool witness) NOEXCEPT
-{
-    switch (id)
-    {
-        PEER_MESSAGE_LIST(PEER_DESERIALIZE_ANY)
-        default: return {};
-    }
-}
-
-#undef PEER_DESERIALIZE_ANY
 
 // peer::body::reader
 // ----------------------------------------------------------------------------
@@ -93,8 +73,8 @@ bool body::reader::accept(const data_chunk& payload, boost_code& ec) NOEXCEPT
         return false;
     }
 
-    value_.payload = to_any(value_.head.id(), payload, value_.version,
-        value_.witness);
+    value_.payload = rpc::peer_registry::to_any(value_.head.index(), payload,
+        value_.version, value_.witness);
 
     if (!value_.payload)
     {

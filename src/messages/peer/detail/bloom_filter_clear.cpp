@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/bloom_filter_clear.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
     
 const std::string bloom_filter_clear::command = "filterclear";
-const identifier bloom_filter_clear::id = identifier::bloom_filter_clear;
 const uint32_t bloom_filter_clear::version_minimum = level::bip37;
 const uint32_t bloom_filter_clear::version_maximum = level::maximum_protocol;
 

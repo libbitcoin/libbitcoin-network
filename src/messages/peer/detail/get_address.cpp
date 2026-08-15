@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/get_address.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
     
 const std::string get_address::command = "getaddr";
-const identifier get_address::id = identifier::get_address;
 const uint32_t get_address::version_minimum = level::minimum_protocol;
 const uint32_t get_address::version_maximum = level::maximum_protocol;
 

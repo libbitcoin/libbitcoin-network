@@ -22,6 +22,7 @@
 #include <bitcoin/network/interfaces/http.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
+#include <bitcoin/network/interfaces/peer_registry.hpp>
 
 namespace libbitcoin {
 namespace network {

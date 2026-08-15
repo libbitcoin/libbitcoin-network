@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
 
     const auto ec5 = instance.notify(
     {
-        // success – duplicate keys are allowed (real JSON input)
+        // success ï¿½ duplicate keys are allowed (real JSON input)
         // Boost.JSON parser resolves duplicates using last-writer-wins,
         // before object_t conversion occurs, so map never sees duplicates.
         // Test construction uses initializer_list -> first-writer-wins.
@@ -886,7 +886,6 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
 
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(result);
-    BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
     BOOST_REQUIRE_EQUAL(result->nonce, expected);
     instance.stop(error::service_stopped);
 }
@@ -916,7 +915,6 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
 
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(result);
-    BOOST_REQUIRE(result->id == messages::peer::identifier::ping);
     BOOST_REQUIRE_EQUAL(result->nonce, expected);
     instance.stop(error::service_stopped);
 }

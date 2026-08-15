@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/fee_filter.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
     
 const std::string fee_filter::command = "feefilter";
-const identifier fee_filter::id = identifier::fee_filter;
 const uint32_t fee_filter::version_minimum = level::bip133;
 const uint32_t fee_filter::version_maximum = level::maximum_protocol;
 

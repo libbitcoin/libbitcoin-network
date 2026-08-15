@@ -22,7 +22,6 @@
 #include <memory>
 #include <ranges>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
 
 namespace libbitcoin {
@@ -38,7 +37,6 @@ struct BCT_API inventory
     typedef inventory_item::type_id type_id;
     typedef inventory_item item;
 
-    static const identifier id;
     static const std::string command;
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;

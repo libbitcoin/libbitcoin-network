@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/version_acknowledge.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
     
 const std::string version_acknowledge::command = "verack";
-const identifier version_acknowledge::id = identifier::version_acknowledge;
 const uint32_t version_acknowledge::version_minimum = level::minimum_protocol;
 const uint32_t version_acknowledge::version_maximum = level::maximum_protocol;
 

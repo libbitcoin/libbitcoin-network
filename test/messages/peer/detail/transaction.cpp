@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(transaction__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(transaction::command, "tx");
-    BOOST_REQUIRE(transaction::id == identifier::transaction);
+    constexpr auto index = rpc::peer_registry::index_of<transaction>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), transaction::command);
     BOOST_REQUIRE_EQUAL(transaction::version_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(transaction::version_maximum, level::maximum_protocol);
 }

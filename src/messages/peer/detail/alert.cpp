@@ -20,7 +20,6 @@
 
 #include <utility>
 #include <bitcoin/network/messages/peer/detail/alert_item.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -32,7 +31,6 @@ namespace peer {
 using namespace system;
     
 const std::string alert::command = "alert";
-const identifier alert::id = identifier::alert;
 const uint32_t alert::version_minimum = level::minimum_protocol;
 const uint32_t alert::version_maximum = level::maximum_protocol;
 
