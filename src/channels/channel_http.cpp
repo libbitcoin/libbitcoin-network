@@ -78,7 +78,7 @@ void channel_http::receive() NOEXCEPT
     const auto in = create_request();
     auto& buffer = request_buffer();
     const auto minimum = options().minimum_buffer;
-    if (buffer.capacity() > minimum)
+    if (buffer.capacity() > minimum && buffer.size() <= minimum)
     {
         buffer.shrink_to_fit();
         buffer.reserve(minimum);
