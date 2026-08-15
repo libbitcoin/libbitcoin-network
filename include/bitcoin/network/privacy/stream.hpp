@@ -58,21 +58,21 @@ public:
     static bool detected_v1(const std::span<const uint8_t>& prefix,
         uint32_t identifier) NOEXCEPT;
 
-    /// Assume ownership of the connected tcp socket (initiator).
+    /// Assume ownership of the connected tcp socket.
     stream(asio::socket&& socket, const context& context) NOEXCEPT;
-
-    /// Assume ownership of the accepted tcp socket (responder), with the
-    /// detection prefix bytes consumed by the socket (partial peer key).
-    stream(asio::socket&& socket, const context& context,
-        system::data_chunk&& detected) NOEXCEPT;
 
     /// asio stream conventions (next_layer enables get_lowest_layer).
     executor_type get_executor() NOEXCEPT;
     asio::socket& next_layer() NOEXCEPT;
     const asio::socket& next_layer() const NOEXCEPT;
 
-    /// Perform the v2 handshake, set initiate if this side connected.
-    void async_handshake(bool initiate, handshake_handler&& handler) NOEXCEPT;
+    /// Perform the v2 handshake as the connection initiator.
+    void async_handshake(handshake_handler&& handler) NOEXCEPT;
+
+    /// Perform the v2 handshake as the responder, given the detection
+    /// prefix bytes consumed by the socket (partial peer key).
+    void async_handshake(system::data_chunk&& detected,
+        handshake_handler&& handler) NOEXCEPT;
 
     /// The session identifier (valid after v2 handshake).
     const system::hash_digest& session_id() const NOEXCEPT;
@@ -92,13 +92,16 @@ public:
 private:
     typedef std::function<void(const boost_code&)> pump_handler;
 
+    using key_ptr = std::shared_ptr<cipher::key>;
+
     // handshake
     void do_initiate(const handshake_handler& handler) NOEXCEPT;
-    void do_respond(const handshake_handler& handler) NOEXCEPT;
+    void do_respond(system::data_chunk&& detected,
+        const handshake_handler& handler) NOEXCEPT;
     void handle_key_sent(const boost_code& ec,
         const handshake_handler& handler) NOEXCEPT;
     void handle_their_key(const boost_code& ec, bool initiate,
-        const handshake_handler& handler) NOEXCEPT;
+        const key_ptr& peer, const handshake_handler& handler) NOEXCEPT;
     void send_terminator_version(bool initiate,
         const handshake_handler& handler) NOEXCEPT;
     void handle_terminator_sent(const boost_code& ec,
@@ -133,18 +136,12 @@ private:
 
 
     // These are protected by stream (executor) sequencing.
+    cipher cipher_{};
     asio::socket socket_;
-    cipher cipher_;
     const uint32_t identifier_;
-
-    // Peer key accumulation and handshake packet stream residue.
-    system::data_chunk replay_{};
-
-    // read state
-    system::data_chunk garbage_{};
     system::data_chunk packet_{};
-
-
+    system::data_chunk residue_{};
+    system::data_chunk garbage_{};
 };
 
 } // namespace privacy

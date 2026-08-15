@@ -92,12 +92,12 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
     {
         detected = ec;
         v1 = v2_stream::detected_v1(prefix, mainnet);
-        upgraded.emplace(std::move(server), configuration, std::move(prefix));
-        upgraded->async_handshake(false, shook);
+        upgraded.emplace(std::move(server), configuration);
+        upgraded->async_handshake(std::move(prefix), shook);
     };
 
     const auto shake = [&](const boost_code& ec) { initiated = ec; };
-    initiator.async_handshake(true, shake);
+    initiator.async_handshake(shake);
     const boost::asio::mutable_buffer out{ prefix.data(), prefix.size() };
     boost::asio::async_read(server, out, detect);
 

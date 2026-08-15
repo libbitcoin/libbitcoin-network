@@ -199,7 +199,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
             std::get<cref<privacy::context>>(context_).get());
 
         // Posts handler to socket strand.
-        get_p2ps().async_handshake(true,
+        get_p2ps().async_handshake(
             std::bind(&socket::handle_encrypted_handshake,
                 shared_from_this(), _1, handler));
         return;
@@ -263,11 +263,10 @@ void socket::handle_detection(const boost_code& ec,
     auto socket = std::move(get_base());
 
     // P2PS (bip324) context is applied to the socket.
-    socket_.emplace<privacy::stream>(std::move(socket), context,
-        std::move(key));
+    socket_.emplace<privacy::stream>(std::move(socket), context);
 
     // Posts handler to socket strand.
-    get_p2ps().async_handshake(false,
+    get_p2ps().async_handshake(std::move(key),
         std::bind(&socket::handle_encrypted_handshake,
             shared_from_this(), _1, handler));
 }
