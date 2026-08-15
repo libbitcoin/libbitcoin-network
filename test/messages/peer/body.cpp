@@ -272,6 +272,135 @@ BOOST_AUTO_TEST_CASE(peer_body__put__checksum_disabled__message)
     BOOST_REQUIRE(reader.done());
 }
 
+// The framed reader parses the caller buffer supplied at construct, which is
+// how socket::peer_read drives it (the buffer is not consumed by the parse).
+
+static data_chunk block_frame()
+{
+    const system::settings settings{ system::chain::selection::mainnet };
+    const auto payload = settings.genesis_block.to_data(true);
+    const auto head = heading::factory(magic, "block", payload);
+    data_chunk framed(heading::size() + payload.size());
+    const auto start = framed.data();
+    BOOST_REQUIRE(head.serialize({ start, std::next(start, heading::size()) }));
+    std::copy(payload.begin(), payload.end(), std::next(framed.begin(), heading::size()));
+    return framed;
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer_sequence__message)
+{
+    const auto data = ping_frame();
+    const auto head = frame_head(data);
+    auto buffer = frame_payload(data);
+
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value, buffer };
+    reader.init({}, ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put({ head.data(), head.size() }, ec), heading::size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(reader.need(), sizeof(uint64_t));
+
+    BOOST_REQUIRE_EQUAL(reader.put({ buffer.data(), buffer.size() }, ec), buffer.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto message = value.payload.get<const ping>();
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->nonce, nonce);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer__buffer_retained)
+{
+    const auto data = ping_frame();
+    const auto head = frame_head(data);
+    const auto payload = frame_payload(data);
+    auto buffer = payload;
+
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value, buffer };
+    reader.init({}, ec);
+    reader.put({ head.data(), head.size() }, ec);
+    reader.put({ buffer.data(), buffer.size() }, ec);
+    BOOST_REQUIRE(reader.done());
+
+    // The message parses the buffer in place, leaving it to the caller.
+    BOOST_REQUIRE_EQUAL(buffer, payload);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer_empty_payload__completes_on_heading)
+{
+    const data_chunk payload{};
+    data_chunk data(heading::size());
+    const auto head = heading::factory(magic, "verack", payload);
+    BOOST_REQUIRE(head.serialize({ data.data(), std::next(data.data(), heading::size()) }));
+
+    // Stale content from a prior message must not reach the parse.
+    data_chunk buffer(42, 0x42);
+
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value, buffer };
+    reader.init({}, ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put({ data.data(), data.size() }, ec), heading::size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(value.payload.get<const version_acknowledge>());
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer_invalid_checksum__fault)
+{
+    auto data = ping_frame();
+    data.back() ^= 0x01;
+    const auto head = frame_head(data);
+    auto buffer = frame_payload(data);
+
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value, buffer };
+    reader.init({}, ec);
+
+    reader.put({ head.data(), head.size() }, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put({ buffer.data(), buffer.size() }, ec);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE_EQUAL(value.fault, error::invalid_checksum);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer_block__message)
+{
+    const auto data = block_frame();
+    const auto head = frame_head(data);
+    auto buffer = frame_payload(data);
+
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value, buffer };
+    reader.init({}, ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put({ head.data(), head.size() }, ec), heading::size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(reader.need(), buffer.size());
+
+    BOOST_REQUIRE_EQUAL(reader.put({ buffer.data(), buffer.size() }, ec), buffer.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+
+    const auto message = value.payload.get<const block>();
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(message->block.is_valid());
+}
+
 BOOST_AUTO_TEST_CASE(peer_body__writer__frame__emitted)
 {
     auto value = test_frame();
@@ -290,6 +419,25 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__frame__emitted)
     BOOST_REQUIRE(writer.done());
     BOOST_REQUIRE_EQUAL(out->first.data(), value.data->data());
     BOOST_REQUIRE_EQUAL(out->first.size(), value.data->size());
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__writer__get_twice__empty)
+{
+    auto value = test_frame();
+    value.data = system::to_shared(ping_frame());
+
+    boost_code ec{};
+    body::writer writer{ value };
+    writer.init(ec);
+
+    const auto out = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(out.has_value());
+    BOOST_REQUIRE(writer.done());
+
+    const auto empty = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(!empty.has_value());
 }
 
 BOOST_AUTO_TEST_CASE(peer_body__writer__no_frame__error)
