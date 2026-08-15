@@ -52,7 +52,11 @@ struct BCT_API body
         /// Type-erased deserialized message (read out).
         rpc::any_t payload{};
 
-        /// Serialized frame from peer::serialize (write in).
+        /// Type-erased message with its registry index (write in).
+        rpc::any_t message{};
+        size_t index{};
+
+        /// Serialized v1 frame (write out).
         system::chunk_cptr data{};
     };
 

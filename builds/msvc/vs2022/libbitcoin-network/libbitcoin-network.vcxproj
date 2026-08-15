@@ -218,7 +218,6 @@
     <ClCompile Include="..\..\..\..\src\net\socket_wait.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp" />
     <ClCompile Include="..\..\..\..\src\privacy\cipher.cpp" />
-    <ClCompile Include="..\..\..\..\src\privacy\commands.cpp" />
     <ClCompile Include="..\..\..\..\src\privacy\stream.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_in_209.cpp" />
@@ -425,7 +424,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\preprocessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\cipher.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\commands.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\privacy.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\stream.hpp" />

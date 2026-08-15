@@ -21,6 +21,7 @@
 #include <utility>
 #include <variant>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/interfaces/peer_registry.hpp>
 #include <bitcoin/network/log/log.hpp>
 
 namespace libbitcoin {
@@ -130,9 +131,41 @@ void socket::handle_peer_read_encrypted(const boost_code& ec,
 void socket::peer_write(frame&& message,
     count_handler&& handler) NOEXCEPT
 {
-    http::response out{};
-    out.body() = std::move(message);
-    body_write(std::move(out), std::move(handler));
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_peer_write,
+            shared_from_this(), emplace_shared<frame>(std::move(message)),
+            std::move(handler)));
+}
+
+// private
+void socket::do_peer_write(const frame_ptr& out,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (is_encrypted())
+    {
+        using registry = rpc::peer_registry;
+        const auto payload = registry::to_payload(out->index, out->message,
+            out->version);
+
+        if (!payload || out->index >= registry::size)
+        {
+            handler(error::bad_stream, zero);
+            return;
+        }
+
+        get_p2ps().async_write_message(
+            registry::identifiers().at(out->index),
+            std::string{ registry::commands().at(out->index) }, payload,
+            std::bind(&socket::handle_async,
+                shared_from_this(), _1, _2, handler, "async_write_message"));
+        return;
+    }
+
+    http::response response{};
+    response.body() = std::move(*out);
+    body_write(std::move(response), count_handler{ handler });
 }
 
 BC_POP_WARNING()

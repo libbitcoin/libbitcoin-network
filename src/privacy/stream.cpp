@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <bitcoin/network/privacy/commands.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
@@ -447,9 +446,23 @@ bool stream::split(uint8_t& identifier, std::string& command, size_t& prefix,
 // Write path.
 // ----------------------------------------------------------------------------
 
-void stream::write_pending(size_t size, io_handler&& handler) NOEXCEPT
+// Packet writer.
+// ----------------------------------------------------------------------------
+
+void stream::async_write_message(uint8_t identifier,
+    const std::string& command, const system::chunk_cptr& payload,
+    io_handler&& handler) NOEXCEPT
 {
-    if (!encrypt_frames())
+    using namespace messages::peer;
+
+    // bip324
+    // Contents are the short type identifier (or zero byte and padded
+    // command) followed by the payload.
+    const auto prefix = is_zero(identifier) ? add1(heading::command_size) :
+        one;
+
+    if (!payload || command.size() > heading::command_size ||
+        payload->size() > cipher::maximum_content - prefix)
     {
         boost::asio::post(get_executor(),
             [handler = std::move(handler)]() mutable
@@ -459,84 +472,30 @@ void stream::write_pending(size_t size, io_handler&& handler) NOEXCEPT
         return;
     }
 
-    if (ciphertext_.empty())
+    data_chunk contents{};
+    contents.reserve(prefix + payload->size());
+    contents.push_back(identifier);
+
+    if (is_zero(identifier))
     {
-        // Nothing complete to send yet, input is buffered.
-        boost::asio::post(get_executor(),
-            [handler = std::move(handler), size]() mutable
-            {
-                std::move(handler)(boost_code{}, size);
-            });
-        return;
+        contents.resize(prefix, 0x00);
+        std::copy_n(command.begin(), command.size(),
+            std::next(contents.begin()));
     }
 
-    // Move ciphertext into a stable buffer for the async write.
-    const auto out = std::make_shared<data_chunk>(std::move(ciphertext_));
-    ciphertext_ = {};
+    contents.insert(contents.end(), payload->begin(), payload->end());
+
+    const auto packet = std::make_shared<data_chunk>(
+        contents.size() + cipher::expansion);
+    cipher_.encrypt(contents, {}, false, *packet);
 
     boost::asio::async_write(socket_,
-        boost::asio::const_buffer{ out->data(), out->size() },
-        [out, size, handler = std::move(handler)](
-            const boost_code& ec, size_t) mutable
+        boost::asio::const_buffer{ packet->data(), packet->size() },
+        [packet, handler = std::move(handler)](
+            const boost_code& ec, size_t size) mutable
         {
-            std::move(handler)(ec, ec ? zero : size);
+            std::move(handler)(ec, size);
         });
-}
-
-// Encrypt all complete v1 messages in pending_ into ciphertext_.
-bool stream::encrypt_frames() NOEXCEPT
-{
-    using namespace messages::peer;
-
-    while (pending_.size() >= heading::size())
-    {
-        system::stream::in::fast source{ pending_ };
-        system::read::bytes::fast reader{ source };
-        const auto head = heading::deserialize(reader);
-        if (!reader || head.magic != identifier_)
-            return false;
-
-        const auto frame = ceilinged_add(heading::size(), head.payload_size);
-        if (head.payload_size > cipher::maximum_content)
-            return false;
-
-        if (pending_.size() < frame)
-            break;
-
-        // bip324
-        // Contents are the short type identifier (or zero byte and padded
-        // command) followed by the payload (magic/checksum are dropped).
-        const auto id = to_identifier(head.command);
-        data_chunk contents{};
-        contents.reserve(add1(head.payload_size));
-
-        if (is_zero(id))
-        {
-            contents.push_back(0x00);
-            contents.resize(add1(heading::command_size), 0x00);
-            std::copy_n(head.command.begin(), head.command.size(),
-                std::next(contents.begin()));
-        }
-        else
-        {
-            contents.push_back(id);
-        }
-
-        contents.insert(contents.end(),
-            std::next(pending_.begin(), heading::size()),
-            std::next(pending_.begin(), frame));
-
-        // Append the encrypted packet to the ciphertext buffer.
-        const auto start = ciphertext_.size();
-        ciphertext_.resize(start + contents.size() + cipher::expansion);
-        cipher_.encrypt(contents, {}, false, std::span<uint8_t>
-            { std::next(ciphertext_.data(), start),
-                contents.size() + cipher::expansion });
-
-        pending_.erase(pending_.begin(), std::next(pending_.begin(), frame));
-    }
-
-    return true;
 }
 
 BC_POP_WARNING()

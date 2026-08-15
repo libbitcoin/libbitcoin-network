@@ -115,10 +115,10 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
     };
 
     // Send a short-identifier message (ping) initiator to responder.
-    const auto ping = v1_frame("ping", system::base16_chunk("0011223344556677"));
+    const auto ping_payload = system::base16_chunk("0011223344556677");
     boost_code sent{ boost::asio::error::would_block };
-    boost::asio::async_write(initiator,
-        boost::asio::const_buffer{ ping.data(), ping.size() },
+    initiator.async_write_message(identifiers::ping, "",
+        system::to_shared(ping_payload),
         [&](const boost_code& ec, size_t) { sent = ec; });
 
     read_message(responder);
@@ -128,15 +128,13 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
     BOOST_REQUIRE(!got);
     BOOST_REQUIRE_EQUAL(identifier, identifiers::ping);
     BOOST_REQUIRE(command.empty());
-    const data_chunk ping_payload(std::next(ping.begin(), heading::size()),
-        ping.end());
     BOOST_REQUIRE_EQUAL(payload, ping_payload);
 
     // Send an unmapped command (version, 13 byte type) responder to initiator.
-    const auto version = v1_frame("version", system::base16_chunk("deadbeef"));
+    const auto version_payload = system::base16_chunk("deadbeef");
     sent = boost::asio::error::would_block;
-    boost::asio::async_write(responder,
-        boost::asio::const_buffer{ version.data(), version.size() },
+    responder.async_write_message(identifiers::unassigned, "version",
+        system::to_shared(version_payload),
         [&](const boost_code& ec, size_t) { sent = ec; });
 
     read_message(initiator);
@@ -146,15 +144,13 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
     BOOST_REQUIRE(!got);
     BOOST_REQUIRE_EQUAL(identifier, identifiers::unassigned);
     BOOST_REQUIRE_EQUAL(command, "version");
-    const data_chunk version_payload(
-        std::next(version.begin(), heading::size()), version.end());
     BOOST_REQUIRE_EQUAL(payload, version_payload);
 
     // A second short-identifier message reuses the buffer (inv).
-    const auto inv = v1_frame("inv", system::base16_chunk("00"));
+    const auto inv_payload = system::base16_chunk("00");
     sent = boost::asio::error::would_block;
-    boost::asio::async_write(initiator,
-        boost::asio::const_buffer{ inv.data(), inv.size() },
+    initiator.async_write_message(identifiers::inventory, "",
+        system::to_shared(inv_payload),
         [&](const boost_code& ec, size_t) { sent = ec; });
 
     read_message(responder);
@@ -164,8 +160,6 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
     BOOST_REQUIRE(!got);
     BOOST_REQUIRE_EQUAL(identifier, identifiers::inventory);
     BOOST_REQUIRE(command.empty());
-    const data_chunk inv_payload(std::next(inv.begin(), heading::size()),
-        inv.end());
     BOOST_REQUIRE_EQUAL(payload, inv_payload);
 }
 

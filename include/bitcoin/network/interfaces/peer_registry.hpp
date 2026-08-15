@@ -42,8 +42,9 @@ struct peer_registry
 
     /// The message type registered at index.
     template <size_t Index>
-    using cptr_t = std::tuple_element_t<zero,
-        args_native_t<method_t<Index, methods_t>>>;
+    using arguments_t = args_native_t<method_t<Index, methods_t>>;
+    template <size_t Index>
+    using cptr_t = std::tuple_element_t<zero, arguments_t<Index>>;
     template <size_t Index>
     using message_t = std::remove_const_t<typename cptr_t<Index>::element_type>;
 
@@ -51,6 +52,7 @@ struct peer_registry
     template <size_t Index>
     static constexpr auto command = method_t<Index, methods_t>::name;
 
+    /// The numeric identifier registered at index.
     template <size_t Index>
     static constexpr auto identifier = message_t<Index>::identifier;
 
@@ -58,11 +60,16 @@ struct peer_registry
     using identifiers_t = std::array<uint8_t, size>;
 
 private:
-    using deserializer_t = any_t(*)(const std::span<const uint8_t>&, uint32_t, bool);
+    using span_t = std::span<const uint8_t>;
+    using deserializer_t = any_t(*)(const span_t&, uint32_t, bool);
     using deserializers_t = std::array<deserializer_t, size>;
+    using serializer_t = system::chunk_ptr(*)(const any_t&, uint32_t, uint32_t);
+    using serializers_t = std::array<serializer_t, size>;
+    using payloader_t = system::chunk_ptr(*)(const any_t&, uint32_t);
+    using payloaders_t = std::array<payloader_t, size>;
 
     template <size_t Index>
-    static any_t deserialize(const std::span<const uint8_t>& data, uint32_t version,
+    static any_t deserialize(const span_t& data, uint32_t version,
         bool witness) NOEXCEPT
     {
         using message = message_t<Index>;
@@ -74,6 +81,38 @@ private:
             message_ptr = message::deserialize(version, data);
 
         return message_ptr ? any_t{ message_ptr } : any_t{};
+    }
+
+    template <size_t Index>
+    static system::chunk_ptr serialize(const any_t& message, uint32_t magic,
+        uint32_t version) NOEXCEPT
+    {
+        const auto ptr = message.get<const message_t<Index>>();
+        return ptr ? messages::peer::serialize(*ptr, magic, version) :
+            system::chunk_ptr{};
+    }
+
+    template <size_t Index>
+    static system::chunk_ptr serialize_payload(const any_t& message,
+        uint32_t version) NOEXCEPT
+    {
+        const auto ptr = message.get<const message_t<Index>>();
+        return ptr ? messages::peer::serialize(*ptr, version) :
+            system::chunk_ptr{};
+    }
+
+    template <size_t... Index>
+    static constexpr serializers_t make_serializers(
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        return { &peer_registry::serialize<Index>... };
+    }
+
+    template <size_t... Index>
+    static constexpr payloaders_t make_payloaders(
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        return { &peer_registry::serialize_payload<Index>... };
     }
 
     template <size_t... Index>
@@ -97,11 +136,11 @@ private:
         auto found = unknown;
         const auto match = [&](size_t at, uint8_t assigned) NOEXCEPT
         {
-            return (!is_zero(assigned) && assigned == id) ?
-                ((found = at), true) : false;
+            const auto same = !is_zero(assigned) && assigned == id;
+            return same ? ((found = at), true) : false;
         };
 
-        (void)(match(Index, identifier<Index>) || ...);
+        (match(Index, identifier<Index>) || ...);
         return found;
     }
 
@@ -117,12 +156,13 @@ private:
         std::index_sequence<Index...>) NOEXCEPT
     {
         auto found = unknown;
-        const auto match = [&](size_t at, std::string_view name) NOEXCEPT
+        const auto match = [&](size_t at, const std::string_view& name) NOEXCEPT
         {
-            return name == command ? ((found = at), true) : false;
+            const auto same = name == command;
+            return same ? ((found = at), true) : false;
         };
 
-        (void)(match(Index, peer_registry::command<Index>) || ...);
+        (match(Index, peer_registry::command<Index>) || ...);
         return found;
     }
 
@@ -135,7 +175,7 @@ private:
             return same ? ((found = at), true) : false;
         };
 
-        (void)(match(Index, std::is_same_v<Message, message_t<Index>>) || ...);
+        (match(Index, std::is_same_v<Message, message_t<Index>>) || ...);
         return found;
     }
 
@@ -180,6 +220,26 @@ public:
 
         return index < size ? table.at(index)(data, version, witness) :
             any_t{};
+    }
+
+    static system::chunk_ptr to_frame(size_t index, const any_t& message,
+        uint32_t magic, uint32_t version) NOEXCEPT
+    {
+        static constexpr auto table = make_serializers(
+            std::make_index_sequence<size>{});
+
+        return index < size ? table.at(index)(message, magic, version) :
+            system::chunk_ptr{};
+    }
+
+    static system::chunk_ptr to_payload(size_t index, const any_t& message,
+        uint32_t version) NOEXCEPT
+    {
+        static constexpr auto table = make_payloaders(
+            std::make_index_sequence<size>{});
+
+        return index < size ? table.at(index)(message, version) :
+            system::chunk_ptr{};
     }
 };
 

@@ -191,12 +191,14 @@ bool body::reader::done() const NOEXCEPT
 
 // peer::body::writer
 // ----------------------------------------------------------------------------
-// The writer emits the frame serialized by peer::serialize (in the value),
-// as typed serialization is performed where the message type is static.
+// The writer translates the typed message to its serialized v1 frame.
 
 void body::writer::init(boost_code& ec) NOEXCEPT
 {
     done_ = false;
+    value_.data = rpc::peer_registry::to_frame(value_.index, value_.message,
+        value_.magic, value_.version);
+
     ec = value_.data ? boost_code{} :
         error::to_http_code(error::http_error_t::bad_value);
 }

@@ -426,9 +426,6 @@
     <ClCompile Include="..\..\..\..\src\privacy\cipher.cpp">
       <Filter>src\privacy</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\privacy\commands.cpp">
-      <Filter>src\privacy</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\privacy\stream.cpp">
       <Filter>src\privacy</Filter>
     </ClCompile>
@@ -1029,9 +1026,6 @@
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\cipher.hpp">
-      <Filter>include\bitcoin\network\privacy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\commands.hpp">
       <Filter>include\bitcoin\network\privacy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\context.hpp">

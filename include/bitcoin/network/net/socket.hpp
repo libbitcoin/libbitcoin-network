@@ -449,6 +449,8 @@ private:
     // peer
     void do_peer_read(size_t total, const peer_state::ptr& in,
         const count_handler& handler) NOEXCEPT;
+    void do_peer_write(const messages::peer::frame_ptr& out,
+        const count_handler& handler) NOEXCEPT;
 
     // body
     void do_body_read(boost_code ec, size_t total,
@@ -512,6 +514,7 @@ private:
     void handle_peer_read_encrypted(const boost_code& ec, uint8_t identifier,
         const std::string& command, const std::span<const uint8_t>& payload,
         const peer_state::ptr& in, const count_handler& handler) NOEXCEPT;
+
 
     // rpc
     void handle_rpc_read(const code& ec, size_t bytes,

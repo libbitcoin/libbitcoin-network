@@ -133,7 +133,6 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/net/socket_wait.cpp \
     ${srcdir}/../../src/net/socket_ws.cpp \
     ${srcdir}/../../src/privacy/cipher.cpp \
-    ${srcdir}/../../src/privacy/commands.cpp \
     ${srcdir}/../../src/privacy/stream.cpp \
     ${srcdir}/../../src/protocols/protocol.cpp \
     ${srcdir}/../../src/protocols/protocol_address_in_209.cpp \
@@ -475,7 +474,6 @@ include_bitcoin_network_privacydir = \
 
 include_bitcoin_network_privacy_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/privacy/cipher.hpp \
-    ${srcdir}/../../include/bitcoin/network/privacy/commands.hpp \
     ${srcdir}/../../include/bitcoin/network/privacy/context.hpp \
     ${srcdir}/../../include/bitcoin/network/privacy/privacy.hpp \
     ${srcdir}/../../include/bitcoin/network/privacy/stream.hpp
@@ -793,7 +791,6 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/net/proxy.cpp \
     ${srcdir}/../../test/net/socket.cpp \
     ${srcdir}/../../test/privacy/cipher.cpp \
-    ${srcdir}/../../test/privacy/commands.cpp \
     ${srcdir}/../../test/privacy/stream.cpp \
     ${srcdir}/../../test/protocols/protocol.cpp \
     ${srcdir}/../../test/protocols/protocol_address_in_209.cpp \

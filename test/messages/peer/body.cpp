@@ -404,13 +404,15 @@ BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer_block__message)
 BOOST_AUTO_TEST_CASE(peer_body__writer__frame__emitted)
 {
     auto value = test_frame();
-    value.data = system::to_shared(ping_frame());
+    value.message = rpc::any_t{ system::to_shared(ping{ nonce }) };
+    value.index = rpc::peer_registry::index_of<ping>();
 
     boost_code ec{};
     body::writer writer{ value };
     writer.init(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(!writer.done());
+    BOOST_REQUIRE_EQUAL(*value.data, ping_frame());
 
     const auto out = writer.get(ec);
     BOOST_REQUIRE(!ec);
@@ -424,7 +426,8 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__frame__emitted)
 BOOST_AUTO_TEST_CASE(peer_body__writer__get_twice__empty)
 {
     auto value = test_frame();
-    value.data = system::to_shared(ping_frame());
+    value.message = rpc::any_t{ system::to_shared(ping{ nonce }) };
+    value.index = rpc::peer_registry::index_of<ping>();
 
     boost_code ec{};
     body::writer writer{ value };
@@ -440,7 +443,7 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__get_twice__empty)
     BOOST_REQUIRE(!empty.has_value());
 }
 
-BOOST_AUTO_TEST_CASE(peer_body__writer__no_frame__error)
+BOOST_AUTO_TEST_CASE(peer_body__writer__no_message__error)
 {
     auto value = test_frame();
     boost_code ec{};

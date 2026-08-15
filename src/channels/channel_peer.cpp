@@ -236,8 +236,8 @@ void channel_peer::handle_receive(const code& ec, size_t,
     receive();
 }
 
-void channel_peer::handle_send(const code& ec, size_t,
-    const chunk_cptr& payload, const result_handler& handler) NOEXCEPT
+void channel_peer::handle_send(const code& ec, size_t LOG_ONLY(size),
+    const std::string& LOG_ONLY(command), const result_handler& handler) NOEXCEPT
 {
     if (ec)
         stop(ec);
@@ -248,12 +248,6 @@ void channel_peer::handle_send(const code& ec, size_t,
         ec != error::operation_canceled &&
         ec != error::connect_failed)
     {
-        LOG_ONLY(const auto command = payload ?
-            heading::get_command(*payload) : std::string{ "unknown" };)
-
-        LOG_ONLY(const auto size = floored_subtract(payload ?
-            payload->size() : zero, heading::command_size);)
-
         LOGF("Send failure " << command << " to [" << endpoint() << "] ("
             << size << " bytes) " << ec.message());
     }

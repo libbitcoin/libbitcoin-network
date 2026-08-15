@@ -402,9 +402,6 @@
     <ClCompile Include="..\..\..\..\test\privacy\cipher.cpp">
       <Filter>src\privacy</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\privacy\commands.cpp">
-      <Filter>src\privacy</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\privacy\stream.cpp">
       <Filter>src\privacy</Filter>
     </ClCompile>

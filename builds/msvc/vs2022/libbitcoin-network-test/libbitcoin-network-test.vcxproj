@@ -228,7 +228,6 @@
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\test\net\socket.cpp" />
     <ClCompile Include="..\..\..\..\test\privacy\cipher.cpp" />
-    <ClCompile Include="..\..\..\..\test\privacy\commands.cpp" />
     <ClCompile Include="..\..\..\..\test\privacy\stream.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp" />

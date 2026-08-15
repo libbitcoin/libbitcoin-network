@@ -100,7 +100,12 @@ public:
             io_handler{ std::forward<Handler>(handler) });
     }
 
-    /// Write some bytes of the v1 stream (buffered to whole messages).
+    /// Write a message as one encrypted packet (v2 only).
+    /// Identity is the short identifier, or the command if it is zero.
+    void async_write_message(uint8_t identifier, const std::string& command,
+        const system::chunk_cptr& payload, io_handler&& handler) NOEXCEPT;
+
+    /// Write some bytes of the v1 stream (passthrough only).
     template <typename ConstBuffers, typename Handler>
     void async_write_some(const ConstBuffers& buffers, Handler&& handler)
     {
@@ -110,13 +115,12 @@ public:
             return;
         }
 
-        const auto size = boost::asio::buffer_size(buffers);
-        const auto start = pending_.size();
-        pending_.resize(start + size);
-        boost::asio::buffer_copy(boost::asio::mutable_buffer
-            { std::next(pending_.data(), start), size }, buffers);
-
-        write_pending(size, io_handler{ std::forward<Handler>(handler) });
+        // The encrypted stream accepts messages, not bytes.
+        boost::asio::post(get_executor(),
+            [handler = std::forward<Handler>(handler)]() mutable
+            {
+                handler(boost::asio::error::no_protocol_option, zero);
+            });
     }
 
 private:
@@ -144,9 +148,6 @@ private:
     static bool split(uint8_t& identifier, std::string& command,
         size_t& prefix, const std::span<const uint8_t>& contents) NOEXCEPT;
 
-    // packet writer
-    void write_pending(size_t size, io_handler&& handler) NOEXCEPT;
-    bool encrypt_frames() NOEXCEPT;
 
     // These are protected by stream (executor) sequencing.
     asio::socket socket_;
@@ -161,9 +162,7 @@ private:
     system::data_chunk garbage_{};
     system::data_chunk packet_{};
 
-    // write state
-    system::data_chunk pending_{};
-    system::data_chunk ciphertext_{};
+
 };
 
 } // namespace privacy

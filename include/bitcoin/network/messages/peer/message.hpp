@@ -45,6 +45,18 @@ inline typename Message::cptr deserialize(const std::span<const uint8_t>& body,
     return Message::deserialize(version, body);
 }
 
+/// Serialize message payload to the wire protocol encoding (no heading).
+/// Returns nullptr if serialization fails for any reason (unexpected).
+template <typename Message>
+inline system::chunk_ptr serialize(const Message& message,
+    uint32_t version) NOEXCEPT
+{
+    using namespace system;
+    const auto data = emplace_shared<data_chunk>(message.size(version));
+    const data_slab body(data->begin(), data->end());
+    return message.serialize(version, body) ? data : chunk_ptr{};
+}
+
 /// Serialize message object to the wire protocol encoding.
 /// Returns nullptr if serialization fails for any reason (unexpected).
 template <typename Message>
