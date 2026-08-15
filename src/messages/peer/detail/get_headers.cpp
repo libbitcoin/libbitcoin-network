@@ -48,9 +48,9 @@ get_headers::indexes get_headers::heights(size_t top) NOEXCEPT
 
 // static
 typename get_headers::cptr get_headers::deserialize(uint32_t version,
-    const system::data_chunk& data) NOEXCEPT
+    const std::span<const uint8_t>& data) NOEXCEPT
 {
-    system::istream source{ data };
+    system::istream source{ { data.begin(), data.end() } };
     system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;

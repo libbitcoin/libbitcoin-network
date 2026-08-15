@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_INTERFACES_PEER_REGISTRY_HPP
 
 #include <array>
+#include <span>
 #include <tuple>
 #include <utility>
 #include <bitcoin/network/define.hpp>
@@ -57,11 +58,11 @@ struct peer_registry
     using identifiers_t = std::array<uint8_t, size>;
 
 private:
-    using deserializer_t = any_t(*)(const system::data_chunk&, uint32_t, bool);
+    using deserializer_t = any_t(*)(const std::span<const uint8_t>&, uint32_t, bool);
     using deserializers_t = std::array<deserializer_t, size>;
 
     template <size_t Index>
-    static any_t deserialize(const system::data_chunk& data, uint32_t version,
+    static any_t deserialize(const std::span<const uint8_t>& data, uint32_t version,
         bool witness) NOEXCEPT
     {
         using message = message_t<Index>;
@@ -171,7 +172,7 @@ public:
         return to_index_of<Message>(std::make_index_sequence<size>{});
     }
 
-    static any_t to_any(size_t index, const system::data_chunk& data,
+    static any_t to_any(size_t index, const std::span<const uint8_t>& data,
         uint32_t version, bool witness) NOEXCEPT
     {
         static constexpr auto table = make_deserializers(

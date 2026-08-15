@@ -41,13 +41,13 @@ const uint32_t block::version_maximum = level::maximum_protocol;
 
 // static
 typename block::cptr block::deserialize(uint32_t version,
-    const data_chunk& data, bool witness) NOEXCEPT
+    const std::span<const uint8_t>& data, bool witness) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         return {};
 
     const auto message = emplace_shared<messages::peer::block>(
-        chain::block_view{ move_copy(data), witness });
+        chain::block_view{ data_chunk{ data.begin(), data.end() }, witness });
 
     return message->block.is_valid() ? message : nullptr;
 }

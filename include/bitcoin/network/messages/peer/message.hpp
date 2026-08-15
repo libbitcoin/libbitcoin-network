@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_MESSAGE_HPP
 
 #include <iterator>
+#include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/messages/peer/detail/transaction.hpp>
@@ -38,7 +39,7 @@ inline uint32_t network_checksum(const system::hash_digest& hash) NOEXCEPT
 /// Deserialize message payload from the wire protocol encoding.
 /// Returns nullptr if serialization fails for any reason (expected).
 template <typename Message>
-inline typename Message::cptr deserialize(const system::data_chunk& body,
+inline typename Message::cptr deserialize(const std::span<const uint8_t>& body,
     uint32_t version) NOEXCEPT
 {
     return Message::deserialize(version, body);

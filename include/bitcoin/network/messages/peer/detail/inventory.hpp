@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_INVENTORY_HPP
 
 #include <memory>
+#include <span>
 #include <ranges>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
@@ -50,7 +51,7 @@ struct BCT_API inventory
         type_id type) NOEXCEPT;
 
     static cptr deserialize(uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+        const std::span<const uint8_t>& data) NOEXCEPT;
     static inventory deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 

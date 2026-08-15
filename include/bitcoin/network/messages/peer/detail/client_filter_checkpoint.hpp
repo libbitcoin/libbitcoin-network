@@ -23,6 +23,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_CLIENT_FILTER_CHECKPOINT_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
@@ -41,7 +42,7 @@ struct BCT_API client_filter_checkpoint
     static const std::string command;
 
     static cptr deserialize(uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+        const std::span<const uint8_t>& data) NOEXCEPT;
     static client_filter_checkpoint deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_HEADING_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 
@@ -56,7 +57,7 @@ struct BCT_API heading
             + sizeof(uint32_t);
     }
 
-    static cptr deserialize(const system::data_chunk& data) NOEXCEPT;
+    static cptr deserialize(const std::span<const uint8_t>& data) NOEXCEPT;
     static heading deserialize(system::reader& source) NOEXCEPT;
     bool serialize(const system::data_slab& data) const NOEXCEPT;
     void serialize(system::writer& sink) const NOEXCEPT;

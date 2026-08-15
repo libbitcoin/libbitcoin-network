@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_MERKLE_BLOCK_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
@@ -39,7 +40,7 @@ public:
     static const std::string command;
 
     static cptr deserialize(uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+        const std::span<const uint8_t>& data) NOEXCEPT;
     static merkle_block deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 

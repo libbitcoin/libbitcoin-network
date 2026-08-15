@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_REJECT_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
@@ -73,7 +74,7 @@ struct BCT_API reject
     static reason_code byte_to_reason(uint8_t value) NOEXCEPT;
 
     static cptr deserialize(uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+        const std::span<const uint8_t>& data) NOEXCEPT;
     static reject deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 

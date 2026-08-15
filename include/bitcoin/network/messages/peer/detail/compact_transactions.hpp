@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_COMPACT_TRANSACTIONS_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
@@ -39,7 +40,7 @@ struct BCT_API compact_transactions
     static const std::string command;
 
     static cptr deserialize(uint32_t version,
-        const system::data_chunk& data, bool witness=true) NOEXCEPT;
+        const std::span<const uint8_t>& data, bool witness=true) NOEXCEPT;
     static compact_transactions deserialize(uint32_t version,
         system::reader& source, bool witness=true) NOEXCEPT;
 
