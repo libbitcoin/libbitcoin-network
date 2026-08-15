@@ -70,6 +70,14 @@ struct message_type
     /// Socket wires message termination by transport framing (tcp/ws
     /// stream messages are newline terminated, http chunks are not).
     bool terminate{};
+
+    /// Cache: the model is derived from the message, and is derived once, as
+    /// the measure and the write require the same model. A null model is a
+    /// valid derivation, so the derivation is marked rather than detected.
+    /// Assigning message after a derivation requires clearing this.
+    /// Const/mutable, not thread safe: the measure and the write are ordered
+    /// on the channel strand, which is what makes one derivation sufficient.
+    mutable bool converted{};
 };
 
 /// Derived boost::beast::http body for JSON-RPC messages.
@@ -144,6 +152,11 @@ struct BCT_API body
         bool set_prefix_{};
         bool set_close_{};
     };
+
+    /// The byte count that the writer emits for the part, including batch
+    /// framing and termination. The measure builds the model as the writer
+    /// does, so a message that cannot be measured cannot be written.
+    static uint64_t size(const value_type& value) NOEXCEPT;
 };
 
 using request_body = body<request_t>;

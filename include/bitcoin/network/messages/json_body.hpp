@@ -27,14 +27,18 @@ namespace network {
 namespace json {
 
 /// Content passed to/from reader/writer via request/response.
-/// `static uint64_t size(const value_type&)` must be defined for beast to 
-/// produce `content_length`, otherwise the response is chunked. Predeter-
-/// mining size would have the effect of eliminating the benefit of
-/// streaming serialize.
+/// This body defines no `static uint64_t size(const value_type&)`, so beast
+/// never frames it with a content_length. The multiplexing http::body defines
+/// size() and measures this model through length() below, as beast detects a
+/// sized body as a compile time trait of the body type.
 struct json_value
 {
-    /// JSON document object model to parse/serialize.
-    boost::json::value model{};
+    /// JSON document object model to parse/serialize. Mutable because the
+    /// rpc body derives it from its message during the measure, which beast
+    /// invokes on a const body, and retains that derivation for the write
+    /// (see rpc::message_type::converted). The writer holds a non-const
+    /// reference, so nothing else requires this.
+    mutable boost::json::value model{};
 
     /// Used by channel to resize reusable buffer.
     size_t size_hint{};
@@ -111,6 +115,12 @@ struct body
         value_type& value_;
         boost::json::serializer serializer_;
     };
+
+    /// The byte count that the writer emits for the model, or zero where the
+    /// model cannot be serialized. The measure serializes as the writer does,
+    /// so a model that cannot be measured cannot be written. The serialization
+    /// is discarded as it is measured, so it is never materialized.
+    static uint64_t length(const boost::json::value& model) NOEXCEPT;
 };
 
 } // namespace json

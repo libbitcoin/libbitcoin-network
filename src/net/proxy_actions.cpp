@@ -488,6 +488,30 @@ void proxy::write(http::response&& response,
         return;
     }
 
+    // beast frames from the header alone and never reconciles the declared
+    // length against the bytes written, so a body of indeterminate length
+    // must not be written under a content_length. The caller sets chunked
+    // encoding (which clears the length) to write one.
+    if (http::body::streaming(response.body()) && !response.chunked())
+    {
+        handler(error::bad_stream, zero);
+        return;
+    }
+
+    // A model serializes to at least a null, and a peer body is never framed,
+    // so a zero measure of either is not a length the writer will honor.
+    // Writing the header would frame an empty success for a body that does
+    // not follow it, or that follows it unframed.
+    if (http::body::unframable_zero(response.body()) && !response.chunked())
+    {
+        const auto length = response.find(http::field::content_length);
+        if (length != response.end() && length->value() == "0")
+        {
+            handler(error::bad_stream, zero);
+            return;
+        }
+    }
+
     // http batch response: header once (chunked), then response parts.
     if (batched_)
     {

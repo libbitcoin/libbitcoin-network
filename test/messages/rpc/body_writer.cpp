@@ -278,6 +278,222 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_non_terminated__open_
     BOOST_REQUIRE(writer.done());
 }
 
+// size
+// ----------------------------------------------------------------------------
+// The size must equal the bytes that the writer emits, otherwise the beast
+// content_length frame is invalid. Each case measures the same body that it
+// then writes, comparing the two.
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__simple_response_non_terminated__message_length)
+{
+    const std::string_view expected{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
+    rpc::response_body::value_type body{};
+    body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
+    BOOST_REQUIRE_EQUAL(rpc::response_body::size(body), expected.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__simple_response_terminated__message_length_with_terminator)
+{
+    const std::string_view expected_json{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
+    const std::string_view expected_newline{ "\n" };
+    rpc::response_body::value_type body{};
+    body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
+    body.terminate = true;
+    BOOST_REQUIRE_EQUAL(rpc::response_body::size(body), expected_json.size() + expected_newline.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__simple_response_non_terminated__emitted_bytes)
+{
+    rpc::response_body::value_type body{};
+    body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
+    const auto sized = rpc::response_body::size(body);
+
+    response_header header{};
+    rpc::response_body::writer writer(header, body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer.has_value());
+    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(writer.done());
+
+    BOOST_REQUIRE_EQUAL(sized, buffer.get().first.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__simple_response_terminated__emitted_bytes)
+{
+    rpc::response_body::value_type body{};
+    body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
+    body.terminate = true;
+    const auto sized = rpc::response_body::size(body);
+
+    rpc::response_body::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer1 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer1.has_value());
+
+    const auto buffer2 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer2.has_value());
+    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(writer.done());
+
+    BOOST_REQUIRE_EQUAL(sized, buffer1.get().first.size() + buffer2.get().first.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__batch_open_part_terminated__emitted_bytes)
+{
+    rpc::response_body::value_type body{};
+    body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
+    body.changed = true;
+    body.terminate = true;
+    const auto sized = rpc::response_body::size(body);
+
+    rpc::response_body::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer1 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer1.has_value());
+
+    const auto buffer2 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer2.has_value());
+    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(writer.done());
+
+    BOOST_REQUIRE_EQUAL(sized, buffer1.get().first.size() + buffer2.get().first.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__batch_continuation_part_terminated__emitted_bytes)
+{
+    rpc::response_body::value_type body{};
+    body.message = response_t{ version::v2, identity_t{ 2 }, {}, value_t{ true } };
+    body.batch = true;
+    body.terminate = true;
+    const auto sized = rpc::response_body::size(body);
+
+    rpc::response_body::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer1 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer1.has_value());
+
+    const auto buffer2 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer2.has_value());
+    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(writer.done());
+
+    BOOST_REQUIRE_EQUAL(sized, buffer1.get().first.size() + buffer2.get().first.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__batch_close_part_terminated__emitted_bytes)
+{
+    rpc::response_body::value_type body{};
+    body.batch = true;
+    body.changed = true;
+    body.terminate = true;
+    const auto sized = rpc::response_body::size(body);
+
+    rpc::response_body::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer1 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer1.has_value());
+
+    const auto buffer2 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer2.has_value());
+    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(writer.done());
+
+    BOOST_REQUIRE_EQUAL(sized, buffer1.get().first.size() + buffer2.get().first.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__batch_close_part_non_terminated__emitted_bytes)
+{
+    response_header header{};
+    rpc::response_body::value_type body{};
+    body.batch = true;
+    body.changed = true;
+    const auto sized = rpc::response_body::size(body);
+
+    rpc::response_body::writer writer(header, body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer.has_value());
+    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(writer.done());
+
+    BOOST_REQUIRE_EQUAL(sized, buffer.get().first.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__notification_non_terminated__emitted_bytes)
+{
+    rpc::request_body::value_type body{};
+    body.message = request_t{ version::v2, {}, "notify", {} };
+    const auto sized = rpc::request_body::size(body);
+
+    request_header header{};
+    rpc::request_body::writer writer(header, body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer.has_value());
+    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(writer.done());
+
+    BOOST_REQUIRE_EQUAL(sized, buffer.get().first.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body__size__notification_terminated__emitted_bytes)
+{
+    rpc::request_body::value_type body{};
+    body.message = request_t{ version::v2, {}, "notify", {} };
+    body.terminate = true;
+    const auto sized = rpc::request_body::size(body);
+
+    rpc::request_body::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer1 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer1.has_value());
+
+    const auto buffer2 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer2.has_value());
+    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(writer.done());
+
+    BOOST_REQUIRE_EQUAL(sized, buffer1.get().first.size() + buffer2.get().first.size());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 ////#endif // HAVE_SLOW_TESTS

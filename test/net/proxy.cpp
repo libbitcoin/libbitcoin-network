@@ -37,6 +37,12 @@ public:
         return proxy::unconsumed(bytes, start);
     }
 
+    // Call is not stranded, as the framing guards precede the strand.
+    void write1(http::response&& response, count_handler&& handler) NOEXCEPT
+    {
+        proxy::write(std::move(response), std::move(handler));
+    }
+
     // Access protected constructor.
     mock_proxy(const socket::ptr& socket, uint32_t rate_limit=0) NOEXCEPT
       : proxy(socket, rate_limit)
@@ -299,6 +305,68 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
     proxy_ptr->stop(expected_ec);
     BOOST_REQUIRE_EQUAL(stop1_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE(proxy_ptr->stopped());
+}
+
+// write (framing guards)
+// ----------------------------------------------------------------------------
+// Both guards complete the handler and return without touching the socket, so
+// the socket need not be connected to observe them.
+
+static std::shared_ptr<mock_proxy> make_proxy(threadpool& pool, const logger& log) NOEXCEPT
+{
+    socket::parameters params{ .maximum_request = 42 };
+    const auto socket_ptr = std::make_shared<network::socket>(log,
+        pool.service(), std::move(params));
+    return std::make_shared<mock_proxy>(socket_ptr);
+}
+
+// A model cannot serialize to zero bytes and a peer body is never framed, so
+// a zero length from either is refused rather than framed as empty.
+BOOST_AUTO_TEST_CASE(proxy__write__unframable_zero_length__bad_stream)
+{
+    const logger log{};
+    threadpool pool(1);
+    const auto proxy_ptr = make_proxy(pool, log);
+
+    http::json_body::value_type json{};
+    json.model = boost::json::parse(R"({"result":42})");
+
+    http::response response{ http::status::ok, http::version_1_1 };
+    response.body() = std::move(json);
+    response.set(http::field::content_length, "0");
+
+    code result{ error::success };
+    proxy_ptr->write1(std::move(response),
+        [&](const code& ec, size_t) NOEXCEPT { result = ec; });
+
+    BOOST_REQUIRE_EQUAL(result, error::bad_stream);
+    proxy_ptr->stop(error::invalid_magic);
+    pool.stop();
+}
+
+// A streaming body has no length to declare, so it is refused unless chunked.
+BOOST_AUTO_TEST_CASE(proxy__write__streaming_body_unchunked__bad_stream)
+{
+    const logger log{};
+    threadpool pool(1);
+    const auto proxy_ptr = make_proxy(pool, log);
+
+    std::vector<uint8_t> bytes{ 0x2a, 0x2b, 0x2c };
+    http::buffer_value buffer{};
+    buffer.data = bytes.data();
+    buffer.size = bytes.size();
+    buffer.more = true;
+
+    http::response response{ http::status::ok, http::version_1_1 };
+    response.body() = std::move(buffer);
+
+    code result{ error::success };
+    proxy_ptr->write1(std::move(response),
+        [&](const code& ec, size_t) NOEXCEPT { result = ec; });
+
+    BOOST_REQUIRE_EQUAL(result, error::bad_stream);
+    proxy_ptr->stop(error::invalid_magic);
+    pool.stop();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

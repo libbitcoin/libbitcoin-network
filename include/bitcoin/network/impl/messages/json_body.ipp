@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_IPP
 
+#include <array>
 #include <memory>
 #include <utility>
 #include <bitcoin/network/define.hpp>
@@ -241,6 +242,47 @@ TEMPLATE
 bool CLASS::writer::done() const NOEXCEPT
 {
     return serializer_.done();
+}
+
+// json::body<>::length
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+uint64_t CLASS::length(const boost::json::value& model) NOEXCEPT
+{
+    using namespace system;
+
+    // The scratch is overwritten by each read, so the serialization is
+    // measured without being materialized. The alternative is not a cheaper
+    // measure but no measure, which frames the response as chunked.
+    std::array<char, writer::default_buffer> scratch{};
+    size_t size{};
+
+    try
+    {
+        // The writer serializes the same model with the same configuration,
+        // so a model that cannot be measured here cannot be written there.
+        boost::json::serializer serializer{ model.storage() };
+        serializer.reset(&model);
+
+        while (!serializer.done())
+        {
+            const auto view = serializer.read(scratch.data(), scratch.size());
+
+            // No progress (edge case), as guarded by the writer.
+            if (view.empty())
+                return zero;
+
+            size = ceilinged_add(size, view.size());
+        }
+    }
+    catch (...)
+    {
+        // The writer performs this same serialization, so it fails likewise.
+        return zero;
+    }
+
+    return size;
 }
 
 } // namespace json

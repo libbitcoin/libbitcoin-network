@@ -158,6 +158,91 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
     }, writer_);
 }
 
+// http::body::streaming
+// ----------------------------------------------------------------------------
+
+bool body::streaming(const value_type& value) NOEXCEPT
+{
+    // A buffer body emits an unbounded sequence of caller-supplied buffers
+    // while more is set, so its total length is not knowable here.
+    return value.contains<buffer_value>() && value.get<buffer_value>().more;
+}
+
+// http::body::unframable_zero
+// ----------------------------------------------------------------------------
+
+bool body::unframable_zero(const value_type& value) NOEXCEPT
+{
+    return value.contains<json_value>() || value.contains<rpc::request>() ||
+        value.contains<rpc::response>() || value.contains<peer_value>();
+}
+
+// http::body::size
+// ----------------------------------------------------------------------------
+// A length cannot be produced without serializing the whole model, so
+// measuring json forfeits the laziness that the streaming writer exists for.
+// The writer still streams, but it streams bytes that were measured in full
+// before the header was written. bitcoind declares a length on every
+// response, so an interface that implements it has no alternative.
+
+uint64_t body::size(const value_type& value) NOEXCEPT
+{
+    using namespace system;
+
+    // The writer assigns an empty body when the caller has assigned none.
+    if (!value.has_value())
+        return zero;
+
+    return std::visit(overload
+    {
+        [](const empty_value& value) NOEXCEPT
+        {
+            return empty_body::size(value);
+        },
+        [](const data_value& value) NOEXCEPT
+        {
+            return chunk_body::size(value);
+        },
+        [](const file_value& value) NOEXCEPT
+        {
+            return file_body::size(value);
+        },
+        [](const span_value& value) NOEXCEPT
+        {
+            return span_body::size(value);
+        },
+        [](const buffer_value& value) NOEXCEPT -> uint64_t
+        {
+            // The writer emits the assigned buffer, which is the whole body
+            // only where more is unset (a streaming body is not framable).
+            return is_null(value.data) ? zero : value.size;
+        },
+        [](const string_value& value) NOEXCEPT
+        {
+            return string_body::size(value);
+        },
+        [](const json_value& value) NOEXCEPT
+        {
+            return json_body::length(value.model);
+        },
+        [](const peer_value&) NOEXCEPT -> uint64_t
+        {
+            // A peer body is selected only by preselection (non-http) and is
+            // written by proxy::write(frame&&), so it is never framed by
+            // beast and this measure is never obtained.
+            return zero;
+        },
+        [](const rpc::request& value) NOEXCEPT
+        {
+            return rpc::request_body::size(value);
+        },
+        [](const rpc::response& value) NOEXCEPT
+        {
+            return rpc::response_body::size(value);
+        }
+    }, value.value());
+}
+
 } // namespace http
 } // namespace network
 } // namespace libbitcoin

@@ -104,7 +104,6 @@ using body_value = std::variant
 /// reader or writer construction, and then passes all calls through to it.
 struct BCT_API body
 {
-    /// No size(), forces chunked encoding for all types.
     /// The pass-thru body(), reader populates in construct.
     struct value_type
     {
@@ -358,6 +357,26 @@ struct BCT_API body
     private:
         body_writer writer_;
     };
+
+    /// True where the writer emits an indeterminate number of bytes, which
+    /// therefore cannot be framed with a content_length. The sender refuses
+    /// to write such a body unless the caller has set chunked encoding.
+    static bool streaming(const value_type& value) NOEXCEPT;
+
+    /// True where a zero measure cannot be a valid length: a model serializes
+    /// to at least a null (four bytes), and a peer body is written by
+    /// proxy::write(frame&&) and never framed, so it measures zero always.
+    /// A zero from either means the frame would not match the write, which
+    /// the sender refuses rather than emits.
+    static bool unframable_zero(const value_type& value) NOEXCEPT;
+
+    /// The byte count that the writer emits for the assigned inner type.
+    /// beast requires this to frame a response with a content_length, absent
+    /// which it frames from the version, chunking 1.1 and leaving 1.0
+    /// unframed. Because this is a compile time trait of the body it cannot
+    /// be selectively applied to inner types, so a streaming body is
+    /// excluded by the sender and not by the trait.
+    static uint64_t size(const value_type& value) NOEXCEPT;
 };
 
 using request = boost::beast::http::request<http::body>;

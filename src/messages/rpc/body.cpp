@@ -53,6 +53,67 @@ constexpr bool is_json_whitespace(char character) NOEXCEPT
         character == '\r' || character == '\n';
 }
 
+// Batch framing and message termination. get() emits these characters and
+// size() measures them, so both derive from this one declaration. The parts
+// are: a prefix on a part that opens or continues a batch, a close character
+// on the part that closes one, and a terminator where the transport wires
+// termination (tcp/ws stream messages; http chunks are not terminated), which
+// a batch carries on its close part rather than per part.
+constexpr char open = '[';
+constexpr char comma = ',';
+constexpr char close = ']';
+constexpr char line = '\n';
+constexpr uint64_t character_size = one;
+
+template <typename Value>
+constexpr uint64_t framing_size(const Value& value) NOEXCEPT
+{
+    const auto batched = opens_batch(value) || continues_batch(value);
+    const auto prefix = batched ? character_size : zero;
+    const auto close = closes_batch(value) ? character_size : zero;
+    const auto terminator = value.terminate && !batched ? character_size : zero;
+    return ceilinged_add(ceilinged_add(prefix, close), terminator);
+}
+
+// The measure and the write serialize the same model, so it is derived from
+// the message once and retained. The writer derived it a second time when the
+// measure had already done so.
+template <typename Message>
+bool derive(boost_code& ec, const message_type<Message>& value) NOEXCEPT
+{
+    ec.clear();
+    if (value.converted)
+        return true;
+
+    try
+    {
+        boost::json::value_from(value.message, value.model);
+    }
+    catch (const boost::system::system_error& e)
+    {
+        // Primary exception type for parsing operations.
+        ec = e.code();
+        return false;
+    }
+    catch (...)
+    {
+        ec = code{ error::jsonrpc_writer_exception };
+        return false;
+    }
+
+    value.converted = true;
+    return true;
+}
+
+// The measure has no code to report, and a message that cannot be derived
+// here cannot be derived by the writer, so the write fails on the same model.
+template <typename Message>
+uint64_t serialized_size(const message_type<Message>& value) NOEXCEPT
+{
+    boost_code ec{};
+    return derive(ec, value) ? body<Message>::length(value.model) : zero;
+}
+
 // rpc::body<request_t>::reader
 // ----------------------------------------------------------------------------
 // A batch is never materialized. Each read yields one element (message), with
@@ -401,21 +462,10 @@ init(boost_code& ec) NOEXCEPT
     base::writer::init(ec);
     if (ec) return;
 
-    try
-    {
-        boost::json::value_from(value_.message, value_.model);
-    }
-    catch (const boost::system::system_error& e)
-    {
-        // Primary exception type for parsing operations.
-        ec = e.code();
+    // Already derived where the measure framed a content_length, in which
+    // case this is the model that was measured.
+    if (!derive(ec, value_))
         return;
-    }
-    catch (...)
-    {
-        ec = code{ error::jsonrpc_writer_exception };
-        return;
-    }
 
     serializer_.reset(&value_.model);
 }
@@ -426,10 +476,6 @@ body<rpc::response_t>::writer::
 get(boost_code& ec) NOEXCEPT
 {
     using namespace boost::asio;
-    static constexpr auto open = '[';
-    static constexpr auto comma = ',';
-    static constexpr auto close = ']';
-    static constexpr auto line = '\n';
 
     // Buffer a single static framing character.
     const auto single = [](const char& character, bool more) NOEXCEPT
@@ -496,6 +542,19 @@ done() const NOEXCEPT
         continues_batch(value_) || !value_.terminate || set_terminator_);
 }
 
+// rpc::body<response_t>::size
+// ----------------------------------------------------------------------------
+
+// Measures the bytes emitted by get() above.
+template <>
+uint64_t body<rpc::response_t>::
+size(const value_type& value) NOEXCEPT
+{
+    // The batch close part is framing and termination only (no message).
+    const auto message = closes_batch(value) ? zero : serialized_size(value);
+    return ceilinged_add(message, framing_size(value));
+}
+
 // rpc::body<request_t>::writer
 // ----------------------------------------------------------------------------
 
@@ -506,21 +565,10 @@ init(boost_code& ec) NOEXCEPT
     base::writer::init(ec);
     if (ec) return;
 
-    try
-    {
-        boost::json::value_from(value_.message, value_.model);
-    }
-    catch (const boost::system::system_error& e)
-    {
-        // Primary exception type for parsing operations.
-        ec = e.code();
+    // Already derived where the measure framed a content_length, in which
+    // case this is the model that was measured.
+    if (!derive(ec, value_))
         return;
-    }
-    catch (...)
-    {
-        ec = code{ error::jsonrpc_writer_exception };
-        return;
-    }
 
     set_terminator_ = false;
     serializer_.reset(&value_.model);
@@ -547,8 +595,8 @@ get(boost_code& ec) NOEXCEPT
     // Add terminator and signal done.
     set_terminator_ = true;
     using namespace boost::asio;
-    static constexpr auto line = '\n';
-    return out_buffer{ std::make_pair(buffer(&line, sizeof(line)), false) };
+    return out_buffer{ std::make_pair(
+        buffer(&line, sizeof(line)), false) };
 }
 
 template <>
@@ -557,6 +605,18 @@ done() const NOEXCEPT
 {
     // Done is redundant with !out.second, but provides a cleaner interface.
     return base::writer::done() && (!value_.terminate || set_terminator_);
+}
+
+// rpc::body<request_t>::size
+// ----------------------------------------------------------------------------
+
+// Measures the bytes emitted by get() above. A notification is never batched.
+template <>
+uint64_t body<rpc::request_t>::
+size(const value_type& value) NOEXCEPT
+{
+    // A notification is never batched, so its framing is termination alone.
+    return ceilinged_add(serialized_size(value), framing_size(value));
 }
 
 BC_POP_WARNING()
