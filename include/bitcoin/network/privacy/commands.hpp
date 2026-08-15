@@ -25,9 +25,6 @@ namespace libbitcoin {
 namespace network {
 namespace privacy {
 
-/// Get the command for a bip324 identifier (empty if unassigned).
-BCT_API std::string to_command(uint8_t identifier) NOEXCEPT;
-
 /// Get the bip324 identifier for a command (zero if unmapped).
 BCT_API uint8_t to_identifier(const std::string& command) NOEXCEPT;
 

@@ -24,6 +24,7 @@ using v2_stream = network::privacy::stream;
 using v2_context = network::privacy::context;
 using tcp_socket = network::asio::socket;
 using network::messages::peer::heading;
+namespace identifiers = network::messages::peer::identifiers;
 using system::data_chunk;
 
 constexpr uint32_t mainnet = 0xd9b4bef9;
@@ -86,9 +87,32 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
 
     BOOST_REQUIRE(!initiated);
     BOOST_REQUIRE(!responded);
-    BOOST_REQUIRE(!initiator.passthrough());
-    BOOST_REQUIRE(!responder.passthrough());
+    BOOST_REQUIRE(initiator.encrypted());
+    BOOST_REQUIRE(responder.encrypted());
     BOOST_REQUIRE_EQUAL(initiator.session_id(), responder.session_id());
+
+    // Read helper: one message via the native v2 read.
+    data_chunk buffer{};
+    boost_code got{};
+    uint8_t identifier{};
+    std::string command{};
+    data_chunk payload{};
+    const auto read_message = [&](v2_stream& stream)
+    {
+        got = boost::asio::error::would_block;
+        identifier = 0xff;
+        command.clear();
+        payload.clear();
+        stream.async_read_message(buffer,
+            [&](const boost_code& ec, uint8_t id, std::string type,
+                v2_stream::payload_t data)
+            {
+                got = ec;
+                identifier = id;
+                command = type;
+                payload.assign(data.begin(), data.end());
+            });
+    };
 
     // Send a short-identifier message (ping) initiator to responder.
     const auto ping = v1_frame("ping", system::base16_chunk("0011223344556677"));
@@ -97,17 +121,16 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
         boost::asio::const_buffer{ ping.data(), ping.size() },
         [&](const boost_code& ec, size_t) { sent = ec; });
 
-    data_chunk received(ping.size());
-    boost_code got{ boost::asio::error::would_block };
-    boost::asio::async_read(responder,
-        boost::asio::mutable_buffer{ received.data(), received.size() },
-        [&](const boost_code& ec, size_t) { got = ec; });
-
+    read_message(responder);
     service.run();
     service.restart();
     BOOST_REQUIRE(!sent);
     BOOST_REQUIRE(!got);
-    BOOST_REQUIRE_EQUAL(received, ping);
+    BOOST_REQUIRE_EQUAL(identifier, identifiers::ping);
+    BOOST_REQUIRE(command.empty());
+    const data_chunk ping_payload(std::next(ping.begin(), heading::size()),
+        ping.end());
+    BOOST_REQUIRE_EQUAL(payload, ping_payload);
 
     // Send an unmapped command (version, 13 byte type) responder to initiator.
     const auto version = v1_frame("version", system::base16_chunk("deadbeef"));
@@ -116,49 +139,34 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
         boost::asio::const_buffer{ version.data(), version.size() },
         [&](const boost_code& ec, size_t) { sent = ec; });
 
-    data_chunk reply(version.size());
-    got = boost::asio::error::would_block;
-    boost::asio::async_read(initiator,
-        boost::asio::mutable_buffer{ reply.data(), reply.size() },
-        [&](const boost_code& ec, size_t) { got = ec; });
-
+    read_message(initiator);
     service.run();
     service.restart();
     BOOST_REQUIRE(!sent);
     BOOST_REQUIRE(!got);
-    BOOST_REQUIRE_EQUAL(reply, version);
+    BOOST_REQUIRE_EQUAL(identifier, identifiers::unassigned);
+    BOOST_REQUIRE_EQUAL(command, "version");
+    const data_chunk version_payload(
+        std::next(version.begin(), heading::size()), version.end());
+    BOOST_REQUIRE_EQUAL(payload, version_payload);
 
-    // Piecewise heading/payload reads (channel_peer read shape).
+    // A second short-identifier message reuses the buffer (inv).
     const auto inv = v1_frame("inv", system::base16_chunk("00"));
     sent = boost::asio::error::would_block;
     boost::asio::async_write(initiator,
         boost::asio::const_buffer{ inv.data(), inv.size() },
         [&](const boost_code& ec, size_t) { sent = ec; });
 
-    data_chunk head(heading::size());
-    data_chunk body(inv.size() - heading::size());
-    got = boost::asio::error::would_block;
-    boost_code got_body{ boost::asio::error::would_block };
-    boost::asio::async_read(responder,
-        boost::asio::mutable_buffer{ head.data(), head.size() },
-        [&](const boost_code& ec, size_t)
-        {
-            got = ec;
-            boost::asio::async_read(responder,
-                boost::asio::mutable_buffer{ body.data(), body.size() },
-                [&](const boost_code& code, size_t) { got_body = code; });
-        });
-
+    read_message(responder);
     service.run();
     service.restart();
     BOOST_REQUIRE(!sent);
     BOOST_REQUIRE(!got);
-    BOOST_REQUIRE(!got_body);
-
-    data_chunk expected_head(inv.begin(), std::next(inv.begin(), heading::size()));
-    data_chunk expected_body(std::next(inv.begin(), heading::size()), inv.end());
-    BOOST_REQUIRE_EQUAL(head, expected_head);
-    BOOST_REQUIRE_EQUAL(body, expected_body);
+    BOOST_REQUIRE_EQUAL(identifier, identifiers::inventory);
+    BOOST_REQUIRE(command.empty());
+    const data_chunk inv_payload(std::next(inv.begin(), heading::size()),
+        inv.end());
+    BOOST_REQUIRE_EQUAL(payload, inv_payload);
 }
 
 BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v1_peer__passthrough_replay)
@@ -185,7 +193,7 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v1_peer__passthrough_replay)
 
     BOOST_REQUIRE(!sent);
     BOOST_REQUIRE(!responded);
-    BOOST_REQUIRE(responder.passthrough());
+    BOOST_REQUIRE(!responder.encrypted());
 
     // The full v1 message is surfaced (detection prefix replayed).
     data_chunk received(version.size());

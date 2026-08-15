@@ -64,7 +64,8 @@ size_t body::reader::need() const NOEXCEPT
 }
 
 // private
-bool body::reader::accept(const data_chunk& payload, boost_code& ec) NOEXCEPT
+bool body::reader::accept(const std::span<const uint8_t>& payload,
+    boost_code& ec) NOEXCEPT
 {
     if (value_.checksum && value_.head.checksum !=
         network_checksum(bitcoin_hash(payload.size(), payload.data())))
@@ -99,10 +100,10 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         if (size < need_)
             return zero;
 
-        // The framed read parses the caller buffer in place.
-        const auto copy = is_null(payload_) ?
-            data_chunk{ data, std::next(data, need_) } : data_chunk{};
-        const auto& payload = is_null(payload_) ? copy : *payload_;
+        // The payload is parsed in place (buffered by the caller either way).
+        const auto payload = is_null(payload_) ?
+            std::span<const uint8_t>{ data, need_ } :
+            std::span<const uint8_t>{ *payload_ };
         return accept(payload, ec) ? value_.head.payload_size : zero;
     }
 
@@ -132,6 +133,49 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         return zero;
 
     return heading::size();
+}
+
+void body::reader::put(uint8_t identifier, const std::string& command,
+    const std::span<const uint8_t>& payload, boost_code& ec) NOEXCEPT
+{
+    using registry = rpc::peer_registry;
+    ec = {};
+
+    const auto index = is_zero(identifier) ? registry::index(command) :
+        registry::index(identifier);
+
+    if (index == registry::unknown)
+    {
+        set_fault(value_, error::unknown_message, ec);
+        return;
+    }
+
+    if (payload.size() > value_.maximum)
+    {
+        set_fault(value_, error::oversized_payload, ec);
+        return;
+    }
+
+    value_.head =
+    {
+        value_.magic,
+        std::string{ registry::commands().at(index) },
+        possible_narrow_cast<uint32_t>(payload.size()),
+        zero
+    };
+
+    value_.payload = registry::to_any(index, payload, value_.version,
+        value_.witness);
+
+    if (!value_.payload)
+    {
+        set_fault(value_, error::invalid_message, ec);
+        return;
+    }
+
+    need_ = zero;
+    headed_ = true;
+    done_ = true;
 }
 
 void body::reader::finish(boost_code& ec) NOEXCEPT

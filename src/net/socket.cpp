@@ -129,19 +129,30 @@ const config::endpoint& socket::endpoint() const NOEXCEPT
     return endpoint_;
 }
 
-// Context.
+// Context (configured upgrade, thread safe).
 // ----------------------------------------------------------------------------
 // protected
 
+// TODO: zmq::context.
+
 bool socket::secure() const NOEXCEPT
 {
-    // TODO: zmq::context.
     return std::holds_alternative<ref<asio::ssl::context>>(context_);
 }
 
 bool socket::encrypted() const NOEXCEPT
 {
-    return std::holds_alternative<ref<const privacy::context>>(context_);
+    return std::holds_alternative<cref<privacy::context>>(context_);
+}
+
+// Variant state (protected by strand).
+// ----------------------------------------------------------------------------
+// protected
+
+bool socket::is_base() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return std::holds_alternative<asio::socket>(socket_);
 }
 
 bool socket::is_secure() const NOEXCEPT
@@ -151,16 +162,15 @@ bool socket::is_secure() const NOEXCEPT
         std::holds_alternative<ws::ssl::socket>(socket_);
 }
 
-bool socket::is_encrypted() const NOEXCEPT
+bool socket::is_p2ps() const NOEXCEPT
 {
     BC_ASSERT(stranded());
     return std::holds_alternative<privacy::stream>(socket_);
 }
 
-bool socket::is_base() const NOEXCEPT
+bool socket::is_encrypted() const NOEXCEPT
 {
-    BC_ASSERT(stranded());
-    return std::holds_alternative<asio::socket>(socket_);
+    return is_p2ps() && std::get<privacy::stream>(socket_).encrypted();
 }
 
 // Variant accessors.
@@ -282,6 +292,36 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
         [](privacy::stream&) NOEXCEPT -> asio::ssl::socket&
         {
             std::terminate();
+        }
+    }, socket_);
+}
+
+privacy::stream& socket::get_p2ps() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    BC_ASSERT(is_p2ps());
+
+    return std::visit(overload
+    {
+        [](asio::socket&) NOEXCEPT -> privacy::stream&
+        {
+            std::terminate();
+        },
+        [](asio::ssl::socket&) NOEXCEPT -> privacy::stream&
+        {
+            std::terminate();
+        },
+        [](ws::socket&) NOEXCEPT -> privacy::stream&
+        {
+            std::terminate();
+        },
+        [](ws::ssl::socket&) NOEXCEPT -> privacy::stream&
+        {
+            std::terminate();
+        },
+        [](privacy::stream& value) NOEXCEPT -> privacy::stream&
+        {
+            return value;
         }
     }, socket_);
 }

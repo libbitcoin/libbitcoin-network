@@ -23,47 +23,6 @@ BOOST_AUTO_TEST_SUITE(privacy_commands_tests)
 using namespace network::privacy;
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(privacy_commands__to_command__assigned__expected)
-{
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::address), "addr");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::block), "block");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::compact_transactions), "blocktxn");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::compact_block), "cmpctblock");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::fee_filter), "feefilter");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::bloom_filter_add), "filteradd");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::bloom_filter_clear), "filterclear");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::bloom_filter_load), "filterload");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::get_blocks), "getblocks");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::get_compact_transactions), "getblocktxn");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::get_data), "getdata");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::get_headers), "getheaders");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::headers), "headers");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::inventory), "inv");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::memory_pool), "mempool");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::merkle_block), "merkleblock");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::not_found), "notfound");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::ping), "ping");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::pong), "pong");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::send_compact), "sendcmpct");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::transaction), "tx");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::get_client_filters), "getcfilters");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::client_filter), "cfilter");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::get_client_filter_headers), "getcfheaders");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::client_filter_headers), "cfheaders");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::get_client_filter_checkpoint), "getcfcheckpt");
-    BOOST_REQUIRE_EQUAL(to_command(identifiers::client_filter_checkpoint), "cfcheckpt");
-}
-
-BOOST_AUTO_TEST_CASE(privacy_commands__to_command__unassigned__empty)
-{
-    BOOST_REQUIRE(to_command(identifiers::unassigned).empty());
-
-    // bip155 addrv2 is assigned but not an implemented message type.
-    BOOST_REQUIRE(to_command(identifiers::address_v2).empty());
-    BOOST_REQUIRE(to_command(29).empty());
-    BOOST_REQUIRE(to_command(255).empty());
-}
-
 BOOST_AUTO_TEST_CASE(privacy_commands__to_identifier__assigned__expected)
 {
     BOOST_REQUIRE_EQUAL(to_identifier("addr"), identifiers::address);

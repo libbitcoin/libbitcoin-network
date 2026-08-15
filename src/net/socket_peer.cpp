@@ -57,16 +57,19 @@ void socket::do_peer_read(size_t total, const peer_state::ptr& in,
 {
     BC_ASSERT(stranded());
 
-    // The heading is read into fixed storage, the payload into the caller
-    // buffer, sized by the heading.
+    if (is_encrypted())
+    {
+        get_p2ps().async_read_message(in->payload,
+            std::bind(&socket::handle_peer_read_encrypted,
+                shared_from_this(), _1, _2, _3, _4, in, handler));
+        return;
+    }
+
     const auto need = in->reader.need();
-
-    if (in->headed)
-        in->payload.resize(need);
-
+    if (in->headed) in->payload.resize(need);
     const auto data = in->headed ? in->payload.data() : in->head.data();
 
-    async_read(asio::mutable_buffer{ data, need },
+    async_read({ data, need },
         std::bind(&socket::handle_peer_read,
             shared_from_this(), _1, _2, total, in, handler));
 }
@@ -86,7 +89,7 @@ void socket::handle_peer_read(const code& ec, size_t size, size_t total,
 
     boost_code code{};
     const auto data = in->headed ? in->payload.data() : in->head.data();
-    in->reader.put(asio::const_buffer{ data, size }, code);
+    in->reader.put({ data, size }, code);
 
     if (code)
     {
@@ -103,6 +106,25 @@ void socket::handle_peer_read(const code& ec, size_t size, size_t total,
 
     in->headed = true;
     do_peer_read(total, in, handler);
+}
+
+// private
+void socket::handle_peer_read_encrypted(const boost_code& ec,
+    uint8_t identifier, const std::string& command,
+    const std::span<const uint8_t>& payload, const peer_state::ptr& in,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        handler(error::asio_to_error_code(ec), in->payload.size());
+        return;
+    }
+
+    boost_code code{};
+    in->reader.put(identifier, command, payload, code);
+    handler(error::http_to_error_code(code), in->payload.size());
 }
 
 void socket::peer_write(frame&& message,

@@ -174,47 +174,50 @@ void socket::handshake(result_handler&& handler) NOEXCEPT
             shared_from_this(), std::move(handler)));
 }
 
+// Invokes handler on acceptor (network) or connector (socket) strand.
 void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
     ////BC_ASSERT(stranded());
 
     if (encrypted())
     {
+        const auto direction = !inbound_;
+
         // Extract to temporary to avoid dangling reference after destruction.
         auto socket = std::move(std::get<asio::socket>(socket_));
 
-        // bip324 context is applied to the socket.
+        // P2PS (bip324) context is applied to the socket.
         socket_.emplace<privacy::stream>(std::move(socket),
-            std::get<ref<const privacy::context>>(context_).get());
+            std::get<cref<privacy::context>>(context_).get());
 
         // Posts handler to socket strand.
-        std::get<privacy::stream>(socket_).async_handshake(!inbound_,
+        get_p2ps().async_handshake(direction,
             std::bind(&socket::handle_encrypted_handshake,
                 shared_from_this(), _1, handler));
         return;
     }
 
-    // Invokes handler on acceptor (network) or connector (socket) strand.
-    if (!secure())
+    if (secure())
     {
-        handler(error::success);
+        const auto direction = inbound_ ?
+            boost::asio::ssl::stream_base::server :
+            boost::asio::ssl::stream_base::client;
+
+        // Extract to temporary to avoid dangling reference after destruction.
+        auto socket = std::move(std::get<asio::socket>(socket_));
+
+        // TLS context is applied to the socket.
+        socket_.emplace<asio::ssl::socket>(std::move(socket),
+            std::get<ref<asio::ssl::context>>(context_));
+
+        // Posts handler to socket strand.
+        get_ssl().async_handshake(direction,
+            std::bind(&socket::handle_handshake,
+                shared_from_this(), _1, handler));
         return;
     }
 
-    // Extract to temporary to avoid dangling reference after destruction.
-    auto socket = std::move(std::get<asio::socket>(socket_));
-
-    // TLS context is applied to the socket.
-    socket_.emplace<asio::ssl::socket>(std::move(socket),
-        std::get<ref<asio::ssl::context>>(context_));
-
-    // Posts handler to socket strand.
-    std::get<asio::ssl::socket>(socket_)
-        .async_handshake(inbound_ ?
-            boost::asio::ssl::stream_base::server :
-            boost::asio::ssl::stream_base::client,
-            std::bind(&socket::handle_handshake,
-                shared_from_this(), _1, handler));
+    handler(error::success);
 }
 
 void socket::handle_encrypted_handshake(const boost_code& ec,

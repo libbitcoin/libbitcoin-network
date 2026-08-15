@@ -25,14 +25,6 @@ namespace libbitcoin {
 namespace network {
 namespace privacy {
 
-std::string to_command(uint8_t identifier) NOEXCEPT
-{
-    using registry = rpc::peer_registry;
-    const auto index = registry::index(identifier);
-    return index == registry::unknown ? std::string{} :
-        std::string{ registry::commands().at(index) };
-}
-
 uint8_t to_identifier(const std::string& command) NOEXCEPT
 {
     using registry = rpc::peer_registry;

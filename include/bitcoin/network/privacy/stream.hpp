@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <memory>
+#include <span>
 #include <bitcoin/network/asio.hpp>
 #include <bitcoin/network/privacy/cipher.hpp>
 #include <bitcoin/network/privacy/context.hpp>
@@ -35,7 +36,7 @@ namespace privacy {
 /// Presents the v1 (heading framed) wire image to the caller while carrying
 /// v2 encrypted packets on the wire, so socket framing above is unchanged:
 /// written v1 messages are translated to encrypted packets, and received
-/// packets are surfaced as synthesized v1 messages. On accept, a v1 peer is
+/// packets are surfaced as whole messages. On accept, a v1 peer is
 /// detected from its first bytes and the stream degrades to passthrough.
 ///
 /// Models asio AsyncReadStream/AsyncWriteStream (handlers must be copyable).
@@ -50,6 +51,9 @@ public:
     typedef std::function<void(const boost_code&)> handshake_handler;
     using io_handler =
         boost::asio::any_completion_handler<void(boost_code, size_t)>;
+    using payload_t = std::span<const uint8_t>;
+    using message_handler = boost::asio::any_completion_handler<
+        void(boost_code, uint8_t, std::string, const payload_t&)>;
     using executor_type = asio::socket::executor_type;
 
     /// Assume ownership of the connected tcp socket.
@@ -64,11 +68,17 @@ public:
     /// A v1 peer detected on accept completes success with passthrough set.
     void async_handshake(bool initiate, handshake_handler&& handler) NOEXCEPT;
 
-    /// The accepted peer was v1, the stream is transparent.
-    bool passthrough() const NOEXCEPT;
+    /// The stream is encrypting, false if the accepted peer was detected v1.
+    bool encrypted() const NOEXCEPT;
 
     /// The session identifier (valid after v2 handshake).
     const system::hash_digest& session_id() const NOEXCEPT;
+
+    /// Read the next message into the buffer, decrypted in place (v2).
+    /// Identity is the short identifier, or the command if it is zero.
+    /// The payload is a span over the buffer (excludes framing and tag).
+    void async_read_message(system::data_chunk& buffer,
+        message_handler&& handler) NOEXCEPT;
 
     /// Read some bytes of the surfaced v1 stream.
     template <typename MutableBuffers, typename Handler>
@@ -129,9 +139,10 @@ private:
     // packet pump (read)
     void read_some(const copy_handler& copy, size_t limit,
         io_handler&& handler) NOEXCEPT;
-    void pump(pump_handler&& handler) NOEXCEPT;
-    void read_exactly(size_t size, pump_handler&& handler) NOEXCEPT;
-    bool synthesize(const system::data_chunk& contents) NOEXCEPT;
+    void read_exactly(const std::span<uint8_t>& out,
+        pump_handler&& handler) NOEXCEPT;
+    static bool split(uint8_t& identifier, std::string& command,
+        size_t& prefix, const std::span<const uint8_t>& contents) NOEXCEPT;
 
     // packet writer
     void write_pending(size_t size, io_handler&& handler) NOEXCEPT;
@@ -149,8 +160,6 @@ private:
     // read state
     system::data_chunk garbage_{};
     system::data_chunk packet_{};
-    system::data_chunk plain_{};
-    size_t offset_{};
 
     // write state
     system::data_chunk pending_{};

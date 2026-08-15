@@ -22,6 +22,7 @@
 #include <atomic>
 #include <memory>
 #include <optional>
+#include <span>
 #include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -275,17 +276,20 @@ protected:
         const config::address& address, const config::endpoint& endpoint,
         bool proxied, bool inbound) NOEXCEPT;
 
-    /// Context.
+    /// Variant state (protected by strand).
     /// -----------------------------------------------------------------------
-
-    /// The socket was upgraded to ssl (requires strand).
-    bool is_secure() const NOEXCEPT;
-
-    /// The socket was upgraded to bip324 (requires strand).
-    bool is_encrypted() const NOEXCEPT;
 
     /// The socket is not upgraded (asio::socket).
     bool is_base() const NOEXCEPT;
+
+    /// The socket was upgraded to ssl.
+    bool is_secure() const NOEXCEPT;
+
+    /// The socket was upgraded to p2ps (encrypting or v1 passthrough).
+    bool is_p2ps() const NOEXCEPT;
+
+    /// The socket was upgraded to p2ps and the peer is v2 (encrypting).
+    bool is_encrypted() const NOEXCEPT;
 
     /// Variant accessors (protected by strand).
     /// -----------------------------------------------------------------------
@@ -293,6 +297,7 @@ protected:
     tcp_t get_tcp() NOEXCEPT;
     asio::socket& get_base() NOEXCEPT;
     asio::ssl::socket& get_ssl() NOEXCEPT;
+    privacy::stream& get_p2ps() NOEXCEPT;
 
     /// Variant (ws vs. tcp) helpers (protected by strand).
     /// -----------------------------------------------------------------------
@@ -503,6 +508,9 @@ private:
 
     // peer
     void handle_peer_read(const code& ec, size_t size, size_t total,
+        const peer_state::ptr& in, const count_handler& handler) NOEXCEPT;
+    void handle_peer_read_encrypted(const boost_code& ec, uint8_t identifier,
+        const std::string& command, const std::span<const uint8_t>& payload,
         const peer_state::ptr& in, const count_handler& handler) NOEXCEPT;
 
     // rpc

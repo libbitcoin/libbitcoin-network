@@ -58,9 +58,9 @@ const asio::socket& stream::next_layer() const NOEXCEPT
     return socket_;
 }
 
-bool stream::passthrough() const NOEXCEPT
+bool stream::encrypted() const NOEXCEPT
 {
-    return passthrough_;
+    return !passthrough_;
 }
 
 const hash_digest& stream::session_id() const NOEXCEPT
@@ -230,7 +230,8 @@ void stream::read_versioning(bool first, const handshake_handler& handler) NOEXC
     // bip324
     // Read packets until the version packet (skipping decoys). The aad of the
     // first received packet is the peer garbage (excluding terminator).
-    read_exactly(cipher::length_size,
+    packet_.resize(cipher::length_size);
+    read_exactly(packet_,
         [this, first, handler](const boost_code& ec)
         {
             if (ec) { handler(ec); return; }
@@ -242,15 +243,18 @@ void stream::read_versioning(bool first, const handshake_handler& handler) NOEXC
                 return;
             }
 
-            read_exactly(cipher::header_size + length + cipher::tag_size,
+            packet_.resize(cipher::header_size + length + cipher::tag_size);
+            read_exactly(packet_,
                 [this, first, length, handler](const boost_code& code)
                 {
                     if (code) { handler(code); return; }
 
                     bool ignore{};
-                    data_chunk contents(length);
+                    const std::span<uint8_t> packet{ packet_ };
+                    const auto plain = packet.first(
+                        cipher::header_size + length);
                     const auto aad = first ? garbage_ : data_chunk{};
-                    if (!cipher_.decrypt(contents, aad, ignore, packet_))
+                    if (!cipher_.decrypt(plain, aad, ignore, packet))
                     {
                         handler(protocol_error);
                         return;
@@ -301,91 +305,21 @@ void stream::read_some(const copy_handler& copy, size_t limit,
         return;
     }
 
-    pump([this, copy, limit, handler = std::move(handler)](
-        const boost_code& ec) mutable
-    {
-        if (ec) { std::move(handler)(ec, zero); return; }
-
-        const auto available = plain_.size() - offset_;
-        const auto size = copy(std::next(plain_.data(), offset_),
-            std::min(limit, available));
-
-        offset_ += size;
-        if (offset_ == plain_.size())
+    // The encrypted stream surfaces messages, not bytes.
+    boost::asio::post(get_executor(),
+        [handler = std::move(handler)]() mutable
         {
-            plain_.clear();
-            offset_ = zero;
-        }
-
-        std::move(handler)(boost_code{}, size);
-    });
-}
-
-// Ensure at least one plaintext byte is available (post if already).
-void stream::pump(pump_handler&& handler) NOEXCEPT
-{
-    if (offset_ < plain_.size())
-    {
-        boost::asio::post(get_executor(),
-            [handler = std::move(handler)]() mutable
-            {
-                std::move(handler)(boost_code{});
-            });
-        return;
-    }
-
-    // bip324
-    // Read and decrypt the next content packet (skipping decoys), and
-    // synthesize its v1 message framing (heading) into the plain buffer.
-    read_exactly(cipher::length_size,
-        [this, handler = std::move(handler)](const boost_code& ec) mutable
-        {
-            if (ec) { std::move(handler)(ec); return; }
-
-            const auto length = cipher_.decrypt_length(packet_);
-            if (length > cipher::maximum_content)
-            {
-                std::move(handler)(protocol_error);
-                return;
-            }
-
-            read_exactly(cipher::header_size + length + cipher::tag_size,
-                [this, length, handler = std::move(handler)](
-                    const boost_code& code) mutable
-                {
-                    if (code) { std::move(handler)(code); return; }
-
-                    bool ignore{};
-                    data_chunk contents(length);
-                    if (!cipher_.decrypt(contents, {}, ignore, packet_))
-                    {
-                        std::move(handler)(protocol_error);
-                        return;
-                    }
-
-                    if (ignore)
-                    {
-                        pump(std::move(handler));
-                        return;
-                    }
-
-                    if (!synthesize(contents))
-                    {
-                        std::move(handler)(protocol_error);
-                        return;
-                    }
-
-                    std::move(handler)(boost_code{});
-                });
+            std::move(handler)(protocol_error, zero);
         });
 }
 
-// Read exactly size bytes into packet_, drawing from replay residue first.
-void stream::read_exactly(size_t size, pump_handler&& handler) NOEXCEPT
+// Read exactly out size bytes into out, drawing from replay residue first.
+void stream::read_exactly(const std::span<uint8_t>& out,
+    pump_handler&& handler) NOEXCEPT
 {
-    packet_.resize(size);
+    const auto size = out.size();
     const auto residue = std::min(size, replay_.size());
-    std::copy_n(replay_.begin(), residue, packet_.begin());
+    std::copy_n(replay_.begin(), residue, out.begin());
     replay_.erase(replay_.begin(), std::next(replay_.begin(), residue));
 
     if (residue == size)
@@ -399,68 +333,115 @@ void stream::read_exactly(size_t size, pump_handler&& handler) NOEXCEPT
     }
 
     boost::asio::async_read(socket_, boost::asio::mutable_buffer
-        { std::next(packet_.data(), residue), size - residue },
+        { std::next(out.data(), residue), size - residue },
         [handler = std::move(handler)](const boost_code& ec, size_t) mutable
         {
             std::move(handler)(ec);
         });
 }
 
-// Convert v2 packet contents to a v1 message (heading and payload).
-bool stream::synthesize(const data_chunk& contents) NOEXCEPT
+// Read the encrypted length prefix and then the packet into the caller
+// buffer, decrypting it in place (skipping decoys). The payload is a span
+// over the buffer following the packet header and message type prefix.
+void stream::async_read_message(data_chunk& buffer,
+    message_handler&& handler) NOEXCEPT
+{
+    packet_.resize(cipher::length_size);
+    read_exactly(packet_,
+        [this, &buffer, handler = std::move(handler)](
+            const boost_code& ec) mutable
+        {
+            if (ec)
+            {
+                std::move(handler)(ec, uint8_t{}, std::string{}, payload_t{});
+                return;
+            }
+
+            const auto length = cipher_.decrypt_length(packet_);
+            if (length > cipher::maximum_content)
+            {
+                std::move(handler)(protocol_error, uint8_t{}, std::string{}, payload_t{});
+                return;
+            }
+
+            buffer.resize(cipher::header_size + length + cipher::tag_size);
+            read_exactly(buffer,
+                [this, &buffer, length, handler = std::move(handler)](
+                    const boost_code& code) mutable
+                {
+                    if (code)
+                    {
+                        std::move(handler)(code, uint8_t{}, std::string{}, payload_t{});
+                        return;
+                    }
+
+                    bool ignore{};
+                    const std::span<uint8_t> packet{ buffer };
+                    const auto plain = packet.first(
+                        cipher::header_size + length);
+
+                    if (!cipher_.decrypt(plain, {}, ignore, packet))
+                    {
+                        std::move(handler)(protocol_error, uint8_t{}, std::string{}, payload_t{});
+                        return;
+                    }
+
+                    // Decoy packets are discarded, contents are ignored.
+                    if (ignore)
+                    {
+                        async_read_message(buffer, std::move(handler));
+                        return;
+                    }
+
+                    size_t prefix{};
+                    uint8_t identifier{};
+                    std::string command{};
+                    const auto contents = plain.subspan(cipher::header_size);
+
+                    if (!split(identifier, command, prefix, contents))
+                    {
+                        std::move(handler)(protocol_error, uint8_t{}, std::string{}, payload_t{});
+                        return;
+                    }
+
+                    std::move(handler)(boost_code{}, identifier,
+                        std::move(command), contents.subspan(prefix));
+                });
+        });
+}
+
+// static
+bool stream::split(uint8_t& identifier, std::string& command, size_t& prefix,
+    const std::span<const uint8_t>& contents) NOEXCEPT
 {
     using namespace messages::peer;
 
     if (contents.empty())
         return false;
 
-    std::string command{};
-    size_t prefix{ one };
+    identifier = contents.front();
 
-    if (is_zero(contents.front()))
+    // bip324
+    // A nonzero first byte is a short message type identifier, otherwise it
+    // introduces a 12 byte (padded ascii) message type.
+    if (!is_zero(identifier))
     {
-        // bip324
-        // A zero first byte indicates a 12 byte (padded ascii) message type.
-        prefix = add1(heading::command_size);
-        if (contents.size() < prefix)
-            return false;
-
-        const auto begin = std::next(contents.begin());
-        const auto end = std::next(begin, heading::command_size);
-        const auto terminus = std::find(begin, end, 0x00);
-        command.assign(begin, terminus);
-
-        // Trailing pad bytes must be null (deserialize symmetry).
-        if (!std::all_of(terminus, end, [](uint8_t byte) NOEXCEPT
-            { return is_zero(byte); }))
-            return false;
-    }
-    else
-    {
-        // bip324
-        // A nonzero first byte is a short message type identifier.
-        command = to_command(contents.front());
-
-        // An unknown short identifier is unrecoverable (cannot be skipped).
-        if (command.empty())
-            return false;
+        prefix = one;
+        return true;
     }
 
-    // Synthesize the v1 wire image (heading, including checksum, + payload).
-    const auto payload = std::next(contents.data(), prefix);
-    const auto payload_size = contents.size() - prefix;
-    const auto head = heading::factory(identifier_, command,
-        data_slice{ payload, std::next(payload, payload_size) });
-
-    plain_.resize(ceilinged_add(heading::size(), payload_size));
-    if (!head.serialize({ plain_.data(), std::next(plain_.data(),
-        heading::size()) }))
+    prefix = add1(heading::command_size);
+    if (contents.size() < prefix)
         return false;
 
-    std::copy_n(payload, payload_size,
-        std::next(plain_.begin(), heading::size()));
-    offset_ = zero;
-    return true;
+    const auto begin = std::next(contents.begin());
+    const auto end = std::next(begin, heading::command_size);
+    const auto terminus = std::find(begin, end, 0x00);
+    command.assign(begin, terminus);
+
+    // Trailing pad bytes must be null (deserialize symmetry).
+    return std::all_of(terminus, end, [](uint8_t byte) NOEXCEPT
+        { return is_zero(byte); });
 }
 
 // Write path.
