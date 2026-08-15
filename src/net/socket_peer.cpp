@@ -60,7 +60,7 @@ void socket::do_peer_read(size_t total, const peer_state::ptr& in,
 
     if (is_encrypted())
     {
-        get_p2ps().async_read_message(in->payload,
+        get_p2ps().async_read_message(in->payload, maximum_,
             std::bind(&socket::handle_peer_read_encrypted,
                 shared_from_this(), _1, _2, _3, _4, in, handler));
         return;
@@ -70,16 +70,28 @@ void socket::do_peer_read(size_t total, const peer_state::ptr& in,
     if (in->headed) in->payload.resize(need);
     const auto data = in->headed ? in->payload.data() : in->head.data();
 
-    async_read({ data, need },
+    // Drain the retained detection prefix (v1 peer) into the read.
+    const auto residue = std::min(detection_.size(), need);
+    if (!is_zero(residue))
+    {
+        const auto region = detection_.data();
+        std::copy_n(pointer_cast<const uint8_t>(region.data()), residue,
+            data);
+        detection_.consume(residue);
+    }
+
+    async_read({ std::next(data, residue), need - residue },
         std::bind(&socket::handle_peer_read,
-            shared_from_this(), _1, _2, total, in, handler));
+            shared_from_this(), _1, _2, residue, total, in, handler));
 }
 
 // private
-void socket::handle_peer_read(const code& ec, size_t size, size_t total,
-    const peer_state::ptr& in, const count_handler& handler) NOEXCEPT
+void socket::handle_peer_read(const code& ec, size_t size, size_t residue,
+    size_t total, const peer_state::ptr& in,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    size = ceilinged_add(size, residue);
     total = ceilinged_add(total, size);
 
     if (ec)

@@ -45,13 +45,13 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 void socket::accept(asio::acceptor& acceptor,
     result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(!std::get<asio::socket>(socket_).is_open(),
+    BC_ASSERT_MSG(!get_base().is_open(),
         "accept on open socket");
     try
     {
         // Dispatches on the acceptor's strand (which should be network).
         // Cannot move handler due to catch block invocation.
-        acceptor.async_accept(std::get<asio::socket>(socket_),
+        acceptor.async_accept(get_base(),
             std::bind(&socket::handle_accept,
                 shared_from_this(), _1, handler));
     }
@@ -82,7 +82,7 @@ void socket::handle_accept(boost_code ec,
         return;
     }
 
-    endpoint_ = { std::get<asio::socket>(socket_).remote_endpoint(ec) };
+    endpoint_ = { get_base().remote_endpoint(ec) };
     address_ = endpoint_;
 
     if (ec)
@@ -113,13 +113,13 @@ void socket::do_connect(const asio::endpoints& range,
 {
     BC_ASSERT(stranded());
     BC_ASSERT_MSG(!websocket(), "socket is upgraded");
-    BC_ASSERT_MSG(!std::get<asio::socket>(socket_).is_open(),
+    BC_ASSERT_MSG(!get_base().is_open(),
         "connect on open socket");
 
     try
     {
         // Establishes a socket connection by trying each endpoint in sequence.
-        boost::asio::async_connect(std::get<asio::socket>(socket_), range,
+        boost::asio::async_connect(get_base(), range,
             std::bind(&socket::handle_connect,
                 shared_from_this(), _1, _2, handler));
     }
@@ -184,18 +184,15 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
         // The accepted peer is detected as v1 or v2 before upgrade.
         if (inbound_)
         {
-            const auto prefix = system::emplace_shared<system::data_chunk>(
-                privacy::stream::detection_size);
-
-            boost::asio::async_read(std::get<asio::socket>(socket_),
-                boost::asio::mutable_buffer{ prefix->data(), prefix->size() },
+            boost::asio::async_read(get_base(),
+                detection_.prepare(privacy::stream::detection_size),
                 std::bind(&socket::handle_detection,
-                    shared_from_this(), _1, prefix, handler));
+                    shared_from_this(), _1, handler));
             return;
         }
 
         // Extract to temporary to avoid dangling reference after destruction.
-        auto socket = std::move(std::get<asio::socket>(socket_));
+        auto socket = std::move(get_base());
 
         // P2PS (bip324) context is applied to the socket.
         socket_.emplace<privacy::stream>(std::move(socket),
@@ -215,7 +212,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
             boost::asio::ssl::stream_base::client;
 
         // Extract to temporary to avoid dangling reference after destruction.
-        auto socket = std::move(std::get<asio::socket>(socket_));
+        auto socket = std::move(get_base());
 
         // TLS context is applied to the socket.
         socket_.emplace<asio::ssl::socket>(std::move(socket),
@@ -233,7 +230,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 
 // Invoked on the socket strand (asio handler).
 void socket::handle_detection(const boost_code& ec,
-    const system::chunk_ptr& prefix, const result_handler& handler) NOEXCEPT
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -245,22 +242,29 @@ void socket::handle_detection(const boost_code& ec,
         return;
     }
 
+    constexpr auto size = privacy::stream::detection_size;
+    detection_.commit(size);
     const auto& context = std::get<cref<privacy::context>>(context_).get();
+    const auto data = system::pointer_cast<const uint8_t>(detection_.data().data());
+    const std::span<const uint8_t> prefix{ data, size };
 
-    // A v1 peer is served without upgrade, replaying the detected prefix.
-    if (privacy::stream::detected_v1(*prefix, context.identifier))
+    // A v1 peer is served without upgrade, the buffer retains the prefix.
+    if (privacy::stream::detected_v1(prefix, context.identifier))
     {
-        replay_ = std::move(*prefix);
         handler(error::success);
         return;
     }
 
-    // Extract to temporary to avoid dangling reference after destruction.
-    auto socket = std::move(std::get<asio::socket>(socket_));
+    // The prefix is consumed by the upgrade (a partial peer key).
+    system::data_chunk key{ prefix.begin(), prefix.end() };
+    detection_.consume(size);
 
-    // P2PS (bip324) context is applied to the socket (partial peer key).
+    // Extract to temporary to avoid dangling reference after destruction.
+    auto socket = std::move(get_base());
+
+    // P2PS (bip324) context is applied to the socket.
     socket_.emplace<privacy::stream>(std::move(socket), context,
-        std::move(*prefix));
+        std::move(key));
 
     // Posts handler to socket strand.
     get_p2ps().async_handshake(false,

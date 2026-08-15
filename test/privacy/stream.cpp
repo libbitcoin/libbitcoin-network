@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <optional>
 #include "../test.hpp"
 
 BOOST_AUTO_TEST_SUITE(privacy_stream_tests)
@@ -76,32 +77,39 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
 
     const v2_context configuration{ mainnet };
     v2_stream initiator{ std::move(client), configuration };
+    std::optional<v2_stream> upgraded{};
 
-    // The initiator sends its key, the socket detects v2 (not v1 prefix).
     boost_code initiated{ boost::asio::error::would_block };
-    initiator.async_handshake(true, [&](const boost_code& ec) { initiated = ec; });
-
-    data_chunk prefix(v2_stream::detection_size);
+    boost_code responded{ boost::asio::error::would_block };
     boost_code detected{ boost::asio::error::would_block };
-    const auto detect = [&](const boost_code& ec, size_t) { detected = ec; };
+    data_chunk prefix(v2_stream::detection_size);
+    bool v1{ true };
+
+    // The socket reads the detection prefix and upgrades on a v2 peer,
+    // passing the detected bytes to the stream (a partial peer key).
+    const auto shook = [&](const boost_code& ec) { responded = ec; };
+    const auto detect = [&](const boost_code& ec, size_t)
+    {
+        detected = ec;
+        v1 = v2_stream::detected_v1(prefix, mainnet);
+        upgraded.emplace(std::move(server), configuration, std::move(prefix));
+        upgraded->async_handshake(false, shook);
+    };
+
+    const auto shake = [&](const boost_code& ec) { initiated = ec; };
+    initiator.async_handshake(true, shake);
     const boost::asio::mutable_buffer out{ prefix.data(), prefix.size() };
     boost::asio::async_read(server, out, detect);
 
     service.run();
     service.restart();
+
     BOOST_REQUIRE(!detected);
-    BOOST_REQUIRE(!v2_stream::detected_v1(prefix, mainnet));
-
-    // The responder stream assumes the detection prefix (partial peer key).
-    v2_stream responder{ std::move(server), configuration, std::move(prefix) };
-
-    boost_code responded{ boost::asio::error::would_block };
-    responder.async_handshake(false, [&](const boost_code& ec) { responded = ec; });
-    service.run();
-    service.restart();
-
+    BOOST_REQUIRE(!v1);
     BOOST_REQUIRE(!initiated);
     BOOST_REQUIRE(!responded);
+
+    auto& responder = *upgraded;
     BOOST_REQUIRE_EQUAL(initiator.session_id(), responder.session_id());
 
     // Read helper: one message via the native v2 read.
@@ -126,7 +134,8 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
         identifier = 0xff;
         command.clear();
         payload.clear();
-        stream.async_read_message(buffer, on_message);
+        constexpr auto maximum = network::privacy::cipher::maximum_content;
+        stream.async_read_message(buffer, maximum, on_message);
     };
 
     // Send a short-identifier message (ping) initiator to responder.

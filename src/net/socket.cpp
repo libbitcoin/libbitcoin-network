@@ -234,8 +234,6 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
 
 asio::socket& socket::get_base() NOEXCEPT
 {
-    BC_ASSERT(stranded());
-
     return std::visit(overload
     {
         [](asio::socket& value) NOEXCEPT -> asio::socket&
@@ -436,38 +434,12 @@ void socket::async_read(const asio::mutable_buffer& buffer,
             // Websockets read frame not size, use async_read(flat_buffer).
             handler(error::operation_failed, {});
         }
-        else if (replay_.empty())
+        else
         {
             // Fixed-size semantics.
             VARIANT_DISPATCH_FUNCTION(boost::asio::async_read, get_tcp(),
                 buffer, std::bind(&socket::handle_async,
                     shared_from_this(), _1, _2, handler, "async_read"));
-        }
-        else
-        {
-            // Splice the one-shot v1 detection prefix into the read.
-            const auto data = pointer_cast<uint8_t>(buffer.data());
-            const auto size = buffer.size();
-            const auto residue = std::min(replay_.size(), size);
-            std::copy_n(replay_.begin(), residue, data);
-            replay_.erase(replay_.begin(), std::next(replay_.begin(),
-                residue));
-
-            if (residue == size)
-            {
-                handler(error::success, residue);
-                return;
-            }
-
-            VARIANT_DISPATCH_FUNCTION(boost::asio::async_read, get_tcp(),
-                (asio::mutable_buffer{ std::next(data, residue),
-                    size - residue }),
-                [self = shared_from_this(), residue, handler](
-                    const boost_code& ec, size_t bytes) NOEXCEPT
-                {
-                    self->handle_async(ec, bytes + residue, handler,
-                        "async_read");
-                });
         }
     }
     catch (const std::exception& e)

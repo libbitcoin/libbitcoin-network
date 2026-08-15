@@ -432,7 +432,7 @@ private:
         const result_handler& handler) NOEXCEPT;
     void do_handshake(const result_handler& handler) NOEXCEPT;
     void handle_detection(const boost_code& ec,
-        const system::chunk_ptr& prefix, const result_handler& handler) NOEXCEPT;
+        const result_handler& handler) NOEXCEPT;
 
     // ws (framed)
     void do_ws_read(ref<http::flat_buffer> out,
@@ -507,8 +507,9 @@ private:
         const count_handler& handler,const std::string& operation) NOEXCEPT;
 
     // peer
-    void handle_peer_read(const code& ec, size_t size, size_t total,
-        const peer_state::ptr& in, const count_handler& handler) NOEXCEPT;
+    void handle_peer_read(const code& ec, size_t size, size_t residue,
+        size_t total, const peer_state::ptr& in,
+        const count_handler& handler) NOEXCEPT;
     void handle_peer_read_encrypted(const boost_code& ec, uint8_t identifier,
         const std::string& command, const std::span<const uint8_t>& payload,
         const peer_state::ptr& in, const count_handler& handler) NOEXCEPT;
@@ -569,8 +570,8 @@ protected:
     deadline::ptr timer_;
     socket_t socket_;
 
-    // One-shot replay of the v1 detection prefix (see handle_detection).
-    system::data_chunk replay_{};
+    // Retains the detection prefix for a v1 peer (see handle_detection).
+    http::flat_buffer detection_{ privacy::stream::detection_size };
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;

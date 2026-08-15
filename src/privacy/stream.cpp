@@ -37,16 +37,19 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 constexpr auto protocol_error = boost::asio::error::no_protocol_option;
 
 // static
-bool stream::detected_v1(const data_chunk& prefix,
+bool stream::detected_v1(const std::span<const uint8_t>& prefix,
     uint32_t identifier) NOEXCEPT
 {
     // The v1 version message prefix (network magic and command padding).
-    return prefix == build_chunk(
+    const auto expected = build_chunk(
     {
         to_little_endian(identifier),
         to_chunk("version"),
         data_chunk(5, 0x00)
     });
+
+    return prefix.size() == expected.size() &&
+        std::equal(prefix.begin(), prefix.end(), expected.begin());
 }
 
 stream::stream(asio::socket&& socket, const context& context) NOEXCEPT
@@ -289,12 +292,12 @@ void stream::read_exactly(const std::span<uint8_t>& out,
 // Read the encrypted length prefix and then the packet into the caller
 // buffer, decrypting it in place (skipping decoys). The payload is a span
 // over the buffer following the packet header and message type prefix.
-void stream::async_read_message(data_chunk& buffer,
+void stream::async_read_message(data_chunk& buffer, size_t maximum,
     message_handler&& handler) NOEXCEPT
 {
     packet_.resize(cipher::length_size);
     read_exactly(packet_,
-        [this, &buffer, handler = std::move(handler)](
+        [this, &buffer, maximum, handler = std::move(handler)](
             const boost_code& ec) mutable
         {
             if (ec)
@@ -303,8 +306,13 @@ void stream::async_read_message(data_chunk& buffer,
                 return;
             }
 
+            // Contents are bounded by the maximum payload and type prefix.
+            using namespace messages::peer;
+            const auto bound = std::min(cipher::maximum_content,
+                maximum + add1(heading::command_size));
+
             const auto length = cipher_.decrypt_length(packet_);
-            if (length > cipher::maximum_content)
+            if (length > bound)
             {
                 std::move(handler)(protocol_error, uint8_t{}, std::string{}, payload_t{});
                 return;
@@ -312,7 +320,7 @@ void stream::async_read_message(data_chunk& buffer,
 
             buffer.resize(cipher::header_size + length + cipher::tag_size);
             read_exactly(buffer,
-                [this, &buffer, length, handler = std::move(handler)](
+                [this, &buffer, length, maximum, handler = std::move(handler)](
                     const boost_code& code) mutable
                 {
                     if (code)
@@ -335,7 +343,7 @@ void stream::async_read_message(data_chunk& buffer,
                     // Decoy packets are discarded, contents are ignored.
                     if (ignore)
                     {
-                        async_read_message(buffer, std::move(handler));
+                        async_read_message(buffer, maximum, std::move(handler));
                         return;
                     }
 

@@ -56,7 +56,7 @@ public:
         sizeof(uint32_t) + messages::peer::heading::command_size;
 
     /// The detection prefix indicates a v1 peer (v1 version message).
-    static bool detected_v1(const system::data_chunk& prefix,
+    static bool detected_v1(const std::span<const uint8_t>& prefix,
         uint32_t identifier) NOEXCEPT;
 
     /// Assume ownership of the connected tcp socket (initiator).
@@ -79,9 +79,10 @@ public:
     const system::hash_digest& session_id() const NOEXCEPT;
 
     /// Read the next message into the buffer, decrypted in place (v2).
+    /// A message with contents exceeding maximum is rejected unread.
     /// Identity is the short identifier, or the command if it is zero.
     /// The payload is a span over the buffer (excludes framing and tag).
-    void async_read_message(system::data_chunk& buffer,
+    void async_read_message(system::data_chunk& buffer, size_t maximum,
         message_handler&& handler) NOEXCEPT;
 
     /// Write a message as one encrypted packet (v2 only).
