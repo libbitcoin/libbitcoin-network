@@ -181,7 +181,18 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 
     if (encrypted())
     {
-        const auto direction = !inbound_;
+        // The accepted peer is detected as v1 or v2 before upgrade.
+        if (inbound_)
+        {
+            const auto prefix = system::emplace_shared<system::data_chunk>(
+                privacy::stream::detection_size);
+
+            boost::asio::async_read(std::get<asio::socket>(socket_),
+                boost::asio::mutable_buffer{ prefix->data(), prefix->size() },
+                std::bind(&socket::handle_detection,
+                    shared_from_this(), _1, prefix, handler));
+            return;
+        }
 
         // Extract to temporary to avoid dangling reference after destruction.
         auto socket = std::move(std::get<asio::socket>(socket_));
@@ -191,7 +202,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
             std::get<cref<privacy::context>>(context_).get());
 
         // Posts handler to socket strand.
-        get_p2ps().async_handshake(direction,
+        get_p2ps().async_handshake(true,
             std::bind(&socket::handle_encrypted_handshake,
                 shared_from_this(), _1, handler));
         return;
@@ -218,6 +229,43 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
     }
 
     handler(error::success);
+}
+
+// Invoked on the socket strand (asio handler).
+void socket::handle_detection(const boost_code& ec,
+    const system::chunk_ptr& prefix, const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        const auto code = error::asio_to_error_code(ec);
+        if (code == error::unknown) logx("detection", ec);
+        handler(code);
+        return;
+    }
+
+    const auto& context = std::get<cref<privacy::context>>(context_).get();
+
+    // A v1 peer is served without upgrade, replaying the detected prefix.
+    if (privacy::stream::detected_v1(*prefix, context.identifier))
+    {
+        replay_ = std::move(*prefix);
+        handler(error::success);
+        return;
+    }
+
+    // Extract to temporary to avoid dangling reference after destruction.
+    auto socket = std::move(std::get<asio::socket>(socket_));
+
+    // P2PS (bip324) context is applied to the socket (partial peer key).
+    socket_.emplace<privacy::stream>(std::move(socket), context,
+        std::move(*prefix));
+
+    // Posts handler to socket strand.
+    get_p2ps().async_handshake(false,
+        std::bind(&socket::handle_encrypted_handshake,
+            shared_from_this(), _1, handler));
 }
 
 void socket::handle_encrypted_handshake(const boost_code& ec,

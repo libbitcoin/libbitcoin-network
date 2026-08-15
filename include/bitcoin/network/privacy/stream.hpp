@@ -23,6 +23,7 @@
 #include <memory>
 #include <span>
 #include <bitcoin/network/asio.hpp>
+#include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/privacy/cipher.hpp>
 #include <bitcoin/network/privacy/context.hpp>
 #include <bitcoin/network/define.hpp>
@@ -32,17 +33,11 @@ namespace network {
 namespace privacy {
 
 /// bip324 (v2) transport stream over a tcp socket.
-///
-/// Presents the v1 (heading framed) wire image to the caller while carrying
-/// v2 encrypted packets on the wire, so socket framing above is unchanged:
-/// written v1 messages are translated to encrypted packets, and received
-/// packets are surfaced as whole messages. On accept, a v1 peer is
-/// detected from its first bytes and the stream degrades to passthrough.
-///
-/// Models asio AsyncReadStream/AsyncWriteStream (handlers must be copyable).
+/// The stream is message oriented: whole messages are written as encrypted
+/// packets and received packets are surfaced as whole messages. The socket
+/// upgrades to the stream only once the peer is detected (or connected) v2.
 /// All calls must be sequenced on the underlying socket's executor. Read and
 /// write chains may overlap each other but not themselves (as asio streams).
-/// Not final, asio trait detection requires derivability.
 class BCT_API stream
 {
 public:
@@ -56,8 +51,21 @@ public:
         void(boost_code, uint8_t, std::string, const payload_t&)>;
     using executor_type = asio::socket::executor_type;
 
-    /// Assume ownership of the connected tcp socket.
+    /// The size of the v1 detection prefix (magic and command padding).
+    static constexpr size_t detection_size =
+        sizeof(uint32_t) + messages::peer::heading::command_size;
+
+    /// The detection prefix indicates a v1 peer (v1 version message).
+    static bool detected_v1(const system::data_chunk& prefix,
+        uint32_t identifier) NOEXCEPT;
+
+    /// Assume ownership of the connected tcp socket (initiator).
     stream(asio::socket&& socket, const context& context) NOEXCEPT;
+
+    /// Assume ownership of the accepted tcp socket (responder), with the
+    /// detection prefix bytes consumed by the socket (partial peer key).
+    stream(asio::socket&& socket, const context& context,
+        system::data_chunk&& detected) NOEXCEPT;
 
     /// asio stream conventions (next_layer enables get_lowest_layer).
     executor_type get_executor() NOEXCEPT;
@@ -65,11 +73,7 @@ public:
     const asio::socket& next_layer() const NOEXCEPT;
 
     /// Perform the v2 handshake, set initiate if this side connected.
-    /// A v1 peer detected on accept completes success with passthrough set.
     void async_handshake(bool initiate, handshake_handler&& handler) NOEXCEPT;
-
-    /// The stream is encrypting, false if the accepted peer was detected v1.
-    bool encrypted() const NOEXCEPT;
 
     /// The session identifier (valid after v2 handshake).
     const system::hash_digest& session_id() const NOEXCEPT;
@@ -80,59 +84,18 @@ public:
     void async_read_message(system::data_chunk& buffer,
         message_handler&& handler) NOEXCEPT;
 
-    /// Read some bytes of the surfaced v1 stream.
-    template <typename MutableBuffers, typename Handler>
-    void async_read_some(const MutableBuffers& buffers, Handler&& handler)
-    {
-        if (passthrough_ && replay_.empty())
-        {
-            socket_.async_read_some(buffers, std::forward<Handler>(handler));
-            return;
-        }
-
-        read_some(
-            [buffers](const uint8_t* data, size_t size) NOEXCEPT
-            {
-                return boost::asio::buffer_copy(buffers,
-                    boost::asio::const_buffer{ data, size });
-            },
-            boost::asio::buffer_size(buffers),
-            io_handler{ std::forward<Handler>(handler) });
-    }
-
     /// Write a message as one encrypted packet (v2 only).
     /// Identity is the short identifier, or the command if it is zero.
     void async_write_message(uint8_t identifier, const std::string& command,
         const system::chunk_cptr& payload, io_handler&& handler) NOEXCEPT;
 
-    /// Write some bytes of the v1 stream (passthrough only).
-    template <typename ConstBuffers, typename Handler>
-    void async_write_some(const ConstBuffers& buffers, Handler&& handler)
-    {
-        if (passthrough_)
-        {
-            socket_.async_write_some(buffers, std::forward<Handler>(handler));
-            return;
-        }
-
-        // The encrypted stream accepts messages, not bytes.
-        boost::asio::post(get_executor(),
-            [handler = std::forward<Handler>(handler)]() mutable
-            {
-                handler(boost::asio::error::no_protocol_option, zero);
-            });
-    }
-
 private:
-    typedef std::function<size_t(const uint8_t*, size_t)> copy_handler;
     using pump_handler =
         boost::asio::any_completion_handler<void(boost_code)>;
 
     // handshake
     void do_initiate(const handshake_handler& handler) NOEXCEPT;
     void do_respond(const handshake_handler& handler) NOEXCEPT;
-    void handle_detect(const boost_code& ec,
-        const handshake_handler& handler) NOEXCEPT;
     void handle_their_key(const boost_code& ec, bool initiate,
         const handshake_handler& handler) NOEXCEPT;
     void send_terminator_version(bool initiate,
@@ -141,8 +104,6 @@ private:
     void read_versioning(bool first, const handshake_handler& handler) NOEXCEPT;
 
     // packet pump (read)
-    void read_some(const copy_handler& copy, size_t limit,
-        io_handler&& handler) NOEXCEPT;
     void read_exactly(const std::span<uint8_t>& out,
         pump_handler&& handler) NOEXCEPT;
     static bool split(uint8_t& identifier, std::string& command,
@@ -153,9 +114,8 @@ private:
     asio::socket socket_;
     cipher cipher_;
     const uint32_t identifier_;
-    bool passthrough_{};
 
-    // v1 detection replay (passthrough) or handshake residue (v2).
+    // Peer key accumulation and handshake packet stream residue.
     system::data_chunk replay_{};
 
     // read state

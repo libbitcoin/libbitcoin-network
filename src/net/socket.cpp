@@ -162,15 +162,10 @@ bool socket::is_secure() const NOEXCEPT
         std::holds_alternative<ws::ssl::socket>(socket_);
 }
 
-bool socket::is_p2ps() const NOEXCEPT
+bool socket::is_encrypted() const NOEXCEPT
 {
     BC_ASSERT(stranded());
     return std::holds_alternative<privacy::stream>(socket_);
-}
-
-bool socket::is_encrypted() const NOEXCEPT
-{
-    return is_p2ps() && std::get<privacy::stream>(socket_).encrypted();
 }
 
 // Variant accessors.
@@ -230,9 +225,9 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
         {
             std::terminate();
         },
-        [](privacy::stream& value) NOEXCEPT -> socket::tcp_t
+        [](privacy::stream&) NOEXCEPT -> socket::tcp_t
         {
-            return std::ref(value);
+            std::terminate();
         }
     }, socket_);
 }
@@ -299,7 +294,7 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
 privacy::stream& socket::get_p2ps() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(is_p2ps());
+    BC_ASSERT(is_encrypted());
 
     return std::visit(overload
     {
@@ -441,12 +436,38 @@ void socket::async_read(const asio::mutable_buffer& buffer,
             // Websockets read frame not size, use async_read(flat_buffer).
             handler(error::operation_failed, {});
         }
-        else
+        else if (replay_.empty())
         {
             // Fixed-size semantics.
             VARIANT_DISPATCH_FUNCTION(boost::asio::async_read, get_tcp(),
                 buffer, std::bind(&socket::handle_async,
                     shared_from_this(), _1, _2, handler, "async_read"));
+        }
+        else
+        {
+            // Splice the one-shot v1 detection prefix into the read.
+            const auto data = pointer_cast<uint8_t>(buffer.data());
+            const auto size = buffer.size();
+            const auto residue = std::min(replay_.size(), size);
+            std::copy_n(replay_.begin(), residue, data);
+            replay_.erase(replay_.begin(), std::next(replay_.begin(),
+                residue));
+
+            if (residue == size)
+            {
+                handler(error::success, residue);
+                return;
+            }
+
+            VARIANT_DISPATCH_FUNCTION(boost::asio::async_read, get_tcp(),
+                (asio::mutable_buffer{ std::next(data, residue),
+                    size - residue }),
+                [self = shared_from_this(), residue, handler](
+                    const boost_code& ec, size_t bytes) NOEXCEPT
+                {
+                    self->handle_async(ec, bytes + residue, handler,
+                        "async_read");
+                });
         }
     }
     catch (const std::exception& e)

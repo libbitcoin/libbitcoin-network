@@ -32,13 +32,32 @@ using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// bip324
 // Errors are surfaced as generic boost codes, the socket logs and maps them.
 // Handshake and stream failures are unrecoverable, producing socket close.
 constexpr auto protocol_error = boost::asio::error::no_protocol_option;
 
+// static
+bool stream::detected_v1(const data_chunk& prefix,
+    uint32_t identifier) NOEXCEPT
+{
+    // The v1 version message prefix (network magic and command padding).
+    return prefix == build_chunk(
+    {
+        to_little_endian(identifier),
+        to_chunk("version"),
+        data_chunk(5, 0x00)
+    });
+}
+
 stream::stream(asio::socket&& socket, const context& context) NOEXCEPT
   : socket_(std::move(socket)), cipher_{}, identifier_(context.identifier)
+{
+}
+
+stream::stream(asio::socket&& socket, const context& context,
+    data_chunk&& detected) NOEXCEPT
+  : socket_(std::move(socket)), cipher_{}, identifier_(context.identifier),
+    replay_(std::move(detected))
 {
 }
 
@@ -57,10 +76,6 @@ const asio::socket& stream::next_layer() const NOEXCEPT
     return socket_;
 }
 
-bool stream::encrypted() const NOEXCEPT
-{
-    return !passthrough_;
-}
 
 const hash_digest& stream::session_id() const NOEXCEPT
 {
@@ -81,7 +96,6 @@ void stream::async_handshake(bool initiate,
 
 void stream::do_initiate(const handshake_handler& handler) NOEXCEPT
 {
-    // bip324
     // The initiator sends its ellswift public key (with optional garbage).
     const auto& key = cipher_.public_key();
     boost::asio::async_write(socket_,
@@ -90,7 +104,6 @@ void stream::do_initiate(const handshake_handler& handler) NOEXCEPT
         {
             if (ec) { handler(ec); return; }
 
-            // bip324
             // The responder replies with its own ellswift public key.
             replay_.resize(cipher::key_size);
             boost::asio::async_read(socket_,
@@ -101,36 +114,8 @@ void stream::do_initiate(const handshake_handler& handler) NOEXCEPT
 
 void stream::do_respond(const handshake_handler& handler) NOEXCEPT
 {
-    // bip324
-    // The responder matches initial bytes against the v1 version message
-    // prefix (network magic and "version" command padding, 16 bytes).
-    replay_.resize(messages::peer::heading::command_size + sizeof(uint32_t));
-    boost::asio::async_read(socket_,
-        boost::asio::mutable_buffer{ replay_.data(), replay_.size() },
-        std::bind(&stream::handle_detect, this, _1, handler));
-}
-
-void stream::handle_detect(const boost_code& ec,
-    const handshake_handler& handler) NOEXCEPT
-{
-    if (ec) { handler(ec); return; }
-
-    const auto prefix = build_chunk(
-    {
-        to_little_endian(identifier_),
-        to_chunk("version"),
-        data_chunk(5, 0x00)
-    });
-
-    if (replay_ == prefix)
-    {
-        // v1 peer detected, become transparent and replay the prefix.
-        passthrough_ = true;
-        handler(boost_code{});
-        return;
-    }
-
-    // v2 peer, the balance of the ellswift public key follows.
+    // The socket detected v2 from the initial bytes (partial peer key), the
+    // balance of the ellswift public key follows.
     const auto detected = replay_.size();
     replay_.resize(cipher::key_size);
     boost::asio::async_read(socket_, boost::asio::mutable_buffer
@@ -159,7 +144,6 @@ void stream::handle_their_key(const boost_code& ec, bool initiate,
 void stream::send_terminator_version(bool initiate,
     const handshake_handler& handler) NOEXCEPT
 {
-    // bip324
     // Send garbage terminator and version packet (aad is sent garbage, none).
     // The responder additionally prepends its own ellswift public key, as the
     // initiator sent its key before reading the peer key.
@@ -187,7 +171,6 @@ void stream::send_terminator_version(bool initiate,
 
 void stream::scan_terminator(const handshake_handler& handler) NOEXCEPT
 {
-    // bip324
     // Scan for the peer garbage terminator within garbage plus terminator.
     const auto& terminator = cipher_.receive_terminator();
     const auto position = std::search(garbage_.begin(), garbage_.end(),
@@ -226,8 +209,7 @@ void stream::scan_terminator(const handshake_handler& handler) NOEXCEPT
 
 void stream::read_versioning(bool first, const handshake_handler& handler) NOEXCEPT
 {
-    // bip324
-    // Read packets until the version packet (skipping decoys). The aad of the
+    // bip324    // Read packets until the version packet (skipping decoys). The aad of the
     // first received packet is the peer garbage (excluding terminator).
     packet_.resize(cipher::length_size);
     read_exactly(packet_,
@@ -276,41 +258,6 @@ void stream::read_versioning(bool first, const handshake_handler& handler) NOEXC
 
 // Read pump.
 // ----------------------------------------------------------------------------
-
-void stream::read_some(const copy_handler& copy, size_t limit,
-    io_handler&& handler) NOEXCEPT
-{
-    // Passthrough replay of the v1 detection prefix.
-    if (passthrough_)
-    {
-        const auto size = std::min(limit, replay_.size());
-        copy(replay_.data(), size);
-        replay_.erase(replay_.begin(), std::next(replay_.begin(), size));
-        boost::asio::post(get_executor(),
-            [handler = std::move(handler), size]() mutable
-            {
-                std::move(handler)(boost_code{}, size);
-            });
-        return;
-    }
-
-    if (is_zero(limit))
-    {
-        boost::asio::post(get_executor(),
-            [handler = std::move(handler)]() mutable
-            {
-                std::move(handler)(boost_code{}, zero);
-            });
-        return;
-    }
-
-    // The encrypted stream surfaces messages, not bytes.
-    boost::asio::post(get_executor(),
-        [handler = std::move(handler)]() mutable
-        {
-            std::move(handler)(protocol_error, zero);
-        });
-}
 
 // Read exactly out size bytes into out, drawing from replay residue first.
 void stream::read_exactly(const std::span<uint8_t>& out,
@@ -420,7 +367,6 @@ bool stream::split(uint8_t& identifier, std::string& command, size_t& prefix,
 
     identifier = contents.front();
 
-    // bip324
     // A nonzero first byte is a short message type identifier, otherwise it
     // introduces a 12 byte (padded ascii) message type.
     if (!is_zero(identifier))
@@ -455,7 +401,6 @@ void stream::async_write_message(uint8_t identifier,
 {
     using namespace messages::peer;
 
-    // bip324
     // Contents are the short type identifier (or zero byte and padded
     // command) followed by the payload.
     const auto prefix = is_zero(identifier) ? add1(heading::command_size) :

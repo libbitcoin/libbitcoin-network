@@ -30,7 +30,7 @@ using namespace system;
 BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 BC_PUSH_WARNING(NO_DYNAMIC_ARRAY_INDEXING)
 
-// bip324 key derivation salt prefix.
+// key derivation salt prefix.
 constexpr char salt_label[] = "bitcoin_v2_shared_secret";
 
 // This is to be used only for ephemeral network session keys.

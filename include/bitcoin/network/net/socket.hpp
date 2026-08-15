@@ -265,8 +265,7 @@ public:
 
 protected:
     using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;
-    using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>,
-        ref<privacy::stream>>;
+    using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
     using socket_t = std::variant<asio::socket, asio::ssl::socket, ws::socket,
         ws::ssl::socket, privacy::stream>;
 
@@ -285,10 +284,7 @@ protected:
     /// The socket was upgraded to ssl.
     bool is_secure() const NOEXCEPT;
 
-    /// The socket was upgraded to p2ps (encrypting or v1 passthrough).
-    bool is_p2ps() const NOEXCEPT;
-
-    /// The socket was upgraded to p2ps and the peer is v2 (encrypting).
+    /// The socket was upgraded to p2ps (the peer is v2).
     bool is_encrypted() const NOEXCEPT;
 
     /// Variant accessors (protected by strand).
@@ -435,6 +431,8 @@ private:
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
     void do_handshake(const result_handler& handler) NOEXCEPT;
+    void handle_detection(const boost_code& ec,
+        const system::chunk_ptr& prefix, const result_handler& handler) NOEXCEPT;
 
     // ws (framed)
     void do_ws_read(ref<http::flat_buffer> out,
@@ -570,6 +568,9 @@ protected:
     config::endpoint endpoint_;
     deadline::ptr timer_;
     socket_t socket_;
+
+    // One-shot replay of the v1 detection prefix (see handle_detection).
+    system::data_chunk replay_{};
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;
