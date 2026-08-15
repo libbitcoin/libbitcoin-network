@@ -23,6 +23,7 @@
 #include <ranges>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -37,9 +38,10 @@ struct BCT_API inventory
     typedef inventory_item::type_id type_id;
     typedef inventory_item item;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::inventory };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     // TODO: parameterize with witness parameter (once node is ready).
     static inventory factory(system::hashes&& hashes,

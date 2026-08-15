@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -31,9 +32,10 @@ struct BCT_API bloom_filter_load
 {
     typedef std::shared_ptr<const bloom_filter_load> cptr;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::bloom_filter_load };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static cptr deserialize(uint32_t version,
         const system::data_chunk& data) NOEXCEPT;

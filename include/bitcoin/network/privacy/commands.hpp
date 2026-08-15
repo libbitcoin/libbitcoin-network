@@ -19,20 +19,16 @@
 #ifndef LIBBITCOIN_NETWORK_PRIVACY_COMMANDS_HPP
 #define LIBBITCOIN_NETWORK_PRIVACY_COMMANDS_HPP
 
-#include <string>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace privacy {
 
-/// v2 short message type identifiers (bip324).
-/// A zero identifier indicates an unmapped command (13 byte encoding).
+/// Get the command for a bip324 identifier (empty if unassigned).
+BCT_API std::string to_command(uint8_t identifier) NOEXCEPT;
 
-/// Get the command for a short identifier (empty if unassigned).
-BCT_API const std::string& to_command(uint8_t identifier) NOEXCEPT;
-
-/// Get the short identifier for a command (zero if unmapped).
+/// Get the bip324 identifier for a command (zero if unmapped).
 BCT_API uint8_t to_identifier(const std::string& command) NOEXCEPT;
 
 } // namespace privacy

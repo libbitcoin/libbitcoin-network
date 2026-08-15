@@ -22,6 +22,7 @@
 #include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/detail/compact_block_item.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -35,9 +36,10 @@ struct BCT_API compact_block
     typedef system::mini_hash short_id;
     typedef std_vector<short_id> short_id_list;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::compact_block };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static cptr deserialize(uint32_t version, const system::data_chunk& data,
         bool witness=true) NOEXCEPT;

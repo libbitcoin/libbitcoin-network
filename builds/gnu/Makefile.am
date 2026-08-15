@@ -431,6 +431,7 @@ include_bitcoin_network_messages_peer_enumsdir = \
     ${includedir}/bitcoin/network/messages/peer/enums
 
 include_bitcoin_network_messages_peer_enums_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/peer/enums/identifiers.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/enums/level.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/enums/magic_numbers.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/enums/service.hpp

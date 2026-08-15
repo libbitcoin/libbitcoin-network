@@ -30,9 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// The peer message set, derived from the dispatch interface. Command, index
-/// and deserialization are obtained from one declaration, so a message cannot
-/// be dispatchable yet unrecognized (or the reverse).
+/// The peer message set, derived from the dispatch interface.
 struct peer_registry
 {
     using methods_t = decltype(peer_dispatch::methods);
@@ -52,15 +50,16 @@ struct peer_registry
     template <size_t Index>
     static constexpr auto command = method_t<Index, methods_t>::name;
 
+    template <size_t Index>
+    static constexpr auto identifier = message_t<Index>::identifier;
+
     using commands_t = std::array<std::string_view, size>;
+    using identifiers_t = std::array<uint8_t, size>;
 
 private:
     using deserializer_t = any_t(*)(const system::data_chunk&, uint32_t, bool);
     using deserializers_t = std::array<deserializer_t, size>;
 
-    /// Helpers are defined before use, as constant evaluation requires it.
-
-    /// The witness parameter is detected, as only some messages carry it.
     template <size_t Index>
     static any_t deserialize(const system::data_chunk& data, uint32_t version,
         bool witness) NOEXCEPT
@@ -81,6 +80,28 @@ private:
         std::index_sequence<Index...>) NOEXCEPT
     {
         return { command<Index>... };
+    }
+
+    template <size_t... Index>
+    static constexpr identifiers_t make_identifiers(
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        return { identifier<Index>... };
+    }
+
+    template <size_t... Index>
+    static constexpr size_t to_index(uint8_t id,
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        auto found = unknown;
+        const auto match = [&](size_t at, uint8_t assigned) NOEXCEPT
+        {
+            return (!is_zero(assigned) && assigned == id) ?
+                ((found = at), true) : false;
+        };
+
+        (void)(match(Index, identifier<Index>) || ...);
+        return found;
     }
 
     template <size_t... Index>
@@ -118,7 +139,6 @@ private:
     }
 
 public:
-    /// The registered commands, ordered by index.
     static const commands_t& commands() NOEXCEPT
     {
         static constexpr auto table = make_commands(
@@ -127,21 +147,30 @@ public:
         return table;
     }
 
-    /// Index of the command, unknown if not registered.
+    static const identifiers_t& identifiers() NOEXCEPT
+    {
+        static constexpr auto table = make_identifiers(
+            std::make_index_sequence<size>{});
+
+        return table;
+    }
+
     static constexpr size_t index(const std::string_view& command) NOEXCEPT
     {
         return to_index(command, std::make_index_sequence<size>{});
     }
 
-    /// Index of the message type, unknown if not registered.
+    static constexpr size_t index(uint8_t id) NOEXCEPT
+    {
+        return to_index(id, std::make_index_sequence<size>{});
+    }
+
     template <class Message>
     static constexpr size_t index_of() NOEXCEPT
     {
         return to_index_of<Message>(std::make_index_sequence<size>{});
     }
 
-    /// Deserialize the payload as the message registered at index.
-    /// Returns an empty any_t if the index is unknown or the parse fails.
     static any_t to_any(size_t index, const system::data_chunk& data,
         uint32_t version, bool witness) NOEXCEPT
     {

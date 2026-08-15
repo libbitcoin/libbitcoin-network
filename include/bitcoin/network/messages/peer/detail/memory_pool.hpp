@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -31,9 +32,10 @@ struct BCT_API memory_pool
 {
     typedef std::shared_ptr<const memory_pool> cptr;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::memory_pool };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static size_t size(uint32_t version) NOEXCEPT;
 

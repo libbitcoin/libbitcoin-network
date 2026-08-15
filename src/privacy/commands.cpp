@@ -18,69 +18,27 @@
  */
 #include <bitcoin/network/privacy/commands.hpp>
 
-#include <algorithm>
-#include <string>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/interfaces/peer_registry.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace privacy {
 
-using namespace system;
-
-// bip324
-// The short identifier is the array index plus one (1 to 28).
-static const std_array<std::string, 28> commands
+std::string to_command(uint8_t identifier) NOEXCEPT
 {
-    "addr",         // 1
-    "block",        // 2
-    "blocktxn",     // 3
-    "cmpctblock",   // 4
-    "feefilter",    // 5
-    "filteradd",    // 6
-    "filterclear",  // 7
-    "filterload",   // 8
-    "getblocks",    // 9
-    "getblocktxn",  // 10
-    "getdata",      // 11
-    "getheaders",   // 12
-    "headers",      // 13
-    "inv",          // 14
-    "mempool",      // 15
-    "merkleblock",  // 16
-    "notfound",     // 17
-    "ping",         // 18
-    "pong",         // 19
-    "sendcmpct",    // 20
-    "tx",           // 21
-    "getcfilters",  // 22
-    "cfilter",      // 23
-    "getcfheaders", // 24
-    "cfheaders",    // 25
-    "getcfcheckpt", // 26
-    "cfcheckpt",    // 27
-    "addrv2"        // 28
-};
-
-const std::string& to_command(uint8_t identifier) NOEXCEPT
-{
-    static const std::string unassigned{};
-
-    if (is_zero(identifier) || identifier > commands.size())
-        return unassigned;
-
-    return commands.at(sub1(identifier));
+    using registry = rpc::peer_registry;
+    const auto index = registry::index(identifier);
+    return index == registry::unknown ? std::string{} :
+        std::string{ registry::commands().at(index) };
 }
 
 uint8_t to_identifier(const std::string& command) NOEXCEPT
 {
-    const auto it = std::find(commands.begin(), commands.end(), command);
-
-    if (it == commands.end())
-        return 0;
-
-    return possible_narrow_sign_cast<uint8_t>(
-        add1(std::distance(commands.begin(), it)));
+    using registry = rpc::peer_registry;
+    const auto index = registry::index(command);
+    return index == registry::unknown ? 0_u8 :
+        registry::identifiers().at(index);
 }
 
 } // namespace privacy

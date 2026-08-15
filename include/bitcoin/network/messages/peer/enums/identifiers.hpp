@@ -16,40 +16,51 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_WITNESS_TX_ID_RELAY_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_PEER_WITNESS_TX_ID_RELAY_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_ENUMS_IDENTIFIERS_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_PEER_ENUMS_IDENTIFIERS_HPP
 
-#include <memory>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
 namespace peer {
+namespace identifiers {
 
-struct BCT_API witness_tx_id_relay
+enum identifier_t : uint8_t
 {
-    typedef std::shared_ptr<const witness_tx_id_relay> cptr;
-
-    static constexpr uint8_t identifier{ identifiers::unassigned };
-    static const uint32_t version_minimum;
-    static const uint32_t version_maximum;
-    static const std::string command;
-
-    static size_t size(uint32_t version) NOEXCEPT;
-
-    static cptr deserialize(uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
-    static witness_tx_id_relay deserialize(uint32_t version,
-        system::reader& source) NOEXCEPT;
-
-    bool serialize(uint32_t version,
-        const system::data_slab& data) const NOEXCEPT;
-    void serialize(uint32_t version,
-        system::writer& sink) const NOEXCEPT;
+    unassigned = 0,
+    address = 1,
+    block = 2,
+    compact_transactions = 3,
+    compact_block = 4,
+    fee_filter = 5,
+    bloom_filter_add = 6,
+    bloom_filter_clear = 7,
+    bloom_filter_load = 8,
+    get_blocks = 9,
+    get_compact_transactions = 10,
+    get_data = 11,
+    get_headers = 12,
+    headers = 13,
+    inventory = 14,
+    memory_pool = 15,
+    merkle_block = 16,
+    not_found = 17,
+    ping = 18,
+    pong = 19,
+    send_compact = 20,
+    transaction = 21,
+    get_client_filters = 22,
+    client_filter = 23,
+    get_client_filter_headers = 24,
+    client_filter_headers = 25,
+    get_client_filter_checkpoint = 26,
+    client_filter_checkpoint = 27,
+    address_v2 = 28
 };
 
+} // namespace identifiers
 } // namespace peer
 } // namespace messages
 } // namespace network

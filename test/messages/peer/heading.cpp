@@ -43,7 +43,6 @@ BOOST_AUTO_TEST_CASE(rpc_heading__size__always__expected)
     BOOST_REQUIRE_EQUAL(heading::size(), expected);
 }
 
-// The registry is the message set, so these cannot drift from it.
 BOOST_AUTO_TEST_CASE(rpc_heading__index__registered_commands__own_index)
 {
     for (size_t expected{}; expected < rpc::peer_registry::size; ++expected)

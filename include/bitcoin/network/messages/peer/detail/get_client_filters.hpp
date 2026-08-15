@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -34,9 +35,10 @@ struct BCT_API get_client_filters
 {
     typedef std::shared_ptr<const get_client_filters> cptr;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::get_client_filters };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static size_t size(uint32_t version) NOEXCEPT;
 

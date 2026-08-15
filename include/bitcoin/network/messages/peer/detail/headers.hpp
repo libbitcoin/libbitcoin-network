@@ -23,6 +23,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -33,9 +34,10 @@ struct BCT_API headers
 {
     typedef std::shared_ptr<const headers> cptr;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::headers };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static cptr deserialize(uint32_t version,
         const system::data_chunk& data) NOEXCEPT;

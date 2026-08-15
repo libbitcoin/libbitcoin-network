@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -63,9 +64,10 @@ struct BCT_API reject
         checkpoint = 0x43
     };
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::unassigned };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static uint8_t reason_to_byte(reason_code value) NOEXCEPT;
     static reason_code byte_to_reason(uint8_t value) NOEXCEPT;

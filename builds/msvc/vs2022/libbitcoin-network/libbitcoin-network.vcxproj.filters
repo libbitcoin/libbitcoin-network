@@ -944,6 +944,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\witness_tx_id_relay.hpp">
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\identifiers.hpp">
+      <Filter>include\bitcoin\network\messages\peer\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\level.hpp">
       <Filter>include\bitcoin\network\messages\peer\enums</Filter>
     </ClInclude>

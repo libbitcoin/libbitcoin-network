@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -39,9 +40,10 @@ struct BCT_API client_filter
         neutrino = 0
     };
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::client_filter };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static cptr deserialize(uint32_t version,
         const system::data_chunk& data) NOEXCEPT;
