@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(memory_pool__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(memory_pool::command, "mempool");
-    BOOST_REQUIRE(memory_pool::id == identifier::memory_pool);
+    constexpr auto index = rpc::peer_registry::index_of<memory_pool>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), memory_pool::command);
     BOOST_REQUIRE_EQUAL(memory_pool::version_minimum, level::bip35);
     BOOST_REQUIRE_EQUAL(memory_pool::version_maximum, level::maximum_protocol);
 }

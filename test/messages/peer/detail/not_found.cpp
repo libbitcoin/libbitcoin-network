@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(not_found__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(not_found::command, "notfound");
-    BOOST_REQUIRE(not_found::id == identifier::not_found);
+    constexpr auto index = rpc::peer_registry::index_of<not_found>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), not_found::command);
     BOOST_REQUIRE_EQUAL(not_found::version_minimum, level::bip37);
     BOOST_REQUIRE_EQUAL(not_found::version_maximum, level::maximum_protocol);
 }

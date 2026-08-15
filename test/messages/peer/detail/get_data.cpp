@@ -53,7 +53,8 @@ static get_data make_mixed_inventory() NOEXCEPT
 BOOST_AUTO_TEST_CASE(get_data__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(get_data::command, "getdata");
-    BOOST_REQUIRE(get_data::id == identifier::get_data);
+    constexpr auto index = rpc::peer_registry::index_of<get_data>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), get_data::command);
     BOOST_REQUIRE_EQUAL(get_data::version_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(get_data::version_maximum, level::maximum_protocol);
 }

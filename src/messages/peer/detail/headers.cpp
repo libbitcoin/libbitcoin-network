@@ -20,7 +20,6 @@
 
 #include <iterator>
 #include <memory>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
@@ -34,7 +33,6 @@ namespace peer {
 using namespace system;
     
 const std::string headers::command = "headers";
-const identifier headers::id = identifier::headers;
 const uint32_t headers::version_minimum = level::headers_protocol;
 const uint32_t headers::version_maximum = level::maximum_protocol;
 

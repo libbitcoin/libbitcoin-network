@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/send_compact.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
     
 const std::string send_compact::command = "sendcmpct";
-const identifier send_compact::id = identifier::send_compact;
 const uint32_t send_compact::version_minimum = level::bip152;
 const uint32_t send_compact::version_maximum = level::maximum_protocol;
 

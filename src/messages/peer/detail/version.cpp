@@ -19,7 +19,6 @@
 #include <bitcoin/network/messages/peer/detail/version.hpp>
 
 #include <algorithm>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -32,7 +31,6 @@ using namespace system;
     
 // version.relay added by bip37.
 const std::string version::command = "version";
-const identifier version::id = identifier::version;
 const uint32_t messages::peer::version::version_minimum = level::minimum_protocol;
 const uint32_t messages::peer::version::version_maximum = level::maximum_protocol;
 

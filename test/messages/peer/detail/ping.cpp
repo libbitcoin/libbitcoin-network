@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(ping__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(ping::command, "ping");
-    BOOST_REQUIRE(ping::id == identifier::ping);
+    constexpr auto index = rpc::peer_registry::index_of<ping>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), ping::command);
     BOOST_REQUIRE_EQUAL(ping::version_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(ping::version_maximum, level::maximum_protocol);
 }

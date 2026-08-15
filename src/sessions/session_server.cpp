@@ -113,7 +113,13 @@ code session_server::do_accept(const config::authorities& binds,
 
     for (const auto& bind: binds)
     {
-        const auto acceptor = create_service(context);
+        // Each acceptor owns its parameters.
+        const auto acceptor = create_service(
+        {
+            .connect_timeout = network_settings().connect_timeout(),
+            .maximum_request = options_.maximum_request,
+            .context = context
+        });
 
         // Require that all acceptors at least start.
         if (const auto ec = acceptor->start(bind))

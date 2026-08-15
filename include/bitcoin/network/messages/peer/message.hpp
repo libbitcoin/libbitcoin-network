@@ -51,7 +51,7 @@ inline system::chunk_ptr serialize(const Message& message, uint32_t magic,
     uint32_t version) NOEXCEPT
 {
     using namespace system;
-    const auto size = heading::size() + message.size(version);
+    const auto size = ceilinged_add(heading::size(), message.size(version));
     const auto data = emplace_shared<data_chunk>(size);
     const auto start = std::next(data->begin(), heading::size());
     const data_slab body(start, data->end());

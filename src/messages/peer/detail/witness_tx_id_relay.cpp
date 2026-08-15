@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/witness_tx_id_relay.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
 
 const std::string witness_tx_id_relay::command = "wtxidrelay";
-const identifier witness_tx_id_relay::id = identifier::witness_tx_id_relay;
 const uint32_t witness_tx_id_relay::version_minimum = level::bip339;
 const uint32_t witness_tx_id_relay::version_maximum = level::maximum_protocol;
 

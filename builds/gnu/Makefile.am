@@ -70,6 +70,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/messages/http/fields.cpp \
     ${srcdir}/../../src/messages/http/enums/media_type.cpp \
     ${srcdir}/../../src/messages/http/enums/target.cpp \
+    ${srcdir}/../../src/messages/peer/body.cpp \
     ${srcdir}/../../src/messages/peer/message.cpp \
     ${srcdir}/../../src/messages/peer/detail/address.cpp \
     ${srcdir}/../../src/messages/peer/detail/address_item.cpp \
@@ -125,6 +126,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/net/socket_body.cpp \
     ${srcdir}/../../src/net/socket_connect.cpp \
     ${srcdir}/../../src/net/socket_http.cpp \
+    ${srcdir}/../../src/net/socket_peer.cpp \
     ${srcdir}/../../src/net/socket_rpc.cpp \
     ${srcdir}/../../src/net/socket_stop.cpp \
     ${srcdir}/../../src/net/socket_tcp.cpp \
@@ -330,7 +332,8 @@ include_bitcoin_network_interfaces_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/interfaces/http.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/interfaces.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_broadcast.hpp \
-    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp
+    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp \
+    ${srcdir}/../../include/bitcoin/network/interfaces/peer_registry.hpp
 
 include_bitcoin_network_logdir = \
     ${includedir}/bitcoin/network/log
@@ -375,6 +378,7 @@ include_bitcoin_network_messages_peerdir = \
     ${includedir}/bitcoin/network/messages/peer
 
 include_bitcoin_network_messages_peer_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/peer/body.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/heading.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/message.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/peer.hpp
@@ -427,7 +431,6 @@ include_bitcoin_network_messages_peer_enumsdir = \
     ${includedir}/bitcoin/network/messages/peer/enums
 
 include_bitcoin_network_messages_peer_enums_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/messages/peer/enums/identifier.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/enums/level.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/enums/magic_numbers.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/enums/service.hpp
@@ -727,6 +730,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/messages/http/enums/magic_numbers.cpp \
     ${srcdir}/../../test/messages/http/enums/media_type.cpp \
     ${srcdir}/../../test/messages/http/enums/target.cpp \
+    ${srcdir}/../../test/messages/peer/body.cpp \
     ${srcdir}/../../test/messages/peer/heading.cpp \
     ${srcdir}/../../test/messages/peer/message.cpp \
     ${srcdir}/../../test/messages/peer/detail/address.cpp \

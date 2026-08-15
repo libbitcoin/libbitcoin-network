@@ -31,12 +31,27 @@ namespace libbitcoin {
 namespace network {
 
 /// The largest p2p payload request when configured for witness blocks.
-constexpr uint32_t maximum_request_default
+constexpr uint32_t maximum_request_default() NOEXCEPT
 {
-    system::possible_narrow_cast<uint32_t>(
-        messages::peer::heading::maximum_payload(
-            messages::peer::level::canonical, true))
-};
+    using namespace system;
+    using namespace messages::peer;
+    return possible_narrow_cast<uint32_t>(
+        heading::maximum_payload(level::canonical, true));
+}
+
+/// The retained service request buffer, as requests are typically small.
+constexpr uint32_t minimum_service_default() NOEXCEPT
+{
+    return 4096;
+}
+
+/// The largest service request, a base16 block within a message envelope.
+constexpr uint32_t maximum_service_default() NOEXCEPT
+{
+    using namespace system;
+    return ceilinged_add(ceilinged_multiply(maximum_request_default(), 2_u32),
+        4096_u32);
+}
 
 /// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
@@ -72,8 +87,8 @@ struct BCT_API settings
         uint16_t connections{ 0 };
         uint32_t inactivity_minutes{ 10 };
         uint32_t expiration_minutes{ 60 };
-        uint32_t maximum_request{ maximum_request_default };
-        uint32_t minimum_buffer{ maximum_request_default };
+        uint32_t maximum_request{ maximum_request_default() };
+        uint32_t minimum_buffer{ maximum_request_default() };
 
         /// Service send rate limit, overlapping the network rate limit (see
         /// settings::rate_limited). Zero is unlimited.
@@ -89,7 +104,14 @@ struct BCT_API settings
       : public tcp_server
     {
         DELETE_COPY(tls_server);
-        using tcp_server::tcp_server;
+
+        /// Service requests are small, it is responses that are large.
+        tls_server(const std::string_view& logging_name) NOEXCEPT
+          : tcp_server(logging_name)
+        {
+            maximum_request = maximum_service_default();
+            minimum_buffer = minimum_service_default();
+        }
 
         /// Transport layer security bindings.
         config::authorities safes{};

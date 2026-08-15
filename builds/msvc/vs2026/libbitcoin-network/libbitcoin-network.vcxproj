@@ -148,6 +148,9 @@
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\fields.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http_body.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\peer\body.cpp">
+      <ObjectFileName>$(IntDir)src_messages_peer_body.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
@@ -191,7 +194,9 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\witness_tx_id_relay.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\message.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\rpc\body.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\rpc\body.cpp">
+      <ObjectFileName>$(IntDir)src_messages_rpc_body.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\rpc\model.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
@@ -206,6 +211,7 @@
     <ClCompile Include="..\..\..\..\src\net\socket_body.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_connect.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_http.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\socket_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_rpc.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_stop.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_tcp.cpp" />
@@ -329,6 +335,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_registry.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\levels.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp" />
@@ -349,6 +356,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http_method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json_body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\messages.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\alert.hpp" />
@@ -388,7 +396,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\version_acknowledge.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\witness_tx_id_relay.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\identifier.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\level.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\magic_numbers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\service.hpp" />

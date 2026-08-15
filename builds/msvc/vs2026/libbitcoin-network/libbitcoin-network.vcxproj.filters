@@ -234,6 +234,9 @@
     <ClCompile Include="..\..\..\..\src\messages\http_body.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\peer\body.cpp">
+      <Filter>src\messages\peer</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\address.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
@@ -400,6 +403,9 @@
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_http.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_peer.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_rpc.cpp">
@@ -755,6 +761,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp">
       <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_registry.hpp">
+      <Filter>include\bitcoin\network\interfaces</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp">
       <Filter>include\bitcoin\network\log</Filter>
     </ClInclude>
@@ -814,6 +823,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\messages.hpp">
       <Filter>include\bitcoin\network\messages</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\body.hpp">
+      <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address.hpp">
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>
@@ -931,9 +943,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\witness_tx_id_relay.hpp">
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\identifier.hpp">
-      <Filter>include\bitcoin\network\messages\peer\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\enums\level.hpp">
       <Filter>include\bitcoin\network\messages\peer\enums</Filter>

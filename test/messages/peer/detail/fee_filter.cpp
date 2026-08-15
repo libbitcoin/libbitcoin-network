@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(fee_filter__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(fee_filter::command, "feefilter");
-    BOOST_REQUIRE(fee_filter::id == identifier::fee_filter);
+    constexpr auto index = rpc::peer_registry::index_of<fee_filter>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), fee_filter::command);
     BOOST_REQUIRE_EQUAL(fee_filter::version_minimum, level::bip133);
     BOOST_REQUIRE_EQUAL(fee_filter::version_maximum, level::maximum_protocol);
 }

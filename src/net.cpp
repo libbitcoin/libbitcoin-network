@@ -70,17 +70,8 @@ net::~net() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // server
-// TODO: could move this to server by extending context.
-acceptor::ptr net::create_service(const socket::context& context) NOEXCEPT
+acceptor::ptr net::create_service(socket::parameters&& params) NOEXCEPT
 {
-    const auto& settings = network_settings();
-    socket::parameters params
-    {
-        .connect_timeout = settings.connect_timeout(),
-        .maximum_request = settings.inbound.maximum_request,
-        .context = context
-    };
-
     return emplace_shared<acceptor>(log, strand(), service(),
         service_suspended_, std::move(params));
 }

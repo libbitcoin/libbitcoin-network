@@ -43,208 +43,27 @@ BOOST_AUTO_TEST_CASE(rpc_heading__size__always__expected)
     BOOST_REQUIRE_EQUAL(heading::size(), expected);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__address_id__always__expected)
+// The registry is the message set, so these cannot drift from it.
+BOOST_AUTO_TEST_CASE(rpc_heading__index__registered_commands__own_index)
 {
-    const auto instance = heading{ 0u, address::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == address::id);
+    for (size_t expected{}; expected < rpc::peer_registry::size; ++expected)
+    {
+        const std::string command{ rpc::peer_registry::commands().at(expected) };
+        const auto instance = heading{ 0u, command, 0u, 0u };
+        BOOST_REQUIRE_EQUAL(instance.index(), expected);
+    }
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__alert_id__always__expected)
+BOOST_AUTO_TEST_CASE(rpc_heading__index__unregistered_command__unknown)
 {
-    const auto instance = heading{ 0u, alert::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == alert::id);
+    const auto instance = heading{ 0u, "bogus", 0u, 0u };
+    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__block_id__always__expected)
+BOOST_AUTO_TEST_CASE(rpc_heading__index__empty_command__unknown)
 {
-    const auto instance = heading{ 0u, block::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == block::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__bloom_filter_add_id__always__expected)
-{
-    const auto instance = heading{ 0u, bloom_filter_add::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == bloom_filter_add::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__bloom_filter_clear_id__always__expected)
-{
-    const auto instance = heading{ 0u, bloom_filter_clear::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == bloom_filter_clear::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__bloom_filter_load_id__always__expected)
-{
-    const auto instance = heading{ 0u, bloom_filter_load::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == bloom_filter_load::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__client_filter_id__always__expected)
-{
-    const auto instance = heading{ 0u, client_filter::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == client_filter::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__client_filter_checkpoint_id__always__expected)
-{
-    const auto instance = heading{ 0u, client_filter_checkpoint::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == client_filter_checkpoint::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__client_filter_headers_id__always__expected)
-{
-    const auto instance = heading{ 0u, client_filter_headers::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == client_filter_headers::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__compact_block_id__always__expected)
-{
-    const auto instance = heading{ 0u, compact_block::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == compact_block::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__compact_transactions_id__always__expected)
-{
-    const auto instance = heading{ 0u, compact_transactions::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == compact_transactions::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__fee_filter_id__always__expected)
-{
-    const auto instance = heading{ 0u, fee_filter::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == fee_filter::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__get_address_id__always__expected)
-{
-    const auto instance = heading{ 0u, get_address::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == get_address::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__get_blocks_id__always__expected)
-{
-    const auto instance = heading{ 0u, get_blocks::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == get_blocks::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__get_client_filter_checkpoint_id__always__expected)
-{
-    const auto instance = heading{ 0u, get_client_filter_checkpoint::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == get_client_filter_checkpoint::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__aget_client_filter_headers_id__always__expected)
-{
-    const auto instance = heading{ 0u, get_client_filter_headers::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == get_client_filter_headers::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__get_client_filters_id__always__expected)
-{
-    const auto instance = heading{ 0u, get_client_filters::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == get_client_filters::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__get_compact_transactions_id__always__expected)
-{
-    const auto instance = heading{ 0u, get_compact_transactions::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == get_compact_transactions::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__get_data_id__always__expected)
-{
-    const auto instance = heading{ 0u, get_data::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == get_data::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__get_headers_id__always__expected)
-{
-    const auto instance = heading{ 0u, get_headers::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == get_headers::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__headers_id__always__expected)
-{
-    const auto instance = heading{ 0u, headers::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == headers::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__inventory_id__always__expected)
-{
-    const auto instance = heading{ 0u, inventory::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == inventory::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__memory_pool_id__always__expected)
-{
-    const auto instance = heading{ 0u, memory_pool::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == memory_pool::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__merkle_block_id__always__expected)
-{
-    const auto instance = heading{ 0u, merkle_block::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == merkle_block::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__not_found_id__always__expected)
-{
-    const auto instance = heading{ 0u, not_found::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == not_found::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__ping_id__always__expected)
-{
-    const auto instance = heading{ 0u, ping::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == ping::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__pong_id__always__expected)
-{
-    const auto instance = heading{ 0u, pong::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == pong::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__reject_id__always__expected)
-{
-    const auto instance = heading{ 0u, reject::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == reject::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__send_address_v2_id__always__expected)
-{
-    const auto instance = heading{ 0u, send_address_v2::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == send_address_v2::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__send_compact_id__always__expected)
-{
-    const auto instance = heading{ 0u, send_compact::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == send_compact::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__send_headers_id__always__expected)
-{
-    const auto instance = heading{ 0u, send_headers::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == send_headers::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__transaction_id__always__expected)
-{
-    const auto instance = heading{ 0u, transaction::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == transaction::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__version_id__always__expected)
-{
-    const auto instance = heading{ 0u, version::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == version::id);
-}
-
-BOOST_AUTO_TEST_CASE(rpc_heading__version_acknowledge_id__always__expected)
-{
-    const auto instance = heading{ 0u, version_acknowledge::command, 0u, 0u };
-    BOOST_REQUIRE(instance.id() == version_acknowledge::id);
+    const auto instance = heading{ 0u, "", 0u, 0u };
+    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::unknown);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_heading__get_command__empty_payload__unknown)
@@ -292,7 +111,7 @@ BOOST_AUTO_TEST_CASE(rpc_heading__factory1__empty__expected)
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
     BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
-    BOOST_REQUIRE(instance.id() == identifier::ping);
+    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::index("ping"));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_heading__factory2__default_hash__expected)
@@ -305,7 +124,7 @@ BOOST_AUTO_TEST_CASE(rpc_heading__factory2__default_hash__expected)
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
     BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
-    BOOST_REQUIRE(instance.id() == identifier::pong);
+    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::index("pong"));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_heading__factory2__empty_hash__expected)
@@ -318,7 +137,7 @@ BOOST_AUTO_TEST_CASE(rpc_heading__factory2__empty_hash__expected)
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
     BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
-    BOOST_REQUIRE(instance.id() == identifier::pong);
+    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::index("pong"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

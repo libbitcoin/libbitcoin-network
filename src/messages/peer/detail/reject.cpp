@@ -20,7 +20,6 @@
 
 #include <utility>
 #include <bitcoin/network/messages/peer/detail/block.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
@@ -34,7 +33,6 @@ namespace peer {
 using namespace system;
     
 const std::string reject::command = "reject";
-const identifier reject::id = identifier::reject;
 const uint32_t reject::version_minimum = level::bip61;
 const uint32_t reject::version_maximum = level::maximum_protocol;
 

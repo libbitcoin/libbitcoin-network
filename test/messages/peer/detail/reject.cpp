@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(reject__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(reject::command, "reject");
-    BOOST_REQUIRE(reject::id == identifier::reject);
+    constexpr auto index = rpc::peer_registry::index_of<reject>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), reject::command);
     BOOST_REQUIRE_EQUAL(reject::version_minimum, level::bip61);
     BOOST_REQUIRE_EQUAL(reject::version_maximum, level::maximum_protocol);
 }

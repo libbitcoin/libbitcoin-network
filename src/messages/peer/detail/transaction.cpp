@@ -19,7 +19,6 @@
 #include <bitcoin/network/messages/peer/detail/transaction.hpp>
 
 #include <iterator>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -31,7 +30,6 @@ namespace peer {
 using namespace system;
     
 const std::string transaction::command = "tx";
-const identifier transaction::id = identifier::transaction;
 const uint32_t transaction::version_minimum = level::minimum_protocol;
 const uint32_t transaction::version_maximum = level::maximum_protocol;
 

@@ -53,7 +53,8 @@ static inventory make_mixed_inventory() NOEXCEPT
 BOOST_AUTO_TEST_CASE(inventory__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(inventory::command, "inv");
-    BOOST_REQUIRE(inventory::id == identifier::inventory);
+    constexpr auto index = rpc::peer_registry::index_of<inventory>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), inventory::command);
     BOOST_REQUIRE_EQUAL(inventory::version_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(inventory::version_maximum, level::maximum_protocol);
 }

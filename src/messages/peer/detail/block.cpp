@@ -19,9 +19,9 @@
 #include <bitcoin/network/messages/peer/detail/block.hpp>
 
 #include <iterator>
+#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/peer/detail/transaction.hpp>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -36,7 +36,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
     
 const std::string block::command = "block";
-const identifier block::id = identifier::block;
 const uint32_t block::version_minimum = level::minimum_protocol;
 const uint32_t block::version_maximum = level::maximum_protocol;
 
@@ -58,9 +57,17 @@ block block::deserialize(uint32_t version, reader& source,
     bool witness) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
+    {
+        source.invalidate();
         return { chain::block_view{ data_chunk{}, witness } };
+    }
 
-    return { chain::block_view{ source.read_bytes(), witness } };
+    // source.read_bytes() iterates the stream (slow).
+    chain::block_view view{ source.read_bytes(), witness };
+    if (!view.is_valid())
+        source.invalidate();
+
+    return { std::move(view) };
 }
 
 bool block::serialize(uint32_t version, const data_slab& data,

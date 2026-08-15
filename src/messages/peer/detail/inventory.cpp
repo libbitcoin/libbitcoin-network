@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
@@ -35,7 +34,6 @@ using namespace system;
     
 // Multiple inv message in reply enabled by bip61.
 const std::string inventory::command = "inv";
-const identifier inventory::id = identifier::inventory;
 const uint32_t inventory::version_minimum = level::minimum_protocol;
 const uint32_t inventory::version_maximum = level::maximum_protocol;
 

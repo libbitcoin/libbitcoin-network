@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/memory_pool.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -30,7 +29,6 @@ namespace peer {
 using namespace system;
 
 const std::string memory_pool::command = "mempool";
-const identifier memory_pool::id = identifier::memory_pool;
 const uint32_t memory_pool::version_minimum = level::bip35;
 const uint32_t memory_pool::version_maximum = level::maximum_protocol;
 

@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(get_headers__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(get_headers::command, "getheaders");
-    BOOST_REQUIRE(get_headers::id == identifier::get_headers);
+    constexpr auto index = rpc::peer_registry::index_of<get_headers>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), get_headers::command);
     BOOST_REQUIRE_EQUAL(get_headers::version_minimum, level::headers_protocol);
     BOOST_REQUIRE_EQUAL(get_headers::version_maximum, level::maximum_protocol);
 }

@@ -25,7 +25,8 @@ using namespace network::messages;
 BOOST_AUTO_TEST_CASE(block__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(peer::block::command, "block");
-    BOOST_REQUIRE(peer::block::id == peer::identifier::block);
+    constexpr auto index = rpc::peer_registry::index_of<peer::block>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), peer::block::command);
     BOOST_REQUIRE_EQUAL(peer::block::version_minimum, peer::level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(peer::block::version_maximum, peer::level::maximum_protocol);
 }

@@ -60,7 +60,7 @@ public:
         options_(options),
         in_band_(in_band),
         response_buffer_(system::to_shared<http::flat_buffer>()),
-        request_buffer_(options.minimum_buffer),
+        request_buffer_(options.maximum_request),
         authorized_(!options.authorize())
     {
     }

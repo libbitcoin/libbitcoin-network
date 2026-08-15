@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/not_found.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
@@ -32,7 +31,6 @@ namespace peer {
 using namespace system;
     
 const std::string not_found::command = "notfound";
-const identifier not_found::id = identifier::not_found;
 const uint32_t not_found::version_minimum = level::bip37;
 const uint32_t not_found::version_maximum = level::maximum_protocol;
 

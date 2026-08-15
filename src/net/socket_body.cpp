@@ -40,11 +40,10 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // The body_ methods accept any boost::beast-compliant body to read/write a tcp
 // socket. For http read/write use the http_ methods. The rpc_ methods are just
 // a specialization of these methods, passing the rpc::body<> types. For simple
-// fixed-size tcp (p2p) use the tcp_ methods, and for simple framed ws use the
-// ws_ methods. The body methods require fixed size or framed read/write. The
-// json and json-rpc bodies are internally framed by json, so can read/write
-// over a raw tcp socket (electrum) or a framed websocket (btcd). And again for
-// http framing, use the http_ methods, as these incorporate header processing.
+// fixed-size tcp use the tcp_ methods, and for simple framed ws use the ws_
+// methods. The body methods require fixed size or framed read/write. The json
+// and json-rpc bodies are internally framed by json, so can read/write over a
+// raw tcp socket (electrum) or a framed websocket (btcd).
 
 void socket::body_read(http::flat_buffer& buffer, http::request& request,
     count_handler&& handler) NOEXCEPT

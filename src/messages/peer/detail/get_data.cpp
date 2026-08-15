@@ -19,7 +19,6 @@
 #include <bitcoin/network/messages/peer/detail/get_data.hpp>
 
 #include <algorithm>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
@@ -34,7 +33,6 @@ using namespace system;
 
 // filtered_block flag allowed by bip37.
 const std::string get_data::command = "getdata";
-const identifier get_data::id = identifier::get_data;
 const uint32_t get_data::version_minimum = level::minimum_protocol;
 const uint32_t get_data::version_maximum = level::maximum_protocol;
 

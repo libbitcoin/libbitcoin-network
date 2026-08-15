@@ -146,6 +146,17 @@ public:
     virtual void tcp_write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
+    /// PEER (TCP: bitcoin p2p).
+    /// -----------------------------------------------------------------------
+
+    /// Read peer message from the socket, handler posted to socket strand.
+    virtual void peer_read(system::data_chunk& buffer,
+        messages::peer::frame& message, count_handler&& handler) NOEXCEPT;
+
+    /// Write peer message to the socket, handler posted to socket strand.
+    virtual void peer_write(messages::peer::frame&& message,
+        count_handler&& handler) NOEXCEPT;
+
     /// RPC (TCP: electrum/stratum_v1, WS: btcd).
     /// -----------------------------------------------------------------------
 
@@ -299,6 +310,22 @@ protected:
         const count_handler& handler) NOEXCEPT;
 
 private:
+    struct peer_state
+    {
+        typedef std::shared_ptr<peer_state> ptr;
+
+        peer_state(messages::peer::frame& value,
+            system::data_chunk& payload) NOEXCEPT
+          : reader{ value, payload }, payload{ payload }
+        {
+        }
+
+        messages::peer::body::reader reader;
+        system::data_chunk& payload;
+        system::data_array<messages::peer::heading::size()> head{};
+        bool headed{};
+    };
+
     struct read_state
     {
         typedef std::shared_ptr<read_state> ptr;
@@ -414,6 +441,10 @@ private:
     void do_tcp_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
 
+    // peer
+    void do_peer_read(size_t total, const peer_state::ptr& in,
+        const count_handler& handler) NOEXCEPT;
+
     // body
     void do_body_read(boost_code ec, size_t total,
         const read_state::ptr& in, const count_handler& handler) NOEXCEPT;
@@ -469,6 +500,10 @@ private:
     // read/write (tcp/ws)
     void handle_async(const boost_code& ec, size_t size,
         const count_handler& handler,const std::string& operation) NOEXCEPT;
+
+    // peer
+    void handle_peer_read(const code& ec, size_t size, size_t total,
+        const peer_state::ptr& in, const count_handler& handler) NOEXCEPT;
 
     // rpc
     void handle_rpc_read(const code& ec, size_t bytes,

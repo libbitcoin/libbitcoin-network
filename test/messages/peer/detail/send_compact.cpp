@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(send_compact__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(send_compact::command, "sendcmpct");
-    BOOST_REQUIRE(send_compact::id == identifier::send_compact);
+    constexpr auto index = rpc::peer_registry::index_of<send_compact>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), send_compact::command);
     BOOST_REQUIRE_EQUAL(send_compact::version_minimum, level::bip152);
     BOOST_REQUIRE_EQUAL(send_compact::version_maximum, level::maximum_protocol);
 }

@@ -58,12 +58,11 @@ void channel_peer::stopping(const code& ec) NOEXCEPT
     dispatcher_.stop(ec);
 }
 
-// TODO: resume of an idle channel results in termination for invalid_magic.
 void channel_peer::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::resume();
-    read_heading();
+    receive();
 }
 
 // Properties.
@@ -86,7 +85,8 @@ bool channel_peer::is_negotiated(messages::peer::level level) const NOEXCEPT
     return negotiated_version() >= level;
 }
 
-bool channel_peer::is_peer_service(messages::peer::service service) const NOEXCEPT
+bool channel_peer::is_peer_service(
+    messages::peer::service service) const NOEXCEPT
 {
     return to_bool(bit_and<uint64_t>(peer_version_->services, service));
 }
@@ -113,6 +113,17 @@ void channel_peer::set_negotiated_version(uint32_t value) NOEXCEPT
     negotiated_version_ = value;
 }
 
+bool channel_peer::current() const NOEXCEPT
+{
+    return current_;
+}
+
+void channel_peer::set_current(bool value) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    current_ = value;
+}
+
 bool channel_peer::is_handshaked() const NOEXCEPT
 {
     return !is_null(peer_version_);
@@ -122,7 +133,7 @@ bool channel_peer::is_handshaked() const NOEXCEPT
 version::cptr channel_peer::peer_version() const NOEXCEPT
 {
     // peer_version_ defaults to nullptr, which implies not handshaked.
-    return is_handshaked() ? peer_version_ : to_shared<messages::peer::version>();
+    return is_handshaked() ? peer_version_ : to_shared<version>();
 }
 
 void channel_peer::set_peer_version(const version::cptr& value) NOEXCEPT
@@ -147,216 +158,183 @@ address_item_cptr channel_peer::get_updated_address() const NOEXCEPT
 // Read cycle (read continues until stop called).
 // ----------------------------------------------------------------------------
 
-void channel_peer::read_heading() NOEXCEPT
+void channel_peer::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Both terminate read loop, paused can be resumed, stopped cannot.
+    // All prevent read loop start, reading indicates it is already started
+    // (making resume idempotent), paused can be resumed, stopped cannot.
     // Pause only prevents start of the read loop, it does not prevent messages
     // from being issued for sockets already past that point (e.g. waiting).
     // This is mainly for startup coordination, preventing missed messages.
-    if (stopped() || paused())
+    if (stopped() || paused() || reading_)
         return;
 
-    // Post handle_read_heading to strand upon stop, error, or buffer full.
-    read({ heading_buffer_.data(), heading_buffer_.size() },
-        std::bind(&channel_peer::handle_read_heading,
-            shared_from_base<channel_peer>(), _1, _2));
-}
+    reading_ = true;
 
-void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
-{
-    static constexpr uint32_t http_magic = 0x20544547;
+    // Fresh frame stamped with parse context, fault detail carried out.
+    const auto in = to_shared<frame>();
+    in->magic = settings().identifier;
+    in->version = negotiated_version();
+    in->witness = settings().witness_node();
+    in->checksum = settings().validate_checksum;
+    in->maximum = options().maximum_request;
 
-    BC_ASSERT(stranded());
-
-    if (stopped())
-    {
-        LOGQ("Heading read abort [" << endpoint() << "]");
-        return;
-    }
-
-    if (ec)
-    {
-        // Don't log common conditions.
-        if (ec != error::peer_disconnect && ec != error::operation_canceled)
-        {
-            LOGF("Heading read failure [" << endpoint() << "] "
-                << ec.message());
-        }
-
-        stop(ec);
-        return;
-    }
-
-    heading_reader_.set_position(zero);
-    const auto head = to_shared(heading::deserialize(heading_reader_));
-
-    if (!heading_reader_)
-    {
-        LOGR("Invalid heading from [" << endpoint() << "]");
-        stop(error::invalid_heading);
-        return;
-    }
-
-    if (head->magic != settings().identifier)
-    {
-        if (head->magic == http_magic)
-        {
-            LOGR("Http request from [" << endpoint() << "]");
-        }
-        else
-        {
-            LOGR("Invalid heading magic (0x"
-                << encode_base16(to_little_endian(head->magic))
-                << ") from [" << endpoint()
-                << "] possibly encrypted connection to clear endpoint.");
-        }
-
-        stop(error::invalid_magic);
-        return;
-    }
-
-    if (head->payload_size > options().maximum_request)
-    {
-        LOGR("Oversized payload indicated by " << head->command
-            << " heading from [" << endpoint() << "] ("
-            << head->payload_size << " bytes)");
-
-        stop(error::oversized_payload);
-        return;
-    }
-
-    // Buffer capacity increases with each larger message (up to maximum).
-    payload_buffer_.resize(head->payload_size);
-
-    // Post handle_read_payload to strand upon stop, error, or buffer full.
-    read({ payload_buffer_.data(), payload_buffer_.size() },
-        std::bind(&channel_peer::handle_read_payload,
-            shared_from_base<channel_peer>(), _1, _2, head));
+    // Post handle_receive to strand upon message, stop, or error.
+    read(payload_buffer_, *in,
+        std::bind(&channel_peer::handle_receive,
+            shared_from_base<channel_peer>(), _1, _2, in));
 }
 
 // Handle errors and post message to subscribers.
-// The head object is allocated on another thread and destroyed on this one.
+// The frame object is allocated on another thread and destroyed on this one.
 // This introduces cross-thread allocation/deallocation, though size is small.
-void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
-    const heading_ptr& head) NOEXCEPT
+void channel_peer::handle_receive(const code& ec, size_t,
+    const frame_ptr& in) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     if (stopped())
     {
-        LOGQ("Payload read abort [" << endpoint() << "]");
+        LOGQ("Message read abort [" << endpoint() << "]");
         return;
     }
 
     if (ec)
     {
-        // Don't log common conditions.
-        if (ec != error::peer_disconnect && ec != error::operation_canceled)
-        {
-            LOGF("Payload read failure [" << endpoint() << "] "
-                << ec.message());
-        }
-
-        stop(ec);
+        // The frame carries parse fault detail (the read code is generic).
+        const auto fault = in->fault ? in->fault : ec;
+        log_fault(fault, *in);
+        stop(fault);
         return;
     }
 
-    if (settings().validate_checksum)
-    {
-        // This hash could be reused as w/txid, but simpler to disable check.
-        if (head->checksum != network_checksum(bitcoin_hash(payload_buffer_)))
-        {
-            LOGR("Invalid " << head->command << " payload from ["
-                << endpoint() << "] bad checksum.");
+    LOGX("Recv " << in->head.command << " from [" << endpoint() << "] ("
+        << in->head.payload_size << " bytes)");
 
-            stop(error::invalid_checksum);
-            return;
-        }
-    }
-
-    LOGX("Recv " << head->command << " from [" << endpoint() << "] ("
-        << payload_size << " bytes)");
+    reading_ = false;
 
     // Notify subscribers of the new message.
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: hack, move into peer::body::reader.
-    if (auto any = interface::deserialize(head->id(), payload_buffer_,
-        negotiated_version(), settings().witness_node()))
+    // If object passes to another thread destruction cost is very high.
+    if (const auto code = dispatcher_.notify(rpc::request_t
     {
-        // If object passes to another thread destruction cost is very high.
-        if (const auto code = dispatcher_.notify(rpc::request_t
-        {
-            .method = head->command,
-            .params = { rpc::array_t{ std::move(any) } }
-        }))
-        {
-            stop(code);
-            return;
-        }
-    }
-    else
+        .method = in->head.command,
+        .params = { rpc::array_t{ std::move(in->payload) } }
+    }))
     {
-        log_message(head->command, payload_size);
-        stop(error::invalid_message);
+        stop(code);
         return;
     }
-    ///////////////////////////////////////////////////////////////////////////
 
-    // Don't retain larger than configured (time-space tradeoff).
-    if (options().minimum_buffer < payload_buffer_.capacity())
+    // Don't retain larger than configured when current (time-space tradeoff).
+    if (current() && payload_buffer_.capacity() > options().minimum_buffer)
     {
         payload_buffer_.resize(options().minimum_buffer);
         payload_buffer_.shrink_to_fit();
     }
 
-    read_heading();
+    receive();
 }
 
 void channel_peer::handle_send(const code& ec, size_t,
-    const system::chunk_cptr& payload, const result_handler& handler) NOEXCEPT
+    const chunk_cptr& payload, const result_handler& handler) NOEXCEPT
 {
     if (ec)
         stop(ec);
 
+    // Don't log common conditions.
     if (ec &&
         ec != error::peer_disconnect &&
         ec != error::operation_canceled &&
         ec != error::connect_failed)
     {
-        LOGF("Send failure " << heading::get_command(*payload) << " to ["
-            << endpoint() << "] (" << system::floored_subtract(payload->size(),
-                heading::command_size) << " bytes) " << ec.message());
+        LOG_ONLY(const auto command = payload ?
+            heading::get_command(*payload) : std::string{ "unknown" };)
+
+        LOG_ONLY(const auto size = floored_subtract(payload ?
+            payload->size() : zero, heading::command_size);)
+
+        LOGF("Send failure " << command << " to [" << endpoint() << "] ("
+            << size << " bytes) " << ec.message());
     }
 
     handler(ec);
 }
 
-void channel_peer::log_message(const std::string_view& name,
-    size_t LOG_ONLY(size)) const NOEXCEPT
+// On parse fault the frame bytes remain in the read buffer (not consumed),
+// so payload diagnostics are drawn from the buffer via the parsed heading.
+void channel_peer::log_fault(const code& LOG_ONLY(fault),
+    const frame& LOG_ONLY(in)) const NOEXCEPT
 {
+#if defined(HAVE_LOGGING)
     // Dump up to this size of payload as hex in order to diagnose failure.
     static constexpr size_t invalid_payload_dump_size = 0xff;
+    static constexpr uint32_t http_magic = 0x20544547;
 
-    if (name == messages::peer::transaction::command ||
-        name == messages::peer::block::command)
+    const auto& name = in.head.command;
+
+    switch (fault.value())
     {
-        LOGR("Invalid " << name << " payload from ["
-            << endpoint() << "] with hash ["
-            << encode_hash(bitcoin_hash(payload_buffer_)) << "] ");
+        case error::invalid_heading:
+        {
+            LOGR("Invalid heading from [" << endpoint() << "]");
+            break;
+        }
+        case error::invalid_magic:
+        {
+            if (in.head.magic == http_magic)
+            {
+                LOGR("Http request from [" << endpoint() << "]");
+            }
+            else
+            {
+                LOGR("Invalid heading magic (0x"
+                    << encode_base16(to_little_endian(in.head.magic))
+                    << ") from [" << endpoint()
+                    << "] possibly encrypted connection to clear endpoint.");
+            }
+
+            break;
+        }
+        case error::oversized_payload:
+        {
+            LOGR("Oversized payload indicated by " << name
+                << " heading from [" << endpoint() << "] ("
+                << in.head.payload_size << " bytes)");
+            break;
+        }
+        case error::invalid_checksum:
+        {
+            LOGR("Invalid " << name << " payload from ["
+                << endpoint() << "] bad checksum.");
+            break;
+        }
+        case error::invalid_message:
+        {
+            LOG_ONLY(const auto start = payload_buffer_.begin();)
+            LOG_ONLY(const auto end = std::next(start, std::min<size_t>(
+                payload_buffer_.size(), invalid_payload_dump_size));)
+
+            LOGR("Invalid " << name << " payload from ["
+                << endpoint() << "] with bytes (" << encode_base16({ start, end })
+                << "...) ");
+
+            break;
+        }
+        default:
+        {
+            // Don't log common conditions.
+            if (fault != error::peer_disconnect &&
+                fault != error::operation_canceled)
+            {
+                LOGF("Message read failure [" << endpoint() << "] "
+                    << fault.message());
+            }
+
+            break;
+        }
     }
-    else
-    {
-        LOGR("Invalid " << name << " payload from ["
-            << endpoint() << "] with bytes (" << encode_base16(
-                {
-                    payload_buffer_.begin(),
-                    std::next(payload_buffer_.begin(),
-                    std::min(size, invalid_payload_dump_size))
-                })
-            << "...) ");
-    }
+#endif
 }
 
 BC_POP_WARNING()

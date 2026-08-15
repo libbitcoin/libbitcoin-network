@@ -159,6 +159,7 @@
     <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\body.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>

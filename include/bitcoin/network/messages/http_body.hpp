@@ -25,6 +25,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/messages/json_body.hpp>
+#include <bitcoin/network/messages/peer/body.hpp>
 #include <bitcoin/network/messages/rpc/rpc.hpp>
 
 namespace libbitcoin {
@@ -38,6 +39,7 @@ using span_reader = http::span_body::reader;
 using buffer_reader = http::buffer_body::reader;
 using string_reader = http::string_body::reader;
 using json_reader = http::json_body::reader;
+using peer_reader = messages::peer::body::reader;
 using body_reader = std::variant
 <
     std::monostate, //     1 byte
@@ -47,6 +49,7 @@ using body_reader = std::variant
     span_reader,    //     8 bytes
     buffer_reader,  //     8 bytes
     string_reader,  //     8 bytes
+    peer_reader,    //    32 bytes
     json_reader,    //   320 bytes!
     rpc::reader     //   328 bytes!
 >;
@@ -58,6 +61,7 @@ using span_writer = http::span_body::writer;
 using buffer_writer = http::buffer_body::writer;
 using string_writer = http::string_body::writer;
 using json_writer = http::json_body::writer;
+using peer_writer = messages::peer::body::writer;
 using body_writer = std::variant
 <
     std::monostate, //     1 byte
@@ -67,6 +71,7 @@ using body_writer = std::variant
     span_writer,    //     8 bytes
     buffer_writer,  //    16 bytes
     string_writer,  //     8 bytes
+    peer_writer,    //    16 bytes
     json_writer,    //   136 bytes!
     rpc::writer,    //   144 bytes!
     rpc::notifier   //   144 bytes!
@@ -79,6 +84,7 @@ using span_value = http::span_body::value_type;
 using buffer_value = http::buffer_body::value_type;
 using string_value = http::string_body::value_type;
 using json_value = http::json_body::value_type;
+using peer_value = messages::peer::body::value_type;
 using body_value = std::variant
 <
     empty_value,    //  1 byte
@@ -88,6 +94,7 @@ using body_value = std::variant
     buffer_value,   // 24 bytes
     string_value,   // 40 bytes
     json_value,     // 48 bytes
+    peer_value,     // 96 bytes
     rpc::request,   // 248 bytes!
     rpc::response   // 360 bytes!
 >;
@@ -118,6 +125,7 @@ struct BCT_API body
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, buffer_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, string_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, json_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, peer_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpc::request, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpc::response, inner_)
 
@@ -230,6 +238,11 @@ struct BCT_API body
                     // json_reader not copy or assignable (by contained parser).
                     reader_.emplace<json_reader>(header, value);
                 },
+                [&](peer_value& value) NOEXCEPT
+                {
+                    // Selectable only by preselection (non-http reads).
+                    reader_.emplace<peer_reader>(header, value);
+                },
                 [&](rpc::request& value) NOEXCEPT
                 {
                     // json_reader not copy or assignable (by contained parser).
@@ -268,6 +281,7 @@ struct BCT_API body
                 [&](const span_writer&)    NOEXCEPT { return true; },
                 [&](const buffer_writer&)  NOEXCEPT { return true; },
                 [&](const string_writer&)  NOEXCEPT { return false; },
+                [&](const peer_writer&)    NOEXCEPT { return true; },
                 [&](const json_writer&)    NOEXCEPT { return false; },
                 [&](const rpc::writer&)    NOEXCEPT { return false; },
                 [&](const rpc::notifier&)  NOEXCEPT { return false; }
@@ -319,6 +333,10 @@ struct BCT_API body
                     // So requires in-place construction for variant populate.
                     return body_writer{ std::in_place_type<json_writer>,
                         header, value };
+                },
+                [&](peer_value& value) NOEXCEPT
+                {
+                    return body_writer{ peer_writer{ header, value } };
                 },
                 [&](rpc::response& value) NOEXCEPT
                 {

@@ -20,7 +20,6 @@
 
 #include <memory>
 #include <numeric>
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -32,7 +31,6 @@ namespace peer {
 using namespace system;
     
 const std::string compact_transactions::command = "blocktxn";
-const identifier compact_transactions::id = identifier::compact_transactions;
 const uint32_t compact_transactions::version_minimum = level::bip152;
 const uint32_t compact_transactions::version_maximum = level::maximum_protocol;
 

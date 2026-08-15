@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(pong__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(pong::command, "pong");
-    BOOST_REQUIRE(pong::id == identifier::pong);
+    constexpr auto index = rpc::peer_registry::index_of<pong>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), pong::command);
     BOOST_REQUIRE_EQUAL(pong::version_minimum, level::bip31);
     BOOST_REQUIRE_EQUAL(pong::version_maximum, level::maximum_protocol);
 }

@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(client_filter__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(client_filter::command, "cfilter");
-    BOOST_REQUIRE(client_filter::id == identifier::client_filter);
+    constexpr auto index = rpc::peer_registry::index_of<client_filter>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), client_filter::command);
     BOOST_REQUIRE_EQUAL(client_filter::version_minimum, level::bip157);
     BOOST_REQUIRE_EQUAL(client_filter::version_maximum, level::maximum_protocol);
 }

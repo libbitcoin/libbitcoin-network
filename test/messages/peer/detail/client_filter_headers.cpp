@@ -25,7 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(client_filter_headers__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(client_filter_headers::command, "cfheaders");
-    BOOST_REQUIRE(client_filter_headers::id == identifier::client_filter_headers);
+    constexpr auto index = rpc::peer_registry::index_of<client_filter_headers>();
+    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), client_filter_headers::command);
     BOOST_REQUIRE_EQUAL(client_filter_headers::version_minimum, level::bip157);
     BOOST_REQUIRE_EQUAL(client_filter_headers::version_maximum, level::maximum_protocol);
 }

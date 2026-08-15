@@ -381,6 +381,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__invalid_configuration__true_expected_message
     BOOST_REQUIRE_EQUAL(ec.message(), "invalid configuration");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__insufficient_buffer__true_expected_message)
+{
+    constexpr auto value = error::insufficient_buffer;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "insufficient buffer space");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__operation_timeout__true_expected_message)
 {
     constexpr auto value = error::operation_timeout;

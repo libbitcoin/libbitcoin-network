@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/get_blocks.hpp>
 
-#include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
@@ -30,7 +29,6 @@ namespace peer {
 
 using namespace system;
     
-const identifier get_blocks::id = identifier::get_blocks;
 const std::string get_blocks::command = "getblocks";
 const uint32_t get_blocks::version_minimum = level::minimum_protocol;
 const uint32_t get_blocks::version_maximum = level::maximum_protocol;

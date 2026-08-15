@@ -32,6 +32,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace system;
+using namespace messages::peer;
 using namespace std::placeholders;
 
 // Wait (all).
@@ -103,6 +104,41 @@ void proxy::do_tcp_write(const asio::const_buffer& payload,
     const count_handler& handler) NOEXCEPT
 {
     socket_->tcp_write({ payload.data(), payload.size() },
+        metered(std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler)));
+}
+
+// PEER (TCP: bitcoin p2p).
+// ----------------------------------------------------------------------------
+
+void proxy::read(data_chunk& buffer, frame& message,
+    count_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    do_reading();
+
+    socket_->peer_read(buffer, message, std::move(handler));
+}
+
+void proxy::write(frame&& message, count_handler&& handler) NOEXCEPT
+{
+    // Pointer ships moveable message through the send queue.
+    const auto out = move_shared(std::move(message));
+    writer call = std::bind(&proxy::do_peer_write,
+        shared_from_this(), out, std::move(handler));
+
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), std::move(call)));
+}
+
+// private
+void proxy::do_peer_write(const frame_ptr& message,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    socket_->peer_write(std::move(*message),
         metered(std::bind(&proxy::handle_write,
             shared_from_this(), _1, _2, handler)));
 }
