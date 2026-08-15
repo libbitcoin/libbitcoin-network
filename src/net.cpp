@@ -70,16 +70,8 @@ net::~net() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // server
-acceptor::ptr net::create_service(uint32_t maximum_request,
-    const socket::context& context) NOEXCEPT
+acceptor::ptr net::create_service(socket::parameters&& params) NOEXCEPT
 {
-    socket::parameters params
-    {
-        .connect_timeout = network_settings().connect_timeout(),
-        .maximum_request = maximum_request,
-        .context = context
-    };
-
     return emplace_shared<acceptor>(log, strand(), service(),
         service_suspended_, std::move(params));
 }
