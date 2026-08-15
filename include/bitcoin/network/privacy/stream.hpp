@@ -44,11 +44,10 @@ public:
     DELETE_COPY_MOVE(stream);
 
     typedef std::function<void(const boost_code&)> handshake_handler;
-    using io_handler =
-        boost::asio::any_completion_handler<void(boost_code, size_t)>;
+    typedef std::function<void(const boost_code&, size_t)> io_handler;
     using payload_t = std::span<const uint8_t>;
-    using message_handler = boost::asio::any_completion_handler<
-        void(boost_code, uint8_t, std::string, const payload_t&)>;
+    typedef std::function<void(const boost_code&, uint8_t,
+        const std::string&, const payload_t&)> message_handler;
     using executor_type = asio::socket::executor_type;
 
     /// The size of the v1 detection prefix (magic and command padding).
@@ -91,24 +90,46 @@ public:
         const system::chunk_cptr& payload, io_handler&& handler) NOEXCEPT;
 
 private:
-    using pump_handler =
-        boost::asio::any_completion_handler<void(boost_code)>;
+    typedef std::function<void(const boost_code&)> pump_handler;
 
     // handshake
     void do_initiate(const handshake_handler& handler) NOEXCEPT;
     void do_respond(const handshake_handler& handler) NOEXCEPT;
+    void handle_key_sent(const boost_code& ec,
+        const handshake_handler& handler) NOEXCEPT;
     void handle_their_key(const boost_code& ec, bool initiate,
         const handshake_handler& handler) NOEXCEPT;
     void send_terminator_version(bool initiate,
         const handshake_handler& handler) NOEXCEPT;
+    void handle_terminator_sent(const boost_code& ec,
+        const system::chunk_ptr& frame,
+        const handshake_handler& handler) NOEXCEPT;
     void scan_terminator(const handshake_handler& handler) NOEXCEPT;
+    void handle_scan(const boost_code& ec, size_t size, size_t start,
+        const handshake_handler& handler) NOEXCEPT;
     void read_versioning(bool first, const handshake_handler& handler) NOEXCEPT;
+    void handle_version_length(const boost_code& ec, bool first,
+        const handshake_handler& handler) NOEXCEPT;
+    void handle_version_packet(const boost_code& ec, bool first,
+        size_t length, const handshake_handler& handler) NOEXCEPT;
 
     // packet pump (read)
     void read_exactly(const std::span<uint8_t>& out,
         pump_handler&& handler) NOEXCEPT;
+    void handle_read(const boost_code& ec, size_t size,
+        const pump_handler& handler) NOEXCEPT;
+    void handle_message_length(const boost_code& ec,
+        system::data_chunk& buffer, size_t maximum,
+        const message_handler& handler) NOEXCEPT;
+    void handle_message_read(const boost_code& ec,
+        system::data_chunk& buffer, size_t length, size_t maximum,
+        const message_handler& handler) NOEXCEPT;
     static bool split(uint8_t& identifier, std::string& command,
         size_t& prefix, const std::span<const uint8_t>& contents) NOEXCEPT;
+
+    // packet write
+    void handle_message_sent(const boost_code& ec, size_t size,
+        const system::chunk_ptr& packet, const io_handler& handler) NOEXCEPT;
 
 
     // These are protected by stream (executor) sequencing.

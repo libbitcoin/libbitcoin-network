@@ -103,16 +103,19 @@ void stream::do_initiate(const handshake_handler& handler) NOEXCEPT
     const auto& key = cipher_.public_key();
     boost::asio::async_write(socket_,
         boost::asio::const_buffer{ key.data(), key.size() },
-        [this, handler](const boost_code& ec, size_t)
-        {
-            if (ec) { handler(ec); return; }
+        std::bind(&stream::handle_key_sent, this, _1, handler));
+}
 
-            // The responder replies with its own ellswift public key.
-            replay_.resize(cipher::key_size);
-            boost::asio::async_read(socket_,
-                boost::asio::mutable_buffer{ replay_.data(), replay_.size() },
-                std::bind(&stream::handle_their_key, this, _1, true, handler));
-        });
+void stream::handle_key_sent(const boost_code& ec,
+    const handshake_handler& handler) NOEXCEPT
+{
+    if (ec) { handler(ec); return; }
+
+    // The responder replies with its own ellswift public key.
+    replay_.resize(cipher::key_size);
+    boost::asio::async_read(socket_,
+        boost::asio::mutable_buffer{ replay_.data(), replay_.size() },
+        std::bind(&stream::handle_their_key, this, _1, true, handler));
 }
 
 void stream::do_respond(const handshake_handler& handler) NOEXCEPT
@@ -165,11 +168,15 @@ void stream::send_terminator_version(bool initiate,
 
     boost::asio::async_write(socket_,
         boost::asio::const_buffer{ frame->data(), frame->size() },
-        [this, frame, handler](const boost_code& code, size_t)
-        {
-            if (code) { handler(code); return; }
-            scan_terminator(handler);
-        });
+        std::bind(&stream::handle_terminator_sent, this, _1, frame, handler));
+}
+
+// The frame is bound to preserve its buffer for the write.
+void stream::handle_terminator_sent(const boost_code& ec,
+    const system::chunk_ptr&, const handshake_handler& handler) NOEXCEPT
+{
+    if (ec) { handler(ec); return; }
+    scan_terminator(handler);
 }
 
 void stream::scan_terminator(const handshake_handler& handler) NOEXCEPT
@@ -202,61 +209,70 @@ void stream::scan_terminator(const handshake_handler& handler) NOEXCEPT
     garbage_.resize(start + allowance);
     socket_.async_read_some(boost::asio::mutable_buffer
         { std::next(garbage_.data(), start), allowance },
-        [this, start, handler](const boost_code& ec, size_t size)
-        {
-            garbage_.resize(start + (ec ? zero : size));
-            if (ec) { handler(ec); return; }
-            scan_terminator(handler);
-        });
+        std::bind(&stream::handle_scan, this, _1, _2, start, handler));
+}
+
+void stream::handle_scan(const boost_code& ec, size_t size, size_t start,
+    const handshake_handler& handler) NOEXCEPT
+{
+    garbage_.resize(start + (ec ? zero : size));
+    if (ec) { handler(ec); return; }
+    scan_terminator(handler);
 }
 
 void stream::read_versioning(bool first, const handshake_handler& handler) NOEXCEPT
 {
-    // bip324    // Read packets until the version packet (skipping decoys). The aad of the
+    // Read packets until the version packet (skipping decoys). The aad of the
     // first received packet is the peer garbage (excluding terminator).
     packet_.resize(cipher::length_size);
     read_exactly(packet_,
-        [this, first, handler](const boost_code& ec)
-        {
-            if (ec) { handler(ec); return; }
+        std::bind(&stream::handle_version_length, this, _1, first, handler));
+}
 
-            const auto length = cipher_.decrypt_length(packet_);
-            if (length > cipher::maximum_content)
-            {
-                handler(protocol_error);
-                return;
-            }
+void stream::handle_version_length(const boost_code& ec, bool first,
+    const handshake_handler& handler) NOEXCEPT
+{
+    if (ec) { handler(ec); return; }
 
-            packet_.resize(cipher::header_size + length + cipher::tag_size);
-            read_exactly(packet_,
-                [this, first, length, handler](const boost_code& code)
-                {
-                    if (code) { handler(code); return; }
+    const auto length = cipher_.decrypt_length(packet_);
+    if (length > cipher::maximum_content)
+    {
+        handler(protocol_error);
+        return;
+    }
 
-                    bool ignore{};
-                    const std::span<uint8_t> packet{ packet_ };
-                    const auto plain = packet.first(
-                        cipher::header_size + length);
-                    const auto aad = first ? garbage_ : data_chunk{};
-                    if (!cipher_.decrypt(plain, aad, ignore, packet))
-                    {
-                        handler(protocol_error);
-                        return;
-                    }
+    packet_.resize(cipher::header_size + length + cipher::tag_size);
+    read_exactly(packet_,
+        std::bind(&stream::handle_version_packet,
+            this, _1, first, length, handler));
+}
 
-                    // Decoy packets are discarded, contents are ignored.
-                    if (ignore)
-                    {
-                        read_versioning(false, handler);
-                        return;
-                    }
+void stream::handle_version_packet(const boost_code& ec, bool first,
+    size_t length, const handshake_handler& handler) NOEXCEPT
+{
+    if (ec) { handler(ec); return; }
 
-                    // Handshake is complete.
-                    garbage_.clear();
-                    garbage_.shrink_to_fit();
-                    handler(boost_code{});
-                });
-        });
+    bool ignore{};
+    const std::span<uint8_t> packet{ packet_ };
+    const auto plain = packet.first(cipher::header_size + length);
+    const auto aad = first ? garbage_ : data_chunk{};
+    if (!cipher_.decrypt(plain, aad, ignore, packet))
+    {
+        handler(protocol_error);
+        return;
+    }
+
+    // Decoy packets are discarded, contents are ignored.
+    if (ignore)
+    {
+        read_versioning(false, handler);
+        return;
+    }
+
+    // Handshake is complete.
+    garbage_.clear();
+    garbage_.shrink_to_fit();
+    handler(boost_code{});
 }
 
 // Read pump.
@@ -274,19 +290,21 @@ void stream::read_exactly(const std::span<uint8_t>& out,
     if (residue == size)
     {
         boost::asio::post(get_executor(),
-            [handler = std::move(handler)]() mutable
-            {
-                std::move(handler)(boost_code{});
-            });
+            std::bind(&stream::handle_read,
+                this, {}, size, std::move(handler)));
         return;
     }
 
     boost::asio::async_read(socket_, boost::asio::mutable_buffer
         { std::next(out.data(), residue), size - residue },
-        [handler = std::move(handler)](const boost_code& ec, size_t) mutable
-        {
-            std::move(handler)(ec);
-        });
+        std::bind(&stream::handle_read, this, _1, _2, std::move(handler)));
+}
+
+// The read size is implied by the fixed buffer (dropped).
+void stream::handle_read(const boost_code& ec, size_t,
+    const pump_handler& handler) NOEXCEPT
+{
+    handler(ec);
 }
 
 // Read the encrypted length prefix and then the packet into the caller
@@ -297,71 +315,75 @@ void stream::async_read_message(data_chunk& buffer, size_t maximum,
 {
     packet_.resize(cipher::length_size);
     read_exactly(packet_,
-        [this, &buffer, maximum, handler = std::move(handler)](
-            const boost_code& ec) mutable
-        {
-            if (ec)
-            {
-                std::move(handler)(ec, uint8_t{}, std::string{}, payload_t{});
-                return;
-            }
+        std::bind(&stream::handle_message_length,
+            this, _1, std::ref(buffer), maximum, std::move(handler)));
+}
 
-            // Contents are bounded by the maximum payload and type prefix.
-            using namespace messages::peer;
-            const auto bound = std::min(cipher::maximum_content,
-                maximum + add1(heading::command_size));
+void stream::handle_message_length(const boost_code& ec, data_chunk& buffer,
+    size_t maximum, const message_handler& handler) NOEXCEPT
+{
+    if (ec)
+    {
+        handler(ec, {}, {}, {});
+        return;
+    }
 
-            const auto length = cipher_.decrypt_length(packet_);
-            if (length > bound)
-            {
-                std::move(handler)(protocol_error, uint8_t{}, std::string{}, payload_t{});
-                return;
-            }
+    // Contents are bounded by the maximum payload and type prefix.
+    using namespace messages::peer;
+    const auto bound = std::min(cipher::maximum_content,
+        maximum + add1(heading::command_size));
 
-            buffer.resize(cipher::header_size + length + cipher::tag_size);
-            read_exactly(buffer,
-                [this, &buffer, length, maximum, handler = std::move(handler)](
-                    const boost_code& code) mutable
-                {
-                    if (code)
-                    {
-                        std::move(handler)(code, uint8_t{}, std::string{}, payload_t{});
-                        return;
-                    }
+    const auto length = cipher_.decrypt_length(packet_);
+    if (length > bound)
+    {
+        handler(protocol_error, {}, {}, {});
+        return;
+    }
 
-                    bool ignore{};
-                    const std::span<uint8_t> packet{ buffer };
-                    const auto plain = packet.first(
-                        cipher::header_size + length);
+    buffer.resize(cipher::header_size + length + cipher::tag_size);
+    read_exactly(buffer,
+        std::bind(&stream::handle_message_read,
+            this, _1, std::ref(buffer), length, maximum, handler));
+}
 
-                    if (!cipher_.decrypt(plain, {}, ignore, packet))
-                    {
-                        std::move(handler)(protocol_error, uint8_t{}, std::string{}, payload_t{});
-                        return;
-                    }
+void stream::handle_message_read(const boost_code& ec, data_chunk& buffer,
+    size_t length, size_t maximum, const message_handler& handler) NOEXCEPT
+{
+    if (ec)
+    {
+        handler(ec, uint8_t{}, std::string{}, payload_t{});
+        return;
+    }
 
-                    // Decoy packets are discarded, contents are ignored.
-                    if (ignore)
-                    {
-                        async_read_message(buffer, maximum, std::move(handler));
-                        return;
-                    }
+    bool ignore{};
+    const std::span<uint8_t> packet{ buffer };
+    const auto plain = packet.first(cipher::header_size + length);
 
-                    size_t prefix{};
-                    uint8_t identifier{};
-                    std::string command{};
-                    const auto contents = plain.subspan(cipher::header_size);
+    if (!cipher_.decrypt(plain, {}, ignore, packet))
+    {
+        handler(protocol_error, {}, {}, {});
+        return;
+    }
 
-                    if (!split(identifier, command, prefix, contents))
-                    {
-                        std::move(handler)(protocol_error, uint8_t{}, std::string{}, payload_t{});
-                        return;
-                    }
+    // Decoy packets are discarded, contents are ignored.
+    if (ignore)
+    {
+        async_read_message(buffer, maximum, move_copy(handler));
+        return;
+    }
 
-                    std::move(handler)(boost_code{}, identifier,
-                        std::move(command), contents.subspan(prefix));
-                });
-        });
+    size_t prefix{};
+    uint8_t identifier{};
+    std::string command{};
+    const auto contents = plain.subspan(cipher::header_size);
+
+    if (!split(identifier, command, prefix, contents))
+    {
+        handler(protocol_error, {}, {}, {});
+        return;
+    }
+
+    handler({}, identifier, std::move(command), contents.subspan(prefix));
 }
 
 // static
@@ -418,10 +440,8 @@ void stream::async_write_message(uint8_t identifier,
         payload->size() > cipher::maximum_content - prefix)
     {
         boost::asio::post(get_executor(),
-            [handler = std::move(handler)]() mutable
-            {
-                std::move(handler)(protocol_error, zero);
-            });
+            std::bind(&stream::handle_message_sent,
+                this, protocol_error, {}, {}, std::move(handler)));
         return;
     }
 
@@ -444,11 +464,15 @@ void stream::async_write_message(uint8_t identifier,
 
     boost::asio::async_write(socket_,
         boost::asio::const_buffer{ packet->data(), packet->size() },
-        [packet, handler = std::move(handler)](
-            const boost_code& ec, size_t size) mutable
-        {
-            std::move(handler)(ec, size);
-        });
+        std::bind(&stream::handle_message_sent, this, _1, _2, packet,
+            std::move(handler)));
+}
+
+// The packet is bound to preserve its buffer for the write.
+void stream::handle_message_sent(const boost_code& ec, size_t size,
+    const system::chunk_ptr&, const io_handler& handler) NOEXCEPT
+{
+    handler(ec, size);
 }
 
 BC_POP_WARNING()
