@@ -84,6 +84,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // general failures
     { invalid_configuration, "invalid configuration" },
+    { insufficient_buffer, "insufficient buffer space" },
     { operation_timeout, "operation timed out" },
     { operation_canceled, "operation canceled" },
     { operation_failed, "operation failed" },
@@ -340,7 +341,7 @@ code errc_to_error_code(const boost_code& ec) NOEXCEPT
             // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
             // connect-tcp-greater-than-5000-error-wsaenobufs-10055
             case boost_errc_t::no_buffer_space:
-                return error::invalid_configuration;
+                return error::insufficient_buffer;
 
             // network
             case boost_errc_t::operation_not_permitted:
@@ -477,8 +478,10 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
             case asio_basic_error_t::invalid_argument:
             case asio_basic_error_t::name_too_long:
             case asio_basic_error_t::no_descriptors:
-            case asio_basic_error_t::no_buffer_space:
                 return error::invalid_configuration;
+
+            case asio_basic_error_t::no_buffer_space:
+                return error::insufficient_buffer;
 
                 // This duplicates would_block except on MSVC.
                 ////case asio_basic_error_t::try_again:

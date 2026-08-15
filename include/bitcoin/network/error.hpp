@@ -96,6 +96,7 @@ enum error_t : uint8_t
 
     // general failures
     invalid_configuration,
+    insufficient_buffer,
     operation_timeout,
     operation_canceled,
     operation_failed,
