@@ -73,6 +73,12 @@ protected:
     /// Advertised addresses with own services and current timestamp.
     virtual messages::peer::address selfs() const NOEXCEPT;
 
+    /// The services provided to peers.
+    virtual uint64_t services_provided() const NOEXCEPT;
+
+    /// The services required of peers.
+    virtual uint64_t services_required() const NOEXCEPT;
+
     /// Addresses.
     /// -----------------------------------------------------------------------
 
