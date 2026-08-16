@@ -134,10 +134,16 @@ void connector::start(const std::string& hostname, uint16_t port,
     // Capture the handler.
     racer_.start(std::move(handler));
 
+    // Encryption (bip324) is applied only to advertising peer addresses.
+    using namespace messages::peer;
+    auto params = parameters_;
+    if (!to_bool(address.services() & service::node_encrypted_transport))
+        params.context = {};
+
     // Create the outbound socket and shared finish context.
     const auto finish = std::make_shared<bool>(false);
     const auto socket = std::make_shared<network::socket>(log, service_,
-        parameters_, address, endpoint, proxied());
+        params, address, endpoint, proxied());
 
     // Posts handle_timer to strand.
     timer_->start(
