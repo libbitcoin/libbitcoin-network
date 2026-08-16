@@ -63,10 +63,12 @@ public:
     DELETE_COPY_MOVE(net);
 
     /// Construct an instance from config.
-    net(const configuration& config, const logger& log) NOEXCEPT;
+    net(const configuration& config, const logger& log,
+        uint64_t required_services=messages::peer::service::node_none) NOEXCEPT;
 
     /// Construct an instance from settings (deprecated).
-    net(const settings& settings, const logger& log) NOEXCEPT;
+    net(const settings& settings, const logger& log,
+        uint64_t required_services=messages::peer::service::node_none) NOEXCEPT;
 
     /// Calls close().
     virtual ~net() NOEXCEPT;

@@ -399,6 +399,18 @@ const network::settings& session::network_settings() const NOEXCEPT
     return network_.network_settings();
 }
 
+uint64_t session::services_provided() const NOEXCEPT
+{
+    using namespace messages::peer;
+    return network_settings().privacy ? service::node_encrypted_transport :
+        service::node_none;
+}
+
+uint64_t session::services_required() const NOEXCEPT
+{
+    return messages::peer::service::node_none;
+}
+
 uint64_t session::identifier() const NOEXCEPT
 {
     return identifier_;

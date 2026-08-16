@@ -174,19 +174,19 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
         BIND(handle_channel_stop, _1, channel, racer));
 }
 
+uint64_t session_seed::services_provided() const NOEXCEPT
+{
+    return messages::peer::service::node_none;
+}
+
 void session_seed::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
-    // Seeding does not require or provide any node services.
-    // Nodes that require inbound connection services/txs will not accept.
-    using namespace messages::peer;
-    constexpr auto required = service::node_none;
-    constexpr auto provided = service::node_none;
-
     // Tx relay is always disabled for seeding.
+    using namespace messages::peer;
     constexpr auto relay = false;
 
     // Protocol must pause the channel after receiving version and verack.
@@ -196,21 +196,21 @@ void session_seed::attach_handshake(const channel::ptr& channel,
 
     // Address v2 can be disabled, independent of version.
     if (is_configured(level::bip155) && address_v2)
-        channel->attach<protocol_version_70016>(self, required,
-            provided, relay, reject)->shake(std::move(handler));
+        channel->attach<protocol_version_70016>(self, relay,
+            reject)->shake(std::move(handler));
 
     // Protocol versions are cumulative, but reject is deprecated.
     else if (is_configured(level::bip61) && reject)
-        channel->attach<protocol_version_70002>(self, required,
-            provided, relay)->shake(std::move(handler));
+        channel->attach<protocol_version_70002>(self,
+            relay)->shake(std::move(handler));
 
     else if (is_configured(level::bip37))
-        channel->attach<protocol_version_70001>(self, required,
-            provided, relay)->shake(std::move(handler));
+        channel->attach<protocol_version_70001>(self,
+            relay)->shake(std::move(handler));
 
     else if (is_configured(level::version_message))
-        channel->attach<protocol_version_106>(self, required,
-            provided)->shake(std::move(handler));
+        channel->attach<protocol_version_106>(
+            self)->shake(std::move(handler));
 }
 
 void session_seed::handle_channel_start(const code& ec,

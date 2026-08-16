@@ -41,11 +41,6 @@ public:
     protocol_version_106(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
-    /// Construct a version protocol instance using parameterized services.
-    protocol_version_106(const session::ptr& session,
-        const channel::ptr& channel, uint64_t required_services,
-        uint64_t provided_services) NOEXCEPT;
-
     /// Perform the handshake (requires strand), handler invoked on completion.
     virtual void shake(result_handler&& handler) NOEXCEPT;
 

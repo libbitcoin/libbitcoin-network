@@ -40,12 +40,13 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 using namespace system;
 using namespace std::placeholders;
 
-net::net(const settings& settings, const logger& log) NOEXCEPT
+net::net(const settings& settings, const logger& log,
+    uint64_t required_services) NOEXCEPT
   : settings_(settings),
     encryption_{ settings.identifier },
     threadpool_(std::max(settings.threads, 1_u32)),
     strand_(threadpool_.service().get_executor()),
-    hosts_(settings, log),
+    hosts_(settings, log, required_services),
     reporter(log)
 {
     ////LOG_LOG("Aplication log compiled..: ", news_defined);
@@ -82,7 +83,7 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
     const auto& settings = network_settings();
 
     // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
-    const auto accept = settings.encrypted_node() &&
+    const auto accept = settings.privacy &&
         std::holds_alternative<std::monostate>(context) ?
             socket::context{ std::cref(encryption_) } : context;
 
@@ -108,7 +109,7 @@ connector::ptr net::create_connector(const settings::socks5& socks,
         .maximum_request = maximum_request
     };
 
-    if (network_settings().encrypted_node())
+    if (network_settings().privacy)
         params.context = std::cref(encryption_);
 
     if (socks.proxied())

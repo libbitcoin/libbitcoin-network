@@ -48,7 +48,8 @@ public:
     DELETE_COPY_MOVE_DESTRUCT(hosts);
 
     /// Construct an instance.
-    hosts(const settings& settings, const logger& log) NOEXCEPT;
+    hosts(const settings& settings, const logger& log,
+        uint64_t required_services=messages::peer::service::node_none) NOEXCEPT;
 
     /// Start/stop.
     /// -----------------------------------------------------------------------
@@ -116,6 +117,13 @@ private:
         BC_POP_WARNING()
     }
 
+    // The address does not provide the required services.
+    inline bool insufficient(
+        const messages::peer::address_item& item) const NOEXCEPT
+    {
+        return (item.services & required_) != required_;
+    }
+
     // Inlines local to translation unit.
     inline messages::peer::address_item::cptr pop() NOEXCEPT;
     inline void push(const std::string& line) NOEXCEPT;
@@ -130,6 +138,7 @@ private:
 
     // These are thread safe.
     const settings& settings_;
+    const uint64_t required_;
     std::atomic<size_t> hosts_count_{};
     std::atomic<size_t> endpoints_count_{};
 

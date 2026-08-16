@@ -83,7 +83,7 @@ void protocol_peer::set_negotiated_version(uint32_t value) NOEXCEPT
 address protocol_peer::selfs() const NOEXCEPT
 {
     const auto time_now = unix_time();
-    const auto services = services_provided();
+    const auto services = session_->services_provided();
     const auto& selfs = network_settings().inbound.selfs;
 
     address message{};
@@ -92,17 +92,6 @@ address protocol_peer::selfs() const NOEXCEPT
         message.addresses.push_back(self.to_address_item(time_now, services));
 
     return message;
-}
-
-uint64_t protocol_peer::services_provided() const NOEXCEPT
-{
-    return network_settings().privacy ? service::node_encrypted_transport :
-        service::node_none;
-}
-
-uint64_t protocol_peer::services_required() const NOEXCEPT
-{
-    return service::node_none;
 }
 
 // Addresses.

@@ -104,6 +104,9 @@ public:
     size_t start_height() const NOEXCEPT;
     void set_start_height(size_t height) NOEXCEPT;
 
+    /// Frame deserialization witness flag (set only before resume).
+    void set_witness(bool witness) NOEXCEPT;
+
     /// Negotiated version should be written only in handshake (safety).
     uint32_t negotiated_version() const NOEXCEPT;
     void set_negotiated_version(uint32_t value) NOEXCEPT;
@@ -143,6 +146,7 @@ private:
     system::data_chunk payload_buffer_{};
     dispatcher dispatcher_{};
     size_t start_height_{};
+    bool witness_{};
     bool reading_{};
     bool quiet_{};
     bool current_{};

@@ -38,19 +38,14 @@ using namespace network::messages::peer;
 protocol_version_70001::protocol_version_70001(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70001(session, channel,
-        session->network_settings().services_required,
-        session->network_settings().services_provided,
         session->network_settings().enable_relay)
 {
 }
 
 protocol_version_70001::protocol_version_70001(const session::ptr& session,
     const channel::ptr& channel,
-    uint64_t required_services,
-    uint64_t provided_services,
     bool relay) NOEXCEPT
-  : protocol_version_106(session, channel, required_services,
-      provided_services),
+  : protocol_version_106(session, channel),
     relay_(relay),
     tracker<protocol_version_70001>(session->log)
 {

@@ -102,6 +102,11 @@ void channel_peer::set_start_height(size_t height) NOEXCEPT
     start_height_ = height;
 }
 
+void channel_peer::set_witness(bool witness) NOEXCEPT
+{
+    witness_ = witness;
+}
+
 uint32_t channel_peer::negotiated_version() const NOEXCEPT
 {
     return negotiated_version_;
@@ -176,7 +181,7 @@ void channel_peer::receive() NOEXCEPT
     const auto in = to_shared<frame>();
     in->magic = settings().identifier;
     in->version = negotiated_version();
-    in->witness = settings().witness_node();
+    in->witness = witness_;
     in->checksum = settings().validate_checksum;
     in->maximum = options().maximum_request;
 

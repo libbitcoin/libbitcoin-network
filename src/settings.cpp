@@ -270,21 +270,6 @@ settings::settings(chain::selection context) NOEXCEPT
 {
 }
 
-bool settings::pruned_node() const NOEXCEPT
-{
-    return to_bool(services_provided & service::node_network_limited);
-}
-
-bool settings::witness_node() const NOEXCEPT
-{
-    return to_bool(services_provided & service::node_witness);
-}
-
-bool settings::encrypted_node() const NOEXCEPT
-{
-    return to_bool(services_provided & service::node_encrypted_transport);
-}
-
 // Randomized from 50% to maximum milliseconds (specified in seconds).
 steady_clock::duration settings::retry_timeout() const NOEXCEPT
 {
@@ -323,11 +308,6 @@ std::filesystem::path settings::file() const NOEXCEPT
     BC_POP_WARNING()
 }
 
-bool settings::insufficient(const address_item& item) const NOEXCEPT
-{
-    return (item.services & services_required) != services_required;
-}
-
 bool settings::unsupported(const address_item& item) const NOEXCEPT
 {
     return to_bool(item.services & invalid_services);
@@ -347,7 +327,6 @@ bool settings::excluded(const address_item& item) const NOEXCEPT
 {
     return !is_specified(item)
         || outbound.disabled(item)
-        || insufficient(item)
         || unsupported(item)
         || manual.peered(item)
         || blacklisted(item)

@@ -41,26 +41,14 @@ using namespace system;
 using namespace messages::peer;
 using namespace std::placeholders;
 
-// Require the configured minimum protocol and required services by default.
 protocol_version_106::protocol_version_106(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
-  : protocol_version_106(session, channel,
-      session->network_settings().services_required,
-      session->network_settings().services_provided)
-{
-}
-
-// Used for seeding (should probably not override these).
-protocol_version_106::protocol_version_106(const session::ptr& session,
-    const channel::ptr& channel,
-    uint64_t required_services,
-    uint64_t provided_services) NOEXCEPT
   : protocol_peer(session, channel),
     inbound_(channel->inbound()),
     minimum_version_(session->network_settings().protocol_minimum),
     maximum_version_(session->network_settings().protocol_maximum),
-    required_services_(required_services),
-    provided_services_(provided_services),
+    required_services_(session->services_required()),
+    provided_services_(session->services_provided()),
     invalid_services_(session->network_settings().invalid_services),
     maximum_skew_minutes_(session->network_settings().maximum_skew_minutes),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),

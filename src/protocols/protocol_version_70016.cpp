@@ -43,8 +43,6 @@ using namespace std::placeholders;
 protocol_version_70016::protocol_version_70016(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70016(session, channel,
-        session->network_settings().services_required,
-        session->network_settings().services_provided,
         session->network_settings().enable_relay,
         session->network_settings().enable_reject)
 {
@@ -52,12 +50,9 @@ protocol_version_70016::protocol_version_70016(const session::ptr& session,
 
 protocol_version_70016::protocol_version_70016(const session::ptr& session,
     const channel::ptr& channel,
-    uint64_t required_services,
-    uint64_t provided_services,
     bool relay,
     bool reject) NOEXCEPT
-  : protocol_version_70002(session, channel, required_services,
-      provided_services, relay),
+  : protocol_version_70002(session, channel, relay),
     reject_(reject),
     tracker<protocol_version_70016>(session->log)
 {

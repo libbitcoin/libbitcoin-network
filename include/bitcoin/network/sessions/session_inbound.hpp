@@ -46,10 +46,6 @@ public:
     void start(result_handler&& handler) NOEXCEPT override;
 
 protected:
-    /// Overridden to change version protocol (base calls from channel strand).
-    void attach_handshake(const channel::ptr& channel,
-        result_handler&& handler) NOEXCEPT override;
-
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) NOEXCEPT override;
 
