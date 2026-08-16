@@ -402,7 +402,7 @@ const network::settings& session::network_settings() const NOEXCEPT
 uint64_t session::services_provided() const NOEXCEPT
 {
     using namespace messages::peer;
-    return network_settings().privacy ? service::node_encrypted_transport :
+    return network_settings().enable_privacy ? service::node_encrypted_transport :
         service::node_none;
 }
 

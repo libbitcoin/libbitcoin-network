@@ -307,7 +307,6 @@ struct BCT_API settings
     uint32_t protocol_maximum{ messages::peer::level::maximum_protocol };
     uint32_t protocol_minimum{ messages::peer::level::minimum_protocol };
     uint64_t invalid_services{ 176 };
-    bool privacy{ false };
     bool enable_address{ false };
     bool enable_address_v2{ false };
     bool enable_witness_tx{ false };
@@ -315,6 +314,7 @@ struct BCT_API settings
     bool enable_alert{ false };
     bool enable_reject{ false };
     bool enable_relay{ false };
+    bool enable_privacy{ false };
     bool validate_checksum{ false };
     uint32_t identifier{ 0 };
     uint32_t retry_timeout_seconds{ 1 };
