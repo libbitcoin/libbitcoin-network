@@ -53,6 +53,11 @@ protocol_peer::protocol_peer(const session::ptr& session,
 // handshake protocol operation. Thread safety requires that setters are never
 // invoked outside of the handshake protocol (start handler).
 
+bool protocol_peer::encrypted() const NOEXCEPT
+{
+    return channel_->encrypted();
+}
+
 size_t protocol_peer::start_height() const NOEXCEPT
 {
     return channel_->start_height();

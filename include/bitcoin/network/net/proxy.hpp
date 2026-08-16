@@ -104,6 +104,9 @@ public:
     /// Connection is currently secured (TLS or comparable for socket type).
     bool secure() const NOEXCEPT;
 
+    /// Connection was upgraded to encrypted transport (bip324).
+    bool encrypted() const NOEXCEPT;
+
     /// The socket was upgraded to a websocket.
     bool websocket() const NOEXCEPT;
 

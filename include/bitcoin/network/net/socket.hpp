@@ -251,6 +251,9 @@ public:
     /// The socket upgrades to bip324 (v2) transport upon connect.
     virtual bool encrypted() const NOEXCEPT;
 
+    /// The socket was upgraded to p2ps (the peer is v2).
+    bool is_encrypted() const NOEXCEPT;
+
     /// The socket was upgraded to a websocket.
     virtual bool websocket() const NOEXCEPT;
 
@@ -283,9 +286,6 @@ protected:
 
     /// The socket was upgraded to ssl.
     bool is_secure() const NOEXCEPT;
-
-    /// The socket was upgraded to p2ps (the peer is v2).
-    bool is_encrypted() const NOEXCEPT;
 
     /// Variant accessors (protected by strand).
     /// -----------------------------------------------------------------------

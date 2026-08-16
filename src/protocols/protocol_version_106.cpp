@@ -309,8 +309,9 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     ////    "/BitcoinFinance:");
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
-    LOGN(prefix << " [" << opposite() << "] version (" << message->value
-        << ") " << user_agent);
+    LOG_ONLY(const auto security = (encrypted() ? "private" : "clear");)
+    LOGN(prefix << " " << security << " [" << opposite() << "] version ("
+        << message->value << ") " << user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {
