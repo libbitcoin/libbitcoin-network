@@ -22,6 +22,7 @@
 #include <atomic>
 #include <memory>
 #include <optional>
+#include <span>
 #include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -244,10 +245,10 @@ public:
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
 
-    /// The socket upgrades to its secure configuration upon connect.
+    /// The socket was upgraded to ssl.
     virtual bool secure() const NOEXCEPT;
 
-    /// The socket upgrades to bip324 (v2) transport upon connect.
+    /// The socket was upgraded to p2ps (the peer is v2).
     virtual bool encrypted() const NOEXCEPT;
 
     /// The socket was upgraded to a websocket.
@@ -264,8 +265,7 @@ public:
 
 protected:
     using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;
-    using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>,
-        ref<privacy::stream>>;
+    using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
     using socket_t = std::variant<asio::socket, asio::ssl::socket, ws::socket,
         ws::ssl::socket, privacy::stream>;
 
@@ -275,14 +275,8 @@ protected:
         const config::address& address, const config::endpoint& endpoint,
         bool proxied, bool inbound) NOEXCEPT;
 
-    /// Context.
+    /// Variant state (protected by strand).
     /// -----------------------------------------------------------------------
-
-    /// The socket was upgraded to ssl (requires strand).
-    bool is_secure() const NOEXCEPT;
-
-    /// The socket was upgraded to bip324 (requires strand).
-    bool is_encrypted() const NOEXCEPT;
 
     /// The socket is not upgraded (asio::socket).
     bool is_base() const NOEXCEPT;
@@ -293,6 +287,7 @@ protected:
     tcp_t get_tcp() NOEXCEPT;
     asio::socket& get_base() NOEXCEPT;
     asio::ssl::socket& get_ssl() NOEXCEPT;
+    privacy::stream& get_p2ps() NOEXCEPT;
 
     /// Variant (ws vs. tcp) helpers (protected by strand).
     /// -----------------------------------------------------------------------
@@ -430,6 +425,8 @@ private:
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
     void do_handshake(const result_handler& handler) NOEXCEPT;
+    void handle_detection(const boost_code& ec,
+        const result_handler& handler) NOEXCEPT;
 
     // ws (framed)
     void do_ws_read(ref<http::flat_buffer> out,
@@ -443,6 +440,8 @@ private:
 
     // peer
     void do_peer_read(size_t total, const peer_state::ptr& in,
+        const count_handler& handler) NOEXCEPT;
+    void do_peer_write(const messages::peer::frame_ptr& out,
         const count_handler& handler) NOEXCEPT;
 
     // body
@@ -502,8 +501,13 @@ private:
         const count_handler& handler,const std::string& operation) NOEXCEPT;
 
     // peer
-    void handle_peer_read(const code& ec, size_t size, size_t total,
+    void handle_peer_read(const code& ec, size_t size, size_t residue,
+        size_t total, const peer_state::ptr& in,
+        const count_handler& handler) NOEXCEPT;
+    void handle_peer_read_encrypted(const boost_code& ec, uint8_t identifier,
+        const std::string& command, const std::span<const uint8_t>& payload,
         const peer_state::ptr& in, const count_handler& handler) NOEXCEPT;
+
 
     // rpc
     void handle_rpc_read(const code& ec, size_t bytes,
@@ -550,7 +554,7 @@ protected:
     const size_t maximum_;
     asio::strand strand_;
     asio::context& service_;
-    const context& context_;
+    const context context_;
     std::atomic_bool stopped_{};
     std::atomic_bool websocket_{};
 
@@ -559,6 +563,9 @@ protected:
     config::endpoint endpoint_;
     deadline::ptr timer_;
     socket_t socket_;
+
+    // Retains the detection prefix for a v1 peer (see handle_detection).
+    http::flat_buffer detection_{ privacy::stream::detection_size };
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;

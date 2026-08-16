@@ -52,7 +52,8 @@ public:
         dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
-    /// Serialize and write message to peer (requires strand).
+    /// Write message to peer (requires strand).
+    /// The message is translated to the wire by the body (transport framed).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
     inline void send(const Message& message, result_handler&& handler) NOEXCEPT
@@ -60,25 +61,20 @@ public:
         BC_ASSERT(stranded());
         using namespace messages::peer;
         using namespace std::placeholders;
-        const auto id = settings().identifier;
-        frame out{ .data = serialize(message, id, negotiated_version()) };
 
-        count_handler complete = std::bind(&channel_peer::handle_send,
-            shared_from_base<channel_peer>(),  _1, _2, out.data,
-            std::move(handler));
+        frame out{};
+        out.magic = settings().identifier;
+        out.version = negotiated_version();
+        out.message = rpc::any_t{ system::to_shared(message) };
+        out.index = rpc::peer_registry::index_of<Message>();
 
-        if (!out.data)
-        {
-            complete(error::bad_alloc, {});
-        }
-        else
-        {
-            LOGX("Sent " << Message::command << " to [" << endpoint() << "] ("
-                << system::floored_subtract(out.data->size(),
-                heading::command_size) << " bytes)");
+        LOGX("Send " << Message::command << " to [" << endpoint() << "] ("
+            << message.size(out.version) << " bytes)");
 
-            write(std::move(out), std::move(complete));
-        }
+        write(std::move(out),
+            std::bind(&channel_peer::handle_send,
+                shared_from_base<channel_peer>(), _1, _2, Message::command,
+                std::move(handler)));
     }
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.
@@ -127,6 +123,9 @@ protected:
     /// Stranded handler invoked from channel::stop().
     void stopping(const code& ec) NOEXCEPT override;
 
+    /// Construct a frame stamped with parse context.
+    virtual messages::peer::frame_ptr create_frame() const NOEXCEPT;
+
     /// Message read and dispatch (framing is owned by peer::body).
     void receive() NOEXCEPT;
     void handle_receive(const code& ec, size_t bytes,
@@ -139,8 +138,7 @@ private:
     void log_fault(const code& ec,
         const messages::peer::frame& in) const NOEXCEPT;
     void handle_send(const code& ec, size_t size,
-        const system::chunk_cptr& payload,
-        const result_handler& handler) NOEXCEPT;
+        const std::string& command, const result_handler& handler) NOEXCEPT;
 
     // These are protected by strand/order.
     uint32_t negotiated_version_;

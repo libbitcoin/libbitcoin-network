@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_PRIVACY_PRIVACY_HPP
 
 #include <bitcoin/network/privacy/cipher.hpp>
-#include <bitcoin/network/privacy/commands.hpp>
 #include <bitcoin/network/privacy/context.hpp>
 #include <bitcoin/network/privacy/stream.hpp>
 

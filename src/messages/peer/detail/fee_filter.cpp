@@ -40,9 +40,9 @@ size_t fee_filter::size(uint32_t) NOEXCEPT
 
 // static
 typename fee_filter::cptr fee_filter::deserialize(uint32_t version,
-    const system::data_chunk& data) NOEXCEPT
+    const std::span<const uint8_t>& data) NOEXCEPT
 {
-    system::istream source{ data };
+    system::istream source{ { data.begin(), data.end() } };
     system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;

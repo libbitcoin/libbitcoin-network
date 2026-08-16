@@ -32,8 +32,10 @@ using namespace messages::peer;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-hosts::hosts(const settings& settings, const logger& log) NOEXCEPT
+hosts::hosts(const settings& settings, const logger& log,
+    uint64_t required_services) NOEXCEPT
   : settings_(settings),
+    required_(required_services),
     buffer_(settings.outbound.host_pool_capacity),
     reporter(log)
 {
@@ -250,7 +252,7 @@ void hosts::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
     for (const auto& host: message->addresses)
     {
         // O(N) <= could be resolved with O(1) search.
-        if (!is_reserved({ host }) && !is_pooled(host))
+        if (!insufficient(host) && !is_reserved({ host }) && !is_pooled(host))
         {
             // O(1).
             buffer_.push_back(host);
@@ -290,7 +292,7 @@ inline void hosts::push(const std::string& line) NOEXCEPT
             // IPv6 addresses saved and loaded with IPv6 disabled.
             ////LOGF("Address disabled upon load [" << line << "].");
         }
-        else if (settings_.insufficient(item))
+        else if (insufficient(item))
         {
             LOGF("Address insufficient upon load [" << line << "].");
         }

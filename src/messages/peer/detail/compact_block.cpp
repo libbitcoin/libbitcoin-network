@@ -36,9 +36,9 @@ const uint32_t compact_block::version_maximum = level::maximum_protocol;
 
 // static
 typename compact_block::cptr compact_block::deserialize(uint32_t version,
-    const system::data_chunk& data, bool witness) NOEXCEPT
+    const std::span<const uint8_t>& data, bool witness) NOEXCEPT
 {
-    system::istream source{ data };
+    system::istream source{ { data.begin(), data.end() } };
     system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader, witness));
     return reader ? message : nullptr;
@@ -104,8 +104,8 @@ void compact_block::serialize(uint32_t version, writer& sink,
     sink.write_8_bytes_little_endian(nonce);
     sink.write_variable(short_ids.size());
 
-    for (const auto& identifier: short_ids)
-        sink.write_bytes(identifier);
+    for (const auto& short_id: short_ids)
+        sink.write_bytes(short_id);
 
     sink.write_variable(transactions.size());
 

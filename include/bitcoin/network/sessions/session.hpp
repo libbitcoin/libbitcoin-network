@@ -132,6 +132,12 @@ public:
     /// Access network configuration settings.
     const network::settings& network_settings() const NOEXCEPT;
 
+    /// The services provided to peers.
+    virtual uint64_t services_provided() const NOEXCEPT;
+
+    /// The services required of peers.
+    virtual uint64_t services_required() const NOEXCEPT;
+
     /// Arbitrary identifier of the session (for net subscriber).
     uint64_t identifier() const NOEXCEPT;
 

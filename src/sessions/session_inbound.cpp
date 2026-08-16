@@ -216,51 +216,6 @@ bool session_inbound::enabled() const NOEXCEPT
     return true;
 }
 
-// Channel sequence.
-// ----------------------------------------------------------------------------
-
-void session_inbound::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
-
-    // Inbound does not require any node services.
-    using namespace messages::peer;
-    constexpr auto minimum_services = service::node_none;
-    const auto maximum_services = network_settings().services_maximum;
-
-    // Protocol must pause the channel after receiving version and verack.
-    const auto self = shared_from_this();
-    const auto relay = network_settings().enable_relay;
-    const auto reject = network_settings().enable_reject;
-    const auto address_v2 = network_settings().enable_address_v2;
-
-    // protocol_version_70016 sends and receives send_address_v2 even though
-    // inbound connections do not accept addresses. There is no message to
-    // disable address broadcasting, so this is just allowed to upgrade.
-
-    // Address v2 can be disabled, independent of version.
-    if (is_configured(level::bip155) && address_v2)
-        channel->attach<protocol_version_70016>(self, minimum_services,
-            maximum_services, relay, reject)->shake(std::move(handler));
-
-    // Protocol versions are cumulative, but reject is deprecated.
-    else if (is_configured(level::bip61) && reject)
-        channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
-
-    // TODO: consider relay may be dynamic (disabled until current).
-    // .enable_relay is always passed to the peer during handshake.
-    else if (is_configured(level::bip37))
-        channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
-
-    else if (is_configured(level::version_message))
-        channel->attach<protocol_version_106>(self, minimum_services,
-            maximum_services)->shake(std::move(handler));
-}
-
 // Completion sequence.
 // ----------------------------------------------------------------------------
 void session_inbound::handle_channel_start(const code&,

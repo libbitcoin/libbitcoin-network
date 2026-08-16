@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <optional>
 #include "../test.hpp"
 
 BOOST_AUTO_TEST_SUITE(privacy_stream_tests)
@@ -24,6 +25,7 @@ using v2_stream = network::privacy::stream;
 using v2_context = network::privacy::context;
 using tcp_socket = network::asio::socket;
 using network::messages::peer::heading;
+namespace identifiers = network::messages::peer::identifiers;
 using system::data_chunk;
 
 constexpr uint32_t mainnet = 0xd9b4bef9;
@@ -75,129 +77,143 @@ BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v2_both_sides__frames_round_trip
 
     const v2_context configuration{ mainnet };
     v2_stream initiator{ std::move(client), configuration };
-    v2_stream responder{ std::move(server), configuration };
+    std::optional<v2_stream> upgraded{};
 
     boost_code initiated{ boost::asio::error::would_block };
     boost_code responded{ boost::asio::error::would_block };
-    initiator.async_handshake(true, [&](const boost_code& ec) { initiated = ec; });
-    responder.async_handshake(false, [&](const boost_code& ec) { responded = ec; });
+    boost_code detected{ boost::asio::error::would_block };
+    data_chunk prefix(v2_stream::detection_size);
+    bool v1{ true };
+
+    // The socket reads the detection prefix and upgrades on a v2 peer,
+    // passing the detected bytes to the stream (a partial peer key).
+    const auto shook = [&](const boost_code& ec) { responded = ec; };
+    const auto detect = [&](const boost_code& ec, size_t)
+    {
+        detected = ec;
+        v1 = v2_stream::detected_v1(prefix, mainnet);
+        upgraded.emplace(std::move(server), configuration);
+        upgraded->async_handshake(std::move(prefix), shook);
+    };
+
+    const auto shake = [&](const boost_code& ec) { initiated = ec; };
+    initiator.async_handshake(shake);
+    const boost::asio::mutable_buffer out{ prefix.data(), prefix.size() };
+    boost::asio::async_read(server, out, detect);
+
     service.run();
     service.restart();
 
+    BOOST_REQUIRE(!detected);
+    BOOST_REQUIRE(!v1);
     BOOST_REQUIRE(!initiated);
     BOOST_REQUIRE(!responded);
-    BOOST_REQUIRE(!initiator.passthrough());
-    BOOST_REQUIRE(!responder.passthrough());
+
+    auto& responder = *upgraded;
     BOOST_REQUIRE_EQUAL(initiator.session_id(), responder.session_id());
 
-    // Send a short-identifier message (ping) initiator to responder.
-    const auto ping = v1_frame("ping", system::base16_chunk("0011223344556677"));
-    boost_code sent{ boost::asio::error::would_block };
-    boost::asio::async_write(initiator,
-        boost::asio::const_buffer{ ping.data(), ping.size() },
-        [&](const boost_code& ec, size_t) { sent = ec; });
-
-    data_chunk received(ping.size());
-    boost_code got{ boost::asio::error::would_block };
-    boost::asio::async_read(responder,
-        boost::asio::mutable_buffer{ received.data(), received.size() },
-        [&](const boost_code& ec, size_t) { got = ec; });
-
-    service.run();
-    service.restart();
-    BOOST_REQUIRE(!sent);
-    BOOST_REQUIRE(!got);
-    BOOST_REQUIRE_EQUAL(received, ping);
-
-    // Send an unmapped command (version, 13 byte type) responder to initiator.
-    const auto version = v1_frame("version", system::base16_chunk("deadbeef"));
-    sent = boost::asio::error::would_block;
-    boost::asio::async_write(responder,
-        boost::asio::const_buffer{ version.data(), version.size() },
-        [&](const boost_code& ec, size_t) { sent = ec; });
-
-    data_chunk reply(version.size());
-    got = boost::asio::error::would_block;
-    boost::asio::async_read(initiator,
-        boost::asio::mutable_buffer{ reply.data(), reply.size() },
-        [&](const boost_code& ec, size_t) { got = ec; });
-
-    service.run();
-    service.restart();
-    BOOST_REQUIRE(!sent);
-    BOOST_REQUIRE(!got);
-    BOOST_REQUIRE_EQUAL(reply, version);
-
-    // Piecewise heading/payload reads (channel_peer read shape).
-    const auto inv = v1_frame("inv", system::base16_chunk("00"));
-    sent = boost::asio::error::would_block;
-    boost::asio::async_write(initiator,
-        boost::asio::const_buffer{ inv.data(), inv.size() },
-        [&](const boost_code& ec, size_t) { sent = ec; });
-
-    data_chunk head(heading::size());
-    data_chunk body(inv.size() - heading::size());
-    got = boost::asio::error::would_block;
-    boost_code got_body{ boost::asio::error::would_block };
-    boost::asio::async_read(responder,
-        boost::asio::mutable_buffer{ head.data(), head.size() },
-        [&](const boost_code& ec, size_t)
+    // Read helper: one message via the native v2 read.
+    data_chunk buffer{};
+    boost_code got{};
+    uint8_t identifier{};
+    std::string command{};
+    data_chunk payload{};
+    using payload_t = v2_stream::payload_t;
+    const auto on_message =
+        [&](const boost_code& ec, uint8_t id, std::string type, payload_t data)
         {
             got = ec;
-            boost::asio::async_read(responder,
-                boost::asio::mutable_buffer{ body.data(), body.size() },
-                [&](const boost_code& code, size_t) { got_body = code; });
-        });
+            identifier = id;
+            command = type;
+            payload.assign(data.begin(), data.end());
+        };
 
+    const auto read_message = [&](v2_stream& stream)
+    {
+        got = boost::asio::error::would_block;
+        identifier = 0xff;
+        command.clear();
+        payload.clear();
+        constexpr auto maximum = network::privacy::cipher::maximum_content;
+        stream.async_read_message(buffer, maximum, on_message);
+    };
+
+    // Send a short-identifier message (ping) initiator to responder.
+    const auto ping_payload = system::base16_chunk("0011223344556677");
+    const auto ping_ptr = system::to_shared(ping_payload);
+    boost_code sent{ boost::asio::error::would_block };
+    const auto on_sent = [&](const boost_code& ec, size_t) { sent = ec; };
+    initiator.async_write_message(identifiers::ping, "", ping_ptr, on_sent);
+
+    read_message(responder);
     service.run();
     service.restart();
     BOOST_REQUIRE(!sent);
     BOOST_REQUIRE(!got);
-    BOOST_REQUIRE(!got_body);
+    BOOST_REQUIRE_EQUAL(identifier, identifiers::ping);
+    BOOST_REQUIRE(command.empty());
+    BOOST_REQUIRE_EQUAL(payload, ping_payload);
 
-    data_chunk expected_head(inv.begin(), std::next(inv.begin(), heading::size()));
-    data_chunk expected_body(std::next(inv.begin(), heading::size()), inv.end());
-    BOOST_REQUIRE_EQUAL(head, expected_head);
-    BOOST_REQUIRE_EQUAL(body, expected_body);
+    // Send an unmapped command (version, 13 byte type) responder to initiator.
+    const auto version_payload = system::base16_chunk("deadbeef");
+    const auto version_ptr = system::to_shared(version_payload);
+    const auto unassigned = identifiers::unassigned;
+    sent = boost::asio::error::would_block;
+    responder.async_write_message(unassigned, "version", version_ptr, on_sent);
+
+    read_message(initiator);
+    service.run();
+    service.restart();
+    BOOST_REQUIRE(!sent);
+    BOOST_REQUIRE(!got);
+    BOOST_REQUIRE_EQUAL(identifier, identifiers::unassigned);
+    BOOST_REQUIRE_EQUAL(command, "version");
+    BOOST_REQUIRE_EQUAL(payload, version_payload);
+
+    // A second short-identifier message reuses the buffer (inv).
+    const auto inv_payload = system::base16_chunk("00");
+    const auto inv_ptr = system::to_shared(inv_payload);
+    sent = boost::asio::error::would_block;
+    initiator.async_write_message(identifiers::inventory, "", inv_ptr, on_sent);
+
+    read_message(responder);
+    service.run();
+    service.restart();
+    BOOST_REQUIRE(!sent);
+    BOOST_REQUIRE(!got);
+    BOOST_REQUIRE_EQUAL(identifier, identifiers::inventory);
+    BOOST_REQUIRE(command.empty());
+    BOOST_REQUIRE_EQUAL(payload, inv_payload);
 }
 
-BOOST_AUTO_TEST_CASE(privacy_stream__handshake__v1_peer__passthrough_replay)
+BOOST_AUTO_TEST_CASE(privacy_stream__detected_v1__version_prefix__true)
 {
-    boost::asio::io_context service{};
-    tcp_socket server{ service };
-    tcp_socket client{ service };
-    connect_pair(service, server, client);
-
-    const v2_context configuration{ mainnet };
-    v2_stream responder{ std::move(server), configuration };
-
     // A v1 peer opens with a version message.
-    const auto version = v1_frame("version", system::base16_chunk("00112233445566778899"));
-    boost_code sent{ boost::asio::error::would_block };
-    boost::asio::async_write(client,
-        boost::asio::const_buffer{ version.data(), version.size() },
-        [&](const boost_code& ec, size_t) { sent = ec; });
+    const auto payload = system::base16_chunk("00112233445566778899");
+    const auto version = v1_frame("version", payload);
+    const auto end = std::next(version.begin(), v2_stream::detection_size);
+    const data_chunk prefix(version.begin(), end);
 
-    boost_code responded{ boost::asio::error::would_block };
-    responder.async_handshake(false, [&](const boost_code& ec) { responded = ec; });
-    service.run();
-    service.restart();
+    BOOST_REQUIRE(v2_stream::detected_v1(prefix, mainnet));
+}
 
-    BOOST_REQUIRE(!sent);
-    BOOST_REQUIRE(!responded);
-    BOOST_REQUIRE(responder.passthrough());
+BOOST_AUTO_TEST_CASE(privacy_stream__detected_v1__wrong_magic__false)
+{
+    const auto payload = system::base16_chunk("00112233445566778899");
+    const auto version = v1_frame("version", payload);
+    const auto end = std::next(version.begin(), v2_stream::detection_size);
+    const data_chunk prefix(version.begin(), end);
 
-    // The full v1 message is surfaced (detection prefix replayed).
-    data_chunk received(version.size());
-    boost_code got{ boost::asio::error::would_block };
-    boost::asio::async_read(responder,
-        boost::asio::mutable_buffer{ received.data(), received.size() },
-        [&](const boost_code& ec, size_t) { got = ec; });
+    BOOST_REQUIRE(!v2_stream::detected_v1(prefix, 0x0b110907));
+}
 
-    service.run();
-    service.restart();
-    BOOST_REQUIRE(!got);
-    BOOST_REQUIRE_EQUAL(received, version);
+BOOST_AUTO_TEST_CASE(privacy_stream__detected_v1__random_key__false)
+{
+    // An ellswift key cannot match the version prefix.
+    const v2_context configuration{ mainnet };
+    const data_chunk prefix(v2_stream::detection_size, 0x42);
+
+    BOOST_REQUIRE(!v2_stream::detected_v1(prefix, mainnet));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

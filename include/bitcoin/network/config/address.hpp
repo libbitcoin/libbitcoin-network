@@ -72,6 +72,9 @@ public:
     uint32_t timestamp() const NOEXCEPT;
     uint64_t services() const NOEXCEPT;
 
+    /// The service is advertised by the address.
+    bool is_advertised(messages::peer::service service) const NOEXCEPT;
+
     /// Operators.
     /// -----------------------------------------------------------------------
 

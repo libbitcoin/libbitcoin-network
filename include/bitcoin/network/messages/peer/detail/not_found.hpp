@@ -20,8 +20,10 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_NOT_FOUND_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -34,12 +36,13 @@ struct BCT_API not_found
 public:
     typedef std::shared_ptr<const not_found> cptr;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::not_found };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static cptr deserialize(uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+        const std::span<const uint8_t>& data) NOEXCEPT;
     static not_found deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 

@@ -85,13 +85,6 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
-    const auto payload_maximum = [](const settings& settings) NOEXCEPT
-    {
-        using namespace messages::peer;
-        return heading::maximum_payload(settings.protocol_maximum,
-            to_bool(settings.services_maximum & service::node_witness));
-    };
-
     BOOST_REQUIRE(!channel_ptr->address());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
@@ -100,7 +93,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     // TODO: compare to default instance.
     BOOST_REQUIRE(channel_ptr->peer_version());
 
-    BOOST_REQUIRE_EQUAL(channel_ptr->options().maximum_request, payload_maximum(set));
+    BOOST_REQUIRE_EQUAL(channel_ptr->options().maximum_request, maximum_request_default());
     BOOST_REQUIRE_EQUAL(channel_ptr->settings().identifier, set.identifier);
     BOOST_REQUIRE_EQUAL(channel_ptr->settings().validate_checksum, set.validate_checksum);
 

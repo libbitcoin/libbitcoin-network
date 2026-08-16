@@ -39,19 +39,14 @@ using namespace std::placeholders;
 protocol_version_70002::protocol_version_70002(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70002(session, channel,
-        session->network_settings().services_minimum,
-        session->network_settings().services_maximum,
         session->network_settings().enable_relay)
 {
 }
 
 protocol_version_70002::protocol_version_70002(const session::ptr& session,
     const channel::ptr& channel,
-    uint64_t minimum_services,
-    uint64_t maximum_services,
     bool relay) NOEXCEPT
-  : protocol_version_70001(session, channel, minimum_services, maximum_services,
-      relay),
+  : protocol_version_70001(session, channel, relay),
     tracker<protocol_version_70002>(session->log)
 {
 }

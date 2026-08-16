@@ -117,6 +117,12 @@ uint64_t address::services() const NOEXCEPT
     return address_->services;
 }
 
+bool address::is_advertised(messages::peer::service service) const NOEXCEPT
+{
+    using namespace system;
+    return get_right(address_->services, right_zeros<uint64_t>(service));
+}
+
 // Operators.
 // ----------------------------------------------------------------------------
 

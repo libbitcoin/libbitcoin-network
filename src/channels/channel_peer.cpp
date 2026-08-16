@@ -102,6 +102,16 @@ void channel_peer::set_start_height(size_t height) NOEXCEPT
     start_height_ = height;
 }
 
+frame_ptr channel_peer::create_frame() const NOEXCEPT
+{
+    const auto in = to_shared<frame>();
+    in->magic = settings().identifier;
+    in->version = negotiated_version();
+    in->checksum = settings().validate_checksum;
+    in->maximum = options().maximum_request;
+    return in;
+}
+
 uint32_t channel_peer::negotiated_version() const NOEXCEPT
 {
     return negotiated_version_;
@@ -173,12 +183,7 @@ void channel_peer::receive() NOEXCEPT
     reading_ = true;
 
     // Fresh frame stamped with parse context, fault detail carried out.
-    const auto in = to_shared<frame>();
-    in->magic = settings().identifier;
-    in->version = negotiated_version();
-    in->witness = settings().witness_node();
-    in->checksum = settings().validate_checksum;
-    in->maximum = options().maximum_request;
+    const auto in = create_frame();
 
     // Post handle_receive to strand upon message, stop, or error.
     read(payload_buffer_, *in,
@@ -236,8 +241,8 @@ void channel_peer::handle_receive(const code& ec, size_t,
     receive();
 }
 
-void channel_peer::handle_send(const code& ec, size_t,
-    const chunk_cptr& payload, const result_handler& handler) NOEXCEPT
+void channel_peer::handle_send(const code& ec, size_t LOG_ONLY(size),
+    const std::string& LOG_ONLY(command), const result_handler& handler) NOEXCEPT
 {
     if (ec)
         stop(ec);
@@ -248,12 +253,6 @@ void channel_peer::handle_send(const code& ec, size_t,
         ec != error::operation_canceled &&
         ec != error::connect_failed)
     {
-        LOG_ONLY(const auto command = payload ?
-            heading::get_command(*payload) : std::string{ "unknown" };)
-
-        LOG_ONLY(const auto size = floored_subtract(payload ?
-            payload->size() : zero, heading::command_size);)
-
         LOGF("Send failure " << command << " to [" << endpoint() << "] ("
             << size << " bytes) " << ec.message());
     }

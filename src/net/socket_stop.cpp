@@ -113,7 +113,7 @@ void socket::handle_ws_close(const boost_code& ec) NOEXCEPT
 void socket::do_ssl_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (!is_secure())
+    if (!secure())
     {
         do_stop();
         return;

@@ -21,6 +21,7 @@
 #include <utility>
 #include <variant>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/interfaces/peer_registry.hpp>
 #include <bitcoin/network/log/log.hpp>
 
 namespace libbitcoin {
@@ -57,25 +58,40 @@ void socket::do_peer_read(size_t total, const peer_state::ptr& in,
 {
     BC_ASSERT(stranded());
 
-    // The heading is read into fixed storage, the payload into the caller
-    // buffer, sized by the heading.
+    if (encrypted())
+    {
+        get_p2ps().async_read_message(in->payload, maximum_,
+            std::bind(&socket::handle_peer_read_encrypted,
+                shared_from_this(), _1, _2, _3, _4, in, handler));
+        return;
+    }
+
     const auto need = in->reader.need();
-
-    if (in->headed)
-        in->payload.resize(need);
-
+    if (in->headed) in->payload.resize(need);
     const auto data = in->headed ? in->payload.data() : in->head.data();
 
-    async_read(asio::mutable_buffer{ data, need },
+    // Drain the retained detection prefix (v1 peer) into the read.
+    const auto residue = std::min(detection_.size(), need);
+    if (!is_zero(residue))
+    {
+        const auto region = detection_.data();
+        std::copy_n(pointer_cast<const uint8_t>(region.data()), residue,
+            data);
+        detection_.consume(residue);
+    }
+
+    async_read({ std::next(data, residue), need - residue },
         std::bind(&socket::handle_peer_read,
-            shared_from_this(), _1, _2, total, in, handler));
+            shared_from_this(), _1, _2, residue, total, in, handler));
 }
 
 // private
-void socket::handle_peer_read(const code& ec, size_t size, size_t total,
-    const peer_state::ptr& in, const count_handler& handler) NOEXCEPT
+void socket::handle_peer_read(const code& ec, size_t size, size_t residue,
+    size_t total, const peer_state::ptr& in,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    size = ceilinged_add(size, residue);
     total = ceilinged_add(total, size);
 
     if (ec)
@@ -86,7 +102,7 @@ void socket::handle_peer_read(const code& ec, size_t size, size_t total,
 
     boost_code code{};
     const auto data = in->headed ? in->payload.data() : in->head.data();
-    in->reader.put(asio::const_buffer{ data, size }, code);
+    in->reader.put({ data, size }, code);
 
     if (code)
     {
@@ -105,12 +121,63 @@ void socket::handle_peer_read(const code& ec, size_t size, size_t total,
     do_peer_read(total, in, handler);
 }
 
+// private
+void socket::handle_peer_read_encrypted(const boost_code& ec,
+    uint8_t identifier, const std::string& command,
+    const std::span<const uint8_t>& payload, const peer_state::ptr& in,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        handler(error::asio_to_error_code(ec), in->payload.size());
+        return;
+    }
+
+    boost_code code{};
+    in->reader.put(identifier, command, payload, code);
+    handler(error::http_to_error_code(code), in->payload.size());
+}
+
 void socket::peer_write(frame&& message,
     count_handler&& handler) NOEXCEPT
 {
-    http::response out{};
-    out.body() = std::move(message);
-    body_write(std::move(out), std::move(handler));
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_peer_write,
+            shared_from_this(), emplace_shared<frame>(std::move(message)),
+            std::move(handler)));
+}
+
+// private
+void socket::do_peer_write(const frame_ptr& out,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (encrypted())
+    {
+        using registry = rpc::peer_registry;
+        const auto payload = registry::to_payload(out->index, out->message,
+            out->version);
+
+        if (!payload || out->index >= registry::size)
+        {
+            handler(error::bad_stream, zero);
+            return;
+        }
+
+        get_p2ps().async_write_message(
+            registry::identifiers().at(out->index),
+            std::string{ registry::commands().at(out->index) }, payload,
+            std::bind(&socket::handle_async,
+                shared_from_this(), _1, _2, handler, "async_write_message"));
+        return;
+    }
+
+    http::response response{};
+    response.body() = std::move(*out);
+    body_write(std::move(response), count_handler{ handler });
 }
 
 BC_POP_WARNING()

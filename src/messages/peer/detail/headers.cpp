@@ -41,9 +41,9 @@ constexpr uint8_t trail = 0x00;
 
 // static
 typename headers::cptr headers::deserialize(uint32_t version,
-    const data_chunk& data) NOEXCEPT
+    const std::span<const uint8_t>& data) NOEXCEPT
 {
-    system::istream source{ data };
+    system::istream source{ { data.begin(), data.end() } };
     system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     if (!reader)

@@ -119,6 +119,7 @@
 #include <bitcoin/network/messages/peer/detail/version.hpp>
 #include <bitcoin/network/messages/peer/detail/version_acknowledge.hpp>
 #include <bitcoin/network/messages/peer/detail/witness_tx_id_relay.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>
@@ -142,7 +143,6 @@
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/privacy/cipher.hpp>
-#include <bitcoin/network/privacy/commands.hpp>
 #include <bitcoin/network/privacy/context.hpp>
 #include <bitcoin/network/privacy/privacy.hpp>
 #include <bitcoin/network/privacy/stream.hpp>

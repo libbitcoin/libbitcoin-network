@@ -23,7 +23,9 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_GET_CLIENT_FILTERS_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -34,14 +36,15 @@ struct BCT_API get_client_filters
 {
     typedef std::shared_ptr<const get_client_filters> cptr;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::get_client_filters };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static size_t size(uint32_t version) NOEXCEPT;
 
     static cptr deserialize(uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+        const std::span<const uint8_t>& data) NOEXCEPT;
     static get_client_filters deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 

@@ -157,7 +157,7 @@ code socket::accept_websocket(const http::request& request) NOEXCEPT
         else
         {
             // Extract before emplacing back to same variant.
-            auto ws = std::move(std::get<asio::socket>(socket_));
+            auto ws = std::move(get_base());
             socket_.emplace<ws::socket>(std::move(ws));
 
             auto& sock = std::get<ws::socket>(socket_);

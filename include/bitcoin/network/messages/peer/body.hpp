@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_BODY_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>
@@ -51,7 +52,11 @@ struct BCT_API body
         /// Type-erased deserialized message (read out).
         rpc::any_t payload{};
 
-        /// Serialized frame from peer::serialize (write in).
+        /// Type-erased message with its registry index (write in).
+        rpc::any_t message{};
+        size_t index{};
+
+        /// Serialized v1 frame (write out).
         system::chunk_cptr data{};
     };
 
@@ -82,6 +87,10 @@ struct BCT_API body
         void finish(boost_code& ec) NOEXCEPT;
         bool done() const NOEXCEPT;
 
+        /// Accept the payload of the identified message (v2).
+        void put(uint8_t identifier, const std::string& command,
+            const std::span<const uint8_t>& payload, boost_code& ec) NOEXCEPT;
+
         /// Bytes required to advance the parse (zero when done).
         size_t need() const NOEXCEPT;
 
@@ -92,7 +101,7 @@ struct BCT_API body
         const system::data_chunk* payload_{};
 
     private:
-        bool accept(const system::data_chunk& payload,
+        bool accept(const std::span<const uint8_t>& payload,
             boost_code& ec) NOEXCEPT;
 
         size_t need_{};

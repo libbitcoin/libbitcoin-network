@@ -53,6 +53,11 @@ protocol_peer::protocol_peer(const session::ptr& session,
 // handshake protocol operation. Thread safety requires that setters are never
 // invoked outside of the handshake protocol (start handler).
 
+bool protocol_peer::encrypted() const NOEXCEPT
+{
+    return channel_->encrypted();
+}
+
 size_t protocol_peer::start_height() const NOEXCEPT
 {
     return channel_->start_height();
@@ -83,7 +88,7 @@ void protocol_peer::set_negotiated_version(uint32_t value) NOEXCEPT
 address protocol_peer::selfs() const NOEXCEPT
 {
     const auto time_now = unix_time();
-    const auto services = network_settings().services_maximum;
+    const auto services = session_->services_provided();
     const auto& selfs = network_settings().inbound.selfs;
 
     address message{};

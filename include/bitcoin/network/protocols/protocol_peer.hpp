@@ -55,6 +55,9 @@ protected:
     /// Properties.
     /// -----------------------------------------------------------------------
 
+    /// The channel was upgraded to encrypted transport (bip324).
+    virtual bool encrypted() const NOEXCEPT;
+
     /// The start height (for version message).
     virtual size_t start_height() const NOEXCEPT;
 

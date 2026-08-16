@@ -20,7 +20,9 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_TRANSACTION_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -32,11 +34,12 @@ struct BCT_API transaction
 {
     typedef std::shared_ptr<const transaction> cptr;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::transaction };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
-    static cptr deserialize(uint32_t version, const system::data_chunk& data,
+    static cptr deserialize(uint32_t version, const std::span<const uint8_t>& data,
         bool witness=true) NOEXCEPT;
     static transaction deserialize(uint32_t version, system::reader& source,
         bool witness=true) NOEXCEPT;

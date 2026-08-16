@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace network {
 namespace privacy {
 
-/// The bip324 (v2) transport session cipher.
+/// The bip324 (v2) transport (p2ps) session cipher.
 /// This is to be used only for ephemeral network session keys.
 /// Construction generates an ephemeral keypair. Once the peer key is known,
 /// initialize() derives the directional packet ciphers, garbage terminators
@@ -37,7 +37,7 @@ class BCT_API cipher final
 public:
     DELETE_COPY_MOVE(cipher);
 
-    /// bip324 constants.
+    /// Constants.
     static constexpr size_t key_size = system::ec_ellswift_size;
     static constexpr size_t terminator_size = 16;
     static constexpr size_t length_size = 3;
@@ -81,15 +81,17 @@ public:
     /// Decrypt an encrypted packet length (advances the length cipher).
     size_t decrypt_length(std::span<const uint8_t> in) NOEXCEPT;
 
-    /// Decrypt packet remainder into contents, setting the decoy indicator.
-    /// in = header + contents + tag, contents = in size - header - tag.
-    /// False if the tag does not authenticate.
-    bool decrypt(std::span<uint8_t> contents, std::span<const uint8_t> aad,
-        bool& ignore, std::span<const uint8_t> in) NOEXCEPT;
+    /// Decrypt packet remainder into plain, setting the decoy indicator.
+    /// in = header + contents + tag, plain = header + contents.
+    /// plain may alias in exactly (same offset), for in-place decryption.
+    /// False if the tag does not authenticate (plain is wiped).
+    bool decrypt(const std::span<uint8_t>& plain,
+        const std::span<const uint8_t>& aad, bool& ignore,
+        const std::span<const uint8_t>& in) NOEXCEPT;
 
 private:
-    system::ec_secret secret_;
     key key_;
+    system::ec_secret secret_;
     terminator send_terminator_{};
     terminator receive_terminator_{};
     system::hash_digest session_id_{};

@@ -105,11 +105,12 @@ BOOST_AUTO_TEST_CASE(privacy_cipher__round_trip__both_directions__expected)
     BOOST_REQUIRE_EQUAL(length, contents.size());
 
     bool ignore{ true };
-    data_chunk decrypted(length);
+    data_chunk decrypted(cipher::header_size + length);
     const std::span<const uint8_t> rest{ std::next(packet.data(), cipher::length_size), packet.size() - cipher::length_size };
     BOOST_REQUIRE(beta.decrypt(decrypted, aad, ignore, rest));
     BOOST_REQUIRE(!ignore);
-    BOOST_REQUIRE_EQUAL(decrypted, contents);
+    const data_chunk payload(std::next(decrypted.begin()), decrypted.end());
+    BOOST_REQUIRE_EQUAL(payload, contents);
 
     // Reply direction.
     data_chunk reply(contents.size() + cipher::expansion);
@@ -118,11 +119,12 @@ BOOST_AUTO_TEST_CASE(privacy_cipher__round_trip__both_directions__expected)
     const auto reply_length = alpha.decrypt_length(std::span<const uint8_t>{ reply.data(), cipher::length_size });
     BOOST_REQUIRE_EQUAL(reply_length, contents.size());
 
-    data_chunk reply_decrypted(reply_length);
+    data_chunk reply_decrypted(cipher::header_size + reply_length);
     const std::span<const uint8_t> reply_rest{ std::next(reply.data(), cipher::length_size), reply.size() - cipher::length_size };
     BOOST_REQUIRE(alpha.decrypt(reply_decrypted, {}, ignore, reply_rest));
     BOOST_REQUIRE(ignore);
-    BOOST_REQUIRE_EQUAL(reply_decrypted, contents);
+    const data_chunk reply_payload(std::next(reply_decrypted.begin()), reply_decrypted.end());
+    BOOST_REQUIRE_EQUAL(reply_payload, contents);
 }
 
 // Tampered packets do not authenticate.
@@ -142,7 +144,7 @@ BOOST_AUTO_TEST_CASE(privacy_cipher__decrypt__tampered__false)
     BOOST_REQUIRE_EQUAL(length, contents.size());
 
     bool ignore{};
-    data_chunk decrypted(length);
+    data_chunk decrypted(cipher::header_size + length);
     const std::span<const uint8_t> rest{ std::next(packet.data(), cipher::length_size), packet.size() - cipher::length_size };
     BOOST_REQUIRE(!beta.decrypt(decrypted, {}, ignore, rest));
 }

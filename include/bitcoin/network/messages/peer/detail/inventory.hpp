@@ -20,9 +20,11 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_INVENTORY_HPP
 
 #include <memory>
+#include <span>
 #include <ranges>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -37,9 +39,10 @@ struct BCT_API inventory
     typedef inventory_item::type_id type_id;
     typedef inventory_item item;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::inventory };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     // TODO: parameterize with witness parameter (once node is ready).
     static inventory factory(system::hashes&& hashes,
@@ -48,7 +51,7 @@ struct BCT_API inventory
         type_id type) NOEXCEPT;
 
     static cptr deserialize(uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+        const std::span<const uint8_t>& data) NOEXCEPT;
     static inventory deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 

@@ -41,26 +41,14 @@ using namespace system;
 using namespace messages::peer;
 using namespace std::placeholders;
 
-// Require the configured minimum protocol and services by default.
 protocol_version_106::protocol_version_106(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
-  : protocol_version_106(session, channel,
-      session->network_settings().services_minimum,
-      session->network_settings().services_maximum)
-{
-}
-
-// Used for seeding (should probably not override these).
-protocol_version_106::protocol_version_106(const session::ptr& session,
-    const channel::ptr& channel,
-    uint64_t minimum_services,
-    uint64_t maximum_services) NOEXCEPT
   : protocol_peer(session, channel),
     inbound_(channel->inbound()),
     minimum_version_(session->network_settings().protocol_minimum),
     maximum_version_(session->network_settings().protocol_maximum),
-    minimum_services_(minimum_services),
-    maximum_services_(maximum_services),
+    required_services_(session->services_required()),
+    provided_services_(session->services_provided()),
     invalid_services_(session->network_settings().invalid_services),
     maximum_skew_minutes_(session->network_settings().maximum_skew_minutes),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),
@@ -83,7 +71,7 @@ messages::peer::version protocol_version_106::version_factory(
     return
     {
         maximum_version_,
-        maximum_services_,
+        provided_services_,
         timestamp,
 
         // ********************************************************************
@@ -109,7 +97,7 @@ messages::peer::version protocol_version_106::version_factory(
         address_item
         {
             timestamp,
-            maximum_services_,
+            provided_services_,
             network_settings().inbound.first_self().to_ip_address(),
             network_settings().inbound.first_self().port(),
         },
@@ -321,8 +309,9 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     ////    "/BitcoinFinance:");
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
-    LOGN(prefix << " [" << opposite() << "] version (" << message->value
-        << ") " << user_agent);
+    LOG_ONLY(const auto security = (encrypted() ? "private" : "-clear-");)
+    LOGN(prefix << " " << security << " [" << opposite() << "] version ("
+        << message->value << ") " << user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {
@@ -335,7 +324,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     }
 
     // Advertised services on many incoming connections are set to zero.
-    if ((message->services & minimum_services_) != minimum_services_)
+    if ((message->services & required_services_) != required_services_)
     {
         LOGR("Insufficient services (" << message->services << ") by ["
             << opposite() << "] showing (" << outbound().services() << ") "

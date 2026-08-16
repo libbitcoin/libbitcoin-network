@@ -35,9 +35,9 @@ const uint32_t transaction::version_maximum = level::maximum_protocol;
 
 // static
 typename transaction::cptr transaction::deserialize(uint32_t version,
-    const data_chunk& data, bool witness) NOEXCEPT
+    const std::span<const uint8_t>& data, bool witness) NOEXCEPT
 {
-    system::istream source{ data };
+    system::istream source{ { data.begin(), data.end() } };
     system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader, witness));
     if (!reader)

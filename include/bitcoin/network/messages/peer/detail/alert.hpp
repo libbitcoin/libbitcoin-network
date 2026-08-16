@@ -20,8 +20,10 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_ALERT_HPP
 
 #include <memory>
+#include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/detail/alert_item.hpp>
+#include <bitcoin/network/messages/peer/enums/identifiers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -32,12 +34,13 @@ struct BCT_API alert
 {
     typedef std::shared_ptr<const alert> cptr;
 
-    static const std::string command;
+    static constexpr uint8_t identifier{ identifiers::unassigned };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
+    static const std::string command;
 
     static cptr deserialize(uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+        const std::span<const uint8_t>& data) NOEXCEPT;
     static alert deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 

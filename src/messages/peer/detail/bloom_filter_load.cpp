@@ -35,9 +35,9 @@ const uint32_t bloom_filter_load::version_maximum = level::maximum_protocol;
 
 // static
 typename bloom_filter_load::cptr bloom_filter_load::deserialize(
-    uint32_t version, const system::data_chunk& data) NOEXCEPT
+    uint32_t version, const std::span<const uint8_t>& data) NOEXCEPT
 {
-    system::istream source{ data };
+    system::istream source{ { data.begin(), data.end() } };
     system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;

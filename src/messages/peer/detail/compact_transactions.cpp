@@ -36,9 +36,9 @@ const uint32_t compact_transactions::version_maximum = level::maximum_protocol;
 
 // static
 typename compact_transactions::cptr compact_transactions::deserialize(
-    uint32_t version, const system::data_chunk& data, bool witness) NOEXCEPT
+    uint32_t version, const std::span<const uint8_t>& data, bool witness) NOEXCEPT
 {
-    system::istream source{ data };
+    system::istream source{ { data.begin(), data.end() } };
     system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader, witness));
     return reader ? message : nullptr;

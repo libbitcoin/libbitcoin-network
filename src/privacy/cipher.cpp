@@ -30,7 +30,7 @@ using namespace system;
 BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 BC_PUSH_WARNING(NO_DYNAMIC_ARRAY_INDEXING)
 
-// bip324 key derivation salt prefix.
+// key derivation salt prefix.
 constexpr char salt_label[] = "bitcoin_v2_shared_secret";
 
 // This is to be used only for ephemeral network session keys.
@@ -54,7 +54,7 @@ static hash_digest entropy() NOEXCEPT
 }
 
 cipher::cipher() NOEXCEPT
-  : secret_{}, key_{}
+  : key_{}, secret_{}
 {
     // A secret outside the group order is astronomically improbable.
     do
@@ -65,7 +65,7 @@ cipher::cipher() NOEXCEPT
 }
 
 cipher::cipher(const ec_secret& secret, const key& public_key) NOEXCEPT
-  : secret_(secret), key_(public_key)
+  : key_(public_key), secret_(secret)
 {
 }
 
@@ -77,7 +77,6 @@ const cipher::key& cipher::public_key() const NOEXCEPT
 bool cipher::initialize(const key& theirs, uint32_t identifier,
     bool initiating) NOEXCEPT
 {
-    // bip324
     // The initiating party is party a in the ecdh tagged hash.
     hash_digest ecdh{};
     const auto& key_a = initiating ? key_ : theirs;
@@ -85,7 +84,6 @@ bool cipher::initialize(const key& theirs, uint32_t identifier,
     if (!ellswift::exchange(ecdh, secret_, key_a, key_b, !initiating))
         return false;
 
-    // bip324
     // salt = "bitcoin_v2_shared_secret" + network magic bytes.
     const auto salt = build_chunk(
     {
@@ -93,7 +91,6 @@ bool cipher::initialize(const key& theirs, uint32_t identifier,
         to_little_endian(identifier)
     });
 
-    // bip324
     // HKDF-SHA256 extraction, with per-key expansion by label.
     const auto prk = hkdf<sha256>::extract(ecdh, salt);
     ecdh = {};
@@ -108,7 +105,6 @@ bool cipher::initialize(const key& theirs, uint32_t identifier,
     hkdf<sha256>::expand(okm, prk, to_chunk("responder_P"));
     (initiating ? receive_packet_ : send_packet_).emplace(okm, rekey_interval);
 
-    // bip324
     // The initiator terminator is the first half of the expansion.
     hkdf<sha256>::expand(okm, prk, to_chunk("garbage_terminators"));
     auto& initiator = initiating ? send_terminator_ : receive_terminator_;
@@ -145,18 +141,10 @@ void cipher::encrypt(std::span<const uint8_t> contents,
     BC_ASSERT(out.size() == contents.size() + expansion);
     BC_ASSERT(contents.size() <= maximum_content);
 
-    // bip324
-    // The three byte little-endian contents length is independently encrypted.
-    const data_array<length_size> length
-    {
-        narrow_cast<uint8_t>(bit_and<size_t>(contents.size(), 0xff)),
-        narrow_cast<uint8_t>(bit_and<size_t>(shift_right(contents.size(), 8u), 0xff)),
-        narrow_cast<uint8_t>(bit_and<size_t>(shift_right(contents.size(), 16u), 0xff))
-    };
-
+    // The three byte little-endian content length is independently encrypted.
+    const auto length = to_little_endian_size<length_size>(contents.size());
     send_length_->crypt(length, out.first(length_size));
 
-    // bip324
     // The header byte (ignore bit) is prepended to contents for encryption.
     const data_array<header_size> header{ ignore ? ignore_bit : 0x00_u8 };
     data_chunk plain{};
@@ -172,24 +160,19 @@ size_t cipher::decrypt_length(std::span<const uint8_t> in) NOEXCEPT
 
     data_array<length_size> length{};
     receive_length_->crypt(in, length);
-
-    return
-        (static_cast<size_t>(length[0])) |
-        (static_cast<size_t>(length[1]) << 8u) |
-        (static_cast<size_t>(length[2]) << 16u);
+    return from_little_array<size_t>(length);
 }
 
-bool cipher::decrypt(std::span<uint8_t> contents, std::span<const uint8_t> aad,
-    bool& ignore, std::span<const uint8_t> in) NOEXCEPT
+bool cipher::decrypt(const std::span<uint8_t>& plain,
+    const std::span<const uint8_t>& aad, bool& ignore,
+    const std::span<const uint8_t>& in) NOEXCEPT
 {
-    BC_ASSERT(in.size() == contents.size() + header_size + tag_size);
+    BC_ASSERT(in.size() == plain.size() + tag_size);
 
-    data_chunk plain(header_size + contents.size());
     if (!receive_packet_->decrypt(plain, aad, in))
         return false;
 
     ignore = to_bool(bit_and(plain.front(), ignore_bit));
-    std::copy(std::next(plain.begin()), plain.end(), contents.begin());
     return true;
 }
 

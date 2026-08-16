@@ -87,9 +87,9 @@ heading heading::factory(uint32_t magic, const std::string& command,
 }
 
 // static
-heading::cptr heading::deserialize(const data_chunk& data) NOEXCEPT
+heading::cptr heading::deserialize(const std::span<const uint8_t>& data) NOEXCEPT
 {
-    system::istream source{ data };
+    system::istream source{ { data.begin(), data.end() } };
     system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(reader));
     return reader ? message : nullptr;

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_INTERFACES_PEER_REGISTRY_HPP
 
 #include <array>
+#include <span>
 #include <tuple>
 #include <utility>
 #include <bitcoin/network/define.hpp>
@@ -30,9 +31,7 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// The peer message set, derived from the dispatch interface. Command, index
-/// and deserialization are obtained from one declaration, so a message cannot
-/// be dispatchable yet unrecognized (or the reverse).
+/// The peer message set, derived from the dispatch interface.
 struct peer_registry
 {
     using methods_t = decltype(peer_dispatch::methods);
@@ -43,8 +42,9 @@ struct peer_registry
 
     /// The message type registered at index.
     template <size_t Index>
-    using cptr_t = std::tuple_element_t<zero,
-        args_native_t<method_t<Index, methods_t>>>;
+    using arguments_t = args_native_t<method_t<Index, methods_t>>;
+    template <size_t Index>
+    using cptr_t = std::tuple_element_t<zero, arguments_t<Index>>;
     template <size_t Index>
     using message_t = std::remove_const_t<typename cptr_t<Index>::element_type>;
 
@@ -52,17 +52,24 @@ struct peer_registry
     template <size_t Index>
     static constexpr auto command = method_t<Index, methods_t>::name;
 
+    /// The numeric identifier registered at index.
+    template <size_t Index>
+    static constexpr auto identifier = message_t<Index>::identifier;
+
     using commands_t = std::array<std::string_view, size>;
+    using identifiers_t = std::array<uint8_t, size>;
 
 private:
-    using deserializer_t = any_t(*)(const system::data_chunk&, uint32_t, bool);
+    using span_t = std::span<const uint8_t>;
+    using deserializer_t = any_t(*)(const span_t&, uint32_t, bool);
     using deserializers_t = std::array<deserializer_t, size>;
+    using serializer_t = system::chunk_ptr(*)(const any_t&, uint32_t, uint32_t);
+    using serializers_t = std::array<serializer_t, size>;
+    using payloader_t = system::chunk_ptr(*)(const any_t&, uint32_t);
+    using payloaders_t = std::array<payloader_t, size>;
 
-    /// Helpers are defined before use, as constant evaluation requires it.
-
-    /// The witness parameter is detected, as only some messages carry it.
     template <size_t Index>
-    static any_t deserialize(const system::data_chunk& data, uint32_t version,
+    static any_t deserialize(const span_t& data, uint32_t version,
         bool witness) NOEXCEPT
     {
         using message = message_t<Index>;
@@ -76,11 +83,65 @@ private:
         return message_ptr ? any_t{ message_ptr } : any_t{};
     }
 
+    template <size_t Index>
+    static system::chunk_ptr serialize(const any_t& message, uint32_t magic,
+        uint32_t version) NOEXCEPT
+    {
+        const auto ptr = message.get<const message_t<Index>>();
+        return ptr ? messages::peer::serialize(*ptr, magic, version) :
+            system::chunk_ptr{};
+    }
+
+    template <size_t Index>
+    static system::chunk_ptr serialize_payload(const any_t& message,
+        uint32_t version) NOEXCEPT
+    {
+        const auto ptr = message.get<const message_t<Index>>();
+        return ptr ? messages::peer::serialize(*ptr, version) :
+            system::chunk_ptr{};
+    }
+
+    template <size_t... Index>
+    static constexpr serializers_t make_serializers(
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        return { &peer_registry::serialize<Index>... };
+    }
+
+    template <size_t... Index>
+    static constexpr payloaders_t make_payloaders(
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        return { &peer_registry::serialize_payload<Index>... };
+    }
+
     template <size_t... Index>
     static constexpr commands_t make_commands(
         std::index_sequence<Index...>) NOEXCEPT
     {
         return { command<Index>... };
+    }
+
+    template <size_t... Index>
+    static constexpr identifiers_t make_identifiers(
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        return { identifier<Index>... };
+    }
+
+    template <size_t... Index>
+    static constexpr size_t to_index(uint8_t id,
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        auto found = unknown;
+        const auto match = [&](size_t at, uint8_t assigned) NOEXCEPT
+        {
+            const auto same = !is_zero(assigned) && assigned == id;
+            return same ? ((found = at), true) : false;
+        };
+
+        (match(Index, identifier<Index>) || ...);
+        return found;
     }
 
     template <size_t... Index>
@@ -95,12 +156,13 @@ private:
         std::index_sequence<Index...>) NOEXCEPT
     {
         auto found = unknown;
-        const auto match = [&](size_t at, std::string_view name) NOEXCEPT
+        const auto match = [&](size_t at, const std::string_view& name) NOEXCEPT
         {
-            return name == command ? ((found = at), true) : false;
+            const auto same = name == command;
+            return same ? ((found = at), true) : false;
         };
 
-        (void)(match(Index, peer_registry::command<Index>) || ...);
+        (match(Index, peer_registry::command<Index>) || ...);
         return found;
     }
 
@@ -113,12 +175,11 @@ private:
             return same ? ((found = at), true) : false;
         };
 
-        (void)(match(Index, std::is_same_v<Message, message_t<Index>>) || ...);
+        (match(Index, std::is_same_v<Message, message_t<Index>>) || ...);
         return found;
     }
 
 public:
-    /// The registered commands, ordered by index.
     static const commands_t& commands() NOEXCEPT
     {
         static constexpr auto table = make_commands(
@@ -127,22 +188,31 @@ public:
         return table;
     }
 
-    /// Index of the command, unknown if not registered.
+    static const identifiers_t& identifiers() NOEXCEPT
+    {
+        static constexpr auto table = make_identifiers(
+            std::make_index_sequence<size>{});
+
+        return table;
+    }
+
     static constexpr size_t index(const std::string_view& command) NOEXCEPT
     {
         return to_index(command, std::make_index_sequence<size>{});
     }
 
-    /// Index of the message type, unknown if not registered.
+    static constexpr size_t index(uint8_t id) NOEXCEPT
+    {
+        return to_index(id, std::make_index_sequence<size>{});
+    }
+
     template <class Message>
     static constexpr size_t index_of() NOEXCEPT
     {
         return to_index_of<Message>(std::make_index_sequence<size>{});
     }
 
-    /// Deserialize the payload as the message registered at index.
-    /// Returns an empty any_t if the index is unknown or the parse fails.
-    static any_t to_any(size_t index, const system::data_chunk& data,
+    static any_t to_any(size_t index, const std::span<const uint8_t>& data,
         uint32_t version, bool witness) NOEXCEPT
     {
         static constexpr auto table = make_deserializers(
@@ -150,6 +220,26 @@ public:
 
         return index < size ? table.at(index)(data, version, witness) :
             any_t{};
+    }
+
+    static system::chunk_ptr to_frame(size_t index, const any_t& message,
+        uint32_t magic, uint32_t version) NOEXCEPT
+    {
+        static constexpr auto table = make_serializers(
+            std::make_index_sequence<size>{});
+
+        return index < size ? table.at(index)(message, magic, version) :
+            system::chunk_ptr{};
+    }
+
+    static system::chunk_ptr to_payload(size_t index, const any_t& message,
+        uint32_t version) NOEXCEPT
+    {
+        static constexpr auto table = make_payloaders(
+            std::make_index_sequence<size>{});
+
+        return index < size ? table.at(index)(message, version) :
+            system::chunk_ptr{};
     }
 };
 
