@@ -560,7 +560,7 @@ protected:
     const size_t maximum_;
     asio::strand strand_;
     asio::context& service_;
-    const context& context_;
+    const context context_;
     std::atomic_bool stopped_{};
     std::atomic_bool websocket_{};
 
