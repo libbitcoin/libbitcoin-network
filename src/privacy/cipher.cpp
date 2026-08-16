@@ -141,14 +141,8 @@ void cipher::encrypt(std::span<const uint8_t> contents,
     BC_ASSERT(out.size() == contents.size() + expansion);
     BC_ASSERT(contents.size() <= maximum_content);
 
-    // The three byte little-endian contents length is independently encrypted.
-    const data_array<length_size> length
-    {
-        narrow_cast<uint8_t>(bit_and<size_t>(contents.size(), 0xff)),
-        narrow_cast<uint8_t>(bit_and<size_t>(shift_right(contents.size(), 8u), 0xff)),
-        narrow_cast<uint8_t>(bit_and<size_t>(shift_right(contents.size(), 16u), 0xff))
-    };
-
+    // The three byte little-endian content length is independently encrypted.
+    const auto length = to_little_endian_size<length_size>(contents.size());
     send_length_->crypt(length, out.first(length_size));
 
     // The header byte (ignore bit) is prepended to contents for encryption.
@@ -166,11 +160,7 @@ size_t cipher::decrypt_length(std::span<const uint8_t> in) NOEXCEPT
 
     data_array<length_size> length{};
     receive_length_->crypt(in, length);
-
-    return
-        (static_cast<size_t>(length[0])) |
-        (static_cast<size_t>(length[1]) << 8u) |
-        (static_cast<size_t>(length[2]) << 16u);
+    return from_little_array<size_t>(length);
 }
 
 bool cipher::decrypt(const std::span<uint8_t>& plain,
