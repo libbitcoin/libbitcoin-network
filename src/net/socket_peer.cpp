@@ -58,7 +58,7 @@ void socket::do_peer_read(size_t total, const peer_state::ptr& in,
 {
     BC_ASSERT(stranded());
 
-    if (is_encrypted())
+    if (encrypted())
     {
         get_p2ps().async_read_message(in->payload, maximum_,
             std::bind(&socket::handle_peer_read_encrypted,
@@ -155,7 +155,7 @@ void socket::do_peer_write(const frame_ptr& out,
 {
     BC_ASSERT(stranded());
 
-    if (is_encrypted())
+    if (encrypted())
     {
         using registry = rpc::peer_registry;
         const auto payload = registry::to_payload(out->index, out->message,

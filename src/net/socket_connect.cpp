@@ -179,7 +179,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
     ////BC_ASSERT(stranded());
 
-    if (encrypted())
+    if (std::holds_alternative<cref<privacy::context>>(context_))
     {
         // The accepted peer is detected as v1 or v2 before upgrade.
         if (inbound_)
@@ -205,7 +205,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
         return;
     }
 
-    if (secure())
+    if (std::holds_alternative<ref<asio::ssl::context>>(context_))
     {
         const auto direction = inbound_ ?
             boost::asio::ssl::stream_base::server :

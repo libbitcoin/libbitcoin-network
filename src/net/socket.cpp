@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2011-2026 libbitcoin developers
  *
  * This file is part of libbitcoin.
@@ -129,43 +129,29 @@ const config::endpoint& socket::endpoint() const NOEXCEPT
     return endpoint_;
 }
 
-// Context (configured upgrade, thread safe).
+// Variant state (protected by strand).
 // ----------------------------------------------------------------------------
-// protected
 
 // TODO: zmq::context.
 
 bool socket::secure() const NOEXCEPT
-{
-    return std::holds_alternative<ref<asio::ssl::context>>(context_);
-}
-
-bool socket::encrypted() const NOEXCEPT
-{
-    return std::holds_alternative<cref<privacy::context>>(context_);
-}
-
-// Variant state (protected by strand).
-// ----------------------------------------------------------------------------
-// protected
-
-bool socket::is_base() const NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    return std::holds_alternative<asio::socket>(socket_);
-}
-
-bool socket::is_secure() const NOEXCEPT
 {
     BC_ASSERT(stranded());
     return std::holds_alternative<asio::ssl::socket>(socket_) ||
         std::holds_alternative<ws::ssl::socket>(socket_);
 }
 
-bool socket::is_encrypted() const NOEXCEPT
+bool socket::encrypted() const NOEXCEPT
 {
     BC_ASSERT(stranded());
     return std::holds_alternative<privacy::stream>(socket_);
+}
+
+// protected
+bool socket::is_base() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return std::holds_alternative<asio::socket>(socket_);
 }
 
 // Variant accessors.
@@ -262,7 +248,7 @@ asio::socket& socket::get_base() NOEXCEPT
 asio::ssl::socket& socket::get_ssl() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(is_secure());
+    BC_ASSERT(secure());
 
     return std::visit(overload
     {
@@ -292,7 +278,7 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
 privacy::stream& socket::get_p2ps() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(is_encrypted());
+    BC_ASSERT(encrypted());
 
     return std::visit(overload
     {

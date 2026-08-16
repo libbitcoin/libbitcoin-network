@@ -267,7 +267,7 @@ bool proxy::secure() const NOEXCEPT
 
 bool proxy::encrypted() const NOEXCEPT
 {
-    return socket_->is_encrypted();
+    return socket_->encrypted();
 }
 
 bool proxy::websocket() const NOEXCEPT
