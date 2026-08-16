@@ -43,8 +43,8 @@ public:
 
     /// Construct a version protocol instance using parameterized services.
     protocol_version_70016(const session::ptr& session,
-        const channel::ptr& channel, uint64_t minimum_services,
-        uint64_t maximum_services, bool relay, bool reject) NOEXCEPT;
+        const channel::ptr& channel, uint64_t required_services,
+        uint64_t provided_services, bool relay, bool reject) NOEXCEPT;
 
     /// Perform the handshake (requires strand), handler invoked on completion.
     void shake(result_handler&& handle_event) NOEXCEPT override;

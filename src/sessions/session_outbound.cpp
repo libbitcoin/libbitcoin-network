@@ -244,7 +244,7 @@ void session_outbound::handle_connect(const code& ec,
 void session_outbound::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) NOEXCEPT
 {
-    // outbound session requires peer has minimum_services.
+    // outbound session requires peer provides services_required.
     session_peer::attach_handshake(channel, std::move(handler));
 }
 

@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.address_lower, 5u);
     BOOST_REQUIRE_EQUAL(instance.protocol_maximum, level::maximum_protocol);
     BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
-    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
+    BOOST_REQUIRE_EQUAL(instance.services_provided, service::node_none);
+    BOOST_REQUIRE_EQUAL(instance.services_required, service::node_none);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_address, false);
     BOOST_REQUIRE_EQUAL(instance.enable_address_v2, false);
@@ -89,21 +89,8 @@ BOOST_AUTO_TEST_CASE(settings__pruned_node__default__false)
 BOOST_AUTO_TEST_CASE(settings__pruned_node__node_network_limited__true)
 {
     settings instance{ system::chain::selection::mainnet };
-    instance.services_maximum = service::node_network_limited;
+    instance.services_provided = service::node_network_limited;
     BOOST_REQUIRE(instance.pruned_node());
-}
-
-BOOST_AUTO_TEST_CASE(settings__encrypt_node__default__false)
-{
-    settings instance{ system::chain::selection::mainnet };
-    BOOST_REQUIRE(!instance.encrypt_node());
-}
-
-BOOST_AUTO_TEST_CASE(settings__encrypt_node__node_encrypted_transport__true)
-{
-    settings instance{ system::chain::selection::mainnet };
-    instance.services_minimum = service::node_encrypted_transport;
-    BOOST_REQUIRE(instance.encrypt_node());
 }
 
 BOOST_AUTO_TEST_CASE(settings__witness_node__default__false)
@@ -115,8 +102,21 @@ BOOST_AUTO_TEST_CASE(settings__witness_node__default__false)
 BOOST_AUTO_TEST_CASE(settings__witness_node__node_witness__true)
 {
     settings instance{ system::chain::selection::mainnet };
-    instance.services_minimum = service::node_witness;
+    instance.services_provided = service::node_witness;
     BOOST_REQUIRE(instance.witness_node());
+}
+
+BOOST_AUTO_TEST_CASE(settings__encrypted_node__default__false)
+{
+    settings instance{ system::chain::selection::mainnet };
+    BOOST_REQUIRE(!instance.encrypted_node());
+}
+
+BOOST_AUTO_TEST_CASE(settings__encrypted_node__node_encrypted_transport__true)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.services_provided = service::node_encrypted_transport;
+    BOOST_REQUIRE(instance.encrypted_node());
 }
 
 BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__between_zero_and_retry_timeout_seconds)
@@ -166,9 +166,9 @@ BOOST_AUTO_TEST_CASE(settings__insufficient__default__false)
     settings instance{ system::chain::selection::mainnet };
     constexpr uint64_t services = 0;
     constexpr messages::peer::address_item loop{ 42, services, loopback_ip_address, 8333 };
-    instance.services_minimum = 0;
+    instance.services_required = 0;
     BOOST_REQUIRE(!instance.insufficient(loop));
-    instance.services_minimum = 1;
+    instance.services_required = 1;
     BOOST_REQUIRE(instance.insufficient(loop));
 }
 
@@ -177,11 +177,11 @@ BOOST_AUTO_TEST_CASE(settings__insufficient__match__expected)
     settings instance{ system::chain::selection::mainnet };
     constexpr uint64_t services = 0b01010101;
     constexpr messages::peer::address_item loop{ 42, services, loopback_ip_address, 8333 };
-    instance.services_minimum = services;
+    instance.services_required = services;
     BOOST_REQUIRE(!instance.insufficient(loop));
-    instance.services_minimum = services | 0b00000010;
+    instance.services_required = services | 0b00000010;
     BOOST_REQUIRE(instance.insufficient(loop));
-    instance.services_minimum = services & 0b11111110;
+    instance.services_required = services & 0b11111110;
     BOOST_REQUIRE(!instance.insufficient(loop));
 }
 

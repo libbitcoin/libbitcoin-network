@@ -272,17 +272,17 @@ settings::settings(chain::selection context) NOEXCEPT
 
 bool settings::pruned_node() const NOEXCEPT
 {
-    return to_bool(services_maximum & service::node_network_limited);
-}
-
-bool settings::encrypt_node() const NOEXCEPT
-{
-    return to_bool(services_minimum & service::node_encrypted_transport);
+    return to_bool(services_provided & service::node_network_limited);
 }
 
 bool settings::witness_node() const NOEXCEPT
 {
-    return to_bool(services_minimum & service::node_witness);
+    return to_bool(services_provided & service::node_witness);
+}
+
+bool settings::encrypted_node() const NOEXCEPT
+{
+    return to_bool(services_provided & service::node_encrypted_transport);
 }
 
 // Randomized from 50% to maximum milliseconds (specified in seconds).
@@ -325,7 +325,7 @@ std::filesystem::path settings::file() const NOEXCEPT
 
 bool settings::insufficient(const address_item& item) const NOEXCEPT
 {
-    return (item.services & services_minimum) != services_minimum;
+    return (item.services & services_required) != services_required;
 }
 
 bool settings::unsupported(const address_item& item) const NOEXCEPT

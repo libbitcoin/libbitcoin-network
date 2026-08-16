@@ -59,11 +59,9 @@ enum service: uint64_t
     /// The node is capable of bip324 (v2) encrypted transport.
     node_encrypted_transport = system::bit_right<uint64_t>(11),
 
-    /// The minimum supported capability.
-    minimum_services = node_none,
-
-    /// The maximum supported capability.
-    maximum_services = node_network | node_witness | node_client_filters
+    /// The services that the implementation is capable of providing.
+    supported_services = node_network | node_witness | node_client_filters |
+        node_network_limited | node_encrypted_transport
 };
 
 } // namespace peer

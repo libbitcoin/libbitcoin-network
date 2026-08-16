@@ -227,8 +227,8 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
 
     // Inbound does not require any node services.
     using namespace messages::peer;
-    constexpr auto minimum_services = service::node_none;
-    const auto maximum_services = network_settings().services_maximum;
+    constexpr auto required = service::node_none;
+    const auto provided = network_settings().services_provided;
 
     // Protocol must pause the channel after receiving version and verack.
     const auto self = shared_from_this();
@@ -242,23 +242,23 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
 
     // Address v2 can be disabled, independent of version.
     if (is_configured(level::bip155) && address_v2)
-        channel->attach<protocol_version_70016>(self, minimum_services,
-            maximum_services, relay, reject)->shake(std::move(handler));
+        channel->attach<protocol_version_70016>(self, required,
+            provided, relay, reject)->shake(std::move(handler));
 
     // Protocol versions are cumulative, but reject is deprecated.
     else if (is_configured(level::bip61) && reject)
-        channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
+        channel->attach<protocol_version_70002>(self, required,
+            provided, relay)->shake(std::move(handler));
 
     // TODO: consider relay may be dynamic (disabled until current).
     // .enable_relay is always passed to the peer during handshake.
     else if (is_configured(level::bip37))
-        channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
+        channel->attach<protocol_version_70001>(self, required,
+            provided, relay)->shake(std::move(handler));
 
     else if (is_configured(level::version_message))
-        channel->attach<protocol_version_106>(self, minimum_services,
-            maximum_services)->shake(std::move(handler));
+        channel->attach<protocol_version_106>(self, required,
+            provided)->shake(std::move(handler));
 }
 
 // Completion sequence.

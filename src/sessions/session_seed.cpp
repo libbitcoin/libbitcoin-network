@@ -183,8 +183,8 @@ void session_seed::attach_handshake(const channel::ptr& channel,
     // Seeding does not require or provide any node services.
     // Nodes that require inbound connection services/txs will not accept.
     using namespace messages::peer;
-    constexpr auto minimum_services = service::node_none;
-    constexpr auto maximum_services = service::node_none;
+    constexpr auto required = service::node_none;
+    constexpr auto provided = service::node_none;
 
     // Tx relay is always disabled for seeding.
     constexpr auto relay = false;
@@ -196,21 +196,21 @@ void session_seed::attach_handshake(const channel::ptr& channel,
 
     // Address v2 can be disabled, independent of version.
     if (is_configured(level::bip155) && address_v2)
-        channel->attach<protocol_version_70016>(self, minimum_services,
-            maximum_services, relay, reject)->shake(std::move(handler));
+        channel->attach<protocol_version_70016>(self, required,
+            provided, relay, reject)->shake(std::move(handler));
 
     // Protocol versions are cumulative, but reject is deprecated.
     else if (is_configured(level::bip61) && reject)
-        channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
+        channel->attach<protocol_version_70002>(self, required,
+            provided, relay)->shake(std::move(handler));
 
     else if (is_configured(level::bip37))
-        channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
+        channel->attach<protocol_version_70001>(self, required,
+            provided, relay)->shake(std::move(handler));
 
     else if (is_configured(level::version_message))
-        channel->attach<protocol_version_106>(self, minimum_services,
-            maximum_services)->shake(std::move(handler));
+        channel->attach<protocol_version_106>(self, required,
+            provided)->shake(std::move(handler));
 }
 
 void session_seed::handle_channel_start(const code& ec,

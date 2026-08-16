@@ -306,8 +306,8 @@ struct BCT_API settings
     uint16_t address_lower{ 5 };
     uint32_t protocol_maximum{ messages::peer::level::maximum_protocol };
     uint32_t protocol_minimum{ messages::peer::level::minimum_protocol };
-    uint64_t services_maximum{ messages::peer::service::maximum_services };
-    uint64_t services_minimum{ messages::peer::service::minimum_services };
+    uint64_t services_provided{ messages::peer::service::node_none };
+    uint64_t services_required{ messages::peer::service::node_none };
     uint64_t invalid_services{ 176 };
     bool enable_address{ false };
     bool enable_address_v2{ false };
@@ -336,8 +336,8 @@ struct BCT_API settings
 
     /// Helpers.
     virtual bool pruned_node() const NOEXCEPT;
-    virtual bool encrypt_node() const NOEXCEPT;
     virtual bool witness_node() const NOEXCEPT;
+    virtual bool encrypted_node() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
     virtual steady_clock::duration connect_timeout() const NOEXCEPT;
     virtual steady_clock::duration channel_handshake() const NOEXCEPT;

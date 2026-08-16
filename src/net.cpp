@@ -82,7 +82,7 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
     const auto& settings = network_settings();
 
     // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
-    const auto accept = settings.encrypt_node() &&
+    const auto accept = settings.encrypted_node() &&
         std::holds_alternative<std::monostate>(context) ?
             socket::context{ std::cref(encryption_) } : context;
 
@@ -108,7 +108,7 @@ connector::ptr net::create_connector(const settings::socks5& socks,
         .maximum_request = maximum_request
     };
 
-    if (network_settings().encrypt_node())
+    if (network_settings().encrypted_node())
         params.context = std::cref(encryption_);
 
     if (socks.proxied())

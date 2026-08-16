@@ -43,8 +43,8 @@ public:
 
     /// Construct a version protocol instance using parameterized services.
     protocol_version_70001(const session::ptr& session,
-        const channel::ptr& channel, uint64_t minimum_services,
-        uint64_t maximum_services, bool relay) NOEXCEPT;
+        const channel::ptr& channel, uint64_t required_services,
+        uint64_t provided_services, bool relay) NOEXCEPT;
 
 protected:
     messages::peer::version version_factory(bool relay=false) const NOEXCEPT override;
