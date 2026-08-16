@@ -309,6 +309,7 @@ struct BCT_API settings
     uint64_t services_provided{ messages::peer::service::node_none };
     uint64_t services_required{ messages::peer::service::node_none };
     uint64_t invalid_services{ 176 };
+    bool privacy{ false };
     bool enable_address{ false };
     bool enable_address_v2{ false };
     bool enable_witness_tx{ false };

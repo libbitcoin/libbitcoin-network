@@ -39,6 +39,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.services_provided, service::node_none);
     BOOST_REQUIRE_EQUAL(instance.services_required, service::node_none);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
+    BOOST_REQUIRE_EQUAL(instance.privacy, false);
     BOOST_REQUIRE_EQUAL(instance.enable_address, false);
     BOOST_REQUIRE_EQUAL(instance.enable_address_v2, false);
     BOOST_REQUIRE_EQUAL(instance.enable_witness_tx, false);
