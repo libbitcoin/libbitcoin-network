@@ -102,9 +102,14 @@ void channel_peer::set_start_height(size_t height) NOEXCEPT
     start_height_ = height;
 }
 
-void channel_peer::set_witness(bool witness) NOEXCEPT
+frame_ptr channel_peer::create_frame() const NOEXCEPT
 {
-    witness_ = witness;
+    const auto in = to_shared<frame>();
+    in->magic = settings().identifier;
+    in->version = negotiated_version();
+    in->checksum = settings().validate_checksum;
+    in->maximum = options().maximum_request;
+    return in;
 }
 
 uint32_t channel_peer::negotiated_version() const NOEXCEPT
@@ -178,12 +183,7 @@ void channel_peer::receive() NOEXCEPT
     reading_ = true;
 
     // Fresh frame stamped with parse context, fault detail carried out.
-    const auto in = to_shared<frame>();
-    in->magic = settings().identifier;
-    in->version = negotiated_version();
-    in->witness = witness_;
-    in->checksum = settings().validate_checksum;
-    in->maximum = options().maximum_request;
+    const auto in = create_frame();
 
     // Post handle_receive to strand upon message, stop, or error.
     read(payload_buffer_, *in,
