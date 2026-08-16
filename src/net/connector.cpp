@@ -40,6 +40,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 using namespace system;
 using namespace network::config;
 using namespace std::placeholders;
+constexpr auto encryption = messages::peer::service::node_encrypted_transport;
 
 // Construct.
 // ----------------------------------------------------------------------------
@@ -134,16 +135,15 @@ void connector::start(const std::string& hostname, uint16_t port,
     // Capture the handler.
     racer_.start(std::move(handler));
 
-    // Encryption (bip324) is applied only to advertising peer addresses.
-    using namespace messages::peer;
-    auto params = parameters_;
-    if (!to_bool(address.services() & service::node_encrypted_transport))
-        params.context = {};
+    // Strip encryption config for non-advertising peers.
+    auto parameters = parameters_;
+    if (!address.is_advertised(encryption))
+        parameters.context = {};
 
     // Create the outbound socket and shared finish context.
-    const auto finish = std::make_shared<bool>(false);
-    const auto socket = std::make_shared<network::socket>(log, service_,
-        params, address, endpoint, proxied());
+    const auto finish = emplace_shared<bool>(false);
+    const auto socket = emplace_shared<network::socket>(log, service_,
+        parameters, address, endpoint, proxied());
 
     // Posts handle_timer to strand.
     timer_->start(
