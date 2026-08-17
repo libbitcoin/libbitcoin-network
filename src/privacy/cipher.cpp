@@ -147,11 +147,7 @@ void cipher::encrypt(std::span<const uint8_t> contents,
 
     // The header byte (ignore bit) is prepended to contents for encryption.
     const data_array<header_size> header{ ignore ? ignore_bit : 0x00_u8 };
-    data_chunk plain{};
-    plain.reserve(header_size + contents.size());
-    plain.insert(plain.end(), header.begin(), header.end());
-    plain.insert(plain.end(), contents.begin(), contents.end());
-    send_packet_->encrypt(plain, aad, out.subspan(length_size));
+    send_packet_->encrypt(header, contents, aad, out.subspan(length_size));
 }
 
 size_t cipher::decrypt_length(std::span<const uint8_t> in) NOEXCEPT
