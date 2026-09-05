@@ -76,7 +76,7 @@ void protocol_ping_60001::send_ping() NOEXCEPT
         return;
 
     // The ping/pong nonce is arbitrary and distinct from the channel nonce.
-    nonce_ = pseudo_random::next<uint64_t>(add1(minimum_nonce), bc::max_int64);
+    nonce_ = maybe_random::next<uint64_t>(add1(minimum_nonce), bc::max_int64);
     SEND(ping{ nonce_ }, handle_send, _1);
 }
 

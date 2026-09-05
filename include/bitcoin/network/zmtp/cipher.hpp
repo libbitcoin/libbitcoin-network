@@ -60,8 +60,6 @@ public:
     static constexpr uint8_t payload_more = 0x01;
     static constexpr uint8_t payload_command = 0x02;
 
-    /// Generate a random keypair.
-    static void generate(key& secret, key& public_key) NOEXCEPT;
 
     /// Derive the public key of a secret (false if the secret is invalid).
     static bool to_public(key& public_key, const key& secret) NOEXCEPT;

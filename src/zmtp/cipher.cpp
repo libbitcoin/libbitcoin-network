@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/zmtp/cipher.hpp>
 
-#include <random>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -53,38 +52,8 @@ constexpr uint8_t version_minor = 0;
 constexpr size_t hello_padding = 72;
 constexpr size_t hello_content = 64;
 
-// This is to be used only for ephemeral network session keys.
-// Gather 256 bits of operating system entropy, conditioned by sha256.
-static hash_digest entropy() NOEXCEPT
-{
-    using word = std::random_device::result_type;
-    constexpr auto words = hash_size / sizeof(word);
-
-    std::random_device device{};
-    data_array<words * sizeof(word)> seed{};
-    auto it = seed.begin();
-
-    for (size_t count{}; count < words; ++count)
-    {
-        const auto value = to_little_endian(device());
-        it = std::copy(value.begin(), value.end(), it);
-    }
-
-    return sha256_hash(seed);
-}
-
 // Keys.
 // ----------------------------------------------------------------------------
-
-void cipher::generate(key& secret, key& public_key) NOEXCEPT
-{
-    // A low order result is astronomically improbable.
-    do
-    {
-        secret = entropy();
-    }
-    while (!to_public(public_key, secret));
-}
 
 bool cipher::to_public(key& public_key, const key& secret) NOEXCEPT
 {
@@ -221,7 +190,7 @@ bool cipher::hello(data_chunk& out) NOEXCEPT
 
     // The transient keypair and the (C' -> S) box.
     key shared{};
-    generate(transient_secret_, transient_public_);
+    x25519::generate(transient_secret_, transient_public_);
     if (!derive(shared, transient_secret_, peer_))
         return false;
 
@@ -277,12 +246,12 @@ bool cipher::welcome(data_chunk& out, const span& hello) NOEXCEPT
         return false;
 
     // The transient keypair and cookie key are per connection.
-    generate(transient_secret_, transient_public_);
-    cookie_key_ = entropy();
+    x25519::generate(transient_secret_, transient_public_);
+    maybe_random::fill(cookie_key_);
 
     // The cookie holds the connection state under the cookie key.
     long_nonce cookie_nonce{};
-    std::copy_n(entropy().begin(), long_nonce_size, cookie_nonce.begin());
+    maybe_random::fill(cookie_nonce);
     data_chunk state{};
     state.insert(state.end(), peer_transient_.begin(), peer_transient_.end());
     state.insert(state.end(), transient_secret_.begin(),
@@ -294,7 +263,7 @@ bool cipher::welcome(data_chunk& out, const span& hello) NOEXCEPT
 
     // The welcome box (S -> C') carries the server transient key and cookie.
     long_nonce welcome_nonce{};
-    std::copy_n(entropy().begin(), long_nonce_size, welcome_nonce.begin());
+    maybe_random::fill(welcome_nonce);
     data_chunk plain{};
     plain.insert(plain.end(), transient_public_.begin(),
         transient_public_.end());
@@ -345,7 +314,7 @@ bool cipher::initiate(data_chunk& out, const span& welcome,
 
     // The vouch binds the client transient key to the client long-term key.
     long_nonce vouch_nonce{};
-    std::copy_n(entropy().begin(), long_nonce_size, vouch_nonce.begin());
+    maybe_random::fill(vouch_nonce);
     data_chunk keys{};
     keys.insert(keys.end(), transient_public_.begin(),
         transient_public_.end());

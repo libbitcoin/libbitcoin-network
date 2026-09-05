@@ -647,8 +647,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
     network::zmtp::cipher::key server_public{};
     network::zmtp::cipher::key client_secret{};
     network::zmtp::cipher::key client_public{};
-    network::zmtp::cipher::generate(server_secret, server_public);
-    network::zmtp::cipher::generate(client_secret, client_public);
+    system::x25519::generate(server_secret, server_public);
+    system::x25519::generate(client_secret, client_public);
     const context curve{ system::to_chunk(server_secret) };
     BOOST_REQUIRE(curve.curve());
     BOOST_REQUIRE_EQUAL(curve.public_key(), server_public);
@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__null_client__error)
 
     network::zmtp::cipher::key server_secret{};
     network::zmtp::cipher::key server_public{};
-    network::zmtp::cipher::generate(server_secret, server_public);
+    system::x25519::generate(server_secret, server_public);
     const context curve{ system::to_chunk(server_secret) };
 
     stream server{ std::move(server_socket), curve };
@@ -709,8 +709,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
     network::zmtp::cipher::key server_public{};
     network::zmtp::cipher::key client_secret{};
     network::zmtp::cipher::key client_public{};
-    network::zmtp::cipher::generate(server_secret, server_public);
-    network::zmtp::cipher::generate(client_secret, client_public);
+    system::x25519::generate(server_secret, server_public);
+    system::x25519::generate(client_secret, client_public);
     const context curve{ system::to_chunk(server_secret) };
 
     stream server{ std::move(server_socket), curve };

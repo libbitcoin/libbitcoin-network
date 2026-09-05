@@ -32,8 +32,8 @@ struct cipher_pair
 {
     cipher_pair()
     {
-        cipher::generate(server_secret, server_public);
-        cipher::generate(client_secret, client_public);
+        system::x25519::generate(server_secret, server_public);
+        system::x25519::generate(client_secret, client_public);
         server = std::make_unique<cipher>(server_secret, server_public);
         client = std::make_unique<cipher>(client_secret, client_public,
             server_public);
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(zmtp_cipher__generate__twice__distinct_valid_keys)
     cipher::key public1{};
     cipher::key secret2{};
     cipher::key public2{};
-    cipher::generate(secret1, public1);
-    cipher::generate(secret2, public2);
+    system::x25519::generate(secret1, public1);
+    system::x25519::generate(secret2, public2);
     BOOST_REQUIRE_NE(secret1, secret2);
     BOOST_REQUIRE_NE(public1, public2);
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(zmtp_cipher__welcome__wrong_server_key__false)
     // The client believes in a different server key.
     cipher::key other_secret{};
     cipher::key other_public{};
-    cipher::generate(other_secret, other_public);
+    system::x25519::generate(other_secret, other_public);
     cipher client{ pair.client_secret, pair.client_public, other_public };
     BOOST_REQUIRE(client.hello(pair.hello));
     BOOST_REQUIRE(!pair.server->welcome(pair.welcome, pair.hello));

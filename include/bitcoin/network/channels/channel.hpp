@@ -125,7 +125,7 @@ private:
     const uint64_t identifier_;
     const uint64_t nonce_
     {
-        system::pseudo_random::next<uint64_t>(one, max_uint64)
+        system::maybe_random::next<uint64_t>(one, max_uint64)
     };
 
     // These are protected by strand.

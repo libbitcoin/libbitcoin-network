@@ -360,7 +360,7 @@ steady_clock::duration settings::retry_timeout() const NOEXCEPT
 {
     const auto from = retry_timeout_seconds * 500_u64;
     const auto to = retry_timeout_seconds * 1'000_u64;
-    return milliseconds{ system::pseudo_random::next(from, to) };
+    return milliseconds{ system::maybe_random::next(from, to) };
 }
 
 // Randomized from 50% to maximum milliseconds (specified in seconds).
@@ -368,7 +368,7 @@ steady_clock::duration settings::connect_timeout() const NOEXCEPT
 {
     const auto from = connect_timeout_seconds * 500_u64;
     const auto to = connect_timeout_seconds * 1'000_u64;
-    return milliseconds{ system::pseudo_random::next(from, to) };
+    return milliseconds{ system::maybe_random::next(from, to) };
 }
 
 steady_clock::duration settings::channel_handshake() const NOEXCEPT

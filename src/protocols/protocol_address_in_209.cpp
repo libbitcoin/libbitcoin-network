@@ -84,14 +84,14 @@ address::cptr protocol_address_in_209::filter(
     const size_t maximum = std::min(cap, items.size());
 
     // Returns zero if minimum > maximum.
-    const size_t select = pseudo_random::next(minimum, maximum);
+    const size_t select = maybe_random::next(minimum, maximum);
     if (is_zero(select))
         return to_shared<address>();
 
     // Shuffle, reduce, and filter to the target amount.
     const auto message = to_shared<address>(items);
     auto& addresses = const_cast<address_items&>(message->addresses);
-    pseudo_random::shuffle(addresses);
+    maybe_random::shuffle(addresses);
     addresses.resize(select);
     std::erase_if(addresses, [&](const auto& address) NOEXCEPT
     {
