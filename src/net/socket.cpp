@@ -132,8 +132,6 @@ const config::endpoint& socket::endpoint() const NOEXCEPT
 // Variant state (protected by strand).
 // ----------------------------------------------------------------------------
 
-// TODO: zmq::context.
-
 bool socket::secure() const NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -145,6 +143,12 @@ bool socket::encrypted() const NOEXCEPT
 {
     BC_ASSERT(stranded());
     return std::holds_alternative<privacy::stream>(socket_);
+}
+
+bool socket::publisher() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return std::holds_alternative<zmtp::stream>(socket_);
 }
 
 // protected
@@ -184,6 +188,10 @@ socket::ws_t socket::get_ws() NOEXCEPT
         [](privacy::stream&) NOEXCEPT -> socket::ws_t
         {
             std::terminate();
+        },
+        [](zmtp::stream&) NOEXCEPT -> socket::ws_t
+        {
+            std::terminate();
         }
     }, socket_);
 }
@@ -214,6 +222,10 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
         [](privacy::stream&) NOEXCEPT -> socket::tcp_t
         {
             std::terminate();
+        },
+        [](zmtp::stream&) NOEXCEPT -> socket::tcp_t
+        {
+            std::terminate();
         }
     }, socket_);
 }
@@ -239,6 +251,10 @@ asio::socket& socket::get_base() NOEXCEPT
             return boost::beast::get_lowest_layer(value);
         },
         [](privacy::stream& value) NOEXCEPT -> asio::socket&
+        {
+            return boost::beast::get_lowest_layer(value);
+        },
+        [](zmtp::stream& value) NOEXCEPT -> asio::socket&
         {
             return boost::beast::get_lowest_layer(value);
         }
@@ -271,6 +287,10 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
         [](privacy::stream&) NOEXCEPT -> asio::ssl::socket&
         {
             std::terminate();
+        },
+        [](zmtp::stream&) NOEXCEPT -> asio::ssl::socket&
+        {
+            std::terminate();
         }
     }, socket_);
 }
@@ -299,6 +319,44 @@ privacy::stream& socket::get_p2ps() NOEXCEPT
             std::terminate();
         },
         [](privacy::stream& value) NOEXCEPT -> privacy::stream&
+        {
+            return value;
+        },
+        [](zmtp::stream&) NOEXCEPT -> privacy::stream&
+        {
+            std::terminate();
+        }
+    }, socket_);
+}
+
+zmtp::stream& socket::get_zmtp() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    BC_ASSERT(publisher());
+
+    return std::visit(overload
+    {
+        [](asio::socket&) NOEXCEPT -> zmtp::stream&
+        {
+            std::terminate();
+        },
+        [](asio::ssl::socket&) NOEXCEPT -> zmtp::stream&
+        {
+            std::terminate();
+        },
+        [](ws::socket&) NOEXCEPT -> zmtp::stream&
+        {
+            std::terminate();
+        },
+        [](ws::ssl::socket&) NOEXCEPT -> zmtp::stream&
+        {
+            std::terminate();
+        },
+        [](privacy::stream&) NOEXCEPT -> zmtp::stream&
+        {
+            std::terminate();
+        },
+        [](zmtp::stream& value) NOEXCEPT -> zmtp::stream&
         {
             return value;
         }

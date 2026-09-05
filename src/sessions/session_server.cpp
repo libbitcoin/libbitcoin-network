@@ -99,7 +99,13 @@ void session_server::handle_started(const code& ec,
         }
     }
 
-    handler(do_accept(options_.binds));
+    handler(do_accept(options_.binds, accept_context()));
+}
+
+// protected
+socket::context session_server::accept_context() const NOEXCEPT
+{
+    return {};
 }
 
 // private

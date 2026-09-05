@@ -82,6 +82,10 @@ protected:
     /// Inbound services are enabled (e.g. because node is current).
     virtual bool enabled() const NOEXCEPT;
 
+    /// The socket context applied to clear bindings (default none). A
+    /// service that upgrades its transport (e.g. zmtp) overrides this.
+    virtual socket::context accept_context() const NOEXCEPT;
+
 private:
     code do_accept(const config::authorities& binds,
         const socket::context& context={}) NOEXCEPT;

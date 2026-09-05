@@ -112,62 +112,68 @@
     <Filter Include="include\bitcoin\network\ssl\wolfssl\wolfcrypt">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src">
+    <Filter Include="include\bitcoin\network\zmtp">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\async">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\channels">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\config">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\log">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages">
+    <Filter Include="src\log">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http">
+    <Filter Include="src\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000011}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http\enums">
+    <Filter Include="src\messages\http">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000A2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer">
+    <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer\detail">
+    <Filter Include="src\messages\peer">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\rpc">
+    <Filter Include="src\messages\peer\detail">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\net">
+    <Filter Include="src\messages\rpc">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\privacy">
+    <Filter Include="src\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\privacy">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\protocols">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ssl">
+    <Filter Include="src\sessions">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ssl\wolfssl">
+    <Filter Include="src\ssl">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ssl\wolfssl\src">
+    <Filter Include="src\ssl\wolfssl">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ssl\wolfssl\wolfcrypt">
+    <Filter Include="src\ssl\wolfssl\src">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ssl\wolfssl\wolfcrypt">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\zmtp">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -423,6 +429,9 @@
     <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_zmtp.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\privacy\cipher.cpp">
       <Filter>src\privacy</Filter>
     </ClCompile>
@@ -644,6 +653,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfio.c">
       <Filter>src\ssl\wolfssl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zmtp\stream.cpp">
+      <Filter>src\zmtp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1501,6 +1513,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp">
       <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\context.hpp">
+      <Filter>include\bitcoin\network\zmtp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\stream.hpp">
+      <Filter>include\bitcoin\network\zmtp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\zmtp.hpp">
+      <Filter>include\bitcoin\network\zmtp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

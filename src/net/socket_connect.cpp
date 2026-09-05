@@ -203,6 +203,22 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
         return;
     }
 
+    if (std::holds_alternative<cref<zmtp::context>>(context_))
+    {
+        // Extract to temporary to avoid dangling reference after destruction.
+        auto socket = std::move(get_base());
+
+        // ZMTP (native) context is applied to the socket.
+        auto& stream = socket_.emplace<zmtp::stream>(std::move(socket),
+            std::get<cref<zmtp::context>>(context_).get());
+
+        // Posts handler to socket strand.
+        stream.async_handshake(inbound_,
+            std::bind(&socket::handle_publisher_handshake,
+                shared_from_this(), _1, handler));
+        return;
+    }
+
     if (std::holds_alternative<ref<asio::ssl::context>>(context_))
     {
         const auto direction = inbound_ ?
@@ -282,6 +298,22 @@ void socket::handle_encrypted_handshake(const boost_code& ec,
 
     const auto code = error::asio_to_error_code(ec);
     if (code == error::unknown) logx("encrypted handshake", ec);
+    handler(code);
+}
+
+void socket::handle_publisher_handshake(const boost_code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::operation_canceled);
+        return;
+    }
+
+    const auto code = error::asio_to_error_code(ec);
+    if (code == error::unknown) logx("publisher handshake", ec);
     handler(code);
 }
 

@@ -301,5 +301,8 @@
 #include <bitcoin/network/ssl/wolfssl/wolfcrypt/wc_port.h>
 #include <bitcoin/network/ssl/wolfssl/wolfcrypt/wolfmath.h>
 #endif
+#include <bitcoin/network/zmtp/context.hpp>
+#include <bitcoin/network/zmtp/stream.hpp>
+#include <bitcoin/network/zmtp/zmtp.hpp>
 
 #endif

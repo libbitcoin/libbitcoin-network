@@ -208,6 +208,21 @@ protected:
     virtual void write(rpc::request&& notification,
         count_handler&& handler) NOEXCEPT;
 
+    /// ZMTP (TCP: publisher).
+    /// -----------------------------------------------------------------------
+    /// The channel is keepalive-blind: the proxy absorbs PING (queuing the
+    /// PONG) and re-arms the read. Every other frame is delivered, including
+    /// subscriptions, which are the protocol's concern.
+
+    /// Read next frame from the socket into the caller-owned frame.
+    virtual void read(zmtp::stream::frame& out,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write a framed message (see zmtp::stream::frame_message). The packet
+    /// is shared so one framing may fan out to every subscriber.
+    virtual void write(const system::chunk_cptr& packet,
+        count_handler&& handler) NOEXCEPT;
+
     /// HTTP/WS (generic/rpc).
     /// -----------------------------------------------------------------------
 
@@ -240,6 +255,13 @@ private:
         const count_handler& handler) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;
+
+    // For zmtp keepalive absorption.
+    void handle_zmtp_read(const code& ec, size_t bytes,
+        const ref<zmtp::stream::frame>& out,
+        const count_handler& handler) NOEXCEPT;
+    void do_zmtp_write(const system::chunk_cptr& packet,
+        const count_handler& handler) NOEXCEPT;
 
     // For rpc batch normalization.
     void do_defer_write(const writer& call) NOEXCEPT;
