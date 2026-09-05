@@ -42,7 +42,7 @@ class BCT_API session_server
 {
 public:
     typedef std::shared_ptr<session_server> ptr;
-    using options_t = network::settings::tls_server;
+    using options_t = network::settings::secure_server;
 
     /// Start accepting connections as configured (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
@@ -82,13 +82,9 @@ protected:
     /// Inbound services are enabled (e.g. because node is current).
     virtual bool enabled() const NOEXCEPT;
 
-    /// The socket context applied to clear bindings (default none). A
-    /// service that upgrades its transport (e.g. zmtp) overrides this.
-    virtual socket::context accept_context() const NOEXCEPT;
-
 private:
     code do_accept(const config::authorities& binds,
-        const socket::context& context={}) NOEXCEPT;
+        const socket::context& context, bool secure) NOEXCEPT;
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;

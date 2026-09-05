@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>

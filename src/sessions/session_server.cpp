@@ -84,38 +84,31 @@ void session_server::handle_started(const code& ec,
         << " private" << (options_.authenticate() ? " authenticated" : "")
         << " bindings.");
 
+    // The contexts (transports) of the bindings are provided by the settings.
+    if (const auto code = options_.initialize_context())
+    {
+        handler(code);
+        return;
+    }
+
     if (options_.secure())
     {
-        if (const auto code = options_.initialize_context())
-        {
-            handler(code);
-            return;
-        }
-
-        if (const auto code = do_accept(options_.safes, *options_.context))
+        if (const auto code = do_accept(options_.safes,
+            options_.secure_context(), true))
         {
             handler(code);
             return;
         }
     }
 
-    handler(do_accept(options_.binds, accept_context()));
-}
-
-// protected
-socket::context session_server::accept_context() const NOEXCEPT
-{
-    return {};
+    handler(do_accept(options_.binds, options_.clear_context(), false));
 }
 
 // private
 code session_server::do_accept(const config::authorities& binds,
-    const socket::context& context) NOEXCEPT
+    const socket::context& context, bool secure) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // Currently only ssl context is secure.
-    const auto secure = std::holds_alternative<ref<asio::ssl::context>>(context);
 
     for (const auto& bind: binds)
     {

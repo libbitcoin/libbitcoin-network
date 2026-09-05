@@ -23,16 +23,14 @@
 #include <memory>
 #include <optional>
 #include <span>
-#include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/deadline.hpp>
-#include <bitcoin/network/privacy/context.hpp>
-#include <bitcoin/network/privacy/stream.hpp>
-#include <bitcoin/network/zmtp/context.hpp>
-#include <bitcoin/network/zmtp/stream.hpp>
+#include <bitcoin/network/privacy/privacy.hpp>
+#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/zmtp/zmtp.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -47,13 +45,7 @@ class BCT_API socket
 public:
     typedef std::shared_ptr<socket> ptr;
 
-    using context = std::variant
-    <
-        std::monostate,
-        ref<asio::ssl::context>,
-        ref<const privacy::context>,
-        ref<const zmtp::context>
-    >;
+    using context = settings::transport;
 
     struct parameters
     {
