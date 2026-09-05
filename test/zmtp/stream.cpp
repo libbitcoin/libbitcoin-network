@@ -248,7 +248,7 @@ public:
     {
         data_chunk message{};
         BOOST_REQUIRE(client_.encode(message, payload, body));
-        write(stream::frame_encode(message, true, false));
+        write(stream::frame_encode(message, false, false));
     }
 
     void subscribe(const data_chunk& topic)
@@ -270,8 +270,7 @@ public:
             if (ec) { out = ec; return; }
             uint8_t payload{};
             data_chunk body{};
-            if (is_zero(flags & stream::flag_command) ||
-                !client_.decode(payload, body, message))
+            if (!client_.decode(payload, body, message))
             {
                 out = failure();
                 return;

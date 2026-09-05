@@ -730,19 +730,20 @@ void stream::handle_frame_body(const boost_code& ec, size_t size,
         return;
     }
 
-    // Under CURVE every frame is a command: a boxed MESSAGE, or an ERROR
+    // Under CURVE every frame is a boxed MESSAGE (framed as a message, as
+    // libzmq, though the mechanism names it a command) or an ERROR command
     // (delivered as is, the tier above treats it as any other command).
     auto& frame = out.get();
     std::string name{};
     std::span<const uint8_t> content{};
     const std::span<const uint8_t> body{ frame.body };
-    if (!frame.command() || !command_name(name, content, body))
+    if (!command_name(name, content, body))
     {
         handler(protocol_error, zero);
         return;
     }
 
-    if (name == command_error)
+    if (frame.command() && name == command_error)
     {
         handler(ec, size);
         return;
@@ -812,7 +813,8 @@ void stream::async_write(const asio::const_buffer& in,
             return;
         }
 
-        const auto frame = frame_encode(message, true, false);
+        // The boxed MESSAGE is framed as a message (as libzmq).
+        const auto frame = frame_encode(message, false, false);
         boxed_.insert(boxed_.end(), frame.begin(), frame.end());
     }
 
