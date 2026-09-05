@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/alert.hpp>
 
-#include <utility>
 #include <bitcoin/network/messages/peer/detail/alert_item.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>

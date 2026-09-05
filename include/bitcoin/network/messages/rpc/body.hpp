@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_BODY_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_BODY_HPP
 
-#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json_body.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/http_body.hpp>
 
-#include <variant>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

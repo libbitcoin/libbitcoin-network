@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_SEED_209_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_SEED_209_HPP
 
-#include <memory>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

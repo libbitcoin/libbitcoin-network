@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_ZMTP_STREAM_HPP
 #define LIBBITCOIN_NETWORK_ZMTP_STREAM_HPP
 
-#include <memory>
 #include <optional>
 #include <span>
 #include <bitcoin/network/asio.hpp>

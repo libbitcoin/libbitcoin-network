@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_ALERT_ITEM_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_ALERT_ITEM_HPP
 
-#include <memory>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

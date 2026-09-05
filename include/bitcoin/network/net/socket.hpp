@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_NET_SOCKET_HPP
 
 #include <atomic>
-#include <memory>
 #include <optional>
 #include <span>
 #include <bitcoin/network/async/async.hpp>

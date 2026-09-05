@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/config/endpoint.hpp>
 
-#include <algorithm>
 #include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/network/define.hpp>

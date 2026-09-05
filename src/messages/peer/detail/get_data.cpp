@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/get_data.hpp>
 
-#include <algorithm>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory_item.hpp>

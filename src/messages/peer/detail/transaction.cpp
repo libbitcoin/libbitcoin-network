@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/transaction.hpp>
 
-#include <iterator>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_CONFIG_ADDRESS_HPP
 #define LIBBITCOIN_NETWORK_CONFIG_ADDRESS_HPP
 
-#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 

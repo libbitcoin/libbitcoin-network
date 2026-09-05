@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/block.hpp>
 
-#include <iterator>
-#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/peer/detail/transaction.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>

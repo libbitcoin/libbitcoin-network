@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_HPP
 #define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_HPP
 
-#include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/deadline.hpp>

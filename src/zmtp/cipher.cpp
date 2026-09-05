@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/zmtp/cipher.hpp>
 
-#include <algorithm>
 #include <random>
 #include <bitcoin/network/define.hpp>
 

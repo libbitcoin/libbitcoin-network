@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_ASYNC_UNSUBSCRIBER_HPP
 
 #include <list>
-#include <utility>
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/define.hpp>
 

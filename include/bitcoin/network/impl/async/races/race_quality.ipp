@@ -19,9 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_QUALITY_IPP
 #define LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_QUALITY_IPP
 
-#include <memory>
 #include <tuple>
-#include <utility>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

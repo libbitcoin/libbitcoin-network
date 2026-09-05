@@ -20,8 +20,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_ANY_HPP
 
 #include <any>
-#include <memory>
-#include <utility>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

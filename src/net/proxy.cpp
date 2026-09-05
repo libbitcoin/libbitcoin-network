@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/proxy.hpp>
 
-#include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/socket.hpp>

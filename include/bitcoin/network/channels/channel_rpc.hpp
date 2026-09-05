@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_RPC_HPP
 #define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_RPC_HPP
 
-#include <memory>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

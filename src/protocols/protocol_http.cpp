@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_http.hpp>
 
-#include <memory>
-#include <utility>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>

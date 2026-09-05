@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/log/logger.hpp>
 
-#include <utility>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/timer.hpp>
 #include <bitcoin/network/async/async.hpp>

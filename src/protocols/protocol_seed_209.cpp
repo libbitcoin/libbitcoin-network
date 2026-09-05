@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_seed_209.hpp>
 
-#include <algorithm>
-#include <memory>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

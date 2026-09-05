@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_NET_CONNECTOR_SOCKS_HPP
 
 #include <atomic>
-#include <memory>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

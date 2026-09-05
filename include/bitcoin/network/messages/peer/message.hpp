@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_MESSAGE_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_MESSAGE_HPP
 
-#include <iterator>
 #include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>

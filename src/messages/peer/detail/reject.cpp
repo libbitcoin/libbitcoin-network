@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/reject.hpp>
 
-#include <utility>
 #include <bitcoin/network/messages/peer/detail/block.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>

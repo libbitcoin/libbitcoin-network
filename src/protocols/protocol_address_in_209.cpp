@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_address_in_209.hpp>
 
-#include <algorithm>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/net/socket.hpp>
 
-#include <utility>
-#include <variant>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 

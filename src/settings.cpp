@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/settings.hpp>
 
-#include <algorithm>
 #include <filesystem>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>

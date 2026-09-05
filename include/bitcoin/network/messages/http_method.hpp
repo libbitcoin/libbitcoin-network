@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_METHOD_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_METHOD_HPP
 
-#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
 

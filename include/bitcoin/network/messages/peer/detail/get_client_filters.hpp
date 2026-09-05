@@ -22,7 +22,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_GET_CLIENT_FILTERS_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_GET_CLIENT_FILTERS_HPP
 
-#include <memory>
 #include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/enums/identifiers.hpp>

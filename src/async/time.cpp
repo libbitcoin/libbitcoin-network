@@ -123,7 +123,6 @@ std::string format_http_time(time_t time) NOEXCEPT
 
 #include <chrono>
 #include <format>
-#include <string>
 
 // Format time as local time: "yyyy-mm-ddThh:mm:ss".
 std::string format_local_time(time_t time) NOEXCEPT

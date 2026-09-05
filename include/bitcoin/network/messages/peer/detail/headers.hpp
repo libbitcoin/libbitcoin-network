@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_HEADERS_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_HEADERS_HPP
 
-#include <memory>
 #include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/detail/inventory.hpp>

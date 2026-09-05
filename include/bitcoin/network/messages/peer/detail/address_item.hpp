@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_ADDRESS_ITEM_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_ADDRESS_ITEM_HPP
 
-#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/enums/service.hpp>
 

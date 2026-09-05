@@ -18,9 +18,6 @@
  */
 #include <bitcoin/network/channels/channel_peer.hpp>
 
-#include <iterator>
-#include <memory>
-#include <utility>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>

@@ -19,8 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_HTTP_HPP
 #define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_HTTP_HPP
 
-#include <memory>
-#include <utility>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/interfaces/interfaces.hpp>

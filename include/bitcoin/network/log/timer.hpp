@@ -21,7 +21,6 @@
 
 #include <chrono>
 #include <time.h>
-#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 
