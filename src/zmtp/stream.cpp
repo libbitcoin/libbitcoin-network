@@ -22,6 +22,7 @@
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/zmtp/cipher.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -34,21 +35,28 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 constexpr auto protocol_error = boost::asio::error::no_protocol_option;
 
-// The ZMTP NULL mechanism name occupies the 20-byte mechanism field.
+// The mechanism name occupies the 20-byte mechanism field.
 constexpr auto mechanism_size = 20_size;
+constexpr auto mechanism_null = "NULL";
+constexpr auto mechanism_curve = "CURVE";
 
 // Command name literals (self-describing, length-prefixed on the wire).
 constexpr auto command_ready = "READY";
 constexpr auto command_error = "ERROR";
 constexpr auto command_pong = "PONG";
+constexpr auto command_hello = "HELLO";
+constexpr auto command_initiate = "INITIATE";
+constexpr auto command_message = "MESSAGE";
 
 // Constructor.
 // ----------------------------------------------------------------------------
 
-// The context selects the upgrade; the NULL mechanism has no parameters.
-stream::stream(asio::socket&& socket, const context&) NOEXCEPT
+// The context selects the upgrade and configures the CURVE mechanism.
+stream::stream(asio::socket&& socket, const context& context) NOEXCEPT
   : socket_(std::move(socket))
 {
+    if (context.curve())
+        cipher_.emplace(context.secret(), context.public_key());
 }
 
 // Properties.
@@ -88,9 +96,7 @@ data_chunk stream::frame_message(const data_stack& parts) NOEXCEPT
     return packet;
 }
 
-// The as-server greeting byte is 0 for the NULL mechanism (no role
-// asymmetry); the parameter is retained for the CURVE mechanism (phase 2).
-data_chunk stream::make_greeting(bool) NOEXCEPT
+data_chunk stream::make_greeting(bool as_server, bool curve) NOEXCEPT
 {
     data_chunk greeting(greeting_size, 0x00);
 
@@ -102,18 +108,22 @@ data_chunk stream::make_greeting(bool) NOEXCEPT
     greeting.at(signature_size) = revision_major;
     greeting.at(add1(signature_size)) = revision_minor;
 
-    // Mechanism: "NULL" left-justified in a 20-byte null-padded field.
-    constexpr auto mechanism = "NULL";
+    // Mechanism: name left-justified in a 20-byte null-padded field.
+    const auto mechanism = curve ? mechanism_curve : mechanism_null;
     const auto position = std::next(greeting.begin(), signature_size + 2u);
     std::copy_n(mechanism, std::char_traits<char>::length(mechanism),
         position);
 
-    // As-server byte and 31-byte filler remain zero.
+    // As-server byte follows the mechanism (NULL has no role asymmetry),
+    // and the 31-byte filler remains zero.
+    greeting.at(signature_size + 2u + mechanism_size) =
+        (curve && as_server) ? 0x01 : 0x00;
+
     return greeting;
 }
 
 bool stream::parse_greeting(const std::span<const uint8_t>& greeting,
-    uint8_t& minor) NOEXCEPT
+    uint8_t& minor, bool& curve, bool& as_server) NOEXCEPT
 {
     if (greeting.size() != greeting_size)
         return false;
@@ -130,17 +140,40 @@ bool stream::parse_greeting(const std::span<const uint8_t>& greeting,
 
     minor = greeting[add1(signature_size)];
 
-    // Mechanism must byte-match "NULL" in a 20-byte null-padded field.
-    constexpr auto name = "NULL";
-    const auto length = std::char_traits<char>::length(name);
+    // Mechanism must byte-match a name in a 20-byte null-padded field.
     const auto position = std::next(greeting.begin(), signature_size + 2u);
-    if (!std::equal(name, std::next(name, length), position))
+    const auto matches = [&](const char* name) NOEXCEPT
+    {
+        const auto length = std::char_traits<char>::length(name);
+        return std::equal(name, std::next(name, length), position) &&
+            std::all_of(std::next(position, length),
+                std::next(position, mechanism_size),
+                    [](uint8_t byte) NOEXCEPT { return is_zero(byte); });
+    };
+
+    if (matches(mechanism_null))
+        curve = false;
+    else if (matches(mechanism_curve))
+        curve = true;
+    else
         return false;
 
-    // Trailing mechanism bytes must be null.
-    return std::all_of(std::next(position, length),
-        std::next(position, mechanism_size),
-            [](uint8_t byte) NOEXCEPT { return is_zero(byte); });
+    as_server = !is_zero(greeting[signature_size + 2u + mechanism_size]);
+    return true;
+}
+
+data_chunk stream::make_property(const std::string& name,
+    const std::string& value) NOEXCEPT
+{
+    // Property: name (u8-len) then value (u32be-len).
+    data_chunk property{};
+    property.push_back(possible_narrow_cast<uint8_t>(name.size()));
+    property.insert(property.end(), name.begin(), name.end());
+    const auto size = to_big_endian(possible_narrow_cast<uint32_t>(
+        value.size()));
+    property.insert(property.end(), size.begin(), size.end());
+    property.insert(property.end(), value.begin(), value.end());
+    return property;
 }
 
 data_chunk stream::make_ready_pub() NOEXCEPT
@@ -150,17 +183,8 @@ data_chunk stream::make_ready_pub() NOEXCEPT
     const std::string name{ command_ready };
     body.push_back(possible_narrow_cast<uint8_t>(name.size()));
     body.insert(body.end(), name.begin(), name.end());
-
-    // Property: "Socket-Type" => "PUB" (name u8-len, value u32be-len).
-    const std::string key{ "Socket-Type" };
-    const std::string value{ "PUB" };
-    body.push_back(possible_narrow_cast<uint8_t>(key.size()));
-    body.insert(body.end(), key.begin(), key.end());
-    const auto size = to_big_endian(possible_narrow_cast<uint32_t>(
-        value.size()));
-    body.insert(body.end(), size.begin(), size.end());
-    body.insert(body.end(), value.begin(), value.end());
-
+    const auto property = make_property("Socket-Type", "PUB");
+    body.insert(body.end(), property.begin(), property.end());
     return frame_encode(body, true, false);
 }
 
@@ -220,6 +244,44 @@ data_chunk stream::frame_encode(const std::span<const uint8_t>& body,
 
     frame.insert(frame.end(), body.begin(), body.end());
     return frame;
+}
+
+bool stream::frame_decode(uint8_t& flags, std::span<const uint8_t>& body,
+    std::span<const uint8_t>& buffer) NOEXCEPT
+{
+    if (buffer.empty())
+        return false;
+
+    flags = buffer.front();
+    buffer = buffer.subspan(sizeof(flags));
+
+    size_t length{};
+    if (!is_zero(flags & flag_long))
+    {
+        if (buffer.size() < sizeof(uint64_t))
+            return false;
+
+        data_array<sizeof(uint64_t)> bytes{};
+        std::copy_n(buffer.begin(), bytes.size(), bytes.begin());
+        length = possible_narrow_cast<size_t>(from_big_endian<uint64_t>(
+            bytes));
+        buffer = buffer.subspan(bytes.size());
+    }
+    else
+    {
+        if (buffer.empty())
+            return false;
+
+        length = buffer.front();
+        buffer = buffer.subspan(sizeof(uint8_t));
+    }
+
+    if (buffer.size() < length)
+        return false;
+
+    body = buffer.first(length);
+    buffer = buffer.subspan(length);
+    return true;
 }
 
 bool stream::command_name(std::string& name, std::span<const uint8_t>& body,
@@ -290,14 +352,15 @@ void stream::write_greeting(bool as_server,
     const handshake_handler& handler) NOEXCEPT
 {
     // Send our complete greeting eagerly (waiting to read first deadlocks).
-    const auto greeting = to_shared(make_greeting(as_server));
+    const auto greeting = to_shared(make_greeting(as_server,
+        cipher_.has_value()));
     const boost::asio::const_buffer out{ greeting->data(), greeting->size() };
     boost::asio::async_write(socket_, out,
         std::bind(&stream::handle_greeting_sent,
             this, _1, as_server, greeting, handler));
 }
 
-void stream::handle_greeting_sent(const boost_code& ec, bool,
+void stream::handle_greeting_sent(const boost_code& ec, bool as_server,
     const chunk_cptr&, const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -306,20 +369,21 @@ void stream::handle_greeting_sent(const boost_code& ec, bool,
         return;
     }
 
-    read_greeting(handler);
+    read_greeting(as_server, handler);
 }
 
-void stream::read_greeting(const handshake_handler& handler) NOEXCEPT
+void stream::read_greeting(bool as_server,
+    const handshake_handler& handler) NOEXCEPT
 {
     // Read the peer greeting progressively: signature and major first.
     greeting_.resize(greeting_size);
     const boost::asio::mutable_buffer in{ greeting_.data(), greeting_stage1 };
     boost::asio::async_read(socket_, in,
         std::bind(&stream::handle_greeting_stage1,
-            this, _1, handler));
+            this, _1, as_server, handler));
 }
 
-void stream::handle_greeting_stage1(const boost_code& ec,
+void stream::handle_greeting_stage1(const boost_code& ec, bool as_server,
     const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -341,10 +405,10 @@ void stream::handle_greeting_stage1(const boost_code& ec,
     const boost::asio::mutable_buffer in{ begin, greeting_stage2 };
     boost::asio::async_read(socket_, in,
         std::bind(&stream::handle_greeting_stage2,
-            this, _1, handler));
+            this, _1, as_server, handler));
 }
 
-void stream::handle_greeting_stage2(const boost_code& ec,
+void stream::handle_greeting_stage2(const boost_code& ec, bool as_server,
     const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -354,8 +418,10 @@ void stream::handle_greeting_stage2(const boost_code& ec,
     }
 
     uint8_t minor{};
+    bool curve{};
+    bool peer_server{};
     const std::span<const uint8_t> greeting{ greeting_ };
-    if (!parse_greeting(greeting, minor))
+    if (!parse_greeting(greeting, minor, curve, peer_server))
     {
         handler(protocol_error);
         return;
@@ -363,12 +429,47 @@ void stream::handle_greeting_stage2(const boost_code& ec,
 
     greeting_.clear();
     greeting_.shrink_to_fit();
-    write_ready(handler);
+
+    // The peer mechanism must match ours, and under CURVE the peer must take
+    // the role opposite to ours (only the server role is implemented).
+    if (curve != cipher_.has_value() || (curve && (peer_server || !as_server)))
+    {
+        fail_handshake("mechanism mismatch", handler);
+        return;
+    }
+
+    if (curve)
+        read_hello(handler);
+    else
+        write_ready(handler);
 }
+
+void stream::fail_handshake(const std::string& reason,
+    const handshake_handler& handler) NOEXCEPT
+{
+    // Best-effort ERROR command, then fail the handshake.
+    const auto error = to_shared(make_error(reason));
+    const boost::asio::const_buffer out{ error->data(), error->size() };
+    boost::asio::async_write(socket_, out,
+        [error, handler](const boost_code&, size_t) NOEXCEPT
+        {
+            handler(protocol_error);
+        });
+}
+
+// The peer socket type must be a subscriber (SUB or XSUB).
+bool stream::subscriber(const std::span<const uint8_t>& metadata) const NOEXCEPT
+{
+    std::string type{};
+    return ready_socket_type(type, metadata) &&
+        (type == "SUB" || type == "XSUB");
+}
+
+// NULL mechanism.
+// ----------------------------------------------------------------------------
 
 void stream::write_ready(const handshake_handler& handler) NOEXCEPT
 {
-    // Only the NULL mechanism is implemented (CURVE is phase 2).
     const auto ready = to_shared(make_ready_pub());
     const boost::asio::const_buffer out{ ready->data(), ready->size() };
     boost::asio::async_write(socket_, out,
@@ -422,9 +523,7 @@ void stream::handle_ready(const boost_code& ec, size_t,
         return;
     }
 
-    // Validate the peer socket type is a subscriber (SUB or XSUB).
-    std::string type{};
-    if (!ready_socket_type(type, metadata) || (type != "SUB" && type != "XSUB"))
+    if (!subscriber(metadata))
     {
         fail_handshake("incompatible socket type", handler);
         return;
@@ -434,17 +533,123 @@ void stream::handle_ready(const boost_code& ec, size_t,
     handler(boost_code{});
 }
 
-void stream::fail_handshake(const std::string& reason,
+// CURVE mechanism (server).
+// ----------------------------------------------------------------------------
+
+void stream::read_hello(const handshake_handler& handler) NOEXCEPT
+{
+    // The frame is bound to outlive the read.
+    const auto hello = to_shared<frame>();
+    async_read_frame(*hello,
+        std::bind(&stream::handle_hello,
+            this, _1, _2, hello, handler));
+}
+
+void stream::handle_hello(const boost_code& ec, size_t,
+    const frame_ptr& hello, const handshake_handler& handler) NOEXCEPT
+{
+    if (ec)
+    {
+        handler(ec);
+        return;
+    }
+
+    // The first post-greeting frame must be a HELLO command.
+    std::string name{};
+    std::span<const uint8_t> content{};
+    const std::span<const uint8_t> body{ hello->body };
+    if (!hello->command() || !command_name(name, content, body) ||
+        name != command_hello)
+    {
+        fail_handshake("expected HELLO", handler);
+        return;
+    }
+
+    // The WELCOME carries the server transient key and cookie.
+    data_chunk welcome{};
+    if (!cipher_->welcome(welcome, body))
+    {
+        fail_handshake("invalid HELLO", handler);
+        return;
+    }
+
+    const auto frame = to_shared(frame_encode(welcome, true, false));
+    const boost::asio::const_buffer out{ frame->data(), frame->size() };
+    boost::asio::async_write(socket_, out,
+        std::bind(&stream::handle_welcome_sent,
+            this, _1, frame, handler));
+}
+
+void stream::handle_welcome_sent(const boost_code& ec, const chunk_cptr&,
     const handshake_handler& handler) NOEXCEPT
 {
-    // Best-effort ERROR command, then fail the handshake.
-    const auto error = to_shared(make_error(reason));
-    const boost::asio::const_buffer out{ error->data(), error->size() };
+    if (ec)
+    {
+        handler(ec);
+        return;
+    }
+
+    // The frame is bound to outlive the read.
+    const auto initiate = to_shared<frame>();
+    async_read_frame(*initiate,
+        std::bind(&stream::handle_initiate,
+            this, _1, _2, initiate, handler));
+}
+
+void stream::handle_initiate(const boost_code& ec, size_t,
+    const frame_ptr& initiate, const handshake_handler& handler) NOEXCEPT
+{
+    if (ec)
+    {
+        handler(ec);
+        return;
+    }
+
+    std::string name{};
+    std::span<const uint8_t> content{};
+    const std::span<const uint8_t> body{ initiate->body };
+    if (!initiate->command() || !command_name(name, content, body) ||
+        name != command_initiate)
+    {
+        fail_handshake("expected INITIATE", handler);
+        return;
+    }
+
+    // The READY carries our metadata, the INITIATE the peer's.
+    data_chunk ready{};
+    data_chunk metadata{};
+    if (!cipher_->ready(ready, metadata, body,
+        make_property("Socket-Type", "PUB")))
+    {
+        fail_handshake("invalid INITIATE", handler);
+        return;
+    }
+
+    if (!subscriber(metadata))
+    {
+        fail_handshake("incompatible socket type", handler);
+        return;
+    }
+
+    const auto frame = to_shared(frame_encode(ready, true, false));
+    const boost::asio::const_buffer out{ frame->data(), frame->size() };
     boost::asio::async_write(socket_, out,
-        [error, handler](const boost_code&, size_t) NOEXCEPT
-        {
-            handler(protocol_error);
-        });
+        std::bind(&stream::handle_curve_ready_sent,
+            this, _1, frame, handler));
+}
+
+void stream::handle_curve_ready_sent(const boost_code& ec, const chunk_cptr&,
+    const handshake_handler& handler) NOEXCEPT
+{
+    if (ec)
+    {
+        handler(ec);
+        return;
+    }
+
+    // Handshake complete; frames are boxed from here.
+    secured_ = true;
+    handler(boost_code{});
 }
 
 // Frame reader (one whole frame: flags, length, body).
@@ -508,7 +713,7 @@ void stream::handle_frame_length(const boost_code& ec, bool long_size,
     body.resize(length);
     if (is_zero(length))
     {
-        handler(boost_code{}, zero);
+        handle_frame_body(boost_code{}, zero, out, handler);
         return;
     }
 
@@ -518,10 +723,51 @@ void stream::handle_frame_length(const boost_code& ec, bool long_size,
             this, _1, _2, out, handler));
 }
 
-void stream::handle_frame_body(const boost_code& ec, size_t size, ref<frame>,
-    const io_handler& handler) NOEXCEPT
+void stream::handle_frame_body(const boost_code& ec, size_t size,
+    ref<frame> out, const io_handler& handler) NOEXCEPT
 {
-    handler(ec, size);
+    if (ec || !secured_)
+    {
+        handler(ec, size);
+        return;
+    }
+
+    // Under CURVE every frame is a command: a boxed MESSAGE, or an ERROR
+    // (delivered as is, the tier above treats it as any other command).
+    auto& frame = out.get();
+    std::string name{};
+    std::span<const uint8_t> content{};
+    const std::span<const uint8_t> body{ frame.body };
+    if (!frame.command() || !command_name(name, content, body))
+    {
+        handler(protocol_error, zero);
+        return;
+    }
+
+    if (name == command_error)
+    {
+        handler(ec, size);
+        return;
+    }
+
+    uint8_t payload{};
+    data_chunk plain{};
+    if (name != command_message || !cipher_->decode(payload, plain, body))
+    {
+        handler(protocol_error, zero);
+        return;
+    }
+
+    // The payload flags map to frame flags (LONG is a framing artifact).
+    frame.body.swap(plain);
+    frame.flags = 0x00;
+    if (!is_zero(payload & cipher::payload_more))
+        frame.flags |= flag_more;
+
+    if (!is_zero(payload & cipher::payload_command))
+        frame.flags |= flag_command;
+
+    handler(ec, frame.body.size());
 }
 
 // Buffer write (caller-framed, caller-retained until the handler fires).
@@ -530,7 +776,50 @@ void stream::handle_frame_body(const boost_code& ec, size_t size, ref<frame>,
 void stream::async_write(const asio::const_buffer& in,
     io_handler&& handler) NOEXCEPT
 {
-    boost::asio::async_write(socket_, in, std::move(handler));
+    if (!secured_)
+    {
+        boost::asio::async_write(socket_, in, std::move(handler));
+        return;
+    }
+
+    // Under CURVE each frame is boxed into a MESSAGE command for this peer,
+    // into the stream's write scratch (one write in flight at a time).
+    boxed_.clear();
+    uint8_t flags{};
+    std::span<const uint8_t> body{};
+    std::span<const uint8_t> buffer
+    {
+        pointer_cast<const uint8_t>(in.data()), in.size()
+    };
+
+    while (!buffer.empty())
+    {
+        data_chunk message{};
+        uint8_t payload{};
+        if (!frame_decode(flags, body, buffer))
+        {
+            handler(protocol_error, zero);
+            return;
+        }
+
+        if (!is_zero(flags & flag_more))
+            payload |= cipher::payload_more;
+
+        if (!is_zero(flags & flag_command))
+            payload |= cipher::payload_command;
+
+        if (!cipher_->encode(message, payload, body))
+        {
+            handler(protocol_error, zero);
+            return;
+        }
+
+        const auto frame = frame_encode(message, true, false);
+        boxed_.insert(boxed_.end(), frame.begin(), frame.end());
+    }
+
+    const boost::asio::const_buffer out{ boxed_.data(), boxed_.size() };
+    boost::asio::async_write(socket_, out, std::move(handler));
 }
 
 BC_POP_WARNING()

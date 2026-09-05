@@ -20,18 +20,38 @@
 #define LIBBITCOIN_NETWORK_ZMTP_CONTEXT_HPP
 
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/zmtp/cipher.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace zmtp {
 
 /// Shared configuration for native ZMTP (ZeroMQ 3.x) transport sockets.
-/// The owner must outlive all sockets created with a reference to it. Only
-/// the NULL mechanism is implemented, so there is nothing to configure yet;
-/// the context selects the zmtp upgrade, as privacy::context selects p2ps.
-struct BCT_API context
+/// The owner must outlive all sockets created with a reference to it. The
+/// context selects the zmtp upgrade, as privacy::context selects p2ps, and
+/// holds the server long-term keypair of the CURVE mechanism when one is
+/// configured (otherwise the NULL mechanism is used).
+class BCT_API context
 {
-    // TODO: CURVE mechanism (server keypair), phase 2.
+public:
+    /// The NULL mechanism.
+    context() NOEXCEPT;
+
+    /// The CURVE mechanism with the given server long-term secret key. The
+    /// mechanism is NULL if the secret is not of key_size or is invalid.
+    context(const system::data_chunk& secret) NOEXCEPT;
+
+    /// The CURVE mechanism is configured.
+    bool curve() const NOEXCEPT;
+
+    /// The server long-term keypair (valid if curve).
+    const cipher::key& secret() const NOEXCEPT;
+    const cipher::key& public_key() const NOEXCEPT;
+
+private:
+    bool curve_{};
+    cipher::key secret_{};
+    cipher::key public_{};
 };
 
 } // namespace zmtp

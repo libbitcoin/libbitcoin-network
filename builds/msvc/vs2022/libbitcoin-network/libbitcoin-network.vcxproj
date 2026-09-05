@@ -218,7 +218,9 @@
     <ClCompile Include="..\..\..\..\src\net\socket_wait.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_zmtp.cpp" />
-    <ClCompile Include="..\..\..\..\src\privacy\cipher.cpp" />
+    <ClCompile Include="..\..\..\..\src\privacy\cipher.cpp">
+      <ObjectFileName>$(IntDir)src_privacy_cipher.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\privacy\stream.cpp">
       <ObjectFileName>$(IntDir)src_privacy_stream.obj</ObjectFileName>
     </ClCompile>
@@ -298,6 +300,10 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wc_port.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfcrypt\wolfmath.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfio.c" />
+    <ClCompile Include="..\..\..\..\src\zmtp\cipher.cpp">
+      <ObjectFileName>$(IntDir)src_zmtp_cipher.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zmtp\context.cpp" />
     <ClCompile Include="..\..\..\..\src\zmtp\stream.cpp">
       <ObjectFileName>$(IntDir)src_zmtp_stream.obj</ObjectFileName>
     </ClCompile>
@@ -588,6 +594,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfio.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfssl.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\cipher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\stream.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\zmtp.hpp" />

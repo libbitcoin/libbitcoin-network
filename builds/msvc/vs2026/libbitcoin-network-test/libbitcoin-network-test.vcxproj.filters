@@ -708,6 +708,9 @@
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\cipher.cpp">
+      <Filter>src\zmtp</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\zmtp\proxy.cpp">
       <Filter>src\zmtp</Filter>
     </ClCompile>

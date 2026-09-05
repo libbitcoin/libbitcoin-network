@@ -654,6 +654,12 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\wolfio.c">
       <Filter>src\ssl\wolfssl</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zmtp\cipher.cpp">
+      <Filter>src\zmtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\zmtp\context.cpp">
+      <Filter>src\zmtp</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\zmtp\stream.cpp">
       <Filter>src\zmtp</Filter>
     </ClCompile>
@@ -1513,6 +1519,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp">
       <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\cipher.hpp">
+      <Filter>include\bitcoin\network\zmtp</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\context.hpp">
       <Filter>include\bitcoin\network\zmtp</Filter>

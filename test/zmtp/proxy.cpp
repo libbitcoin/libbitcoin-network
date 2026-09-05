@@ -126,7 +126,7 @@ static data_stack peer_read_message(tcp_socket& peer)
 // Synchronously perform the peer (SUB) side of the ZMTP handshake.
 static void peer_handshake(tcp_socket& peer, uint8_t minor)
 {
-    auto greeting = stream::make_greeting(false);
+    auto greeting = stream::make_greeting(false, false);
     greeting.at(11) = minor;
     peer_write(peer, greeting);
 
@@ -134,7 +134,9 @@ static void peer_handshake(tcp_socket& peer, uint8_t minor)
     const boost::asio::mutable_buffer in{ theirs.data(), theirs.size() };
     boost::asio::read(peer, in);
     uint8_t their_minor{};
-    BOOST_REQUIRE(stream::parse_greeting(theirs, their_minor));
+    bool curve{};
+    bool as_server{};
+    BOOST_REQUIRE(stream::parse_greeting(theirs, their_minor, curve, as_server));
 
     peer_write(peer, ready("SUB"));
     uint8_t flags{};

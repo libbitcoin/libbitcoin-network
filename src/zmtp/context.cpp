@@ -16,11 +16,44 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ZMTP_ZMTP_HPP
-#define LIBBITCOIN_NETWORK_ZMTP_ZMTP_HPP
-
-#include <bitcoin/network/zmtp/cipher.hpp>
 #include <bitcoin/network/zmtp/context.hpp>
-#include <bitcoin/network/zmtp/stream.hpp>
 
-#endif
+#include <algorithm>
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/zmtp/cipher.hpp>
+
+namespace libbitcoin {
+namespace network {
+namespace zmtp {
+
+context::context() NOEXCEPT
+{
+}
+
+context::context(const system::data_chunk& secret) NOEXCEPT
+{
+    if (secret.size() != cipher::key_size)
+        return;
+
+    std::copy(secret.begin(), secret.end(), secret_.begin());
+    curve_ = cipher::to_public(public_, secret_);
+}
+
+bool context::curve() const NOEXCEPT
+{
+    return curve_;
+}
+
+const cipher::key& context::secret() const NOEXCEPT
+{
+    return secret_;
+}
+
+const cipher::key& context::public_key() const NOEXCEPT
+{
+    return public_;
+}
+
+} // namespace zmtp
+} // namespace network
+} // namespace libbitcoin

@@ -20,9 +20,11 @@
 #define LIBBITCOIN_NETWORK_ZMTP_STREAM_HPP
 
 #include <memory>
+#include <optional>
 #include <span>
 #include <bitcoin/network/asio.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/zmtp/cipher.hpp>
 #include <bitcoin/network/zmtp/context.hpp>
 
 namespace libbitcoin {
@@ -30,12 +32,15 @@ namespace network {
 namespace zmtp {
 
 /// Native ZMTP (ZeroMQ 3.x) framing over a tcp socket.
-/// The stream performs the greeting and NULL-mechanism handshake and then
-/// frames the wire: one frame is read at a time into a caller-owned frame,
-/// and a caller-framed buffer is written at a time. It is a transport, not a
-/// framework. Control traffic (subscriptions, PING/PONG), subscription
-/// filtering and write serialization belong to the tier above, which inspects
-/// each frame read and uses its own write queue; the stream buffers nothing.
+/// The stream performs the greeting and mechanism handshake (NULL, or CURVE
+/// as server when the context holds a keypair) and then frames the wire: one
+/// frame is read at a time into a caller-owned frame, and a caller-framed
+/// buffer is written at a time. Under CURVE each frame is boxed into a
+/// MESSAGE command on write and unboxed on read, so the tiers above see the
+/// same frames either way. It is a transport, not a framework. Control
+/// traffic (subscriptions, PING/PONG), subscription filtering and write
+/// serialization belong to the tier above, which inspects each frame read
+/// and uses its own write queue; the stream buffers only the in-flight write.
 /// All calls must be sequenced on the underlying socket's executor. Read and
 /// write chains may overlap each other but not themselves (as asio streams).
 class BCT_API stream
@@ -101,8 +106,9 @@ public:
     asio::socket& next_layer() NOEXCEPT;
     const asio::socket& next_layer() const NOEXCEPT;
 
-    /// Perform the ZMTP greeting and NULL handshake.
+    /// Perform the ZMTP greeting and mechanism handshake.
     /// as_server is set for accepted (bound) connections, clear for connected.
+    /// The CURVE mechanism is implemented for the server role only.
     void async_handshake(bool as_server, handshake_handler&& handler) NOEXCEPT;
 
     /// Read the next frame into the caller-owned frame (flags and body).
@@ -122,17 +128,24 @@ public:
         const system::data_stack& parts) NOEXCEPT;
 
     /// Build our complete 64-byte greeting (sent eagerly on handshake start).
-    static system::data_chunk make_greeting(bool as_server) NOEXCEPT;
+    /// The as-server byte is set only for the CURVE mechanism server role.
+    static system::data_chunk make_greeting(bool as_server,
+        bool curve) NOEXCEPT;
 
-    /// Validate a peer greeting and extract its minor version. Requires the
-    /// full greeting_size bytes. Returns false on signature/mechanism refusal.
+    /// Validate a peer greeting and extract its minor version, mechanism
+    /// (NULL or CURVE) and as-server byte. Requires the full greeting_size
+    /// bytes. Returns false on signature/mechanism refusal.
     static bool parse_greeting(const std::span<const uint8_t>& greeting,
-        uint8_t& minor) NOEXCEPT;
+        uint8_t& minor, bool& curve, bool& as_server) NOEXCEPT;
+
+    /// Build one metadata property (name u8-length, value u32be-length).
+    static system::data_chunk make_property(const std::string& name,
+        const std::string& value) NOEXCEPT;
 
     /// Build the NULL-mechanism READY command advertising Socket-Type PUB.
     static system::data_chunk make_ready_pub() NOEXCEPT;
 
-    /// Build a NULL-mechanism ERROR command with the given reason.
+    /// Build an ERROR command with the given reason.
     static system::data_chunk make_error(const std::string& reason) NOEXCEPT;
 
     /// Build a PONG command echoing the given context (truncated to 16 bytes).
@@ -143,12 +156,17 @@ public:
     static system::data_chunk frame_encode(const std::span<const uint8_t>& body,
         bool command, bool more) NOEXCEPT;
 
+    /// Decode the frame at the front of a buffer into flags and body, setting
+    /// the buffer to the remainder. False if the buffer is malformed.
+    static bool frame_decode(uint8_t& flags, std::span<const uint8_t>& body,
+        std::span<const uint8_t>& buffer) NOEXCEPT;
+
     /// Extract the command name from a command frame body, or empty if the
     /// self-describing length prefix is malformed. Sets body to the remainder.
     static bool command_name(std::string& name, std::span<const uint8_t>& body,
         const std::span<const uint8_t>& frame) NOEXCEPT;
 
-    /// Parse a READY command's Socket-Type property. Returns false if the
+    /// Parse the Socket-Type property from metadata. Returns false if the
     /// property is absent or malformed; type is the property value.
     static bool ready_socket_type(std::string& type,
         const std::span<const uint8_t>& body) NOEXCEPT;
@@ -162,11 +180,16 @@ private:
     void handle_greeting_sent(const boost_code& ec, bool as_server,
         const system::chunk_cptr& greeting,
         const handshake_handler& handler) NOEXCEPT;
-    void read_greeting(const handshake_handler& handler) NOEXCEPT;
-    void handle_greeting_stage1(const boost_code& ec,
+    void read_greeting(bool as_server,
         const handshake_handler& handler) NOEXCEPT;
-    void handle_greeting_stage2(const boost_code& ec,
+    void handle_greeting_stage1(const boost_code& ec, bool as_server,
         const handshake_handler& handler) NOEXCEPT;
+    void handle_greeting_stage2(const boost_code& ec, bool as_server,
+        const handshake_handler& handler) NOEXCEPT;
+    void fail_handshake(const std::string& reason,
+        const handshake_handler& handler) NOEXCEPT;
+
+    // NULL mechanism
     void write_ready(const handshake_handler& handler) NOEXCEPT;
     void handle_ready_sent(const boost_code& ec,
         const system::chunk_cptr& ready,
@@ -174,8 +197,20 @@ private:
     void read_ready(const handshake_handler& handler) NOEXCEPT;
     void handle_ready(const boost_code& ec, size_t size,
         const frame_ptr& ready, const handshake_handler& handler) NOEXCEPT;
-    void fail_handshake(const std::string& reason,
+
+    // CURVE mechanism (server)
+    void read_hello(const handshake_handler& handler) NOEXCEPT;
+    void handle_hello(const boost_code& ec, size_t size,
+        const frame_ptr& hello, const handshake_handler& handler) NOEXCEPT;
+    void handle_welcome_sent(const boost_code& ec,
+        const system::chunk_cptr& welcome,
         const handshake_handler& handler) NOEXCEPT;
+    void handle_initiate(const boost_code& ec, size_t size,
+        const frame_ptr& initiate, const handshake_handler& handler) NOEXCEPT;
+    void handle_curve_ready_sent(const boost_code& ec,
+        const system::chunk_cptr& ready,
+        const handshake_handler& handler) NOEXCEPT;
+    bool subscriber(const std::span<const uint8_t>& metadata) const NOEXCEPT;
 
     // frame reader (one whole frame: flags, length, body)
     void handle_frame_flags(const boost_code& ec, ref<frame> out,
@@ -187,10 +222,15 @@ private:
 
     // These are protected by stream (executor) sequencing.
     asio::socket socket_;
+    std::optional<cipher> cipher_{};
+    bool secured_{};
 
     // Frame reader scratch (one in-flight frame at a time on the read chain).
     system::data_chunk greeting_{};
     system::data_array<sizeof(uint64_t)> length_{};
+
+    // Boxed writer scratch (one in-flight write at a time on the write chain).
+    system::data_chunk boxed_{};
 };
 
 } // namespace zmtp
