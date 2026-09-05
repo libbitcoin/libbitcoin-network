@@ -153,10 +153,10 @@ BOOST_AUTO_TEST_CASE(net__network_settings__unstarted__expected)
 {
     const logger log{};
     settings set(selection::mainnet);
-    BOOST_REQUIRE_EQUAL(set.threads, 1u);
+    BOOST_REQUIRE_EQUAL(set.threads, 0u);
 
     net net(set, log);
-    BOOST_REQUIRE_EQUAL(net.network_settings().threads, 1u);
+    BOOST_REQUIRE_EQUAL(net.network_settings().threads, 0u);
 }
 
 BOOST_AUTO_TEST_CASE(net__address_count__unstarted__zero)
