@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_PUBLISH_HPP
 
-#include <array>
 #include <tuple>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>

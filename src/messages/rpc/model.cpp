@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/rpc/model.hpp>
 
-#include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 

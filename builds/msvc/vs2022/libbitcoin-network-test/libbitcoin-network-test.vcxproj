@@ -228,10 +228,16 @@
     <ClCompile Include="..\..\..\..\test\net\connector_socks.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\proxy.cpp">
+      <ObjectFileName>$(IntDir)test_net_proxy.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\socket.cpp" />
-    <ClCompile Include="..\..\..\..\test\privacy\cipher.cpp" />
-    <ClCompile Include="..\..\..\..\test\privacy\stream.cpp" />
+    <ClCompile Include="..\..\..\..\test\privacy\cipher.cpp">
+      <ObjectFileName>$(IntDir)test_privacy_cipher.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\privacy\stream.cpp">
+      <ObjectFileName>$(IntDir)test_privacy_stream.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_209.cpp" />
@@ -335,6 +341,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <ObjectFileName>$(IntDir)test_test.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\cipher.cpp">
+      <ObjectFileName>$(IntDir)test_zmtp_cipher.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\proxy.cpp">
+      <ObjectFileName>$(IntDir)test_zmtp_proxy.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\stream.cpp">
+      <ObjectFileName>$(IntDir)test_zmtp_stream.obj</ObjectFileName>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

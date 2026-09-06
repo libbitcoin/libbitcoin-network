@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
 
 #include <tuple>
-#include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/types.hpp>
 

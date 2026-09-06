@@ -29,7 +29,7 @@ using namespace system;
 // static
 uint32_t inventory_item::to_number(type_id inventory_type) NOEXCEPT
 {
-    return static_cast<uint32_t>(inventory_type);
+    return to_value(inventory_type);
 }
 
 // static

@@ -19,7 +19,6 @@
 #include <bitcoin/network/config/address.hpp>
 
 #include <sstream>
-#include <utility>
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>

@@ -221,13 +221,13 @@ void hosts::fetch(address_handler&& handler) const NOEXCEPT
     }
 
     // Vary the return count (quantity fingerprinting).
-    const auto divide = pseudo_random::next<size_t>(
+    const auto divide = maybe_random::next<size_t>(
         settings_.address_lower, settings_.address_upper);
     const auto size = std::min(messages::peer::max_address, buffer_.size() / divide);
 
     // Vary the start position (value fingerprinting).
     const auto limit = sub1(buffer_.size());
-    auto index = pseudo_random::next(zero, limit);
+    auto index = maybe_random::next(zero, limit);
 
     // Allocate non-const message (converted to const by return).
     const auto out = to_shared<messages::peer::address>();

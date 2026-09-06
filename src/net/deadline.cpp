@@ -19,7 +19,6 @@
 #include <bitcoin/network/net/deadline.hpp>
 
 #include <chrono>
-#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

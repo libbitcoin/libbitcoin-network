@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_GET_DATA_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_GET_DATA_HPP
 
-#include <memory>
 #include <span>
 #include <ranges>
 #include <bitcoin/network/define.hpp>

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/socket.hpp>
 
-#include <variant>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

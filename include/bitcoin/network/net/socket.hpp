@@ -20,17 +20,16 @@
 #define LIBBITCOIN_NETWORK_NET_SOCKET_HPP
 
 #include <atomic>
-#include <memory>
 #include <optional>
 #include <span>
-#include <variant>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/deadline.hpp>
-#include <bitcoin/network/privacy/context.hpp>
-#include <bitcoin/network/privacy/stream.hpp>
+#include <bitcoin/network/privacy/privacy.hpp>
+#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/zmtp/zmtp.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -45,13 +44,7 @@ class BCT_API socket
 public:
     typedef std::shared_ptr<socket> ptr;
 
-    // TODO: zmq::context.
-    using context = std::variant
-    <
-        std::monostate,
-        ref<asio::ssl::context>,
-        ref<const privacy::context>
-    >;
+    using context = settings::transport;
 
     struct parameters
     {
@@ -145,6 +138,19 @@ public:
 
     /// Write fixed buffer to socket, handler posted to socket strand.
     virtual void tcp_write(const asio::const_buffer& in,
+        count_handler&& handler) NOEXCEPT;
+
+    /// ZMTP (TCP: native publisher).
+    /// -----------------------------------------------------------------------
+
+    /// Read next frame from the zmtp socket, handler posted to socket strand.
+    virtual void zmtp_read(zmtp::stream::frame& out,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write caller-framed buffer to the zmtp socket, handler posted to
+    /// socket strand. Control traffic and subscription filtering belong to
+    /// the tier above (see zmtp::stream::frame_message).
+    virtual void zmtp_write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
     /// PEER (TCP: bitcoin p2p).
@@ -251,6 +257,9 @@ public:
     /// The socket was upgraded to p2ps (the peer is v2).
     virtual bool encrypted() const NOEXCEPT;
 
+    /// The socket was upgraded to a native ZMTP publisher.
+    virtual bool publisher() const NOEXCEPT;
+
     /// The socket was upgraded to a websocket.
     virtual bool websocket() const NOEXCEPT;
 
@@ -267,7 +276,7 @@ protected:
     using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;
     using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
     using socket_t = std::variant<asio::socket, asio::ssl::socket, ws::socket,
-        ws::ssl::socket, privacy::stream>;
+        ws::ssl::socket, privacy::stream, zmtp::stream>;
 
     /// Construct.
     /// -----------------------------------------------------------------------
@@ -288,6 +297,7 @@ protected:
     asio::socket& get_base() NOEXCEPT;
     asio::ssl::socket& get_ssl() NOEXCEPT;
     privacy::stream& get_p2ps() NOEXCEPT;
+    zmtp::stream& get_zmtp() NOEXCEPT;
 
     /// Variant (ws vs. tcp) helpers (protected by strand).
     /// -----------------------------------------------------------------------
@@ -438,6 +448,12 @@ private:
     void do_tcp_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
 
+    // zmtp
+    void do_zmtp_read(ref<zmtp::stream::frame> out,
+        const count_handler& handler) NOEXCEPT;
+    void do_zmtp_write(const asio::const_buffer& in,
+        const count_handler& handler) NOEXCEPT;
+
     // peer
     void do_peer_read(size_t total, const peer_state::ptr& in,
         const count_handler& handler) NOEXCEPT;
@@ -494,6 +510,8 @@ private:
     void handle_handshake(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_encrypted_handshake(const boost_code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void handle_publisher_handshake(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
 
     // read/write (tcp/ws)

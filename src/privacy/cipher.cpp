@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/privacy/cipher.hpp>
 
-#include <random>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -33,35 +32,17 @@ BC_PUSH_WARNING(NO_DYNAMIC_ARRAY_INDEXING)
 // key derivation salt prefix.
 constexpr char salt_label[] = "bitcoin_v2_shared_secret";
 
-// This is to be used only for ephemeral network session keys.
-// Gather 256 bits of operating system entropy, conditioned by sha256.
-static hash_digest entropy() NOEXCEPT
-{
-    using word = std::random_device::result_type;
-    constexpr auto words = hash_size / sizeof(word);
-
-    std::random_device device{};
-    data_array<words * sizeof(word)> seed{};
-    auto it = seed.begin();
-
-    for (size_t count{}; count < words; ++count)
-    {
-        const auto value = to_little_endian(device());
-        it = std::copy(value.begin(), value.end(), it);
-    }
-
-    return sha256_hash(seed);
-}
-
 cipher::cipher() NOEXCEPT
   : key_{}, secret_{}
 {
     // A secret outside the group order is astronomically improbable.
+    hash_digest tweak{};
     do
     {
-        secret_ = entropy();
+        maybe_random::fill(secret_);
+        maybe_random::fill(tweak);
     }
-    while (!ellswift::create(key_, secret_, entropy()));
+    while (!ellswift::create(key_, secret_, tweak));
 }
 
 cipher::cipher(const ec_secret& secret, const key& public_key) NOEXCEPT

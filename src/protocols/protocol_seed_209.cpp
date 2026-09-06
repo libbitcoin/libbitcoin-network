@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_seed_209.hpp>
 
-#include <algorithm>
-#include <memory>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -127,14 +125,14 @@ address::cptr protocol_seed_209::filter(
     const size_t maximum = std::min(cap, items.size());
 
     // Returns zero if minimum > maximum.
-    const size_t select = pseudo_random::next(minimum, maximum);
+    const size_t select = maybe_random::next(minimum, maximum);
     if (is_zero(select))
         return to_shared<address>();
 
     // Copy, shuffle, reduce, and filter to the target amount.
     const auto message = system::to_shared<address>(items);
     auto& addresses = const_cast<address_items&>(message->addresses);
-    pseudo_random::shuffle(addresses);
+    maybe_random::shuffle(addresses);
     addresses.resize(select);
     std::erase_if(addresses, [&](const auto& address) NOEXCEPT
     {

@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/privacy/stream.hpp>
 
-#include <algorithm>
-#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>

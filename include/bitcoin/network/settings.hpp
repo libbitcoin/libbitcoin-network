@@ -24,6 +24,8 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/privacy/privacy.hpp>
+#include <bitcoin/network/zmtp/zmtp.hpp>
 
 #define BC_HTTP_SERVER_NAME "libbitcoin/4"
 
@@ -56,6 +58,15 @@ constexpr uint32_t maximum_service_default() NOEXCEPT
 /// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
 {
+    /// The transport of a socket is selected by its context (none is clear).
+    using transport = std::variant
+    <
+        std::monostate,
+        ref<asio::ssl::context>,
+        ref<const privacy::context>,
+        ref<const zmtp::context>
+    >;
+
     struct socks5
     {
         DEFAULT_COPY_MOVE_DESTRUCT(socks5);
@@ -100,21 +111,36 @@ struct BCT_API settings
         virtual steady_clock::duration expiration() const NOEXCEPT;
     };
 
-    struct tls_server
+    struct secure_server
       : public tcp_server
     {
-        DELETE_COPY(tls_server);
+        DEFAULT_COPY_MOVE_DESTRUCT(secure_server);
+        secure_server(const std::string_view& logging_name) NOEXCEPT;
 
-        /// Service requests are small, it is responses that are large.
-        tls_server(const std::string_view& logging_name) NOEXCEPT
-          : tcp_server(logging_name)
-        {
-            maximum_request = maximum_service_default();
-            minimum_buffer = minimum_service_default();
-        }
-
-        /// Transport layer security bindings.
+        /// Secured bindings.
         config::authorities safes{};
+
+        /// The secured bindings are configured (default false).
+        virtual bool secure() const NOEXCEPT;
+
+        /// Requires client authentication (default false).
+        virtual bool authenticate() const NOEXCEPT;
+
+        /// Initialize the secure context (required before use).
+        virtual code initialize_context() const NOEXCEPT;
+
+        /// The socket context applied to the clear bindings (default none).
+        virtual transport clear_context() const NOEXCEPT;
+
+        /// The socket context applied to the secured bindings (default none).
+        virtual transport secure_context() const NOEXCEPT;
+    };
+
+    struct tls_server
+      : public secure_server
+    {
+        DELETE_COPY(tls_server);
+        tls_server(const std::string_view& logging_name) NOEXCEPT;
 
         /// Path to server private key decryption password (optional).
         std::string key_pass{};
@@ -128,17 +154,47 @@ struct BCT_API settings
         /// Directory for CA certificates for client authentication (optional).
         std::filesystem::path cert_auth{};
 
-        /// False if binds, certificate_path, or key_path is empty.
-        virtual bool secure() const NOEXCEPT;
+        /// False if safes, certificate_path, or key_path is empty.
+        bool secure() const NOEXCEPT override;
 
         /// Requires client authentication (certificate authority specified).
-        virtual bool authenticate() const NOEXCEPT;
+        bool authenticate() const NOEXCEPT override;
 
         /// Initialize the ssl::context (required before use).
-        virtual code initialize_context() const NOEXCEPT;
+        code initialize_context() const NOEXCEPT override;
+
+        /// The ssl::context (initialized).
+        transport secure_context() const NOEXCEPT override;
 
         /// Thread safe socket ssl context (deferred construction).
         mutable std::unique_ptr<asio::ssl::context> context{};
+    };
+
+    struct zmtp_server
+      : public secure_server
+    {
+        DELETE_COPY(zmtp_server);
+        zmtp_server(const std::string_view& logging_name) NOEXCEPT;
+
+        /// The CurveZMQ server secret key (Z85) of the secured bindings.
+        system::config::base85 curve_secret{};
+
+        /// False if safes or curve_secret is empty.
+        bool secure() const NOEXCEPT override;
+
+        /// Initialize the CURVE context (invalid_configuration if the secret
+        /// is malformed, as the downgrade to NULL would otherwise be silent).
+        code initialize_context() const NOEXCEPT override;
+
+        /// The NULL mechanism context.
+        transport clear_context() const NOEXCEPT override;
+
+        /// The CURVE mechanism context (initialized).
+        transport secure_context() const NOEXCEPT override;
+
+        /// Thread safe socket zmtp contexts (secure is deferred construction).
+        const zmtp::context clear{};
+        mutable std::unique_ptr<zmtp::context> context{};
     };
 
     struct http_server

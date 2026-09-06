@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/sessions/session_peer.hpp>
 
-#include <memory>
-#include <utility>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

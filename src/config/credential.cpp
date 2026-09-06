@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/config/credential.hpp>
 
-#include <iostream>
 #include <sstream>
 #include <bitcoin/network/define.hpp>
 

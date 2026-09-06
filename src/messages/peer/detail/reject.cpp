@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/reject.hpp>
 
-#include <utility>
 #include <bitcoin/network/messages/peer/detail/block.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
@@ -45,7 +44,7 @@ bool reject::is_chain(const std::string& message) NOEXCEPT
 // static
 uint8_t reject::reason_to_byte(reason_code value) NOEXCEPT
 {
-    return static_cast<uint8_t>(value);
+    return to_value(value);
 }
 
 // static

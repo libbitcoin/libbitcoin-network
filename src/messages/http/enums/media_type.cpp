@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/http/enums/media_type.hpp>
 
-#include <algorithm>
 #include <unordered_map>
 #include <bitcoin/network/define.hpp>
 

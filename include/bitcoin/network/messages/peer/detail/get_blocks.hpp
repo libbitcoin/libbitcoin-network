@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_GET_BLOCKS_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_PEER_GET_BLOCKS_HPP
 
-#include <memory>
 #include <span>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/peer/enums/identifiers.hpp>

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_HPP
 #define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_HPP
 
-#include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/deadline.hpp>
@@ -126,7 +125,7 @@ private:
     const uint64_t identifier_;
     const uint64_t nonce_
     {
-        system::pseudo_random::next<uint64_t>(one, max_uint64)
+        system::maybe_random::next<uint64_t>(one, max_uint64)
     };
 
     // These are protected by strand.

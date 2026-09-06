@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_FIELDS_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_FIELDS_HPP
 
-#include <algorithm>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

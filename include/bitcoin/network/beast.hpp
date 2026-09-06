@@ -22,8 +22,6 @@
 #include <bitcoin/network/asio.hpp>
 
 #include <optional>
-#include <memory>
-#include <utility>
 
 // The default is 4096, which hits the variant http_body.
 #define BOOST_BEAST_FILE_BUFFER_SIZE 1024

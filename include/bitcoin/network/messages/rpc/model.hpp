@@ -21,8 +21,6 @@
 
 #include <optional>
 #include <unordered_map>
-#include <utility>
-#include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/any.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>

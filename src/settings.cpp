@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/settings.hpp>
 
-#include <algorithm>
 #include <filesystem>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -70,8 +69,49 @@ steady_clock::duration settings::tcp_server::expiration() const NOEXCEPT
     return minutes{ expiration_minutes };
 }
 
+// secure_server
+// ----------------------------------------------------------------------------
+
+settings::secure_server::secure_server(
+    const std::string_view& logging_name) NOEXCEPT
+  : tcp_server(logging_name)
+{
+}
+
+bool settings::secure_server::secure() const NOEXCEPT
+{
+    return false;
+}
+
+bool settings::secure_server::authenticate() const NOEXCEPT
+{
+    return false;
+}
+
+code settings::secure_server::initialize_context() const NOEXCEPT
+{
+    return error::success;
+}
+
+settings::transport settings::secure_server::clear_context() const NOEXCEPT
+{
+    return {};
+}
+
+settings::transport settings::secure_server::secure_context() const NOEXCEPT
+{
+    return {};
+}
+
 // tls_server
 // ----------------------------------------------------------------------------
+
+settings::tls_server::tls_server(const std::string_view& logging_name) NOEXCEPT
+  : secure_server(logging_name)
+{
+    maximum_request = maximum_service_default();
+    minimum_buffer = minimum_service_default();
+}
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 code settings::tls_server::initialize_context() const NOEXCEPT
@@ -124,6 +164,51 @@ bool settings::tls_server::secure() const NOEXCEPT
 bool settings::tls_server::authenticate() const NOEXCEPT
 {
     return secure() && !cert_auth.empty();
+}
+
+settings::transport settings::tls_server::secure_context() const NOEXCEPT
+{
+    BC_ASSERT(context);
+    return std::ref(*context);
+}
+
+// zmtp_server
+// ----------------------------------------------------------------------------
+
+settings::zmtp_server::zmtp_server(
+    const std::string_view& logging_name) NOEXCEPT
+  : secure_server(logging_name)
+{
+}
+
+bool settings::zmtp_server::secure() const NOEXCEPT
+{
+    const system::data_chunk& secret = curve_secret;
+    return !safes.empty() && !secret.empty();
+}
+
+code settings::zmtp_server::initialize_context() const NOEXCEPT
+{
+    if (context)
+        return error::operation_failed;
+
+    context = std::make_unique<zmtp::context>(curve_secret);
+
+    if (!secure())
+        return error::success;
+
+    return context->curve() ? error::success : error::invalid_configuration;
+}
+
+settings::transport settings::zmtp_server::clear_context() const NOEXCEPT
+{
+    return std::cref(clear);
+}
+
+settings::transport settings::zmtp_server::secure_context() const NOEXCEPT
+{
+    BC_ASSERT(context);
+    return std::cref(*context);
 }
 
 // http_server
@@ -275,7 +360,7 @@ steady_clock::duration settings::retry_timeout() const NOEXCEPT
 {
     const auto from = retry_timeout_seconds * 500_u64;
     const auto to = retry_timeout_seconds * 1'000_u64;
-    return milliseconds{ system::pseudo_random::next(from, to) };
+    return milliseconds{ system::maybe_random::next(from, to) };
 }
 
 // Randomized from 50% to maximum milliseconds (specified in seconds).
@@ -283,7 +368,7 @@ steady_clock::duration settings::connect_timeout() const NOEXCEPT
 {
     const auto from = connect_timeout_seconds * 500_u64;
     const auto to = connect_timeout_seconds * 1'000_u64;
-    return milliseconds{ system::pseudo_random::next(from, to) };
+    return milliseconds{ system::maybe_random::next(from, to) };
 }
 
 steady_clock::duration settings::channel_handshake() const NOEXCEPT

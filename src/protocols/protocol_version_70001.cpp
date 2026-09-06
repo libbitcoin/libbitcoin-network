@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 
-#include <utility>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

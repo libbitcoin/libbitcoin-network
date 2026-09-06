@@ -19,8 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_CONFIG_CREDENTIAL_HPP
 #define LIBBITCOIN_NETWORK_CONFIG_CREDENTIAL_HPP
 
-#include <iostream>
-#include <memory>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

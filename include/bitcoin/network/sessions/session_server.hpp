@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_SERVER_HPP
 #define LIBBITCOIN_NETWORK_SESSION_SERVER_HPP
 
-#include <memory>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -42,7 +41,7 @@ class BCT_API session_server
 {
 public:
     typedef std::shared_ptr<session_server> ptr;
-    using options_t = network::settings::tls_server;
+    using options_t = network::settings::secure_server;
 
     /// Start accepting connections as configured (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
@@ -84,7 +83,7 @@ protected:
 
 private:
     code do_accept(const config::authorities& binds,
-        const socket::context& context={}) NOEXCEPT;
+        const socket::context& context, bool secure) NOEXCEPT;
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;

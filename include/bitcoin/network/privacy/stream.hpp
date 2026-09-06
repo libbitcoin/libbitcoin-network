@@ -19,8 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_PRIVACY_STREAM_HPP
 #define LIBBITCOIN_NETWORK_PRIVACY_STREAM_HPP
 
-#include <functional>
-#include <memory>
 #include <span>
 #include <bitcoin/network/asio.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>

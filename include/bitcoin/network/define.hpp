@@ -73,7 +73,7 @@ namespace network {
 // Root directory singletons.
 
 // memory         : define
-// settings       : define /config
+// settings       : define /config /privacy /zmtp
 // net            : define settings /sessions
 
 // Other directory common includes are not internally chained.
@@ -86,6 +86,8 @@ namespace network {
 // /messages      : define memory /async
 // /config        : define /messages
 // /interface     : define /messages
+// /privacy       : define /messages
+// /zmtp          : define
 // /net           : define settings memory /config /log
 // /channels      : define /net /interface
 // /sessions      : define /channels

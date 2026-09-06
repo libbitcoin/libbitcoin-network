@@ -132,6 +132,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/net/socket_tcp.cpp \
     ${srcdir}/../../src/net/socket_wait.cpp \
     ${srcdir}/../../src/net/socket_ws.cpp \
+    ${srcdir}/../../src/net/socket_zmtp.cpp \
     ${srcdir}/../../src/privacy/cipher.cpp \
     ${srcdir}/../../src/privacy/stream.cpp \
     ${srcdir}/../../src/protocols/protocol.cpp \
@@ -154,7 +155,10 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/sessions/session_outbound.cpp \
     ${srcdir}/../../src/sessions/session_peer.cpp \
     ${srcdir}/../../src/sessions/session_seed.cpp \
-    ${srcdir}/../../src/sessions/session_server.cpp
+    ${srcdir}/../../src/sessions/session_server.cpp \
+    ${srcdir}/../../src/zmtp/cipher.cpp \
+    ${srcdir}/../../src/zmtp/context.cpp \
+    ${srcdir}/../../src/zmtp/stream.cpp
 
 if WITH_SSL
 
@@ -665,6 +669,15 @@ include_bitcoin_network_ssl_wolfssl_wolfcrypt_HEADERS = \
 
 endif WITH_SSL
 
+include_bitcoin_network_zmtpdir = \
+    ${includedir}/bitcoin/network/zmtp
+
+include_bitcoin_network_zmtp_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/zmtp/cipher.hpp \
+    ${srcdir}/../../include/bitcoin/network/zmtp/context.hpp \
+    ${srcdir}/../../include/bitcoin/network/zmtp/stream.hpp \
+    ${srcdir}/../../include/bitcoin/network/zmtp/zmtp.hpp
+
 # Tests.
 #==============================================================================
 # Target test 'test/libbitcoin-network-test'
@@ -817,7 +830,10 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/sessions/session_outbound.cpp \
     ${srcdir}/../../test/sessions/session_seed.cpp \
     ${srcdir}/../../test/sessions/session_server.cpp \
-    ${srcdir}/../../test/ssl/wolfssl.cpp
+    ${srcdir}/../../test/ssl/wolfssl.cpp \
+    ${srcdir}/../../test/zmtp/cipher.cpp \
+    ${srcdir}/../../test/zmtp/proxy.cpp \
+    ${srcdir}/../../test/zmtp/stream.cpp
 
 if WITH_SSL
 

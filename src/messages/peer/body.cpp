@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/body.hpp>
 
-#include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/interfaces/peer_registry.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>

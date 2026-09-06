@@ -109,6 +109,9 @@
     <Filter Include="src\ssl\wolfssl\wolfcrypt\test">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\zmtp">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp">
@@ -704,6 +707,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\cipher.cpp">
+      <Filter>src\zmtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\proxy.cpp">
+      <Filter>src\zmtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\stream.cpp">
+      <Filter>src\zmtp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

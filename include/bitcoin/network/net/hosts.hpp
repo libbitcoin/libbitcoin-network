@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_HOSTS_HPP
 #define LIBBITCOIN_NETWORK_NET_HOSTS_HPP
 
-#include <algorithm>
 #include <atomic>
 #include <unordered_set>
 #include <bitcoin/network/config/config.hpp>

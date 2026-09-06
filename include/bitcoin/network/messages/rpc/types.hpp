@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_TYPES_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_TYPES_HPP
 
-#include <memory>
 #include <optional>
 #include <tuple>
 #include <bitcoin/network/define.hpp>

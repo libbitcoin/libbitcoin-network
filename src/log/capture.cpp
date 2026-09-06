@@ -19,7 +19,6 @@
 #include <bitcoin/network/log/capture.hpp>
 
 #include <optional>
-#include <utility>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

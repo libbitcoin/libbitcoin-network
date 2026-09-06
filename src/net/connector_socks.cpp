@@ -18,9 +18,7 @@
  */
 #include <bitcoin/network/net/connector_socks.hpp>
 
-#include <algorithm>
 #include <atomic>
-#include <utility>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

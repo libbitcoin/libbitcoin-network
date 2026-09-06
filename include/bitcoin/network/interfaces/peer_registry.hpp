@@ -19,10 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_INTERFACES_PEER_REGISTRY_HPP
 #define LIBBITCOIN_NETWORK_INTERFACES_PEER_REGISTRY_HPP
 
-#include <array>
 #include <span>
 #include <tuple>
-#include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
 #include <bitcoin/network/messages/messages.hpp>
