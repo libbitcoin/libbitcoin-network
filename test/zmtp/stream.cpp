@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(zmtp_stream_tests)
 
 using stream = network::zmtp::stream;
 using context = network::zmtp::context;
-using tcp_socket = network::asio::socket;
+using peer_socket = network::asio::socket;
 using system::data_chunk;
 using system::data_stack;
 using system::base16_chunk;
@@ -33,7 +33,7 @@ using system::base16_chunk;
 
 // Establish a connected local socket pair on the given service.
 static void connect_pair(boost::asio::io_context& service,
-    tcp_socket& server, tcp_socket& client)
+    peer_socket& server, peer_socket& client)
 {
     boost::asio::ip::tcp::acceptor acceptor{ service,
         { boost::asio::ip::address_v4::loopback(), 0 } };
@@ -91,7 +91,7 @@ public:
     using frame_handler = std::function<void(const boost_code&, uint8_t,
         const data_chunk&)>;
 
-    raw_peer(tcp_socket& socket, uint8_t minor) NOEXCEPT
+    raw_peer(peer_socket& socket, uint8_t minor) NOEXCEPT
       : socket_(socket), minor_(minor)
     {
     }
@@ -188,7 +188,7 @@ public:
     }
 
 private:
-    tcp_socket& socket_;
+    peer_socket& socket_;
     const uint8_t minor_;
     data_chunk scratch_{};
 };
@@ -200,7 +200,7 @@ class curve_peer
 public:
     using cipher = network::zmtp::cipher;
 
-    curve_peer(tcp_socket& socket, cipher& client) NOEXCEPT
+    curve_peer(peer_socket& socket, cipher& client) NOEXCEPT
       : raw_peer(socket, 1), client_(client)
     {
     }
@@ -420,8 +420,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__make_pong__echoes_truncated_context)
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
 {
     boost::asio::io_context service{};
-    tcp_socket server{ service };
-    tcp_socket client{ service };
+    peer_socket server{ service };
+    peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
@@ -472,8 +472,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
 BOOST_AUTO_TEST_CASE(zmtp_stream__handshake__v30_peer__minor_zero)
 {
     boost::asio::io_context service{};
-    tcp_socket server{ service };
-    tcp_socket client{ service };
+    peer_socket server{ service };
+    peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
@@ -497,8 +497,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__handshake__v30_peer__minor_zero)
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
 {
     boost::asio::io_context service{};
-    tcp_socket server{ service };
-    tcp_socket client{ service };
+    peer_socket server{ service };
+    peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
@@ -542,8 +542,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_from_context)
 {
     boost::asio::io_context service{};
-    tcp_socket server{ service };
-    tcp_socket client{ service };
+    peer_socket server{ service };
+    peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
@@ -638,8 +638,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__frame_decode__two_frames__expected)
 BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
 {
     boost::asio::io_context service{};
-    tcp_socket server_socket{ service };
-    tcp_socket client_socket{ service };
+    peer_socket server_socket{ service };
+    peer_socket client_socket{ service };
     connect_pair(service, server_socket, client_socket);
 
     network::zmtp::cipher::key server_secret{};
@@ -668,8 +668,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
 BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__null_client__error)
 {
     boost::asio::io_context service{};
-    tcp_socket server_socket{ service };
-    tcp_socket client_socket{ service };
+    peer_socket server_socket{ service };
+    peer_socket client_socket{ service };
     connect_pair(service, server_socket, client_socket);
 
     network::zmtp::cipher::key server_secret{};
@@ -700,8 +700,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__context__wrong_size_secret__null_mechanism)
 BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_ways)
 {
     boost::asio::io_context service{};
-    tcp_socket server_socket{ service };
-    tcp_socket client_socket{ service };
+    peer_socket server_socket{ service };
+    peer_socket client_socket{ service };
     connect_pair(service, server_socket, client_socket);
 
     network::zmtp::cipher::key server_secret{};

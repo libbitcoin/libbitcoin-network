@@ -28,7 +28,7 @@ namespace zmtp {
 
 /// Shared configuration for native ZMTP (ZeroMQ 3.x) transport sockets.
 /// The owner must outlive all sockets created with a reference to it. The
-/// context selects the zmtp upgrade, as privacy::context selects p2ps, and
+/// context selects the zmtp upgrade, as p2ps::context selects p2ps, and
 /// holds the server long-term keypair of the CURVE mechanism when one is
 /// configured (otherwise the NULL mechanism is used).
 class BCT_API context

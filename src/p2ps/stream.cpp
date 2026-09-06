@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/privacy/stream.hpp>
+#include <bitcoin/network/p2ps/stream.hpp>
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -24,7 +24,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace privacy {
+namespace p2ps {
 
 using namespace system;
 using namespace std::placeholders;
@@ -500,6 +500,6 @@ void stream::handle_message_sent(const boost_code& ec, size_t size,
 
 BC_POP_WARNING()
 
-} // namespace privacy
+} // namespace p2ps
 } // namespace network
 } // namespace libbitcoin

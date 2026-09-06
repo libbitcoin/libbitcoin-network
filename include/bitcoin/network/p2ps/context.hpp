@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PRIVACY_CONTEXT_HPP
-#define LIBBITCOIN_NETWORK_PRIVACY_CONTEXT_HPP
+#ifndef LIBBITCOIN_NETWORK_P2PS_CONTEXT_HPP
+#define LIBBITCOIN_NETWORK_P2PS_CONTEXT_HPP
 
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace privacy {
+namespace p2ps {
 
 /// Shared configuration for bip324 (v2) transport sockets.
 /// The owner must outlive all sockets created with a reference to it.
@@ -34,7 +34,7 @@ struct BCT_API context
     uint32_t identifier{};
 };
 
-} // namespace privacy
+} // namespace p2ps
 } // namespace network
 } // namespace libbitcoin
 

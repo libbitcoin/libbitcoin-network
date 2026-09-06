@@ -82,7 +82,7 @@
     <Filter Include="include\bitcoin\network\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\privacy">
+    <Filter Include="include\bitcoin\network\p2ps">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\protocols">
@@ -151,7 +151,7 @@
     <Filter Include="src\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\privacy">
+    <Filter Include="src\p2ps">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\protocols">
@@ -432,11 +432,11 @@
     <ClCompile Include="..\..\..\..\src\net\socket_zmtp.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\privacy\cipher.cpp">
-      <Filter>src\privacy</Filter>
+    <ClCompile Include="..\..\..\..\src\p2ps\cipher.cpp">
+      <Filter>src\p2ps</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\privacy\stream.cpp">
-      <Filter>src\privacy</Filter>
+    <ClCompile Include="..\..\..\..\src\p2ps\stream.cpp">
+      <Filter>src\p2ps</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol.cpp">
       <Filter>src\protocols</Filter>
@@ -1043,20 +1043,20 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\cipher.hpp">
+      <Filter>include\bitcoin\network\p2ps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\context.hpp">
+      <Filter>include\bitcoin\network\p2ps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\p2ps.hpp">
+      <Filter>include\bitcoin\network\p2ps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\stream.hpp">
+      <Filter>include\bitcoin\network\p2ps</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\preprocessor.hpp">
       <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\cipher.hpp">
-      <Filter>include\bitcoin\network\privacy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\context.hpp">
-      <Filter>include\bitcoin\network\privacy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\privacy.hpp">
-      <Filter>include\bitcoin\network\privacy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\privacy\stream.hpp">
-      <Filter>include\bitcoin\network\privacy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>

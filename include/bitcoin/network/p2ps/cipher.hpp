@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PRIVACY_CIPHER_HPP
-#define LIBBITCOIN_NETWORK_PRIVACY_CIPHER_HPP
+#ifndef LIBBITCOIN_NETWORK_P2PS_CIPHER_HPP
+#define LIBBITCOIN_NETWORK_P2PS_CIPHER_HPP
 
 #include <optional>
 #include <span>
@@ -25,7 +25,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace privacy {
+namespace p2ps {
 
 /// The bip324 (v2) transport (p2ps) session cipher.
 /// This is to be used only for ephemeral network session keys.
@@ -101,7 +101,7 @@ private:
     std::optional<system::fschacha20_poly1305> receive_packet_{};
 };
 
-} // namespace privacy
+} // namespace p2ps
 } // namespace network
 } // namespace libbitcoin
 

@@ -175,13 +175,13 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
     ////BC_ASSERT(stranded());
 
-    if (std::holds_alternative<cref<privacy::context>>(context_))
+    if (std::holds_alternative<cref<p2ps::context>>(context_))
     {
         // The accepted peer is detected as v1 or v2 before upgrade.
         if (inbound_)
         {
             boost::asio::async_read(get_base(),
-                detection_.prepare(privacy::stream::detection_size),
+                detection_.prepare(p2ps::stream::detection_size),
                 std::bind(&socket::handle_detection,
                     shared_from_this(), _1, handler));
             return;
@@ -191,8 +191,8 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
         auto socket = std::move(get_base());
 
         // P2PS (bip324) context is applied to the socket.
-        socket_.emplace<privacy::stream>(std::move(socket),
-            std::get<cref<privacy::context>>(context_).get());
+        socket_.emplace<p2ps::stream>(std::move(socket),
+            std::get<cref<p2ps::context>>(context_).get());
 
         // Posts handler to socket strand.
         get_p2ps().async_handshake(
@@ -254,14 +254,14 @@ void socket::handle_detection(const boost_code& ec,
         return;
     }
 
-    constexpr auto size = privacy::stream::detection_size;
+    constexpr auto size = p2ps::stream::detection_size;
     detection_.commit(size);
-    const auto& context = std::get<cref<privacy::context>>(context_).get();
+    const auto& context = std::get<cref<p2ps::context>>(context_).get();
     const auto data = system::pointer_cast<const uint8_t>(detection_.data().data());
     const std::span<const uint8_t> prefix{ data, size };
 
     // A v1 peer is served without upgrade, the buffer retains the prefix.
-    if (privacy::stream::detected_v1(prefix, context.identifier))
+    if (p2ps::stream::detected_v1(prefix, context.identifier))
     {
         handler(error::success);
         return;
@@ -275,7 +275,7 @@ void socket::handle_detection(const boost_code& ec,
     auto socket = std::move(get_base());
 
     // P2PS (bip324) context is applied to the socket.
-    socket_.emplace<privacy::stream>(std::move(socket), context);
+    socket_.emplace<p2ps::stream>(std::move(socket), context);
 
     // Posts handler to socket strand.
     get_p2ps().async_handshake(std::move(key),

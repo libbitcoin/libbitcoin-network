@@ -16,19 +16,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PRIVACY_STREAM_HPP
-#define LIBBITCOIN_NETWORK_PRIVACY_STREAM_HPP
+#ifndef LIBBITCOIN_NETWORK_P2PS_STREAM_HPP
+#define LIBBITCOIN_NETWORK_P2PS_STREAM_HPP
 
 #include <span>
 #include <bitcoin/network/asio.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
-#include <bitcoin/network/privacy/cipher.hpp>
-#include <bitcoin/network/privacy/context.hpp>
+#include <bitcoin/network/p2ps/cipher.hpp>
+#include <bitcoin/network/p2ps/context.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace privacy {
+namespace p2ps {
 
 /// bip324 (v2) transport stream over a tcp socket.
 /// The stream is message oriented: whole messages are written as encrypted
@@ -142,7 +142,7 @@ private:
     system::data_chunk garbage_{};
 };
 
-} // namespace privacy
+} // namespace p2ps
 } // namespace network
 } // namespace libbitcoin
 

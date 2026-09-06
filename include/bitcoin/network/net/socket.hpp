@@ -27,7 +27,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/deadline.hpp>
-#include <bitcoin/network/privacy/privacy.hpp>
+#include <bitcoin/network/p2ps/p2ps.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/zmtp/zmtp.hpp>
 
@@ -276,7 +276,7 @@ protected:
     using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;
     using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
     using socket_t = std::variant<asio::socket, asio::ssl::socket, ws::socket,
-        ws::ssl::socket, privacy::stream, zmtp::stream>;
+        ws::ssl::socket, p2ps::stream, zmtp::stream>;
 
     /// Construct.
     /// -----------------------------------------------------------------------
@@ -296,7 +296,7 @@ protected:
     tcp_t get_tcp() NOEXCEPT;
     asio::socket& get_base() NOEXCEPT;
     asio::ssl::socket& get_ssl() NOEXCEPT;
-    privacy::stream& get_p2ps() NOEXCEPT;
+    p2ps::stream& get_p2ps() NOEXCEPT;
     zmtp::stream& get_zmtp() NOEXCEPT;
 
     /// Variant (ws vs. tcp) helpers (protected by strand).
@@ -583,7 +583,7 @@ protected:
     socket_t socket_;
 
     // Retains the detection prefix for a v1 peer (see handle_detection).
-    http::flat_buffer detection_{ privacy::stream::detection_size };
+    http::flat_buffer detection_{ p2ps::stream::detection_size };
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;

@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PRIVACY_PRIVACY_HPP
-#define LIBBITCOIN_NETWORK_PRIVACY_PRIVACY_HPP
+#ifndef LIBBITCOIN_NETWORK_P2PS_PRIVACY_HPP
+#define LIBBITCOIN_NETWORK_P2PS_PRIVACY_HPP
 
-#include <bitcoin/network/privacy/cipher.hpp>
-#include <bitcoin/network/privacy/context.hpp>
-#include <bitcoin/network/privacy/stream.hpp>
+#include <bitcoin/network/p2ps/cipher.hpp>
+#include <bitcoin/network/p2ps/context.hpp>
+#include <bitcoin/network/p2ps/stream.hpp>
 
 #endif
