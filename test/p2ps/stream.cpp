@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(p2ps_stream_tests)
 
 using v2_stream = network::p2ps::stream;
 using v2_context = network::p2ps::context;
-using tcp_socket = network::asio::socket;
+using peer_socket = network::asio::socket;
 using network::messages::peer::heading;
 namespace identifiers = network::messages::peer::identifiers;
 using system::data_chunk;
@@ -32,7 +32,7 @@ constexpr uint32_t mainnet = 0xd9b4bef9;
 
 // Establish a connected local socket pair on the given service.
 static void connect_pair(boost::asio::io_context& service,
-    tcp_socket& server, tcp_socket& client)
+    peer_socket& server, peer_socket& client)
 {
     boost::asio::ip::tcp::acceptor acceptor{ service,
         { boost::asio::ip::address_v4::loopback(), 0 } };
@@ -71,8 +71,8 @@ static data_chunk v1_frame(const std::string& command,
 BOOST_AUTO_TEST_CASE(p2ps_stream__handshake__v2_both_sides__frames_round_trip)
 {
     boost::asio::io_context service{};
-    tcp_socket server{ service };
-    tcp_socket client{ service };
+    peer_socket server{ service };
+    peer_socket client{ service };
     connect_pair(service, server, client);
 
     const v2_context configuration{ mainnet };
