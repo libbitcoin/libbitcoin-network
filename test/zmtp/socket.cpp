@@ -406,6 +406,8 @@ BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__replier_request__delimited,
 
     rpc::request request{};
     BOOST_REQUIRE_EQUAL(read(request), error::success);
+    BOOST_REQUIRE(request.message.id);
+    BOOST_REQUIRE(std::holds_alternative<rpc::null_t>(*request.message.id));
     BOOST_REQUIRE_EQUAL(request.message.method, "method");
     BOOST_REQUIRE_EQUAL(params_of(request), 1u);
     BOOST_REQUIRE_EQUAL(param_of(request, 0), chunk("param"));

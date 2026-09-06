@@ -180,10 +180,13 @@ static code decode_message(rpc::request_t& out, role role,
         }
         case role::replier:
         {
-            // REQ prefixes the request with an empty delimiter part.
+            // REQ prefixes the request with an empty delimiter part. The
+            // request expects a response, correlated by strict alternation,
+            // so it carries a (null) id.
             if (!parts.front().body.empty())
                 return error::zmtp_unexpected_message;
 
+            out.id = rpc::identity_t{ rpc::null_t{} };
             return decode_request(out, parts, one);
         }
         case role::router:
