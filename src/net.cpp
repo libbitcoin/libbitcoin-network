@@ -41,7 +41,7 @@ net::net(const settings& settings, const logger& log,
     uint64_t required_services) NOEXCEPT
   : settings_(settings),
     p2ps_{ settings.identifier },
-    threadpool_(std::max(settings.threads, 1_u32)),
+    threadpool_(settings.threads_()),
     strand_(threadpool_.service().get_executor()),
     hosts_(settings, log, required_services),
     reporter(log)

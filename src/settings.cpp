@@ -29,6 +29,9 @@ namespace network {
 using namespace system;
 using namespace messages::peer;
 
+// Default (zero) threads is capped at this many hardware threads.
+constexpr auto maximum_default_threads = 32_size;
+
 // socks5
 // ----------------------------------------------------------------------------
 
@@ -362,6 +365,13 @@ settings::settings(chain::selection context) NOEXCEPT
     manual{ context },
     identifier(identifier_from_context(context))
 {
+}
+
+size_t settings::threads_() const NOEXCEPT
+{
+    // Zero implies the lesser of hardware threads and the default cap.
+    return to_bool(threads) ? threads :
+        std::min(cores(), maximum_default_threads);
 }
 
 // Randomized from 50% to maximum milliseconds (specified in seconds).

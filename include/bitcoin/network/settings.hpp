@@ -363,7 +363,7 @@ struct BCT_API settings
     network::settings::peer_manual manual;
 
     /// Properties.
-    uint32_t threads{ 1 };
+    uint32_t threads{ 0 };
     uint16_t address_upper{ 10 };
     uint16_t address_lower{ 5 };
     uint32_t protocol_maximum{ messages::peer::level::maximum_protocol };
@@ -396,6 +396,7 @@ struct BCT_API settings
     config::authorities whitelists{};
 
     /// Helpers.
+    virtual size_t threads_() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
     virtual steady_clock::duration connect_timeout() const NOEXCEPT;
     virtual steady_clock::duration channel_handshake() const NOEXCEPT;
