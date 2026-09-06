@@ -221,6 +221,7 @@ private:
 
     // These are protected by stream (executor) sequencing.
     asio::socket socket_;
+    const context& context_;
     std::optional<cipher> cipher_{};
     bool secured_{};
 

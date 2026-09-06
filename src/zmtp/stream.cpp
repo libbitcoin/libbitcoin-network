@@ -51,7 +51,7 @@ constexpr auto command_message = "MESSAGE";
 
 // The context selects the upgrade and configures the CURVE mechanism.
 stream::stream(asio::socket&& socket, const context& context) NOEXCEPT
-  : socket_(std::move(socket))
+  : socket_(std::move(socket)), context_(context)
 {
     if (context.curve())
         cipher_.emplace(context.secret(), context.public_key());
@@ -620,6 +620,13 @@ void stream::handle_initiate(const boost_code& ec, size_t,
         make_property("Socket-Type", "PUB")))
     {
         fail_handshake("invalid INITIATE", handler);
+        return;
+    }
+
+    // An unauthorized client is refused with the zap status (as libzmq).
+    if (!context_.authorized(cipher_->peer_key()))
+    {
+        fail_handshake("400", handler);
         return;
     }
 

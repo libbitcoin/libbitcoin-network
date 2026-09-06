@@ -29,10 +29,21 @@ context::context() NOEXCEPT
 {
 }
 
-context::context(const system::data_chunk& secret) NOEXCEPT
+context::context(const system::data_chunk& secret,
+    const system::data_stack& clients) NOEXCEPT
 {
     if (secret.size() != cipher::key_size)
         return;
+
+    for (const auto& client: clients)
+    {
+        if (client.size() != cipher::key_size)
+            return;
+
+        cipher::key key{};
+        std::copy(client.begin(), client.end(), key.begin());
+        clients_.push_back(key);
+    }
 
     std::copy(secret.begin(), secret.end(), secret_.begin());
     curve_ = cipher::to_public(public_, secret_);
@@ -41,6 +52,11 @@ context::context(const system::data_chunk& secret) NOEXCEPT
 bool context::curve() const NOEXCEPT
 {
     return curve_;
+}
+
+bool context::authorized(const cipher::key& client) const NOEXCEPT
+{
+    return clients_.empty() || system::contains(clients_, client);
 }
 
 const cipher::key& context::secret() const NOEXCEPT
