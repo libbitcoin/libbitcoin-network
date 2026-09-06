@@ -18,16 +18,16 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(privacy_cipher_tests)
+BOOST_AUTO_TEST_SUITE(p2ps_cipher_tests)
 
-using namespace network::privacy;
+using namespace network::p2ps;
 using namespace system;
 
 // The bip324 test vectors are computed for mainnet magic.
 constexpr uint32_t mainnet = 0xd9b4bef9;
 
 // bips.dev/324 packet encoding test vector 1 (initiating, packet index 1).
-BOOST_AUTO_TEST_CASE(privacy_cipher__encrypt__vector_1__expected)
+BOOST_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_1__expected)
 {
     const ec_secret secret = base16_array("61062ea5071d800bbfd59e2e8b53d47d194b095ae5a4df04936b49772ef0d4d7");
     const cipher::key ours = base16_array("ec0adff257bbfe500c188c80b4fdd640f6b45a482bbc15fc7cef5931deff0aa186f6eb9bba7b85dc4dcc28b28722de1e3d9108b985e2967045668f66098e475b");
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(privacy_cipher__encrypt__vector_1__expected)
 }
 
 // bips.dev/324 packet encoding test vector 2 (responding, packet index 999).
-BOOST_AUTO_TEST_CASE(privacy_cipher__encrypt__vector_2__expected)
+BOOST_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_2__expected)
 {
     const ec_secret secret = base16_array("6f312890ec83bbb26798abaadd574684a53e74ccef7953b790fcc29409080246");
     const cipher::key ours = base16_array("a8785af31c029efc82fa9fc677d7118031358d7c6a25b5779a9b900e5ccd94aac97eb36a3c5dbcdb2ca5843cc4c2fe0aaa46d10eb3d233a81c3dde476da00eef");
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(privacy_cipher__encrypt__vector_2__expected)
 }
 
 // A full session between two generated keypairs, both directions.
-BOOST_AUTO_TEST_CASE(privacy_cipher__round_trip__both_directions__expected)
+BOOST_AUTO_TEST_CASE(p2ps_cipher__round_trip__both_directions__expected)
 {
     cipher alpha{};
     cipher beta{};
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(privacy_cipher__round_trip__both_directions__expected)
 }
 
 // Tampered packets do not authenticate.
-BOOST_AUTO_TEST_CASE(privacy_cipher__decrypt__tampered__false)
+BOOST_AUTO_TEST_CASE(p2ps_cipher__decrypt__tampered__false)
 {
     cipher alpha{};
     cipher beta{};

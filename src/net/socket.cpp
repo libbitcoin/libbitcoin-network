@@ -139,7 +139,7 @@ bool socket::secure() const NOEXCEPT
 bool socket::encrypted() const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    return std::holds_alternative<privacy::stream>(socket_);
+    return std::holds_alternative<p2ps::stream>(socket_);
 }
 
 bool socket::publisher() const NOEXCEPT
@@ -182,7 +182,7 @@ socket::ws_t socket::get_ws() NOEXCEPT
         {
             return std::ref(value);
         },
-        [](privacy::stream&) NOEXCEPT -> socket::ws_t
+        [](p2ps::stream&) NOEXCEPT -> socket::ws_t
         {
             std::terminate();
         },
@@ -216,7 +216,7 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
         {
             std::terminate();
         },
-        [](privacy::stream&) NOEXCEPT -> socket::tcp_t
+        [](p2ps::stream&) NOEXCEPT -> socket::tcp_t
         {
             std::terminate();
         },
@@ -247,7 +247,7 @@ asio::socket& socket::get_base() NOEXCEPT
         {
             return boost::beast::get_lowest_layer(value);
         },
-        [](privacy::stream& value) NOEXCEPT -> asio::socket&
+        [](p2ps::stream& value) NOEXCEPT -> asio::socket&
         {
             return boost::beast::get_lowest_layer(value);
         },
@@ -281,7 +281,7 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
         {
             return value.next_layer();
         },
-        [](privacy::stream&) NOEXCEPT -> asio::ssl::socket&
+        [](p2ps::stream&) NOEXCEPT -> asio::ssl::socket&
         {
             std::terminate();
         },
@@ -292,34 +292,34 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
     }, socket_);
 }
 
-privacy::stream& socket::get_p2ps() NOEXCEPT
+p2ps::stream& socket::get_p2ps() NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT(encrypted());
 
     return std::visit(overload
     {
-        [](asio::socket&) NOEXCEPT -> privacy::stream&
+        [](asio::socket&) NOEXCEPT -> p2ps::stream&
         {
             std::terminate();
         },
-        [](asio::ssl::socket&) NOEXCEPT -> privacy::stream&
+        [](asio::ssl::socket&) NOEXCEPT -> p2ps::stream&
         {
             std::terminate();
         },
-        [](ws::socket&) NOEXCEPT -> privacy::stream&
+        [](ws::socket&) NOEXCEPT -> p2ps::stream&
         {
             std::terminate();
         },
-        [](ws::ssl::socket&) NOEXCEPT -> privacy::stream&
+        [](ws::ssl::socket&) NOEXCEPT -> p2ps::stream&
         {
             std::terminate();
         },
-        [](privacy::stream& value) NOEXCEPT -> privacy::stream&
+        [](p2ps::stream& value) NOEXCEPT -> p2ps::stream&
         {
             return value;
         },
-        [](zmtp::stream&) NOEXCEPT -> privacy::stream&
+        [](zmtp::stream&) NOEXCEPT -> p2ps::stream&
         {
             std::terminate();
         }
@@ -349,7 +349,7 @@ zmtp::stream& socket::get_zmtp() NOEXCEPT
         {
             std::terminate();
         },
-        [](privacy::stream&) NOEXCEPT -> zmtp::stream&
+        [](p2ps::stream&) NOEXCEPT -> zmtp::stream&
         {
             std::terminate();
         },

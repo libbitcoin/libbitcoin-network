@@ -232,11 +232,11 @@
       <ObjectFileName>$(IntDir)test_net_proxy.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\socket.cpp" />
-    <ClCompile Include="..\..\..\..\test\privacy\cipher.cpp">
-      <ObjectFileName>$(IntDir)test_privacy_cipher.obj</ObjectFileName>
+    <ClCompile Include="..\..\..\..\test\p2ps\cipher.cpp">
+      <ObjectFileName>$(IntDir)test_p2ps_cipher.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\privacy\stream.cpp">
-      <ObjectFileName>$(IntDir)test_privacy_stream.obj</ObjectFileName>
+    <ClCompile Include="..\..\..\..\test\p2ps\stream.cpp">
+      <ObjectFileName>$(IntDir)test_p2ps_stream.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp" />

@@ -321,7 +321,7 @@ private:
 
     // These are thread safe.
     const settings& settings_;
-    const privacy::context encryption_{};
+    const p2ps::context p2ps_{};
     std::atomic_bool closed_{ false };
     std::atomic_bool accept_suspended_{ false };
     std::atomic_bool service_suspended_{ false };

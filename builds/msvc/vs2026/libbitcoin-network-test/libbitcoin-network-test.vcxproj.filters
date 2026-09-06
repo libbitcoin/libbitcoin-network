@@ -52,7 +52,7 @@
     <Filter Include="src\net">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\privacy">
+    <Filter Include="src\p2ps">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\protocols">
@@ -414,11 +414,11 @@
     <ClCompile Include="..\..\..\..\test\net\socket.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\privacy\cipher.cpp">
-      <Filter>src\privacy</Filter>
+    <ClCompile Include="..\..\..\..\test\p2ps\cipher.cpp">
+      <Filter>src\p2ps</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\privacy\stream.cpp">
-      <Filter>src\privacy</Filter>
+    <ClCompile Include="..\..\..\..\test\p2ps\stream.cpp">
+      <Filter>src\p2ps</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp">
       <Filter>src\protocols</Filter>

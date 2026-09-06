@@ -24,7 +24,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/privacy/privacy.hpp>
+#include <bitcoin/network/p2ps/p2ps.hpp>
 #include <bitcoin/network/zmtp/zmtp.hpp>
 
 #define BC_HTTP_SERVER_NAME "libbitcoin/4"
@@ -63,7 +63,7 @@ struct BCT_API settings
     <
         std::monostate,
         ref<asio::ssl::context>,
-        ref<const privacy::context>,
+        ref<const p2ps::context>,
         ref<const zmtp::context>
     >;
 

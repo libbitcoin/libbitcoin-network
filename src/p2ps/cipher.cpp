@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/privacy/cipher.hpp>
+#include <bitcoin/network/p2ps/cipher.hpp>
 
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace privacy {
+namespace p2ps {
 
 using namespace system;
 
@@ -156,6 +156,6 @@ bool cipher::decrypt(const std::span<uint8_t>& plain,
 BC_POP_WARNING()
 BC_POP_WARNING()
 
-} // namespace privacy
+} // namespace p2ps
 } // namespace network
 } // namespace libbitcoin
