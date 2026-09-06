@@ -38,11 +38,7 @@ namespace zmtp {
 /// buffer is written at a time. Under CURVE each frame is boxed into a
 /// MESSAGE command on write and unboxed on read, so the tiers above see the
 /// same frames either way. It is a transport, not a framework. The role is
-/// the socket type advertised in the handshake, which admits only compatible
-/// peers; message assembly and its mapping to rpc belong to the socket, and
-/// control traffic (PING/PONG) and write serialization to the tier above,
-/// which uses its own write queue; the stream buffers only the in-flight
-/// write.
+/// the socket type advertised in the handshake (admits compatible peers).
 /// All calls must be sequenced on the underlying socket's executor. Read and
 /// write chains may overlap each other but not themselves (as asio streams).
 class BCT_API stream
@@ -121,11 +117,7 @@ public:
     /// frame per read (the handshake reads one command at a time).
     void async_read_frame(frame& out, io_handler&& handler) NOEXCEPT;
 
-    /// Decode the frame at the front of a buffer into flags and an owned body
-    /// (unboxed under CURVE), setting the buffer to the remainder. Returns
-    /// need_more if the frame is incomplete (the buffer is unchanged),
-    /// oversized_payload if its length exceeds the limit, and a protocol
-    /// violation if it is malformed or its box does not open.
+    /// Decode the frame at the front of the buffer, need_more if incomplete.
     code decode(uint8_t& flags, system::data_chunk& body,
         std::span<const uint8_t>& buffer, size_t limit) NOEXCEPT;
 

@@ -26,24 +26,8 @@ namespace libbitcoin {
 namespace network {
 
 // ZMTP messages are read into and written from rpc messages by socket role.
-// ----------------------------------------------------------------------------
-// The stream frames the wire only. A message (one or more frames chained by
-// MORE) maps to an rpc request or response: the first part is the method (or
-// topic) and each subsequent part is one positional param. A command maps to
-// an rpc request named by the command in lower case, with the command fields
-// as params. The role (zmtp::role) closes both directions: it selects which
-// messages may be read and which rpc messages may be written, and it defines
-// the routing envelope, where the rpc id is the peer identity (router).
-//
-// Param values: an inbound part is a byte chunk (system::chunk_cptr in any_t),
-// as the wire carries no type. An outbound value encodes by its alternative:
-// a string or chunk is its bytes, null is an empty part, a bool is one byte,
-// and a fixed-width integral is little-endian of its own width. A double, an
-// array, an object and json have no wire form (zmtp_unserializable).
-//
-// Control commands PING and PONG are read in every role as the "ping" and
-// "pong" methods (ttl and context, context) and written from the same, and
-// are answered by the proxy (the channel is keepalive-blind).
+// A message is [method][param]... (inbound params are chunks), a command is
+// the request of its lower case name, and the router identity is the rpc id.
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
@@ -71,9 +55,7 @@ constexpr auto ttl_size = sizeof(uint16_t);
 // Decoding (frames to rpc).
 // ----------------------------------------------------------------------------
 
-// An inbound part is delivered as a shared byte chunk. The frame reader
-// reads each part into its own sized body, which is moved (not copied) into
-// the delivered chunk, so the read allocation is the delivered allocation.
+// An inbound part is delivered as a shared byte chunk.
 static rpc::value_t to_chunk_value(data_chunk&& bytes) NOEXCEPT
 {
     return rpc::any_t{ to_shared(std::move(bytes)) };
@@ -433,10 +415,7 @@ static code encode_response(data_chunk& packet, role role,
 
 // ZMTP (read).
 // ----------------------------------------------------------------------------
-// The caller's buffer is the read target: the socket reads what is available
-// into it and decodes complete frames from its front (the stream unboxes
-// under CURVE), so a partial frame or the start of the next message remains
-// in the buffer as residue for the next read (as the http body parsers).
+// Complete frames are decoded from the buffer, residue carried to next read.
 
 // private
 void socket::do_zmtp_read(const zmtp_read_state::ptr& in,

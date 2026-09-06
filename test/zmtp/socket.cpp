@@ -139,9 +139,12 @@ struct role_fixture
     role_fixture(role value, const std::string& type,
         size_t maximum=4096)
       : pool(1),
-        params{ .maximum_request = maximum,
+        params
+        {
+            .maximum_request = maximum,
             .context = socket::context{ std::cref(configuration) },
-            .role = value },
+            .role = value
+        },
         sock(std::make_shared<network::socket>(log, pool.service(), params)),
         strand(pool.service().get_executor()),
         acceptor(strand),

@@ -181,10 +181,7 @@ protected:
     /// re-arming the read), and defers notifications while a batch is open.
 
     /// Read rpc request from the socket, using provided buffer.
-    /// The proxy stamps batch state (the parse is always lax). Over zmtp the
-    /// buffer is the read target and carries frame residue between reads,
-    /// and the channel is keepalive-blind: the proxy answers a ping with a
-    /// pong (queued), drops a pong, and re-arms the read.
+    /// The proxy stamps batch state (the parse is always lax).
     virtual void read(http::flat_buffer& buffer, rpc::request& request,
         count_handler&& handler) NOEXCEPT;
 
