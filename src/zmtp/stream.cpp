@@ -247,6 +247,91 @@ data_chunk stream::frame_encode(const std::span<const uint8_t>& body,
     return frame;
 }
 
+bool stream::frame_header(uint8_t& flags, size_t& length, size_t& header,
+    const std::span<const uint8_t>& buffer) NOEXCEPT
+{
+    if (buffer.empty())
+        return false;
+
+    flags = buffer.front();
+    header = sizeof(flags);
+
+    if (!is_zero(flags & flag_long))
+    {
+        constexpr auto size = sizeof(uint64_t);
+        if (buffer.size() < add1(size))
+            return false;
+
+        data_array<size> bytes{};
+        std::copy_n(std::next(buffer.begin()), size, bytes.begin());
+        length = possible_narrow_cast<size_t>(from_big_endian<uint64_t>(
+            bytes));
+        header += size;
+        return true;
+    }
+
+    if (buffer.size() < add1(sizeof(uint8_t)))
+        return false;
+
+    length = *std::next(buffer.begin());
+    header += sizeof(uint8_t);
+    return true;
+}
+
+code stream::decode(uint8_t& flags, data_chunk& body,
+    std::span<const uint8_t>& buffer, size_t limit) NOEXCEPT
+{
+    // Framing: an incomplete frame leaves the buffer as residue.
+    size_t length{};
+    size_t header{};
+    if (!frame_header(flags, length, header, buffer))
+        return error::need_more;
+
+    if (length > limit)
+        return error::oversized_payload;
+
+    if (buffer.size() < header + length)
+        return error::need_more;
+
+    const auto wire = buffer.subspan(header, length);
+    buffer = buffer.subspan(header + length);
+
+    if (!secured_)
+    {
+        body.assign(wire.begin(), wire.end());
+        return error::success;
+    }
+
+    // Under CURVE every frame is a boxed MESSAGE (framed as a message, as
+    // libzmq, though the mechanism names it a command) or an ERROR command
+    // (delivered as is, the tier above treats it as any other command).
+    std::string name{};
+    std::span<const uint8_t> content{};
+    if (!command_name(name, content, wire))
+        return error::protocol_violation;
+
+    if (!is_zero(flags & flag_command) && name == command_error)
+    {
+        body.assign(wire.begin(), wire.end());
+        return error::success;
+    }
+
+    // Unboxing decrypts into the body (the delivered allocation).
+    uint8_t payload{};
+    if (name != command_message || !cipher_->decode(payload, body, wire))
+        return error::protocol_violation;
+
+    // The payload flags map to frame flags (LONG is a framing artifact).
+    flags = 0x00;
+    if (!is_zero(payload & cipher::payload_more))
+        flags |= flag_more;
+
+    if (!is_zero(payload & cipher::payload_command))
+        flags |= flag_command;
+
+    return error::success;
+}
+
 bool stream::frame_decode(uint8_t& flags, std::span<const uint8_t>& body,
     std::span<const uint8_t>& buffer) NOEXCEPT
 {

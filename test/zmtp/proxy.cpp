@@ -214,7 +214,7 @@ struct publisher_fixture
 {
     publisher_fixture()
       : pool(1),
-        params{ .maximum_request = 42,
+        params{ .maximum_request = 4096,
             .context = socket::context{ std::cref(configuration) },
             .role = role::publisher },
         sock(std::make_shared<network::socket>(log, pool.service(), params)),

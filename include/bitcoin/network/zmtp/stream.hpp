@@ -117,8 +117,17 @@ public:
     /// The CURVE mechanism is implemented for the server role only.
     void async_handshake(bool as_server, handshake_handler&& handler) NOEXCEPT;
 
-    /// Read the next frame into the caller-owned frame (flags and body).
+    /// Read the next frame into the caller-owned frame (flags and body), one
+    /// frame per read (the handshake reads one command at a time).
     void async_read_frame(frame& out, io_handler&& handler) NOEXCEPT;
+
+    /// Decode the frame at the front of a buffer into flags and an owned body
+    /// (unboxed under CURVE), setting the buffer to the remainder. Returns
+    /// need_more if the frame is incomplete (the buffer is unchanged),
+    /// oversized_payload if its length exceeds the limit, and a protocol
+    /// violation if it is malformed or its box does not open.
+    code decode(uint8_t& flags, system::data_chunk& body,
+        std::span<const uint8_t>& buffer, size_t limit) NOEXCEPT;
 
     /// Write a caller-framed buffer (see frame_message). The caller retains
     /// the buffer until the handler fires, when the peer has accepted it.
@@ -167,6 +176,12 @@ public:
     /// the buffer to the remainder. False if the buffer is malformed.
     static bool frame_decode(uint8_t& flags, std::span<const uint8_t>& body,
         std::span<const uint8_t>& buffer) NOEXCEPT;
+
+    /// Parse the frame header (flags and length) at the front of a buffer
+    /// without consuming it, setting header to the size of the prefix. False
+    /// if the buffer holds less than the prefix.
+    static bool frame_header(uint8_t& flags, size_t& length, size_t& header,
+        const std::span<const uint8_t>& buffer) NOEXCEPT;
 
     /// Extract the command name from a command frame body, or empty if the
     /// self-describing length prefix is malformed. Sets body to the remainder.

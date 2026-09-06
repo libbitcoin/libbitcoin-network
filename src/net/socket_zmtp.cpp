@@ -71,10 +71,18 @@ constexpr auto ttl_size = sizeof(uint16_t);
 // Decoding (frames to rpc).
 // ----------------------------------------------------------------------------
 
-// An inbound part is delivered as a shared byte chunk.
+// An inbound part is delivered as a shared byte chunk. The frame reader
+// reads each part into its own sized body, which is moved (not copied) into
+// the delivered chunk, so the read allocation is the delivered allocation.
+static rpc::value_t to_chunk_value(data_chunk&& bytes) NOEXCEPT
+{
+    return rpc::any_t{ to_shared(std::move(bytes)) };
+}
+
+// A command field is a subspan of the command body (copied).
 static rpc::value_t to_chunk_value(const std::span<const uint8_t>& bytes) NOEXCEPT
 {
-    return rpc::any_t{ to_shared(data_chunk{ bytes.begin(), bytes.end() }) };
+    return to_chunk_value(data_chunk{ bytes.begin(), bytes.end() });
 }
 
 // The method (or topic) part is text.
@@ -84,7 +92,7 @@ static rpc::string_t to_method(const data_chunk& part) NOEXCEPT
 }
 
 // A message is a method part followed by one part per positional param.
-static code decode_request(rpc::request_t& out, const socket::parts_t& parts,
+static code decode_request(rpc::request_t& out, socket::parts_t& parts,
     size_t start) NOEXCEPT
 {
     if (parts.size() <= start || parts.at(start).body.empty())
@@ -92,7 +100,7 @@ static code decode_request(rpc::request_t& out, const socket::parts_t& parts,
 
     rpc::array_t params{};
     for (auto index = add1(start); index < parts.size(); ++index)
-        params.push_back(to_chunk_value(parts.at(index).body));
+        params.push_back(to_chunk_value(std::move(parts.at(index).body)));
 
     out.method = to_method(parts.at(start).body);
     out.params = std::move(params);
@@ -158,7 +166,7 @@ static code decode_command(rpc::request_t& out, role role,
 
 // A message (non-command) is read by role.
 static code decode_message(rpc::request_t& out, role role,
-    const socket::parts_t& parts) NOEXCEPT
+    socket::parts_t& parts) NOEXCEPT
 {
     switch (role)
     {
@@ -425,6 +433,10 @@ static code encode_response(data_chunk& packet, role role,
 
 // ZMTP (read).
 // ----------------------------------------------------------------------------
+// The caller's buffer is the read target: the socket reads what is available
+// into it and decodes complete frames from its front (the stream unboxes
+// under CURVE), so a partial frame or the start of the next message remains
+// in the buffer as residue for the next read (as the http body parsers).
 
 // private
 void socket::do_zmtp_read(const zmtp_read_state::ptr& in,
@@ -438,14 +450,76 @@ void socket::do_zmtp_read(const zmtp_read_state::ptr& in,
         return;
     }
 
-    if (in->parts.size() >= stream::maximum_parts)
+    auto& upgraded = get_zmtp();
+    auto& buffer = in->buffer;
+
+    // Decode the complete frames in the buffer, each into an owned part.
+    while (true)
     {
-        handler(error::zmtp_excessive_parts, in->total);
+        const auto data = buffer.data();
+        std::span<const uint8_t> remaining
+        {
+            pointer_cast<const uint8_t>(data.data()), data.size()
+        };
+
+        uint8_t flags{};
+        data_chunk body{};
+        const auto size = remaining.size();
+        const auto ec = upgraded.decode(flags, body, remaining, maximum_);
+        if (ec == error::need_more)
+            break;
+
+        if (ec)
+        {
+            handler(ec, in->total);
+            return;
+        }
+
+        const auto consumed = size - remaining.size();
+        buffer.consume(consumed);
+        in->total += consumed;
+        in->parts.push_back({ flags, std::move(body) });
+        const auto& frame = in->parts.back();
+
+        // A command is a whole message, and cannot be within a message.
+        if (frame.command())
+        {
+            if (!is_one(in->parts.size()) || frame.more())
+            {
+                handler(error::zmtp_unexpected_command, in->total);
+                return;
+            }
+
+            handler(decode_command(in->out.message, role_, frame), in->total);
+            return;
+        }
+
+        if (!frame.more())
+        {
+            handler(decode_message(in->out.message, role_, in->parts),
+                in->total);
+            return;
+        }
+
+        if (in->parts.size() >= stream::maximum_parts)
+        {
+            handler(error::zmtp_excessive_parts, in->total);
+            return;
+        }
+    }
+
+    // The buffered residue is bounded by the socket maximum (as the http
+    // body limit), and reads are sized to what the buffer may accept.
+    const auto held = buffer.size();
+    if (held >= maximum_ || held >= buffer.max_size())
+    {
+        handler(error::oversized_payload, in->total);
         return;
     }
 
-    // Each part is read into the parts vector, chained by the MORE flag.
-    get_zmtp().async_read_frame(in->parts.emplace_back(),
+    const auto space = std::min(maximum_, buffer.max_size()) - held;
+    const auto request = std::min(space, stream::maximum_inbound);
+    upgraded.next_layer().async_read_some(buffer.prepare(request),
         std::bind(&socket::handle_zmtp_read,
             shared_from_this(), _1, _2, in, handler));
 }
@@ -458,33 +532,12 @@ void socket::handle_zmtp_read(const boost_code& ec, size_t size,
 
     if (ec)
     {
-        handle_async(ec, in->total, handler, "async_read_frame");
+        handle_async(ec, in->total, handler, "async_read_some");
         return;
     }
 
-    in->total += size;
-    const auto& frame = in->parts.back();
-
-    // A command is a whole message, and cannot be within a multipart message.
-    if (frame.command())
-    {
-        if (!is_one(in->parts.size()) || frame.more())
-        {
-            handler(error::zmtp_unexpected_command, in->total);
-            return;
-        }
-
-        handler(decode_command(in->out.message, role_, frame), in->total);
-        return;
-    }
-
-    if (frame.more())
-    {
-        do_zmtp_read(in, handler);
-        return;
-    }
-
-    handler(decode_message(in->out.message, role_, in->parts), in->total);
+    in->buffer.commit(size);
+    do_zmtp_read(in, handler);
 }
 
 // ZMTP (write).

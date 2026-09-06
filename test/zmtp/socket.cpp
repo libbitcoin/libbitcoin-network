@@ -136,9 +136,10 @@ static std::string peer_handshake(peer_socket& peer, const std::string& type)
 // A server socket in the given role and a peer of the given socket type.
 struct role_fixture
 {
-    role_fixture(role value, const std::string& type)
+    role_fixture(role value, const std::string& type,
+        size_t maximum=4096)
       : pool(1),
-        params{ .maximum_request = 42,
+        params{ .maximum_request = maximum,
             .context = socket::context{ std::cref(configuration) },
             .role = value },
         sock(std::make_shared<network::socket>(log, pool.service(), params)),
@@ -247,6 +248,12 @@ struct incompatible_fixture
   : role_fixture
 {
     incompatible_fixture() : role_fixture(role::puller, "SUB") {}
+};
+
+struct bounded_fixture
+  : role_fixture
+{
+    bounded_fixture() : role_fixture(role::puller, "PUSH", 16) {}
 };
 
 // Positional params are byte chunks.
@@ -384,6 +391,37 @@ BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__excessive_parts__excessive_parts,
 
     rpc::request request{};
     BOOST_REQUIRE_EQUAL(read(request), error::zmtp_excessive_parts);
+}
+
+BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__oversized_frame__oversized_payload,
+    bounded_fixture)
+{
+    // The frame length exceeds the socket maximum before it is read.
+    const data_stack parts{ chunk("method"), data_chunk(32, 0x42) };
+    peer_write(peer, stream::frame_message(parts));
+
+    rpc::request request{};
+    BOOST_REQUIRE_EQUAL(read(request), error::oversized_payload);
+}
+
+BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__two_messages_one_read__residue_carried,
+    puller_fixture)
+{
+    // Both messages arrive in one read, the second is residue for the next.
+    auto both = stream::frame_message({ chunk("first"), chunk("one") });
+    const auto second = stream::frame_message({ chunk("second") });
+    both.insert(both.end(), second.begin(), second.end());
+    peer_write(peer, both);
+
+    rpc::request request{};
+    BOOST_REQUIRE_EQUAL(read(request), error::success);
+    BOOST_REQUIRE_EQUAL(request.message.method, "first");
+    BOOST_REQUIRE_EQUAL(params_of(request), 1u);
+
+    rpc::request next{};
+    BOOST_REQUIRE_EQUAL(read(next), error::success);
+    BOOST_REQUIRE_EQUAL(next.message.method, "second");
+    BOOST_REQUIRE_EQUAL(params_of(next), 0u);
 }
 
 BOOST_FIXTURE_TEST_CASE(zmtp_socket__notify__puller__unserializable,
