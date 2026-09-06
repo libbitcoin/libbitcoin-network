@@ -25,6 +25,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/zmtp/cipher.hpp>
 #include <bitcoin/network/zmtp/context.hpp>
+#include <bitcoin/network/zmtp/role.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -36,10 +37,12 @@ namespace zmtp {
 /// frame is read at a time into a caller-owned frame, and a caller-framed
 /// buffer is written at a time. Under CURVE each frame is boxed into a
 /// MESSAGE command on write and unboxed on read, so the tiers above see the
-/// same frames either way. It is a transport, not a framework. Control
-/// traffic (subscriptions, PING/PONG), subscription filtering and write
-/// serialization belong to the tier above, which inspects each frame read
-/// and uses its own write queue; the stream buffers only the in-flight write.
+/// same frames either way. It is a transport, not a framework. The role is
+/// the socket type advertised in the handshake, which admits only compatible
+/// peers; message assembly and its mapping to rpc belong to the socket, and
+/// control traffic (PING/PONG) and write serialization to the tier above,
+/// which uses its own write queue; the stream buffers only the in-flight
+/// write.
 /// All calls must be sequenced on the underlying socket's executor. Read and
 /// write chains may overlap each other but not themselves (as asio streams).
 class BCT_API stream
@@ -90,15 +93,19 @@ public:
     static constexpr uint8_t revision_major = 3;
     static constexpr uint8_t revision_minor = 1;
 
-    /// Maximum accepted inbound frame contents. A publisher receives only
-    /// small control traffic (subscriptions, pings), so this is modest.
+    /// Maximum accepted inbound frame contents. Inbound traffic is control
+    /// (subscriptions, pings) and rpc requests, so this is modest.
     static constexpr size_t maximum_inbound = 8192;
 
     /// Maximum echoed PING context (per ZMTP, truncated to this).
     static constexpr size_t maximum_ping_context = 16;
 
-    /// Assume ownership of the connected tcp socket.
-    stream(asio::socket&& socket, const context& context) NOEXCEPT;
+    /// Maximum parts of one inbound multipart message.
+    static constexpr size_t maximum_parts = 32;
+
+    /// Assume ownership of the connected tcp socket, in the given role.
+    stream(asio::socket&& socket, const context& context,
+        zmtp::role role) NOEXCEPT;
 
     /// asio stream conventions (next_layer enables get_lowest_layer).
     executor_type get_executor() NOEXCEPT;
@@ -141,8 +148,9 @@ public:
     static system::data_chunk make_property(const std::string& name,
         const std::string& value) NOEXCEPT;
 
-    /// Build the NULL-mechanism READY command advertising Socket-Type PUB.
-    static system::data_chunk make_ready_pub() NOEXCEPT;
+    /// Build the NULL-mechanism READY command advertising the role's
+    /// Socket-Type.
+    static system::data_chunk make_ready(zmtp::role role) NOEXCEPT;
 
     /// Build an ERROR command with the given reason.
     static system::data_chunk make_error(const std::string& reason) NOEXCEPT;
@@ -209,7 +217,7 @@ private:
     void handle_curve_ready_sent(const boost_code& ec,
         const system::chunk_cptr& ready,
         const handshake_handler& handler) NOEXCEPT;
-    bool subscriber(const std::span<const uint8_t>& metadata) const NOEXCEPT;
+    bool compatible(const std::span<const uint8_t>& metadata) const NOEXCEPT;
 
     // frame reader (one whole frame: flags, length, body)
     void handle_frame_flags(const boost_code& ec, ref<frame> out,
@@ -222,6 +230,7 @@ private:
     // These are protected by stream (executor) sequencing.
     asio::socket socket_;
     const context& context_;
+    const zmtp::role role_;
     std::optional<cipher> cipher_{};
     bool secured_{};
 

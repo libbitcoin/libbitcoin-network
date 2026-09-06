@@ -321,7 +321,13 @@ enum error_t : uint8_t
     jsonrpc_batch_empty,
     jsonrpc_batch_malformed,
     jsonrpc_batch_requires_v2,
-    jsonrpc_batch_unsupported
+    jsonrpc_batch_unsupported,
+
+    // zmtp (rpc by socket role)
+    zmtp_unexpected_command,
+    zmtp_unexpected_message,
+    zmtp_excessive_parts,
+    zmtp_unserializable
 };
 
 // No current need for error_code equivalence mapping.

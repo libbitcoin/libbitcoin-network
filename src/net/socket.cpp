@@ -68,6 +68,7 @@ socket::socket(const logger& log, asio::context& service,
     strand_(service.get_executor()),
     service_(service),
     context_(params.context),
+    role_(params.role),
     address_(address),
     endpoint_(endpoint),
     timer_(emplace_shared<deadline>(log, strand_, params.connect_timeout)),
@@ -142,7 +143,7 @@ bool socket::encrypted() const NOEXCEPT
     return std::holds_alternative<p2ps::stream>(socket_);
 }
 
-bool socket::publisher() const NOEXCEPT
+bool socket::zeromq() const NOEXCEPT
 {
     BC_ASSERT(stranded());
     return std::holds_alternative<zmtp::stream>(socket_);
@@ -329,7 +330,7 @@ p2ps::stream& socket::get_p2ps() NOEXCEPT
 zmtp::stream& socket::get_zmtp() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(publisher());
+    BC_ASSERT(zeromq());
 
     return std::visit(overload
     {

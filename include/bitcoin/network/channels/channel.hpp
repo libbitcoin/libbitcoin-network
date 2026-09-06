@@ -39,6 +39,9 @@ public:
     using options_t = network::settings::tcp_server;
     using settings_t = network::settings;
 
+    /// The ZeroMQ socket type of a zmtp channel (undefined otherwise).
+    static constexpr zmtp::role role{ zmtp::role::undefined };
+
     DELETE_COPY_MOVE(channel);
 
     /// Attach protocol to channel, caller must start (requires strand).

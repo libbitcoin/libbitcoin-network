@@ -231,7 +231,9 @@
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp">
       <ObjectFileName>$(IntDir)test_net_proxy.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\socket.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\socket.cpp">
+      <ObjectFileName>$(IntDir)test_net_socket.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\p2ps\cipher.cpp">
       <ObjectFileName>$(IntDir)test_p2ps_cipher.obj</ObjectFileName>
     </ClCompile>
@@ -347,6 +349,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\zmtp\proxy.cpp">
       <ObjectFileName>$(IntDir)test_zmtp_proxy.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\socket.cpp">
+      <ObjectFileName>$(IntDir)test_zmtp_socket.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\zmtp\stream.cpp">
       <ObjectFileName>$(IntDir)test_zmtp_stream.obj</ObjectFileName>

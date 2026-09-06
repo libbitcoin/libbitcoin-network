@@ -23,6 +23,7 @@ BOOST_AUTO_TEST_SUITE(zmtp_proxy_tests)
 
 using stream = network::zmtp::stream;
 using context = network::zmtp::context;
+using role = network::zmtp::role;
 using peer_socket = network::asio::socket;
 using system::data_chunk;
 using system::data_stack;
@@ -42,15 +43,22 @@ public:
     }
 
     // Call must be stranded.
-    void read1(stream::frame& out, count_handler&& handler) NOEXCEPT
-    {
-        proxy::read(out, std::move(handler));
-    }
-
-    void write1(const system::chunk_cptr& packet,
+    void read1(http::flat_buffer& buffer, rpc::request& request,
         count_handler&& handler) NOEXCEPT
     {
-        proxy::write(packet, std::move(handler));
+        proxy::read(buffer, request, std::move(handler));
+    }
+
+    void write1(rpc::request&& notification,
+        count_handler&& handler) NOEXCEPT
+    {
+        proxy::write(std::move(notification), std::move(handler));
+    }
+
+    void write1(rpc::response&& response,
+        count_handler&& handler) NOEXCEPT
+    {
+        proxy::write(std::move(response), std::move(handler));
     }
 };
 
@@ -201,143 +209,221 @@ static void accept_publisher(const socket::ptr& sock,
     BOOST_REQUIRE_EQUAL(accepted.get_future().get(), error::success);
 }
 
+// A publisher socket with its proxy and a handshaken peer.
+struct publisher_fixture
+{
+    publisher_fixture()
+      : pool(1),
+        params{ .maximum_request = 42,
+            .context = socket::context{ std::cref(configuration) },
+            .role = role::publisher },
+        sock(std::make_shared<network::socket>(log, pool.service(), params)),
+        prx(std::make_shared<mock_proxy>(sock)),
+        strand(pool.service().get_executor()),
+        acceptor(strand),
+        peer(peer_context)
+    {
+        accept_publisher(sock, acceptor, peer, 1);
+    }
+
+    ~publisher_fixture()
+    {
+        prx->stop(error::channel_stopped);
+        peer.close();
+        pool.stop();
+        BOOST_REQUIRE(pool.join());
+    }
+
+    // Arm one rpc read on the proxy strand.
+    std::future<code> read(rpc::request& request)
+    {
+        auto got = std::make_shared<std::promise<code>>();
+        auto pending = got->get_future();
+        boost::asio::post(prx->strand(), [=, this, &request]() NOEXCEPT
+        {
+            prx->read1(buffer, request,
+                [got](const code& ec, size_t) NOEXCEPT
+                {
+                    got->set_value(ec);
+                });
+        });
+
+        return pending;
+    }
+
+    const logger log{};
+    threadpool pool;
+    const context configuration{};
+    socket::parameters params;
+    socket::ptr sock;
+    std::shared_ptr<mock_proxy> prx;
+    asio::strand strand;
+    asio::acceptor acceptor;
+    boost::asio::io_context peer_context{};
+    peer_socket peer;
+    http::flat_buffer buffer{};
+};
+
+// The prefix param of a subscription is a byte chunk.
+static data_chunk prefix_of(const rpc::request& request)
+{
+    const auto& params = std::get<rpc::array_t>(*request.message.params);
+    const auto& any = std::get<rpc::any_t>(params.at(0).value());
+    return *any.as<const data_chunk>();
+}
+
+static bool stop_of(const rpc::request& request)
+{
+    const auto& params = std::get<rpc::array_t>(*request.message.params);
+    return std::get<rpc::boolean_t>(params.at(1).value());
+}
+
 // Accept (handshake through the socket accept path).
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__accept__v31_peer__handshake_success)
+BOOST_FIXTURE_TEST_CASE(zmtp_proxy__accept__v31_peer__handshake_success,
+    publisher_fixture)
 {
-    const logger log{};
-    threadpool pool(1);
-    const context configuration{};
-    socket::parameters params{ .maximum_request = 42, .context = socket::context{ std::cref(configuration) } };
-    const auto sock = std::make_shared<network::socket>(log, pool.service(), std::move(params));
-    const auto prx = std::make_shared<mock_proxy>(sock);
-    asio::strand strand(pool.service().get_executor());
-    asio::acceptor acceptor(strand);
-    boost::asio::io_context peer_context{};
-    peer_socket peer{ peer_context };
-    accept_publisher(sock, acceptor, peer, 1);
-
-    prx->stop(error::channel_stopped);
-    peer.close();
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(sock);
 }
 
-// Interception.
+// Read (frames to rpc by role, control absorbed by the proxy).
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__read__ping__pong_queued_and_read_absorbed)
+BOOST_FIXTURE_TEST_CASE(zmtp_proxy__read__ping__pong_queued_and_read_absorbed,
+    publisher_fixture)
 {
-    const logger log{};
-    threadpool pool(1);
-    const context configuration{};
-    socket::parameters params{ .maximum_request = 42, .context = socket::context{ std::cref(configuration) } };
-    const auto sock = std::make_shared<network::socket>(log, pool.service(), std::move(params));
-    const auto prx = std::make_shared<mock_proxy>(sock);
-    asio::strand strand(pool.service().get_executor());
-    asio::acceptor acceptor(strand);
-    boost::asio::io_context peer_context{};
-    peer_socket peer{ peer_context };
-    accept_publisher(sock, acceptor, peer, 1);
-
-    stream::frame frame{};
-    std::promise<code> got{};
-    boost::asio::post(prx->strand(), [&]() NOEXCEPT
-    {
-        prx->read1(frame, [&](const code& ec, size_t) NOEXCEPT { got.set_value(ec); });
-    });
+    rpc::request request{};
+    auto pending = read(request);
 
     // The PING is absorbed (PONG queued through the proxy) and the read re-armed.
     peer_ping_pong(peer);
-    auto pending = got.get_future();
     BOOST_REQUIRE(pending.wait_for(milliseconds(100)) == std::future_status::timeout);
 
-    // A data frame is delivered to the channel.
-    const data_chunk payload{ 0x42, 0x43 };
-    peer_write(peer, stream::frame_encode(payload, false, false));
-    BOOST_REQUIRE_EQUAL(pending.get(), error::success);
-    BOOST_REQUIRE(!frame.command());
-    BOOST_REQUIRE_EQUAL(frame.body, payload);
-
-    prx->stop(error::channel_stopped);
-    peer.close();
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-}
-
-BOOST_AUTO_TEST_CASE(zmtp_proxy__read__subscribe_command__delivered_to_channel)
-{
-    const logger log{};
-    threadpool pool(1);
-    const context configuration{};
-    socket::parameters params{ .maximum_request = 42, .context = socket::context{ std::cref(configuration) } };
-    const auto sock = std::make_shared<network::socket>(log, pool.service(), std::move(params));
-    const auto prx = std::make_shared<mock_proxy>(sock);
-    asio::strand strand(pool.service().get_executor());
-    asio::acceptor acceptor(strand);
-    boost::asio::io_context peer_context{};
-    peer_socket peer{ peer_context };
-    accept_publisher(sock, acceptor, peer, 1);
-
-    // A subscription is the protocol's concern, so it reaches the channel.
-    stream::frame frame{};
-    std::promise<code> got{};
-    boost::asio::post(prx->strand(), [&]() NOEXCEPT
-    {
-        prx->read1(frame, [&](const code& ec, size_t) NOEXCEPT { got.set_value(ec); });
-    });
-
+    // A subscription is delivered to the channel.
     const auto topic = system::to_chunk(std::string{ "hashblock" });
     peer_write(peer, command("SUBSCRIBE", topic));
-    BOOST_REQUIRE_EQUAL(got.get_future().get(), error::success);
-    BOOST_REQUIRE(frame.command());
-
-    std::string name{};
-    data_chunk content{};
-    parse_command(frame.body, name, content);
-    BOOST_REQUIRE_EQUAL(name, "SUBSCRIBE");
-    BOOST_REQUIRE_EQUAL(content, topic);
-
-    prx->stop(error::channel_stopped);
-    peer.close();
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE_EQUAL(pending.get(), error::success);
+    BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
+    BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
+    BOOST_REQUIRE(!stop_of(request));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__write__framed_packet__three_frames_received)
+BOOST_FIXTURE_TEST_CASE(zmtp_proxy__read__pong__read_absorbed, publisher_fixture)
 {
-    const logger log{};
-    threadpool pool(1);
-    const context configuration{};
-    socket::parameters params{ .maximum_request = 42, .context = socket::context{ std::cref(configuration) } };
-    const auto sock = std::make_shared<network::socket>(log, pool.service(), std::move(params));
-    const auto prx = std::make_shared<mock_proxy>(sock);
-    asio::strand strand(pool.service().get_executor());
-    asio::acceptor acceptor(strand);
-    boost::asio::io_context peer_context{};
-    peer_socket peer{ peer_context };
-    accept_publisher(sock, acceptor, peer, 1);
+    rpc::request request{};
+    auto pending = read(request);
 
+    // An unsolicited PONG is dropped and the read re-armed.
+    peer_write(peer, command("PONG", system::base16_chunk("00112233")));
+    BOOST_REQUIRE(pending.wait_for(milliseconds(100)) == std::future_status::timeout);
+
+    const auto topic = system::to_chunk(std::string{ "rawtx" });
+    peer_write(peer, command("CANCEL", topic));
+    BOOST_REQUIRE_EQUAL(pending.get(), error::success);
+    BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
+    BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
+    BOOST_REQUIRE(stop_of(request));
+}
+
+BOOST_FIXTURE_TEST_CASE(zmtp_proxy__read__v30_subscription__delivered,
+    publisher_fixture)
+{
+    rpc::request request{};
+    auto pending = read(request);
+
+    // The 3.0 dialect subscribes by a single 0x01-prefixed message frame.
+    const auto topic = system::to_chunk(std::string{ "sequence" });
+    data_chunk body{ 0x01 };
+    body.insert(body.end(), topic.begin(), topic.end());
+    peer_write(peer, stream::frame_encode(body, false, false));
+    BOOST_REQUIRE_EQUAL(pending.get(), error::success);
+    BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
+    BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
+    BOOST_REQUIRE(!stop_of(request));
+}
+
+BOOST_FIXTURE_TEST_CASE(zmtp_proxy__read__data_message__unexpected_message,
+    publisher_fixture)
+{
+    rpc::request request{};
+    auto pending = read(request);
+
+    // A publisher receives no data messages.
+    const data_chunk payload{ 0x42, 0x43 };
+    peer_write(peer, stream::frame_encode(payload, false, false));
+    BOOST_REQUIRE_EQUAL(pending.get(), error::zmtp_unexpected_message);
+}
+
+BOOST_FIXTURE_TEST_CASE(zmtp_proxy__read__unknown_command__unexpected_command,
+    publisher_fixture)
+{
+    rpc::request request{};
+    auto pending = read(request);
+    peer_write(peer, command("BOGUS", {}));
+    BOOST_REQUIRE_EQUAL(pending.get(), error::zmtp_unexpected_command);
+}
+
+// Write (rpc to frames by role).
+// ----------------------------------------------------------------------------
+
+BOOST_FIXTURE_TEST_CASE(zmtp_proxy__write__notification__topic_and_param_frames,
+    publisher_fixture)
+{
     // The write is unconditional; filtering by subscription is the protocol's.
-    const auto topic = system::to_chunk(std::string{ "hashblock" });
-    const auto body = system::to_chunk(std::string{ "body" });
-    const data_stack parts{ topic, body, data_chunk{ 0x00, 0x00, 0x00, 0x00 } };
-    const auto packet = system::to_shared(stream::frame_message(parts));
-    std::promise<std::pair<code, size_t>> sent{};
-    prx->write1(packet, [&](const code& ec, size_t size) NOEXCEPT { sent.set_value({ ec, size }); });
-    const auto received = peer_read_message(peer);
-    const auto result = sent.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::success);
-    BOOST_REQUIRE_EQUAL(result.second, packet->size());
-    BOOST_REQUIRE_EQUAL(received.size(), 3u);
-    BOOST_REQUIRE_EQUAL(received.at(0), topic);
-    BOOST_REQUIRE_EQUAL(received.at(1), body);
+    const auto body = system::to_shared(system::to_chunk(std::string{ "body" }));
+    rpc::request notification{};
+    notification.message.method = "hashblock";
+    notification.message.params = rpc::array_t
+    {
+        rpc::any_t{ body },
+        rpc::value_t{ uint32_t{ 0x01020304 } }
+    };
 
-    prx->stop(error::channel_stopped);
-    peer.close();
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
+    std::promise<code> sent{};
+    prx->write1(std::move(notification), [&](const code& ec, size_t) NOEXCEPT
+    {
+        sent.set_value(ec);
+    });
+
+    const auto received = peer_read_message(peer);
+    BOOST_REQUIRE_EQUAL(sent.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(received.size(), 3u);
+    BOOST_REQUIRE_EQUAL(received.at(0), system::to_chunk(std::string{ "hashblock" }));
+    BOOST_REQUIRE_EQUAL(received.at(1), *body);
+    BOOST_REQUIRE_EQUAL(received.at(2), system::base16_chunk("04030201"));
+}
+
+BOOST_FIXTURE_TEST_CASE(zmtp_proxy__write__response__unserializable,
+    publisher_fixture)
+{
+    // A publisher has no reply path.
+    rpc::response response{};
+    response.message.result = rpc::value_t{ rpc::string_t{ "result" } };
+
+    std::promise<code> sent{};
+    prx->write1(std::move(response), [&](const code& ec, size_t) NOEXCEPT
+    {
+        sent.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(sent.get_future().get(), error::zmtp_unserializable);
+}
+
+BOOST_FIXTURE_TEST_CASE(zmtp_proxy__write__double_param__unserializable,
+    publisher_fixture)
+{
+    rpc::request notification{};
+    notification.message.method = "hashblock";
+    notification.message.params = rpc::array_t{ rpc::value_t{ 42.0 } };
+
+    std::promise<code> sent{};
+    prx->write1(std::move(notification), [&](const code& ec, size_t) NOEXCEPT
+    {
+        sent.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(sent.get_future().get(), error::zmtp_unserializable);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -49,9 +49,11 @@ constexpr auto command_message = "MESSAGE";
 // Constructor.
 // ----------------------------------------------------------------------------
 
-// The context selects the upgrade and configures the CURVE mechanism.
-stream::stream(asio::socket&& socket, const context& context) NOEXCEPT
-  : socket_(std::move(socket)), context_(context)
+// The context selects the upgrade and configures the CURVE mechanism, the
+// role selects the socket type and thereby the compatible peer socket types.
+stream::stream(asio::socket&& socket, const context& context,
+    zmtp::role role) NOEXCEPT
+  : socket_(std::move(socket)), context_(context), role_(role)
 {
     if (context.curve())
         cipher_.emplace(context.secret(), context.public_key());
@@ -174,14 +176,15 @@ data_chunk stream::make_property(const std::string& name,
     return property;
 }
 
-data_chunk stream::make_ready_pub() NOEXCEPT
+data_chunk stream::make_ready(zmtp::role role) NOEXCEPT
 {
     // READY command body: length-prefixed name then metadata properties.
     data_chunk body{};
     const std::string name{ command_ready };
     body.push_back(possible_narrow_cast<uint8_t>(name.size()));
     body.insert(body.end(), name.begin(), name.end());
-    const auto property = make_property("Socket-Type", "PUB");
+    const auto property = make_property("Socket-Type",
+        std::string{ socket_type(role) });
     body.insert(body.end(), property.begin(), property.end());
     return frame_encode(body, true, false);
 }
@@ -455,12 +458,11 @@ void stream::fail_handshake(const std::string& reason,
         });
 }
 
-// The peer socket type must be a subscriber (SUB or XSUB).
-bool stream::subscriber(const std::span<const uint8_t>& metadata) const NOEXCEPT
+// The peer socket type must be compatible with the role.
+bool stream::compatible(const std::span<const uint8_t>& metadata) const NOEXCEPT
 {
     std::string type{};
-    return ready_socket_type(type, metadata) &&
-        (type == "SUB" || type == "XSUB");
+    return ready_socket_type(type, metadata) && zmtp::compatible(role_, type);
 }
 
 // NULL mechanism.
@@ -468,7 +470,7 @@ bool stream::subscriber(const std::span<const uint8_t>& metadata) const NOEXCEPT
 
 void stream::write_ready(const handshake_handler& handler) NOEXCEPT
 {
-    const auto ready = to_shared(make_ready_pub());
+    const auto ready = to_shared(make_ready(role_));
     const boost::asio::const_buffer out{ ready->data(), ready->size() };
     boost::asio::async_write(socket_, out,
         std::bind(&stream::handle_ready_sent,
@@ -521,7 +523,7 @@ void stream::handle_ready(const boost_code& ec, size_t,
         return;
     }
 
-    if (!subscriber(metadata))
+    if (!compatible(metadata))
     {
         fail_handshake("incompatible socket type", handler);
         return;
@@ -617,7 +619,7 @@ void stream::handle_initiate(const boost_code& ec, size_t,
     data_chunk ready{};
     data_chunk metadata{};
     if (!cipher_->ready(ready, metadata, body,
-        make_property("Socket-Type", "PUB")))
+        make_property("Socket-Type", std::string{ socket_type(role_) })))
     {
         fail_handshake("invalid INITIATE", handler);
         return;
@@ -630,7 +632,7 @@ void stream::handle_initiate(const boost_code& ec, size_t,
         return;
     }
 
-    if (!subscriber(metadata))
+    if (!compatible(metadata))
     {
         fail_handshake("incompatible socket type", handler);
         return;

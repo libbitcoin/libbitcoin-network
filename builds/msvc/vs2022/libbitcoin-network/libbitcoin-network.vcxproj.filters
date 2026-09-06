@@ -1526,6 +1526,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\context.hpp">
       <Filter>include\bitcoin\network\zmtp</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\role.hpp">
+      <Filter>include\bitcoin\network\zmtp</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\stream.hpp">
       <Filter>include\bitcoin\network\zmtp</Filter>
     </ClInclude>

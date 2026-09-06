@@ -714,6 +714,9 @@
     <ClCompile Include="..\..\..\..\test\zmtp\proxy.cpp">
       <Filter>src\zmtp</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\socket.cpp">
+      <Filter>src\zmtp</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\zmtp\stream.cpp">
       <Filter>src\zmtp</Filter>
     </ClCompile>

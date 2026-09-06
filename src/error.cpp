@@ -308,7 +308,13 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { jsonrpc_batch_empty, "jsonrpc batch empty" },
     { jsonrpc_batch_malformed, "jsonrpc batch malformed" },
     { jsonrpc_batch_requires_v2, "jsonrpc batch requires v2" },
-    { jsonrpc_batch_unsupported, "jsonrpc batch unsupported" }
+    { jsonrpc_batch_unsupported, "jsonrpc batch unsupported" },
+
+    // zmtp (rpc by socket role)
+    { zmtp_unexpected_command, "zmtp unexpected command" },
+    { zmtp_unexpected_message, "zmtp unexpected message" },
+    { zmtp_excessive_parts, "zmtp excessive parts" },
+    { zmtp_unserializable, "zmtp unserializable" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")

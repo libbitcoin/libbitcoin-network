@@ -208,7 +208,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 
         // ZMTP (native) context is applied to the socket.
         auto& stream = socket_.emplace<zmtp::stream>(std::move(socket),
-            std::get<cref<zmtp::context>>(context_).get());
+            std::get<cref<zmtp::context>>(context_).get(), role_);
 
         // Posts handler to socket strand.
         stream.async_handshake(inbound_,

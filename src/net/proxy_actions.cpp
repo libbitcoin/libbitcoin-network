@@ -165,6 +165,19 @@ void proxy::do_peer_write(const frame_ptr& message,
 // close part and re-arming the read), and defers notifications while open.
 
 // flat_buffer must have configured max_size, which will be allocated.
+// The PING context is the second param (the first is the TTL).
+static rpc::value_t to_context(const rpc::params_option& params) NOEXCEPT
+{
+    if (params && std::holds_alternative<rpc::array_t>(*params))
+    {
+        const auto& values = std::get<rpc::array_t>(*params);
+        if (values.size() > one)
+            return values.at(one);
+    }
+
+    return rpc::null_t{};
+}
+
 void proxy::read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
 {
@@ -195,6 +208,40 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
     }
 
     auto& value = request.get();
+
+    // ZMTP control (the channel is keepalive-blind): a PING is answered with
+    // a PONG through the write queue and the read re-armed, a PONG is
+    // dropped and the read re-armed (the channel read handler stays pending).
+    if (socket_->zeromq())
+    {
+        auto& message = value.message;
+        const auto ping = (message.method == "ping");
+        if (ping || message.method == "pong")
+        {
+            if (ping)
+            {
+                const auto pong = to_shared<rpc::request>();
+                pong->message.method = "pong";
+                pong->message.params = rpc::array_t
+                {
+                    to_context(message.params)
+                };
+
+                const count_handler ignore =
+                    [](const code&, size_t) NOEXCEPT {};
+                do_write(std::bind(&proxy::do_notification_write,
+                    shared_from_this(), pong, ignore));
+            }
+
+            socket_->rpc_read(buffer.get(), value,
+                std::bind(&proxy::handle_rpc_read,
+                    shared_from_this(), _1, _2, request, buffer, handler));
+            return;
+        }
+
+        handler(ec, bytes);
+        return;
+    }
 
     // Batch open rides along with the first element (message delivered).
     if (value.changed && !value.batch)
@@ -571,82 +618,6 @@ void proxy::do_http_write(const http::response_ptr& response,
 // with a PONG through the write queue and the read re-armed (as the rpc
 // batch close is absorbed above). Every other frame is delivered; the
 // subscription protocol is the channel's concern.
-
-void proxy::read(zmtp::stream::frame& out, count_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    do_reading();
-
-    socket_->zmtp_read(out,
-        std::bind(&proxy::handle_zmtp_read,
-            shared_from_this(), _1, _2, std::ref(out), std::move(handler)));
-}
-
-// private
-void proxy::handle_zmtp_read(const code& ec, size_t bytes,
-    const ref<zmtp::stream::frame>& out, const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    using stream = zmtp::stream;
-
-    if (ec)
-    {
-        handler(ec, bytes);
-        return;
-    }
-
-    auto& value = out.get();
-
-    if (value.command())
-    {
-        std::string name{};
-        std::span<const uint8_t> content{};
-        const std::span<const uint8_t> body{ value.body };
-        constexpr auto ttl_size = sizeof(uint16_t);
-
-        // PING: echo the context (after the TTL) via the write queue and
-        // re-arm the read (the channel read handler remains pending).
-        if (stream::command_name(name, content, body) && name == "PING" &&
-            content.size() >= ttl_size)
-        {
-            const auto pong = to_shared(stream::make_pong(
-                content.subspan(ttl_size)));
-            const count_handler ignore =
-                [](const code&, size_t) NOEXCEPT {};
-            do_write(std::bind(&proxy::do_zmtp_write,
-                shared_from_this(), pong, ignore));
-
-            socket_->zmtp_read(value,
-                std::bind(&proxy::handle_zmtp_read,
-                    shared_from_this(), _1, _2, out, handler));
-            return;
-        }
-    }
-
-    handler(ec, bytes);
-}
-
-void proxy::write(const chunk_cptr& packet, count_handler&& handler) NOEXCEPT
-{
-    writer call = std::bind(&proxy::do_zmtp_write,
-        shared_from_this(), packet, std::move(handler));
-
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), std::move(call)));
-}
-
-// private
-// The packet is bound to preserve its buffer for the write.
-void proxy::do_zmtp_write(const chunk_cptr& packet,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    socket_->zmtp_write({ packet->data(), packet->size() },
-        metered(std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler)));
-}
 
 BC_POP_WARNING()
 BC_POP_WARNING()
