@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(zmtp_proxy_tests)
 
 using stream = network::zmtp::stream;
 using context = network::zmtp::context;
-using tcp_socket = network::asio::socket;
+using peer_socket = network::asio::socket;
 using system::data_chunk;
 using system::data_stack;
 
@@ -82,14 +82,14 @@ static data_chunk ready(const std::string& type)
 }
 
 // Synchronously write the whole buffer to the peer socket.
-static void peer_write(tcp_socket& peer, const data_chunk& data)
+static void peer_write(peer_socket& peer, const data_chunk& data)
 {
     const boost::asio::const_buffer out{ data.data(), data.size() };
     boost::asio::write(peer, out);
 }
 
 // Synchronously read one short frame (flags and body) from the peer socket.
-static void peer_read_frame(tcp_socket& peer, uint8_t& flags,
+static void peer_read_frame(peer_socket& peer, uint8_t& flags,
     data_chunk& body)
 {
     system::data_array<2> head{};
@@ -107,7 +107,7 @@ static void peer_read_frame(tcp_socket& peer, uint8_t& flags,
 }
 
 // Synchronously read one whole (multipart) message from the peer socket.
-static data_stack peer_read_message(tcp_socket& peer)
+static data_stack peer_read_message(peer_socket& peer)
 {
     data_stack parts{};
     auto more = true;
@@ -124,7 +124,7 @@ static data_stack peer_read_message(tcp_socket& peer)
 }
 
 // Synchronously perform the peer (SUB) side of the ZMTP handshake.
-static void peer_handshake(tcp_socket& peer, uint8_t minor)
+static void peer_handshake(peer_socket& peer, uint8_t minor)
 {
     auto greeting = stream::make_greeting(false, false);
     greeting.at(11) = minor;
@@ -157,7 +157,7 @@ static void parse_command(const data_chunk& body, std::string& name,
 
 // Send a PING and require the echoed PONG, proving all prior frames were
 // consumed by the proxy (the stream is ordered).
-static void peer_ping_pong(tcp_socket& peer)
+static void peer_ping_pong(peer_socket& peer)
 {
     const auto context_bytes = system::base16_chunk("0011223344556677");
     data_chunk ping{ 0x00, 0x00 };
@@ -178,7 +178,7 @@ static void peer_ping_pong(tcp_socket& peer)
 
 // Accept one publisher connection with a completed ZMTP handshake.
 static void accept_publisher(const socket::ptr& sock,
-    asio::acceptor& acceptor, tcp_socket& peer, uint8_t minor)
+    asio::acceptor& acceptor, peer_socket& peer, uint8_t minor)
 {
     boost_code ec{};
     acceptor.open(asio::tcp::v4(), ec);
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__accept__v31_peer__handshake_success)
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
     boost::asio::io_context peer_context{};
-    tcp_socket peer{ peer_context };
+    peer_socket peer{ peer_context };
     accept_publisher(sock, acceptor, peer, 1);
 
     prx->stop(error::channel_stopped);
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__ping__pong_queued_and_read_absorbed)
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
     boost::asio::io_context peer_context{};
-    tcp_socket peer{ peer_context };
+    peer_socket peer{ peer_context };
     accept_publisher(sock, acceptor, peer, 1);
 
     stream::frame frame{};
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__subscribe_command__delivered_to_channel)
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
     boost::asio::io_context peer_context{};
-    tcp_socket peer{ peer_context };
+    peer_socket peer{ peer_context };
     accept_publisher(sock, acceptor, peer, 1);
 
     // A subscription is the protocol's concern, so it reaches the channel.
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__write__framed_packet__three_frames_received)
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
     boost::asio::io_context peer_context{};
-    tcp_socket peer{ peer_context };
+    peer_socket peer{ peer_context };
     accept_publisher(sock, acceptor, peer, 1);
 
     // The write is unconditional; filtering by subscription is the protocol's.
