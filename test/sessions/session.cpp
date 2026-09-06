@@ -803,6 +803,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
 
+    // The stop handler unstores/uncounts before signaling completion.
+    BOOST_REQUIRE(stopped_channel.get_future().get());
+
     // unstored and uncounted
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
     BOOST_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
