@@ -30,16 +30,19 @@ namespace zmtp {
 /// The owner must outlive all sockets created with a reference to it. The
 /// context selects the zmtp upgrade, as p2ps::context selects p2ps, and
 /// holds the server long-term keypair of the CURVE mechanism when one is
-/// configured (otherwise the NULL mechanism is used).
+/// configured (otherwise the NULL mechanism is used), and the public keys
+/// of the authorized clients (any client if none).
 class BCT_API context
 {
 public:
     /// The NULL mechanism.
     context() NOEXCEPT;
 
-    /// The CURVE mechanism with the given server long-term secret key. The
-    /// mechanism is NULL if the secret is not of key_size or is invalid.
-    context(const system::data_chunk& secret) NOEXCEPT;
+    /// The CURVE mechanism with the given server long-term secret key and
+    /// authorized client public keys. The mechanism is NULL if the secret or
+    /// any client key is not of key_size or the secret is invalid.
+    context(const system::data_chunk& secret,
+        const system::data_stack& clients={}) NOEXCEPT;
 
     /// The CURVE mechanism is configured.
     bool curve() const NOEXCEPT;
@@ -48,10 +51,14 @@ public:
     const cipher::key& secret() const NOEXCEPT;
     const cipher::key& public_key() const NOEXCEPT;
 
+    /// The client is authorized (any client if none are configured).
+    bool authorized(const cipher::key& client) const NOEXCEPT;
+
 private:
     bool curve_{};
     cipher::key secret_{};
     cipher::key public_{};
+    std::vector<cipher::key> clients_{};
 };
 
 } // namespace zmtp

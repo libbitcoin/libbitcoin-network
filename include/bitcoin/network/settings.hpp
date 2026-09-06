@@ -177,13 +177,19 @@ struct BCT_API settings
         zmtp_server(const std::string_view& logging_name) NOEXCEPT;
 
         /// The CurveZMQ server secret key (Z85) of the secured bindings.
-        system::config::base85 curve_secret{};
+        system::config::base85 key{};
 
-        /// False if safes or curve_secret is empty.
+        /// The CurveZMQ client certificates (Z85 public keys) authorized.
+        std::vector<system::config::base85> certs{};
+
+        /// False if safes or key is empty.
         bool secure() const NOEXCEPT override;
 
-        /// Initialize the CURVE context (invalid_configuration if the secret
-        /// is malformed, as the downgrade to NULL would otherwise be silent).
+        /// Requires client authentication (client certificates specified).
+        bool authenticate() const NOEXCEPT override;
+
+        /// Initialize the CURVE context (invalid_configuration if the key or
+        /// a client certificate is malformed, as the downgrade would be silent).
         code initialize_context() const NOEXCEPT override;
 
         /// The NULL mechanism context.

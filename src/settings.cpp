@@ -183,8 +183,13 @@ settings::zmtp_server::zmtp_server(
 
 bool settings::zmtp_server::secure() const NOEXCEPT
 {
-    const system::data_chunk& secret = curve_secret;
+    const system::data_chunk& secret = key;
     return !safes.empty() && !secret.empty();
+}
+
+bool settings::zmtp_server::authenticate() const NOEXCEPT
+{
+    return secure() && !certs.empty();
 }
 
 code settings::zmtp_server::initialize_context() const NOEXCEPT
@@ -192,7 +197,11 @@ code settings::zmtp_server::initialize_context() const NOEXCEPT
     if (context)
         return error::operation_failed;
 
-    context = std::make_unique<zmtp::context>(curve_secret);
+    system::data_stack clients{};
+    for (const system::data_chunk& cert: certs)
+        clients.push_back(cert);
+
+    context = std::make_unique<zmtp::context>(key, clients);
 
     if (!secure())
         return error::success;

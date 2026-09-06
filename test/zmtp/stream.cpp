@@ -754,4 +754,93 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
     BOOST_REQUIRE_EQUAL(received.at(2), parts.at(2));
 }
 
+// CURVE client authorization.
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(zmtp_stream__context__clients__authorized_expected)
+{
+    network::zmtp::cipher::key server_secret{};
+    network::zmtp::cipher::key server_public{};
+    network::zmtp::cipher::key listed_secret{};
+    network::zmtp::cipher::key listed_public{};
+    network::zmtp::cipher::key other_secret{};
+    network::zmtp::cipher::key other_public{};
+    system::x25519::generate(server_secret, server_public);
+    system::x25519::generate(listed_secret, listed_public);
+    system::x25519::generate(other_secret, other_public);
+
+    const context any{ system::to_chunk(server_secret) };
+    BOOST_REQUIRE(any.curve());
+    BOOST_REQUIRE(any.authorized(listed_public));
+    BOOST_REQUIRE(any.authorized(other_public));
+
+    const context listed{ system::to_chunk(server_secret), { system::to_chunk(listed_public) } };
+    BOOST_REQUIRE(listed.curve());
+    BOOST_REQUIRE(listed.authorized(listed_public));
+    BOOST_REQUIRE(!listed.authorized(other_public));
+
+    const context malformed{ system::to_chunk(server_secret), { data_chunk(31, 0x01) } };
+    BOOST_REQUIRE(!malformed.curve());
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__authorized_client__completes)
+{
+    boost::asio::io_context service{};
+    peer_socket server_socket{ service };
+    peer_socket client_socket{ service };
+    connect_pair(service, server_socket, client_socket);
+
+    network::zmtp::cipher::key server_secret{};
+    network::zmtp::cipher::key server_public{};
+    network::zmtp::cipher::key client_secret{};
+    network::zmtp::cipher::key client_public{};
+    system::x25519::generate(server_secret, server_public);
+    system::x25519::generate(client_secret, client_public);
+    const context curve{ system::to_chunk(server_secret), { system::to_chunk(client_public) } };
+    BOOST_REQUIRE(curve.curve());
+
+    stream server{ std::move(server_socket), curve };
+    network::zmtp::cipher client{ client_secret, client_public, server_public };
+    curve_peer peer{ client_socket, client };
+
+    boost_code server_result{ boost::asio::error::would_block };
+    boost_code peer_result{ boost::asio::error::would_block };
+    server.async_handshake(true, [&](const boost_code& ec) { server_result = ec; });
+    peer.handshake(peer_result);
+    service.run();
+    BOOST_REQUIRE_MESSAGE(!server_result, server_result.message());
+    BOOST_REQUIRE_MESSAGE(!peer_result, peer_result.message());
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__unauthorized_client__error)
+{
+    boost::asio::io_context service{};
+    peer_socket server_socket{ service };
+    peer_socket client_socket{ service };
+    connect_pair(service, server_socket, client_socket);
+
+    network::zmtp::cipher::key server_secret{};
+    network::zmtp::cipher::key server_public{};
+    network::zmtp::cipher::key client_secret{};
+    network::zmtp::cipher::key client_public{};
+    network::zmtp::cipher::key listed_secret{};
+    network::zmtp::cipher::key listed_public{};
+    system::x25519::generate(server_secret, server_public);
+    system::x25519::generate(client_secret, client_public);
+    system::x25519::generate(listed_secret, listed_public);
+    const context curve{ system::to_chunk(server_secret), { system::to_chunk(listed_public) } };
+
+    stream server{ std::move(server_socket), curve };
+    network::zmtp::cipher client{ client_secret, client_public, server_public };
+    curve_peer peer{ client_socket, client };
+
+    boost_code server_result{ boost::asio::error::would_block };
+    boost_code peer_result{ boost::asio::error::would_block };
+    server.async_handshake(true, [&](const boost_code& ec) { server_result = ec; });
+    peer.handshake(peer_result);
+    service.run();
+    BOOST_REQUIRE_EQUAL(server_result, boost_code(boost::asio::error::no_protocol_option));
+    BOOST_REQUIRE_EQUAL(peer_result, boost_code(boost::asio::error::no_protocol_option));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
