@@ -190,7 +190,7 @@ bool cipher::hello(data_chunk& out) NOEXCEPT
 
     // The transient keypair and the (C' -> S) box.
     key shared{};
-    x25519::generate(transient_secret_, transient_public_);
+    x25519::generate(transient_secret_, transient_public_, false);
     if (!derive(shared, transient_secret_, peer_))
         return false;
 
@@ -246,7 +246,7 @@ bool cipher::welcome(data_chunk& out, const span& hello) NOEXCEPT
         return false;
 
     // The transient keypair and cookie key are per connection.
-    x25519::generate(transient_secret_, transient_public_);
+    x25519::generate(transient_secret_, transient_public_, false);
     maybe_random::fill(cookie_key_);
 
     // The cookie holds the connection state under the cookie key.
