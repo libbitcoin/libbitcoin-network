@@ -140,9 +140,9 @@ BOOST_AUTO_TEST_CASE(zmtp_socket__read__excessive_parts__excessive_parts)
     BOOST_REQUIRE_EQUAL(read(request), error::zmtp_excessive_parts);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_socket__read__two_messages_one_read__residue_carried)
+BOOST_AUTO_TEST_CASE(zmtp_socket__read__two_messages_one_write__read_in_order)
 {
-    // Both messages arrive in one read, the second is residue for the next.
+    // Both messages arrive together and are read one per read.
     auto both = zmtp_stream::frame_message({ chunk("first"), chunk("one") });
     const auto second = zmtp_stream::frame_message({ chunk("second") });
     both.insert(both.end(), second.begin(), second.end());

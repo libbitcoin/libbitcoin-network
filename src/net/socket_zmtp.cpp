@@ -397,7 +397,7 @@ static code encode_response(data_chunk& packet, role role,
 
 // ZMTP (read).
 // ----------------------------------------------------------------------------
-// Complete frames are decoded from the buffer, residue carried to next read.
+// One frame per stream read, a message completing on its last part.
 
 // private
 void socket::do_zmtp_read(const zmtp_read_state::ptr& in,
@@ -405,82 +405,13 @@ void socket::do_zmtp_read(const zmtp_read_state::ptr& in,
 {
     BC_ASSERT(stranded());
 
-    if (!zeromq() || role_ == role::undefined)
+    if (role_ == role::undefined)
     {
         handler(error::bad_stream, zero);
         return;
     }
 
-    auto& upgraded = get_zmtp();
-    auto& buffer = in->buffer;
-
-    // Decode the complete frames in the buffer, each into an owned part.
-    while (true)
-    {
-        const auto data = buffer.data();
-        std::span<const uint8_t> remaining
-        {
-            pointer_cast<const uint8_t>(data.data()), data.size()
-        };
-
-        uint8_t flags{};
-        data_chunk body{};
-        const auto size = remaining.size();
-        const auto ec = upgraded.decode(flags, body, remaining, maximum_);
-        if (ec == error::need_more)
-            break;
-
-        if (ec)
-        {
-            handler(ec, in->total);
-            return;
-        }
-
-        const auto consumed = size - remaining.size();
-        buffer.consume(consumed);
-        in->total += consumed;
-        in->parts.push_back({ flags, std::move(body) });
-        const auto& frame = in->parts.back();
-
-        // A command is a whole message, and cannot be within a message.
-        if (frame.command())
-        {
-            if (!is_one(in->parts.size()) || frame.more())
-            {
-                handler(error::zmtp_unexpected_command, in->total);
-                return;
-            }
-
-            handler(decode_command(in->out.message, role_, frame), in->total);
-            return;
-        }
-
-        if (!frame.more())
-        {
-            handler(decode_message(in->out.message, role_, in->parts,
-                upgraded.identity()), in->total);
-            return;
-        }
-
-        if (in->parts.size() >= stream::maximum_parts)
-        {
-            handler(error::zmtp_excessive_parts, in->total);
-            return;
-        }
-    }
-
-    // The buffered residue is bounded by the socket maximum (as the http
-    // body limit), and reads are sized to what the buffer may accept.
-    const auto held = buffer.size();
-    if (held >= maximum_ || held >= buffer.max_size())
-    {
-        handler(error::oversized_payload, in->total);
-        return;
-    }
-
-    const auto space = std::min(maximum_, buffer.max_size()) - held;
-    const auto request = std::min(space, stream::maximum_inbound);
-    upgraded.next_layer().async_read_some(buffer.prepare(request),
+    get_zmtp().async_read_frame(in->frame, maximum_,
         std::bind(&socket::handle_zmtp_read,
             shared_from_this(), _1, _2, in, handler));
 }
@@ -490,14 +421,50 @@ void socket::handle_zmtp_read(const boost_code& ec, size_t size,
     const zmtp_read_state::ptr& in, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    in->total = ceilinged_add(in->total, size);
 
-    if (ec)
+    if (ec == boost::asio::error::message_size)
     {
-        handle_async(ec, in->total, handler, "async_read_some");
+        handler(error::oversized_payload, in->total);
         return;
     }
 
-    in->buffer.commit(size);
+    if (ec)
+    {
+        handle_async(ec, in->total, handler, "async_read_frame");
+        return;
+    }
+
+    in->parts.push_back(std::move(in->frame));
+    in->frame = {};
+    const auto& frame = in->parts.back();
+
+    // A command is a whole message, and cannot be within a message.
+    if (frame.command())
+    {
+        if (!is_one(in->parts.size()) || frame.more())
+        {
+            handler(error::zmtp_unexpected_command, in->total);
+            return;
+        }
+
+        handler(decode_command(in->out.message, role_, frame), in->total);
+        return;
+    }
+
+    if (!frame.more())
+    {
+        handler(decode_message(in->out.message, role_, in->parts,
+            get_zmtp().identity()), in->total);
+        return;
+    }
+
+    if (in->parts.size() >= stream::maximum_parts)
+    {
+        handler(error::zmtp_excessive_parts, in->total);
+        return;
+    }
+
     do_zmtp_read(in, handler);
 }
 
@@ -510,12 +477,6 @@ void socket::do_zmtp_notify(const rpc::request_ptr& out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    if (!zeromq())
-    {
-        handler(error::bad_stream, zero);
-        return;
-    }
 
     const auto packet = to_shared<data_chunk>();
     if (const auto ec = encode_notification(*packet, role_, out->message))
@@ -532,12 +493,6 @@ void socket::do_zmtp_response(const rpc::response_ptr& out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    if (!zeromq())
-    {
-        handler(error::bad_stream, zero);
-        return;
-    }
 
     const auto packet = to_shared<data_chunk>();
     if (const auto ec = encode_response(*packet, role_, out->message))

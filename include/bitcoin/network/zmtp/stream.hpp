@@ -89,8 +89,7 @@ public:
     static constexpr uint8_t revision_major = 3;
     static constexpr uint8_t revision_minor = 1;
 
-    /// Maximum accepted inbound frame contents. Inbound traffic is control
-    /// (subscriptions, pings) and rpc requests, so this is modest.
+    /// Maximum handshake frame contents (the socket bounds data frames).
     static constexpr size_t maximum_inbound = 8192;
 
     /// Maximum echoed PING context (per ZMTP, truncated to this).
@@ -114,12 +113,9 @@ public:
     void async_handshake(bool as_server, handshake_handler&& handler) NOEXCEPT;
 
     /// Read the next frame into the caller-owned frame (flags and body), one
-    /// frame per read (the handshake reads one command at a time).
-    void async_read_frame(frame& out, io_handler&& handler) NOEXCEPT;
-
-    /// Decode the frame at the front of the buffer, need_more if incomplete.
-    code decode(uint8_t& flags, system::data_chunk& body,
-        std::span<const uint8_t>& buffer, size_t limit) NOEXCEPT;
+    /// frame per read. A frame exceeding maximum fails with message_size.
+    void async_read_frame(frame& out, size_t maximum,
+        io_handler&& handler) NOEXCEPT;
 
     /// Write a caller-framed buffer (see frame_message). The caller retains
     /// the buffer until the handler fires, when the peer has accepted it.
@@ -168,12 +164,6 @@ public:
     /// the buffer to the remainder. False if the buffer is malformed.
     static bool frame_decode(uint8_t& flags, std::span<const uint8_t>& body,
         std::span<const uint8_t>& buffer) NOEXCEPT;
-
-    /// Parse the frame header (flags and length) at the front of a buffer
-    /// without consuming it, setting header to the size of the prefix. False
-    /// if the buffer holds less than the prefix.
-    static bool frame_header(uint8_t& flags, size_t& length, size_t& header,
-        const std::span<const uint8_t>& buffer) NOEXCEPT;
 
     /// Extract the command name from a command frame body, or empty if the
     /// self-describing length prefix is malformed. Sets body to the remainder.
@@ -235,9 +225,9 @@ private:
 
     // frame reader (one whole frame: flags, length, body)
     void handle_frame_flags(const boost_code& ec, ref<frame> out,
-        const io_handler& handler) NOEXCEPT;
+        size_t maximum, const io_handler& handler) NOEXCEPT;
     void handle_frame_length(const boost_code& ec, bool long_size,
-        ref<frame> out, const io_handler& handler) NOEXCEPT;
+        ref<frame> out, size_t maximum, const io_handler& handler) NOEXCEPT;
     void handle_frame_body(const boost_code& ec, size_t size,
         ref<frame> out, const io_handler& handler) NOEXCEPT;
 

@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
 
     boost_code got{ boost::asio::error::would_block };
     stream::frame frame{};
-    publisher->async_read_frame(frame, [&](const boost_code& ec, size_t) { got = ec; });
+    publisher->async_read_frame(frame, 1024, [&](const boost_code& ec, size_t) { got = ec; });
     service.run();
     service.restart();
     BOOST_REQUIRE(!got);
@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_fro
 
     boost_code got{ boost::asio::error::would_block };
     stream::frame frame{};
-    publisher->async_read_frame(frame, [&](const boost_code& ec, size_t) { got = ec; });
+    publisher->async_read_frame(frame, 1024, [&](const boost_code& ec, size_t) { got = ec; });
     service.run();
     service.restart();
     BOOST_REQUIRE(!got);
@@ -728,7 +728,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
     // The boxed SUBSCRIBE surfaces as a plain command frame.
     stream::frame frame{};
     boost_code read_result{ boost::asio::error::would_block };
-    server.async_read_frame(frame, [&](const boost_code& ec, size_t) { read_result = ec; });
+    server.async_read_frame(frame, 1024, [&](const boost_code& ec, size_t) { read_result = ec; });
     const data_chunk topic{ 0x68, 0x61, 0x73, 0x68 };
     peer.subscribe(topic);
     service.run();

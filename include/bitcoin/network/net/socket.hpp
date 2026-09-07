@@ -324,14 +324,13 @@ private:
     {
         typedef std::shared_ptr<zmtp_read_state> ptr;
 
-        zmtp_read_state(rpc::request& request,
-            http::flat_buffer& buffer) NOEXCEPT
-          : out{ request }, buffer{ buffer }
+        zmtp_read_state(rpc::request& request) NOEXCEPT
+          : out{ request }
         {
         }
 
         rpc::request& out;
-        http::flat_buffer& buffer;
+        zmtp::stream::frame frame{};
         parts_t parts{};
         size_t total{};
     };
