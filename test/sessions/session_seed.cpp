@@ -135,11 +135,8 @@ public:
         // Must be first to ensure connector::start_connect() preceeds promise release.
         session_seed::start_seed({}, seed, connector, handler);
 
-        if (!seeded_)
-        {
-            seeded_ = true;
+        if (!seeded_.exchange(true))
             seed_.set_value(true);
-        }
     }
 
     bool seeded() const NOEXCEPT
@@ -155,11 +152,9 @@ public:
     void attach_handshake(const channel::ptr& channel,
         result_handler&& handshake) NOEXCEPT override
     {
-        if (!handshaked_)
-        {
-            handshaked_ = true;
+        // Seed channels handshake concurrently (one strand each).
+        if (!handshaked_.exchange(true))
             handshake_.set_value(true);
-        }
 
         // The handshake protocol pauses the channel upon completion, which is
         // after the session resumes it to start the read loop, so this posts.
@@ -182,8 +177,8 @@ public:
     }
 
 private:
-    mutable bool seeded_{ false };
-    mutable bool handshaked_{ false };
+    mutable std::atomic_bool seeded_{ false };
+    mutable std::atomic_bool handshaked_{ false };
     mutable std::promise<bool> seed_;
     mutable std::promise<bool> handshake_;
 };
