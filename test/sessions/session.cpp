@@ -166,8 +166,15 @@ public:
             handshaked_ = true;
         }
 
-        // Simulate handshake completion.
-        handshake(channel->stopped() ? error::channel_stopped : error::success);
+        // The handshake protocol pauses the channel upon completion, which is
+        // after the session resumes it to start the read loop, so this posts.
+        boost::asio::post(channel->strand(),
+            [channel, complete = std::move(handshake)]() NOEXCEPT
+            {
+                channel->pause();
+                complete(channel->stopped() ? error::channel_stopped :
+                    error::success);
+            });
     }
 
     bool attached_handshake() const NOEXCEPT
@@ -759,8 +766,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 
     socket::parameters params{ .maximum_request = 42 };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
-    const auto channel = std::make_shared<mock_channel>(net.log, socket, 42, session->network_settings(), options);
-    
+    const auto channel = std::make_shared<mock_channel_no_read>(net.log, socket, 42, session->network_settings(), options);
+
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
     boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
@@ -776,16 +783,12 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
             });
     });
 
-    // Channel stopped by heading read fail (bad_stream), stop method called by session.
+    // The channel does not read, so it is stopped only by the session.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
     ////BOOST_REQUIRE(session->attached_protocol());
     ////BOOST_REQUIRE(channel->reresumed());
-
-    // Race between bad_stream and channel_stopped.
-    BOOST_REQUIRE(channel->stopped());
-    BOOST_REQUIRE(channel->stop_code());
 
     // stored and counted
     BOOST_REQUIRE(net.stored_nonce_result());
@@ -805,6 +808,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 
     // The stop handler unstores/uncounts before signaling completion.
     BOOST_REQUIRE(stopped_channel.get_future().get());
+    BOOST_REQUIRE(channel->stopped());
+    BOOST_REQUIRE(channel->stop_code());
 
     // unstored and uncounted
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
