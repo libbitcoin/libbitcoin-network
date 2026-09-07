@@ -196,7 +196,7 @@ public:
         return accept_.get_future().get();
     }
 
-    void attach_handshake(const channel::ptr&,
+    void attach_handshake(const channel::ptr& channel,
         result_handler&& handshake) NOEXCEPT override
     {
         if (!handshaked_)
@@ -205,8 +205,14 @@ public:
             handshake_.set_value(true);
         }
 
-        // Simulate handshake successful completion.
-        handshake(error::success);
+        // The handshake protocol pauses the channel upon completion, which is
+        // after the session resumes it to start the read loop, so this posts.
+        boost::asio::post(channel->strand(),
+            [channel, complete = std::move(handshake)]() NOEXCEPT
+            {
+                channel->pause();
+                complete(error::success);
+            });
     }
 
     bool attached_handshake() const NOEXCEPT
