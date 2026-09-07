@@ -165,11 +165,9 @@ public:
     void attach_handshake(const channel::ptr& channel,
         result_handler&& handshake) NOEXCEPT override
     {
-        if (!handshaked_)
-        {
-            handshaked_ = true;
+        // Outbound channels handshake concurrently (one strand each).
+        if (!handshaked_.exchange(true))
             handshake_.set_value(true);
-        }
 
         // The handshake protocol pauses the channel upon completion, which is
         // after the session resumes it to start the read loop, so this posts.
@@ -192,7 +190,7 @@ public:
     }
 
 protected:
-    mutable bool handshaked_{ false };
+    mutable std::atomic_bool handshaked_{ false };
     mutable std::promise<bool> handshake_;
 
 private:
