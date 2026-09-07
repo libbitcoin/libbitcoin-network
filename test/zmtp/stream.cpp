@@ -265,7 +265,7 @@ public:
     // Read and unbox one whole multipart message.
     void read_message(std::vector<data_chunk>& parts, boost_code& out)
     {
-        read_frame([this, &parts, &out](const boost_code& ec, uint8_t flags,
+        read_frame([this, &parts, &out](const boost_code& ec, uint8_t,
             const data_chunk& message)
         {
             if (ec) { out = ec; return; }

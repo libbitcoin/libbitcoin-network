@@ -1,6 +1,6 @@
 """libzmq (pyzmq) interoperability test for the zmtp socket roles.
 
-Each role server is a test case in the network test binary
+Each role server is a test suite in the network test binary
 (test/zmtp/harness.cpp) that this script runs by name with ZMTP_HARNESS set
 (the cases pass trivially without it), connecting a real libzmq peer of the
 compatible socket type to it. The exchange is fixed by
@@ -47,7 +47,7 @@ class Server:
         self.name = case
         self.port = port
         self.process = subprocess.Popen(
-            [test, "--run_test=zmtp_harness_tests/zmtp_harness__" + case,
+            [test, f"--run_test=zmtp_harness_{case}_tests",
              "--log_level=test_suite"],
             env={**os.environ, "ZMTP_HARNESS": "1"},
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)

@@ -714,16 +714,19 @@
     <ClCompile Include="..\..\..\..\test\zmtp\cipher.cpp">
       <Filter>src\zmtp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\zmtp\harness.cpp">
+    <ClCompile Include="..\..\..\..\test\zmtp\proxy.cpp">
       <Filter>src\zmtp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\zmtp\proxy.cpp">
+    <ClCompile Include="..\..\..\..\test\zmtp\role.cpp">
       <Filter>src\zmtp</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\zmtp\socket.cpp">
       <Filter>src\zmtp</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\zmtp\stream.cpp">
+      <Filter>src\zmtp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\zmtp_setup_fixture.cpp">
       <Filter>src\zmtp</Filter>
     </ClCompile>
   </ItemGroup>
@@ -949,6 +952,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\test\test.hpp">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\zmtp\zmtp_setup_fixture.hpp">
+      <Filter>src\zmtp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
