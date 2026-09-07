@@ -45,6 +45,7 @@ public:
     typedef std::shared_ptr<socket> ptr;
 
     using context = settings::transport;
+    using parts_t = std::vector<zmtp::stream::frame>;
 
     struct parameters
     {
@@ -53,6 +54,7 @@ public:
         duration connect_timeout{};
         size_t maximum_request{};
         socket::context context{};
+        zmtp::role role{};
     };
 
     /// Construct.
@@ -140,19 +142,6 @@ public:
     virtual void tcp_write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
-    /// ZMTP (TCP: native publisher).
-    /// -----------------------------------------------------------------------
-
-    /// Read next frame from the zmtp socket, handler posted to socket strand.
-    virtual void zmtp_read(zmtp::stream::frame& out,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write caller-framed buffer to the zmtp socket, handler posted to
-    /// socket strand. Control traffic and subscription filtering belong to
-    /// the tier above (see zmtp::stream::frame_message).
-    virtual void zmtp_write(const asio::const_buffer& in,
-        count_handler&& handler) NOEXCEPT;
-
     /// PEER (TCP: bitcoin p2p).
     /// -----------------------------------------------------------------------
 
@@ -164,7 +153,7 @@ public:
     virtual void peer_write(messages::peer::frame&& message,
         count_handler&& handler) NOEXCEPT;
 
-    /// RPC (TCP: electrum/stratum_v1, WS: btcd).
+    /// RPC (TCP: electrum/stratum_v1, WS: btcd, ZMTP: by socket role).
     /// -----------------------------------------------------------------------
 
     /// Read rpc request from the socket, handler posted to socket strand.
@@ -257,8 +246,8 @@ public:
     /// The socket was upgraded to p2ps (the peer is v2).
     virtual bool encrypted() const NOEXCEPT;
 
-    /// The socket was upgraded to a native ZMTP publisher.
-    virtual bool publisher() const NOEXCEPT;
+    /// The socket was upgraded to native ZMTP (in its role).
+    virtual bool zeromq() const NOEXCEPT;
 
     /// The socket was upgraded to a websocket.
     virtual bool websocket() const NOEXCEPT;
@@ -329,6 +318,22 @@ private:
         system::data_chunk& payload;
         system::data_array<messages::peer::heading::size()> head{};
         bool headed{};
+    };
+
+    struct zmtp_read_state
+    {
+        typedef std::shared_ptr<zmtp_read_state> ptr;
+
+        zmtp_read_state(rpc::request& request,
+            http::flat_buffer& buffer) NOEXCEPT
+          : out{ request }, buffer{ buffer }
+        {
+        }
+
+        rpc::request& out;
+        http::flat_buffer& buffer;
+        parts_t parts{};
+        size_t total{};
     };
 
     struct read_state
@@ -448,10 +453,23 @@ private:
     void do_tcp_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
 
-    // zmtp
-    void do_zmtp_read(ref<zmtp::stream::frame> out,
+    // rpc (transport selection)
+    void do_rpc_read(const ref<http::flat_buffer>& buffer,
+        const ref<rpc::request>& request,
         const count_handler& handler) NOEXCEPT;
-    void do_zmtp_write(const asio::const_buffer& in,
+    void do_rpc_write(const rpc::response_ptr& response,
+        const count_handler& handler) NOEXCEPT;
+    void do_rpc_notify(const rpc::request_ptr& notification,
+        const count_handler& handler) NOEXCEPT;
+
+    // zmtp (rpc by role)
+    void do_zmtp_read(const zmtp_read_state::ptr& in,
+        const count_handler& handler) NOEXCEPT;
+    void do_zmtp_notify(const rpc::request_ptr& out,
+        const count_handler& handler) NOEXCEPT;
+    void do_zmtp_response(const rpc::response_ptr& out,
+        const count_handler& handler) NOEXCEPT;
+    void do_zmtp_write(const system::chunk_ptr& packet,
         const count_handler& handler) NOEXCEPT;
 
     // peer
@@ -532,6 +550,10 @@ private:
         const ref<rpc::request>& out, const http::request_ptr& in,
         const count_handler& handler) NOEXCEPT;
 
+    // zmtp
+    void handle_zmtp_read(const boost_code& ec, size_t size,
+        const zmtp_read_state::ptr& in, const count_handler& handler) NOEXCEPT;
+
     // body
     void handle_body_read(const code& ec, size_t size, size_t total,
         const read_state::ptr& in, const count_handler& handler) NOEXCEPT;
@@ -573,6 +595,7 @@ protected:
     asio::strand strand_;
     asio::context& service_;
     const context context_;
+    const zmtp::role role_;
     std::atomic_bool stopped_{};
     std::atomic_bool websocket_{};
 

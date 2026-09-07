@@ -103,6 +103,11 @@ void session_server::handle_started(const code& ec,
     handler(do_accept(options_.binds, options_.clear_context(), false));
 }
 
+zmtp::role session_server::role() const NOEXCEPT
+{
+    return zmtp::role::undefined;
+}
+
 // private
 code session_server::do_accept(const config::authorities& binds,
     const socket::context& context, bool secure) NOEXCEPT
@@ -116,7 +121,8 @@ code session_server::do_accept(const config::authorities& binds,
         {
             .connect_timeout = network_settings().connect_timeout(),
             .maximum_request = options_.maximum_request,
-            .context = context
+            .context = context,
+            .role = role()
         });
 
         // Require that all acceptors at least start.

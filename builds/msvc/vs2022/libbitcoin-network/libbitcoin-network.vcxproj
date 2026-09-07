@@ -596,6 +596,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\cipher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\context.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\role.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\stream.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\zmtp.hpp" />
   </ItemGroup>

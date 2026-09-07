@@ -81,6 +81,9 @@ protected:
     /// Inbound services are enabled (e.g. because node is current).
     virtual bool enabled() const NOEXCEPT;
 
+    /// The ZeroMQ socket type of the channel (undefined if not zmtp).
+    virtual zmtp::role role() const NOEXCEPT;
+
 private:
     code do_accept(const config::authorities& binds,
         const socket::context& context, bool secure) NOEXCEPT;

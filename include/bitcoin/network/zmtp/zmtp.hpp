@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/zmtp/cipher.hpp>
 #include <bitcoin/network/zmtp/context.hpp>
+#include <bitcoin/network/zmtp/role.hpp>
 #include <bitcoin/network/zmtp/stream.hpp>
 
 #endif

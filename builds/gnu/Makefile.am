@@ -675,6 +675,7 @@ include_bitcoin_network_zmtpdir = \
 include_bitcoin_network_zmtp_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/zmtp/cipher.hpp \
     ${srcdir}/../../include/bitcoin/network/zmtp/context.hpp \
+    ${srcdir}/../../include/bitcoin/network/zmtp/role.hpp \
     ${srcdir}/../../include/bitcoin/network/zmtp/stream.hpp \
     ${srcdir}/../../include/bitcoin/network/zmtp/zmtp.hpp
 
@@ -833,6 +834,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/ssl/wolfssl.cpp \
     ${srcdir}/../../test/zmtp/cipher.cpp \
     ${srcdir}/../../test/zmtp/proxy.cpp \
+    ${srcdir}/../../test/zmtp/socket.cpp \
     ${srcdir}/../../test/zmtp/stream.cpp
 
 if WITH_SSL

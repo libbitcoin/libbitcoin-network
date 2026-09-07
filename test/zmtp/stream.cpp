@@ -23,6 +23,7 @@ BOOST_AUTO_TEST_SUITE(zmtp_stream_tests)
 
 using stream = network::zmtp::stream;
 using context = network::zmtp::context;
+using role = network::zmtp::role;
 using peer_socket = network::asio::socket;
 using system::data_chunk;
 using system::data_stack;
@@ -385,9 +386,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__frame_message__three_parts__more_on_all_but_la
     BOOST_REQUIRE_EQUAL(packet.at(14), 4u);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__make_ready_pub__socket_type__pub)
+BOOST_AUTO_TEST_CASE(zmtp_stream__make_ready__publisher__socket_type_pub)
 {
-    const auto frame = stream::make_ready_pub();
+    const auto frame = stream::make_ready(role::publisher);
     BOOST_REQUIRE(!is_zero(frame.at(0) & stream::flag_command));
 
     const std::span<const uint8_t> body{ std::next(frame.data(), 2u), frame.size() - 2u };
@@ -426,7 +427,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
 
     const context configuration{};
     std::optional<stream> publisher{};
-    publisher.emplace(std::move(server), configuration);
+    publisher.emplace(std::move(server), configuration, role::publisher);
     raw_peer peer{ client, 1 };
 
     boost_code shook{ boost::asio::error::would_block };
@@ -478,7 +479,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__handshake__v30_peer__minor_zero)
 
     const context configuration{};
     std::optional<stream> publisher{};
-    publisher.emplace(std::move(server), configuration);
+    publisher.emplace(std::move(server), configuration, role::publisher);
     raw_peer peer{ client, 0 };
 
     boost_code shook{ boost::asio::error::would_block };
@@ -503,7 +504,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
 
     const context configuration{};
     std::optional<stream> publisher{};
-    publisher.emplace(std::move(server), configuration);
+    publisher.emplace(std::move(server), configuration, role::publisher);
     raw_peer peer{ client, 1 };
 
     boost_code shook{ boost::asio::error::would_block };
@@ -548,7 +549,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_fro
 
     const context configuration{};
     std::optional<stream> publisher{};
-    publisher.emplace(std::move(server), configuration);
+    publisher.emplace(std::move(server), configuration, role::publisher);
     raw_peer peer{ client, 1 };
 
     boost_code shook{ boost::asio::error::would_block };
@@ -652,7 +653,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
     BOOST_REQUIRE(curve.curve());
     BOOST_REQUIRE_EQUAL(curve.public_key(), server_public);
 
-    stream server{ std::move(server_socket), curve };
+    stream server{ std::move(server_socket), curve, role::publisher };
     network::zmtp::cipher client{ client_secret, client_public, server_public };
     curve_peer peer{ client_socket, client };
 
@@ -677,7 +678,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__null_client__error)
     system::x25519::generate(server_secret, server_public);
     const context curve{ system::to_chunk(server_secret) };
 
-    stream server{ std::move(server_socket), curve };
+    stream server{ std::move(server_socket), curve, role::publisher };
     raw_peer peer{ client_socket, 1 };
 
     boost_code server_result{ boost::asio::error::would_block };
@@ -712,7 +713,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
     system::x25519::generate(client_secret, client_public);
     const context curve{ system::to_chunk(server_secret) };
 
-    stream server{ std::move(server_socket), curve };
+    stream server{ std::move(server_socket), curve, role::publisher };
     network::zmtp::cipher client{ client_secret, client_public, server_public };
     curve_peer peer{ client_socket, client };
 
@@ -799,7 +800,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__authorized_client__completes)
     const context curve{ system::to_chunk(server_secret), { system::to_chunk(client_public) } };
     BOOST_REQUIRE(curve.curve());
 
-    stream server{ std::move(server_socket), curve };
+    stream server{ std::move(server_socket), curve, role::publisher };
     network::zmtp::cipher client{ client_secret, client_public, server_public };
     curve_peer peer{ client_socket, client };
 
@@ -830,7 +831,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__unauthorized_client__error)
     system::x25519::generate(listed_secret, listed_public);
     const context curve{ system::to_chunk(server_secret), { system::to_chunk(listed_public) } };
 
-    stream server{ std::move(server_socket), curve };
+    stream server{ std::move(server_socket), curve, role::publisher };
     network::zmtp::cipher client{ client_secret, client_public, server_public };
     curve_peer peer{ client_socket, client };
 

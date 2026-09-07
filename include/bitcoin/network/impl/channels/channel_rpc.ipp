@@ -131,7 +131,15 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
     }
 
     if (const auto code = dispatcher_.notify(request->message))
+    {
         stop(code);
+        return;
+    }
+
+    // A request without an id is a notification, which has no response, so
+    // the listener is restarted here rather than following a response.
+    if (!request->message.id)
+        receive();
 }
 
 // request helpers
@@ -200,10 +208,12 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     // Typically a noop, but handshake may pause channel here.
     handler(ec);
 
-    // Restart the listener (only in response to requests).
+    // Restart the listener (only in response to requests). A response to a
+    // notification is a protocol violation, the listener already restarted.
     if constexpr (is_same_type<Message, rpc::response_t>)
     {
-        receive();
+        if (!reading_)
+            receive();
     }
 }
 
