@@ -833,6 +833,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/sessions/session_server.cpp \
     ${srcdir}/../../test/ssl/wolfssl.cpp \
     ${srcdir}/../../test/zmtp/cipher.cpp \
+    ${srcdir}/../../test/zmtp/harness.cpp \
     ${srcdir}/../../test/zmtp/proxy.cpp \
     ${srcdir}/../../test/zmtp/socket.cpp \
     ${srcdir}/../../test/zmtp/stream.cpp

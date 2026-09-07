@@ -47,19 +47,31 @@ static data_chunk command(const std::string& name, const data_chunk& content)
     return stream::frame_encode(body, true, false);
 }
 
-// Build a READY command advertising the given socket type.
-static data_chunk ready(const std::string& type)
+// Build one metadata property.
+static data_chunk property(const std::string& key, const std::string& value)
 {
-    const std::string key{ "Socket-Type" };
     const auto key_size = system::possible_narrow_cast<uint8_t>(key.size());
-    const auto type_size = system::possible_narrow_cast<uint32_t>(type.size());
-    const auto value_size = system::to_big_endian(type_size);
+    const auto size = system::possible_narrow_cast<uint32_t>(value.size());
+    const auto value_size = system::to_big_endian(size);
 
     data_chunk meta{};
     meta.push_back(key_size);
     meta.insert(meta.end(), key.begin(), key.end());
     meta.insert(meta.end(), value_size.begin(), value_size.end());
-    meta.insert(meta.end(), type.begin(), type.end());
+    meta.insert(meta.end(), value.begin(), value.end());
+    return meta;
+}
+
+// Build a READY command advertising the socket type (and identity if any).
+static data_chunk ready(const std::string& type, const std::string& identity)
+{
+    auto meta = property("Socket-Type", type);
+    if (!identity.empty())
+    {
+        const auto named = property("Identity", identity);
+        meta.insert(meta.end(), named.begin(), named.end());
+    }
+
     return command("READY", meta);
 }
 
@@ -108,7 +120,8 @@ static data_stack peer_read_message(peer_socket& peer)
 // Synchronously perform the peer side of the ZMTP handshake as the given
 // socket type, returning the name of the first command received (READY or
 // ERROR).
-static std::string peer_handshake(peer_socket& peer, const std::string& type)
+static std::string peer_handshake(peer_socket& peer, const std::string& type,
+    const std::string& identity)
 {
     peer_write(peer, stream::make_greeting(false, false));
 
@@ -120,7 +133,7 @@ static std::string peer_handshake(peer_socket& peer, const std::string& type)
     bool as_server{};
     BOOST_REQUIRE(stream::parse_greeting(theirs, minor, curve, as_server));
 
-    peer_write(peer, ready(type));
+    peer_write(peer, ready(type, identity));
     uint8_t flags{};
     data_chunk body{};
     peer_read_frame(peer, flags, body);
@@ -137,7 +150,7 @@ static std::string peer_handshake(peer_socket& peer, const std::string& type)
 struct role_fixture
 {
     role_fixture(role value, const std::string& type,
-        size_t maximum=4096)
+        size_t maximum=4096, const std::string& identity="")
       : pool(1),
         params
         {
@@ -167,7 +180,7 @@ struct role_fixture
         });
 
         peer.connect(acceptor.local_endpoint());
-        first = peer_handshake(peer, type);
+        first = peer_handshake(peer, type, identity);
         accepted = promised.get_future().get();
     }
 
@@ -245,6 +258,15 @@ struct router_fixture
   : role_fixture
 {
     router_fixture() : role_fixture(role::router, "DEALER") {}
+};
+
+struct identified_router_fixture
+  : role_fixture
+{
+    identified_router_fixture()
+      : role_fixture(role::router, "DEALER", 4096, "peer1")
+    {
+    }
 };
 
 struct incompatible_fixture
@@ -501,19 +523,19 @@ BOOST_FIXTURE_TEST_CASE(zmtp_socket__notify__replier__unserializable,
         error::zmtp_unserializable);
 }
 
-// Router (the rpc id is the peer identity).
+// Router (the rpc id is the handshake identity, the envelope a delimiter).
 // ----------------------------------------------------------------------------
 
-BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__router_dealer_request__identified,
+BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__router_dealer_request__undelimited,
     router_fixture)
 {
-    const data_stack parts{ chunk("peer1"), chunk("method"), chunk("param") };
+    const data_stack parts{ chunk("method"), chunk("param") };
     peer_write(peer, stream::frame_message(parts));
 
     rpc::request request{};
     BOOST_REQUIRE_EQUAL(read(request), error::success);
     BOOST_REQUIRE(request.message.id);
-    BOOST_REQUIRE_EQUAL(std::get<rpc::string_t>(*request.message.id), "peer1");
+    BOOST_REQUIRE(std::holds_alternative<rpc::null_t>(*request.message.id));
     BOOST_REQUIRE_EQUAL(request.message.method, "method");
     BOOST_REQUIRE_EQUAL(params_of(request), 1u);
     BOOST_REQUIRE_EQUAL(param_of(request, 0), chunk("param"));
@@ -522,65 +544,63 @@ BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__router_dealer_request__identified,
 BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__router_req_request__delimiter_skipped,
     router_fixture)
 {
-    const data_stack parts{ chunk("peer2"), data_chunk{}, chunk("method") };
+    const data_stack parts{ data_chunk{}, chunk("method") };
     peer_write(peer, stream::frame_message(parts));
 
     rpc::request request{};
     BOOST_REQUIRE_EQUAL(read(request), error::success);
-    BOOST_REQUIRE_EQUAL(std::get<rpc::string_t>(*request.message.id), "peer2");
     BOOST_REQUIRE_EQUAL(request.message.method, "method");
     BOOST_REQUIRE_EQUAL(params_of(request), 0u);
 }
 
-BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__router_no_request__unexpected_message,
+BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__router_identified_peer__identity_id,
+    identified_router_fixture)
+{
+    const data_stack parts{ data_chunk{}, chunk("method") };
+    peer_write(peer, stream::frame_message(parts));
+
+    rpc::request request{};
+    BOOST_REQUIRE_EQUAL(read(request), error::success);
+    BOOST_REQUIRE(request.message.id);
+    BOOST_REQUIRE_EQUAL(std::get<rpc::string_t>(*request.message.id), "peer1");
+}
+
+BOOST_FIXTURE_TEST_CASE(zmtp_socket__read__router_delimiter_only__unexpected_message,
     router_fixture)
 {
-    const data_stack parts{ chunk("peer3") };
+    const data_stack parts{ data_chunk{} };
     peer_write(peer, stream::frame_message(parts));
 
     rpc::request request{};
     BOOST_REQUIRE_EQUAL(read(request), error::zmtp_unexpected_message);
 }
 
-BOOST_FIXTURE_TEST_CASE(zmtp_socket__respond__router_result__identity_envelope,
+BOOST_FIXTURE_TEST_CASE(zmtp_socket__respond__router_result__delimited_value,
     router_fixture)
 {
     rpc::response response{};
-    response.message.id = rpc::string_t{ "peer1" };
     response.message.result = rpc::value_t{ rpc::string_t{ "result" } };
     BOOST_REQUIRE_EQUAL(respond(std::move(response)), error::success);
 
     const auto received = peer_read_message(peer);
-    BOOST_REQUIRE_EQUAL(received.size(), 3u);
-    BOOST_REQUIRE_EQUAL(received.at(0), chunk("peer1"));
-    BOOST_REQUIRE(received.at(1).empty());
-    BOOST_REQUIRE_EQUAL(received.at(2), chunk("result"));
+    BOOST_REQUIRE_EQUAL(received.size(), 2u);
+    BOOST_REQUIRE(received.at(0).empty());
+    BOOST_REQUIRE_EQUAL(received.at(1), chunk("result"));
 }
 
-BOOST_FIXTURE_TEST_CASE(zmtp_socket__notify__router_identified__envelope_and_message,
+BOOST_FIXTURE_TEST_CASE(zmtp_socket__notify__router__delimited_message,
     router_fixture)
 {
     rpc::request notification{};
-    notification.message.id = rpc::string_t{ "peer1" };
     notification.message.method = "topic";
     notification.message.params = rpc::array_t{ rpc::value_t{ true } };
     BOOST_REQUIRE_EQUAL(notify(std::move(notification)), error::success);
 
     const auto received = peer_read_message(peer);
-    BOOST_REQUIRE_EQUAL(received.size(), 4u);
-    BOOST_REQUIRE_EQUAL(received.at(0), chunk("peer1"));
-    BOOST_REQUIRE(received.at(1).empty());
-    BOOST_REQUIRE_EQUAL(received.at(2), chunk("topic"));
-    BOOST_REQUIRE_EQUAL(received.at(3), data_chunk{ 0x01 });
-}
-
-BOOST_FIXTURE_TEST_CASE(zmtp_socket__notify__router_unidentified__unserializable,
-    router_fixture)
-{
-    rpc::request notification{};
-    notification.message.method = "topic";
-    BOOST_REQUIRE_EQUAL(notify(std::move(notification)),
-        error::zmtp_unserializable);
+    BOOST_REQUIRE_EQUAL(received.size(), 3u);
+    BOOST_REQUIRE(received.at(0).empty());
+    BOOST_REQUIRE_EQUAL(received.at(1), chunk("topic"));
+    BOOST_REQUIRE_EQUAL(received.at(2), data_chunk{ 0x01 });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

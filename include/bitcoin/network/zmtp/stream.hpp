@@ -180,10 +180,17 @@ public:
     static bool command_name(std::string& name, std::span<const uint8_t>& body,
         const std::span<const uint8_t>& frame) NOEXCEPT;
 
-    /// Parse the Socket-Type property from metadata. Returns false if the
-    /// property is absent or malformed; type is the property value.
+    /// Parse the named property from metadata. Returns false if the property
+    /// is absent or the metadata malformed; value is the property value.
+    static bool ready_property(const std::string& name, std::string& value,
+        const std::span<const uint8_t>& body) NOEXCEPT;
+
+    /// Parse the Socket-Type property from metadata (see ready_property).
     static bool ready_socket_type(std::string& type,
         const std::span<const uint8_t>& body) NOEXCEPT;
+
+    /// The peer Identity property of the handshake (empty if none).
+    const std::string& identity() const NOEXCEPT;
 
 private:
     using frame_ptr = std::shared_ptr<frame>;
@@ -224,7 +231,7 @@ private:
     void handle_curve_ready_sent(const boost_code& ec,
         const system::chunk_cptr& ready,
         const handshake_handler& handler) NOEXCEPT;
-    bool compatible(const std::span<const uint8_t>& metadata) const NOEXCEPT;
+    bool compatible(const std::span<const uint8_t>& metadata) NOEXCEPT;
 
     // frame reader (one whole frame: flags, length, body)
     void handle_frame_flags(const boost_code& ec, ref<frame> out,
@@ -238,6 +245,7 @@ private:
     asio::socket socket_;
     const context& context_;
     const zmtp::role role_;
+    std::string identity_{};
     std::optional<cipher> cipher_{};
     bool secured_{};
 

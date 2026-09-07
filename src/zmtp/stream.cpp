@@ -389,6 +389,12 @@ bool stream::command_name(std::string& name, std::span<const uint8_t>& body,
 bool stream::ready_socket_type(std::string& type,
     const std::span<const uint8_t>& body) NOEXCEPT
 {
+    return ready_property("Socket-Type", type, body);
+}
+
+bool stream::ready_property(const std::string& property, std::string& value,
+    const std::span<const uint8_t>& body) NOEXCEPT
+{
     // Scan metadata properties: name(u8-len) then value(u32be-len).
     auto data = body;
     while (!data.empty())
@@ -413,9 +419,9 @@ bool stream::ready_socket_type(std::string& type,
             return false;
 
         // Case-sensitive property name match per ZMTP metadata convention.
-        if (name == "Socket-Type")
+        if (name == property)
         {
-            type.assign(data.begin(), std::next(data.begin(), value_size));
+            value.assign(data.begin(), std::next(data.begin(), value_size));
             return true;
         }
 
@@ -544,10 +550,20 @@ void stream::fail_handshake(const std::string& reason,
 }
 
 // The peer socket type must be compatible with the role.
-bool stream::compatible(const std::span<const uint8_t>& metadata) const NOEXCEPT
+bool stream::compatible(const std::span<const uint8_t>& metadata) NOEXCEPT
 {
     std::string type{};
-    return ready_socket_type(type, metadata) && zmtp::compatible(role_, type);
+    if (!ready_socket_type(type, metadata) || !zmtp::compatible(role_, type))
+        return false;
+
+    // The peer identity (if any) is a metadata property, not a frame.
+    ready_property("Identity", identity_, metadata);
+    return true;
+}
+
+const std::string& stream::identity() const NOEXCEPT
+{
+    return identity_;
 }
 
 // NULL mechanism.

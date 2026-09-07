@@ -27,7 +27,7 @@ namespace network {
 
 // ZMTP messages are read into and written from rpc messages by socket role.
 // A message is [method][param]... (inbound params are chunks), a command is
-// the request of its lower case name, and the router identity is the rpc id.
+// the request of its lower case name, and the peer identity is the rpc id.
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
@@ -148,7 +148,7 @@ static code decode_command(rpc::request_t& out, role role,
 
 // A message (non-command) is read by role.
 static code decode_message(rpc::request_t& out, role role,
-    socket::parts_t& parts) NOEXCEPT
+    socket::parts_t& parts, const std::string& identity) NOEXCEPT
 {
     switch (role)
     {
@@ -181,15 +181,16 @@ static code decode_message(rpc::request_t& out, role role,
         }
         case role::router:
         {
-            // The peer identity precedes the request, then the empty
-            // delimiter of a REQ peer (a DEALER peer omits it).
-            const auto& identity = parts.front().body;
-            if (identity.empty() || parts.size() < two)
-                return error::zmtp_unexpected_message;
+            // A REQ peer (or a DEALER using its envelope) prefixes an empty
+            // delimiter part. The identity is the handshake Identity property
+            // (the socket is the connection, so the id names the peer only).
+            const auto delimited = parts.front().body.empty();
+            if (identity.empty())
+                out.id = rpc::identity_t{ rpc::null_t{} };
+            else
+                out.id = rpc::string_t{ identity };
 
-            const auto delimited = parts.at(one).body.empty();
-            out.id = rpc::string_t{ identity.begin(), identity.end() };
-            return decode_request(out, parts, delimited ? two : one);
+            return decode_request(out, parts, delimited ? one : zero);
         }
         default:
         {
@@ -293,19 +294,6 @@ static code encode_params(data_stack& parts,
     }, *params);
 }
 
-// The router envelope is the peer identity (rpc id) and a delimiter.
-static code encode_identity(data_stack& parts,
-    const rpc::id_option& id) NOEXCEPT
-{
-    if (!id || !std::holds_alternative<rpc::string_t>(*id))
-        return error::zmtp_unserializable;
-
-    const auto& identity = std::get<rpc::string_t>(*id);
-    parts.emplace_back(identity.begin(), identity.end());
-    parts.emplace_back();
-    return error::success;
-}
-
 // A notification is a message (or a control command) written by role.
 static code encode_notification(data_chunk& packet, role role,
     const rpc::request_t& notification) NOEXCEPT
@@ -347,9 +335,8 @@ static code encode_notification(data_chunk& packet, role role,
         }
         case role::router:
         {
-            if (const auto ec = encode_identity(parts, notification.id))
-                return ec;
-
+            // The REQ envelope (peers are expected to use it).
+            parts.emplace_back();
             break;
         }
         default:
@@ -375,15 +362,10 @@ static code encode_response(data_chunk& packet, role role,
     switch (role)
     {
         case role::replier:
-        {
-            parts.emplace_back();
-            break;
-        }
         case role::router:
         {
-            if (const auto ec = encode_identity(parts, response.id))
-                return ec;
-
+            // The REQ envelope (router peers are expected to use it).
+            parts.emplace_back();
             break;
         }
         default:
@@ -475,8 +457,8 @@ void socket::do_zmtp_read(const zmtp_read_state::ptr& in,
 
         if (!frame.more())
         {
-            handler(decode_message(in->out.message, role_, in->parts),
-                in->total);
+            handler(decode_message(in->out.message, role_, in->parts,
+                upgraded.identity()), in->total);
             return;
         }
 

@@ -347,6 +347,7 @@
     <ClCompile Include="..\..\..\..\test\zmtp\cipher.cpp">
       <ObjectFileName>$(IntDir)test_zmtp_cipher.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\harness.cpp" />
     <ClCompile Include="..\..\..\..\test\zmtp\proxy.cpp">
       <ObjectFileName>$(IntDir)test_zmtp_proxy.obj</ObjectFileName>
     </ClCompile>
