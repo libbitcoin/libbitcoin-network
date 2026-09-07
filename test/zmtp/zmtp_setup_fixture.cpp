@@ -163,7 +163,7 @@ data_chunk prefix_of(const rpc::request& request)
     return param_of(request, 0);
 }
 
-bool stop_of(const rpc::request& request)
+bool cancel_of(const rpc::request& request)
 {
     const auto& params = std::get<rpc::array_t>(*request.message.params);
     return std::get<rpc::boolean_t>(params.at(1).value());

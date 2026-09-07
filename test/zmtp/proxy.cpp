@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__ping__pong_queued_and_read_absorbed)
     BOOST_REQUIRE_EQUAL(await_read(), error::success);
     BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
     BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
-    BOOST_REQUIRE(!stop_of(request));
+    BOOST_REQUIRE(!cancel_of(request));
 
     // The PONG was queued by the proxy, in response to the absorbed PING.
     data_chunk content{};
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__pong__read_absorbed)
     BOOST_REQUIRE_EQUAL(await_read(), error::success);
     BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
     BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
-    BOOST_REQUIRE(stop_of(request));
+    BOOST_REQUIRE(cancel_of(request));
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_proxy__read__v30_subscription__delivered)
@@ -88,7 +88,33 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__v30_subscription__delivered)
     BOOST_REQUIRE_EQUAL(await_read(), error::success);
     BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
     BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
-    BOOST_REQUIRE(!stop_of(request));
+    BOOST_REQUIRE(!cancel_of(request));
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_proxy__read__v30_cancellation__delivered)
+{
+    rpc::request request{};
+    arm_read(request);
+
+    // The 3.0 dialect cancels by a single 0x00-prefixed message frame.
+    const auto topic = chunk("sequence");
+    data_chunk body{ 0x00 };
+    body.insert(body.end(), topic.begin(), topic.end());
+    peer_write(peer, zmtp_stream::frame_encode(body, false, false));
+    BOOST_REQUIRE_EQUAL(await_read(), error::success);
+    BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
+    BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
+    BOOST_REQUIRE(cancel_of(request));
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_proxy__read__empty_message__unexpected_message)
+{
+    rpc::request request{};
+    arm_read(request);
+
+    // A subscription carries at least the dialect byte.
+    peer_write(peer, zmtp_stream::frame_encode({}, false, false));
+    BOOST_REQUIRE_EQUAL(await_read(), error::zmtp_unexpected_message);
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_proxy__read__data_message__unexpected_message)

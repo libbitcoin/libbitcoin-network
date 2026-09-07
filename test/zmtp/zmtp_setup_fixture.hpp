@@ -75,9 +75,9 @@ std::string peer_handshake(peer_socket& peer, const std::string& type, const std
 system::data_chunk param_of(const rpc::request& request, size_t index);
 size_t params_of(const rpc::request& request);
 
-/// The prefix and stop params of a subscription.
+/// The prefix and cancel params of a subscription.
 system::data_chunk prefix_of(const rpc::request& request);
-bool stop_of(const rpc::request& request);
+bool cancel_of(const rpc::request& request);
 
 /// A byte chunk of the given text.
 system::data_chunk chunk(const std::string& text);

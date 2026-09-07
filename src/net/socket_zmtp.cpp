@@ -89,12 +89,12 @@ static code decode_request(rpc::request_t& out, socket::parts_t& parts,
     return error::success;
 }
 
-// A subscription is a topic prefix and a stop (cancel) flag.
+// A subscription is a topic prefix and a cancel flag.
 static void decode_subscription(rpc::request_t& out,
-    const std::span<const uint8_t>& prefix, bool stop) NOEXCEPT
+    const std::span<const uint8_t>& prefix, bool cancel) NOEXCEPT
 {
     out.method = method_subscribe;
-    out.params = rpc::array_t{ to_chunk_value(prefix), rpc::value_t{ stop } };
+    out.params = rpc::array_t{ to_chunk_value(prefix), rpc::value_t{ cancel } };
 }
 
 // A command is a whole message, its name selecting the rpc method.
