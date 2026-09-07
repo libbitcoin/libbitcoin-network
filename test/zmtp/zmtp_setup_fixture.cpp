@@ -22,11 +22,10 @@
 #include <future>
 #include "../test.hpp"
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 using system::data_chunk;
 using system::data_stack;
-
-// The harness servers wait this long for their libzmq peer.
-constexpr auto patience = seconds(10);
 
 // Wire (peer side).
 // ----------------------------------------------------------------------------
@@ -113,6 +112,18 @@ data_stack peer_read_message(peer_socket& peer)
     return parts;
 }
 
+std::string peer_read_command(peer_socket& peer, data_chunk& content)
+{
+    uint8_t flags{};
+    data_chunk body{};
+    peer_read_frame(peer, flags, body);
+    BOOST_REQUIRE(!is_zero(flags & zmtp_stream::flag_command));
+
+    std::string name{};
+    parse_command(body, name, content);
+    return name;
+}
+
 std::string peer_handshake(peer_socket& peer, const std::string& type, const std::string& identity, uint8_t minor)
 {
     auto greeting = zmtp_stream::make_greeting(false, false);
@@ -128,34 +139,8 @@ std::string peer_handshake(peer_socket& peer, const std::string& type, const std
     BOOST_REQUIRE(zmtp_stream::parse_greeting(theirs, their_minor, curve, as_server));
 
     peer_write(peer, ready(type, identity));
-    uint8_t flags{};
-    data_chunk body{};
-    peer_read_frame(peer, flags, body);
-    BOOST_REQUIRE(!is_zero(flags & zmtp_stream::flag_command));
-
-    std::string name{};
     data_chunk content{};
-    parse_command(body, name, content);
-    return name;
-}
-
-void peer_ping_pong(peer_socket& peer)
-{
-    const auto context_bytes = system::base16_chunk("0011223344556677");
-    data_chunk ping{ 0x00, 0x00 };
-    ping.insert(ping.end(), context_bytes.begin(), context_bytes.end());
-    peer_write(peer, command("PING", ping));
-
-    uint8_t flags{};
-    data_chunk body{};
-    peer_read_frame(peer, flags, body);
-    BOOST_REQUIRE(!is_zero(flags & zmtp_stream::flag_command));
-
-    std::string name{};
-    data_chunk content{};
-    parse_command(body, name, content);
-    BOOST_REQUIRE_EQUAL(name, "PONG");
-    BOOST_REQUIRE_EQUAL(content, context_bytes);
+    return peer_read_command(peer, content);
 }
 
 // Rpc (message side).
@@ -215,6 +200,7 @@ socket_setup_fixture::socket_setup_fixture(zmtp_role value, const std::string& t
     acceptor.listen(1, ec);
     BOOST_REQUIRE(!ec);
 
+    // The accept completes with the handshake, which the peer drives.
     std::promise<code> promised{};
     sock->accept(acceptor, [&](const code& result) NOEXCEPT
     {
@@ -226,45 +212,47 @@ socket_setup_fixture::socket_setup_fixture(zmtp_role value, const std::string& t
     accepted = promised.get_future().get();
 }
 
+// The peer is closed first, so the socket sees an ordered end of stream, and
+// the pool is joined before any member is destroyed.
 socket_setup_fixture::~socket_setup_fixture()
 {
-    sock->stop();
     peer.close();
+    sock->stop();
     pool.stop();
     BOOST_REQUIRE(pool.join());
 }
 
 code socket_setup_fixture::read(rpc::request& request)
 {
-    std::promise<code> got{};
+    std::promise<code> promised{};
     sock->rpc_read(buffer, request, [&](const code& ec, size_t) NOEXCEPT
     {
-        got.set_value(ec);
+        promised.set_value(ec);
     });
 
-    return got.get_future().get();
+    return promised.get_future().get();
 }
 
 code socket_setup_fixture::notify(rpc::request&& notification)
 {
-    std::promise<code> sent{};
+    std::promise<code> promised{};
     sock->rpc_notify(std::move(notification), [&](const code& ec, size_t) NOEXCEPT
     {
-        sent.set_value(ec);
+        promised.set_value(ec);
     });
 
-    return sent.get_future().get();
+    return promised.get_future().get();
 }
 
 code socket_setup_fixture::respond(rpc::response&& response)
 {
-    std::promise<code> sent{};
+    std::promise<code> promised{};
     sock->rpc_write(std::move(response), [&](const code& ec, size_t) NOEXCEPT
     {
-        sent.set_value(ec);
+        promised.set_value(ec);
     });
 
-    return sent.get_future().get();
+    return promised.get_future().get();
 }
 
 // publisher_setup_fixture
@@ -294,38 +282,69 @@ publisher_setup_fixture::publisher_setup_fixture()
     acceptor.listen(1, ec);
     BOOST_REQUIRE(!ec);
 
-    std::promise<code> accepted{};
+    std::promise<code> promised{};
     sock->accept(acceptor, [&](const code& result) NOEXCEPT
     {
-        accepted.set_value(result);
+        promised.set_value(result);
     });
 
     peer.connect(acceptor.local_endpoint());
     BOOST_REQUIRE_EQUAL(peer_handshake(peer, "SUB"), "READY");
-    BOOST_REQUIRE_EQUAL(accepted.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(promised.get_future().get(), error::success);
 }
 
 publisher_setup_fixture::~publisher_setup_fixture()
 {
-    prx->stop(error::channel_stopped);
     peer.close();
+    prx->stop(error::channel_stopped);
     pool.stop();
     BOOST_REQUIRE(pool.join());
 }
 
-std::future<code> publisher_setup_fixture::read(rpc::request& request)
+// The promise is a member, as the read is armed by one call and awaited by
+// another, and the pool is joined before it is destroyed.
+void publisher_setup_fixture::arm_read(rpc::request& request)
 {
-    auto got = std::make_shared<std::promise<code>>();
-    auto pending = got->get_future();
-    boost::asio::post(prx->strand(), [=, this, &request]() NOEXCEPT
+    std::promise<bool> posted{};
+    boost::asio::post(prx->strand(), [&]() NOEXCEPT
     {
-        prx->read1(buffer, request, [got](const code& ec, size_t) NOEXCEPT
+        prx->read1(buffer, request, [this](const code& ec, size_t) NOEXCEPT
         {
-            got->set_value(ec);
+            armed.set_value(ec);
         });
+
+        posted.set_value(true);
     });
 
-    return pending;
+    // The read is armed before the peer writes, so control is absorbed.
+    BOOST_REQUIRE(posted.get_future().get());
+}
+
+code publisher_setup_fixture::await_read()
+{
+    return armed.get_future().get();
+}
+
+code publisher_setup_fixture::notify(rpc::request&& notification)
+{
+    std::promise<code> promised{};
+    prx->write1(std::move(notification), [&](const code& ec, size_t) NOEXCEPT
+    {
+        promised.set_value(ec);
+    });
+
+    return promised.get_future().get();
+}
+
+code publisher_setup_fixture::respond(rpc::response&& response)
+{
+    std::promise<code> promised{};
+    prx->write1(std::move(response), [&](const code& ec, size_t) NOEXCEPT
+    {
+        promised.set_value(ec);
+    });
+
+    return promised.get_future().get();
 }
 
 // role_setup_fixture
@@ -344,6 +363,7 @@ role_setup_fixture::role_setup_fixture(zmtp_role value, uint16_t port)
     strand(pool.service().get_executor()),
     acceptor(strand)
 {
+    // Without the harness there is no peer, so nothing is bound or armed.
     if (!enabled)
         return;
 
@@ -357,15 +377,13 @@ role_setup_fixture::role_setup_fixture(zmtp_role value, uint16_t port)
     acceptor.listen(1, ec);
     BOOST_REQUIRE(!ec);
 
-    const auto promised = std::make_shared<std::promise<code>>();
-    sock->accept(acceptor, [promised](const code& result) NOEXCEPT
+    std::promise<code> promised{};
+    sock->accept(acceptor, [&](const code& result) NOEXCEPT
     {
-        promised->set_value(result);
+        promised.set_value(result);
     });
 
-    auto accepted = promised->get_future();
-    BOOST_REQUIRE(accepted.wait_for(patience) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BOOST_REQUIRE_EQUAL(promised.get_future().get(), error::success);
 }
 
 role_setup_fixture::~role_setup_fixture()
@@ -377,39 +395,35 @@ role_setup_fixture::~role_setup_fixture()
 
 code role_setup_fixture::read(rpc::request& request)
 {
-    const auto got = std::make_shared<std::promise<code>>();
-    sock->rpc_read(buffer, request, [got](const code& ec, size_t) NOEXCEPT
+    std::promise<code> promised{};
+    sock->rpc_read(buffer, request, [&](const code& ec, size_t) NOEXCEPT
     {
-        got->set_value(ec);
+        promised.set_value(ec);
     });
 
-    auto pending = got->get_future();
-    BOOST_REQUIRE(pending.wait_for(patience) == std::future_status::ready);
-    return pending.get();
+    return promised.get_future().get();
 }
 
 code role_setup_fixture::notify(rpc::request&& notification)
 {
-    const auto sent = std::make_shared<std::promise<code>>();
-    sock->rpc_notify(std::move(notification), [sent](const code& ec, size_t) NOEXCEPT
+    std::promise<code> promised{};
+    sock->rpc_notify(std::move(notification), [&](const code& ec, size_t) NOEXCEPT
     {
-        sent->set_value(ec);
+        promised.set_value(ec);
     });
 
-    auto pending = sent->get_future();
-    BOOST_REQUIRE(pending.wait_for(patience) == std::future_status::ready);
-    return pending.get();
+    return promised.get_future().get();
 }
 
 code role_setup_fixture::respond(rpc::response&& response)
 {
-    const auto sent = std::make_shared<std::promise<code>>();
-    sock->rpc_write(std::move(response), [sent](const code& ec, size_t) NOEXCEPT
+    std::promise<code> promised{};
+    sock->rpc_write(std::move(response), [&](const code& ec, size_t) NOEXCEPT
     {
-        sent->set_value(ec);
+        promised.set_value(ec);
     });
 
-    auto pending = sent->get_future();
-    BOOST_REQUIRE(pending.wait_for(patience) == std::future_status::ready);
-    return pending.get();
+    return promised.get_future().get();
 }
+
+BC_POP_WARNING()

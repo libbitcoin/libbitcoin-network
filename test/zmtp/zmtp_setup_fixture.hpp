@@ -22,8 +22,10 @@
 #include <future>
 #include "../test.hpp"
 
-// The server socket runs on the pool thread, so the peer is a plain socket
-// driven synchronously from the test thread (no io_context to run).
+// The socket runs on the fixture pool, and the peer is a plain socket driven
+// synchronously from the test thread. Each step owns one completion, awaited
+// before the step returns, and the pool is joined before teardown, so no
+// completion outlives the case that armed it.
 
 using zmtp_stream = network::zmtp::stream;
 using zmtp_context = network::zmtp::context;
@@ -59,13 +61,12 @@ void peer_read_frame(peer_socket& peer, uint8_t& flags, system::data_chunk& body
 /// Synchronously read one whole (multipart) message from the peer socket.
 system::data_stack peer_read_message(peer_socket& peer);
 
+/// Synchronously read one command frame, returning its name and content.
+std::string peer_read_command(peer_socket& peer, system::data_chunk& content);
+
 /// Synchronously perform the peer side of the handshake as the given socket
 /// type, returning the name of the first command received (READY or ERROR).
 std::string peer_handshake(peer_socket& peer, const std::string& type, const std::string& identity={}, uint8_t minor=1);
-
-/// Send a PING and require the echoed PONG, proving all prior frames were
-/// consumed by the tier above (the stream is ordered).
-void peer_ping_pong(peer_socket& peer);
 
 // Rpc (message side).
 // ----------------------------------------------------------------------------
@@ -92,7 +93,7 @@ struct socket_setup_fixture
     socket_setup_fixture(zmtp_role value, const std::string& type, size_t maximum=4096, const std::string& identity={});
     ~socket_setup_fixture();
 
-    /// Read one rpc request from the socket (handler posted to its strand).
+    /// Each blocks until the socket completes the operation.
     code read(rpc::request& request);
     code notify(rpc::request&& notification);
     code respond(rpc::response&& response);
@@ -177,6 +178,8 @@ public:
 };
 
 /// A publisher socket with its proxy and a handshaken subscriber peer.
+/// The proxy absorbs control only while a read is armed, so a case arms the
+/// read, writes to the peer, and then awaits the armed read.
 struct publisher_setup_fixture
 {
     DELETE_COPY_MOVE(publisher_setup_fixture);
@@ -184,8 +187,13 @@ struct publisher_setup_fixture
     publisher_setup_fixture();
     ~publisher_setup_fixture();
 
-    /// Arm one rpc read on the proxy strand.
-    std::future<code> read(rpc::request& request);
+    /// Arm one rpc read, completed by await_read (fixture owns the promise).
+    void arm_read(rpc::request& request);
+    code await_read();
+
+    /// Each blocks until the proxy completes the write.
+    code notify(rpc::request&& notification);
+    code respond(rpc::response&& response);
 
     const logger log{};
     threadpool pool;
@@ -198,14 +206,14 @@ struct publisher_setup_fixture
     boost::asio::io_context peer_context{};
     peer_socket peer;
     http::flat_buffer buffer{};
+    std::promise<code> armed{};
 };
 
 // Role (servers for the pyzmq harness, see test/pyzmq/zmtp_roles.py).
 // ----------------------------------------------------------------------------
 
-/// A server socket in the given role, accepted from the harness peer.
-/// Completion promises are shared so that a late completion after a failed
-/// wait does not touch a destroyed promise.
+/// A server socket in the given role, accepted from the harness peer. The
+/// fixture binds only under ZMTP_HARNESS, where the peer is guaranteed.
 struct role_setup_fixture
 {
     DELETE_COPY_MOVE(role_setup_fixture);
@@ -213,6 +221,7 @@ struct role_setup_fixture
     role_setup_fixture(zmtp_role value, uint16_t port);
     ~role_setup_fixture();
 
+    /// Each blocks until the socket completes the operation.
     code read(rpc::request& request);
     code notify(rpc::request&& notification);
     code respond(rpc::response&& response);
