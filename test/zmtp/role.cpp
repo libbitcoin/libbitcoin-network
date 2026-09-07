@@ -62,22 +62,33 @@ BOOST_AUTO_TEST_SUITE_END()
 // PUSH peer sends three [push][one][two] messages.
 // ----------------------------------------------------------------------------
 
-BOOST_FIXTURE_TEST_SUITE(zmtp_role_puller_tests, role_puller_fixture, *boost::unit_test::disabled())
+BOOST_FIXTURE_TEST_SUITE(zmtp_role_puller_tests, role_puller_fixture)
 
 BOOST_AUTO_TEST_CASE(zmtp_role__puller__push_peer__expected)
 {
     if (!enabled)
         return;
 
-    for (size_t count{}; count < 3; ++count)
-    {
-        rpc::request request{};
-        BOOST_REQUIRE_EQUAL(read(request), error::success);
-        BOOST_REQUIRE_EQUAL(request.message.method, "push");
-        BOOST_REQUIRE_EQUAL(params_of(request), 2u);
-        BOOST_REQUIRE_EQUAL(param_of(request, 0), chunk("one"));
-        BOOST_REQUIRE_EQUAL(param_of(request, 1), chunk("two"));
-    }
+    rpc::request first{};
+    BOOST_REQUIRE_EQUAL(read(first), error::success);
+    BOOST_REQUIRE_EQUAL(first.message.method, "push");
+    BOOST_REQUIRE_EQUAL(params_of(first), 2u);
+    BOOST_REQUIRE_EQUAL(param_of(first, 0), chunk("one"));
+    BOOST_REQUIRE_EQUAL(param_of(first, 1), chunk("two"));
+
+    rpc::request second{};
+    BOOST_REQUIRE_EQUAL(read(second), error::success);
+    BOOST_REQUIRE_EQUAL(second.message.method, "push");
+    BOOST_REQUIRE_EQUAL(params_of(second), 2u);
+    BOOST_REQUIRE_EQUAL(param_of(second, 0), chunk("one"));
+    BOOST_REQUIRE_EQUAL(param_of(second, 1), chunk("two"));
+
+    rpc::request third{};
+    BOOST_REQUIRE_EQUAL(read(third), error::success);
+    BOOST_REQUIRE_EQUAL(third.message.method, "push");
+    BOOST_REQUIRE_EQUAL(params_of(third), 2u);
+    BOOST_REQUIRE_EQUAL(param_of(third, 0), chunk("one"));
+    BOOST_REQUIRE_EQUAL(param_of(third, 1), chunk("two"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -86,32 +97,38 @@ BOOST_AUTO_TEST_SUITE_END()
 // (answered with an error, code and message).
 // ----------------------------------------------------------------------------
 
-BOOST_FIXTURE_TEST_SUITE(zmtp_role_replier_tests, role_replier_fixture, *boost::unit_test::disabled())
+BOOST_FIXTURE_TEST_SUITE(zmtp_role_replier_tests, role_replier_fixture)
 
 BOOST_AUTO_TEST_CASE(zmtp_role__replier__req_peer__expected)
 {
     if (!enabled)
         return;
 
-    for (size_t count{}; count < 2; ++count)
-    {
-        rpc::request request{};
-        BOOST_REQUIRE_EQUAL(read(request), error::success);
-        BOOST_REQUIRE_EQUAL(request.message.method, "echo");
-        BOOST_REQUIRE_EQUAL(params_of(request), 1u);
+    rpc::request first{};
+    BOOST_REQUIRE_EQUAL(read(first), error::success);
+    BOOST_REQUIRE_EQUAL(first.message.method, "echo");
+    BOOST_REQUIRE_EQUAL(params_of(first), 1u);
 
-        rpc::response response{};
-        response.message.result = rpc::value_t{ rpc::any_t{ system::to_shared(param_of(request, 0)) } };
-        BOOST_REQUIRE_EQUAL(respond(std::move(response)), error::success);
-    }
+    rpc::response first_reply{};
+    first_reply.message.result = rpc::value_t{ rpc::any_t{ system::to_shared(param_of(first, 0)) } };
+    BOOST_REQUIRE_EQUAL(respond(std::move(first_reply)), error::success);
 
-    rpc::request request{};
-    BOOST_REQUIRE_EQUAL(read(request), error::success);
-    BOOST_REQUIRE_EQUAL(request.message.method, "fail");
+    rpc::request second{};
+    BOOST_REQUIRE_EQUAL(read(second), error::success);
+    BOOST_REQUIRE_EQUAL(second.message.method, "echo");
+    BOOST_REQUIRE_EQUAL(params_of(second), 1u);
 
-    rpc::response response{};
-    response.message.error = rpc::result_t{ .code = -1, .message = "nope" };
-    BOOST_REQUIRE_EQUAL(respond(std::move(response)), error::success);
+    rpc::response second_reply{};
+    second_reply.message.result = rpc::value_t{ rpc::any_t{ system::to_shared(param_of(second, 0)) } };
+    BOOST_REQUIRE_EQUAL(respond(std::move(second_reply)), error::success);
+
+    rpc::request third{};
+    BOOST_REQUIRE_EQUAL(read(third), error::success);
+    BOOST_REQUIRE_EQUAL(third.message.method, "fail");
+
+    rpc::response error_reply{};
+    error_reply.message.error = rpc::result_t{ .code = -1, .message = "nope" };
+    BOOST_REQUIRE_EQUAL(respond(std::move(error_reply)), error::success);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -121,7 +138,7 @@ BOOST_AUTO_TEST_SUITE_END()
 // [][done].
 // ----------------------------------------------------------------------------
 
-BOOST_FIXTURE_TEST_SUITE(zmtp_role_router_tests, role_router_fixture, *boost::unit_test::disabled())
+BOOST_FIXTURE_TEST_SUITE(zmtp_role_router_tests, role_router_fixture)
 
 BOOST_AUTO_TEST_CASE(zmtp_role__router__dealer_peer__expected)
 {

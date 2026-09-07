@@ -305,6 +305,7 @@ publisher_setup_fixture::~publisher_setup_fixture()
 // another, and the pool is joined before it is destroyed.
 void publisher_setup_fixture::arm_read(rpc::request& request)
 {
+    armed = {};
     std::promise<bool> posted{};
     boost::asio::post(prx->strand(), [&]() NOEXCEPT
     {
