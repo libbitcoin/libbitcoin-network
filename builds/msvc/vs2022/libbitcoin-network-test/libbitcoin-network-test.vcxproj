@@ -350,12 +350,14 @@
     <ClCompile Include="..\..\..\..\test\zmtp\proxy.cpp">
       <ObjectFileName>$(IntDir)test_zmtp_proxy.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\role.cpp" />
     <ClCompile Include="..\..\..\..\test\zmtp\socket.cpp">
       <ObjectFileName>$(IntDir)test_zmtp_socket.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\zmtp\stream.cpp">
       <ObjectFileName>$(IntDir)test_zmtp_stream.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\zmtp\zmtp_setup_fixture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\functional\peer_setup_fixture.hpp" />
@@ -432,6 +434,7 @@
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\benchmark\benchmark.h" />
     <ClInclude Include="..\..\..\..\test\ssl\wolfssl\wolfcrypt\test\test.h" />
     <ClInclude Include="..\..\..\..\test\test.hpp" />
+    <ClInclude Include="..\..\..\..\test\zmtp\zmtp_setup_fixture.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -54,11 +54,16 @@ constexpr std::string_view socket_type(role value) NOEXCEPT
 {
     switch (value)
     {
-        case role::publisher: return "PUB";
-        case role::puller: return "PULL";
-        case role::replier: return "REP";
-        case role::router: return "ROUTER";
-        default: return "";
+        case role::publisher:
+            return "PUB";
+        case role::puller:
+            return "PULL";
+        case role::replier:
+            return "REP";
+        case role::router:
+            return "ROUTER";
+        default:
+            return "";
     }
 }
 
@@ -68,12 +73,16 @@ constexpr bool compatible(role value, std::string_view peer) NOEXCEPT
 {
     switch (value)
     {
-        case role::publisher: return peer == "SUB" || peer == "XSUB";
-        case role::puller: return peer == "PUSH";
-        case role::replier: return peer == "REQ" || peer == "DEALER";
-        case role::router: return peer == "REQ" || peer == "DEALER" ||
-            peer == "ROUTER";
-        default: return false;
+        case role::publisher:
+            return peer == "SUB" || peer == "XSUB";
+        case role::puller:
+            return peer == "PUSH";
+        case role::replier:
+            return peer == "REQ" || peer == "DEALER";
+        case role::router:
+            return peer == "REQ" || peer == "DEALER" || peer == "ROUTER";
+        default:
+            return false;
     }
 }
 

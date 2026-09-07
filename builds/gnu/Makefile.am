@@ -834,8 +834,10 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/ssl/wolfssl.cpp \
     ${srcdir}/../../test/zmtp/cipher.cpp \
     ${srcdir}/../../test/zmtp/proxy.cpp \
+    ${srcdir}/../../test/zmtp/role.cpp \
     ${srcdir}/../../test/zmtp/socket.cpp \
-    ${srcdir}/../../test/zmtp/stream.cpp
+    ${srcdir}/../../test/zmtp/stream.cpp \
+    ${srcdir}/../../test/zmtp/zmtp_setup_fixture.cpp
 
 if WITH_SSL
 

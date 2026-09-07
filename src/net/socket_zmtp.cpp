@@ -27,7 +27,7 @@ namespace network {
 
 // ZMTP messages are read into and written from rpc messages by socket role.
 // A message is [method][param]... (inbound params are chunks), a command is
-// the request of its lower case name, and the router identity is the rpc id.
+// the request of its lower case name, and the peer identity is the rpc id.
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
@@ -89,12 +89,12 @@ static code decode_request(rpc::request_t& out, socket::parts_t& parts,
     return error::success;
 }
 
-// A subscription is a topic prefix and a stop (cancel) flag.
+// A subscription is a topic prefix and a cancel flag.
 static void decode_subscription(rpc::request_t& out,
-    const std::span<const uint8_t>& prefix, bool stop) NOEXCEPT
+    const std::span<const uint8_t>& prefix, bool cancel) NOEXCEPT
 {
     out.method = method_subscribe;
-    out.params = rpc::array_t{ to_chunk_value(prefix), rpc::value_t{ stop } };
+    out.params = rpc::array_t{ to_chunk_value(prefix), rpc::value_t{ cancel } };
 }
 
 // A command is a whole message, its name selecting the rpc method.
@@ -148,7 +148,7 @@ static code decode_command(rpc::request_t& out, role role,
 
 // A message (non-command) is read by role.
 static code decode_message(rpc::request_t& out, role role,
-    socket::parts_t& parts) NOEXCEPT
+    socket::parts_t& parts, const std::string& identity) NOEXCEPT
 {
     switch (role)
     {
@@ -181,15 +181,16 @@ static code decode_message(rpc::request_t& out, role role,
         }
         case role::router:
         {
-            // The peer identity precedes the request, then the empty
-            // delimiter of a REQ peer (a DEALER peer omits it).
-            const auto& identity = parts.front().body;
-            if (identity.empty() || parts.size() < two)
-                return error::zmtp_unexpected_message;
+            // A REQ peer (or a DEALER using its envelope) prefixes an empty
+            // delimiter part. The identity is the handshake Identity property
+            // (the socket is the connection, so the id names the peer only).
+            const auto delimited = parts.front().body.empty();
+            if (identity.empty())
+                out.id = rpc::identity_t{ rpc::null_t{} };
+            else
+                out.id = rpc::string_t{ identity };
 
-            const auto delimited = parts.at(one).body.empty();
-            out.id = rpc::string_t{ identity.begin(), identity.end() };
-            return decode_request(out, parts, delimited ? two : one);
+            return decode_request(out, parts, delimited ? one : zero);
         }
         default:
         {
@@ -293,19 +294,6 @@ static code encode_params(data_stack& parts,
     }, *params);
 }
 
-// The router envelope is the peer identity (rpc id) and a delimiter.
-static code encode_identity(data_stack& parts,
-    const rpc::id_option& id) NOEXCEPT
-{
-    if (!id || !std::holds_alternative<rpc::string_t>(*id))
-        return error::zmtp_unserializable;
-
-    const auto& identity = std::get<rpc::string_t>(*id);
-    parts.emplace_back(identity.begin(), identity.end());
-    parts.emplace_back();
-    return error::success;
-}
-
 // A notification is a message (or a control command) written by role.
 static code encode_notification(data_chunk& packet, role role,
     const rpc::request_t& notification) NOEXCEPT
@@ -347,9 +335,8 @@ static code encode_notification(data_chunk& packet, role role,
         }
         case role::router:
         {
-            if (const auto ec = encode_identity(parts, notification.id))
-                return ec;
-
+            // The REQ envelope (peers are expected to use it).
+            parts.emplace_back();
             break;
         }
         default:
@@ -375,15 +362,10 @@ static code encode_response(data_chunk& packet, role role,
     switch (role)
     {
         case role::replier:
-        {
-            parts.emplace_back();
-            break;
-        }
         case role::router:
         {
-            if (const auto ec = encode_identity(parts, response.id))
-                return ec;
-
+            // The REQ envelope (router peers are expected to use it).
+            parts.emplace_back();
             break;
         }
         default:
@@ -415,7 +397,7 @@ static code encode_response(data_chunk& packet, role role,
 
 // ZMTP (read).
 // ----------------------------------------------------------------------------
-// Complete frames are decoded from the buffer, residue carried to next read.
+// One frame per stream read, a message completing on its last part.
 
 // private
 void socket::do_zmtp_read(const zmtp_read_state::ptr& in,
@@ -423,82 +405,13 @@ void socket::do_zmtp_read(const zmtp_read_state::ptr& in,
 {
     BC_ASSERT(stranded());
 
-    if (!zeromq() || role_ == role::undefined)
+    if (role_ == role::undefined)
     {
         handler(error::bad_stream, zero);
         return;
     }
 
-    auto& upgraded = get_zmtp();
-    auto& buffer = in->buffer;
-
-    // Decode the complete frames in the buffer, each into an owned part.
-    while (true)
-    {
-        const auto data = buffer.data();
-        std::span<const uint8_t> remaining
-        {
-            pointer_cast<const uint8_t>(data.data()), data.size()
-        };
-
-        uint8_t flags{};
-        data_chunk body{};
-        const auto size = remaining.size();
-        const auto ec = upgraded.decode(flags, body, remaining, maximum_);
-        if (ec == error::need_more)
-            break;
-
-        if (ec)
-        {
-            handler(ec, in->total);
-            return;
-        }
-
-        const auto consumed = size - remaining.size();
-        buffer.consume(consumed);
-        in->total += consumed;
-        in->parts.push_back({ flags, std::move(body) });
-        const auto& frame = in->parts.back();
-
-        // A command is a whole message, and cannot be within a message.
-        if (frame.command())
-        {
-            if (!is_one(in->parts.size()) || frame.more())
-            {
-                handler(error::zmtp_unexpected_command, in->total);
-                return;
-            }
-
-            handler(decode_command(in->out.message, role_, frame), in->total);
-            return;
-        }
-
-        if (!frame.more())
-        {
-            handler(decode_message(in->out.message, role_, in->parts),
-                in->total);
-            return;
-        }
-
-        if (in->parts.size() >= stream::maximum_parts)
-        {
-            handler(error::zmtp_excessive_parts, in->total);
-            return;
-        }
-    }
-
-    // The buffered residue is bounded by the socket maximum (as the http
-    // body limit), and reads are sized to what the buffer may accept.
-    const auto held = buffer.size();
-    if (held >= maximum_ || held >= buffer.max_size())
-    {
-        handler(error::oversized_payload, in->total);
-        return;
-    }
-
-    const auto space = std::min(maximum_, buffer.max_size()) - held;
-    const auto request = std::min(space, stream::maximum_inbound);
-    upgraded.next_layer().async_read_some(buffer.prepare(request),
+    get_zmtp().async_read_frame(in->frame, maximum_,
         std::bind(&socket::handle_zmtp_read,
             shared_from_this(), _1, _2, in, handler));
 }
@@ -508,14 +421,50 @@ void socket::handle_zmtp_read(const boost_code& ec, size_t size,
     const zmtp_read_state::ptr& in, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    in->total = ceilinged_add(in->total, size);
 
-    if (ec)
+    if (ec == boost::asio::error::message_size)
     {
-        handle_async(ec, in->total, handler, "async_read_some");
+        handler(error::oversized_payload, in->total);
         return;
     }
 
-    in->buffer.commit(size);
+    if (ec)
+    {
+        handle_async(ec, in->total, handler, "async_read_frame");
+        return;
+    }
+
+    in->parts.push_back(std::move(in->frame));
+    in->frame = {};
+    const auto& frame = in->parts.back();
+
+    // A command is a whole message, and cannot be within a message.
+    if (frame.command())
+    {
+        if (!is_one(in->parts.size()) || frame.more())
+        {
+            handler(error::zmtp_unexpected_command, in->total);
+            return;
+        }
+
+        handler(decode_command(in->out.message, role_, frame), in->total);
+        return;
+    }
+
+    if (!frame.more())
+    {
+        handler(decode_message(in->out.message, role_, in->parts,
+            get_zmtp().identity()), in->total);
+        return;
+    }
+
+    if (in->parts.size() >= stream::maximum_parts)
+    {
+        handler(error::zmtp_excessive_parts, in->total);
+        return;
+    }
+
     do_zmtp_read(in, handler);
 }
 
@@ -528,12 +477,6 @@ void socket::do_zmtp_notify(const rpc::request_ptr& out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    if (!zeromq())
-    {
-        handler(error::bad_stream, zero);
-        return;
-    }
 
     const auto packet = to_shared<data_chunk>();
     if (const auto ec = encode_notification(*packet, role_, out->message))
@@ -550,12 +493,6 @@ void socket::do_zmtp_response(const rpc::response_ptr& out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    if (!zeromq())
-    {
-        handler(error::bad_stream, zero);
-        return;
-    }
 
     const auto packet = to_shared<data_chunk>();
     if (const auto ec = encode_response(*packet, role_, out->message))

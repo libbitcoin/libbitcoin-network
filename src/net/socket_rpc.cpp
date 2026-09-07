@@ -52,8 +52,7 @@ void socket::do_rpc_read(const ref<http::flat_buffer>& buffer,
 
     if (zeromq())
     {
-        do_zmtp_read(emplace_shared<zmtp_read_state>(request.get(),
-            buffer.get()), handler);
+        do_zmtp_read(emplace_shared<zmtp_read_state>(request.get()), handler);
         return;
     }
 

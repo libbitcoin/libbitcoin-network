@@ -161,8 +161,9 @@ protected:
     /// Pause reading from the socket, stops timers (requires strand).
     virtual void pause() NOEXCEPT;
 
-    /// Resume reading from the socket, starts timers (requires strand).
-    virtual void resume() NOEXCEPT;
+    /// Read the next message from the socket, starts timers (requires
+    /// strand). The channel is resumed following pause by the session.
+    virtual void read_next() NOEXCEPT;
 
     /// Monitor/unmonitor the socket for cancel/write (requires strand).
     virtual void monitor(bool value) NOEXCEPT;

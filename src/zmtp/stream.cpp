@@ -247,91 +247,6 @@ data_chunk stream::frame_encode(const std::span<const uint8_t>& body,
     return frame;
 }
 
-bool stream::frame_header(uint8_t& flags, size_t& length, size_t& header,
-    const std::span<const uint8_t>& buffer) NOEXCEPT
-{
-    if (buffer.empty())
-        return false;
-
-    flags = buffer.front();
-    header = sizeof(flags);
-
-    if (!is_zero(flags & flag_long))
-    {
-        constexpr auto size = sizeof(uint64_t);
-        if (buffer.size() < add1(size))
-            return false;
-
-        data_array<size> bytes{};
-        std::copy_n(std::next(buffer.begin()), size, bytes.begin());
-        length = possible_narrow_cast<size_t>(from_big_endian<uint64_t>(
-            bytes));
-        header += size;
-        return true;
-    }
-
-    if (buffer.size() < add1(sizeof(uint8_t)))
-        return false;
-
-    length = *std::next(buffer.begin());
-    header += sizeof(uint8_t);
-    return true;
-}
-
-code stream::decode(uint8_t& flags, data_chunk& body,
-    std::span<const uint8_t>& buffer, size_t limit) NOEXCEPT
-{
-    // Framing: an incomplete frame leaves the buffer as residue.
-    size_t length{};
-    size_t header{};
-    if (!frame_header(flags, length, header, buffer))
-        return error::need_more;
-
-    if (length > limit)
-        return error::oversized_payload;
-
-    if (buffer.size() < header + length)
-        return error::need_more;
-
-    const auto wire = buffer.subspan(header, length);
-    buffer = buffer.subspan(header + length);
-
-    if (!secured_)
-    {
-        body.assign(wire.begin(), wire.end());
-        return error::success;
-    }
-
-    // Under CURVE every frame is a boxed MESSAGE (framed as a message, as
-    // libzmq, though the mechanism names it a command) or an ERROR command
-    // (delivered as is, the tier above treats it as any other command).
-    std::string name{};
-    std::span<const uint8_t> content{};
-    if (!command_name(name, content, wire))
-        return error::protocol_violation;
-
-    if (!is_zero(flags & flag_command) && name == command_error)
-    {
-        body.assign(wire.begin(), wire.end());
-        return error::success;
-    }
-
-    // Unboxing decrypts into the body (the delivered allocation).
-    uint8_t payload{};
-    if (name != command_message || !cipher_->decode(payload, body, wire))
-        return error::protocol_violation;
-
-    // The payload flags map to frame flags (LONG is a framing artifact).
-    flags = 0x00;
-    if (!is_zero(payload & cipher::payload_more))
-        flags |= flag_more;
-
-    if (!is_zero(payload & cipher::payload_command))
-        flags |= flag_command;
-
-    return error::success;
-}
-
 bool stream::frame_decode(uint8_t& flags, std::span<const uint8_t>& body,
     std::span<const uint8_t>& buffer) NOEXCEPT
 {
@@ -389,6 +304,12 @@ bool stream::command_name(std::string& name, std::span<const uint8_t>& body,
 bool stream::ready_socket_type(std::string& type,
     const std::span<const uint8_t>& body) NOEXCEPT
 {
+    return ready_property("Socket-Type", type, body);
+}
+
+bool stream::ready_property(const std::string& property, std::string& value,
+    const std::span<const uint8_t>& body) NOEXCEPT
+{
     // Scan metadata properties: name(u8-len) then value(u32be-len).
     auto data = body;
     while (!data.empty())
@@ -413,9 +334,9 @@ bool stream::ready_socket_type(std::string& type,
             return false;
 
         // Case-sensitive property name match per ZMTP metadata convention.
-        if (name == "Socket-Type")
+        if (name == property)
         {
-            type.assign(data.begin(), std::next(data.begin(), value_size));
+            value.assign(data.begin(), std::next(data.begin(), value_size));
             return true;
         }
 
@@ -544,10 +465,20 @@ void stream::fail_handshake(const std::string& reason,
 }
 
 // The peer socket type must be compatible with the role.
-bool stream::compatible(const std::span<const uint8_t>& metadata) const NOEXCEPT
+bool stream::compatible(const std::span<const uint8_t>& metadata) NOEXCEPT
 {
     std::string type{};
-    return ready_socket_type(type, metadata) && zmtp::compatible(role_, type);
+    if (!ready_socket_type(type, metadata) || !zmtp::compatible(role_, type))
+        return false;
+
+    // The peer identity (if any) is a metadata property, not a frame.
+    ready_property("Identity", identity_, metadata);
+    return true;
+}
+
+const std::string& stream::identity() const NOEXCEPT
+{
+    return identity_;
 }
 
 // NULL mechanism.
@@ -578,7 +509,7 @@ void stream::read_ready(const handshake_handler& handler) NOEXCEPT
 {
     // The frame is bound to outlive the read.
     const auto ready = to_shared<frame>();
-    async_read_frame(*ready,
+    async_read_frame(*ready, maximum_inbound,
         std::bind(&stream::handle_ready,
             this, _1, _2, ready, handler));
 }
@@ -625,7 +556,7 @@ void stream::read_hello(const handshake_handler& handler) NOEXCEPT
 {
     // The frame is bound to outlive the read.
     const auto hello = to_shared<frame>();
-    async_read_frame(*hello,
+    async_read_frame(*hello, maximum_inbound,
         std::bind(&stream::handle_hello,
             this, _1, _2, hello, handler));
 }
@@ -676,7 +607,7 @@ void stream::handle_welcome_sent(const boost_code& ec, const chunk_cptr&,
 
     // The frame is bound to outlive the read.
     const auto initiate = to_shared<frame>();
-    async_read_frame(*initiate,
+    async_read_frame(*initiate, maximum_inbound,
         std::bind(&stream::handle_initiate,
             this, _1, _2, initiate, handler));
 }
@@ -747,17 +678,18 @@ void stream::handle_curve_ready_sent(const boost_code& ec, const chunk_cptr&,
 // Frame reader (one whole frame: flags, length, body).
 // ----------------------------------------------------------------------------
 
-void stream::async_read_frame(frame& out, io_handler&& handler) NOEXCEPT
+void stream::async_read_frame(frame& out, size_t maximum,
+    io_handler&& handler) NOEXCEPT
 {
     // Read the single flags byte into the caller's frame.
     const boost::asio::mutable_buffer in{ &out.flags, sizeof(out.flags) };
     boost::asio::async_read(socket_, in,
         std::bind(&stream::handle_frame_flags,
-            this, _1, std::ref(out), std::move(handler)));
+            this, _1, std::ref(out), maximum, std::move(handler)));
 }
 
 void stream::handle_frame_flags(const boost_code& ec, ref<frame> out,
-    const io_handler& handler) NOEXCEPT
+    size_t maximum, const io_handler& handler) NOEXCEPT
 {
     if (ec)
     {
@@ -771,11 +703,11 @@ void stream::handle_frame_flags(const boost_code& ec, ref<frame> out,
     const boost::asio::mutable_buffer in{ length_.data(), size };
     boost::asio::async_read(socket_, in,
         std::bind(&stream::handle_frame_length,
-            this, _1, long_size, out, handler));
+            this, _1, long_size, out, maximum, handler));
 }
 
 void stream::handle_frame_length(const boost_code& ec, bool long_size,
-    ref<frame> out, const io_handler& handler) NOEXCEPT
+    ref<frame> out, size_t maximum, const io_handler& handler) NOEXCEPT
 {
     if (ec)
     {
@@ -794,10 +726,9 @@ void stream::handle_frame_length(const boost_code& ec, bool long_size,
         length = length_.front();
     }
 
-    // Bound inbound frames; a publisher peer sends only small control traffic.
-    if (length > maximum_inbound)
+    if (length > maximum)
     {
-        handler(protocol_error, zero);
+        handler(boost::asio::error::message_size, zero);
         return;
     }
 
