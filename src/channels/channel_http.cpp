@@ -185,7 +185,9 @@ void channel_http::dispatch(const request_cptr& request) NOEXCEPT
             return;
         }
 
-        // Batch is not supported over ws (btcd clients batch over http only).
+        // Batch is not supported over ws. Batching amortizes http request
+        // overhead, which ws does not incur, so pipelining obtains the same
+        // result without confining the set to a single frame.
         if (websocket() && (body.batch || body.changed))
         {
             stop(error::jsonrpc_batch_unsupported);
