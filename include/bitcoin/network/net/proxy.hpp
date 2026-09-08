@@ -266,6 +266,13 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // For rpc batch normalization (http).
+    void do_rpc_request_read(const ref<rpc::request>& request,
+        const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void do_downgrade_read(const ref<http::request>& request,
+        const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+
     void do_http_request_read(const ref<http::request>& request,
         const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;

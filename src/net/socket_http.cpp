@@ -120,23 +120,6 @@ void socket::handle_detect(const code& ec, size_t size,
     do_detect(buffer, handler);
 }
 
-// private
-void socket::do_downgrade_read(ref<http::flat_buffer> buffer,
-    const ref<http::request>& request,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    // A stream message carries no request line, so synthesize an unknown
-    // method and preselect the json-rpc body, as does the websocket upgrade.
-    auto& in = request.get();
-    in.method_string("stream");
-    if (!in.body().contains<rpc::request>())
-        in.body() = rpc::request{};
-
-    body_read(buffer.get(), in, count_handler{ handler });
-}
-
 // HTTP/WS (read).
 // ----------------------------------------------------------------------------
 
@@ -154,12 +137,6 @@ void socket::do_http_read(ref<http::flat_buffer> buffer,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    if (downgraded_.load())
-    {
-        do_downgrade_read(buffer, request, handler);
-        return;
-    }
 
     async_read_http(buffer.get(), request.get(), handler);
 }

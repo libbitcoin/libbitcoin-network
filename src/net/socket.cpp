@@ -543,22 +543,11 @@ void socket::async_write_http(http::response&& response,
 
     try
     {
-        if (websocket() || downgraded())
+        if (websocket())
         {
             // The body writer processes a websocket write just like a
             // beast::http::async_write but without the headers. The expected
             // body type (serializer) is determined by caller-assigned body.
-            // A downgrade has no framing, so the message is terminated. A
-            // notification carries a request body, a reply carries a response.
-            if (downgraded())
-            {
-                auto& body = response.body();
-                if (body.contains<rpc::response>())
-                    std::get<rpc::response>(body.value()).terminate = true;
-                else if (body.contains<rpc::request>())
-                    std::get<rpc::request>(body.value()).terminate = true;
-            }
-
             body_write(std::move(response), move_copy(handler));
         }
         else

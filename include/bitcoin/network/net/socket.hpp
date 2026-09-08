@@ -499,9 +499,6 @@ private:
     // detect (first read)
     void do_detect(const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;
-    void do_downgrade_read(ref<http::flat_buffer> buffer,
-        const ref<http::request>& request,
-        const count_handler& handler) NOEXCEPT;
 
     // http
     void do_http_read(ref<http::flat_buffer> buffer,
