@@ -109,6 +109,9 @@ protected:
     /// Override to set the preselected reader body.
     virtual http::body::value_type default_body() const NOEXCEPT;
 
+    /// Override to tolerate json-rpc single value params (electrum laxness).
+    virtual bool lax_params() const NOEXCEPT;
+
     /// Latch authorization from request headers (requires strand).
     virtual void set_authorized(const http::request& request) NOEXCEPT;
 
