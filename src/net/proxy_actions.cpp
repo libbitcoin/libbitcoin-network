@@ -382,9 +382,21 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
     BC_ASSERT(stranded());
     do_reading();
 
-    if (socket_->websocket())
+    // ws framing and a tcp downgrade both read the body without a parser.
+    if (socket_->websocket() || socket_->downgraded())
     {
         socket_->http_read(buffer, request, std::move(handler));
+        return;
+    }
+
+    // The preselected body is the read/write control, so a json-rpc body
+    // implies detection, performed before the first message is read.
+    if (!socket_->detected() && request.body().contains<rpc::request>())
+    {
+        socket_->detect(buffer,
+            std::bind(&proxy::handle_detect,
+                shared_from_this(), _1, _2, std::ref(request),
+                std::ref(buffer), std::move(handler)));
         return;
     }
 
@@ -400,6 +412,29 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
 
     do_http_request_read(std::ref(request), std::ref(buffer),
         std::move(handler));
+}
+
+// private
+void proxy::handle_detect(const code& ec, size_t bytes,
+    const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        handler(ec, bytes);
+        return;
+    }
+
+    if (socket_->downgraded())
+    {
+        socket_->http_read(buffer.get(), request.get(),
+            count_handler{ handler });
+        return;
+    }
+
+    do_http_request_read(request, buffer, handler);
 }
 
 // private
@@ -537,7 +572,8 @@ void proxy::handle_http_close_write(const code& ec, size_t bytes,
 void proxy::write(http::response&& response,
     count_handler&& handler) NOEXCEPT
 {
-    if (socket_->websocket())
+    // ws framing and a tcp downgrade both write the body without headers.
+    if (socket_->websocket() || socket_->downgraded())
     {
         // Pointer ships moveable message through the send queue.
         const auto out = move_shared(std::move(response));

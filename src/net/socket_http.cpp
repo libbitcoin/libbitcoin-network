@@ -73,9 +73,16 @@ inline bool detect_json(bool& json, const http::flat_buffer& buffer) NOEXCEPT
     return false;
 }
 
+void socket::detect(http::flat_buffer& buffer,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_detect, shared_from_this(),
+            std::ref(buffer), std::move(handler)));
+}
+
 // private
-void socket::do_detect_read(ref<http::flat_buffer> buffer,
-    const ref<http::request>& request,
+void socket::do_detect(const ref<http::flat_buffer>& buffer,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -85,24 +92,19 @@ void socket::do_detect_read(ref<http::flat_buffer> buffer,
     {
         detected_.store(true);
         downgraded_.store(json);
-
-        if (json)
-            do_downgrade_read(buffer, request, handler);
-        else
-            async_read_http(buffer.get(), request.get(), handler);
-
+        handler(error::success, zero);
         return;
     }
 
     // Tolerated empty lines only, so read more (bounded by the buffer).
     async_read(buffer.get(),
-        std::bind(&socket::handle_detect_read,
-            shared_from_this(), _1, _2, buffer, request, handler));
+        std::bind(&socket::handle_detect,
+            shared_from_this(), _1, _2, buffer, handler));
 }
 
 // private
-void socket::handle_detect_read(const code& ec, size_t size,
-    ref<http::flat_buffer> buffer, const ref<http::request>& request,
+void socket::handle_detect(const code& ec, size_t size,
+    const ref<http::flat_buffer>& buffer,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -113,7 +115,9 @@ void socket::handle_detect_read(const code& ec, size_t size,
         return;
     }
 
-    do_detect_read(buffer, request, handler);
+    // async_read prepares, the caller commits (as does handle_body_read).
+    buffer.get().commit(size);
+    do_detect(buffer, handler);
 }
 
 // private
@@ -150,14 +154,6 @@ void socket::do_http_read(ref<http::flat_buffer> buffer,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // The preselected body is the read/write control, so a json-rpc body
-    // implies detection, performed on the first read and then latched.
-    if (!detected_.load() && request.get().body().contains<rpc::request>())
-    {
-        do_detect_read(buffer, request, handler);
-        return;
-    }
 
     if (downgraded_.load())
     {

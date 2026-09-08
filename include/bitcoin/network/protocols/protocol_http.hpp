@@ -122,6 +122,7 @@ protected:
     /// Properties.
     uint16_t default_port() const NOEXCEPT;
     bool websocket() const NOEXCEPT;
+    bool downgraded() const NOEXCEPT;
 
     /// True if the authorized credential permits the rpc method.
     bool permitted(const std::string& method) const NOEXCEPT;
