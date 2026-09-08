@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__frame__emitted)
 {
     auto value = test_frame();
     value.message = rpc::any_t{ system::to_shared(ping{ nonce }) };
-    value.index = rpc::peer_registry::index_of<ping>();
+    value.index = messages::peer::registry::index_of<ping>();
 
     boost_code ec{};
     body::writer writer{ value };
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__get_twice__empty)
 {
     auto value = test_frame();
     value.message = rpc::any_t{ system::to_shared(ping{ nonce }) };
-    value.index = rpc::peer_registry::index_of<ping>();
+    value.index = messages::peer::registry::index_of<ping>();
 
     boost_code ec{};
     body::writer writer{ value };

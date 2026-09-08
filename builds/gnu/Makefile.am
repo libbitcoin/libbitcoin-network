@@ -336,8 +336,7 @@ include_bitcoin_network_interfaces_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/interfaces/http.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/interfaces.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_broadcast.hpp \
-    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp \
-    ${srcdir}/../../include/bitcoin/network/interfaces/peer_registry.hpp
+    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp
 
 include_bitcoin_network_logdir = \
     ${includedir}/bitcoin/network/log
@@ -385,7 +384,8 @@ include_bitcoin_network_messages_peer_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/peer/body.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/heading.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/message.hpp \
-    ${srcdir}/../../include/bitcoin/network/messages/peer/peer.hpp
+    ${srcdir}/../../include/bitcoin/network/messages/peer/peer.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/peer/registry.hpp
 
 include_bitcoin_network_messages_peer_detaildir = \
     ${includedir}/bitcoin/network/messages/peer/detail

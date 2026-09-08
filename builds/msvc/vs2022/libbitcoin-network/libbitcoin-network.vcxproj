@@ -347,7 +347,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_registry.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\levels.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp" />
@@ -415,6 +414,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\heading.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\message.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\peer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\registry.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\any.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\broadcaster.hpp" />

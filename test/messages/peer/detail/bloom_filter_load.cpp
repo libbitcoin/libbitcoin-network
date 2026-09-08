@@ -25,8 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(bloom_filter_load__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(bloom_filter_load::command, "filterload");
-    constexpr auto index = rpc::peer_registry::index_of<bloom_filter_load>();
-    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), bloom_filter_load::command);
+    constexpr auto index = messages::peer::registry::index_of<bloom_filter_load>();
+    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), bloom_filter_load::command);
     BOOST_REQUIRE_EQUAL(bloom_filter_load::version_minimum, level::bip37);
     BOOST_REQUIRE_EQUAL(bloom_filter_load::version_maximum, level::maximum_protocol);
 }

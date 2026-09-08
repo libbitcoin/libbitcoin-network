@@ -25,6 +25,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/peer/registry.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -65,7 +66,7 @@ public:
         out.magic = settings().identifier;
         out.version = negotiated_version();
         out.message = rpc::any_t{ system::to_shared(message) };
-        out.index = rpc::peer_registry::index_of<Message>();
+        out.index = messages::peer::registry::index_of<Message>();
 
         LOGX("Send " << Message::command << " to [" << endpoint() << "] ("
             << message.size(out.version) << " bytes)");

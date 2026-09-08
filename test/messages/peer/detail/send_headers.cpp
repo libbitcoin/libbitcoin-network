@@ -25,8 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(send_headers__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(send_headers::command, "sendheaders");
-    constexpr auto index = rpc::peer_registry::index_of<send_headers>();
-    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), send_headers::command);
+    constexpr auto index = messages::peer::registry::index_of<send_headers>();
+    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), send_headers::command);
     BOOST_REQUIRE_EQUAL(send_headers::version_minimum, level::bip130);
     BOOST_REQUIRE_EQUAL(send_headers::version_maximum, level::maximum_protocol);
 }

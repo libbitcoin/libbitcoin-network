@@ -45,9 +45,9 @@ BOOST_AUTO_TEST_CASE(rpc_heading__size__always__expected)
 
 BOOST_AUTO_TEST_CASE(rpc_heading__index__registered_commands__own_index)
 {
-    for (size_t expected{}; expected < rpc::peer_registry::size; ++expected)
+    for (size_t expected{}; expected < messages::peer::registry::size; ++expected)
     {
-        const std::string command{ rpc::peer_registry::commands().at(expected) };
+        const std::string command{ messages::peer::registry::commands().at(expected) };
         const auto instance = heading{ 0u, command, 0u, 0u };
         BOOST_REQUIRE_EQUAL(instance.index(), expected);
     }
@@ -56,13 +56,13 @@ BOOST_AUTO_TEST_CASE(rpc_heading__index__registered_commands__own_index)
 BOOST_AUTO_TEST_CASE(rpc_heading__index__unregistered_command__unknown)
 {
     const auto instance = heading{ 0u, "bogus", 0u, 0u };
-    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::unknown);
+    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::unknown);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_heading__index__empty_command__unknown)
 {
     const auto instance = heading{ 0u, "", 0u, 0u };
-    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::unknown);
+    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::unknown);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_heading__get_command__empty_payload__unknown)
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(rpc_heading__factory1__empty__expected)
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
     BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
-    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::index("ping"));
+    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::index("ping"));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_heading__factory2__default_hash__expected)
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(rpc_heading__factory2__default_hash__expected)
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
     BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
-    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::index("pong"));
+    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::index("pong"));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_heading__factory2__empty_hash__expected)
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(rpc_heading__factory2__empty_hash__expected)
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
     BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
-    BOOST_REQUIRE_EQUAL(instance.index(), rpc::peer_registry::index("pong"));
+    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::index("pong"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

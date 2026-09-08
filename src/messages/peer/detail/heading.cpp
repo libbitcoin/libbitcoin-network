@@ -19,7 +19,7 @@
 #include <bitcoin/network/messages/peer/heading.hpp>
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/interfaces/peer_registry.hpp>
+#include <bitcoin/network/messages/peer/registry.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
 namespace libbitcoin {
@@ -125,7 +125,7 @@ void heading::serialize(writer& sink) const NOEXCEPT
 
 size_t heading::index() const NOEXCEPT
 {
-    return rpc::peer_registry::index(command);
+    return messages::peer::registry::index(command);
 }
 
 } // namespace peer
