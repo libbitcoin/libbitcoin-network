@@ -33,8 +33,10 @@ using http = publish<http_methods, grouping::positional>;
 
 namespace peer {
 
-using dispatch = publish<peer_dispatch, grouping::positional>;
-using broadcast = publish<peer_broadcast, grouping::positional>;
+using dispatch = publish<peer_dispatch, grouping::positional,
+    peer_dispatch::all>;
+using broadcast = publish<peer_broadcast, grouping::positional,
+    peer_broadcast::all>;
 
 } // namespace peer
 } // namespace interface

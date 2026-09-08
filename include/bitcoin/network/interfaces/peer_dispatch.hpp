@@ -38,6 +38,7 @@ struct peer_dispatch
     using signature = std::function<bool(const code&,
         const typename Message::cptr&)>;
 
+    /// Methods (exchanged after the handshake completes).
     static constexpr std::tuple methods
     {
         method<"addr", messages::peer::address::cptr>{},
@@ -68,14 +69,22 @@ struct peer_dispatch
         method<"ping", messages::peer::ping::cptr>{},
         method<"pong", messages::peer::pong::cptr>{},
         method<"reject", messages::peer::reject::cptr>{},
-        method<"sendaddrv2", messages::peer::send_address_v2::cptr>{},
         method<"sendcmpct", messages::peer::send_compact::cptr>{},
         method<"sendheaders", messages::peer::send_headers::cptr>{},
-        method<"tx", messages::peer::transaction::cptr>{},
+        method<"tx", messages::peer::transaction::cptr>{}
+    };
+
+    /// Handshake methods (exchanged before the handshake completes).
+    static constexpr std::tuple handshake
+    {
         method<"version", messages::peer::version::cptr>{},
         method<"verack", messages::peer::version_acknowledge::cptr>{},
+        method<"sendaddrv2", messages::peer::send_address_v2::cptr>{},
         method<"wtxidrelay", messages::peer::witness_tx_id_relay::cptr>{}
     };
+
+    /// All methods (the channel dispatches on the union).
+    static constexpr auto all = std::tuple_cat(handshake, methods);
 };
 
 } // namespace rpc
