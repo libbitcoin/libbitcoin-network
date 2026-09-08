@@ -252,6 +252,9 @@ public:
     /// The socket was upgraded to a websocket.
     virtual bool websocket() const NOEXCEPT;
 
+    /// Downgraded from http to tcp by the initial json-rpc request.
+    virtual bool downgraded() const NOEXCEPT;
+
     /// Get the address of the outgoing endpoint passed via construct, or the
     /// resolved endpoint address for incoming connections.
     virtual const config::address& address() const NOEXCEPT;
@@ -485,6 +488,14 @@ private:
     void do_body_notify(boost_code ec, size_t total,
         const notify_state::ptr& out, const count_handler& handler) NOEXCEPT;
 
+    // detect (first read)
+    void do_detect_read(ref<http::flat_buffer> buffer,
+        const ref<http::request>& request,
+        const count_handler& handler) NOEXCEPT;
+    void do_downgrade_read(ref<http::flat_buffer> buffer,
+        const ref<http::request>& request,
+        const count_handler& handler) NOEXCEPT;
+
     // http
     void do_http_read(ref<http::flat_buffer> buffer,
         const ref<http::request>& request,
@@ -561,6 +572,11 @@ private:
     void handle_body_notify(const code& ec, size_t size, size_t total,
         const notify_state::ptr& out, const count_handler& handler) NOEXCEPT;
 
+    // detect
+    void handle_detect_read(const code& ec, size_t size,
+        ref<http::flat_buffer> buffer, const ref<http::request>& request,
+        const count_handler& handler) NOEXCEPT;
+
     // http/ws (native/rpc)
     void handle_http_read(const boost_code& ec, size_t size,
         const ref<http::request>& request, const http_parser_ptr& parser,
@@ -597,6 +613,8 @@ protected:
     const zmtp::role role_;
     std::atomic_bool stopped_{};
     std::atomic_bool websocket_{};
+    std::atomic_bool detected_{};
+    std::atomic_bool downgraded_{};
 
     // These are protected by strand (see also handle_accept).
     config::address address_;

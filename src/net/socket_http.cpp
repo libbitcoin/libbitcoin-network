@@ -35,6 +35,104 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// DETECT (first read).
+// ----------------------------------------------------------------------------
+
+// local
+constexpr bool is_json_open(char byte) NOEXCEPT
+{
+    // A json value opens with an object or array, and neither is a valid
+    // http method token character (rfc9110 tchar).
+    return byte == '{' || byte == '[';
+}
+
+// local
+constexpr bool is_line_break(char byte) NOEXCEPT
+{
+    // A server tolerates empty lines preceding a request line (rfc9112).
+    return byte == '\r' || byte == '\n';
+}
+
+// local
+// False implies inconclusive (the buffer holds only empty lines).
+inline bool detect_json(bool& json, const http::flat_buffer& buffer) NOEXCEPT
+{
+    const auto data = buffer.data();
+    const std::string_view bytes{ static_cast<const char*>(data.data()),
+        data.size() };
+
+    for (const auto byte: bytes)
+    {
+        if (is_line_break(byte))
+            continue;
+
+        json = is_json_open(byte);
+        return true;
+    }
+
+    return false;
+}
+
+// private
+void socket::do_detect_read(ref<http::flat_buffer> buffer,
+    const ref<http::request>& request,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    bool json{};
+    if (detect_json(json, buffer.get()))
+    {
+        detected_.store(true);
+        downgraded_.store(json);
+
+        if (json)
+            do_downgrade_read(buffer, request, handler);
+        else
+            async_read_http(buffer.get(), request.get(), handler);
+
+        return;
+    }
+
+    // Tolerated empty lines only, so read more (bounded by the buffer).
+    async_read(buffer.get(),
+        std::bind(&socket::handle_detect_read,
+            shared_from_this(), _1, _2, buffer, request, handler));
+}
+
+// private
+void socket::handle_detect_read(const code& ec, size_t size,
+    ref<http::flat_buffer> buffer, const ref<http::request>& request,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        handler(ec, size);
+        return;
+    }
+
+    do_detect_read(buffer, request, handler);
+}
+
+// private
+void socket::do_downgrade_read(ref<http::flat_buffer> buffer,
+    const ref<http::request>& request,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // A stream message carries no request line, so synthesize an unknown
+    // method and preselect the json-rpc body, as does the websocket upgrade.
+    auto& in = request.get();
+    in.method_string("stream");
+    if (!in.body().contains<rpc::request>())
+        in.body() = rpc::request{};
+
+    body_read(buffer.get(), in, count_handler{ handler });
+}
+
 // HTTP/WS (read).
 // ----------------------------------------------------------------------------
 
@@ -52,6 +150,21 @@ void socket::do_http_read(ref<http::flat_buffer> buffer,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    // The preselected body is the read/write control, so a json-rpc body
+    // implies detection, performed on the first read and then latched.
+    if (!detected_.load() && request.get().body().contains<rpc::request>())
+    {
+        do_detect_read(buffer, request, handler);
+        return;
+    }
+
+    if (downgraded_.load())
+    {
+        do_downgrade_read(buffer, request, handler);
+        return;
+    }
+
     async_read_http(buffer.get(), request.get(), handler);
 }
 
