@@ -48,6 +48,7 @@ src_libbitcoin_network_la_LIBADD = \
     ${libbitcoin_system_LIBS}
 
 src_libbitcoin_network_la_SOURCES = \
+    ${srcdir}/../../src/asio.cpp \
     ${srcdir}/../../src/error.cpp \
     ${srcdir}/../../src/memory.cpp \
     ${srcdir}/../../src/net.cpp \
@@ -706,6 +707,7 @@ test_libbitcoin_network_test_LDADD = \
     ${src_libbitcoin_network_la_LIBADD}
 
 test_libbitcoin_network_test_SOURCES = \
+    ${srcdir}/../../test/asio.cpp \
     ${srcdir}/../../test/error.cpp \
     ${srcdir}/../../test/main.cpp \
     ${srcdir}/../../test/memory.cpp \

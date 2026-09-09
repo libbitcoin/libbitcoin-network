@@ -122,6 +122,7 @@
   </ImportGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\include\bitcoin\network\ssl\wolfcrypt\src\misc.c" />
+    <ClCompile Include="..\..\..\..\src\asio.cpp" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
