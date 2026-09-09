@@ -38,8 +38,8 @@ struct peer_dispatch
     using signature = std::function<bool(const code&,
         const typename Message::cptr&)>;
 
-    /// Methods (exchanged after the handshake completes).
-    static constexpr std::tuple methods
+    /// Messages exchanged after the handshake completes.
+    static constexpr std::tuple messages
     {
         method<"addr", messages::peer::address::cptr>{},
         method<"alert", messages::peer::alert::cptr>{},
@@ -83,8 +83,8 @@ struct peer_dispatch
         method<"wtxidrelay", messages::peer::witness_tx_id_relay::cptr>{}
     };
 
-    /// All methods (the channel dispatches on the union).
-    static constexpr auto all = std::tuple_cat(handshake, methods);
+    /// The channel dispatches on the union (the wire carries both).
+    static constexpr auto methods = std::tuple_cat(handshake, messages);
 };
 
 } // namespace rpc
