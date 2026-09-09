@@ -26,8 +26,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(version__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(version::command, "version");
-    constexpr auto index = rpc::peer_registry::index_of<version>();
-    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), version::command);
+    constexpr auto index = messages::peer::registry::index_of<version>();
+    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), version::command);
     BOOST_REQUIRE_EQUAL(version::version_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(version::version_maximum, level::maximum_protocol);
 }

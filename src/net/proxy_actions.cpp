@@ -183,15 +183,25 @@ void proxy::read(http::flat_buffer& buffer, rpc::request& request,
 {
     BC_ASSERT(stranded());
     do_reading();
+    do_rpc_request_read(std::ref(request), std::ref(buffer),
+        std::move(handler));
+}
+
+// private
+void proxy::do_rpc_request_read(const ref<rpc::request>& request,
+    const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
 
     // Stamp current batch state (the parse is always lax).
-    request.batch = batched_;
-    request.changed = false;
+    auto& value = request.get();
+    value.batch = batched_;
+    value.changed = false;
 
-    socket_->rpc_read(buffer, request,
+    socket_->rpc_read(buffer.get(), value,
         std::bind(&proxy::handle_rpc_read,
-            shared_from_this(), _1, _2, std::ref(request), std::ref(buffer),
-            std::move(handler)));
+            shared_from_this(), _1, _2, request, buffer, handler));
 }
 
 // private
@@ -388,6 +398,26 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
         return;
     }
 
+    // A downgrade is the json-rpc transport, so it reads as one. The message
+    // lands in the body alternative of the caller's (channel's) request.
+    if (socket_->downgraded())
+    {
+        do_downgrade_read(std::ref(request), std::ref(buffer),
+            std::move(handler));
+        return;
+    }
+
+    // The preselected body is the read/write control, so a json-rpc body
+    // implies detection, performed before the first message is read.
+    if (!socket_->detected() && request.body().contains<rpc::request>())
+    {
+        socket_->detect(buffer,
+            std::bind(&proxy::handle_detect,
+                shared_from_this(), _1, _2, std::ref(request),
+                std::ref(buffer), std::move(handler)));
+        return;
+    }
+
     // Continue the message in progress (batched body), else next message.
     if (parser_)
     {
@@ -400,6 +430,47 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
 
     do_http_request_read(std::ref(request), std::ref(buffer),
         std::move(handler));
+}
+
+// private
+void proxy::handle_detect(const code& ec, size_t bytes,
+    const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        handler(ec, bytes);
+        return;
+    }
+
+    if (socket_->downgraded())
+    {
+        do_downgrade_read(request, buffer, handler);
+        return;
+    }
+
+    do_http_request_read(request, buffer, handler);
+}
+
+// private
+void proxy::do_downgrade_read(const ref<http::request>& request,
+    const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // A downgraded message carries no request line, so synthesize an unknown
+    // method for dispatch, as does the websocket upgrade.
+    auto& in = request.get();
+    in.method_string("stream");
+    if (!in.body().contains<rpc::request>())
+        in.body() = rpc::request{};
+
+    // Read as json-rpc, which applies batch normalization.
+    do_rpc_request_read(std::ref(std::get<rpc::request>(in.body().value())),
+        buffer, handler);
 }
 
 // private
@@ -537,6 +608,29 @@ void proxy::handle_http_close_write(const code& ec, size_t bytes,
 void proxy::write(http::response&& response,
     count_handler&& handler) NOEXCEPT
 {
+    // A downgrade is the json-rpc transport, so it writes as one (batch
+    // stamping for a response, deferral while open for a notification).
+    if (socket_->downgraded())
+    {
+        auto& body = response.body();
+        if (body.contains<rpc::response>())
+        {
+            write(std::move(std::get<rpc::response>(body.value())),
+                std::move(handler));
+            return;
+        }
+
+        if (body.contains<rpc::request>())
+        {
+            write(std::move(std::get<rpc::request>(body.value())),
+                std::move(handler));
+            return;
+        }
+
+        handler(error::bad_stream, zero);
+        return;
+    }
+
     if (socket_->websocket())
     {
         // Pointer ships moveable message through the send queue.

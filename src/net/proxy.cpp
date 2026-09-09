@@ -276,6 +276,16 @@ bool proxy::websocket() const NOEXCEPT
     return socket_->websocket();
 }
 
+bool proxy::downgraded() const NOEXCEPT
+{
+    return socket_->downgraded();
+}
+
+bool proxy::detected() const NOEXCEPT
+{
+    return socket_->detected();
+}
+
 code proxy::accept_websocket(const http::request& request) NOEXCEPT
 {
     return socket_->accept_websocket(request);

@@ -19,7 +19,7 @@
 #include <bitcoin/network/messages/peer/body.hpp>
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/interfaces/peer_registry.hpp>
+#include <bitcoin/network/messages/peer/registry.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
 
@@ -73,7 +73,7 @@ bool body::reader::accept(const std::span<const uint8_t>& payload,
         return false;
     }
 
-    value_.payload = rpc::peer_registry::to_any(value_.head.index(), payload,
+    value_.payload = messages::peer::registry::to_any(value_.head.index(), payload,
         value_.version, value_.witness);
 
     if (!value_.payload)
@@ -137,7 +137,7 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 void body::reader::put(uint8_t identifier, const std::string& command,
     const std::span<const uint8_t>& payload, boost_code& ec) NOEXCEPT
 {
-    using registry = rpc::peer_registry;
+    using registry = messages::peer::registry;
     ec = {};
 
     const auto index = is_zero(identifier) ? registry::index(command) :
@@ -195,7 +195,7 @@ bool body::reader::done() const NOEXCEPT
 void body::writer::init(boost_code& ec) NOEXCEPT
 {
     done_ = false;
-    value_.data = rpc::peer_registry::to_frame(value_.index, value_.message,
+    value_.data = messages::peer::registry::to_frame(value_.index, value_.message,
         value_.magic, value_.version);
 
     ec = value_.data ? boost_code{} :

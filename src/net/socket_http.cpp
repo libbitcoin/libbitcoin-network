@@ -35,6 +35,91 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// DETECT (first read).
+// ----------------------------------------------------------------------------
+
+// local
+constexpr bool is_json_open(char byte) NOEXCEPT
+{
+    // A json value opens with an object or array, and neither is a valid
+    // http method token character (rfc9110 tchar).
+    return byte == '{' || byte == '[';
+}
+
+// local
+constexpr bool is_line_break(char byte) NOEXCEPT
+{
+    // A server tolerates empty lines preceding a request line (rfc9112).
+    return byte == '\r' || byte == '\n';
+}
+
+// local
+// False implies inconclusive (the buffer holds only empty lines).
+inline bool detect_json(bool& json, const http::flat_buffer& buffer) NOEXCEPT
+{
+    const auto data = buffer.data();
+    const std::string_view bytes{ static_cast<const char*>(data.data()),
+        data.size() };
+
+    for (const auto byte: bytes)
+    {
+        if (is_line_break(byte))
+            continue;
+
+        json = is_json_open(byte);
+        return true;
+    }
+
+    return false;
+}
+
+void socket::detect(http::flat_buffer& buffer,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_detect, shared_from_this(),
+            std::ref(buffer), std::move(handler)));
+}
+
+// private
+void socket::do_detect(const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    bool json{};
+    if (detect_json(json, buffer.get()))
+    {
+        detected_.store(true);
+        downgraded_.store(json);
+        handler(error::success, zero);
+        return;
+    }
+
+    // Tolerated empty lines only, so read more (bounded by the buffer).
+    async_read(buffer.get(),
+        std::bind(&socket::handle_detect,
+            shared_from_this(), _1, _2, buffer, handler));
+}
+
+// private
+void socket::handle_detect(const code& ec, size_t size,
+    const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        handler(ec, size);
+        return;
+    }
+
+    // async_read prepares, the caller commits (as does handle_body_read).
+    buffer.get().commit(size);
+    do_detect(buffer, handler);
+}
+
 // HTTP/WS (read).
 // ----------------------------------------------------------------------------
 
@@ -52,6 +137,7 @@ void socket::do_http_read(ref<http::flat_buffer> buffer,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
     async_read_http(buffer.get(), request.get(), handler);
 }
 

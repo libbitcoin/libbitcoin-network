@@ -19,7 +19,7 @@
 #include <bitcoin/network/net/socket.hpp>
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/interfaces/peer_registry.hpp>
+#include <bitcoin/network/messages/peer/registry.hpp>
 #include <bitcoin/network/log/log.hpp>
 
 namespace libbitcoin {
@@ -155,7 +155,7 @@ void socket::do_peer_write(const frame_ptr& out,
 
     if (encrypted())
     {
-        using registry = rpc::peer_registry;
+        using registry = messages::peer::registry;
         const auto payload = registry::to_payload(out->index, out->message,
             out->version);
 

@@ -22,7 +22,6 @@
 #include <bitcoin/network/interfaces/http.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
-#include <bitcoin/network/interfaces/peer_registry.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -33,8 +32,10 @@ using http = publish<http_methods, grouping::positional>;
 
 namespace peer {
 
-using dispatch = publish<peer_dispatch, grouping::positional>;
-using broadcast = publish<peer_broadcast, grouping::positional>;
+using dispatch = publish<peer_dispatch, grouping::positional,
+    peer_dispatch::all>;
+using broadcast = publish<peer_broadcast, grouping::positional,
+    peer_broadcast::all>;
 
 } // namespace peer
 } // namespace interface

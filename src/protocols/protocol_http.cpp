@@ -442,6 +442,11 @@ bool protocol_http::websocket() const NOEXCEPT
     return channel_->websocket();
 }
 
+bool protocol_http::downgraded() const NOEXCEPT
+{
+    return channel_->downgraded();
+}
+
 bool protocol_http::permitted(const std::string& method) const NOEXCEPT
 {
     return channel_->permitted(method);

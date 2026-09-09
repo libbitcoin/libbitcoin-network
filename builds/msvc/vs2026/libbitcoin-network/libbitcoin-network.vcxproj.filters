@@ -779,9 +779,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp">
       <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_registry.hpp">
-      <Filter>include\bitcoin\network\interfaces</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp">
       <Filter>include\bitcoin\network\log</Filter>
     </ClInclude>
@@ -981,6 +978,9 @@
       <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\peer.hpp">
+      <Filter>include\bitcoin\network\messages\peer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\registry.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\any.hpp">

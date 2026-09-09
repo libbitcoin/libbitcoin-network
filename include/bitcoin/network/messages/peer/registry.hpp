@@ -16,23 +16,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_INTERFACES_PEER_REGISTRY_HPP
-#define LIBBITCOIN_NETWORK_INTERFACES_PEER_REGISTRY_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_PEER_REGISTRY_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_PEER_REGISTRY_HPP
 
 #include <span>
 #include <tuple>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/peer/peer.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace rpc {
+namespace messages {
+namespace peer {
 
-/// The peer message set, derived from the dispatch interface.
-struct peer_registry
+/// The peer message codec, derived from the dispatch interface.
+struct registry
 {
-    using methods_t = decltype(peer_dispatch::methods);
+    using methods_t = decltype(rpc::peer_dispatch::all);
     static constexpr auto size = std::tuple_size_v<methods_t>;
 
     /// Index of an unregistered command (one past the last valid index).
@@ -40,7 +41,7 @@ struct peer_registry
 
     /// The message type registered at index.
     template <size_t Index>
-    using arguments_t = args_native_t<method_t<Index, methods_t>>;
+    using arguments_t = rpc::args_native_t<rpc::method_t<Index, methods_t>>;
     template <size_t Index>
     using cptr_t = std::tuple_element_t<zero, arguments_t<Index>>;
     template <size_t Index>
@@ -48,7 +49,7 @@ struct peer_registry
 
     /// The wire command registered at index.
     template <size_t Index>
-    static constexpr auto command = method_t<Index, methods_t>::name;
+    static constexpr auto command = rpc::method_t<Index, methods_t>::name;
 
     /// The numeric identifier registered at index.
     template <size_t Index>
@@ -59,15 +60,15 @@ struct peer_registry
 
 private:
     using span_t = std::span<const uint8_t>;
-    using deserializer_t = any_t(*)(const span_t&, uint32_t, bool);
+    using deserializer_t = rpc::any_t(*)(const span_t&, uint32_t, bool);
     using deserializers_t = std::array<deserializer_t, size>;
-    using serializer_t = system::chunk_ptr(*)(const any_t&, uint32_t, uint32_t);
+    using serializer_t = system::chunk_ptr(*)(const rpc::any_t&, uint32_t, uint32_t);
     using serializers_t = std::array<serializer_t, size>;
-    using payloader_t = system::chunk_ptr(*)(const any_t&, uint32_t);
+    using payloader_t = system::chunk_ptr(*)(const rpc::any_t&, uint32_t);
     using payloaders_t = std::array<payloader_t, size>;
 
     template <size_t Index>
-    static any_t deserialize(const span_t& data, uint32_t version,
+    static rpc::any_t deserialize(const span_t& data, uint32_t version,
         bool witness) NOEXCEPT
     {
         using message = message_t<Index>;
@@ -78,24 +79,24 @@ private:
         else
             message_ptr = message::deserialize(version, data);
 
-        return message_ptr ? any_t{ message_ptr } : any_t{};
+        return message_ptr ? rpc::any_t{ message_ptr } : rpc::any_t{};
     }
 
     template <size_t Index>
-    static system::chunk_ptr serialize(const any_t& message, uint32_t magic,
+    static system::chunk_ptr serialize(const rpc::any_t& message, uint32_t magic,
         uint32_t version) NOEXCEPT
     {
         const auto ptr = message.get<const message_t<Index>>();
-        return ptr ? messages::peer::serialize(*ptr, magic, version) :
+        return ptr ? peer::serialize(*ptr, magic, version) :
             system::chunk_ptr{};
     }
 
     template <size_t Index>
-    static system::chunk_ptr serialize_payload(const any_t& message,
+    static system::chunk_ptr serialize_payload(const rpc::any_t& message,
         uint32_t version) NOEXCEPT
     {
         const auto ptr = message.get<const message_t<Index>>();
-        return ptr ? messages::peer::serialize(*ptr, version) :
+        return ptr ? peer::serialize(*ptr, version) :
             system::chunk_ptr{};
     }
 
@@ -103,14 +104,14 @@ private:
     static constexpr serializers_t make_serializers(
         std::index_sequence<Index...>) NOEXCEPT
     {
-        return { &peer_registry::serialize<Index>... };
+        return { &registry::serialize<Index>... };
     }
 
     template <size_t... Index>
     static constexpr payloaders_t make_payloaders(
         std::index_sequence<Index...>) NOEXCEPT
     {
-        return { &peer_registry::serialize_payload<Index>... };
+        return { &registry::serialize_payload<Index>... };
     }
 
     template <size_t... Index>
@@ -146,7 +147,7 @@ private:
     static constexpr deserializers_t make_deserializers(
         std::index_sequence<Index...>) NOEXCEPT
     {
-        return { &peer_registry::deserialize<Index>... };
+        return { &registry::deserialize<Index>... };
     }
 
     template <size_t... Index>
@@ -160,7 +161,7 @@ private:
             return same ? ((found = at), true) : false;
         };
 
-        (match(Index, peer_registry::command<Index>) || ...);
+        (match(Index, registry::command<Index>) || ...);
         return found;
     }
 
@@ -210,17 +211,17 @@ public:
         return to_index_of<Message>(std::make_index_sequence<size>{});
     }
 
-    static any_t to_any(size_t index, const std::span<const uint8_t>& data,
+    static rpc::any_t to_any(size_t index, const std::span<const uint8_t>& data,
         uint32_t version, bool witness) NOEXCEPT
     {
         static constexpr auto table = make_deserializers(
             std::make_index_sequence<size>{});
 
         return index < size ? table.at(index)(data, version, witness) :
-            any_t{};
+            rpc::any_t{};
     }
 
-    static system::chunk_ptr to_frame(size_t index, const any_t& message,
+    static system::chunk_ptr to_frame(size_t index, const rpc::any_t& message,
         uint32_t magic, uint32_t version) NOEXCEPT
     {
         static constexpr auto table = make_serializers(
@@ -230,7 +231,7 @@ public:
             system::chunk_ptr{};
     }
 
-    static system::chunk_ptr to_payload(size_t index, const any_t& message,
+    static system::chunk_ptr to_payload(size_t index, const rpc::any_t& message,
         uint32_t version) NOEXCEPT
     {
         static constexpr auto table = make_payloaders(
@@ -241,7 +242,8 @@ public:
     }
 };
 
-} // namespace rpc
+} // namespace peer
+} // namespace messages
 } // namespace network
 } // namespace libbitcoin
 

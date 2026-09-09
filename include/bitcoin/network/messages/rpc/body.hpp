@@ -66,8 +66,8 @@ struct message_type
     /// btcd non-standard v1 message within a (v2) batch.
     bool lax_batch{};
 
-    /// Socket wires message termination by transport framing (tcp/ws
-    /// stream messages are newline terminated, http chunks are not).
+    /// Socket wires message termination by transport framing (tcp stream
+    /// messages are newline terminated, http/ws framed messages are not).
     bool terminate{};
 };
 

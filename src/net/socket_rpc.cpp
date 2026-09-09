@@ -33,7 +33,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // The transport is selected on the strand: a zmtp socket reads and writes
 // the rpc message by its role (see socket_zmtp.cpp), otherwise the message
-// is a json-rpc body over tcp/ws.
+// is a json-rpc body over tcp.
 
 void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
@@ -103,7 +103,7 @@ void socket::do_rpc_write(const rpc::response_ptr& response,
         return;
     }
 
-    // Stream (tcp/ws) messages are newline terminated (http chunks are not).
+    // Tcp stream messages are newline terminated (http/ws framed are not).
     response->terminate = true;
 
     http::response out{};
@@ -132,7 +132,7 @@ void socket::do_rpc_notify(const rpc::request_ptr& notification,
         return;
     }
 
-    // Stream (tcp/ws) messages are newline terminated (http chunks are not).
+    // Tcp stream messages are newline terminated (http/ws framed are not).
     notification->terminate = true;
 
     http::request out{};

@@ -140,8 +140,8 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
 
     LOGV(log_message(*request, bytes));
 
-    // Websocket requests are synthesized (no headers).
-    if (!websocket())
+    // Websocket and downgraded requests are synthesized (no headers).
+    if (!websocket() && !downgraded())
         set_authorized(*request);
 
     reading_ = false;
@@ -157,9 +157,9 @@ void channel_http::dispatch(const request_cptr& request) NOEXCEPT
     // subsequent subscribers (e.g. a terminal default responder).
     claimed_ = false;
 
-    // Basic authorization is carried by http headers. ws frames carry none,
-    // so ws authorization is dispatched to the protocol with the message.
-    if (!websocket() && !authorized())
+    // Basic authorization is carried by http headers. ws frames and tcp
+    // messages carry none, so authorization is dispatched to the protocol.
+    if (!websocket() && !downgraded() && !authorized())
     {
         send({ status::unauthorized, request->version() },
             std::bind(&channel_http::handle_unauthorized,
@@ -167,25 +167,27 @@ void channel_http::dispatch(const request_cptr& request) NOEXCEPT
         return;
     }
 
-    // Electrum laxness (single value params) is never allowed here, btcd
-    // laxness (batched v1) is allowed over ws (http upgrade) only.
+    // Electrum laxness (single value params) is allowed only where the
+    // service tolerates it, a v1 message within a batch (btcd) never is.
     const auto& value = request->body();
     if (value.contains<rpc::request>())
     {
         const auto& body = value.get<rpc::request>();
-        if (body.lax_params)
+        if (body.lax_params && !lax_params())
         {
             stop(error::jsonrpc_params_not_collection);
             return;
         }
 
-        if (!websocket() && body.lax_batch)
+        if (body.lax_batch)
         {
             stop(error::jsonrpc_batch_requires_v2);
             return;
         }
 
-        // Batch is not supported over ws (btcd clients batch over http only).
+        // Batch is not supported over ws. Batching amortizes http request
+        // overhead, which ws does not incur, so pipelining obtains the same
+        // result without confining the set to a single frame.
         if (websocket() && (body.batch || body.changed))
         {
             stop(error::jsonrpc_batch_unsupported);
@@ -222,7 +224,7 @@ flat_buffer& channel_http::request_buffer() NOEXCEPT
     return request_buffer_;
 }
 
-body::value_type channel_http::websocket_body() const NOEXCEPT
+body::value_type channel_http::default_body() const NOEXCEPT
 {
     // There is no forwarding constructor so assign and move.
     body::value_type value{};
@@ -230,19 +232,26 @@ body::value_type channel_http::websocket_body() const NOEXCEPT
     return value;
 }
 
+bool channel_http::lax_params() const NOEXCEPT
+{
+    return false;
+}
+
 // private
 request_ptr channel_http::create_request() const NOEXCEPT
 {
     BC_ASSERT(stranded());
 
+    // The ws reader requires the body preselected, and a json-rpc body also
+    // implies detection. The http parse discards it (replaced by the parser).
     const auto out = to_shared<request>();
+    out->body() = default_body();
+
     if (websocket())
     {
         // out->method() will return verb::unknown (mapped in dispatch).
-        // socket will not produce verb::unknown for http requests (blocked). 
-        // plain_json value is not necessary since reader is explicitly set.
+        // socket will not produce verb::unknown for http requests (blocked).
         out->method_string("websocket");
-        out->body() = websocket_body();
     }
 
     return out;
@@ -269,7 +278,9 @@ void channel_http::notify(response&& notification,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(websocket());
+
+    // A downgraded channel is full duplex, as is a websocket.
+    BC_ASSERT(websocket() || downgraded());
 
     std::string message{ LOG_ONLY(log_message(notification)) };
 
@@ -300,8 +311,8 @@ void channel_http::assign_json_buffer(response& response) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // websocket is full duplex, so cannot use shared json repsonse buffer.
-    if (!websocket())
+    // Full duplex (ws/downgrade) cannot use the shared json response buffer.
+    if (!websocket() && !downgraded())
     {
         const auto& body = response.body();
         if (body.contains<json_body::value_type>())

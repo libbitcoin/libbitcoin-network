@@ -117,6 +117,16 @@ bool socket::websocket() const NOEXCEPT
     return websocket_.load();
 }
 
+bool socket::downgraded() const NOEXCEPT
+{
+    return downgraded_.load();
+}
+
+bool socket::detected() const NOEXCEPT
+{
+    return detected_.load();
+}
+
 const config::address& socket::address() const NOEXCEPT
 {
     return address_;

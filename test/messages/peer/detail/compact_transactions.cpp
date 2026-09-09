@@ -25,8 +25,8 @@ using namespace network::messages::peer;
 BOOST_AUTO_TEST_CASE(ccompact_transactions__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(compact_transactions::command, "blocktxn");
-    constexpr auto index = rpc::peer_registry::index_of<compact_transactions>();
-    BOOST_REQUIRE_EQUAL(rpc::peer_registry::commands().at(index), compact_transactions::command);
+    constexpr auto index = messages::peer::registry::index_of<compact_transactions>();
+    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), compact_transactions::command);
     BOOST_REQUIRE_EQUAL(compact_transactions::version_minimum, level::bip152);
     BOOST_REQUIRE_EQUAL(compact_transactions::version_maximum, level::maximum_protocol);
 }
