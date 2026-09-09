@@ -31,44 +31,15 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // Wait.
 // ----------------------------------------------------------------------------
 
-void socket::wait(result_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_wait,
-            shared_from_this(), std::move(handler)));
-}
-
-// private
-void socket::do_wait(const result_handler& handler) NOEXCEPT
+// The peer close is a connection state, not a readability event. A socket
+// carrying a request that arrived during a long-running query is readable
+// whether or not the peer has closed, so the state is read directly. That
+// leaves the request in the receive buffer, so a caller may pipeline up to
+// that limit without the monitor mistaking the request for a drop.
+bool socket::half_closed() NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    get_base().async_wait(asio::socket::wait_read,
-        std::bind(&socket::handle_wait,
-            shared_from_this(), _1, handler));
-}
-
-// private
-void socket::handle_wait(const boost_code& ec,
-    const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    // Only wait cancel results in caller not calling stop.
-    if (error::asio_is_canceled(ec))
-    {
-        handler(error::success);
-        return;
-    }
-
-    if (ec)
-    {
-        logx("wait", ec);
-        handler(error::asio_to_error_code(ec));
-        return;
-    }
-
-    handler(error::operation_canceled);
+    return asio::half_closed(get_base());
 }
 
 void socket::cancel(result_handler&& handler) NOEXCEPT

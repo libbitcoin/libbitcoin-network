@@ -91,8 +91,10 @@ public:
     /// Wait (all).
     /// -----------------------------------------------------------------------
 
-    /// Wait on a peer close/cancel/send, no data capture/loss.
-    virtual void wait(result_handler&& handler) NOEXCEPT;
+    /// True if the peer has closed, false if indeterminate (requires strand).
+    /// Does not consume the receive buffer, so a request that arrived during
+    /// a long-running query is retained and remains distinct from the close.
+    virtual bool half_closed() NOEXCEPT;
 
     /// Cancel wait or any asynchronous read/write operation, handlers posted.
     virtual void cancel(result_handler&& handler) NOEXCEPT;
@@ -443,7 +445,6 @@ private:
     void do_ws_event(ws::frame_type kind, const std::string& data) NOEXCEPT;
 
     // wait
-    void do_wait(const result_handler& handler) NOEXCEPT;
     void do_cancel(const result_handler& handler) NOEXCEPT;
 
     // connection
@@ -530,9 +531,6 @@ private:
     void handle_ws_event(ws::frame_type kind,
         const std::string& data) NOEXCEPT;
 
-    // wait
-    void handle_wait(const boost_code& ec,
-        const result_handler& handler) NOEXCEPT;
 
     // connect/accept
     void handle_accept(boost_code ec,

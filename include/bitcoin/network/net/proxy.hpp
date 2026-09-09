@@ -150,10 +150,11 @@ protected:
     /// Wait.
     /// -----------------------------------------------------------------------
 
-    /// Wait on a peer close/cancel/send, no data capture/loss.
-    virtual void wait(result_handler&& handler) NOEXCEPT;
+    /// True if the peer has closed, false if indeterminate (requires strand).
+    /// No data capture or loss, so a pipelined request remains buffered.
+    virtual bool half_closed() NOEXCEPT;
 
-    /// Cancel wait, deferred past any write in flight, handler posted.
+    /// Cancel any asynchronous operation, deferred past any write in flight.
     virtual void cancel(result_handler&& handler) NOEXCEPT;
 
     /// WS (generic, framed).
