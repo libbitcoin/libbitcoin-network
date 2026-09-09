@@ -30,14 +30,14 @@ namespace rpc {
 
 /// Methods are a std::tuple of rpc::method<name, args>.
 /// Defines a published interface for use with rpc::dispatcher<>.
-/// Tuple selects the published methods (e.g. a handshake subset).
-template <typename Methods, grouping Mode = grouping::either,
-    const auto& Tuple = Methods::methods>
+/// A subset (e.g. a handshake) is published by its own methods type, not by
+/// selecting a tuple here, as a reference template argument becomes part of
+/// the mangled name of every dependent template.
+template <typename Methods, grouping Mode = grouping::either>
 struct publish
   : public Methods
 {
-    static constexpr auto& methods = Tuple;
-    using type = std::remove_cvref_t<decltype(Tuple)>;
+    using type = decltype(Methods::methods);
     static constexpr auto size = std::tuple_size_v<type>;
     static constexpr grouping mode = Mode;
 };

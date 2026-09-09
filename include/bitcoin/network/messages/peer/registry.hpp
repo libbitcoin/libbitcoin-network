@@ -33,7 +33,7 @@ namespace peer {
 /// The peer message codec, derived from the dispatch interface.
 struct registry
 {
-    using methods_t = decltype(rpc::peer_dispatch::all);
+    using methods_t = decltype(rpc::peer_dispatch::methods);
     static constexpr auto size = std::tuple_size_v<methods_t>;
 
     /// Index of an unregistered command (one past the last valid index).
