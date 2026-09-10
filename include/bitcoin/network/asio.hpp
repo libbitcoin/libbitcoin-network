@@ -60,10 +60,6 @@ namespace asio
     typedef std::shared_ptr<socket> socket_ptr;
 
     /// True if the peer has closed its side of the connection (FIN received).
-    /// Independent of buffered data, and false if indeterminate. Asio models
-    /// readiness, not connection state, so a socket with unread bytes is
-    /// readable whether or not the peer has closed. This is therefore the only
-    /// way to observe a drop without consuming the receive buffer.
     BCT_API bool half_closed(socket& sock) NOEXCEPT;
 
     /// asio::ssl::socket

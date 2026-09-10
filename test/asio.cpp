@@ -20,7 +20,6 @@
 
 BOOST_AUTO_TEST_SUITE(asio_tests)
 
-// A connected loopback pair, accepted socket first.
 struct pair
 {
     pair() NOEXCEPT
@@ -42,7 +41,7 @@ struct pair
     bool ok{};
 };
 
-// The FIN is delivered by the stack, not by the caller, so allow for it.
+// The FIN is delivered by the stack, not the caller.
 static bool half_closed_within(asio::socket& sock, size_t milliseconds) NOEXCEPT
 {
     for (size_t time{}; time < milliseconds; time += 10)
@@ -95,9 +94,6 @@ BOOST_AUTO_TEST_CASE(asio__half_closed__peer_close__true)
     BOOST_REQUIRE(half_closed_within(connection.accepted, 1000));
 }
 
-// This is the case that readability cannot distinguish, and the reason the
-// state is read directly: unread bytes leave the socket readable whether or
-// not the peer has closed.
 BOOST_AUTO_TEST_CASE(asio__half_closed__peer_shutdown_with_unread_data__true)
 {
     pair connection{};
