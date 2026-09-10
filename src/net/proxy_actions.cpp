@@ -43,19 +43,6 @@ bool proxy::half_closed() NOEXCEPT
     return socket_->half_closed();
 }
 
-void proxy::cancel(result_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (writing_)
-    {
-        canceler_ = std::move(handler);
-        return;
-    }
-
-    socket_->cancel(std::move(handler));
-}
-
 //  WS (generic, framed).
 // ----------------------------------------------------------------------------
 

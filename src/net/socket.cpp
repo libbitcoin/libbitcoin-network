@@ -238,6 +238,17 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
     }, socket_);
 }
 
+// The peer close is a connection state, not a readability event. A socket
+// carrying a request that arrived during a long-running query is readable
+// whether or not the peer has closed, so the state is read directly. That
+// leaves the request in the receive buffer, so a caller may pipeline up to
+// that limit without the monitor mistaking the request for a drop.
+bool socket::half_closed() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return asio::half_closed(get_base());
+}
+
 asio::socket& socket::get_base() NOEXCEPT
 {
     return std::visit(overload

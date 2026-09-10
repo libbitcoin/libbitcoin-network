@@ -165,7 +165,7 @@ protected:
     /// strand). The channel is resumed following pause by the session.
     virtual void read_next() NOEXCEPT;
 
-    /// Monitor/unmonitor the socket for cancel/write (requires strand).
+    /// Monitor for close during a long-running query (requires strand).
     virtual void monitor(bool value) NOEXCEPT;
 
     /// Seconds before channel expires, zero if expired (requires strand).

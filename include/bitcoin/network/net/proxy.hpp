@@ -154,9 +154,6 @@ protected:
     /// No data capture or loss, so a pipelined request remains buffered.
     virtual bool half_closed() NOEXCEPT;
 
-    /// Cancel any asynchronous operation, deferred past any write in flight.
-    virtual void cancel(result_handler&& handler) NOEXCEPT;
-
     /// WS (generic, framed).
     /// -----------------------------------------------------------------------
 
@@ -316,7 +313,6 @@ private:
     deadline::ptr throttle_;
     stop_subscriber stop_subscriber_{};
     socket::http_parser_ptr parser_{};
-    result_handler canceler_{};
     queue deferred_{};
     bool writing_{};
     queue queue_{};

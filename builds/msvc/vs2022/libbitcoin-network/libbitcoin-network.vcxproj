@@ -216,7 +216,6 @@
     <ClCompile Include="..\..\..\..\src\net\socket_rpc.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_stop.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_tcp.cpp" />
-    <ClCompile Include="..\..\..\..\src\net\socket_wait.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_zmtp.cpp" />
     <ClCompile Include="..\..\..\..\src\p2ps\cipher.cpp">

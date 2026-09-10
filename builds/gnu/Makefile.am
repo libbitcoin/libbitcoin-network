@@ -131,7 +131,6 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/net/socket_rpc.cpp \
     ${srcdir}/../../src/net/socket_stop.cpp \
     ${srcdir}/../../src/net/socket_tcp.cpp \
-    ${srcdir}/../../src/net/socket_wait.cpp \
     ${srcdir}/../../src/net/socket_ws.cpp \
     ${srcdir}/../../src/net/socket_zmtp.cpp \
     ${srcdir}/../../src/p2ps/cipher.cpp \

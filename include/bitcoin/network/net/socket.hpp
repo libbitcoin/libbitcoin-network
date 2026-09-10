@@ -96,9 +96,6 @@ public:
     /// a long-running query is retained and remains distinct from the close.
     virtual bool half_closed() NOEXCEPT;
 
-    /// Cancel wait or any asynchronous read/write operation, handlers posted.
-    virtual void cancel(result_handler&& handler) NOEXCEPT;
-
     /// Connect (all).
     /// -----------------------------------------------------------------------
 
@@ -443,9 +440,6 @@ private:
 
     // config
     void do_ws_event(ws::frame_type kind, const std::string& data) NOEXCEPT;
-
-    // wait
-    void do_cancel(const result_handler& handler) NOEXCEPT;
 
     // connection
     void do_connect(const asio::endpoints& range,

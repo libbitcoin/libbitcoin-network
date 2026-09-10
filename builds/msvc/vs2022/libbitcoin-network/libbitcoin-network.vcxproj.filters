@@ -426,9 +426,6 @@
     <ClCompile Include="..\..\..\..\src\net\socket_tcp.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\net\socket_wait.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
