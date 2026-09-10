@@ -1,6 +1,6 @@
 /* des3.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -113,6 +113,7 @@ struct Des3 {
     void*  devCtx;
 #endif
     void* heap;
+    WC_BITFIELD keySet:1;    /* set to 1 once a key has been configured */
 };
 
 #ifndef WC_DES3_TYPE_DEFINED

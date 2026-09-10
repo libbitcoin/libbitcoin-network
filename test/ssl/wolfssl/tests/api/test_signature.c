@@ -1,6 +1,6 @@
 /* test_signature.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -68,6 +68,13 @@ int test_wc_SignatureGetSize_ecc(void)
     sig_type = WC_SIGNATURE_TYPE_ECC;
     ExpectIntEQ(wc_SignatureGetSize(sig_type, NULL, key_len), 0);
     key_len = (word32)0;
+    ExpectIntEQ(wc_SignatureGetSize(sig_type, &ecc, key_len),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    /* key_len must be exactly sizeof(ecc_key): one less or one more is invalid */
+    key_len = (word32)(sizeof(ecc_key) - 1);
+    ExpectIntEQ(wc_SignatureGetSize(sig_type, &ecc, key_len),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    key_len = (word32)(sizeof(ecc_key) + 1);
     ExpectIntEQ(wc_SignatureGetSize(sig_type, &ecc, key_len),
         WC_NO_ERR_TRACE(BAD_FUNC_ARG));
 
@@ -138,6 +145,13 @@ int test_wc_SignatureGetSize_rsa(void)
     ExpectIntEQ(wc_SignatureGetSize(sig_type, NULL, key_len),
         WC_NO_ERR_TRACE(BAD_FUNC_ARG));
     key_len = (word32)0;
+    ExpectIntEQ(wc_SignatureGetSize(sig_type, &rsa_key, key_len),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    /* key_len must be exactly sizeof(RsaKey): one less or one more is invalid */
+    key_len = (word32)(sizeof(RsaKey) - 1);
+    ExpectIntEQ(wc_SignatureGetSize(sig_type, &rsa_key, key_len),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    key_len = (word32)(sizeof(RsaKey) + 1);
     ExpectIntEQ(wc_SignatureGetSize(sig_type, &rsa_key, key_len),
         WC_NO_ERR_TRACE(BAD_FUNC_ARG));
 

@@ -251,7 +251,13 @@
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\bio.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\conf.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\evp.c" />
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\evp_pk.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\pk.c" />
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\pk_ec.c" />
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\ssl_api_cert.c" />
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\ssl_api_dtls.c" />
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\ssl_api_ext.c" />
+    <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\ssl_api_pk.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\ssl_asn1.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\ssl_bn.c" />
     <ClCompile Include="..\..\..\..\src\ssl\wolfssl\src\ssl_certman.c" />
@@ -583,6 +589,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\sha512.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\signature.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\siphash.h" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\sm2.h" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\sm3.h" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\sm4.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\sp_int.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\srp.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\types.h" />
@@ -590,6 +599,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\visibility.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\wc_encrypt.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\wc_port.h" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\wc_she.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\wolfmath.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfio.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfssl.h" />

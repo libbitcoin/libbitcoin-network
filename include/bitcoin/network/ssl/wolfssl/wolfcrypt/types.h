@@ -1,6 +1,6 @@
 /* types.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -125,7 +125,7 @@ typedef const char wcchar[];
     /* if a version is available, pivot on the version, otherwise guess it's
         * disallowed, subject to override.
         */
-    #if !defined(WOLF_C89) && (!defined(__STDC__)                \
+    #if !defined(WOLF_C89) && !defined(_MSC_VER) && (!defined(__STDC__) \
         || (!defined(__STDC_VERSION__) && !defined(__cplusplus)) \
         || (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201101L)) \
         || (defined(__cplusplus) && (__cplusplus >= 201103L)))
@@ -231,6 +231,15 @@ typedef const char wcchar[];
                 (ULONG_MAX == 0xffffffffUL)
             #define SIZEOF_LONG 4
         #endif
+        /* On LP64 (e.g. 64-bit Linux/macOS) long is 8 bytes. Detect it from the
+         * target's own limits.h so CTC_SETTINGS matches the library, which gets
+         * SIZEOF_LONG=8 from config.h. This must be derived per-target (not
+         * baked into options.h), so LLP64 targets such as Windows correctly get
+         * SIZEOF_LONG=4 from the branch above. */
+        #if !defined(SIZEOF_LONG) && defined(ULONG_MAX) && \
+                (ULONG_MAX == 0xffffffffffffffffULL)
+            #define SIZEOF_LONG 8
+        #endif
         #if !defined(SIZEOF_LONG_LONG) && defined(ULLONG_MAX) && \
                 (ULLONG_MAX == 0xffffffffffffffffULL)
             #define SIZEOF_LONG_LONG 8
@@ -253,6 +262,23 @@ typedef const char wcchar[];
             #define SIZEOF_LONG_LONG 8
         #endif
         #endif
+#endif
+
+#if defined(HAVE___UINT128_T) && !defined(NO_INT128)
+    #ifndef WOLFSSL_UINT128_T_DEFINED
+        #ifdef __SIZEOF_INT128__
+            typedef __uint128_t uint128_t;
+            typedef __int128_t   int128_t;
+            typedef __uint128_t   word128;
+            typedef __int128_t   sword128;
+        #else
+            typedef unsigned long uint128_t __attribute__ ((mode(TI)));
+            typedef long           int128_t __attribute__ ((mode(TI)));
+            typedef uint128_t       word128;
+            typedef int128_t       sword128;
+        #endif
+        #define WOLFSSL_UINT128_T_DEFINED
+    #endif
 #endif
 
 #if (defined(_MSC_VER) && (_MSC_VER == 1200)) ||  /* MSVC6 */ \
@@ -307,8 +333,11 @@ typedef const char wcchar[];
 #endif
 
 #if defined(WORD64_AVAILABLE) && !defined(WC_16BIT_CPU)
-    /* These platforms have 64-bit CPU registers.  */
-    #if (defined(__alpha__) || defined(__ia64__) || defined(_ARCH_PPC64) || \
+    #if defined(WC_64BIT_CPU)
+        /* explicitly configured for 64 bit. */
+    #elif defined(WC_32BIT_CPU)
+        /* explicitly configured for 32 bit. */
+    #elif (defined(__alpha__) || defined(__ia64__) || defined(_ARCH_PPC64) || \
         (defined(__mips64) && \
          ((defined(_ABI64) && (_MIPS_SIM == _ABI64)) || \
           (defined(_ABIO64) && (_MIPS_SIM == _ABIO64)))) || \
@@ -317,6 +346,7 @@ typedef const char wcchar[];
         (defined(__riscv_xlen) && (__riscv_xlen == 64)) || defined(_M_ARM64) || \
         defined(__aarch64__) || defined(__ppc64__) || \
         (defined(__DCC__) && (defined(__LP64) || defined(__LP64__)))
+        /* The above platforms have 64-bit CPU registers. */
         #define WC_64BIT_CPU
     #elif (defined(sun) || defined(__sun)) && \
           (defined(LP64) || defined(_LP64))
@@ -876,6 +906,13 @@ enum {
                 ONFAIL;                                                    \
             }                                                              \
         } while (0)
+    #define WC_CALLOC_VAR_EX(VAR_NAME, VAR_TYPE, VAR_SIZE, HEAP, TY, ONFAIL)\
+        do {                                                               \
+            WC_ALLOC_VAR_EX(VAR_NAME, VAR_TYPE, VAR_SIZE, HEAP, TY, ONFAIL);\
+            if ((VAR_NAME) != NULL) {                                      \
+                XMEMSET(VAR_NAME, 0, sizeof(VAR_TYPE) * (VAR_SIZE));       \
+            }                                                              \
+        } while (0)
     #define WC_CALLOC_VAR(VAR_NAME, VAR_TYPE, VAR_SIZE, HEAP)    \
         do {                                                     \
             WC_ALLOC_VAR(VAR_NAME, VAR_TYPE, VAR_SIZE, HEAP);    \
@@ -905,7 +942,9 @@ enum {
         WC_DO_NOTHING
     #define WC_VAR_OK(VAR_NAME) 1
     #define WC_CALLOC_VAR(VAR_NAME, VAR_TYPE, VAR_SIZE, HEAP)        \
-        XMEMSET(VAR_NAME, 0, sizeof(var))
+        XMEMSET(VAR_NAME, 0, sizeof(VAR_TYPE))
+    #define WC_CALLOC_VAR_EX(VAR_NAME, VAR_TYPE, VAR_SIZE, HEAP, TY, ONFAIL)\
+        XMEMSET(VAR_NAME, 0, sizeof(VAR_TYPE))
     #define WC_FREE_VAR(VAR_NAME, HEAP) WC_DO_NOTHING \
         /* nothing to free, its stack */
     #define WC_FREE_VAR_EX(VAR_NAME, HEAP, TYPE) WC_DO_NOTHING
@@ -1233,7 +1272,7 @@ binding for XSNPRINTF
 #ifndef WC_OFFSETOF
     #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 4))
         #define WC_OFFSETOF(type, field) __builtin_offsetof(type, field)
-    #elif defined(__WATCOMC__)
+    #elif defined(__WATCOMC__) || defined(__IAR_SYSTEMS_ICC__)
         #include <stddef.h>
         #define WC_OFFSETOF    offsetof
     #else
@@ -1339,8 +1378,8 @@ enum {
     DYNAMIC_TYPE_CMAC         = 94,
     DYNAMIC_TYPE_FALCON       = 95,
     DYNAMIC_TYPE_SESSION      = 96,
-    DYNAMIC_TYPE_DILITHIUM    = 97,
-    DYNAMIC_TYPE_SPHINCS      = 98,
+    DYNAMIC_TYPE_MLDSA        = 97,
+    DYNAMIC_TYPE_SPHINCS      = 98, /* deprecated: kept for ABI compat */
     DYNAMIC_TYPE_SM4_BUFFER   = 99,
     DYNAMIC_TYPE_DEBUG_TAG    = 100,
     DYNAMIC_TYPE_LMS          = 101,
@@ -1348,6 +1387,10 @@ enum {
     DYNAMIC_TYPE_X509_ACERT   = 103,
     DYNAMIC_TYPE_OS_BUF       = 104,
     DYNAMIC_TYPE_ASCON        = 105,
+    DYNAMIC_TYPE_SHA          = 106,
+    DYNAMIC_TYPE_SLHDSA       = 107,
+    DYNAMIC_TYPE_OCSP_RESPONSE = 108,
+    DYNAMIC_TYPE_XMSS         = 109,
     DYNAMIC_TYPE_SNIFFER_SERVER       = 1000,
     DYNAMIC_TYPE_SNIFFER_SESSION      = 1001,
     DYNAMIC_TYPE_SNIFFER_PB           = 1002,
@@ -1359,6 +1402,11 @@ enum {
     DYNAMIC_TYPE_SNIFFER_CHAIN_BUFFER = 1008,
     DYNAMIC_TYPE_AES_EAX = 1009
 };
+
+#ifndef WOLFSSL_NO_DILITHIUM_LEGACY_NAMES
+/* Legacy name retained for backwards compatibility. */
+#define DYNAMIC_TYPE_DILITHIUM DYNAMIC_TYPE_MLDSA
+#endif
 
 /* max error buffer string size */
 #ifdef WOLFSSL_MAX_ERROR_SZ
@@ -1391,7 +1439,10 @@ enum wc_AlgoType {
     WC_ALGO_TYPE_KDF = 9,
     WC_ALGO_TYPE_COPY = 10,
     WC_ALGO_TYPE_FREE = 11,
-    WC_ALGO_TYPE_MAX = WC_ALGO_TYPE_FREE
+    WC_ALGO_TYPE_SETKEY = 12,
+    WC_ALGO_TYPE_EXPORT_KEY = 13,
+    WC_ALGO_TYPE_SHE = 14,
+    WC_ALGO_TYPE_MAX = WC_ALGO_TYPE_SHE
 };
 
 /* KDF types */
@@ -1426,7 +1477,13 @@ enum wc_HashType {
     WC_HASH_TYPE_SHA3_512 = 13,
     WC_HASH_TYPE_BLAKE2B = 14,
     WC_HASH_TYPE_BLAKE2S = 19,
-    WC_HASH_TYPE_MAX = WC_HASH_TYPE_BLAKE2S,
+    WC_HASH_TYPE_SHA512_224 = 22,
+    WC_HASH_TYPE_SHA512_256 = 23,
+    WC_HASH_TYPE_SHAKE128 = 20,
+    WC_HASH_TYPE_SHAKE256 = 21,
+    WC_HASH_TYPE_SM3     = 24,
+    WC_HASH_TYPE_MAX = WC_HASH_TYPE_SM3
+
     #ifndef WOLFSSL_NOSHA512_224
         #define WOLFSSL_NOSHA512_224
     #endif
@@ -1450,34 +1507,12 @@ enum wc_HashType {
     WC_HASH_TYPE_SHA3_512 = 13,
     WC_HASH_TYPE_BLAKE2B = 14,
     WC_HASH_TYPE_BLAKE2S = 15,
-    #define _WC_HASH_TYPE_MAX WC_HASH_TYPE_BLAKE2S
-    #ifndef WOLFSSL_NOSHA512_224
-        WC_HASH_TYPE_SHA512_224 = 16,
-        #undef _WC_HASH_TYPE_MAX
-        #define _WC_HASH_TYPE_MAX WC_HASH_TYPE_SHA512_224
-    #endif
-    #ifndef WOLFSSL_NOSHA512_256
-        WC_HASH_TYPE_SHA512_256 = 17,
-        #undef _WC_HASH_TYPE_MAX
-        #define _WC_HASH_TYPE_MAX WC_HASH_TYPE_SHA512_256
-    #endif
-    #ifdef WOLFSSL_SHAKE128
-        WC_HASH_TYPE_SHAKE128 = 18,
-        #undef _WC_HASH_TYPE_MAX
-        #define _WC_HASH_TYPE_MAX WC_HASH_TYPE_SHAKE128
-    #endif
-    #ifdef WOLFSSL_SHAKE256
-        WC_HASH_TYPE_SHAKE256 = 19,
-        #undef _WC_HASH_TYPE_MAX
-        #define _WC_HASH_TYPE_MAX WC_HASH_TYPE_SHAKE256
-    #endif
-    #ifdef WOLFSSL_SM3
-        WC_HASH_TYPE_SM3     = 20,
-        #undef _WC_HASH_TYPE_MAX
-        #define _WC_HASH_TYPE_MAX WC_HASH_TYPE_SM3
-    #endif
-    WC_HASH_TYPE_MAX = _WC_HASH_TYPE_MAX
-    #undef _WC_HASH_TYPE_MAX
+    WC_HASH_TYPE_SHA512_224 = 16,
+    WC_HASH_TYPE_SHA512_256 = 17,
+    WC_HASH_TYPE_SHAKE128 = 18,
+    WC_HASH_TYPE_SHAKE256 = 19,
+    WC_HASH_TYPE_SM3     = 20,
+    WC_HASH_TYPE_MAX = WC_HASH_TYPE_SM3
 
 #endif /* HAVE_SELFTEST */
 };
@@ -1538,7 +1573,8 @@ enum wc_PkType {
     #undef _WC_PK_TYPE_MAX
     #define _WC_PK_TYPE_MAX WC_PK_TYPE_PQC_KEM_DECAPS
 #endif
-#if defined(HAVE_DILITHIUM) || defined(HAVE_FALCON)
+#if defined(WOLFSSL_HAVE_MLDSA) || defined(HAVE_FALCON) || \
+    defined(WOLFSSL_HAVE_SLHDSA)
     WC_PK_TYPE_PQC_SIG_KEYGEN = 21,
     WC_PK_TYPE_PQC_SIG_SIGN = 22,
     WC_PK_TYPE_PQC_SIG_VERIFY = 23,
@@ -1549,6 +1585,18 @@ enum wc_PkType {
     WC_PK_TYPE_RSA_PKCS = 25,
     WC_PK_TYPE_RSA_PSS = 26,
     WC_PK_TYPE_RSA_OAEP = 27,
+    WC_PK_TYPE_EC_GET_SIZE = 28,
+    WC_PK_TYPE_EC_GET_SIG_SIZE = 29,
+    #undef _WC_PK_TYPE_MAX
+    #define _WC_PK_TYPE_MAX WC_PK_TYPE_EC_GET_SIG_SIZE
+#if defined(WOLFSSL_HAVE_LMS) || defined(WOLFSSL_HAVE_XMSS)
+    WC_PK_TYPE_PQC_STATEFUL_SIG_KEYGEN    = 30,
+    WC_PK_TYPE_PQC_STATEFUL_SIG_SIGN      = 31,
+    WC_PK_TYPE_PQC_STATEFUL_SIG_VERIFY    = 32,
+    WC_PK_TYPE_PQC_STATEFUL_SIG_SIGS_LEFT = 33,
+    #undef _WC_PK_TYPE_MAX
+    #define _WC_PK_TYPE_MAX WC_PK_TYPE_PQC_STATEFUL_SIG_SIGS_LEFT
+#endif
     WC_PK_TYPE_MAX = _WC_PK_TYPE_MAX
 };
 
@@ -1557,31 +1605,62 @@ enum wc_PkType {
     enum wc_PqcKemType {
         WC_PQC_KEM_TYPE_NONE = 0,
         #define _WC_PQC_KEM_TYPE_MAX WC_PQC_KEM_TYPE_NONE
-    #if defined(WOLFSSL_HAVE_MLKEM)
-        WC_PQC_KEM_TYPE_KYBER = 1,
+        WC_PQC_KEM_TYPE_MLKEM = 1,
         #undef _WC_PQC_KEM_TYPE_MAX
-        #define _WC_PQC_KEM_TYPE_MAX WC_PQC_KEM_TYPE_KYBER
-    #endif
+        #define _WC_PQC_KEM_TYPE_MAX WC_PQC_KEM_TYPE_MLKEM
         WC_PQC_KEM_TYPE_MAX = _WC_PQC_KEM_TYPE_MAX
     };
+
+    /* Pre-standardization name retained for backwards compatibility. */
+    #define WC_PQC_KEM_TYPE_KYBER WC_PQC_KEM_TYPE_MLKEM
 #endif
 
-#if defined(HAVE_DILITHIUM) || defined(HAVE_FALCON)
+#if defined(WOLFSSL_HAVE_MLDSA) || defined(HAVE_FALCON) || \
+    defined(WOLFSSL_HAVE_SLHDSA)
     /* Post quantum signature algorithms */
     enum wc_PqcSignatureType {
         WC_PQC_SIG_TYPE_NONE = 0,
         #define _WC_PQC_SIG_TYPE_MAX WC_PQC_SIG_TYPE_NONE
-    #if defined(HAVE_DILITHIUM)
-        WC_PQC_SIG_TYPE_DILITHIUM = 1,
+    #if defined(WOLFSSL_HAVE_MLDSA)
+        WC_PQC_SIG_TYPE_MLDSA = 1,
         #undef _WC_PQC_SIG_TYPE_MAX
-        #define _WC_PQC_SIG_TYPE_MAX WC_PQC_SIG_TYPE_DILITHIUM
+        #define _WC_PQC_SIG_TYPE_MAX WC_PQC_SIG_TYPE_MLDSA
     #endif
     #if defined(HAVE_FALCON)
         WC_PQC_SIG_TYPE_FALCON = 2,
         #undef _WC_PQC_SIG_TYPE_MAX
         #define _WC_PQC_SIG_TYPE_MAX WC_PQC_SIG_TYPE_FALCON
     #endif
+    #if defined(WOLFSSL_HAVE_SLHDSA)
+        WC_PQC_SIG_TYPE_SLHDSA = 3,
+        #undef _WC_PQC_SIG_TYPE_MAX
+        #define _WC_PQC_SIG_TYPE_MAX WC_PQC_SIG_TYPE_SLHDSA
+    #endif
         WC_PQC_SIG_TYPE_MAX = _WC_PQC_SIG_TYPE_MAX
+    };
+
+    #if defined(WOLFSSL_HAVE_MLDSA)
+        /* Pre-standardization name retained for backwards compatibility. */
+        #define WC_PQC_SIG_TYPE_DILITHIUM WC_PQC_SIG_TYPE_MLDSA
+    #endif
+#endif
+
+#if defined(WOLFSSL_HAVE_LMS) || defined(WOLFSSL_HAVE_XMSS)
+    /* Post quantum stateful hash-based signature algorithms. */
+    enum wc_PqcStatefulSignatureType {
+        WC_PQC_STATEFUL_SIG_TYPE_NONE = 0,
+        #define _WC_PQC_STATEFUL_SIG_TYPE_MAX WC_PQC_STATEFUL_SIG_TYPE_NONE
+    #if defined(WOLFSSL_HAVE_LMS)
+        WC_PQC_STATEFUL_SIG_TYPE_LMS = 1,
+        #undef _WC_PQC_STATEFUL_SIG_TYPE_MAX
+        #define _WC_PQC_STATEFUL_SIG_TYPE_MAX WC_PQC_STATEFUL_SIG_TYPE_LMS
+    #endif
+    #if defined(WOLFSSL_HAVE_XMSS)
+        WC_PQC_STATEFUL_SIG_TYPE_XMSS = 2,
+        #undef _WC_PQC_STATEFUL_SIG_TYPE_MAX
+        #define _WC_PQC_STATEFUL_SIG_TYPE_MAX WC_PQC_STATEFUL_SIG_TYPE_XMSS
+    #endif
+        WC_PQC_STATEFUL_SIG_TYPE_MAX = _WC_PQC_STATEFUL_SIG_TYPE_MAX
     };
 #endif
 
@@ -1655,6 +1734,19 @@ WOLFSSL_API word32 CheckRunTimeSettings(void);
         #endif
 #endif /* WOLFSSL_AESNI || WOLFSSL_ARMASM || USE_INTEL_SPEEDUP || \
         * WOLFSSL_AFALG_XILINX */
+
+/* ARM C-only builds: if the toolchain reports that the target does NOT
+ * support unaligned access, force the alignment-safe code paths. This
+ * catches Cortex-M (ARMv6-M, and ARMv7-M/v8-M built with
+ * -mno-unaligned-access) without penalizing unaligned-capable cores
+ * such as Cortex-A and AArch64. __ARM_FEATURE_UNALIGNED is defined by
+ * GCC, Clang and armclang per the ARM ACLE when unaligned access is
+ * available. */
+#if defined(__arm__) && !defined(__ARM_FEATURE_UNALIGNED)
+    #ifndef WOLFSSL_USE_ALIGN
+        #define WOLFSSL_USE_ALIGN
+    #endif
+#endif
 
 /* Helpers for memory alignment */
 #ifndef XALIGNED
@@ -2030,6 +2122,33 @@ WOLFSSL_API word32 CheckRunTimeSettings(void);
     #define WC_NORETURN
 #endif
 
+#ifdef __has_attribute
+#if __has_attribute(nonnull)
+    #ifndef WC_ARG_NOT_NULL
+        #define WC_ARG_NOT_NULL(a) __attribute__((nonnull(a)))
+    #endif
+    #ifndef WC_ARGS_NOT_NULL
+        /* double-parenthesize, a la WC_ARGS_NOT_NULL((1, 2)) -- this approach
+         * maintains compatibility with WOLF_NO_VARIADIC_MACROS.
+         */
+        #define WC_ARGS_NOT_NULL(p_a) __attribute__((nonnull p_a))
+    #endif
+    #ifndef WC_ALL_ARGS_NOT_NULL
+        #define WC_ALL_ARGS_NOT_NULL __attribute__((nonnull))
+    #endif
+#endif /* __has_attribute(nonnull) */
+#endif /* defined(__has_attribute) */
+
+#ifndef WC_ARG_NOT_NULL
+    #define WC_ARG_NOT_NULL(a) /* null expansion */
+#endif
+#ifndef WC_ARGS_NOT_NULL
+    #define WC_ARGS_NOT_NULL(p_a) /* null expansion */
+#endif
+#ifndef WC_ALL_ARGS_NOT_NULL
+    #define WC_ALL_ARGS_NOT_NULL
+#endif
+
 #if defined(WOLFSSL_KEY_GEN) || defined(HAVE_COMP_KEY) || \
     defined(WOLFSSL_DEBUG_MATH) || defined(DEBUG_WOLFSSL) || \
     defined(WOLFSSL_PUBLIC_MP) || defined(OPENSSL_EXTRA) || \
@@ -2038,7 +2157,7 @@ WOLFSSL_API word32 CheckRunTimeSettings(void);
     #define WC_MP_TO_RADIX
 #endif
 
-#if defined(__GNUC__) && __GNUC__ > 5
+#if defined(__GNUC__) && (__GNUC__ > 5) && !defined(__clang__)
     #define PRAGMA_GCC_DIAG_PUSH _Pragma("GCC diagnostic push")
     #define PRAGMA_GCC(str) _Pragma(str)
     #define PRAGMA_GCC_DIAG_POP _Pragma("GCC diagnostic pop")
@@ -2080,7 +2199,9 @@ WOLFSSL_API word32 CheckRunTimeSettings(void);
     #define wc_static_assert(expr) struct wc_static_assert_dummy_struct
     #define wc_static_assert2(expr, msg) wc_static_assert(expr)
 #elif !defined(wc_static_assert)
-    #if defined(WOLFSSL_HAVE_ASSERT_H) && !defined(WOLFSSL_NO_ASSERT_H)
+    #if !defined(WOLFSSL_NO_ASSERT_H) && (defined(WOLFSSL_HAVE_ASSERT_H) || \
+        (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)) || \
+        (defined(__cplusplus) && (__cplusplus >= 201103L)))
         #include <assert.h>
     #endif
     #if (defined(__cplusplus) && (__cplusplus >= 201703L)) || \
@@ -2263,27 +2384,39 @@ enum Max_ASN {
     DSA_INTS            =   5,     /* DSA ints in private key */
     MAX_SALT_SIZE       =  64,     /* MAX PKCS Salt length */
     MAX_IV_SIZE         =  64,     /* MAX PKCS Iv length */
-#ifdef HAVE_SPHINCS
-    MAX_ENCODED_SIG_SZ  = 51200,
-#elif defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
-    MAX_ENCODED_SIG_SZ  = 5120,
-#elif !defined(NO_RSA)
+    /* Max classic sig (RSA/DSA/ECC); separate from MAX_ENCODED_SIG_SZ so
+     * PKCS#1/verify buffers stay small when PQC is enabled for verify-only. */
+#if !defined(NO_RSA)
 #if defined(USE_FAST_MATH) && defined(FP_MAX_BITS)
-    MAX_ENCODED_SIG_SZ  = FP_MAX_BITS / 8,
+    MAX_ENCODED_CLASSIC_SIG_SZ = FP_MAX_BITS / 16,
 #elif (defined(WOLFSSL_SP_MATH_ALL) || defined(WOLFSSL_SP_MATH)) && \
     defined(SP_INT_BITS)
-    MAX_ENCODED_SIG_SZ  = (SP_INT_BITS + 7) / 8,
+    MAX_ENCODED_CLASSIC_SIG_SZ = WC_BITS_TO_BYTES(SP_INT_BITS),
 #elif defined(WOLFSSL_HAPROXY)
-    MAX_ENCODED_SIG_SZ  = 1024,    /* Supports 8192 bit keys */
+    MAX_ENCODED_CLASSIC_SIG_SZ = 1024,    /* Supports 8192 bit keys */
 #else
-    MAX_ENCODED_SIG_SZ  = 512,     /* Supports 4096 bit keys */
+    MAX_ENCODED_CLASSIC_SIG_SZ = 512,     /* Supports 4096 bit keys */
 #endif
 #elif defined(HAVE_ECC)
-    MAX_ENCODED_SIG_SZ  = 140,
-#elif defined(HAVE_CURVE448)
-    MAX_ENCODED_SIG_SZ  = 114,
+    MAX_ENCODED_CLASSIC_SIG_SZ = 140,
+#elif defined(HAVE_ED448)
+    MAX_ENCODED_CLASSIC_SIG_SZ = 114,    /* Ed448 signature is 114 bytes */
 #else
-    MAX_ENCODED_SIG_SZ  =  64,
+    MAX_ENCODED_CLASSIC_SIG_SZ =  64,    /* Ed25519 signature is 64 bytes */
+#endif
+
+    /* Largest signature any enabled algorithm can produce. Used to size the
+     * actual signature-output buffers. PQC signatures are large, so prefer
+     * runtime sizing (see GetSignatureBufferSz in asn.c) where the key is
+     * available. */
+#ifdef WOLFSSL_HAVE_SLHDSA
+    /* Largest raw SLH-DSA signature (SHAKE-256f) is 49856 bytes; round up
+     * to leave headroom for ASN.1 wrapping (BIT STRING tag + length). */
+    MAX_ENCODED_SIG_SZ  = 51200,
+#elif defined(HAVE_FALCON) || defined(WOLFSSL_HAVE_MLDSA)
+    MAX_ENCODED_SIG_SZ  = 5120,
+#else
+    MAX_ENCODED_SIG_SZ  = MAX_ENCODED_CLASSIC_SIG_SZ,
 #endif
     MAX_ALGO_SZ         =  20,
     MAX_LENGTH_SZ       = WOLFSSL_ASN_MAX_LENGTH_SZ, /* Max length size for DER encoding */
@@ -2304,8 +2437,8 @@ enum Max_ASN {
     MAX_DSA_PRIVKEY_SZ  = (DSA_INTS * MAX_DSA_INT_SZ) + MAX_SEQ_SZ +
                           MAX_VERSION_SZ, /* Maximum size of a DSA Private
                                       key taken from DsaKeyIntsToDer. */
-#if defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
-    MAX_PQC_PUBLIC_KEY_SZ = 2592, /* Maximum size of a Dilithium public key. */
+#if defined(HAVE_FALCON) || defined(WOLFSSL_HAVE_MLDSA)
+    MAX_PQC_PUBLIC_KEY_SZ = 2592, /* Maximum size of an ML-DSA public key. */
 #endif
     MAX_RSA_E_SZ        =  16,     /* Max RSA public e size */
     MAX_CA_SZ           =  32,     /* Max encoded CA basic constraint length */
@@ -2316,13 +2449,13 @@ enum Max_ASN {
                             /* Maximum DER digest ASN header size */
                             /* Max X509 header length indicates the
                              * max length + 2 ('\n', '\0') */
-#if defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || defined(HAVE_SPHINCS)
+#if defined(HAVE_FALCON) || defined(WOLFSSL_HAVE_MLDSA) || defined(WOLFSSL_HAVE_SLHDSA)
     MAX_X509_HEADER_SZ  = (48 + 2), /* Maximum PEM Header/Footer Size */
 #else
     MAX_X509_HEADER_SZ  = (37 + 2), /* Maximum PEM Header/Footer Size */
 #endif
 
-#if defined(HAVE_FALCON) || defined(HAVE_DILITHIUM)
+#if defined(HAVE_FALCON) || defined(WOLFSSL_HAVE_MLDSA)
     MAX_PUBLIC_KEY_SZ   = MAX_PQC_PUBLIC_KEY_SZ + MAX_ALGO_SZ + MAX_SEQ_SZ * 2,
 #else
     MAX_PUBLIC_KEY_SZ   = MAX_DSA_PUBKEY_SZ + MAX_ALGO_SZ + MAX_SEQ_SZ * 2,
@@ -2343,7 +2476,17 @@ enum Max_ASN {
 
 #define MAX_SIG_SZ MAX_ENCODED_SIG_SZ
 
-#ifdef WOLFSSL_CERT_GEN
+/* Size of the fixed signature buffer embedded in CertSignCtx under
+ * WOLFSSL_NO_MALLOC, and the reject threshold used by the cert/CSR signing
+ * paths when dynamic memory is unavailable. Defaults to the largest signature
+ * any enabled algorithm can produce. Override (e.g. via user_settings.h) to
+ * fit a specific LMS/XMSS parameter set, or to shrink builds that only sign
+ * with classic/compact algorithms. */
+#ifndef WOLFSSL_MAX_SIG_SZ
+#define WOLFSSL_MAX_SIG_SZ MAX_ENCODED_SIG_SZ
+#endif
+
+#if defined(WOLFSSL_CERT_GEN) || defined(HAVE_OCSP_RESPONDER)
     /* Used in asn.c MakeSignature for ECC and RSA non-blocking/async */
     enum CertSignState {
         CERTSIGN_STATE_BEGIN,
@@ -2354,7 +2497,7 @@ enum Max_ASN {
 
     typedef struct CertSignCtx {
     #ifdef WOLFSSL_NO_MALLOC
-        byte sig[MAX_ENCODED_SIG_SZ];
+        byte sig[WOLFSSL_MAX_SIG_SZ];
         byte digest[WC_MAX_DIGEST_SIZE];
         #ifndef NO_RSA
         byte encSig[MAX_DER_DIGEST_SZ];
@@ -2370,11 +2513,12 @@ enum Max_ASN {
         #ifndef NO_RSA
         int encSigSz;
         #endif
+        int digestSz;
+        int typeH; /* Hash algorithm type for encoding */
         int state; /* enum CertSignState */
     } CertSignCtx;
 
 #endif /* WOLFSSL_CERT_GEN */
-
 
 #ifdef __cplusplus
     }   /* extern "C" */

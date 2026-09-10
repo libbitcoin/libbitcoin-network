@@ -1,6 +1,6 @@
 /* utils.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -21,8 +21,9 @@
 
 #include <tests/unit.h>
 #include <tests/utils.h>
+#include <wolfssl/wolfcrypt/error-crypt.h>
 
-#ifdef HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES
+#ifdef HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES_BUILD
 
 /* This set of memio functions allows for more fine tuned control of the TLS
  * connection operations. For new tests, try to use ssl_memio first. */
@@ -79,12 +80,12 @@ int test_memio_write_cb(WOLFSSL *ssl, char *data, int sz, void *ctx)
 #ifdef WOLFSSL_DUMP_MEMIO_STREAM
     {
         char dump_file_name[64];
-        WOLFSSL_BIO *dump_file;
+        XFILE dump_file;
         sprintf(dump_file_name, "%s/%s.dump", tmpDirName, currentTestName);
-        dump_file = wolfSSL_BIO_new_file(dump_file_name, "a");
-        if (dump_file != NULL) {
-            (void)wolfSSL_BIO_write(dump_file, data, sz);
-            wolfSSL_BIO_free(dump_file);
+        dump_file = XFOPEN(dump_file_name, "ab");
+        if (dump_file != XBADFILE) {
+            (void)XFWRITE(data, 1, (size_t)sz, dump_file);
+            XFCLOSE(dump_file);
         }
     }
 #endif
@@ -182,9 +183,16 @@ int test_memio_do_handshake(WOLFSSL *ssl_c, WOLFSSL *ssl_s,
             }
             else {
                 err = wolfSSL_get_error(ssl_c, ret);
-                if (err != WOLFSSL_ERROR_WANT_READ &&
-                    err != WOLFSSL_ERROR_WANT_WRITE)
+                if (err == WC_NO_ERR_TRACE(MP_WOULDBLOCK)) {
+                    /* retry non-blocking math */
+                }
+                else if (err != WOLFSSL_ERROR_WANT_READ &&
+                         err != WOLFSSL_ERROR_WANT_WRITE) {
+                    char buff[WOLFSSL_MAX_ERROR_SZ];
+                    fprintf(stderr, "memio client error = %d, %s\n", err,
+                        wolfSSL_ERR_error_string((word32)err, buff));
                     return -1;
+                }
             }
         }
         if (!hs_s) {
@@ -196,9 +204,16 @@ int test_memio_do_handshake(WOLFSSL *ssl_c, WOLFSSL *ssl_s,
             }
             else {
                 err = wolfSSL_get_error(ssl_s, ret);
-                if (err != WOLFSSL_ERROR_WANT_READ &&
-                    err != WOLFSSL_ERROR_WANT_WRITE)
+                if (err == WC_NO_ERR_TRACE(MP_WOULDBLOCK)) {
+                    /* retry non-blocking math */
+                }
+                else if (err != WOLFSSL_ERROR_WANT_READ &&
+                         err != WOLFSSL_ERROR_WANT_WRITE) {
+                    char buff[WOLFSSL_MAX_ERROR_SZ];
+                    fprintf(stderr, "memio server error = %d, %s\n", err,
+                        wolfSSL_ERR_error_string((word32)err, buff));
                     return -1;
+                }
             }
         }
         handshake_complete = hs_c && hs_s;
@@ -498,6 +513,40 @@ int test_memio_get_message(const struct test_memio_ctx *ctx, int client,
     return 0;
 }
 
+/* The random value placed in a ServerHello to mark it as a HelloRetryRequest.
+ * See RFC 8446 Section 4.1.3. */
+static const byte test_hello_retry_request_random[32] = {
+    0xCF, 0x21, 0xAD, 0x74, 0xE5, 0x9A, 0x61, 0x11,
+    0xBE, 0x1D, 0x8C, 0x02, 0x1E, 0x65, 0xB8, 0x91,
+    0xC2, 0xA2, 0x11, 0x16, 0x7A, 0xBB, 0x8C, 0x5E,
+    0x07, 0x9E, 0x09, 0xE2, 0xC8, 0xA8, 0x33, 0x9C
+};
+
+/* Returns 1 if the first server->client record buffered in ctx is a
+ * HelloRetryRequest, 0 otherwise. A HelloRetryRequest is sent as a ServerHello
+ * (handshake type server_hello) carrying the special random above. */
+int test_memio_msg_is_hello_retry_request(const struct test_memio_ctx *ctx)
+{
+    const char* msg = NULL;
+    int msg_sz = 0;
+    /* TLS record header (5) + handshake header (4) + legacy_version (2) is the
+     * offset of the 32-byte ServerHello random within the record. */
+    const int random_off = 5 + 4 + 2;
+
+    /* The server's flight is buffered for the client (client = 1). */
+    if (test_memio_get_message(ctx, 1, &msg, &msg_sz, 0) != 0)
+        return 0;
+    /* Need a handshake record (0x16) holding a server_hello (0x02) with a full
+     * random. */
+    if (msg_sz < random_off + (int)sizeof(test_hello_retry_request_random))
+        return 0;
+    if ((byte)msg[0] != 0x16 || (byte)msg[5] != 0x02)
+        return 0;
+
+    return XMEMCMP(msg + random_off, test_hello_retry_request_random,
+                   sizeof(test_hello_retry_request_random)) == 0;
+}
+
 int test_memio_move_message(struct test_memio_ctx *ctx, int client,
         int msg_pos_in, int msg_pos_out)
 {
@@ -769,4 +818,26 @@ int test_memio_setup(struct test_memio_ctx *ctx,
                                method_s, NULL, 0, NULL, 0, NULL, 0);
 }
 
-#endif /* HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES */
+#endif /* HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES_BUILD */
+
+#if !defined(NO_FILESYSTEM) && defined(OPENSSL_EXTRA) && \
+    defined(DEBUG_UNIT_TEST_CERTS)
+/* Used when debugging name constraint tests. Not static to allow use in
+ * multiple locations with complex define guards. */
+void DEBUG_WRITE_CERT_X509(WOLFSSL_X509* x509, const char* fileName)
+{
+    BIO* out = BIO_new_file(fileName, "wb");
+    if (out != NULL) {
+        PEM_write_bio_X509(out, x509);
+        BIO_free(out);
+    }
+}
+void DEBUG_WRITE_DER(const byte* der, int derSz, const char* fileName)
+{
+    BIO* out = BIO_new_file(fileName, "wb");
+    if (out != NULL) {
+        BIO_write(out, der, derSz);
+        BIO_free(out);
+    }
+}
+#endif

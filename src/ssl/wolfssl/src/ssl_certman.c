@@ -1,6 +1,6 @@
 /* ssl_certman.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -25,7 +25,7 @@
 
 #if !defined(WOLFSSL_SSL_CERTMAN_INCLUDED)
     #ifndef WOLFSSL_IGNORE_FILE_WARN
-        #warning ssl_certman.c does not need to be compiled separately from ssl.c
+        #warning ssl_certman.c not to be compiled separately from ssl.c
     #endif
 #else
 
@@ -74,6 +74,8 @@ static WC_INLINE WOLFSSL_METHOD* cm_pick_method(void* heap)
     #endif
 }
 
+static void DoCertManagerFree(WOLFSSL_CERT_MANAGER* cm);
+
 /* Create a new certificate manager with a heap hint.
  *
  * @param [in] heap  Heap hint.
@@ -107,11 +109,16 @@ WOLFSSL_CERT_MANAGER* wolfSSL_CertManagerNew_ex(void* heap)
     if (!err) {
         /* Reset all fields. */
         XMEMSET(cm, 0, sizeof(WOLFSSL_CERT_MANAGER));
+        /* Set heap hint early so cleanup can use it. */
+        cm->heap = heap;
 
         /* Create a mutex for use when modify table of stored CAs. */
         if (wc_InitMutex(&cm->caLock) != 0) {
             WOLFSSL_MSG("Bad mutex init");
             err = 1;
+        }
+        else {
+            cm->caLockInit = 1;
         }
     }
     if (!err) {
@@ -121,13 +128,23 @@ WOLFSSL_CERT_MANAGER* wolfSSL_CertManagerNew_ex(void* heap)
         if (err != 0) {
             WOLFSSL_MSG("Bad reference count init");
         }
+        else {
+            cm->refInit = 1;
+        }
+    #else
+        cm->refInit = 1;
     #endif
     }
 #ifdef WOLFSSL_TRUST_PEER_CERT
-    /* Create a mutex for use when modify table of trusted peers. */
-    if ((!err) && (wc_InitMutex(&cm->tpLock) != 0)) {
-        WOLFSSL_MSG("Bad mutex init");
-        err = 1;
+    if (!err) {
+        /* Create a mutex for use when modify table of trusted peers. */
+        if (wc_InitMutex(&cm->tpLock) != 0) {
+            WOLFSSL_MSG("Bad mutex init");
+            err = 1;
+        }
+        else {
+            cm->tpLockInit = 1;
+        }
     }
 #endif
     if (!err) {
@@ -141,17 +158,15 @@ WOLFSSL_CERT_MANAGER* wolfSSL_CertManagerNew_ex(void* heap)
     #ifdef HAVE_FALCON
         cm->minFalconKeySz = MIN_FALCONKEY_SZ;
     #endif /* HAVE_FALCON */
-    #ifdef HAVE_DILITHIUM
-        cm->minDilithiumKeySz = MIN_DILITHIUMKEY_SZ;
-    #endif /* HAVE_DILITHIUM */
-
-        /* Set heap hint to use in certificate manager operations. */
-        cm->heap = heap;
+    #ifdef WOLFSSL_HAVE_MLDSA
+        cm->minMlDsaKeySz = MIN_MLDSAKEY_SZ;
+    #endif /* WOLFSSL_HAVE_MLDSA */
     }
 
-    /* Dispose of certificate manager on error. */
+    /* Dispose of certificate manager on error. The reference count may not
+     * have been initialized, so bypass the ref check and free directly. */
     if (err && (cm != NULL)) {
-        wolfSSL_CertManagerFree(cm);
+        DoCertManagerFree(cm);
         cm = NULL;
     }
     return cm;
@@ -166,6 +181,63 @@ WOLFSSL_CERT_MANAGER* wolfSSL_CertManagerNew(void)
 {
     /* No heap hint. */
     return wolfSSL_CertManagerNew_ex(NULL);
+}
+
+/* Unconditionally dispose of all resources owned by the certificate manager
+ * and free cm itself, bypassing any reference count check. Only frees the
+ * sub-resources that are marked as initialized in the cm bitfield, so it is
+ * safe to call on a cm that was only partially initialized by
+ * wolfSSL_CertManagerNew_ex.
+ *
+ * @param [in, out] cm  Certificate manager (must be non-NULL).
+ */
+static void DoCertManagerFree(WOLFSSL_CERT_MANAGER* cm)
+{
+#ifdef HAVE_CRL
+    /* Dispose of CRL handler. */
+    if (cm->crl != NULL) {
+        /* Dispose of CRL object - indicating dynamically allocated. */
+        FreeCRL(cm->crl, 1);
+    }
+#endif
+
+#ifdef HAVE_OCSP
+    /* Dispose of OCSP handler. */
+    if (cm->ocsp != NULL) {
+        FreeOCSP(cm->ocsp, 1);
+    }
+    /* Dispose of URL. */
+    XFREE(cm->ocspOverrideURL, cm->heap, DYNAMIC_TYPE_URL);
+#if !defined(NO_WOLFSSL_SERVER) && \
+    (defined(HAVE_CERTIFICATE_STATUS_REQUEST) || \
+     defined(HAVE_CERTIFICATE_STATUS_REQUEST_V2))
+    /* Dispose of OCSP stapling handler. */
+    if (cm->ocsp_stapling) {
+        FreeOCSP(cm->ocsp_stapling, 1);
+    }
+#endif
+#endif /* HAVE_OCSP */
+
+    /* Dispose of CA table and mutex. */
+    FreeSignerTable(cm->caTable, CA_TABLE_SIZE, cm->heap);
+    if (cm->caLockInit) {
+        wc_FreeMutex(&cm->caLock);
+    }
+
+#ifdef WOLFSSL_TRUST_PEER_CERT
+    /* Dispose of trusted peer table and mutex. */
+    FreeTrustedPeerTable(cm->tpTable, TP_TABLE_SIZE, cm->heap);
+    if (cm->tpLockInit) {
+        wc_FreeMutex(&cm->tpLock);
+    }
+#endif
+
+    /* Dispose of reference count. */
+    if (cm->refInit) {
+        wolfSSL_RefFree(&cm->ref);
+    }
+    /* Dispose of certificate manager memory. */
+    XFREE(cm, cm->heap, DYNAMIC_TYPE_CERT_MANAGER);
 }
 
 /* Dispose of certificate manager.
@@ -191,45 +263,7 @@ void wolfSSL_CertManagerFree(WOLFSSL_CERT_MANAGER* cm)
         (void)ret;
     #endif
         if (doFree) {
-        #ifdef HAVE_CRL
-            /* Dispose of CRL handler. */
-            if (cm->crl != NULL) {
-                /* Dispose of CRL object - indicating dynamically allocated. */
-                FreeCRL(cm->crl, 1);
-            }
-        #endif
-
-    #ifdef HAVE_OCSP
-            /* Dispose of OCSP handler. */
-            if (cm->ocsp != NULL) {
-                FreeOCSP(cm->ocsp, 1);
-            }
-            /* Dispose of URL. */
-            XFREE(cm->ocspOverrideURL, cm->heap, DYNAMIC_TYPE_URL);
-        #if !defined(NO_WOLFSSL_SERVER) && \
-            (defined(HAVE_CERTIFICATE_STATUS_REQUEST) || \
-             defined(HAVE_CERTIFICATE_STATUS_REQUEST_V2))
-            /* Dispose of OCSP stapling handler. */
-            if (cm->ocsp_stapling) {
-                FreeOCSP(cm->ocsp_stapling, 1);
-            }
-        #endif
-    #endif /* HAVE_OCSP */
-
-            /* Dispose of CA table and mutex. */
-            FreeSignerTable(cm->caTable, CA_TABLE_SIZE, cm->heap);
-            wc_FreeMutex(&cm->caLock);
-
-        #ifdef WOLFSSL_TRUST_PEER_CERT
-            /* Dispose of trusted peer table and mutex. */
-            FreeTrustedPeerTable(cm->tpTable, TP_TABLE_SIZE, cm->heap);
-            wc_FreeMutex(&cm->tpLock);
-        #endif
-
-            /* Dispose of reference count. */
-            wolfSSL_RefFree(&cm->ref);
-            /* Dispose of certificate manager memory. */
-            XFREE(cm, cm->heap, DYNAMIC_TYPE_CERT_MANAGER);
+            DoCertManagerFree(cm);
         }
     }
 }
@@ -599,6 +633,7 @@ int wolfSSL_CertManagerLoadCABufferType(WOLFSSL_CERT_MANAGER* cm,
         if (dCert == NULL) {
             ret = WOLFSSL_FATAL_ERROR;
         } else {
+            XMEMSET(dCert, 0, sizeof(DecodedCert));
             if (format == WOLFSSL_FILETYPE_PEM) {
             #ifndef WOLFSSL_PEM_TO_DER
                 ret = NOT_COMPILED_IN;
@@ -617,7 +652,6 @@ int wolfSSL_CertManagerLoadCABufferType(WOLFSSL_CERT_MANAGER* cm,
             }
 
             if (ret == WOLFSSL_SUCCESS) {
-                XMEMSET(dCert, 0, sizeof(DecodedCert));
                 wc_InitDecodedCert(dCert, buff,
                                 (word32)sz, cm->heap);
                 ret = wc_ParseCert(dCert, CERT_TYPE, NO_VERIFY, NULL);
@@ -716,7 +750,8 @@ void wolfSSL_CertManagerSetUnknownExtCallback(WOLFSSL_CERT_MANAGER* cm,
 }
 #endif /* WC_ASN_UNKNOWN_EXT_CB */
 
-#if !defined(NO_WOLFSSL_CLIENT) || !defined(WOLFSSL_NO_CLIENT_AUTH)
+#if (!defined(NO_WOLFSSL_CLIENT) || !defined(WOLFSSL_NO_CLIENT_AUTH)) || \
+    defined(OPENSSL_EXTRA)
 /* Verify the certificate.
  *
  * Uses the verification callback if available.
@@ -796,7 +831,8 @@ int CM_VerifyBuffer_ex(WOLFSSL_CERT_MANAGER* cm, const unsigned char* buff,
 
     (void)fatal;
 
-#ifndef NO_WOLFSSL_CM_VERIFY
+#if !defined(NO_WOLFSSL_CM_VERIFY) && \
+    (!defined(NO_WOLFSSL_CLIENT) || !defined(WOLFSSL_NO_CLIENT_AUTH))
     /* Use callback to perform verification too if available. */
     if ((!fatal) && cm->verifyCallback) {
         WC_DECLARE_VAR(args, ProcPeerCertArgs, 1, 0);
@@ -884,11 +920,12 @@ int wolfSSL_CertManagerVerifyBuffer(WOLFSSL_CERT_MANAGER* cm,
 
     return ret;
 }
-#endif /* !NO_WOLFSSL_CLIENT || !WOLFSSL_NO_CLIENT_AUTH */
+#endif /* (!NO_WOLFSSL_CLIENT || !WOLFSSL_NO_CLIENT_AUTH) || OPENSSL_EXTRA */
 
 #ifndef NO_FILESYSTEM
 
-#if !defined(NO_WOLFSSL_CLIENT) || !defined(WOLFSSL_NO_CLIENT_AUTH)
+#if (!defined(NO_WOLFSSL_CLIENT) || !defined(WOLFSSL_NO_CLIENT_AUTH)) || \
+    defined(OPENSSL_EXTRA)
 /* Verify the certificate loaded from a file.
  *
  * Uses the verification callback if available.
@@ -1262,7 +1299,9 @@ static WC_INLINE int cm_restore_cert_row(WOLFSSL_CERT_MANAGER* cm,
 
         if (ret == 0) {
             /* Copy in certificate name. */
-            XMEMCPY(signer->name, current + idx, (size_t)signer->nameLen);
+            /* safe cast -- allocated by above XMALLOC(). */
+            XMEMCPY((void *)(wc_ptr_t)signer->name, current + idx,
+                    (size_t)signer->nameLen);
             idx += signer->nameLen;
 
             /* Copy in hash of subject name. */
@@ -1795,6 +1834,7 @@ int wolfSSL_CertManagerDisableCRL(WOLFSSL_CERT_MANAGER* cm)
  *                     WOLFSSL_FILETYPE_ASN1, WOLFSSL_FILETYPE_PEM.
  * @return  WOLFSSL_SUCCESS on success.
  * @return  BAD_FUNC_ARG when cm or buff is NULL or sz is negative or zero.
+ * @return  DUPE_ENTRY_E if the same or a newer CRL already exists in the cm.
  * @return  WOLFSSL_FATAL_ERROR when creating CRL object fails.
  */
 int wolfSSL_CertManagerLoadCRLBuffer(WOLFSSL_CERT_MANAGER* cm,
@@ -2138,8 +2178,8 @@ int wolfSSL_CertManagerEnableOCSP(WOLFSSL_CERT_MANAGER* cm, int options)
                 /* Initialize the OCSP object. */
                 if (InitOCSP(cm->ocsp, cm) != 0) {
                     WOLFSSL_MSG("Init OCSP failed");
-                    /* Dispose of OCSP object - indicating dynamically allocated.
-                     */
+                    /* Dispose of OCSP object - indicating dynamically
+                     * allocated. */
                     FreeOCSP(cm->ocsp, 1);
                     cm->ocsp = NULL;
                     ret = 0;
@@ -2528,6 +2568,819 @@ int wolfSSL_CertManagerSetOCSP_Cb(WOLFSSL_CERT_MANAGER* cm, CbOCSPIO ioCb,
 }
 
 #endif /* HAVE_OCSP */
+
+/******************************************************************************
+ * Internal APIs that use WOLFSSL_CERT_MANAGER
+ ******************************************************************************/
+
+/* hash is the SHA digest of name, just use first 32 bits as hash */
+static WC_INLINE word32 HashSigner(const byte* hash)
+{
+    return MakeWordFromHash(hash) % CA_TABLE_SIZE;
+}
+
+
+/* does CA already exist on signer list */
+int AlreadySigner(WOLFSSL_CERT_MANAGER* cm, byte* hash)
+{
+    Signer* signers;
+    int     ret = 0;
+    word32  row;
+
+    if (cm == NULL || hash == NULL) {
+        return ret;
+    }
+
+    row = HashSigner(hash);
+
+    if (wc_LockMutex(&cm->caLock) != 0) {
+        return ret;
+    }
+    signers = cm->caTable[row];
+    while (signers) {
+        byte* subjectHash;
+
+    #ifndef NO_SKID
+        subjectHash = signers->subjectKeyIdHash;
+    #else
+        subjectHash = signers->subjectNameHash;
+    #endif
+
+        if (XMEMCMP(hash, subjectHash, SIGNER_DIGEST_SIZE) == 0) {
+            ret = 1; /* success */
+            break;
+        }
+        signers = signers->next;
+    }
+    wc_UnLockMutex(&cm->caLock);
+
+    return ret;
+}
+
+#ifdef WOLFSSL_TRUST_PEER_CERT
+/* hash is the SHA digest of name, just use first 32 bits as hash */
+static WC_INLINE word32 TrustedPeerHashSigner(const byte* hash)
+{
+    return MakeWordFromHash(hash) % TP_TABLE_SIZE;
+}
+
+/* does trusted peer already exist on signer list */
+int AlreadyTrustedPeer(WOLFSSL_CERT_MANAGER* cm, DecodedCert* cert)
+{
+    TrustedPeerCert* tp;
+    int     ret = 0;
+    word32  row = TrustedPeerHashSigner(cert->subjectHash);
+
+    if (wc_LockMutex(&cm->tpLock) != 0)
+        return  ret;
+    tp = cm->tpTable[row];
+    while (tp) {
+        if ((XMEMCMP(cert->subjectHash, tp->subjectNameHash,
+                SIGNER_DIGEST_SIZE) == 0)
+    #ifndef WOLFSSL_NO_ISSUERHASH_TDPEER
+         && (XMEMCMP(cert->issuerHash, tp->issuerHash,
+                SIGNER_DIGEST_SIZE) == 0)
+    #endif
+        )
+            ret = 1;
+    #ifndef NO_SKID
+        if (cert->extSubjKeyIdSet) {
+            /* Compare SKID as well if available */
+            if (ret == 1 && XMEMCMP(cert->extSubjKeyId, tp->subjectKeyIdHash,
+                    SIGNER_DIGEST_SIZE) != 0)
+                ret = 0;
+        }
+    #endif
+        if (ret == 1)
+            break;
+        tp = tp->next;
+    }
+    wc_UnLockMutex(&cm->tpLock);
+
+    return ret;
+}
+
+/* return Trusted Peer if found, otherwise NULL
+    type is what to match on
+ */
+TrustedPeerCert* GetTrustedPeer(void* vp, DecodedCert* cert)
+{
+    WOLFSSL_CERT_MANAGER* cm = (WOLFSSL_CERT_MANAGER*)vp;
+    TrustedPeerCert* ret = NULL;
+    TrustedPeerCert* tp  = NULL;
+    word32  row;
+
+    if (cm == NULL || cert == NULL)
+        return NULL;
+
+    row = TrustedPeerHashSigner(cert->subjectHash);
+
+    if (wc_LockMutex(&cm->tpLock) != 0)
+        return ret;
+
+    tp = cm->tpTable[row];
+    while (tp) {
+        if ((XMEMCMP(cert->subjectHash, tp->subjectNameHash,
+                SIGNER_DIGEST_SIZE) == 0)
+        #ifndef WOLFSSL_NO_ISSUERHASH_TDPEER
+             && (XMEMCMP(cert->issuerHash, tp->issuerHash,
+                SIGNER_DIGEST_SIZE) == 0)
+        #endif
+            )
+            ret = tp;
+    #ifndef NO_SKID
+        if (cert->extSubjKeyIdSet) {
+            /* Compare SKID as well if available */
+            if (ret != NULL && XMEMCMP(cert->extSubjKeyId, tp->subjectKeyIdHash,
+                    SIGNER_DIGEST_SIZE) != 0)
+                ret = NULL;
+        }
+    #endif
+        if (ret != NULL)
+            break;
+        tp = tp->next;
+    }
+    wc_UnLockMutex(&cm->tpLock);
+
+    return ret;
+}
+
+
+int MatchTrustedPeer(TrustedPeerCert* tp, DecodedCert* cert)
+{
+    if (tp == NULL || cert == NULL)
+        return BAD_FUNC_ARG;
+
+    /* subject key id or subject hash has been compared when searching
+       tpTable for the cert from function GetTrustedPeer */
+
+    /* compare signatures */
+    if (tp->sigLen == cert->sigLength) {
+        if (XMEMCMP(tp->sig, cert->signature, cert->sigLength)) {
+            return WOLFSSL_FAILURE;
+        }
+    }
+    else {
+        return WOLFSSL_FAILURE;
+    }
+
+    return WOLFSSL_SUCCESS;
+}
+#endif /* WOLFSSL_TRUST_PEER_CERT */
+
+/* return CA if found, otherwise NULL */
+Signer* GetCA(void* vp, byte* hash)
+{
+    WOLFSSL_CERT_MANAGER* cm = (WOLFSSL_CERT_MANAGER*)vp;
+    Signer* ret = NULL;
+    Signer* signers;
+    word32  row = 0;
+
+    if (cm == NULL || hash == NULL)
+        return NULL;
+
+    row = HashSigner(hash);
+
+    if (wc_LockMutex(&cm->caLock) != 0)
+        return ret;
+
+    signers = cm->caTable[row];
+    while (signers) {
+        byte* subjectHash;
+        #ifndef NO_SKID
+            subjectHash = signers->subjectKeyIdHash;
+        #else
+            subjectHash = signers->subjectNameHash;
+        #endif
+        if (XMEMCMP(hash, subjectHash, SIGNER_DIGEST_SIZE) == 0) {
+            ret = signers;
+            break;
+        }
+        signers = signers->next;
+    }
+    wc_UnLockMutex(&cm->caLock);
+
+    return ret;
+}
+
+#if defined(HAVE_OCSP)
+Signer* GetCAByKeyHash(void* vp, const byte* keyHash)
+{
+    WOLFSSL_CERT_MANAGER* cm = (WOLFSSL_CERT_MANAGER*)vp;
+    Signer* ret = NULL;
+    Signer* signers;
+    int row;
+
+    if (cm == NULL || keyHash == NULL)
+        return NULL;
+
+    /* try lookup using keyHash as subjKeyID first */
+    ret = GetCA(vp, (byte*)keyHash);
+    if (ret != NULL && XMEMCMP(ret->subjectKeyHash, keyHash, KEYID_SIZE) == 0) {
+        return ret;
+    }
+
+    /* if we can't find the cert, we have to scan the full table */
+    if (wc_LockMutex(&cm->caLock) != 0)
+        return NULL;
+
+    /* Unfortunately we need to look through the entire table */
+    for (row = 0; row < CA_TABLE_SIZE && ret == NULL; row++) {
+        for (signers = cm->caTable[row]; signers != NULL;
+                signers = signers->next) {
+            if (XMEMCMP(signers->subjectKeyHash, keyHash, KEYID_SIZE) == 0) {
+                ret = signers;
+                break;
+            }
+        }
+    }
+
+    wc_UnLockMutex(&cm->caLock);
+    return ret;
+}
+#endif
+#ifdef WOLFSSL_AKID_NAME
+Signer* GetCAByAKID(void* vp, const byte* issuer, word32 issuerSz,
+        const byte* serial, word32 serialSz)
+{
+    WOLFSSL_CERT_MANAGER* cm = (WOLFSSL_CERT_MANAGER*)vp;
+    Signer* ret = NULL;
+    Signer* signers;
+    byte nameHash[SIGNER_DIGEST_SIZE];
+    byte serialHash[SIGNER_DIGEST_SIZE];
+    word32 row;
+
+    if (cm == NULL || issuer == NULL || issuerSz == 0 ||
+            serial == NULL || serialSz == 0)
+        return NULL;
+
+    if (CalcHashId(issuer, issuerSz, nameHash) != 0 ||
+            CalcHashId(serial, serialSz, serialHash) != 0)
+        return NULL;
+
+    if (wc_LockMutex(&cm->caLock) != 0)
+        return ret;
+
+    /* Unfortunately we need to look through the entire table */
+    for (row = 0; row < CA_TABLE_SIZE && ret == NULL; row++) {
+        for (signers = cm->caTable[row]; signers != NULL;
+                signers = signers->next) {
+            if (XMEMCMP(signers->issuerNameHash, nameHash, SIGNER_DIGEST_SIZE)
+                    == 0 && XMEMCMP(signers->serialHash, serialHash,
+                                    SIGNER_DIGEST_SIZE) == 0) {
+                ret = signers;
+                break;
+            }
+        }
+    }
+
+    wc_UnLockMutex(&cm->caLock);
+
+    return ret;
+}
+#endif
+
+#ifndef NO_SKID
+/* return CA if found, otherwise NULL. Walk through hash table. */
+Signer* GetCAByName(void* vp, byte* hash)
+{
+    WOLFSSL_CERT_MANAGER* cm = (WOLFSSL_CERT_MANAGER*)vp;
+    Signer* ret = NULL;
+    Signer* signers;
+    word32  row;
+
+    if (cm == NULL)
+        return NULL;
+
+    if (wc_LockMutex(&cm->caLock) != 0)
+        return ret;
+
+    for (row = 0; row < CA_TABLE_SIZE && ret == NULL; row++) {
+        signers = cm->caTable[row];
+        while (signers && ret == NULL) {
+            if (XMEMCMP(hash, signers->subjectNameHash,
+                        SIGNER_DIGEST_SIZE) == 0) {
+                ret = signers;
+            }
+            signers = signers->next;
+        }
+    }
+    wc_UnLockMutex(&cm->caLock);
+
+    return ret;
+}
+#endif
+
+#ifdef WOLFSSL_TRUST_PEER_CERT
+/* add a trusted peer cert to linked list */
+int AddTrustedPeer(WOLFSSL_CERT_MANAGER* cm, DerBuffer** pDer, int verify)
+{
+    int ret = 0;
+    int row = 0;
+    TrustedPeerCert* peerCert;
+    DecodedCert* cert;
+    DerBuffer*   der = *pDer;
+
+    WOLFSSL_MSG("Adding a Trusted Peer Cert");
+
+    cert = (DecodedCert*)XMALLOC(sizeof(DecodedCert), cm->heap,
+                                 DYNAMIC_TYPE_DCERT);
+    if (cert == NULL) {
+        FreeDer(&der);
+        return MEMORY_E;
+    }
+
+    InitDecodedCert(cert, der->buffer, der->length, cm->heap);
+    if ((ret = ParseCert(cert, TRUSTED_PEER_TYPE, verify, cm)) != 0) {
+        FreeDecodedCert(cert);
+        XFREE(cert, cm->heap, DYNAMIC_TYPE_DCERT);
+        FreeDer(&der);
+        return ret;
+    }
+    WOLFSSL_MSG("\tParsed new trusted peer cert");
+
+    peerCert = (TrustedPeerCert*)XMALLOC(sizeof(TrustedPeerCert), cm->heap,
+                                                             DYNAMIC_TYPE_CERT);
+    if (peerCert == NULL) {
+        FreeDecodedCert(cert);
+        XFREE(cert, cm->heap, DYNAMIC_TYPE_DCERT);
+        FreeDer(&der);
+        return MEMORY_E;
+    }
+    XMEMSET(peerCert, 0, sizeof(TrustedPeerCert));
+
+    if (AlreadyTrustedPeer(cm, cert)) {
+        WOLFSSL_MSG("\tAlready have this CA, not adding again");
+        FreeTrustedPeer(peerCert, cm->heap);
+        (void)ret;
+    }
+    else {
+        /* add trusted peer signature */
+        peerCert->sigLen = cert->sigLength;
+        peerCert->sig = (byte *)XMALLOC(cert->sigLength, cm->heap,
+                                                        DYNAMIC_TYPE_SIGNATURE);
+        if (peerCert->sig == NULL) {
+            FreeDecodedCert(cert);
+            XFREE(cert, cm->heap, DYNAMIC_TYPE_DCERT);
+            FreeTrustedPeer(peerCert, cm->heap);
+            FreeDer(&der);
+            return MEMORY_E;
+        }
+        XMEMCPY(peerCert->sig, cert->signature, cert->sigLength);
+
+        /* add trusted peer name */
+        peerCert->nameLen = cert->subjectCNLen;
+        peerCert->name    = cert->subjectCN;
+        #ifndef IGNORE_NAME_CONSTRAINTS
+            peerCert->permittedNames = cert->permittedNames;
+            peerCert->excludedNames  = cert->excludedNames;
+        #endif
+
+        /* add SKID when available and hash of name */
+        #ifndef NO_SKID
+            XMEMCPY(peerCert->subjectKeyIdHash, cert->extSubjKeyId,
+                   SIGNER_DIGEST_SIZE);
+        #endif
+            XMEMCPY(peerCert->subjectNameHash, cert->subjectHash,
+                    SIGNER_DIGEST_SIZE);
+        #ifndef WOLFSSL_NO_ISSUERHASH_TDPEER
+            XMEMCPY(peerCert->issuerHash, cert->issuerHash,
+                    SIGNER_DIGEST_SIZE);
+        #endif
+            /* If Key Usage not set, all uses valid. */
+            peerCert->next    = NULL;
+            cert->subjectCN = 0;
+        #ifndef IGNORE_NAME_CONSTRAINTS
+            cert->permittedNames = NULL;
+            cert->excludedNames = NULL;
+        #endif
+
+            row = (int)TrustedPeerHashSigner(peerCert->subjectNameHash);
+
+            if (wc_LockMutex(&cm->tpLock) == 0) {
+                peerCert->next = cm->tpTable[row];
+                cm->tpTable[row] = peerCert;   /* takes ownership */
+                wc_UnLockMutex(&cm->tpLock);
+            }
+            else {
+                WOLFSSL_MSG("\tTrusted Peer Cert Mutex Lock failed");
+                FreeDecodedCert(cert);
+                XFREE(cert, cm->heap, DYNAMIC_TYPE_DCERT);
+                FreeTrustedPeer(peerCert, cm->heap);
+                FreeDer(&der);
+                return BAD_MUTEX_E;
+            }
+        }
+
+    WOLFSSL_MSG("\tFreeing parsed trusted peer cert");
+    FreeDecodedCert(cert);
+    XFREE(cert, cm->heap, DYNAMIC_TYPE_DCERT);
+    WOLFSSL_MSG("\tFreeing der trusted peer cert");
+    FreeDer(&der);
+    WOLFSSL_MSG("\t\tOK Freeing der trusted peer cert");
+    WOLFSSL_LEAVE("AddTrustedPeer", ret);
+
+    return WOLFSSL_SUCCESS;
+}
+#endif /* WOLFSSL_TRUST_PEER_CERT */
+
+int AddSigner(WOLFSSL_CERT_MANAGER* cm, Signer *s)
+{
+    byte*   subjectHash;
+    Signer* signers;
+    word32  row;
+
+    if (cm == NULL || s == NULL)
+        return BAD_FUNC_ARG;
+
+#ifndef NO_SKID
+    subjectHash = s->subjectKeyIdHash;
+#else
+    subjectHash = s->subjectNameHash;
+#endif
+
+    if (AlreadySigner(cm, subjectHash)) {
+        FreeSigner(s, cm->heap);
+        return 0;
+    }
+
+    row = HashSigner(subjectHash);
+
+    if (wc_LockMutex(&cm->caLock) != 0)
+        return BAD_MUTEX_E;
+
+    signers = cm->caTable[row];
+    s->next = signers;
+    cm->caTable[row] = s;
+
+    wc_UnLockMutex(&cm->caLock);
+    return 0;
+}
+
+/* owns der, internal now uses too */
+/* type flag ids from user or from chain received during verify
+   don't allow chain ones to be added w/o isCA extension */
+int AddCA(WOLFSSL_CERT_MANAGER* cm, DerBuffer** pDer, int type, int verify)
+{
+    int         ret = 0;
+    Signer*     signer = NULL;
+    word32      row = 0;
+    byte*       subjectHash = NULL;
+    WC_DECLARE_VAR(cert, DecodedCert, 1, 0);
+    DerBuffer*   der = *pDer;
+
+    WOLFSSL_MSG_CERT_LOG("Adding a CA");
+
+    if (cm == NULL) {
+        FreeDer(pDer);
+        return BAD_FUNC_ARG;
+    }
+
+    #ifdef WOLFSSL_SMALL_STACK
+    cert = (DecodedCert*)XMALLOC(sizeof(DecodedCert), NULL, DYNAMIC_TYPE_DCERT);
+    if (cert == NULL) {
+        FreeDer(pDer);
+        return MEMORY_E;
+    }
+    #endif
+
+    InitDecodedCert(cert, der->buffer, der->length, cm->heap);
+
+#ifdef WC_ASN_UNKNOWN_EXT_CB
+    if (cm->unknownExtCallback != NULL) {
+        wc_SetUnknownExtCallback(cert, cm->unknownExtCallback);
+    }
+#endif
+
+    WOLFSSL_MSG_CERT("\tParsing new CA");
+    ret = ParseCert(cert, CA_TYPE, verify, cm);
+
+    WOLFSSL_MSG("\tParsed new CA");
+#ifdef WOLFSSL_DEBUG_CERTS
+    {
+        const char*  err_msg;
+        if (ret == 0) {
+            WOLFSSL_MSG_CERT_EX(WOLFSSL_MSG_CERT_INDENT "issuer:  '%s'",
+                cert->issuer);
+            WOLFSSL_MSG_CERT_EX(WOLFSSL_MSG_CERT_INDENT "subject: '%s'",
+                cert->subject);
+        }
+        else {
+            WOLFSSL_MSG_CERT(
+                WOLFSSL_MSG_CERT_INDENT "Failed during parse of new CA");
+            err_msg = wc_GetErrorString(ret);
+            WOLFSSL_MSG_CERT_EX(WOLFSSL_MSG_CERT_INDENT "error ret: %d; %s",
+                ret, err_msg);
+        }
+    }
+#endif /* WOLFSSL_DEBUG_CERTS */
+
+#ifndef NO_SKID
+    subjectHash = cert->extSubjKeyId;
+#else
+    subjectHash = cert->subjectHash;
+#endif
+
+    /* check CA key size */
+    if (verify && (ret == 0 )) {
+        switch (cert->keyOID) {
+        #ifndef NO_RSA
+            #ifdef WC_RSA_PSS
+            case RSAPSSk:
+            #endif
+            case RSAk:
+                if (cm->minRsaKeySz < 0 ||
+                                   cert->pubKeySize < (word16)cm->minRsaKeySz) {
+                    ret = RSA_KEY_SIZE_E;
+                    WOLFSSL_MSG_CERT_LOG("\tCA RSA key size error");
+                    WOLFSSL_MSG_CERT_EX("\tCA RSA pubKeySize = %d; "
+                                                "minRsaKeySz = %d",
+                                   cert->pubKeySize, cm->minRsaKeySz);
+                }
+                break;
+        #endif /* !NO_RSA */
+            #ifdef HAVE_ECC
+            case ECDSAk:
+                if (cm->minEccKeySz < 0 ||
+                                   cert->pubKeySize < (word16)cm->minEccKeySz) {
+                    ret = ECC_KEY_SIZE_E;
+                    WOLFSSL_MSG_CERT_LOG("\tCA ECC key size error");
+                    WOLFSSL_MSG_CERT_EX("\tCA ECC pubKeySize = %d; "
+                                                 "minEccKeySz = %d",
+                                   cert->pubKeySize, cm->minEccKeySz);
+                }
+                break;
+            #endif /* HAVE_ECC */
+            #ifdef HAVE_ED25519
+            case ED25519k:
+                if (cm->minEccKeySz < 0 ||
+                                   ED25519_KEY_SIZE < (word16)cm->minEccKeySz) {
+                    ret = ECC_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA ECC key size error");
+                }
+                break;
+            #endif /* HAVE_ED25519 */
+            #ifdef HAVE_ED448
+            case ED448k:
+                if (cm->minEccKeySz < 0 ||
+                                     ED448_KEY_SIZE < (word16)cm->minEccKeySz) {
+                    ret = ECC_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA ECC key size error");
+                }
+                break;
+            #endif /* HAVE_ED448 */
+            #if defined(HAVE_FALCON)
+            case FALCON_LEVEL1k:
+                if (cm->minFalconKeySz < 0 ||
+                          FALCON_LEVEL1_KEY_SIZE < (word16)cm->minFalconKeySz) {
+                    ret = FALCON_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA Falcon level 1 key size error");
+                }
+                break;
+            case FALCON_LEVEL5k:
+                if (cm->minFalconKeySz < 0 ||
+                          FALCON_LEVEL5_KEY_SIZE < (word16)cm->minFalconKeySz) {
+                    ret = FALCON_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA Falcon level 5 key size error");
+                }
+                break;
+            #endif /* HAVE_FALCON */
+            #if defined(WOLFSSL_HAVE_MLDSA)
+            #ifdef WOLFSSL_MLDSA_FIPS204_DRAFT
+            case DILITHIUM_LEVEL2k:
+                if (cm->minMlDsaKeySz < 0 ||
+                    WC_MLDSA_44_KEY_SIZE < (word16)cm->minMlDsaKeySz) {
+                    ret = MLDSA_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA ML-DSA level 2 key size error");
+                }
+                break;
+            case DILITHIUM_LEVEL3k:
+                if (cm->minMlDsaKeySz < 0 ||
+                    WC_MLDSA_65_KEY_SIZE < (word16)cm->minMlDsaKeySz) {
+                    ret = MLDSA_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA ML-DSA level 3 key size error");
+                }
+                break;
+            case DILITHIUM_LEVEL5k:
+                if (cm->minMlDsaKeySz < 0 ||
+                    WC_MLDSA_87_KEY_SIZE < (word16)cm->minMlDsaKeySz) {
+                    ret = MLDSA_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA ML-DSA level 5 key size error");
+                }
+                break;
+            #endif /* WOLFSSL_MLDSA_FIPS204_DRAFT */
+            case ML_DSA_44k:
+                if (cm->minMlDsaKeySz < 0 ||
+                    WC_MLDSA_44_KEY_SIZE < (word16)cm->minMlDsaKeySz) {
+                    ret = MLDSA_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA ML-DSA level 2 key size error");
+                }
+                break;
+            case ML_DSA_65k:
+                if (cm->minMlDsaKeySz < 0 ||
+                    WC_MLDSA_65_KEY_SIZE < (word16)cm->minMlDsaKeySz) {
+                    ret = MLDSA_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA ML-DSA level 3 key size error");
+                }
+                break;
+            case ML_DSA_87k:
+                if (cm->minMlDsaKeySz < 0 ||
+                    WC_MLDSA_87_KEY_SIZE < (word16)cm->minMlDsaKeySz) {
+                    ret = MLDSA_KEY_SIZE_E;
+                    WOLFSSL_MSG("\tCA ML-DSA level 5 key size error");
+                }
+                break;
+            #endif /* WOLFSSL_HAVE_MLDSA */
+
+            default:
+                WOLFSSL_MSG("\tNo key size check done on CA");
+                break; /* no size check if key type is not in switch */
+        }
+    }
+
+    if (ret == 0 && cert->isCA == 0 && type != WOLFSSL_USER_CA &&
+        type != WOLFSSL_TEMP_CA) {
+        WOLFSSL_MSG("\tCan't add as CA if not actually one");
+        ret = NOT_CA_ERROR;
+    }
+#ifndef ALLOW_INVALID_CERTSIGN
+    else if (ret == 0 && cert->isCA == 1 && type != WOLFSSL_USER_CA &&
+        !cert->selfSigned && cert->extKeyUsageSet &&
+        (cert->extKeyUsage & KEYUSE_KEY_CERT_SIGN) == 0) {
+        /* Intermediate CA certs - including chain-supplied temporary CAs
+        * (WOLFSSL_TEMP_CA) added while building a path - are required to have
+        * the keyCertSign key usage when a Key Usage extension is present.
+        * Only operator-loaded root certs (WOLFSSL_USER_CA) and self-signed
+        * roots are exempt. Per RFC 5280 an absent Key Usage extension implies
+        * all usages, so only enforce this when the extension is actually
+        * present (extKeyUsageSet). */
+        WOLFSSL_MSG("\tDoesn't have key usage certificate signing");
+        ret = NOT_CA_ERROR;
+    }
+#endif
+    else if (ret == 0 && AlreadySigner(cm, subjectHash)) {
+        WOLFSSL_MSG("\tAlready have this CA, not adding again");
+        (void)ret;
+    }
+    else if (ret == 0) {
+        /* take over signer parts */
+        signer = MakeSigner(cm->heap);
+        if (!signer)
+            ret = MEMORY_ERROR;
+    }
+    if (ret == 0 && signer != NULL) {
+        ret = FillSigner(signer, cert, type, der);
+
+        if (ret == 0){
+        #ifndef NO_SKID
+            row = HashSigner(signer->subjectKeyIdHash);
+        #else
+            row = HashSigner(signer->subjectNameHash);
+        #endif
+        }
+
+    #if defined(WOLFSSL_RENESAS_TSIP_TLS) || defined(WOLFSSL_RENESAS_FSPSM_TLS)
+        /* Verify CA by TSIP so that generated tsip key is going to          */
+        /* be able to be used for peer's cert verification                   */
+        /* TSIP is only able to handle USER CA, and only one CA.             */
+        /* Therefore, it doesn't need to call TSIP again if there is already */
+        /* verified CA.                                                      */
+        if ( ret == 0 && signer != NULL ) {
+            signer->cm_idx = row;
+            if (type == WOLFSSL_USER_CA) {
+                if ((ret = wc_Renesas_cmn_RootCertVerify(cert->source,
+                        cert->maxIdx,
+                        cert->sigCtx.CertAtt.pubkey_n_start,
+                        cert->sigCtx.CertAtt.pubkey_n_len - 1,
+                        cert->sigCtx.CertAtt.pubkey_e_start,
+                        cert->sigCtx.CertAtt.pubkey_e_len - 1,
+                     row/* cm index */))
+                    < 0)
+                    WOLFSSL_MSG("Renesas_RootCertVerify() failed");
+                else
+                    WOLFSSL_MSG("Renesas_RootCertVerify() succeed or skipped");
+            }
+        }
+    #endif /* TSIP or SCE */
+
+        if (ret == 0 && wc_LockMutex(&cm->caLock) == 0) {
+            signer->next = cm->caTable[row];
+            cm->caTable[row] = signer;   /* takes ownership */
+            wc_UnLockMutex(&cm->caLock);
+            if (cm->caCacheCallback)
+                cm->caCacheCallback(der->buffer, (int)der->length, type);
+        }
+        else {
+            WOLFSSL_MSG("\tCA Mutex Lock failed");
+            ret = BAD_MUTEX_E;
+        }
+    }
+
+    WOLFSSL_MSG("\tFreeing Parsed CA");
+    FreeDecodedCert(cert);
+    if (ret != 0 && signer != NULL)
+        FreeSigner(signer, cm->heap);
+    WC_FREE_VAR_EX(cert, NULL, DYNAMIC_TYPE_DCERT);
+    WOLFSSL_MSG("\tFreeing der CA");
+    FreeDer(pDer);
+    WOLFSSL_MSG("\t\tOK Freeing der CA");
+
+    WOLFSSL_LEAVE("AddCA", ret);
+
+    return ret == 0 ? WOLFSSL_SUCCESS : ret;
+}
+
+/* Removes the CA with the passed in subject hash from the
+   cert manager's CA cert store. */
+int RemoveCA(WOLFSSL_CERT_MANAGER* cm, byte* hash, int type)
+{
+    Signer* current;
+    Signer** prev;
+    int     ret = WC_NO_ERR_TRACE(WOLFSSL_FAILURE);
+    word32  row;
+
+    WOLFSSL_MSG("Removing a CA");
+
+    if (cm == NULL || hash == NULL) {
+        return BAD_FUNC_ARG;
+    }
+
+    row = HashSigner(hash);
+
+    if (wc_LockMutex(&cm->caLock) != 0) {
+        return BAD_MUTEX_E;
+    }
+    current = cm->caTable[row];
+    prev = &cm->caTable[row];
+    while (current) {
+        byte* subjectHash;
+
+    #ifndef NO_SKID
+        subjectHash = current->subjectKeyIdHash;
+    #else
+        subjectHash = current->subjectNameHash;
+    #endif
+
+        if ((current->type == type) &&
+            (XMEMCMP(hash, subjectHash, SIGNER_DIGEST_SIZE) == 0)) {
+            *prev = current->next;
+            FreeSigner(current, cm->heap);
+            ret = WOLFSSL_SUCCESS;
+            break;
+        }
+        prev = &current->next;
+        current = current->next;
+    }
+    wc_UnLockMutex(&cm->caLock);
+
+    WOLFSSL_LEAVE("RemoveCA", ret);
+
+    return ret;
+}
+
+/* Sets the CA with the passed in subject hash
+   to the provided type. */
+int SetCAType(WOLFSSL_CERT_MANAGER* cm, byte* hash, int type)
+{
+    Signer* current;
+    int     ret = WC_NO_ERR_TRACE(WOLFSSL_FAILURE);
+    word32  row;
+
+    WOLFSSL_MSG_EX("Setting CA to type %d", type);
+
+    if (cm == NULL || hash == NULL ||
+        type < WOLFSSL_USER_CA || type > WOLFSSL_USER_INTER) {
+        return ret;
+    }
+
+    row = HashSigner(hash);
+
+    if (wc_LockMutex(&cm->caLock) != 0) {
+        return ret;
+    }
+    current = cm->caTable[row];
+    while (current) {
+        byte* subjectHash;
+
+    #ifndef NO_SKID
+        subjectHash = current->subjectKeyIdHash;
+    #else
+        subjectHash = current->subjectNameHash;
+    #endif
+
+        if (XMEMCMP(hash, subjectHash, SIGNER_DIGEST_SIZE) == 0) {
+            current->type = (byte)type;
+            ret = WOLFSSL_SUCCESS;
+            break;
+        }
+        current = current->next;
+    }
+    wc_UnLockMutex(&cm->caLock);
+
+    WOLFSSL_LEAVE("SetCAType", ret);
+
+    return ret;
+}
 
 #endif /* NO_CERTS */
 

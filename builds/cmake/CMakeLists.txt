@@ -61,7 +61,7 @@ project( libbitcoin-network
   LANGUAGES C CXX )
 
 
-set( repository_root_dir "${CMAKE_CURRENT_SOURCE_DIR}/../../" )
+set( repository_root_dir "${CMAKE_CURRENT_SOURCE_DIR}/../.." )
 
 if ( MSVC )
   set( CMAKE_STATIC_LIBRARY_PREFIX "lib" )
@@ -308,7 +308,7 @@ if ( with-tests )
 
   target_compile_definitions( libbitcoin-network-test
     PRIVATE
-      $<$<BOOL:${with-ssl}>:CERT_PREFIX="${repository_root_dir}/test/ssl/wolfssl/wolfcrypt/test/">
+      $<$<BOOL:${with-ssl}>:CERT_PREFIX="${repository_root_dir}/test/ssl/vectors/">
   )
 
   file( GLOB_RECURSE libbitcoin_network_test_HEADERS CONFIGURE_DEPENDS

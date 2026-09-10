@@ -1,6 +1,6 @@
 /* api.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -37,10 +37,32 @@
     #define HEAP_HINT NULL
 #endif
 
+#include <wolfssl/wolfcrypt/hash.h>
 
-#define TEST_STRING    "Everyone gets Friday off."
-#define TEST_STRING_SZ 25
-
+#if defined(WC_FIPS_186_5_PLUS)
+    #define TEST_STRING "WC_FIPS_186_5_PLUS test test"
+    #define TEST_STRING_SZ 28
+#elif defined(WC_FIPS_186_4_PLUS) || defined(HAVE_SELFTEST)
+    #define TEST_STRING "WC_FIPS_186_4_PLUS test.."
+    #define TEST_STRING_SZ 25
+#elif WC_MIN_DIGEST_SIZE <= 25
+    #define TEST_STRING "Everyone gets Friday off."
+    #define TEST_STRING_SZ 25
+#elif WC_MIN_DIGEST_SIZE <= 28
+    #define TEST_STRING "Everyone works the weekends."
+    #define TEST_STRING_SZ 28
+#elif WC_MIN_DIGEST_SIZE <= 32
+    #define TEST_STRING "Everyone works through the night"
+    #define TEST_STRING_SZ 32
+#elif WC_MIN_DIGEST_SIZE <= 48
+    #define TEST_STRING "Everyone gets to summer in Tuscany with Chianti."
+    #define TEST_STRING_SZ 48
+#elif WC_MIN_DIGEST_SIZE <= 64
+    #define TEST_STRING "Everyone works from Christmas Eve, clear through New Year's Day."
+    #define TEST_STRING_SZ 64
+#else
+    #error WC_MIN_DIGEST_SIZE value not supported by unit test.
+#endif
 
 #ifndef ONEK_BUF
     #define ONEK_BUF 1024
@@ -52,6 +74,11 @@
     #define FOURK_BUF 4096
 #endif
 
+#if !defined(NO_RSA) && !defined(NO_SHA) && !defined(NO_FILESYSTEM) && \
+    !defined(NO_CERTS) && \
+    (!defined(NO_WOLFSSL_CLIENT) || !defined(WOLFSSL_NO_CLIENT_AUTH))
+    #define HAVE_CERT_CHAIN_VALIDATION
+#endif
 
 #ifndef NO_RSA
 #define GEN_BUF  294
@@ -224,6 +251,75 @@ typedef struct testVector {
 
 
 extern int testDevId;
+
+/* Skip past outer SEQ header of a PKCS#8 / RFC 5958 OneAsymmetricKey DER blob,
+ * return version byte (0=v1, 1=v2) or -1 on malformed input. */
+#ifdef WC_ENABLE_ASYM_KEY_EXPORT
+static WC_INLINE int test_pkcs8_get_version_byte(const byte* der, word32 derSz)
+{
+    word32 idx = 0;
+    word32 nBytes = 0;
+
+    /* SEQ tag + short len + INT tag + INT len + version = 5 */
+    if (der == NULL || derSz < 5) {
+        return -1;
+    }
+    /* SEQUENCE */
+    if (der[idx++] != 0x30) {
+        return -1;
+    }
+    if ((der[idx] & 0x80) == 0) {
+        /* short-form length */
+        idx += 1;
+    }
+    else {
+        /* long-form length */
+        nBytes = (word32)(der[idx] & 0x7F);
+        if (nBytes == 0 || nBytes > 4) {
+            return -1;
+        }
+        idx += (1 + nBytes);
+    }
+    if (idx + 3 > derSz) {
+        return -1;
+    }
+    /* INTEGER, len 1 */
+    if (der[idx] != 0x02 || der[idx + 1] != 0x01) {
+        return -1;
+    }
+
+    return (int)der[idx + 2];
+}
+
+/* Overwrite OneAsymmetricKey version byte. Return the patched offset or
+ * -1 on malformed input. */
+static WC_INLINE int test_pkcs8_patch_version_byte(byte* der, word32 derSz,
+    byte newVer)
+{
+    word32 idx = 0;
+    word32 nBytes = 0;
+
+    if (der == NULL || derSz < 5 || der[idx++] != 0x30) {
+        return -1;
+    }
+    if ((der[idx] & 0x80) == 0) {
+        idx += 1;
+    }
+    else {
+        nBytes = (word32)(der[idx] & 0x7F);
+        if (nBytes == 0 || nBytes > 4) {
+            return -1;
+        }
+        idx += (1 + nBytes);
+    }
+    if (idx + 3 > derSz || der[idx] != 0x02 || der[idx + 1] != 0x01) {
+        return -1;
+    }
+    der[idx + 2] = newVer;
+
+    return (int)(idx + 2);
+}
+#endif /* WC_ENABLE_ASYM_KEY_EXPORT */
 
 #endif /* WOLFCRYPT_TEST_API_H */
 

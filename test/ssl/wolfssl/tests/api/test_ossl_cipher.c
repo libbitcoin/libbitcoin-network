@@ -1,6 +1,6 @@
 /* test_ossl_cipher.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -199,6 +199,34 @@ int test_wolfSSL_DES_ncbc(void)
     DES_ncbc_encrypt(out, pln, 8, &myDes, &iv, DES_DECRYPT);
     ExpectIntEQ(XMEMCMP(msg, pln, 8), 0);
     ExpectIntEQ(XMEMCMP(exp2, iv, DES_BLOCK_SIZE), 0);
+#endif
+    return EXPECT_RESULT();
+}
+
+int test_wolfSSL_DES_ncbc_zero_length(void)
+{
+    EXPECT_DECLS;
+#if defined(OPENSSL_EXTRA) && !defined(NO_DES3)
+    const_DES_cblock myDes;
+    DES_cblock iv;
+    DES_cblock ivSaved;
+    DES_key_schedule key = {0};
+    unsigned char msg[DES_BLOCK_SIZE] = {0};
+    unsigned char out[DES_BLOCK_SIZE] = {0};
+
+    DES_set_key(&key, &myDes);
+
+    /* length == 0 must no-op: the offset math would otherwise underflow
+     * size_t and read from a wild pointer. */
+    XMEMSET((byte*)&iv, 0xAB, DES_BLOCK_SIZE);
+    XMEMCPY(&ivSaved, &iv, DES_BLOCK_SIZE);
+    DES_ncbc_encrypt(msg, out, 0, &myDes, &iv, DES_ENCRYPT);
+    ExpectIntEQ(XMEMCMP(&iv, &ivSaved, DES_BLOCK_SIZE), 0);
+
+    XMEMSET((byte*)&iv, 0xAB, DES_BLOCK_SIZE);
+    XMEMCPY(&ivSaved, &iv, DES_BLOCK_SIZE);
+    DES_ncbc_encrypt(msg, out, 0, &myDes, &iv, DES_DECRYPT);
+    ExpectIntEQ(XMEMCMP(&iv, &ivSaved, DES_BLOCK_SIZE), 0);
 #endif
     return EXPECT_RESULT();
 }
@@ -937,7 +965,9 @@ int test_wolfSSL_RC4(void)
     wolfSSL_RC4(NULL, 0, data, enc);
 
     ExpectIntEQ(1, 1);
-    for (i = 0; EXPECT_SUCCESS() && (i <= sizeof(key)); i++) {
+    /* Start at a key length of 1: a zero-length key is invalid and leaves the
+     * Arc4 object without a key set, so encrypt/decrypt is a no-op. */
+    for (i = 1; EXPECT_SUCCESS() && (i <= sizeof(key)); i++) {
         for (j = 0; EXPECT_SUCCESS() && (j <= sizeof(data)); j++) {
             XMEMSET(enc, 0, sizeof(enc));
             XMEMSET(dec, 0, sizeof(dec));

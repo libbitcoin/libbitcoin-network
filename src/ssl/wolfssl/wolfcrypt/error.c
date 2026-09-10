@@ -1,6 +1,6 @@
 /* error.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -36,6 +36,9 @@ WOLFSSL_ABI
 const char* wc_GetErrorString(int error)
 {
     switch ((enum wolfCrypt_ErrorCodes)error) {
+
+    case WC_SUCCESS:
+        return "wolfCrypt generic success";
 
     case WC_FAILURE:
         return "wolfCrypt generic failure";
@@ -315,7 +318,7 @@ const char* wc_GetErrorString(int error)
         return "Random Number Generator failed";
 
     case HMAC_MIN_KEYLEN_E:
-        return "FIPS Mode HMAC Minimum Key Length error";
+        return "FIPS Mode HMAC Minimum Key or Salt Length error";
 
     case RSA_PAD_E:
         return "Rsa Padding error";
@@ -495,10 +498,10 @@ const char* wc_GetErrorString(int error)
         return "wolfcrypt FIPS ECDHE Known Answer Test Failure";
 
     case AES_GCM_OVERFLOW_E:
-        return "AES-GCM invocation counter overflow";
+        return "AES-GCM internal overflow averted";
 
     case AES_CCM_OVERFLOW_E:
-        return "AES-CCM invocation counter overflow";
+        return "AES-CCM internal overflow averted";
 
     case RSA_KEY_PAIR_E:
         return "RSA Key Pair-Wise Consistency check fail";
@@ -655,6 +658,60 @@ const char* wc_GetErrorString(int error)
 
     case INTERRUPTED_E:
         return "Process interrupted";
+
+    case MLKEM_PUB_HASH_E:
+        return "ML-KEM priv key's stored hash doesn't match encoded pub key";
+
+    case BUSY_E:
+        return "Object is busy";
+
+    case ALREADY_E:
+        return "Operation was redundant or preempted";
+
+    case ML_KEM_KAT_FIPS_E:
+        return "wolfCrypt FIPS ML-KEM Known Answer Test Failure";
+
+    case ML_DSA_KAT_FIPS_E:
+        return "wolfCrypt FIPS ML-DSA Known Answer Test Failure";
+
+    case LMS_KAT_FIPS_E:
+        return "wolfCrypt FIPS LMS Known Answer Test Failure";
+
+    case XMSS_KAT_FIPS_E:
+        return "wolfCrypt FIPS XMSS Known Answer Test Failure";
+
+    case ML_KEM_PCT_E:
+        return "wolfcrypt ML-KEM Pairwise Consistency Test Failure";
+
+    case ML_DSA_PCT_E:
+        return "wolfcrypt ML-DSA Pairwise Consistency Test Failure";
+
+    case DRBG_SHA512_KAT_FIPS_E:
+        return "SHA-512 DRBG Known Answer Test check FIPS error";
+
+    case SLH_DSA_KAT_FIPS_E:
+        return "SLH-DSA Known Answer Test check FIPS error";
+
+    case SEQ_OVERFLOW_E:
+        return "Sequence counter would overflow";
+
+    case PUF_INIT_E:
+        return "PUF initialization failed";
+
+    case PUF_READ_E:
+        return "PUF SRAM read failed";
+
+    case PUF_ENROLL_E:
+        return "PUF enrollment failed";
+
+    case PUF_RECONSTRUCT_E:
+        return "PUF reconstruction failed";
+
+    case PUF_DERIVE_KEY_E:
+        return "PUF key derivation failed";
+
+    case PUF_IDENTITY_E:
+        return "PUF identity retrieval failed";
 
     case MAX_CODE_E:
     case WC_SPAN1_MIN_CODE_E:

@@ -1,6 +1,6 @@
 /* test_ossl_bn.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -217,14 +217,16 @@ int test_wolfSSL_BN_init(void)
     ExpectIntEQ(BN_set_word(&cv, 5), SSL_SUCCESS);
 
     /* a^b mod c = */
-    ExpectIntEQ(BN_mod_exp(&dv, NULL, &bv, &cv, NULL), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
+    ExpectIntEQ(BN_mod_exp(&dv, NULL, &bv, &cv, NULL),
+                WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
     ExpectIntEQ(BN_mod_exp(&dv, ap, &bv, &cv, NULL), WOLFSSL_SUCCESS);
 
     /* check result  3^2 mod 5 */
     ExpectIntEQ(BN_get_word(&dv), 4);
 
     /* a*b mod c = */
-    ExpectIntEQ(BN_mod_mul(&dv, NULL, &bv, &cv, NULL), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
+    ExpectIntEQ(BN_mod_mul(&dv, NULL, &bv, &cv, NULL),
+                WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
     ExpectIntEQ(BN_mod_mul(&dv, ap, &bv, &cv, NULL), SSL_SUCCESS);
 
     /* check result  3*2 mod 5 */
@@ -320,6 +322,42 @@ int test_wolfSSL_BN_enc_dec(void)
     ExpectIntEQ(BN_cmp(a, b), 0);
     ExpectNotNull(BN_bin2bn(binNum, sizeof(binNum), b));
     ExpectIntEQ(BN_cmp(a, b), -1);
+
+    /* BN_bn2binpad tests */
+    {
+        unsigned char padOut[5];
+
+        /* Invalid parameters */
+        ExpectIntEQ(BN_bn2binpad(NULL, padOut, sizeof(padOut)), -1);
+        ExpectIntEQ(BN_bn2binpad(&emptyBN, padOut, sizeof(padOut)), -1);
+        ExpectIntEQ(BN_bn2binpad(a, NULL, sizeof(padOut)), -1);
+        ExpectIntEQ(BN_bn2binpad(a, padOut, -1), -1);
+        /* toLen too small for the value */
+        ExpectNotNull(BN_bin2bn(binNum, sizeof(binNum), b));
+        ExpectIntEQ(BN_bn2binpad(b, padOut, 2), -1);
+        /* Normal case: a = 2, padded to 5 bytes */
+        XMEMSET(padOut, 0xFF, sizeof(padOut));
+        ExpectIntEQ(BN_bn2binpad(a, padOut, 5), 5);
+        ExpectIntEQ(padOut[0], 0x00);
+        ExpectIntEQ(padOut[1], 0x00);
+        ExpectIntEQ(padOut[2], 0x00);
+        ExpectIntEQ(padOut[3], 0x00);
+        ExpectIntEQ(padOut[4], 0x02);
+        /* Exact size (no padding needed) */
+        ExpectIntEQ(BN_bn2binpad(a, padOut, 1), 1);
+        ExpectIntEQ(padOut[0], 0x02);
+        /* Zero value padded to 3 bytes */
+        ExpectIntEQ(BN_set_word(a, 0), 1);
+        ExpectIntEQ(BN_bn2binpad(a, padOut, 3), 3);
+        ExpectIntEQ(padOut[0], 0x00);
+        ExpectIntEQ(padOut[1], 0x00);
+        ExpectIntEQ(padOut[2], 0x00);
+        /* toLen == 0 with zero-valued BN is valid */
+        ExpectIntEQ(BN_bn2binpad(a, padOut, 0), 0);
+        /* toLen == 0 with non-zero BN is an error */
+        ExpectIntEQ(BN_set_word(a, 2), 1);
+        ExpectIntEQ(BN_bn2binpad(a, padOut, 0), -1);
+    }
 
     ExpectNotNull(str = BN_bn2hex(a));
     ExpectNotNull(BN_hex2bn(&b, str));
@@ -1027,7 +1065,8 @@ int test_wolfSSL_BN_prime(void)
     EXPECT_DECLS;
 #if defined(OPENSSL_EXTRA) && !defined(NO_ASN) && \
     !defined(OPENSSL_EXTRA_NO_BN) && !defined(WOLFSSL_SP_MATH)
-#if defined(WOLFSSL_KEY_GEN) && (!defined(NO_RSA) || !defined(NO_DH) || !defined(NO_DSA))
+#if defined(WOLFSSL_KEY_GEN) && (!defined(NO_RSA) || !defined(NO_DH) || \
+    !defined(NO_DSA))
     BIGNUM* a = NULL;
     BIGNUM* add = NULL;
     BIGNUM* rem = NULL;

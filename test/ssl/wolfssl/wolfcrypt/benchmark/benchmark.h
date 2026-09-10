@@ -1,6 +1,6 @@
 /* wolfcrypt/benchmark/benchmark.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -105,6 +105,7 @@ void bench_dh(int useDeviceID);
 void bench_mlkem(int type);
 void bench_lms(void);
 void bench_xmss(int hash);
+void bench_slhdsa(int param);
 void bench_ecc_curve(int curveId);
 void bench_eccMakeKey(int useDeviceID, int curveId);
 void bench_ecc(int useDeviceID, int curveId);
@@ -112,8 +113,8 @@ void bench_eccEncrypt(int curveId);
 void bench_sm2(int useDeviceID);
 void bench_curve25519KeyGen(int useDeviceID);
 void bench_curve25519KeyAgree(int useDeviceID);
-void bench_ed25519KeyGen(void);
-void bench_ed25519KeySign(void);
+void bench_ed25519KeyGen(int useDeviceID);
+void bench_ed25519KeySign(int useDeviceID);
 void bench_curve448KeyGen(void);
 void bench_curve448KeyAgree(void);
 void bench_ed448KeyGen(void);
@@ -127,13 +128,19 @@ void bench_sakkeRskGen(void);
 void bench_sakkeValidate(void);
 void bench_sakke(void);
 void bench_rng(void);
+void bench_rng_init(void);
+#if defined(WOLFSSL_DRBG_SHA512) && !defined(WC_NO_RNG) && \
+    !defined(HAVE_SELFTEST) && \
+    (!defined(HAVE_FIPS) || FIPS_VERSION3_GE(7,0,0))
+void bench_rng_sha512(void);
+void bench_rng_sha512_init(void);
+#endif
 void bench_blake2b(void);
 void bench_blake2s(void);
 void bench_ascon_hash(void);
 void bench_pbkdf2(void);
 void bench_falconKeySign(byte level);
-void bench_dilithiumKeySign(byte level);
-void bench_sphincsKeySign(byte level, byte optim);
+void bench_mldsaKeySign(byte level);
 
 void bench_stats_print(void);
 
@@ -144,4 +151,3 @@ void bench_stats_print(void);
 
 
 #endif /* WOLFCRYPT_BENCHMARK_H */
-

@@ -1,6 +1,6 @@
 /* ssl_load.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -28,7 +28,8 @@
  */
 
 #ifdef WOLFSSL_SYS_CA_CERTS
-/* Will be turned off automatically when NO_FILESYSTEM is defined */
+/* Will be turned off automatically when NO_FILESYSTEM is defined
+ * for non Mac/Windows systems */
 
 #ifdef _WIN32
     #define _WINSOCKAPI_ /* block inclusion of winsock.h header file */
@@ -769,11 +770,13 @@ static int ProcessBufferTryDecodeEd448(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
                 WOLFSSL_MSG("ED448 private key too small");
                 ret = ECC_KEY_SIZE_E;
             }
+        #if !defined(WOLFSSL_NO_CLIENT_AUTH) && !defined(NO_ED448_CLIENT_AUTH)
             if (ssl != NULL) {
                 /* Ed448 requires caching enabled for tracking message
                  * hash used in EdDSA_Update for signing */
                 ssl->options.cacheMessages = 1;
             }
+        #endif
         }
         /* Not an Ed448 key but check whether we know what it is. */
         else if (*keyFormat == 0) {
@@ -822,16 +825,57 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
     /* Initialize Falcon key. */
     ret = wc_falcon_init(key);
     if (ret == 0) {
-        /* Set up key to parse the format specified. */
-        if ((*keyFormat == FALCON_LEVEL1k) || ((*keyFormat == 0) &&
-                ((der->length == FALCON_LEVEL1_KEY_SIZE) ||
-                 (der->length == FALCON_LEVEL1_PRV_KEY_SIZE)))) {
-            ret = wc_falcon_set_level(key, 1);
+        byte level = 0;
+        word32 idx;
+
+        if (*keyFormat == FALCON_LEVEL1k) {
+            level = 1;
         }
-        else if ((*keyFormat == FALCON_LEVEL5k) || ((*keyFormat == 0) &&
-                 ((der->length == FALCON_LEVEL5_KEY_SIZE) ||
-                  (der->length == FALCON_LEVEL5_PRV_KEY_SIZE)))) {
-            ret = wc_falcon_set_level(key, 5);
+        else if (*keyFormat == FALCON_LEVEL5k) {
+            level = 5;
+        }
+
+        if (level != 0) {
+            /* Caller told us the level via the OID sum. */
+            ret = wc_falcon_set_level(key, level);
+            if (ret == 0) {
+                idx = 0;
+                ret = wc_Falcon_PrivateKeyDecode(der->buffer, &idx, key,
+                                                  der->length);
+            }
+        }
+        else if (*keyFormat == 0) {
+            /* Key format unknown. Try both levels; the expected OID inside
+             * wc_Falcon_PrivateKeyDecode rejects non-matching DER. Re-init
+             * between attempts so a partial first decode can't leave stale
+             * bytes in key->k / key->p. */
+            idx = 0;
+            if (wc_falcon_set_level(key, 1) == 0 &&
+                wc_Falcon_PrivateKeyDecode(der->buffer, &idx, key,
+                                           der->length) == 0) {
+                level = 1;
+            }
+            else {
+                wc_falcon_free(key);
+                if (wc_falcon_init(key) != 0) {
+                    XFREE(key, heap, DYNAMIC_TYPE_FALCON);
+                    return MEMORY_E;
+                }
+                idx = 0;
+                if (wc_falcon_set_level(key, 5) == 0 &&
+                    wc_Falcon_PrivateKeyDecode(der->buffer, &idx, key,
+                                               der->length) == 0) {
+                    level = 5;
+                }
+            }
+            if (level == 0) {
+                /* Not a Falcon key; let caller try another algorithm. */
+                WOLFSSL_MSG("Not a Falcon key");
+                wc_falcon_free(key);
+                XFREE(key, heap, DYNAMIC_TYPE_FALCON);
+                return 0;
+            }
+            ret = 0;
         }
         else {
             wc_falcon_free(key);
@@ -840,38 +884,27 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
     }
 
     if (ret == 0) {
-        /* Decode as a Falcon private key. */
-        ret = wc_falcon_import_private_only(der->buffer, der->length, key);
-        if (ret == 0) {
-            /* Get the minimum Falcon key size from SSL or SSL context object.
-             */
-            int minKeySz = ssl ? ssl->options.minFalconKeySz :
-                                 ctx->minFalconKeySz;
+        /* Get the minimum Falcon key size from SSL or SSL context object. */
+        int minKeySz = ssl ? ssl->options.minFalconKeySz :
+                             ctx->minFalconKeySz;
 
-            /* Format is known. */
-            if (*keyFormat == FALCON_LEVEL1k) {
-                *keyType = falcon_level1_sa_algo;
-                *keySize = FALCON_LEVEL1_KEY_SIZE;
-            }
-            else {
-                *keyType = falcon_level5_sa_algo;
-                *keySize = FALCON_LEVEL5_KEY_SIZE;
-            }
-
-            /* Check that the size of the Falcon key is enough. */
-            if (*keySize < minKeySz) {
-                WOLFSSL_MSG("Falcon private key too small");
-                ret = FALCON_KEY_SIZE_E;
-            }
+        if (key->level == 1) {
+            *keyFormat = FALCON_LEVEL1k;
+            *keyType = falcon_level1_sa_algo;
+            *keySize = FALCON_LEVEL1_KEY_SIZE;
         }
-        /* Not a Falcon key but check whether we know what it is. */
-        else if (*keyFormat == 0) {
-            WOLFSSL_MSG("Not a Falcon key");
-            /* Format unknown so keep trying. */
-            ret = 0;
+        else {
+            *keyFormat = FALCON_LEVEL5k;
+            *keyType = falcon_level5_sa_algo;
+            *keySize = FALCON_LEVEL5_KEY_SIZE;
         }
 
-        /* Free dynamically allocated data in key. */
+        /* Check that the size of the Falcon key is enough. */
+        if (*keySize < minKeySz) {
+            WOLFSSL_MSG("Falcon private key too small");
+            ret = FALCON_KEY_SIZE_E;
+        }
+
         wc_falcon_free(key);
     }
     else if ((ret == WC_NO_ERR_TRACE(ALGO_ID_E)) && (*keyFormat == 0)) {
@@ -886,8 +919,8 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
 }
 #endif
 
-#if defined(HAVE_DILITHIUM) && !defined(WOLFSSL_DILITHIUM_NO_SIGN) && \
-    !defined(WOLFSSL_DILITHIUM_NO_ASN1)
+#if defined(WOLFSSL_HAVE_MLDSA) && !defined(WOLFSSL_MLDSA_NO_SIGN) && \
+    !defined(WOLFSSL_MLDSA_NO_ASN1)
 /* See if DER data is an Dilithium private key.
  *
  * Checks size meets minimum Falcon key size.
@@ -901,61 +934,69 @@ static int ProcessBufferTryDecodeFalcon(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
  * @param [out]     keyType    Type of key.
  * @param [out]     keySize    Size of key.
  * @return  0 on success or not a Dilithium key and format unknown.
- * @return  DILITHIUM_KEY_SIZE_E when key size doesn't meet minimum required.
+ * @return  MLDSA_KEY_SIZE_E when key size doesn't meet minimum required.
  */
-static int ProcessBufferTryDecodeDilithium(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
+static int ProcessBufferTryDecodeMlDsa(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
     DerBuffer* der, int* keyFormat, void* heap, byte* keyType, int* keySize)
 {
     int ret;
     word32 idx;
-    dilithium_key* key;
+    wc_MlDsaKey* key;
     int keyFormatTemp = 0;
     int keyTypeTemp = 0;
     int keySizeTemp = 0;
 
     /* Allocate a Dilithium key to parse into. */
-    key = (dilithium_key*)XMALLOC(sizeof(dilithium_key), heap,
-        DYNAMIC_TYPE_DILITHIUM);
+    key = (wc_MlDsaKey*)XMALLOC(sizeof(wc_MlDsaKey), heap,
+        DYNAMIC_TYPE_MLDSA);
     if (key == NULL) {
         return MEMORY_E;
     }
 
-    /* Initialize Dilithium key. */
-    ret = wc_dilithium_init(key);
+    /* Initialize ML-DSA key. */
+    ret = wc_MlDsaKey_Init(key, NULL, INVALID_DEVID);
     if (ret == 0) {
-        /* Decode as a Dilithium private key. */
+        /* Decode as an ML-DSA private key. The FIPS wrapper for
+         * wc_MlDsaKey_ImportPrivRaw gates on the per-thread
+         * privateKeyReadEnable flag, which is unset by default in any
+         * thread that hasn't called PRIVATE_KEY_UNLOCK(). Without the
+         * bracket, loading an ML-DSA private key from a worker thread
+         * fails with FIPS_PRIVATE_KEY_LOCKED_E. */
         idx = 0;
-        ret = wc_Dilithium_PrivateKeyDecode(der->buffer, &idx, key, der->length);
+        PRIVATE_KEY_UNLOCK();
+        ret = wc_MlDsaKey_PrivateKeyDecode(key, der->buffer,
+            der->length, &idx);
+        PRIVATE_KEY_LOCK();
         if (ret == 0) {
-            ret = dilithium_get_oid_sum(key, &keyFormatTemp);
+            ret = mldsa_get_oid_sum(key, &keyFormatTemp);
             if (ret == 0) {
                 /* Format is known. */
-                #if defined(WOLFSSL_DILITHIUM_FIPS204_DRAFT)
+                #if defined(WOLFSSL_MLDSA_FIPS204_DRAFT)
                 if (keyFormatTemp == DILITHIUM_LEVEL2k) {
-                    keyTypeTemp = dilithium_level2_sa_algo;
-                    keySizeTemp = DILITHIUM_LEVEL2_KEY_SIZE;
+                    keyTypeTemp = mldsa_44_sa_algo;
+                    keySizeTemp = WC_MLDSA_44_KEY_SIZE;
                 }
                 else if (keyFormatTemp == DILITHIUM_LEVEL3k) {
-                    keyTypeTemp = dilithium_level3_sa_algo;
-                    keySizeTemp = DILITHIUM_LEVEL3_KEY_SIZE;
+                    keyTypeTemp = mldsa_65_sa_algo;
+                    keySizeTemp = WC_MLDSA_65_KEY_SIZE;
                 }
                 else if (keyFormatTemp == DILITHIUM_LEVEL5k) {
-                    keyTypeTemp = dilithium_level5_sa_algo;
-                    keySizeTemp = DILITHIUM_LEVEL5_KEY_SIZE;
+                    keyTypeTemp = mldsa_87_sa_algo;
+                    keySizeTemp = WC_MLDSA_87_KEY_SIZE;
                 }
                 else
-                #endif /* WOLFSSL_DILITHIUM_FIPS204_DRAFT */
-                if (keyFormatTemp == ML_DSA_LEVEL2k) {
-                    keyTypeTemp = dilithium_level2_sa_algo;
-                    keySizeTemp = ML_DSA_LEVEL2_KEY_SIZE;
+                #endif /* WOLFSSL_MLDSA_FIPS204_DRAFT */
+                if (keyFormatTemp == ML_DSA_44k) {
+                    keyTypeTemp = mldsa_44_sa_algo;
+                    keySizeTemp = WC_MLDSA_44_KEY_SIZE;
                 }
-                else if (keyFormatTemp == ML_DSA_LEVEL3k) {
-                    keyTypeTemp = dilithium_level3_sa_algo;
-                    keySizeTemp = ML_DSA_LEVEL3_KEY_SIZE;
+                else if (keyFormatTemp == ML_DSA_65k) {
+                    keyTypeTemp = mldsa_65_sa_algo;
+                    keySizeTemp = WC_MLDSA_65_KEY_SIZE;
                 }
-                else if (keyFormatTemp == ML_DSA_LEVEL5k) {
-                    keyTypeTemp = dilithium_level5_sa_algo;
-                    keySizeTemp = ML_DSA_LEVEL5_KEY_SIZE;
+                else if (keyFormatTemp == ML_DSA_87k) {
+                    keyTypeTemp = mldsa_87_sa_algo;
+                    keySizeTemp = WC_MLDSA_87_KEY_SIZE;
                 }
                 else {
                     ret = ALGO_ID_E;
@@ -965,13 +1006,13 @@ static int ProcessBufferTryDecodeDilithium(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
             if (ret == 0) {
                 /* Get the minimum Dilithium key size from SSL or SSL context
                  * object. */
-                int minKeySz = ssl ? ssl->options.minDilithiumKeySz :
-                                     ctx->minDilithiumKeySz;
+                int minKeySz = ssl ? ssl->options.minMlDsaKeySz :
+                                     ctx->minMlDsaKeySz;
 
                 /* Check that the size of the Dilithium key is enough. */
                 if (keySizeTemp < minKeySz) {
-                    WOLFSSL_MSG("Dilithium private key too small");
-                    ret = DILITHIUM_KEY_SIZE_E;
+                    WOLFSSL_MSG("ML-DSA private key too small");
+                    ret = MLDSA_KEY_SIZE_E;
                 }
             }
 
@@ -982,20 +1023,20 @@ static int ProcessBufferTryDecodeDilithium(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
             }
         }
         else if (*keyFormat == 0) {
-            WOLFSSL_MSG("Not a Dilithium key");
+            WOLFSSL_MSG("Not an ML-DSA key");
             /* Unknown format wasn't dilithium, so keep trying other formats. */
             ret = 0;
         }
 
         /* Free dynamically allocated data in key. */
-        wc_dilithium_free(key);
+        wc_MlDsaKey_Free(key);
     }
 
     /* Dispose of allocated key. */
-    XFREE(key, heap, DYNAMIC_TYPE_DILITHIUM);
+    XFREE(key, heap, DYNAMIC_TYPE_MLDSA);
     return ret;
 }
-#endif /* HAVE_DILITHIUM */
+#endif /* WOLFSSL_HAVE_MLDSA */
 
 /* Try to decode DER data is a known private key.
  *
@@ -1076,11 +1117,9 @@ static int ProcessBufferTryDecode(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
     }
 #ifdef WC_RSA_PSS
     if((ret == 0) && (*keyFormat == RSAPSSk)) {
-        /*
-            Require logic to verify that the der is RSAPSSk (when *keyFormat == RSAPSSK),
-            and to detect that the der is RSAPSSk (when *keyFormat == 0).
-        */
-
+        /* Require logic to verify that the der is RSAPSSk
+         * (when *keyFormat == RSAPSSK), and to detect that the der is RSAPSSk
+         * (when *keyFormat == 0). */
         matchAnyKey = 1;
     }
 #endif /* WC_RSA_PSS */
@@ -1122,26 +1161,26 @@ static int ProcessBufferTryDecode(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
         matchAnyKey = 1;
     }
 #endif /* HAVE_FALCON */
-#if defined(HAVE_DILITHIUM) && !defined(WOLFSSL_DILITHIUM_NO_SIGN) && \
-    !defined(WOLFSSL_DILITHIUM_NO_ASN1)
+#if defined(WOLFSSL_HAVE_MLDSA) && !defined(WOLFSSL_MLDSA_NO_SIGN) && \
+    !defined(WOLFSSL_MLDSA_NO_ASN1)
     /* Try Falcon if key format is Dilithium level 2k, 3k or 5k or yet unknown.
      */
     if ((ret == 0) &&
         ((*keyFormat == 0) ||
-        (*keyFormat == ML_DSA_LEVEL2k) ||
-        (*keyFormat == ML_DSA_LEVEL3k) ||
-        (*keyFormat == ML_DSA_LEVEL5k)
-    #ifdef WOLFSSL_DILITHIUM_FIPS204_DRAFT
+        (*keyFormat == ML_DSA_44k) ||
+        (*keyFormat == ML_DSA_65k) ||
+        (*keyFormat == ML_DSA_87k)
+    #ifdef WOLFSSL_MLDSA_FIPS204_DRAFT
      || (*keyFormat == DILITHIUM_LEVEL2k)
      || (*keyFormat == DILITHIUM_LEVEL3k)
      || (*keyFormat == DILITHIUM_LEVEL5k)
     #endif
         )) {
-        ret = ProcessBufferTryDecodeDilithium(ctx, ssl, der, keyFormat, heap,
+        ret = ProcessBufferTryDecodeMlDsa(ctx, ssl, der, keyFormat, heap,
             keyType, keySz);
         matchAnyKey = 1;
     }
-#endif /* HAVE_DILITHIUM */
+#endif /* WOLFSSL_HAVE_MLDSA */
 
     /* Check we know the format. */
     if ((ret == 0) &&
@@ -1450,23 +1489,23 @@ static void wolfssl_set_have_from_key_oid(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
             }
             break;
     #endif /* HAVE_FALCON */
-    #ifdef HAVE_DILITHIUM
-        case ML_DSA_LEVEL2k:
-        case ML_DSA_LEVEL3k:
-        case ML_DSA_LEVEL5k:
-        #ifdef WOLFSSL_DILITHIUM_FIPS204_DRAFT
+    #ifdef WOLFSSL_HAVE_MLDSA
+        case ML_DSA_44k:
+        case ML_DSA_65k:
+        case ML_DSA_87k:
+        #ifdef WOLFSSL_MLDSA_FIPS204_DRAFT
         case DILITHIUM_LEVEL2k:
         case DILITHIUM_LEVEL3k:
         case DILITHIUM_LEVEL5k:
         #endif
             if (ssl != NULL) {
-                ssl->options.haveDilithiumSig = 1;
+                ssl->options.haveMlDsaSig = 1;
             }
             else {
-                ctx->haveDilithiumSig = 1;
+                ctx->haveMlDsaSig = 1;
             }
             break;
-    #endif /* HAVE_DILITHIUM */
+    #endif /* WOLFSSL_HAVE_MLDSA */
         default:
             WOLFSSL_MSG("Cert key not supported");
             break;
@@ -1488,7 +1527,7 @@ static void ProcessBufferCertSetHave(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
         /* Reset signatures we have in SSL. */
         ssl->options.haveECDSAsig = 0;
         ssl->options.haveFalconSig = 0;
-        ssl->options.haveDilithiumSig = 0;
+        ssl->options.haveMlDsaSig = 0;
     }
 
     /* Set which signature we have based on the type in the cert. */
@@ -1526,21 +1565,21 @@ static void ProcessBufferCertSetHave(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
             }
             break;
     #endif
-    #ifdef HAVE_DILITHIUM
-        case CTC_ML_DSA_LEVEL2:
-        case CTC_ML_DSA_LEVEL3:
-        case CTC_ML_DSA_LEVEL5:
-        #ifdef WOLFSSL_DILITHIUM_FIPS204_DRAFT
+    #ifdef WOLFSSL_HAVE_MLDSA
+        case CTC_ML_DSA_44:
+        case CTC_ML_DSA_65:
+        case CTC_ML_DSA_87:
+        #ifdef WOLFSSL_MLDSA_FIPS204_DRAFT
         case CTC_DILITHIUM_LEVEL2:
         case CTC_DILITHIUM_LEVEL3:
         case CTC_DILITHIUM_LEVEL5:
-        #endif /* WOLFSSL_DILITHIUM_FIPS204_DRAFT */
-            WOLFSSL_MSG("Dilithium cert signature");
+        #endif /* WOLFSSL_MLDSA_FIPS204_DRAFT */
+            WOLFSSL_MSG("ML-DSA cert signature");
             if (ssl) {
-                ssl->options.haveDilithiumSig = 1;
+                ssl->options.haveMlDsaSig = 1;
             }
             else if (ctx) {
-                ctx->haveDilithiumSig = 1;
+                ctx->haveMlDsaSig = 1;
             }
             break;
     #endif
@@ -1550,7 +1589,7 @@ static void ProcessBufferCertSetHave(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
     }
 
 #if defined(HAVE_ECC) || defined(HAVE_ED25519) || defined(HAVE_ED448) || \
-    defined(HAVE_FALCON) || defined(HAVE_DILITHIUM) || !defined(NO_RSA)
+    defined(HAVE_FALCON) || defined(WOLFSSL_HAVE_MLDSA) || !defined(NO_RSA)
     #if defined(HAVE_ECC) || defined(HAVE_ED25519) || defined(HAVE_ED448)
     /* Set the private key curve OID. */
     if (ssl != NULL) {
@@ -1607,6 +1646,9 @@ static int ProcessBufferCertPublicKey(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
 #ifndef NO_RSA
     word32 idx;
 #endif
+    if (ctx == NULL && ssl == NULL) {
+        return BAD_FUNC_ARG;
+    }
 
     /* Get key size and check unless not verifying. */
     switch (cert->keyOID) {
@@ -1624,6 +1666,14 @@ static int ProcessBufferCertPublicKey(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
                 ret = CHECK_KEY_SZ(ssl ? ssl->options.minRsaKeySz :
                     ctx->minRsaKeySz, RSA_MAX_SIZE / 8, keySz, RSA_KEY_SIZE_E);
             }
+    #ifdef WC_RSA_PSS
+            if (ssl) {
+                ssl->useRsaPss = cert->keyOID == RSAPSSk;
+            }
+            if (ctx) {
+                ctx->useRsaPss = cert->keyOID == RSAPSSk;
+            }
+    #endif
             break;
 #endif /* !NO_RSA */
     #ifdef HAVE_ECC
@@ -1659,7 +1709,7 @@ static int ProcessBufferCertPublicKey(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
                     ECC_KEY_SIZE_E);
             }
             break;
-    #endif /* HAVE_ED25519 */
+    #endif /* WOLFSSL_SM2 && WOLFSSL_SM3 */
     #ifdef HAVE_ED25519
         case ED25519k:
             keyType = ed25519_sa_algo;
@@ -1704,70 +1754,70 @@ static int ProcessBufferCertPublicKey(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
             }
             break;
     #endif /* HAVE_FALCON */
-    #if defined(HAVE_DILITHIUM)
-        #ifdef WOLFSSL_DILITHIUM_FIPS204_DRAFT
+    #if defined(WOLFSSL_HAVE_MLDSA)
+        #ifdef WOLFSSL_MLDSA_FIPS204_DRAFT
         case DILITHIUM_LEVEL2k:
-            keyType = dilithium_level2_sa_algo;
+            keyType = mldsa_44_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = DILITHIUM_LEVEL2_KEY_SIZE;
+            keySz = WC_MLDSA_44_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
         case DILITHIUM_LEVEL3k:
-            keyType = dilithium_level3_sa_algo;
+            keyType = mldsa_65_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = DILITHIUM_LEVEL3_KEY_SIZE;
+            keySz = WC_MLDSA_65_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
         case DILITHIUM_LEVEL5k:
-            keyType = dilithium_level5_sa_algo;
+            keyType = mldsa_87_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = DILITHIUM_LEVEL5_KEY_SIZE;
+            keySz = WC_MLDSA_87_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
-        #endif /* WOLFSSL_DILITHIUM_FIPS204_DRAFT */
-        case ML_DSA_LEVEL2k:
-            keyType = dilithium_level2_sa_algo;
+        #endif /* WOLFSSL_MLDSA_FIPS204_DRAFT */
+        case ML_DSA_44k:
+            keyType = mldsa_44_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = ML_DSA_LEVEL2_KEY_SIZE;
+            keySz = WC_MLDSA_44_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
-        case ML_DSA_LEVEL3k:
-            keyType = dilithium_level3_sa_algo;
+        case ML_DSA_65k:
+            keyType = mldsa_65_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = ML_DSA_LEVEL3_KEY_SIZE;
+            keySz = WC_MLDSA_65_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
-        case ML_DSA_LEVEL5k:
-            keyType = dilithium_level5_sa_algo;
+        case ML_DSA_87k:
+            keyType = mldsa_87_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = ML_DSA_LEVEL5_KEY_SIZE;
+            keySz = WC_MLDSA_87_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
-    #endif /* HAVE_DILITHIUM */
+    #endif /* WOLFSSL_HAVE_MLDSA */
 
         default:
             WOLFSSL_MSG("No key size check done on public key in certificate");
@@ -1869,7 +1919,7 @@ static int ProcessBufferCertAltPublicKey(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
                     ECC_KEY_SIZE_E);
             }
             break;
-    #endif /* HAVE_ED25519 */
+    #endif /* WOLFSSL_SM2 && WOLFSSL_SM3 */
     #ifdef HAVE_ED25519
         case ED25519k:
             keyType = ed25519_sa_algo;
@@ -1914,70 +1964,70 @@ static int ProcessBufferCertAltPublicKey(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
             }
             break;
     #endif /* HAVE_FALCON */
-    #if defined(HAVE_DILITHIUM)
-        #ifdef WOLFSSL_DILITHIUM_FIPS204_DRAFT
+    #if defined(WOLFSSL_HAVE_MLDSA)
+        #ifdef WOLFSSL_MLDSA_FIPS204_DRAFT
         case DILITHIUM_LEVEL2k:
-            keyType = dilithium_level2_sa_algo;
+            keyType = mldsa_44_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = DILITHIUM_LEVEL2_KEY_SIZE;
+            keySz = WC_MLDSA_44_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
         case DILITHIUM_LEVEL3k:
-            keyType = dilithium_level3_sa_algo;
+            keyType = mldsa_65_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = DILITHIUM_LEVEL3_KEY_SIZE;
+            keySz = WC_MLDSA_65_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
         case DILITHIUM_LEVEL5k:
-            keyType = dilithium_level5_sa_algo;
+            keyType = mldsa_87_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = DILITHIUM_LEVEL5_KEY_SIZE;
+            keySz = WC_MLDSA_87_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
-        #endif /* WOLFSSL_DILITHIUM_FIPS204_DRAFT */
-        case ML_DSA_LEVEL2k:
-            keyType = dilithium_level2_sa_algo;
+        #endif /* WOLFSSL_MLDSA_FIPS204_DRAFT */
+        case ML_DSA_44k:
+            keyType = mldsa_44_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = ML_DSA_LEVEL2_KEY_SIZE;
+            keySz = WC_MLDSA_44_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
-        case ML_DSA_LEVEL3k:
-            keyType = dilithium_level3_sa_algo;
+        case ML_DSA_65k:
+            keyType = mldsa_65_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = ML_DSA_LEVEL3_KEY_SIZE;
+            keySz = WC_MLDSA_65_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
-        case ML_DSA_LEVEL5k:
-            keyType = dilithium_level5_sa_algo;
+        case ML_DSA_87k:
+            keyType = mldsa_87_sa_algo;
             /* Dilithium is fixed key size */
-            keySz = ML_DSA_LEVEL5_KEY_SIZE;
+            keySz = WC_MLDSA_87_KEY_SIZE;
             if (checkKeySz) {
-                ret = CHECK_KEY_SZ(ssl ? ssl->options.minDilithiumKeySz :
-                    ctx->minDilithiumKeySz, DILITHIUM_MAX_KEY_SIZE, keySz,
-                    DILITHIUM_KEY_SIZE_E);
+                ret = CHECK_KEY_SZ(ssl ? ssl->options.minMlDsaKeySz :
+                    ctx->minMlDsaKeySz, MLDSA_MAX_KEY_SIZE, keySz,
+                    MLDSA_KEY_SIZE_E);
             }
             break;
-    #endif /* HAVE_DILITHIUM */
+    #endif /* WOLFSSL_HAVE_MLDSA */
 
         default:
             /* In this case, there was an OID that we didn't recognize.
@@ -2053,7 +2103,7 @@ static int ProcessBufferCert(WOLFSSL_CTX* ctx, WOLFSSL* ssl, DerBuffer* der)
             }
             /* Don't check if no SSL object verification is disabled for SSL
              * context. */
-            else if ((ssl == NULL) && ctx->verifyNone) {
+            else if ((ssl == NULL) && (ctx != NULL) && ctx->verifyNone) {
                 checkKeySz = 0;
             }
 
@@ -2124,7 +2174,8 @@ static int ProcessBufferCertHandleDer(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
          * certificates so we can inject them at verification time */
         if (ret == 1 && ctx->doAppleNativeCertValidationFlag == 1) {
             WOLFSSL_MSG("ANCV Test: Appending CA to cert list");
-            ret = wolfSSL_TestAppleNativeCertValidation_AppendCA(ctx, derBuf, (int)derLen);
+            ret = wolfSSL_TestAppleNativeCertValidation_AppendCA(ctx, derBuf,
+                (int)derLen);
             if (ret == WOLFSSL_SUCCESS) {
                 WOLFSSL_MSG("ANCV Test: Clearing CA table");
                 /* Clear the CA table so we can ensure they won't be used for
@@ -2370,6 +2421,10 @@ int ProcessBuffer(WOLFSSL_CTX* ctx, const unsigned char* buff, long sz,
     }
     /* This API does not handle CHAIN_CERT_TYPE */
     if ((ret == 0) && (type == CHAIN_CERT_TYPE)) {
+        ret = BAD_FUNC_ARG;
+    }
+    /* Reject negative size - would wrap to huge word32. */
+    if ((ret == 0) && (sz < 0)) {
         ret = BAD_FUNC_ARG;
     }
 
@@ -2663,21 +2718,21 @@ int ProcessFile(WOLFSSL_CTX* ctx, const char* fname, int format, int type,
 
         /* Look for CA header and footer - same as CERT_TYPE. */
         if (wc_PemGetHeaderFooter(CA_TYPE, &header, &footer) == 0 &&
-                (XSTRNSTR((char*)content.buffer, header, (word32)sz) != NULL)) {
+                (XSTRNSTR((char*)content.buffer, header, sz) != NULL)) {
             type = CA_TYPE;
             WOLFSSL_MSG_CERT_LOG_EX("Detected cert type CA_TYPE = %d:", type);
         }
 #ifdef HAVE_CRL
         /* Look for CRL header and footer. */
         else if (wc_PemGetHeaderFooter(CRL_TYPE, &header, &footer) == 0 &&
-                (XSTRNSTR((char*)content.buffer, header, (word32)sz) != NULL)) {
+                (XSTRNSTR((char*)content.buffer, header, sz) != NULL)) {
             type = CRL_TYPE;
             WOLFSSL_MSG_CERT_LOG_EX("Detected cert type CRL_TYPE = %d:", type);
         }
 #endif
         /* Look for cert header and footer - same as CA_TYPE. */
         else if (wc_PemGetHeaderFooter(CERT_TYPE, &header, &footer) == 0 &&
-                (XSTRNSTR((char*)content.buffer, header, (word32)sz) !=
+                (XSTRNSTR((char*)content.buffer, header, sz) !=
                     NULL)) {
             type = CERT_TYPE;
             WOLFSSL_MSG_CERT_LOG_EX("Detected cert type CERT_TYPE = %d:", type);
@@ -2935,8 +2990,8 @@ int wolfSSL_CTX_load_verify_locations_ex(WOLFSSL_CTX* ctx, const char* file,
                 NULL, verify);
 #else
             /* Load the DER formatted CA file */
-            ret = ProcessFile(ctx, file, WOLFSSL_FILETYPE_ASN1, CA_TYPE, NULL, 0,
-                NULL, verify);
+            ret = ProcessFile(ctx, file, WOLFSSL_FILETYPE_ASN1, CA_TYPE, NULL,
+                0, NULL, verify);
 #endif
 #ifndef NO_WOLFSSL_DIR
             if (ret == 1) {
@@ -3029,303 +3084,6 @@ int wolfSSL_CTX_load_verify_locations_compat(WOLFSSL_CTX* ctx, const char* file,
     /* Return 1 on success or 0 on failure. */
     return WS_RETURN_CODE(ret, 0);
 }
-
-#ifdef WOLFSSL_SYS_CA_CERTS
-
-#ifdef USE_WINDOWS_API
-
-/* Load CA certificate from Windows store.
- *
- * Assumes loaded is 0.
- *
- * @param [in, out] ctx     SSL context object.
- * @param [out]     loaded  Whether CA certificates were loaded.
- * @return  1 on success.
- * @return  0 on failure.
- */
-static int LoadSystemCaCertsWindows(WOLFSSL_CTX* ctx, byte* loaded)
-{
-    int ret = 1;
-    word32 i;
-    HANDLE handle = NULL;
-    PCCERT_CONTEXT certCtx = NULL;
-    LPCSTR storeNames[2] = {"ROOT", "CA"};
-    HCRYPTPROV_LEGACY hProv = (HCRYPTPROV_LEGACY)NULL;
-
-    if ((ctx == NULL) || (loaded == NULL)) {
-        ret = 0;
-    }
-
-    for (i = 0; (ret == 1) && (i < sizeof(storeNames)/sizeof(*storeNames));
-         ++i) {
-        handle = CertOpenSystemStoreA(hProv, storeNames[i]);
-        if (handle != NULL) {
-            while ((certCtx = CertEnumCertificatesInStore(handle, certCtx))
-                   != NULL) {
-                if (certCtx->dwCertEncodingType == X509_ASN_ENCODING) {
-                    if (ProcessBuffer(ctx, certCtx->pbCertEncoded,
-                          certCtx->cbCertEncoded, WOLFSSL_FILETYPE_ASN1,
-                          CA_TYPE, NULL, NULL, 0,
-                          GET_VERIFY_SETTING_CTX(ctx),
-                          storeNames[i]) == 1) {
-                        /*
-                         * Set "loaded" as long as we've loaded one CA
-                         * cert.
-                         */
-                        *loaded = 1;
-                    }
-                }
-            }
-        }
-        else {
-            WOLFSSL_MSG_EX("Failed to open cert store %s.", storeNames[i]);
-        }
-
-        if (handle != NULL && !CertCloseStore(handle, 0)) {
-            WOLFSSL_MSG_EX("Failed to close cert store %s.", storeNames[i]);
-            ret = 0;
-        }
-    }
-
-    return ret;
-}
-
-#elif defined(__APPLE__)
-
-#if defined(HAVE_SECURITY_SECTRUSTSETTINGS_H) \
-  && !defined(WOLFSSL_APPLE_NATIVE_CERT_VALIDATION)
-/* Manually obtains certificates from the system trust store and loads them
- * directly into wolfSSL "the old way".
- *
- * As of MacOS 14.0 we are still able to use this method to access system
- * certificates. Accessibility of this API is indicated by the presence of the
- * Security/SecTrustSettings.h header. In the likely event that Apple removes
- * access to this API on Macs, this function should be removed and the
- * DoAppleNativeCertValidation() routine should be used for all devices.
- *
- * Assumes loaded is 0.
- *
- * @param [in, out] ctx     SSL context object.
- * @param [out]     loaded  Whether CA certificates were loaded.
- * @return  1 on success.
- * @return  0 on failure.
- */
-static int LoadSystemCaCertsMac(WOLFSSL_CTX* ctx, byte* loaded)
-{
-    int ret = 1;
-    word32 i;
-    const unsigned int trustDomains[] = {
-        kSecTrustSettingsDomainUser,
-        kSecTrustSettingsDomainAdmin,
-        kSecTrustSettingsDomainSystem
-    };
-    CFArrayRef certs;
-    OSStatus stat;
-    CFIndex numCerts;
-    CFDataRef der;
-    CFIndex j;
-
-    if ((ctx == NULL) || (loaded == NULL)) {
-        ret = 0;
-    }
-
-    for (i = 0; (ret == 1) && (i < sizeof(trustDomains)/sizeof(*trustDomains));
-         ++i) {
-        stat = SecTrustSettingsCopyCertificates(
-            (SecTrustSettingsDomain)trustDomains[i], &certs);
-        if (stat == errSecSuccess) {
-            numCerts = CFArrayGetCount(certs);
-            for (j = 0; j < numCerts; ++j) {
-                der = SecCertificateCopyData((SecCertificateRef)
-                          CFArrayGetValueAtIndex(certs, j));
-                if (der != NULL) {
-                    if (ProcessBuffer(ctx, CFDataGetBytePtr(der),
-                          CFDataGetLength(der), WOLFSSL_FILETYPE_ASN1,
-                          CA_TYPE, NULL, NULL, 0,
-                          GET_VERIFY_SETTING_CTX(ctx),
-                          "MacOSX trustDomains") == 1) {
-                        /*
-                         * Set "loaded" as long as we've loaded one CA
-                         * cert.
-                         */
-                        *loaded = 1;
-                    }
-
-                    CFRelease(der);
-                }
-            }
-
-            CFRelease(certs);
-        }
-        else if (stat == errSecNoTrustSettings) {
-            WOLFSSL_MSG_EX("No trust settings for domain %d, moving to next "
-                "domain.", trustDomains[i]);
-        }
-        else {
-            WOLFSSL_MSG_EX("SecTrustSettingsCopyCertificates failed with"
-                " status %d.", stat);
-            ret = 0;
-            break;
-        }
-    }
-
-    return ret;
-}
-#endif /* defined(HAVE_SECURITY_SECTRUSTSETTINGS_H) */
-
-#else
-
-/* Potential system CA certs directories on Linux/Unix distros. */
-static const char* systemCaDirs[] = {
-#if defined(__ANDROID__) || defined(ANDROID)
-    "/system/etc/security/cacerts"      /* Android */
-#else
-    "/etc/ssl/certs",                   /* Debian, Ubuntu, Gentoo, others */
-    "/etc/pki/ca-trust/source/anchors", /* Fedora, RHEL */
-    "/etc/pki/tls/certs"                /* Older RHEL */
-#endif
-};
-
-/* Get CA directory list.
- *
- * @param [out] num  Number of CA directories.
- * @return  CA directory list.
- * @return  NULL when num is NULL.
- */
-const char** wolfSSL_get_system_CA_dirs(word32* num)
-{
-    const char** ret;
-
-    /* Validate parameters. */
-    if (num == NULL) {
-        ret = NULL;
-    }
-    else {
-        ret = systemCaDirs;
-        *num = sizeof(systemCaDirs)/sizeof(*systemCaDirs);
-    }
-
-    return ret;
-}
-
-/* Load CA certificate from default system directories.
- *
- * Assumes loaded is 0.
- *
- * @param [in, out] ctx     SSL context object.
- * @param [out]     loaded  Whether CA certificates were loaded.
- * @return  1 on success.
- * @return  0 on failure.
- */
-static int LoadSystemCaCertsNix(WOLFSSL_CTX* ctx, byte* loaded) {
-    int ret = 1;
-    word32 i;
-
-    if ((ctx == NULL) || (loaded == NULL)) {
-        ret = 0;
-    }
-
-    for (i = 0; (ret == 1) && (i < sizeof(systemCaDirs)/sizeof(*systemCaDirs));
-         ++i) {
-        WOLFSSL_MSG_EX("Attempting to load system CA certs from %s.",
-            systemCaDirs[i]);
-        /*
-         * We want to keep trying to load more CA certs even if one cert in
-         * the directory is bad and can't be used (e.g. if one is expired),
-         * so we use WOLFSSL_LOAD_FLAG_IGNORE_ERR.
-         */
-        if (wolfSSL_CTX_load_verify_locations_ex(ctx, NULL, systemCaDirs[i],
-                WOLFSSL_LOAD_FLAG_IGNORE_ERR) != 1) {
-            WOLFSSL_MSG_EX("Failed to load CA certs from %s, trying "
-                "next possible location.", systemCaDirs[i]);
-        }
-        else {
-            WOLFSSL_MSG_EX("Loaded CA certs from %s.",
-                systemCaDirs[i]);
-            *loaded = 1;
-            /* Stop searching after we've loaded one directory. */
-            break;
-        }
-    }
-
-    return ret;
-}
-
-#endif
-
-/* Load CA certificates from system defined locations.
- *
- * @param [in, out] ctx  SSL context object.
- * @return  1 on success.
- * @return  0 on failure.
- * @return  WOLFSSL_BAD_PATH when no error but no certificates loaded.
- */
-int wolfSSL_CTX_load_system_CA_certs(WOLFSSL_CTX* ctx)
-{
-    int ret;
-    byte loaded = 0;
-
-    WOLFSSL_ENTER("wolfSSL_CTX_load_system_CA_certs");
-
-#ifdef USE_WINDOWS_API
-
-    ret = LoadSystemCaCertsWindows(ctx, &loaded);
-
-#elif defined(__APPLE__)
-
-#if defined(HAVE_SECURITY_SECTRUSTSETTINGS_H) \
-  && !defined(WOLFSSL_APPLE_NATIVE_CERT_VALIDATION)
-    /* As of MacOS 14.0 we are still able to access system certificates and
-     * load them manually into wolfSSL "the old way". Accessibility of this API
-     * is indicated by the presence of the Security/SecTrustSettings.h header */
-    ret = LoadSystemCaCertsMac(ctx, &loaded);
-#elif defined(WOLFSSL_APPLE_NATIVE_CERT_VALIDATION)
-    /* For other Apple devices, Apple has removed the ability to obtain
-     * certificates from the trust store, so we can't use wolfSSL's built-in
-     * certificate validation mechanisms anymore. We instead must call into the
-     * Security Framework APIs to authenticate peer certificates when received.
-     * (see src/internal.c:DoAppleNativeCertValidation()).
-     * Thus, there is no CA "loading" required, but to keep behavior consistent
-     * with the current API (not using system CA certs unless this function has
-     * been called), we simply set a flag indicating that the new apple trust
-     * verification routine should be used later */
-    ctx->doAppleNativeCertValidationFlag = 1;
-    ret = 1;
-    loaded = 1;
-
-#if FIPS_VERSION_GE(2,0) /* Gate back to cert 3389 FIPS modules */
-#warning "Cryptographic operations may occur outside the FIPS module boundary" \
-         "Please review FIPS claims for cryptography on this Apple device"
-#endif /* FIPS_VERSION_GE(2,0) */
-
-#else
-/* HAVE_SECURITY_SECXXX_H macros are set by autotools or CMake when searching
- * system for the required SDK headers. If building with user_settings.h, you
- * will need to manually define WOLFSSL_APPLE_NATIVE_CERT_VALIDATION
- * and ensure the appropriate Security.framework headers and libraries are
- * visible to your compiler */
-#error "WOLFSSL_SYS_CA_CERTS on Apple devices requires Security.framework" \
-       " header files to be detected, or a manual override with" \
-       " WOLFSSL_APPLE_NATIVE_CERT_VALIDATION"
-#endif
-
-#else
-
-    ret = LoadSystemCaCertsNix(ctx, &loaded);
-
-#endif
-
-    /* If we didn't fail but didn't load then we error out. */
-    if ((ret == 1) && (!loaded)) {
-        ret = WOLFSSL_BAD_PATH;
-    }
-
-    WOLFSSL_LEAVE("wolfSSL_CTX_load_system_CA_certs", ret);
-
-    return ret;
-}
-
-#endif /* WOLFSSL_SYS_CA_CERTS */
 
 #ifdef WOLFSSL_TRUST_PEER_CERT
 /* Load a trusted peer certificate into SSL context.
@@ -3517,8 +3275,8 @@ int wolfSSL_CTX_use_certificate_chain_file(WOLFSSL_CTX* ctx, const char* file)
     ret = ProcessFile(ctx, file, WOLFSSL_FILETYPE_PEM, CERT_TYPE, NULL, 1, NULL,
         GET_VERIFY_SETTING_CTX(ctx));
 #else
-    ret = ProcessFile(ctx, file, WOLFSSL_FILETYPE_ASN1, CERT_TYPE, NULL, 1, NULL,
-        GET_VERIFY_SETTING_CTX(ctx));
+    ret = ProcessFile(ctx, file, WOLFSSL_FILETYPE_ASN1, CERT_TYPE, NULL, 1,
+        NULL, GET_VERIFY_SETTING_CTX(ctx));
 #endif
 
     /* Return 1 on success or 0 on failure. */
@@ -3551,6 +3309,303 @@ int wolfSSL_CTX_use_certificate_chain_file_format(WOLFSSL_CTX* ctx,
 }
 
 #endif /* NO_FILESYSTEM */
+
+#ifdef WOLFSSL_SYS_CA_CERTS
+
+#ifdef USE_WINDOWS_API
+
+/* Load CA certificate from Windows store.
+ *
+ * Assumes loaded is 0.
+ *
+ * @param [in, out] ctx     SSL context object.
+ * @param [out]     loaded  Whether CA certificates were loaded.
+ * @return  1 on success.
+ * @return  0 on failure.
+ */
+static int LoadSystemCaCertsWindows(WOLFSSL_CTX* ctx, byte* loaded)
+{
+    int ret = 1;
+    word32 i;
+    HANDLE handle = NULL;
+    PCCERT_CONTEXT certCtx = NULL;
+    LPCSTR storeNames[2] = {"ROOT", "CA"};
+    HCRYPTPROV_LEGACY hProv = (HCRYPTPROV_LEGACY)NULL;
+
+    if ((ctx == NULL) || (loaded == NULL)) {
+        ret = 0;
+    }
+
+    for (i = 0; (ret == 1) && (i < sizeof(storeNames)/sizeof(*storeNames));
+         ++i) {
+        handle = CertOpenSystemStoreA(hProv, storeNames[i]);
+        if (handle != NULL) {
+            while ((certCtx = CertEnumCertificatesInStore(handle, certCtx))
+                   != NULL) {
+                if (certCtx->dwCertEncodingType == X509_ASN_ENCODING) {
+                    if (ProcessBuffer(ctx, certCtx->pbCertEncoded,
+                          certCtx->cbCertEncoded, WOLFSSL_FILETYPE_ASN1,
+                          CA_TYPE, NULL, NULL, 0,
+                          GET_VERIFY_SETTING_CTX(ctx),
+                          storeNames[i]) == 1) {
+                        /*
+                         * Set "loaded" as long as we've loaded one CA
+                         * cert.
+                         */
+                        *loaded = 1;
+                    }
+                }
+            }
+        }
+        else {
+            WOLFSSL_MSG_EX("Failed to open cert store %s.", storeNames[i]);
+        }
+
+        if (handle != NULL && !CertCloseStore(handle, 0)) {
+            WOLFSSL_MSG_EX("Failed to close cert store %s.", storeNames[i]);
+            ret = 0;
+        }
+    }
+
+    return ret;
+}
+
+#elif defined(__APPLE__)
+
+#if defined(HAVE_SECURITY_SECTRUSTSETTINGS_H) \
+  && !defined(WOLFSSL_APPLE_NATIVE_CERT_VALIDATION)
+/* Manually obtains certificates from the system trust store and loads them
+ * directly into wolfSSL "the old way".
+ *
+ * As of MacOS 14.0 we are still able to use this method to access system
+ * certificates. Accessibility of this API is indicated by the presence of the
+ * Security/SecTrustSettings.h header. In the likely event that Apple removes
+ * access to this API on Macs, this function should be removed and the
+ * DoAppleNativeCertValidation() routine should be used for all devices.
+ *
+ * Assumes loaded is 0.
+ *
+ * @param [in, out] ctx     SSL context object.
+ * @param [out]     loaded  Whether CA certificates were loaded.
+ * @return  1 on success.
+ * @return  0 on failure.
+ */
+static int LoadSystemCaCertsMac(WOLFSSL_CTX* ctx, byte* loaded)
+{
+    int ret = 1;
+    word32 i;
+    const unsigned int trustDomains[] = {
+        kSecTrustSettingsDomainUser,
+        kSecTrustSettingsDomainAdmin,
+        kSecTrustSettingsDomainSystem
+    };
+    CFArrayRef certs;
+    OSStatus stat;
+    CFIndex numCerts;
+    CFDataRef der;
+    CFIndex j;
+
+    if ((ctx == NULL) || (loaded == NULL)) {
+        ret = 0;
+    }
+
+    for (i = 0; (ret == 1) && (i < sizeof(trustDomains)/sizeof(*trustDomains));
+         ++i) {
+        stat = SecTrustSettingsCopyCertificates(
+            (SecTrustSettingsDomain)trustDomains[i], &certs);
+        if (stat == errSecSuccess) {
+            numCerts = CFArrayGetCount(certs);
+            for (j = 0; j < numCerts; ++j) {
+                der = SecCertificateCopyData((SecCertificateRef)
+                          CFArrayGetValueAtIndex(certs, j));
+                if (der != NULL) {
+                    if (ProcessBuffer(ctx, CFDataGetBytePtr(der),
+                          CFDataGetLength(der), WOLFSSL_FILETYPE_ASN1,
+                          CA_TYPE, NULL, NULL, 0,
+                          GET_VERIFY_SETTING_CTX(ctx),
+                          "MacOSX trustDomains") == 1) {
+                        /*
+                         * Set "loaded" as long as we've loaded one CA
+                         * cert.
+                         */
+                        *loaded = 1;
+                    }
+
+                    CFRelease(der);
+                }
+            }
+
+            CFRelease(certs);
+        }
+        else if (stat == errSecNoTrustSettings) {
+            WOLFSSL_MSG_EX("No trust settings for domain %d, moving to next "
+                "domain.", trustDomains[i]);
+        }
+        else {
+            WOLFSSL_MSG_EX("SecTrustSettingsCopyCertificates failed with"
+                " status %d.", stat);
+            ret = 0;
+            break;
+        }
+    }
+
+    return ret;
+}
+#endif /* defined(HAVE_SECURITY_SECTRUSTSETTINGS_H) */
+
+#elif !defined(NO_FILESYSTEM)
+
+/* Potential system CA certs directories on Linux/Unix distros. */
+static const char* systemCaDirs[] = {
+#if defined(__ANDROID__) || defined(ANDROID)
+    "/system/etc/security/cacerts"      /* Android */
+#else
+    "/etc/ssl/certs",                   /* Debian, Ubuntu, Gentoo, others */
+    "/etc/pki/ca-trust/source/anchors", /* Fedora, RHEL */
+    "/etc/pki/tls/certs"                /* Older RHEL */
+#endif
+};
+
+/* Get CA directory list.
+ *
+ * @param [out] num  Number of CA directories.
+ * @return  CA directory list.
+ * @return  NULL when num is NULL.
+ */
+const char** wolfSSL_get_system_CA_dirs(word32* num)
+{
+    const char** ret;
+
+    /* Validate parameters. */
+    if (num == NULL) {
+        ret = NULL;
+    }
+    else {
+        ret = systemCaDirs;
+        *num = sizeof(systemCaDirs)/sizeof(*systemCaDirs);
+    }
+
+    return ret;
+}
+
+/* Load CA certificate from default system directories.
+ *
+ * Assumes loaded is 0.
+ *
+ * @param [in, out] ctx     SSL context object.
+ * @param [out]     loaded  Whether CA certificates were loaded.
+ * @return  1 on success.
+ * @return  0 on failure.
+ */
+static int LoadSystemCaCertsNix(WOLFSSL_CTX* ctx, byte* loaded) {
+    int ret = 1;
+    word32 i;
+
+    if ((ctx == NULL) || (loaded == NULL)) {
+        ret = 0;
+    }
+
+    for (i = 0; (ret == 1) && (i < sizeof(systemCaDirs)/sizeof(*systemCaDirs));
+         ++i) {
+        WOLFSSL_MSG_EX("Attempting to load system CA certs from %s.",
+            systemCaDirs[i]);
+        /*
+         * We want to keep trying to load more CA certs even if one cert in
+         * the directory is bad and can't be used (e.g. if one is expired),
+         * so we use WOLFSSL_LOAD_FLAG_IGNORE_ERR.
+         */
+        if (wolfSSL_CTX_load_verify_locations_ex(ctx, NULL, systemCaDirs[i],
+                WOLFSSL_LOAD_FLAG_IGNORE_ERR) != 1) {
+            WOLFSSL_MSG_EX("Failed to load CA certs from %s, trying "
+                "next possible location.", systemCaDirs[i]);
+        }
+        else {
+            WOLFSSL_MSG_EX("Loaded CA certs from %s.",
+                systemCaDirs[i]);
+            *loaded = 1;
+            /* Stop searching after we've loaded one directory. */
+            break;
+        }
+    }
+
+    return ret;
+}
+
+#endif
+
+/* Load CA certificates from system defined locations.
+ *
+ * @param [in, out] ctx  SSL context object.
+ * @return  1 on success.
+ * @return  0 on failure.
+ * @return  WOLFSSL_BAD_PATH when no error but no certificates loaded.
+ */
+int wolfSSL_CTX_load_system_CA_certs(WOLFSSL_CTX* ctx)
+{
+    int ret;
+    byte loaded = 0;
+
+    WOLFSSL_ENTER("wolfSSL_CTX_load_system_CA_certs");
+
+#ifdef USE_WINDOWS_API
+
+    ret = LoadSystemCaCertsWindows(ctx, &loaded);
+
+#elif defined(__APPLE__)
+
+#if defined(HAVE_SECURITY_SECTRUSTSETTINGS_H) \
+  && !defined(WOLFSSL_APPLE_NATIVE_CERT_VALIDATION)
+    /* As of MacOS 14.0 we are still able to access system certificates and
+     * load them manually into wolfSSL "the old way". Accessibility of this API
+     * is indicated by the presence of the Security/SecTrustSettings.h header */
+    ret = LoadSystemCaCertsMac(ctx, &loaded);
+#elif defined(WOLFSSL_APPLE_NATIVE_CERT_VALIDATION)
+    /* For other Apple devices, Apple has removed the ability to obtain
+     * certificates from the trust store, so we can't use wolfSSL's built-in
+     * certificate validation mechanisms anymore. We instead must call into the
+     * Security Framework APIs to authenticate peer certificates when received.
+     * (see src/internal.c:DoAppleNativeCertValidation()).
+     * Thus, there is no CA "loading" required, but to keep behavior consistent
+     * with the current API (not using system CA certs unless this function has
+     * been called), we simply set a flag indicating that the new apple trust
+     * verification routine should be used later */
+    ctx->doAppleNativeCertValidationFlag = 1;
+    ret = 1;
+    loaded = 1;
+
+#if FIPS_VERSION_GE(2,0) /* Gate back to cert 3389 FIPS modules */
+#warning "Cryptographic operations may occur outside the FIPS module boundary" \
+         "Please review FIPS claims for cryptography on this Apple device"
+#endif /* FIPS_VERSION_GE(2,0) */
+
+#else
+/* HAVE_SECURITY_SECXXX_H macros are set by autotools or CMake when searching
+ * system for the required SDK headers. If building with user_settings.h, you
+ * will need to manually define WOLFSSL_APPLE_NATIVE_CERT_VALIDATION
+ * and ensure the appropriate Security.framework headers and libraries are
+ * visible to your compiler */
+#error "WOLFSSL_SYS_CA_CERTS on Apple devices requires Security.framework" \
+       " header files to be detected, or a manual override with" \
+       " WOLFSSL_APPLE_NATIVE_CERT_VALIDATION"
+#endif
+
+#else
+
+    ret = LoadSystemCaCertsNix(ctx, &loaded);
+
+#endif
+
+    /* If we didn't fail but didn't load then we error out. */
+    if ((ret == 1) && (!loaded)) {
+        ret = WOLFSSL_BAD_PATH;
+    }
+
+    WOLFSSL_LEAVE("wolfSSL_CTX_load_system_CA_certs", ret);
+
+    return ret;
+}
+
+#endif /* WOLFSSL_SYS_CA_CERTS */
 
 #ifdef OPENSSL_EXTRA
 
@@ -4143,6 +4198,12 @@ int wolfSSL_CTX_use_PrivateKey_Id(WOLFSSL_CTX* ctx, const unsigned char* id,
 {
     int ret = 1;
 
+    WOLFSSL_ENTER("wolfSSL_CTX_use_PrivateKey_Id");
+
+    if (ctx == NULL || id == NULL || sz < 0) {
+        return 0;
+    }
+
     /* Dispose of old private key and allocate and copy in id. */
     FreeDer(&ctx->privateKey);
     if (AllocCopyDer(&ctx->privateKey, id, (word32)sz, PRIVATEKEY_TYPE,
@@ -4168,6 +4229,7 @@ int wolfSSL_CTX_use_PrivateKey_Id(WOLFSSL_CTX* ctx, const unsigned char* id,
     #endif
     }
 
+    WOLFSSL_LEAVE("wolfSSL_CTX_use_PrivateKey_Id", ret);
     return ret;
 }
 
@@ -4181,15 +4243,20 @@ int wolfSSL_CTX_use_PrivateKey_Id(WOLFSSL_CTX* ctx, const unsigned char* id,
  * @return  1 on success.
  * @return  0 on failure.
  */
-int wolfSSL_CTX_use_PrivateKey_id(WOLFSSL_CTX* ctx, const unsigned char* id,
+int wolfSSL_CTX_use_PrivateKey_Id_ex(WOLFSSL_CTX* ctx, const unsigned char* id,
     long sz, int devId, long keySz)
 {
-    int ret = wolfSSL_CTX_use_PrivateKey_Id(ctx, id, sz, devId);
+    int ret;
+
+    WOLFSSL_ENTER("wolfSSL_CTX_use_PrivateKey_Id_ex");
+
+    ret = wolfSSL_CTX_use_PrivateKey_Id(ctx, id, sz, devId);
     if (ret == 1) {
         /* Set the key size which normally is calculated during decoding. */
         ctx->privateKeySz = (int)keySz;
     }
 
+    WOLFSSL_LEAVE("wolfSSL_CTX_use_PrivateKey_Id_ex", ret);
     return ret;
 }
 
@@ -4205,7 +4272,15 @@ int wolfSSL_CTX_use_PrivateKey_Label(WOLFSSL_CTX* ctx, const char* label,
     int devId)
 {
     int ret = 1;
-    word32 sz = (word32)XSTRLEN(label) + 1;
+    word32 sz;
+
+    WOLFSSL_ENTER("wolfSSL_CTX_use_PrivateKey_Label");
+
+    if (ctx == NULL || label == NULL) {
+        return 0;
+    }
+
+    sz = (word32)XSTRLEN(label) + 1;
 
     /* Dispose of old private key and allocate and copy in label. */
     FreeDer(&ctx->privateKey);
@@ -4232,6 +4307,7 @@ int wolfSSL_CTX_use_PrivateKey_Label(WOLFSSL_CTX* ctx, const char* label,
     #endif
     }
 
+    WOLFSSL_LEAVE("wolfSSL_CTX_use_PrivateKey_Label", ret);
     return ret;
 }
 
@@ -4241,7 +4317,9 @@ int wolfSSL_CTX_use_AltPrivateKey_Id(WOLFSSL_CTX* ctx, const unsigned char* id,
 {
     int ret = 1;
 
-    if ((ctx == NULL) || (id == NULL)) {
+    WOLFSSL_ENTER("wolfSSL_CTX_use_AltPrivateKey_Id");
+
+    if ((ctx == NULL) || (id == NULL) || (sz < 0)) {
         ret = 0;
     }
 
@@ -4253,7 +4331,7 @@ int wolfSSL_CTX_use_AltPrivateKey_Id(WOLFSSL_CTX* ctx, const unsigned char* id,
         }
     }
     if (ret == 1) {
-        XMEMCPY(ctx->altPrivateKey->buffer, id, sz);
+        XMEMCPY(ctx->altPrivateKey->buffer, id, (word32)sz);
         ctx->altPrivateKeyId = 1;
         if (devId != INVALID_DEVID) {
             ctx->altPrivateKeyDevId = devId;
@@ -4263,17 +4341,23 @@ int wolfSSL_CTX_use_AltPrivateKey_Id(WOLFSSL_CTX* ctx, const unsigned char* id,
         }
     }
 
+    WOLFSSL_LEAVE("wolfSSL_CTX_use_AltPrivateKey_Id", ret);
     return ret;
 }
 
-int wolfSSL_CTX_use_AltPrivateKey_id(WOLFSSL_CTX* ctx, const unsigned char* id,
-    long sz, int devId, long keySz)
+int wolfSSL_CTX_use_AltPrivateKey_Id_ex(WOLFSSL_CTX* ctx,
+    const unsigned char* id, long sz, int devId, long keySz)
 {
-    int ret = wolfSSL_CTX_use_AltPrivateKey_Id(ctx, id, sz, devId);
+    int ret;
+
+    WOLFSSL_ENTER("wolfSSL_CTX_use_AltPrivateKey_Id_ex");
+
+    ret = wolfSSL_CTX_use_AltPrivateKey_Id(ctx, id, sz, devId);
     if (ret == 1) {
         ctx->altPrivateKeySz = (word32)keySz;
     }
 
+    WOLFSSL_LEAVE("wolfSSL_CTX_use_AltPrivateKey_Id_ex", ret);
     return ret;
 }
 
@@ -4282,6 +4366,8 @@ int wolfSSL_CTX_use_AltPrivateKey_Label(WOLFSSL_CTX* ctx, const char* label,
 {
     int ret = 1;
     word32 sz;
+
+    WOLFSSL_ENTER("wolfSSL_CTX_use_AltPrivateKey_Label");
 
     if ((ctx == NULL) || (label == NULL)) {
         ret = 0;
@@ -4306,6 +4392,7 @@ int wolfSSL_CTX_use_AltPrivateKey_Label(WOLFSSL_CTX* ctx, const char* label,
         }
     }
 
+    WOLFSSL_LEAVE("wolfSSL_CTX_use_AltPrivateKey_Label", ret);
     return ret;
 }
 #endif /* WOLFSSL_DUAL_ALG_CERTS */
@@ -4525,6 +4612,10 @@ int wolfSSL_use_PrivateKey_Id(WOLFSSL* ssl, const unsigned char* id,
 {
     int ret = 1;
 
+    if (ssl == NULL || id == NULL || sz < 0) {
+        return 0;
+    }
+
     /* Dispose of old private key if owned and allocate and copy in id. */
     if (ssl->buffers.weOwnKey) {
         FreeDer(&ssl->buffers.key);
@@ -4570,7 +4661,7 @@ int wolfSSL_use_PrivateKey_Id(WOLFSSL* ssl, const unsigned char* id,
  * @return  1 on success.
  * @return  0 on failure.
  */
-int wolfSSL_use_PrivateKey_id(WOLFSSL* ssl, const unsigned char* id,
+int wolfSSL_use_PrivateKey_Id_ex(WOLFSSL* ssl, const unsigned char* id,
     long sz, int devId, long keySz)
 {
     int ret = wolfSSL_use_PrivateKey_Id(ssl, id, sz, devId);
@@ -4593,7 +4684,13 @@ int wolfSSL_use_PrivateKey_id(WOLFSSL* ssl, const unsigned char* id,
 int wolfSSL_use_PrivateKey_Label(WOLFSSL* ssl, const char* label, int devId)
 {
     int ret = 1;
-    word32 sz = (word32)XSTRLEN(label) + 1;
+    word32 sz;
+
+    if (ssl == NULL || label == NULL) {
+        return 0;
+    }
+
+    sz = (word32)XSTRLEN(label) + 1;
 
     /* Dispose of old private key if owned and allocate and copy in label. */
     if (ssl->buffers.weOwnKey) {
@@ -4636,7 +4733,7 @@ int wolfSSL_use_AltPrivateKey_Id(WOLFSSL* ssl, const unsigned char* id, long sz,
 {
     int ret = 1;
 
-    if ((ssl == NULL) || (id == NULL)) {
+    if ((ssl == NULL) || (id == NULL) || (sz < 0)) {
         ret = 0;
     }
 
@@ -4648,12 +4745,12 @@ int wolfSSL_use_AltPrivateKey_Id(WOLFSSL* ssl, const unsigned char* id, long sz,
         #endif
         }
         if (AllocDer(&ssl->buffers.altKey, (word32)sz, ALT_PRIVATEKEY_TYPE,
-                ssl->heap) == 0) {
+                ssl->heap) != 0) {
             ret = 0;
         }
     }
     if (ret == 1) {
-        XMEMCPY(ssl->buffers.altKey->buffer, id, sz);
+        XMEMCPY(ssl->buffers.altKey->buffer, id, (word32)sz);
         ssl->buffers.weOwnAltKey = 1;
         ssl->buffers.altKeyId = 1;
         if (devId != INVALID_DEVID) {
@@ -4667,8 +4764,8 @@ int wolfSSL_use_AltPrivateKey_Id(WOLFSSL* ssl, const unsigned char* id, long sz,
     return ret;
 }
 
-int wolfSSL_use_AltPrivateKey_id(WOLFSSL* ssl, const unsigned char* id, long sz,
-    int devId, long keySz)
+int wolfSSL_use_AltPrivateKey_Id_ex(WOLFSSL* ssl, const unsigned char* id,
+    long sz, int devId, long keySz)
 {
     int ret = wolfSSL_use_AltPrivateKey_Id(ssl, id, sz, devId);
     if (ret == 1) {
@@ -4696,7 +4793,7 @@ int wolfSSL_use_AltPrivateKey_Label(WOLFSSL* ssl, const char* label, int devId)
         #endif
         }
         if (AllocDer(&ssl->buffers.altKey, (word32)sz, ALT_PRIVATEKEY_TYPE,
-                ssl->heap) == 0) {
+                ssl->heap) != 0) {
             ret = 0;
         }
     }
@@ -4795,11 +4892,20 @@ static int wolfssl_add_to_chain(DerBuffer** chain, int weOwn, const byte* cert,
         /* Get length of previous chain. */
         len = oldChain->length;
     }
-    /* Allocate DER buffer bug enough to hold old and new certificates. */
-    ret = AllocDer(&newChain, len + CERT_HEADER_SZ + certSz, CERT_TYPE, heap);
-    if (ret != 0) {
-        WOLFSSL_MSG("AllocDer error");
+    /* Check for integer overflow in size calculation. */
+    if ((len > WOLFSSL_MAX_32BIT - CERT_HEADER_SZ) ||
+            (certSz > WOLFSSL_MAX_32BIT - CERT_HEADER_SZ - len)) {
+        WOLFSSL_MSG("wolfssl_add_to_chain overflow");
         res = 0;
+    }
+    if (res == 1) {
+        /* Allocate DER buffer big enough to hold old and new certificates. */
+        ret = AllocDer(&newChain, len + CERT_HEADER_SZ + certSz, CERT_TYPE,
+            heap);
+        if (ret != 0) {
+            WOLFSSL_MSG("AllocDer error");
+            res = 0;
+        }
     }
 
     if (res == 1) {
@@ -4857,7 +4963,8 @@ static int wolfssl_ctx_add_to_chain(WOLFSSL_CTX* ctx, const byte* der,
 
     if (res == 1) {
          /* Add chain to DER buffer. */
-         res = wolfssl_add_to_chain(&ctx->certChain, 1, der, (word32)derSz, ctx->heap);
+         res = wolfssl_add_to_chain(&ctx->certChain, 1, der, (word32)derSz,
+             ctx->heap);
     #ifdef WOLFSSL_TLS13
         /* Update count of certificates. */
         ctx->certChainCnt++;
@@ -5156,7 +5263,7 @@ int wolfSSL_add1_chain_cert(WOLFSSL* ssl, WOLFSSL_X509* x509)
     }
 
     /* Increase reference count on X509 object before adding. */
-    if ((ret == 1) && ((ret == wolfSSL_X509_up_ref(x509)) == 1)) {
+    if ((ret == 1) && ((ret = wolfSSL_X509_up_ref(x509)) == 1)) {
         /* Add this to the chain. */
         if ((ret = wolfSSL_add0_chain_cert(ssl, x509)) != 1) {
             /* Decrease reference count on error as not stored. */
@@ -5209,6 +5316,18 @@ int wolfSSL_CTX_use_PrivateKey(WOLFSSL_CTX *ctx, WOLFSSL_EVP_PKEY *pkey)
         case WC_EVP_PKEY_EC:
             WOLFSSL_MSG("populating ECC key");
             ret = ECC_populate_EVP_PKEY(pkey, pkey->ecc);
+            break;
+    #endif
+    #ifdef HAVE_ED25519
+        case WC_EVP_PKEY_ED25519:
+            /* DER is already stored in pkey->pkey.ptr by d2i_evp_pkey. */
+            WOLFSSL_MSG("populating Ed25519 key");
+            break;
+    #endif
+    #ifdef HAVE_ED448
+        case WC_EVP_PKEY_ED448:
+            /* DER is already stored in pkey->pkey.ptr by d2i_evp_pkey. */
+            WOLFSSL_MSG("populating Ed448 key");
             break;
     #endif
         default:
@@ -5319,6 +5438,9 @@ int wolfSSL_CTX_use_RSAPrivateKey(WOLFSSL_CTX* ctx, WOLFSSL_RSA* rsa)
     }
 
     /* Dispos of dynamically allocated data. */
+    if (der != NULL) {
+        ForceZero(der, (word32)derSize);
+    }
     XFREE(der, NULL, DYNAMIC_TYPE_TMP_BUFFER);
     return ret;
 }
@@ -5402,9 +5524,13 @@ int wolfSSL_CTX_set_default_verify_paths(WOLFSSL_CTX* ctx)
             ret = 1;
         }
     #else
-        /* OpenSSL's implementation of this API does not require loading the
-           system CA cert directory.  Allow skipping this without erroring out. */
-        ret = 1;
+        /* No source available: SSL_CERT_DIR/SSL_CERT_FILE not set and
+         * WOLFSSL_SYS_CA_CERTS not compiled in. Returning success would be
+         * fail-open since no trust anchors were loaded. */
+        WOLFSSL_MSG("wolfSSL_CTX_set_default_verify_paths: no CA source "
+                    "available (build without WOLFSSL_SYS_CA_CERTS and no "
+                    "SSL_CERT_DIR/SSL_CERT_FILE env)");
+        ret = WOLFSSL_FAILURE;
     #endif
     }
 
@@ -5524,8 +5650,10 @@ int wolfSSL_SetTmpDH(WOLFSSL* ssl, const unsigned char* p, int pSz,
 
     if (ret == 1) {
         /* Allocate buffers for p and g to be assigned into SSL. */
-        pAlloc = (byte*)XMALLOC((size_t)pSz, ssl->heap, DYNAMIC_TYPE_PUBLIC_KEY);
-        gAlloc = (byte*)XMALLOC((size_t)gSz, ssl->heap, DYNAMIC_TYPE_PUBLIC_KEY);
+        pAlloc = (byte*)XMALLOC((size_t)pSz, ssl->heap,
+            DYNAMIC_TYPE_PUBLIC_KEY);
+        gAlloc = (byte*)XMALLOC((size_t)gSz, ssl->heap,
+            DYNAMIC_TYPE_PUBLIC_KEY);
         if ((pAlloc == NULL) || (gAlloc == NULL)) {
             /* Memory will be freed below in the (ret != 1) block */
             ret = MEMORY_E;
@@ -5576,7 +5704,8 @@ static int wolfssl_check_dh_key(unsigned char* p, int pSz, unsigned char* g,
         /* Initialize a DH object. */
         if ((ret = wc_InitDhKey(checkKey)) == 0) {
             /* Check DH parameters. */
-            ret = wc_DhSetCheckKey(checkKey, p, (word32)pSz, g, (word32)gSz, NULL, 0, 0, &rng);
+            ret = wc_DhSetCheckKey(checkKey, p, (word32)pSz, g, (word32)gSz,
+                NULL, 0, 0, &rng);
             /* Dispose of DH object. */
             wc_FreeDhKey(checkKey);
         }
@@ -5612,9 +5741,14 @@ static int wolfssl_ctx_set_tmp_dh(WOLFSSL_CTX* ctx, unsigned char* p, int pSz,
 
     WOLFSSL_ENTER("wolfSSL_CTX_SetTmpDH");
 
+    if ((ctx == NULL) || (p == NULL) || (g == NULL))
+        ret = BAD_FUNC_ARG;
+
     /* Check the size of the prime meets the requirements of the SSL context. */
-    if (((word16)pSz < ctx->minDhKeySz) || ((word16)pSz > ctx->maxDhKeySz)) {
-        ret = DH_KEY_SIZE_E;
+    if (ret == 1) {
+        if (((word16)pSz < ctx->minDhKeySz) || ((word16)pSz > ctx->maxDhKeySz)) {
+            ret = DH_KEY_SIZE_E;
+        }
     }
 
 #if !defined(WOLFSSL_OLD_PRIME_CHECK) && !defined(HAVE_FIPS) && \
@@ -5672,8 +5806,10 @@ int wolfSSL_CTX_SetTmpDH(WOLFSSL_CTX* ctx, const unsigned char* p, int pSz,
 
     if (ret == 1) {
         /* Allocate buffers for p and g to be assigned into SSL context. */
-        pAlloc = (byte*)XMALLOC((size_t)pSz, ctx->heap, DYNAMIC_TYPE_PUBLIC_KEY);
-        gAlloc = (byte*)XMALLOC((size_t)gSz, ctx->heap, DYNAMIC_TYPE_PUBLIC_KEY);
+        pAlloc = (byte*)XMALLOC((size_t)pSz, ctx->heap,
+            DYNAMIC_TYPE_PUBLIC_KEY);
+        gAlloc = (byte*)XMALLOC((size_t)gSz, ctx->heap,
+            DYNAMIC_TYPE_PUBLIC_KEY);
         if ((pAlloc == NULL) || (gAlloc == NULL)) {
             ret = MEMORY_E;
         }
@@ -5812,7 +5948,7 @@ long wolfSSL_CTX_set_tmp_dh(WOLFSSL_CTX* ctx, WOLFSSL_DH* dh)
         pSz = wolfSSL_BN_bn2bin(dh->p, p);
         gSz = wolfSSL_BN_bn2bin(dh->g, g);
         /* Check encoding worked. */
-        if ((pSz < 0) && (gSz < 0)) {
+        if ((pSz <= 0) || (gSz <= 0)) {
             ret = WOLFSSL_FATAL_ERROR;
         }
     }
@@ -5878,12 +6014,10 @@ static int ws_ctx_ssl_set_tmp_dh(WOLFSSL_CTX* ctx, WOLFSSL* ssl,
 
     /* PemToDer allocates its own DER buffer. */
     if ((res == 1) && (format != WOLFSSL_FILETYPE_PEM)) {
-        /* Create an empty DER buffer. */
-        ret = AllocDer(&der, 0, DH_PARAM_TYPE, heap);
+        /* Create a DER buffer and copy in the encoded DH parameters. */
+        ret = AllocDer(&der, (word32)sz, DH_PARAM_TYPE, heap);
         if (ret == 0) {
-            /* Assign encoded DH parameters to DER buffer. */
-            der->buffer = (byte*)buf;
-            der->length = (word32)sz;
+            XMEMCPY(der->buffer, buf, (word32)sz);
         }
         else {
             res = ret;

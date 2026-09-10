@@ -1,6 +1,6 @@
 /* test_ossl_ec.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -314,6 +314,7 @@ int test_wolfSSL_EC_POINT(void)
     EC_POINT* set_point = NULL;
     EC_POINT* get_point = NULL;
     EC_POINT* infinity = NULL;
+    EC_POINT* dup_point = NULL;
     BIGNUM* k = NULL;
     BIGNUM* Gx = NULL;
     BIGNUM* Gy = NULL;
@@ -428,6 +429,7 @@ int test_wolfSSL_EC_POINT(void)
         X, Y, ctx), 0);
 
 #if !defined(WOLFSSL_ATECC508A) && !defined(WOLFSSL_ATECC608A) && \
+    !defined(WOLFSSL_MICROCHIP_TA100) && \
     !defined(HAVE_SELFTEST) && !defined(WOLFSSL_SP_MATH) && \
     !defined(WOLF_CRYPTO_CB_ONLY_ECC)
     ExpectIntEQ(EC_POINT_add(NULL, NULL, NULL, NULL, ctx), 0);
@@ -475,8 +477,7 @@ int test_wolfSSL_EC_POINT(void)
     /* check if point X coordinate is zero */
     ExpectIntEQ(BN_is_zero(new_point->X), 0);
 
-#if defined(USE_ECC_B_PARAM) && !defined(HAVE_SELFTEST) && \
-    (!defined(HAVE_FIPS) || FIPS_VERSION_GT(2,0))
+#if !defined(HAVE_SELFTEST) && (!defined(HAVE_FIPS) || FIPS_VERSION_GT(2,0))
     ExpectIntEQ(EC_POINT_is_on_curve(group, new_point, ctx), 1);
 #endif
 
@@ -507,6 +508,12 @@ int test_wolfSSL_EC_POINT(void)
     ExpectIntEQ(EC_POINT_copy(new_point, NULL), 0);
     ExpectIntEQ(EC_POINT_copy(new_point, set_point), 1);
 
+    /* Test duplicating */
+    ExpectNull(EC_POINT_dup(NULL, group));
+    ExpectNull(EC_POINT_dup(set_point, NULL));
+    ExpectNotNull(dup_point = EC_POINT_dup(set_point, group));
+    ExpectIntEQ(EC_POINT_cmp(group, dup_point, set_point, ctx), 0);
+
     /* Test inverting */
     ExpectIntEQ(EC_POINT_invert(NULL, NULL, ctx), 0);
     ExpectIntEQ(EC_POINT_invert(NULL, new_point, ctx), 0);
@@ -514,6 +521,7 @@ int test_wolfSSL_EC_POINT(void)
     ExpectIntEQ(EC_POINT_invert(group, new_point, ctx), 1);
 
 #if !defined(WOLFSSL_ATECC508A) && !defined(WOLFSSL_ATECC608A) && \
+    !defined(WOLFSSL_MICROCHIP_TA100) && \
     !defined(HAVE_SELFTEST) && !defined(WOLFSSL_SP_MATH) && \
     !defined(WOLF_CRYPTO_CB_ONLY_ECC)
     {
@@ -523,6 +531,12 @@ int test_wolfSSL_EC_POINT(void)
                     1);
         /* new_point should be set_point inverted so adding it will revert
          * the point back to set_point */
+        ExpectIntEQ(EC_POINT_add(group, orig_point, orig_point, new_point,
+                                 NULL), 1);
+        ExpectIntEQ(EC_POINT_cmp(group, orig_point, set_point, NULL), 0);
+        /* dup_point equals set_point so let's test with that too */
+        ExpectIntEQ(EC_POINT_add(group, orig_point, dup_point, dup_point, NULL),
+                    1);
         ExpectIntEQ(EC_POINT_add(group, orig_point, orig_point, new_point,
                                  NULL), 1);
         ExpectIntEQ(EC_POINT_cmp(group, orig_point, set_point, NULL), 0);
@@ -610,13 +624,86 @@ int test_wolfSSL_EC_POINT(void)
     hexStr = EC_POINT_point2hex(group, Gxy, POINT_CONVERSION_COMPRESSED, ctx);
     ExpectNotNull(hexStr);
     ExpectStrEQ(hexStr, compG);
-    #ifdef HAVE_COMP_KEY
+    #if defined(HAVE_COMP_KEY) && !defined(HAVE_SELFTEST)
     ExpectNotNull(get_point = EC_POINT_hex2point
                                             (group, hexStr, get_point, ctx));
     ExpectIntEQ(EC_POINT_cmp(group, Gxy, get_point, ctx), 0);
     #endif
     XFREE(hexStr, NULL, DYNAMIC_TYPE_ECC);
     EC_POINT_free(get_point);
+    get_point = NULL;
+
+    /* Regression: oversized compressed-point hex must not overflow the stack
+     * buffer in wolfSSL_EC_POINT_hex2point(). The byte length decoded from
+     * the hex string must be bounded by the curve's ordinate size. */
+    {
+        char tooLongHex[2 + 600 + 1];
+        size_t i;
+
+        tooLongHex[0] = '0';
+        tooLongHex[1] = '3';
+        for (i = 2; i < sizeof(tooLongHex) - 1; i++)
+            tooLongHex[i] = 'A';
+        tooLongHex[sizeof(tooLongHex) - 1] = '\0';
+        ExpectNull(EC_POINT_hex2point(group, tooLongHex, NULL, ctx));
+
+        /* Same with the "02" (even Y) prefix. */
+        tooLongHex[1] = '2';
+        ExpectNull(EC_POINT_hex2point(group, tooLongHex, NULL, ctx));
+
+        /* Truncated uncompressed input: prefix "04" with too few hex chars
+         * to cover the curve's coordinates. Must return NULL without
+         * reading past the end of the input string. */
+        ExpectNull(EC_POINT_hex2point(group, "04AB", NULL, ctx));
+
+        /* Empty payload after a recognized prefix. */
+        ExpectNull(EC_POINT_hex2point(group, "03", NULL, ctx));
+        ExpectNull(EC_POINT_hex2point(group, "04", NULL, ctx));
+
+        /* Partially populated compressed input: must be rejected so that
+         * wolfSSL_ECPoint_d2i() does not consume uninitialized stack
+         * bytes as the X coordinate. */
+        ExpectNull(EC_POINT_hex2point(group, "03AB", NULL, ctx));
+        ExpectNull(EC_POINT_hex2point(group, "02ABCD", NULL, ctx));
+
+        /* Odd-length compressed payload: 2*key_sz + 1 hex chars after
+         * the "03" prefix (P-256: 65 chars). A truncating-divide bound
+         * (sz = XSTRLEN/2) would round down to key_sz and accept this;
+         * an exact-length compare must reject it. */
+        {
+            char oddLenHex[2 + 65 + 1];
+            for (i = 2; i < sizeof(oddLenHex) - 1; i++)
+                oddLenHex[i] = 'A';
+            oddLenHex[0] = '0';
+            oddLenHex[1] = '3';
+            oddLenHex[sizeof(oddLenHex) - 1] = '\0';
+            ExpectNull(EC_POINT_hex2point(group, oddLenHex, NULL, ctx));
+        }
+    }
+
+    #if defined(HAVE_COMP_KEY) && !defined(HAVE_SELFTEST)
+    /* Round-trip a compressed point with even Y ("02" prefix) to verify
+     * that the prefix-to-parity flag is honored in the compressed branch. */
+    {
+        EC_POINT* even_point = NULL;
+        EC_POINT* round_trip = NULL;
+        char*     even_hex   = NULL;
+
+        ExpectNotNull(even_point = EC_POINT_dup(Gxy, group));
+        ExpectIntEQ(EC_POINT_invert(group, even_point, ctx), 1);
+        ExpectNotNull(even_hex = EC_POINT_point2hex(group, even_point,
+            POINT_CONVERSION_COMPRESSED, ctx));
+        /* P-256 G has odd Y; inverting flips Y parity so prefix is "02". */
+        ExpectIntEQ(even_hex[1], '2');
+        ExpectNotNull(round_trip = EC_POINT_hex2point(group, even_hex, NULL,
+            ctx));
+        ExpectIntEQ(EC_POINT_cmp(group, even_point, round_trip, ctx), 0);
+
+        XFREE(even_hex, NULL, DYNAMIC_TYPE_ECC);
+        EC_POINT_free(round_trip);
+        EC_POINT_free(even_point);
+    }
+    #endif
 
 #ifndef HAVE_SELFTEST
     /* Test point to oct */
@@ -769,6 +856,7 @@ int test_wolfSSL_EC_POINT(void)
     BN_free(k);
     BN_free(set_point_bn);
     EC_POINT_free(infinity);
+    EC_POINT_free(dup_point);
     EC_POINT_free(new_point);
     EC_POINT_free(set_point);
     EC_POINT_clear_free(Gxy);
@@ -788,6 +876,7 @@ int test_wolfSSL_SPAKE(void)
 
 #if defined(OPENSSL_EXTRA) && defined(HAVE_ECC) && !defined(WOLFSSL_ATECC508A) \
     && !defined(WOLFSSL_ATECC608A) && !defined(HAVE_SELFTEST) && \
+       !defined(WOLFSSL_MICROCHIP_TA100) && \
        !defined(WOLFSSL_SP_MATH) && !defined(WOLF_CRYPTO_CB_ONLY_ECC)
     BIGNUM* x = NULL; /* kdc priv */
     BIGNUM* y = NULL; /* client priv */
@@ -988,6 +1077,7 @@ int test_EC_i2d(void)
     ExpectNull(d2i_ECPrivateKey(&copy, &tmp, 1));
     ExpectNull(d2i_ECPrivateKey(&key, &tmp, 0));
 
+#ifndef NO_BIO
     {
         EC_KEY *pubkey = NULL;
         BIO* bio = NULL;
@@ -999,6 +1089,7 @@ int test_EC_i2d(void)
         BIO_free(bio);
         EC_KEY_free(pubkey);
     }
+#endif
 
     ExpectIntEQ(i2d_ECPrivateKey(NULL, &p), 0);
     ExpectIntEQ(i2d_ECPrivateKey(NULL, NULL), 0);
@@ -1345,12 +1436,15 @@ int test_wolfSSL_EC_KEY_print_fp(void)
     EC_KEY* key = NULL;
 
     /* Bad file pointer. */
-    ExpectIntEQ(wolfSSL_EC_KEY_print_fp(NULL, key, 0), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
+    ExpectIntEQ(wolfSSL_EC_KEY_print_fp(NULL, key, 0),
+        WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
     /* NULL key. */
-    ExpectIntEQ(wolfSSL_EC_KEY_print_fp(stderr, NULL, 0), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
+    ExpectIntEQ(wolfSSL_EC_KEY_print_fp(stderr, NULL, 0),
+        WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
     ExpectNotNull((key = wolfSSL_EC_KEY_new_by_curve_name(NID_secp224r1)));
     /* Negative indent. */
-    ExpectIntEQ(wolfSSL_EC_KEY_print_fp(stderr, key, -1), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
+    ExpectIntEQ(wolfSSL_EC_KEY_print_fp(stderr, key, -1),
+        WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
 
     ExpectIntEQ(wolfSSL_EC_KEY_print_fp(stderr, key, 4), WOLFSSL_SUCCESS);
     ExpectIntEQ(wolfSSL_EC_KEY_generate_key(key), WOLFSSL_SUCCESS);
@@ -1461,6 +1555,11 @@ int test_wolfSSL_ECDSA_SIG(void)
     sig = NULL;
 
     ExpectNull(wolfSSL_d2i_ECDSA_SIG(NULL, NULL, sizeof(sigData)));
+    /* Reject non-positive length and *pp == NULL (PR #10207). */
+    cp = sigData;
+    ExpectNull(wolfSSL_d2i_ECDSA_SIG(NULL, &cp, -1));
+    cp = NULL;
+    ExpectNull(wolfSSL_d2i_ECDSA_SIG(NULL, &cp, sizeof(sigData)));
     cp = sigDataBad;
     ExpectNull(wolfSSL_d2i_ECDSA_SIG(NULL, &cp, sizeof(sigDataBad)));
     cp = sigData;

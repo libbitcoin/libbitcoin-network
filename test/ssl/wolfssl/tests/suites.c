@@ -1,6 +1,6 @@
 /* suites.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -169,57 +169,169 @@ static int IsValidCipherSuite(const char* line, char *suite, size_t suite_spc)
 }
 
 #if defined(WOLFSSL_HAVE_MLKEM)
+
+#define MATCH_PQC(b, s, l) ((l) == sizeof(s) - 1 && \
+    XSTRNCMP((b), (s), sizeof(s) - 1) == 0)
+
 static int IsKyberLevelAvailable(const char* line)
 {
     int available = 0;
-    const char* find = "--pqc ";
-    const char* begin = strstr(line, find);
-    const char* end;
+    const char* begin = XSTRSTR(line, "--pqc");
+    size_t len = 0;
 
     if (begin != NULL) {
-        begin += 6;
-        end = XSTRSTR(begin, " ");
+        begin += XSTRLEN("--pqc");
+        while (*begin == ' ' || *begin == '\t') {
+            begin++;
+        }
 
-    #ifndef WOLFSSL_NO_ML_KEM
-        if ((size_t)end - (size_t)begin == 10) {
+        if (*begin != '\0') {
+            const char* end = begin;
+            while (*end != '\0' && *end != ' ' && *end != '\t') {
+                end++;
+            }
+            len = (size_t)(end - begin);
+        }
+    }
+
+    if (begin != NULL && len > 0) {
+#ifndef WOLFSSL_NO_ML_KEM
+    #ifndef WOLFSSL_TLS_NO_MLKEM_STANDALONE
         #ifndef WOLFSSL_NO_ML_KEM_512
-            if (XSTRNCMP(begin, "ML_KEM_512", 10) == 0) {
+            if (MATCH_PQC(begin, "ML_KEM_512", len)) {
                 available = 1;
             }
         #endif
         #ifndef WOLFSSL_NO_ML_KEM_768
-            if (XSTRNCMP(begin, "ML_KEM_768", 10) == 0) {
+            if (MATCH_PQC(begin, "ML_KEM_768", len)) {
                 available = 1;
             }
         #endif
-        }
         #ifndef WOLFSSL_NO_ML_KEM_1024
-        if ((size_t)end - (size_t)begin == 11) {
-            if (XSTRNCMP(begin, "ML_KEM_1024", 11) == 0) {
+            if (MATCH_PQC(begin, "ML_KEM_1024", len)) {
                 available = 1;
             }
-        }
         #endif
-    #endif
-    #ifdef WOLFSSL_MLKEM_KYBER
-        if ((size_t)end - (size_t)begin == 12) {
-        #ifndef WOLFSSL_NO_KYBER512
-            if (XSTRNCMP(begin, "KYBER_LEVEL1", 12) == 0) {
+    #endif /* WOLFSSL_TLS_NO_MLKEM_STANDALONE */
+    #ifdef WOLFSSL_PQC_HYBRIDS
+        #if !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_ECC) && \
+            (!defined(WOLFSSL_SP_MATH) || !defined(WOLFSSL_SP_NO_256))
+            if (MATCH_PQC(begin, "SecP256r1MLKEM768", len)) {
                 available = 1;
             }
+        #endif
+        #if !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_CURVE25519)
+            if (MATCH_PQC(begin, "X25519MLKEM768", len)) {
+                available = 1;
+            }
+        #endif
+        #if !defined(WOLFSSL_NO_ML_KEM_1024) && defined(HAVE_ECC) && \
+            (!defined(WOLFSSL_SP_MATH) || defined(WOLFSSL_SP_384))
+            if (MATCH_PQC(begin, "SecP384r1MLKEM1024", len)) {
+                available = 1;
+            }
+        #endif
+    #endif /* WOLFSSL_PQC_HYBRIDS */
+    #ifdef WOLFSSL_EXTRA_PQC_HYBRIDS
+        #if !defined(WOLFSSL_NO_ML_KEM_512) && defined(HAVE_ECC)
+            if (MATCH_PQC(begin, "SecP256r1MLKEM512", len)) {
+                available = 1;
+            }
+        #ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+            if (MATCH_PQC(begin, "P256_ML_KEM_512_OLD", len)) {
+                available = 1;
+            }
+        #endif
+        #endif
+        #if !defined(WOLFSSL_NO_ML_KEM_512) && defined(HAVE_CURVE25519)
+            if (MATCH_PQC(begin, "X25519MLKEM512", len)) {
+                available = 1;
+            }
+        #endif
+        #if !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_ECC) && \
+            (!defined(WOLFSSL_SP_MATH) || defined(WOLFSSL_SP_384))
+            if (MATCH_PQC(begin, "SecP384r1MLKEM768", len)) {
+                available = 1;
+            }
+        #ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+            if (MATCH_PQC(begin, "P384_ML_KEM_768_OLD", len)) {
+                available = 1;
+            }
+        #endif
+        #endif
+        #if !defined(WOLFSSL_NO_ML_KEM_768) && defined(HAVE_CURVE448)
+            if (MATCH_PQC(begin, "X448MLKEM768", len)) {
+                available = 1;
+            }
+        #endif
+        #if !defined(WOLFSSL_NO_ML_KEM_1024) && defined(HAVE_ECC) && \
+            (!defined(WOLFSSL_SP_MATH) || defined(WOLFSSL_SP_521))
+            if (MATCH_PQC(begin, "SecP521r1MLKEM1024", len)) {
+                available = 1;
+            }
+        #ifdef WOLFSSL_ML_KEM_USE_OLD_IDS
+            if (MATCH_PQC(begin, "P521_ML_KEM_1024_OLD", len)) {
+                available = 1;
+            }
+        #endif
+        #endif
+    #endif /* WOLFSSL_EXTRA_PQC_HYBRIDS */
+#endif /* !WOLFSSL_NO_ML_KEM */
+
+#ifdef WOLFSSL_MLKEM_KYBER
+        #ifndef WOLFSSL_NO_KYBER512
+            if (MATCH_PQC(begin, "KYBER_LEVEL1", len)) {
+                available = 1;
+            }
+        #ifdef HAVE_ECC
+            if (MATCH_PQC(begin, "P256_KYBER_LEVEL1", len)) {
+                available = 1;
+            }
+        #endif
         #endif
         #ifndef WOLFSSL_NO_KYBER768
-            if (XSTRNCMP(begin, "KYBER_LEVEL3", 12) == 0) {
+            if (MATCH_PQC(begin, "KYBER_LEVEL3", len)) {
                 available = 1;
             }
+        #ifdef HAVE_ECC
+            #if !defined(WOLFSSL_SP_MATH) || defined(WOLFSSL_SP_384)
+            if (MATCH_PQC(begin, "P384_KYBER_LEVEL3", len)) {
+                available = 1;
+            }
+            #endif
+            if (MATCH_PQC(begin, "P256_KYBER_LEVEL3", len)) {
+                available = 1;
+            }
+        #endif
         #endif
         #ifndef WOLFSSL_NO_KYBER1024
-            if (XSTRNCMP(begin, "KYBER_LEVEL5", 12) == 0) {
+            if (MATCH_PQC(begin, "KYBER_LEVEL5", len)) {
+                available = 1;
+            }
+        #ifdef HAVE_ECC
+            #if !defined(WOLFSSL_SP_MATH) || defined(WOLFSSL_SP_521)
+            if (MATCH_PQC(begin, "P521_KYBER_LEVEL5", len)) {
+                available = 1;
+            }
+            #endif
+        #endif
+        #endif
+        #if !defined(WOLFSSL_NO_KYBER512) && defined(HAVE_CURVE25519)
+            if (MATCH_PQC(begin, "X25519_KYBER_LEVEL1", len)) {
                 available = 1;
             }
         #endif
-        }
-    #endif
+        #if !defined(WOLFSSL_NO_KYBER768) && defined(HAVE_CURVE25519)
+            if (MATCH_PQC(begin, "X25519_KYBER_LEVEL3", len)) {
+                available = 1;
+            }
+        #endif
+        #if !defined(WOLFSSL_NO_KYBER768) && defined(HAVE_CURVE448)
+            if (MATCH_PQC(begin, "X448_KYBER_LEVEL3", len)) {
+                available = 1;
+            }
+        #endif
+#endif /* WOLFSSL_MLKEM_KYBER */
     }
 
 #if defined(WOLFSSL_MLKEM_NO_MAKE_KEY) || \
@@ -372,6 +484,28 @@ static int IsEcdsaCipherSuiteDefRsaCert(const char* line)
 }
 #endif
 
+#ifdef WOLFSSL_STATIC_PSK
+/* Check whether the command line forces ephemeral (EC)DHE PSK key exchange.
+ *
+ * @param [in] argc  Number of arguments.
+ * @param [in] argv  Argument list.
+ * @return  1 when "--onlyPskDheKe" is present.
+ * @return  0 otherwise.
+ */
+static int IsOnlyPskDheKe(int argc, char** argv)
+{
+    int i;
+
+    for (i = 0; i < argc; i++) {
+        if (argv[i] != NULL && XSTRCMP(argv[i], "--onlyPskDheKe") == 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+#endif /* WOLFSSL_STATIC_PSK */
+
 static int execute_test_case(int svr_argc, char** svr_argv,
                              int cli_argc, char** cli_argv,
                              int addNoVerify, int addNonBlocking,
@@ -480,6 +614,18 @@ static int execute_test_case(int svr_argc, char** svr_argv,
     if (IsUsingCert(commandLine)) {
         #ifdef DEBUG_SUITE_TESTS
             printf("certificate %s not supported in build\n", commandLine);
+        #endif
+        return NOT_BUILT_IN;
+    }
+#endif
+#ifdef WOLFSSL_STATIC_PSK
+    /* --onlyPskDheKe forces the psk_dhe_ke key exchange mode, which requires
+     * ephemeral (EC)DHE. A static PSK build provides only the psk_ke mode, so
+     * skip these tests. */
+    if (IsOnlyPskDheKe(svrArgs.argc, svr_argv) ||
+            IsOnlyPskDheKe(cliArgs.argc, cli_argv)) {
+        #ifdef DEBUG_SUITE_TESTS
+            printf("--onlyPskDheKe not supported with WOLFSSL_STATIC_PSK\n");
         #endif
         return NOT_BUILT_IN;
     }
@@ -904,10 +1050,15 @@ int SuiteTest(int argc, char** argv)
 {
 #if !defined(NO_WOLFSSL_SERVER) && !defined(NO_WOLFSSL_CLIENT) && \
     !defined(NO_TLS) && !defined(SINGLE_THREADED) && \
-    !defined(WOLF_CRYPTO_CB_ONLY_RSA) && !defined(WOLF_CRYPTO_CB_ONLY_ECC)
+    (defined(WOLFSSL_SWDEV) || \
+     (!defined(WOLF_CRYPTO_CB_ONLY_RSA) && !defined(WOLF_CRYPTO_CB_ONLY_ECC)))
     func_args args;
     char argv0[3][80];
     char* myArgv[3];
+
+#ifdef WOLFSSL_STATIC_MEMORY
+    byte memory[320000];
+#endif
 
     printf(" Begin Cipher Suite Tests\n");
 
@@ -917,10 +1068,6 @@ int SuiteTest(int argc, char** argv)
     myArgv[2] = argv0[2];
     args.argv = myArgv;
     XSTRLCPY(argv0[0], "SuiteTest", sizeof(argv0[0]));
-
-#ifdef WOLFSSL_STATIC_MEMORY
-    byte memory[200000];
-#endif
 
     cipherSuiteCtx = wolfSSL_CTX_new(wolfSSLv23_client_method());
     if (cipherSuiteCtx == NULL) {
@@ -1023,9 +1170,10 @@ int SuiteTest(int argc, char** argv)
         goto exit;
     }
     #endif
-    #ifdef HAVE_PQC
-    /* add TLSv13 pq tests */
-    XSTRLCPY(argv0[1], "tests/test-tls13-pq.conf", sizeof(argv0[1]));
+    #ifdef WOLFSSL_HAVE_MLKEM
+    #ifndef WOLFSSL_TLS_NO_MLKEM_STANDALONE
+    /* add TLSv13 pq standalone tests */
+    XSTRLCPY(argv0[1], "tests/test-tls13-pq-standalone.conf", sizeof(argv0[1]));
     printf("starting TLSv13 post-quantum groups tests\n");
     test_harness(&args);
     if (args.return_code != 0) {
@@ -1033,6 +1181,8 @@ int SuiteTest(int argc, char** argv)
         args.return_code = EXIT_FAILURE;
         goto exit;
     }
+    #endif /* !WOLFSSL_TLS_NO_MLKEM_STANDALONE */
+    #ifdef WOLFSSL_PQC_HYBRIDS
     /* add TLSv13 pq hybrid tests */
     XSTRLCPY(argv0[1], "tests/test-tls13-pq-hybrid.conf", sizeof(argv0[1]));
     printf("starting TLSv13 post-quantum groups tests\n");
@@ -1042,10 +1192,23 @@ int SuiteTest(int argc, char** argv)
         args.return_code = EXIT_FAILURE;
         goto exit;
     }
+    #endif /* WOLFSSL_PQC_HYBRIDS */
+    #ifdef WOLFSSL_EXTRA_PQC_HYBRIDS
+    /* add TLSv13 pq extra hybrid tests */
+    XSTRLCPY(argv0[1], "tests/test-tls13-pq-hybrid-extra.conf", sizeof(argv0[1]));
+    printf("starting TLSv13 post-quantum groups tests\n");
+    test_harness(&args);
+    if (args.return_code != 0) {
+        printf("error from script %d\n", args.return_code);
+        args.return_code = EXIT_FAILURE;
+        goto exit;
+    }
     #endif
-    #if defined(HAVE_PQC) && defined(WOLFSSL_DTLS13)
-    /* add DTLSv13 pq tests */
-    XSTRLCPY(argv0[1], "tests/test-dtls13-pq.conf", sizeof(argv0[1]));
+    #endif
+    #if defined(WOLFSSL_HAVE_MLKEM) && defined(WOLFSSL_DTLS13)
+    #ifndef WOLFSSL_TLS_NO_MLKEM_STANDALONE
+    /* add DTLSv13 pq standalone tests */
+    XSTRLCPY(argv0[1], "tests/test-dtls13-pq-standalone.conf", sizeof(argv0[1]));
     printf("starting DTLSv13 post-quantum groups tests\n");
     test_harness(&args);
     if (args.return_code != 0) {
@@ -1053,8 +1216,10 @@ int SuiteTest(int argc, char** argv)
         args.return_code = EXIT_FAILURE;
         goto exit;
     }
-    /* add DTLSv13 pq hybrid tests */
-    XSTRLCPY(argv0[1], "tests/test-dtls13-pq-hybrid.conf", sizeof(argv0[1]));
+    #endif /* !WOLFSSL_TLS_NO_MLKEM_STANDALONE */
+    #ifdef WOLFSSL_EXTRA_PQC_HYBRIDS
+    /* add DTLSv13 pq extra hybrid tests */
+    XSTRLCPY(argv0[1], "tests/test-dtls13-pq-hybrid-extra.conf", sizeof(argv0[1]));
     printf("starting DTLSv13 post-quantum 2 groups tests\n");
     test_harness(&args);
     if (args.return_code != 0) {
@@ -1062,9 +1227,11 @@ int SuiteTest(int argc, char** argv)
         args.return_code = EXIT_FAILURE;
         goto exit;
     }
+    #endif
     #ifdef WOLFSSL_DTLS_CH_FRAG
-    /* add DTLSv13 pq frag tests */
-    XSTRLCPY(argv0[1], "tests/test-dtls13-pq-frag.conf", sizeof(argv0[1]));
+    #ifndef WOLFSSL_TLS_NO_MLKEM_STANDALONE
+    /* add DTLSv13 pq standalone frag tests */
+    XSTRLCPY(argv0[1], "tests/test-dtls13-pq-standalone-frag.conf", sizeof(argv0[1]));
     printf("starting DTLSv13 post-quantum groups tests with fragmentation\n");
     test_harness(&args);
     if (args.return_code != 0) {
@@ -1072,6 +1239,8 @@ int SuiteTest(int argc, char** argv)
         args.return_code = EXIT_FAILURE;
         goto exit;
     }
+    #endif /* !WOLFSSL_TLS_NO_MLKEM_STANDALONE */
+    #ifdef WOLFSSL_PQC_HYBRIDS
     /* add DTLSv13 pq hybrid frag tests */
     XSTRLCPY(argv0[1], "tests/test-dtls13-pq-hybrid-frag.conf", sizeof(argv0[1]));
     printf("starting DTLSv13 post-quantum 2 groups tests with fragmentation\n");
@@ -1081,6 +1250,18 @@ int SuiteTest(int argc, char** argv)
         args.return_code = EXIT_FAILURE;
         goto exit;
     }
+    #endif /* WOLFSSL_PQC_HYBRIDS */
+    #ifdef WOLFSSL_EXTRA_PQC_HYBRIDS
+    /* add DTLSv13 pq extra hybrid frag tests */
+    XSTRLCPY(argv0[1], "tests/test-dtls13-pq-hybrid-extra-frag.conf", sizeof(argv0[1]));
+    printf("starting DTLSv13 post-quantum 2 groups tests with fragmentation\n");
+    test_harness(&args);
+    if (args.return_code != 0) {
+        printf("error from script %d\n", args.return_code);
+        args.return_code = EXIT_FAILURE;
+        goto exit;
+    }
+    #endif
     #endif
     #endif
 #endif
@@ -1117,6 +1298,50 @@ int SuiteTest(int argc, char** argv)
     /* add ED448 certificate cipher suite tests */
     XSTRLCPY(argv0[1], "tests/test-ed448.conf", sizeof(argv0[1]));
     printf("starting ED448 extra cipher suite tests\n");
+    test_harness(&args);
+    if (args.return_code != 0) {
+        printf("error from script %d\n", args.return_code);
+        args.return_code = EXIT_FAILURE;
+        goto exit;
+    }
+#endif
+#if defined(WOLFSSL_HAVE_SLHDSA) && defined(WOLFSSL_HAVE_MLDSA) && \
+    defined(WOLFSSL_SLHDSA_PARAM_128S) && \
+    defined(WOLFSSL_TLS13) && !defined(WOLFSSL_NO_ML_DSA_44)
+    /* SLH-DSA-SHAKE-128s root + ML-DSA-44 entity cert tests (TLS 1.3) */
+    XSTRLCPY(argv0[1], "tests/test-tls13-slhdsa-shake.conf",
+             sizeof(argv0[1]));
+    printf("starting TLSv13 SLH-DSA-SHAKE-128s root + ML-DSA-44 entity tests\n");
+    test_harness(&args);
+    if (args.return_code != 0) {
+        printf("error from script %d\n", args.return_code);
+        args.return_code = EXIT_FAILURE;
+        goto exit;
+    }
+
+    /* Negative: client trusting an unrelated CA must reject the
+     * SLH-DSA-rooted server chain. */
+    args.argc = 3;
+    XSTRLCPY(argv0[1], "tests/test-tls13-slhdsa-fail.conf",
+             sizeof(argv0[1]));
+    XSTRLCPY(argv0[2], "expFail", sizeof(argv0[2]));
+    printf("starting TLSv13 SLH-DSA wrong-CA tests that expect failure\n");
+    test_harness(&args);
+    if (args.return_code != 0) {
+        printf("error from script %d\n", args.return_code);
+        args.return_code = EXIT_FAILURE;
+        goto exit;
+    }
+    XSTRLCPY(argv0[2], "", sizeof(argv0[2]));
+    args.argc = 2;
+#endif
+#if defined(WOLFSSL_HAVE_SLHDSA) && defined(WOLFSSL_SLHDSA_SHA2) && \
+    defined(WOLFSSL_SLHDSA_PARAM_SHA2_128S) && defined(WOLFSSL_HAVE_MLDSA) && \
+    defined(WOLFSSL_TLS13) && !defined(WOLFSSL_NO_ML_DSA_44)
+    /* SLH-DSA-SHA2-128s root + ML-DSA-44 entity cert tests (TLS 1.3) */
+    XSTRLCPY(argv0[1], "tests/test-tls13-slhdsa-sha2.conf",
+             sizeof(argv0[1]));
+    printf("starting TLSv13 SLH-DSA-SHA2-128s root + ML-DSA-44 entity tests\n");
     test_harness(&args);
     if (args.return_code != 0) {
         printf("error from script %d\n", args.return_code);
@@ -1410,7 +1635,7 @@ int SuiteTest(int argc, char** argv)
         }
         #endif
     #endif
-    #ifdef WOLFSSL_TLS13
+    #if defined(WOLFSSL_TLS13) && !defined(NO_PSK)
     /* add psk extra suites */
     XSTRLCPY(argv0[1], "tests/test-tls13-psk.conf", sizeof(argv0[1]));
     printf("starting TLS 1.3 psk no identity extra cipher suite tests\n");
@@ -1420,6 +1645,17 @@ int SuiteTest(int argc, char** argv)
         args.return_code = EXIT_FAILURE;
         goto exit;
     }
+    #ifdef WOLFSSL_CERT_WITH_EXTERN_PSK
+    /* add psk with certificates (cert_with_extern_psk) suites */
+    XSTRLCPY(argv0[1], "tests/test-tls13-psk-certs.conf", sizeof(argv0[1]));
+    printf("starting TLS 1.3 PSK with certificates extra suite tests\n");
+    test_harness(&args);
+    if (args.return_code != 0) {
+        printf("error from script %d\n", args.return_code);
+        args.return_code = EXIT_FAILURE;
+        goto exit;
+    }
+    #endif
     #endif
 #endif
 #if defined(WOLFSSL_ENCRYPTED_KEYS) && !defined(NO_DES3) && !defined(NO_MD5) &&\

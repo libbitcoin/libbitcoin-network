@@ -1,6 +1,6 @@
 /* hpke.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -31,7 +31,8 @@
     extern "C" {
 #endif
 
-#if defined(HAVE_HPKE) && defined(HAVE_ECC)
+#if defined(HAVE_HPKE) && (defined(HAVE_ECC) || defined(HAVE_CURVE25519)) && \
+    defined(HAVE_AESGCM)
 
 #ifndef WOLFCRYPT_HPKE
 #define WOLFCRYPT_HPKE
@@ -64,14 +65,6 @@ enum {
     HPKE_AES_256_GCM = 0x0002
 };
 
-/* TODO better way of doing this */
-#define HPKE_SUPPORTED_KEM_LEN 4
-#define HPKE_SUPPORTED_KDF_LEN 3
-#define HPKE_SUPPORTED_AEAD_LEN 2
-extern const int hpkeSupportedKem[HPKE_SUPPORTED_KEM_LEN];
-extern const int hpkeSupportedKdf[HPKE_SUPPORTED_KDF_LEN];
-extern const int hpkeSupportedAead[HPKE_SUPPORTED_AEAD_LEN];
-
 #define HPKE_Nh_MAX 64
 #define HPKE_Nk_MAX 32
 #define HPKE_Nn_MAX 12
@@ -88,9 +81,6 @@ extern const int hpkeSupportedAead[HPKE_SUPPORTED_AEAD_LEN];
 
 typedef struct {
     void* heap;
-    word32 kem;
-    word32 kdf;
-    word32 aead;
     word32 Nh;
     word32 Nk;
     word32 Nn;
@@ -98,10 +88,17 @@ typedef struct {
     word32 Ndh;
     word32 Npk;
     word32 Nsecret;
-    int kdf_digest;
-    int curve_id;
+    int kdfDigest;
+    int kemDigest;
+    int curveId;
+    word16 kem;
+    word16 kdf;
+    word16 aead;
     byte kem_suite_id[KEM_SUITE_ID_LEN];
     byte hpke_suite_id[HPKE_SUITE_ID_LEN];
+#if defined(HAVE_SECRET_CALLBACK) && defined(HAVE_ECH)
+    byte* echSecret;
+#endif
 } Hpke;
 
 typedef struct {
@@ -136,9 +133,19 @@ WOLFSSL_API int wc_HpkeOpenBase(Hpke* hpke, void* receiverKey,
     const byte* pubKey, word16 pubKeySz, byte* info, word32 infoSz, byte* aad,
     word32 aadSz, byte* ciphertext, word32 ctSz, byte* plaintext);
 
+WOLFSSL_LOCAL word16 wc_HpkeKemGetEncLen(word16 kemId);
+WOLFSSL_LOCAL int wc_HpkeKemIsSupported(word16 kemId);
+WOLFSSL_LOCAL int wc_HpkeKdfIsSupported(word16 kdfId);
+WOLFSSL_LOCAL int wc_HpkeAeadIsSupported(word16 aeadId);
+
+#if defined(HAVE_SECRET_CALLBACK) && defined(HAVE_ECH)
+WOLFSSL_LOCAL int wc_HpkeInitEchSecret(Hpke* hpke);
+WOLFSSL_LOCAL void wc_HpkeFreeEchSecret(Hpke* hpke);
 #endif
 
-#endif /* HAVE_HPKE && HAVE_ECC */
+#endif
+
+#endif /* HAVE_HPKE && (HAVE_ECC || HAVE_CURVE25519) && HAVE_AESGCM */
 
 #ifdef __cplusplus
     }    /* extern "C" */

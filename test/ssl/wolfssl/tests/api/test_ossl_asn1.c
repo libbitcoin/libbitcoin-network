@@ -1,6 +1,6 @@
 /* test_ossl_asn1.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -198,11 +198,11 @@ int test_wolfSSL_ASN1_INTEGER_BN(void)
     }
 #if defined(WOLFSSL_QT) || defined(WOLFSSL_HAPROXY)
     ExpectNotNull(bn = ASN1_INTEGER_to_BN(ai, NULL));
+#else
+    ExpectNull(bn = ASN1_INTEGER_to_BN(ai, NULL));
+#endif
     BN_free(bn);
     bn = NULL;
-#else
-    ExpectNull(ASN1_INTEGER_to_BN(ai, NULL));
-#endif
 
     if (ai != NULL) {
         ai->data[0] = 0x02; /* tag for ASN_INTEGER */
@@ -213,11 +213,11 @@ int test_wolfSSL_ASN1_INTEGER_BN(void)
 #if defined(WOLFSSL_QT) || defined(WOLFSSL_HAPROXY)
     /* Interpreted as a number 0x020403. */
     ExpectNotNull(bn = ASN1_INTEGER_to_BN(ai, NULL));
+#else
+    ExpectNull(bn = ASN1_INTEGER_to_BN(ai, NULL));
+#endif
     BN_free(bn);
     bn = NULL;
-#else
-    ExpectNull(ASN1_INTEGER_to_BN(ai, NULL));
-#endif
 
     if (ai != NULL) {
         ai->data[0] = 0x02; /* tag for ASN_INTEGER */
@@ -870,6 +870,37 @@ int test_wolfSSL_ASN1_OBJECT(void)
     s.objSz = sizeof(der);
     ExpectNotNull(a = wolfSSL_ASN1_OBJECT_dup(&s));
     ASN1_OBJECT_free(a);
+    a = NULL;
+    ASN1_OBJECT_free(&s);
+
+    /* Test dup copies pathlen when set */
+    XMEMSET(&s, 0, sizeof(ASN1_OBJECT));
+    s.type = NID_basic_constraints;
+    s.ca = 1;
+    s.pathlen = wolfSSL_ASN1_INTEGER_new();
+    ExpectNotNull(s.pathlen);
+    if (s.pathlen != NULL) {
+        s.pathlen->length = 5;
+    }
+    ExpectNotNull(a = wolfSSL_ASN1_OBJECT_dup(&s));
+    if (a != NULL) {
+        ExpectIntEQ(a->ca, 1);
+        ExpectNotNull(a->pathlen);
+        if (a->pathlen != NULL) {
+            ExpectIntEQ(a->pathlen->length, 5);
+        }
+    }
+    ASN1_OBJECT_free(a);
+    a = NULL;
+
+    /* Test dup with NULL pathlen leaves it NULL */
+    wolfSSL_ASN1_INTEGER_free(s.pathlen);
+    s.pathlen = NULL;
+    ExpectNotNull(a = wolfSSL_ASN1_OBJECT_dup(&s));
+    if (a != NULL) {
+        ExpectNull(a->pathlen);
+    }
+    ASN1_OBJECT_free(a);
     ASN1_OBJECT_free(&s);
 #endif /* OPENSSL_EXTRA */
     return EXPECT_RESULT();
@@ -1195,7 +1226,8 @@ int test_wolfSSL_ASN1_STRING_to_UTF8(void)
     ExpectNotNull(e = wolfSSL_X509_NAME_get_entry(subject, idx));
     ExpectNotNull(a = wolfSSL_X509_NAME_ENTRY_get_data(e));
     ExpectIntEQ((len = wolfSSL_ASN1_STRING_to_UTF8(&actual_output, a)), 15);
-    ExpectIntEQ(strncmp((const char*)actual_output, targetOutput, (size_t)len), 0);
+    ExpectIntEQ(strncmp((const char*)actual_output, targetOutput, (size_t)len),
+                0);
     a = NULL;
 
     /* wolfSSL_ASN1_STRING_to_UTF8(NULL, valid) */
@@ -1269,9 +1301,12 @@ int test_wolfSSL_ASN1_STRING_canon(void)
     ExpectNotNull(canon = ASN1_STRING_new());
 
     /* Invalid parameter testing. */
-    ExpectIntEQ(wolfSSL_ASN1_STRING_canon(NULL, NULL), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
-    ExpectIntEQ(wolfSSL_ASN1_STRING_canon(canon, NULL), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
-    ExpectIntEQ(wolfSSL_ASN1_STRING_canon(NULL, orig), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_ASN1_STRING_canon(NULL, NULL),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_ASN1_STRING_canon(canon, NULL),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_ASN1_STRING_canon(NULL, orig),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
 
     ExpectIntEQ(wolfSSL_ASN1_STRING_canon(canon, orig), 1);
     ExpectIntEQ(ASN1_STRING_cmp(orig, canon), 0);
@@ -1622,9 +1657,12 @@ int test_wolfSSL_ASN1_GENERALIZEDTIME_print(void)
     ExpectIntEQ(wolfSSL_ASN1_TIME_set_string(gtime, "20180504123500Z"), 1);
 
     /* Invalid parameters testing. */
-    ExpectIntEQ(wolfSSL_ASN1_GENERALIZEDTIME_print(NULL, NULL), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
-    ExpectIntEQ(wolfSSL_ASN1_GENERALIZEDTIME_print(bio, NULL), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
-    ExpectIntEQ(wolfSSL_ASN1_GENERALIZEDTIME_print(NULL, gtime), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_ASN1_GENERALIZEDTIME_print(NULL, NULL),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_ASN1_GENERALIZEDTIME_print(bio, NULL),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_ASN1_GENERALIZEDTIME_print(NULL, gtime),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
 
     ExpectIntEQ(wolfSSL_ASN1_GENERALIZEDTIME_print(bio, gtime), 1);
     ExpectIntEQ(BIO_read(bio, buf, sizeof(buf)), 20);
@@ -2776,6 +2814,28 @@ int test_ASN1_strings(void)
         str = NULL;
         XFREE(der, NULL, DYNAMIC_TYPE_ASN1);
         der = NULL;
+    }
+
+    /* Negative length must be rejected before the signed->word32 cast
+     * (CWE-190 -> CWE-125). The 2-byte header claims 16 bytes of content
+     * that are not present in the buffer; passing len = -1 would, without
+     * the guard, cast to ~4 GiB so GetLength accepts the claimed length and
+     * d2i_ASN1_STRING over-reads 16 bytes past the buffer. Every wrapper
+     * must instead return NULL without reading the content. */
+    {
+        unsigned char hdr[2];
+        const unsigned char* p;
+
+        hdr[1] = 0x10; /* claim 16 bytes of (absent) content */
+
+        p = hdr; hdr[0] = ASN_OCTET_STRING;
+        ExpectNull(d2i_ASN1_OCTET_STRING(NULL, &p, -1));
+        p = hdr; hdr[0] = ASN_GENERALSTRING;
+        ExpectNull(d2i_ASN1_GENERALSTRING(NULL, &p, -1));
+        p = hdr; hdr[0] = ASN_UTF8STRING;
+        ExpectNull(d2i_ASN1_UTF8STRING(NULL, &p, -1));
+        p = hdr; hdr[0] = ASN_BIT_STRING;
+        ExpectNull(d2i_ASN1_BIT_STRING(NULL, &p, -1));
     }
 
 #endif
