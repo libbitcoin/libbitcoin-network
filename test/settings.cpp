@@ -45,6 +45,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.enable_compact, false);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_not_found, false);
     BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.identifier, 3652501241u);

@@ -375,6 +375,7 @@ struct BCT_API settings
     bool enable_compact{ false };
     bool enable_alert{ false };
     bool enable_reject{ false };
+    bool enable_not_found{ false };
     bool enable_relay{ false };
     bool enable_privacy{ false };
     bool validate_checksum{ false };
