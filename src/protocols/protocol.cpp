@@ -95,14 +95,13 @@ void protocol::pause() NOEXCEPT
     channel_->pause();
 }
 
-// Arms the next read (the session resumes the channel following pause).
+// Arms the next read (session resumes channel following pause).
 void protocol::read_next() NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel_->resume();
 }
 
-// Monitor/unmonitor the socket for stop/cancel/bytes.
 void protocol::monitor(bool value) NOEXCEPT
 {
     BC_ASSERT(stranded());

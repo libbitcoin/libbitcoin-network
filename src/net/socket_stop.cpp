@@ -58,6 +58,8 @@ void socket::do_stop() NOEXCEPT
         VARIANT_DISPATCH_METHOD(get_ws(), control_callback());
     }
 
+    monitor_->stop();
+
     boost_code ignore{};
     auto& layer = get_base();
     layer.shutdown(asio::socket::shutdown_both, ignore);

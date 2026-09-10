@@ -133,14 +133,6 @@ void proxy::handle_metered(const code& ec, size_t bytes,
     total_ = system::ceilinged_add(total_.load(), bytes);
     writing_ = false;
 
-    // Deferred cancel, no write in flight.
-    if (canceler_)
-    {
-        auto canceler = std::move(canceler_);
-        canceler_ = {};
-        socket_->cancel(std::move(canceler));
-    }
-
     // A send that consumed its full allocation is not deferred.
     const auto delay = unconsumed(bytes, start);
     if (is_zero(delay.count()))

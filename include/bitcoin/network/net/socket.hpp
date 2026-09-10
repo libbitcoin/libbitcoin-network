@@ -91,11 +91,11 @@ public:
     /// Wait (all).
     /// -----------------------------------------------------------------------
 
-    /// Wait on a peer close/cancel/send, no data capture/loss.
-    virtual void wait(result_handler&& handler) NOEXCEPT;
+    /// Monitor the peer for close, handler posted to socket strand.
+    virtual void monitor(result_handler&& handler) NOEXCEPT;
 
-    /// Cancel wait or any asynchronous read/write operation, handlers posted.
-    virtual void cancel(result_handler&& handler) NOEXCEPT;
+    /// End monitoring, handler invoked with success.
+    virtual void demonitor() NOEXCEPT;
 
     /// Connect (all).
     /// -----------------------------------------------------------------------
@@ -443,8 +443,8 @@ private:
     void do_ws_event(ws::frame_type kind, const std::string& data) NOEXCEPT;
 
     // wait
-    void do_wait(const result_handler& handler) NOEXCEPT;
-    void do_cancel(const result_handler& handler) NOEXCEPT;
+    void do_monitor(const result_handler& handler) NOEXCEPT;
+    void do_demonitor() NOEXCEPT;
 
     // connection
     void do_connect(const asio::endpoints& range,
@@ -531,8 +531,9 @@ private:
         const std::string& data) NOEXCEPT;
 
     // wait
-    void handle_wait(const boost_code& ec,
+    void handle_monitor(const code& ec,
         const result_handler& handler) NOEXCEPT;
+
 
     // connect/accept
     void handle_accept(boost_code ec,
@@ -624,6 +625,7 @@ protected:
     config::address address_;
     config::endpoint endpoint_;
     deadline::ptr timer_;
+    deadline::ptr monitor_;
     socket_t socket_;
 
     // Retains the detection prefix for a v1 peer (see handle_detection).

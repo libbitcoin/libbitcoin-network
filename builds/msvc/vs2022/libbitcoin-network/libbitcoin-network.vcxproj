@@ -122,6 +122,7 @@
   </ImportGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\include\bitcoin\network\ssl\wolfcrypt\src\misc.c" />
+    <ClCompile Include="..\..\..\..\src\asio.cpp" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
@@ -215,7 +216,6 @@
     <ClCompile Include="..\..\..\..\src\net\socket_rpc.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_stop.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_tcp.cpp" />
-    <ClCompile Include="..\..\..\..\src\net\socket_wait.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_zmtp.cpp" />
     <ClCompile Include="..\..\..\..\src\p2ps\cipher.cpp">

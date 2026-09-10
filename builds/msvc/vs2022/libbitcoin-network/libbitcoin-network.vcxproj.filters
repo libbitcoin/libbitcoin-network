@@ -180,6 +180,9 @@
     <ClCompile Include="..\..\..\..\include\bitcoin\network\ssl\wolfcrypt\src\misc.c">
       <Filter>include\bitcoin\network\ssl\wolfcrypt\src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\asio.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\async\thread.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
@@ -421,9 +424,6 @@
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_tcp.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\net\socket_wait.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp">

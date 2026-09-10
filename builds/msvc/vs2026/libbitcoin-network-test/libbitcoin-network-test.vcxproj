@@ -118,6 +118,7 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\asio.cpp" />
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
     <ClCompile Include="..\..\..\..\test\async\races\race_all.cpp" />

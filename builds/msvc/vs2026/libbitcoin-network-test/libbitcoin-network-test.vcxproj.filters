@@ -117,6 +117,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\asio.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp">
       <Filter>src\async</Filter>
     </ClCompile>

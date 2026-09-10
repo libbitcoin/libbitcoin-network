@@ -150,11 +150,11 @@ protected:
     /// Wait.
     /// -----------------------------------------------------------------------
 
-    /// Wait on a peer close/cancel/send, no data capture/loss.
-    virtual void wait(result_handler&& handler) NOEXCEPT;
+    /// Monitor the peer for close, no data capture/loss.
+    virtual void monitor(result_handler&& handler) NOEXCEPT;
 
-    /// Cancel wait, deferred past any write in flight, handler posted.
-    virtual void cancel(result_handler&& handler) NOEXCEPT;
+    /// End monitoring, handler invoked with success.
+    virtual void demonitor() NOEXCEPT;
 
     /// WS (generic, framed).
     /// -----------------------------------------------------------------------
@@ -315,7 +315,6 @@ private:
     deadline::ptr throttle_;
     stop_subscriber stop_subscriber_{};
     socket::http_parser_ptr parser_{};
-    result_handler canceler_{};
     queue deferred_{};
     bool writing_{};
     queue queue_{};
