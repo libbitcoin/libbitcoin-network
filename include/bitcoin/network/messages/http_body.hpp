@@ -155,6 +155,13 @@ struct BCT_API body
             return std::get<Inner>(value());
         }
 
+        template <typename Inner>
+        inline Inner& get() NOEXCEPT
+        {
+            BC_ASSERT(contains<Inner>());
+            return std::get<Inner>(inner_.value());
+        }
+
     private:
         std::optional<body_value> inner_{};
     };

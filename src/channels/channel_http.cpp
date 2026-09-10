@@ -88,7 +88,7 @@ void channel_http::receive() NOEXCEPT
 }
 
 void channel_http::handle_receive(const code& ec, size_t bytes,
-    const http::request_cptr& request) NOEXCEPT
+    const http::request_ptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -149,7 +149,7 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
 }
 
 // Wrap the http request as a tagged verb request and dispatch by type.
-void channel_http::dispatch(const request_cptr& request) NOEXCEPT
+void channel_http::dispatch(const request_ptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 

@@ -116,14 +116,14 @@ protected:
     virtual void set_authorized(const http::request& request) NOEXCEPT;
 
     /// Dispatch request to subscribers by verb type.
-    virtual void dispatch(const http::request_cptr& request) NOEXCEPT;
+    virtual void dispatch(const http::request_ptr& request) NOEXCEPT;
 
     /// Size and assign response_buffer_ if value type is json or json-rpc.
     virtual void assign_json_buffer(http::response& response) NOEXCEPT;
 
     /// Handlers.
     virtual void handle_receive(const code& ec, size_t bytes,
-        const http::request_cptr& request) NOEXCEPT;
+        const http::request_ptr& request) NOEXCEPT;
     virtual void handle_send(const code& ec, size_t bytes, bool notification,
         const std::string& message, const result_handler& handler) NOEXCEPT;
 
