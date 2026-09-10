@@ -1,6 +1,6 @@
 /* test_ed448.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -27,6 +27,7 @@
 int test_wc_ed448_make_key(void);
 int test_wc_ed448_init(void);
 int test_wc_ed448_sign_msg(void);
+int test_wc_ed448_sign_msg_pubonly_fails(void);
 int test_wc_ed448_import_public(void);
 int test_wc_ed448_import_private_key(void);
 int test_wc_ed448_export(void);
@@ -35,11 +36,14 @@ int test_wc_ed448_exportKey(void);
 int test_wc_Ed448PublicKeyToDer(void);
 int test_wc_Ed448KeyToDer(void);
 int test_wc_Ed448PrivateKeyToDer(void);
+int test_wc_Ed448KeyToDer_oneasymkey_version(void);
+int test_wc_ed448_reject_small_order_keys(void);
 
 #define TEST_ED448_DECLS                                          \
     TEST_DECL_GROUP("ed448", test_wc_ed448_make_key),             \
     TEST_DECL_GROUP("ed448", test_wc_ed448_init),                 \
     TEST_DECL_GROUP("ed448", test_wc_ed448_sign_msg),             \
+    TEST_DECL_GROUP("ed448", test_wc_ed448_sign_msg_pubonly_fails), \
     TEST_DECL_GROUP("ed448", test_wc_ed448_import_public),        \
     TEST_DECL_GROUP("ed448", test_wc_ed448_import_private_key),   \
     TEST_DECL_GROUP("ed448", test_wc_ed448_export),               \
@@ -47,6 +51,8 @@ int test_wc_Ed448PrivateKeyToDer(void);
     TEST_DECL_GROUP("ed448", test_wc_ed448_exportKey),            \
     TEST_DECL_GROUP("ed448", test_wc_Ed448PublicKeyToDer),        \
     TEST_DECL_GROUP("ed448", test_wc_Ed448KeyToDer),              \
-    TEST_DECL_GROUP("ed448", test_wc_Ed448PrivateKeyToDer)
+    TEST_DECL_GROUP("ed448", test_wc_Ed448PrivateKeyToDer),       \
+    TEST_DECL_GROUP("ed448", test_wc_Ed448KeyToDer_oneasymkey_version), \
+    TEST_DECL_GROUP("ed448", test_wc_ed448_reject_small_order_keys)
 
 #endif /* WOLFCRYPT_TEST_ED448_H */

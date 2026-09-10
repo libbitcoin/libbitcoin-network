@@ -1,6 +1,6 @@
 /* test_signature.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -29,6 +29,6 @@ int test_wc_SignatureGetSize_rsa(void);
 
 #define TEST_SIGNATURE_DECLS                                    \
     TEST_DECL_GROUP("signature", test_wc_SignatureGetSize_ecc), \
-    TEST_DECL_GROUP("signature", test_wc_SignatureGetSize_ecc)
+    TEST_DECL_GROUP("signature", test_wc_SignatureGetSize_rsa)
 
 #endif /* WOLFCRYPT_TEST_SIGNATURE_H */

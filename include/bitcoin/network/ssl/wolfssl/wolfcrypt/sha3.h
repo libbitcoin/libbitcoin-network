@@ -1,6 +1,6 @@
 /* sha3.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -86,8 +86,11 @@ enum {
     WC_SHA3_256_BLOCK_SIZE = 136,
     WC_SHA3_384_BLOCK_SIZE = 104,
     WC_SHA3_512_BLOCK_SIZE = 72,
+#else
+    /* For SELFTEST version < 2, define WC_SHA3_128_BLOCK_SIZE
+     * for Kyber/Dilithium */
+    WC_SHA3_128_BLOCK_SIZE = 168,
 #endif
-
     WOLF_ENUM_DUMMY_LAST_ELEMENT(WC_SHA3)
 };
 
@@ -241,8 +244,9 @@ WOLFSSL_LOCAL void BlockSha3(word64 *s);
 
 #ifdef WC_SHA3_NO_ASM
     /* asm speedups disabled */
-    #if defined(USE_INTEL_SPEEDUP) && !defined(WC_MLKEM_NO_ASM)
-        /* native ML-KEM uses this directly. */
+    #if defined(USE_INTEL_SPEEDUP) && \
+        !(defined(WC_MLKEM_NO_ASM) && defined(WC_SLHDSA_NO_ASM))
+        /* native ML-KEM and SLH-DSA use this directly. */
         WOLFSSL_LOCAL void sha3_blocksx4_avx2(word64* s);
     #endif
 #elif defined(USE_INTEL_SPEEDUP)

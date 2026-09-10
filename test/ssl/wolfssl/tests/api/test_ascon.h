@@ -1,6 +1,6 @@
 /* test_ascon.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -26,9 +26,11 @@
 
 int test_ascon_hash256(void);
 int test_ascon_aead128(void);
+int test_ascon_aead128_edge_cases(void);
 
-#define TEST_ASCON_DECLS                            \
-    TEST_DECL_GROUP("ascon", test_ascon_hash256),   \
-    TEST_DECL_GROUP("ascon", test_ascon_aead128)
+#define TEST_ASCON_DECLS                                        \
+    TEST_DECL_GROUP("ascon", test_ascon_hash256),               \
+    TEST_DECL_GROUP("ascon", test_ascon_aead128),               \
+    TEST_DECL_GROUP("ascon", test_ascon_aead128_edge_cases)
 
 #endif /* TESTS_API_TEST_ASCON_H */

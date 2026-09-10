@@ -1,6 +1,6 @@
 /* wc_encrypt.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -100,6 +100,10 @@ int wc_Des_CbcEncryptWithKey(byte* out, const byte* in, word32 sz,
     int ret  = 0;
     WC_DECLARE_VAR(des, Des, 1, 0);
 
+    if (out == NULL || in == NULL || key == NULL) {
+        return BAD_FUNC_ARG;
+    }
+
     WC_ALLOC_VAR_EX(des, Des, 1, NULL, DYNAMIC_TYPE_TMP_BUFFER,
         return MEMORY_E);
 
@@ -117,6 +121,10 @@ int wc_Des_CbcDecryptWithKey(byte* out, const byte* in, word32 sz,
 {
     int ret  = 0;
     WC_DECLARE_VAR(des, Des, 1, 0);
+
+    if (out == NULL || in == NULL || key == NULL) {
+        return BAD_FUNC_ARG;
+    }
 
     WC_ALLOC_VAR_EX(des, Des, 1, NULL, DYNAMIC_TYPE_TMP_BUFFER,
         return MEMORY_E);
@@ -315,7 +323,7 @@ int wc_BufferKeyEncrypt(EncryptedInfo* info, byte* der, word32 derSz,
  *
  * returns a negative value on fail case
  */
-int wc_CryptKey(const char* password, int passwordSz, byte* salt,
+int wc_CryptKey(const char* password, int passwordSz, const byte* salt,
                       int saltSz, int iterations, int id, byte* input,
                       int length, int version, byte* cbcIv, int enc, int shaOid)
 {
@@ -329,6 +337,9 @@ int wc_CryptKey(const char* password, int passwordSz, byte* salt,
     (void)enc;
 
     WOLFSSL_ENTER("wc_CryptKey");
+
+    if (password == NULL || salt == NULL || input == NULL)
+        return BAD_FUNC_ARG;
 
     if (length < 0)
         return BAD_LENGTH_E;
@@ -439,14 +450,14 @@ int wc_CryptKey(const char* password, int passwordSz, byte* salt,
     #ifndef NO_HMAC
             case PKCS5v2:
                 PRIVATE_KEY_UNLOCK();
-                ret = wc_PBKDF2(key, (byte*)password, passwordSz,
+                ret = wc_PBKDF2(key, (const byte*)password, passwordSz,
                                 salt, saltSz, iterations, (int)derivedLen, typeH);
                 PRIVATE_KEY_LOCK();
                 break;
     #endif
     #ifndef NO_SHA
             case PKCS5:
-                ret = wc_PBKDF1(key, (byte*)password, passwordSz,
+                ret = wc_PBKDF1(key, (const byte*)password, passwordSz,
                                 salt, saltSz, iterations, (int)derivedLen, typeH);
                 break;
     #endif
@@ -456,7 +467,9 @@ int wc_CryptKey(const char* password, int passwordSz, byte* salt,
                 int  i, idx = 0;
                 byte unicodePasswd[MAX_UNICODE_SZ];
 
-                if ( (passwordSz * 2 + 2) > (int)sizeof(unicodePasswd)) {
+                if (passwordSz < 0 ||
+                    passwordSz >= MAX_UNICODE_SZ ||
+                   (passwordSz * 2 + 2) > MAX_UNICODE_SZ) {
                     ret = UNICODE_SIZE_E;
                     break;
                 }
@@ -471,16 +484,21 @@ int wc_CryptKey(const char* password, int passwordSz, byte* salt,
 
                 ret =  wc_PKCS12_PBKDF(key, unicodePasswd, idx, salt, saltSz,
                                     iterations, (int)derivedLen, typeH, 1);
-                if (ret < 0)
+                if (ret < 0) {
+                    ForceZero(unicodePasswd, MAX_UNICODE_SZ);
                     break;
+                }
                 if (id != PBE_SHA1_RC4_128) {
                     i = ret;
                     ret = wc_PKCS12_PBKDF(cbcIv, unicodePasswd, idx, salt,
                                     saltSz, iterations, 8, typeH, 2);
-                    if (ret < 0)
+                    if (ret < 0) {
+                        ForceZero(unicodePasswd, MAX_UNICODE_SZ);
                         break;
+                    }
                     ret += i;
                 }
+                ForceZero(unicodePasswd, MAX_UNICODE_SZ);
                 break;
             }
     #endif /* HAVE_PKCS12 */
@@ -518,6 +536,7 @@ int wc_CryptKey(const char* password, int passwordSz, byte* salt,
                         wc_Des_CbcDecrypt(&des, input, input, (word32)length);
                     }
                 }
+                ForceZero(&des, sizeof(Des));
                 break;
             }
         #endif /* !NO_SHA || !NO_MD5 */
@@ -561,6 +580,7 @@ int wc_CryptKey(const char* password, int passwordSz, byte* salt,
 
                 wc_Arc4SetKey(&dec, key, derivedLen);
                 wc_Arc4Process(&dec, input, input, (word32)length);
+                ForceZero(&dec, sizeof(Arc4));
                 break;
             }
     #endif
@@ -629,9 +649,7 @@ int wc_CryptKey(const char* password, int passwordSz, byte* salt,
                     else
                         ret = wc_Rc2CbcDecrypt(&rc2, input, input, length);
                 }
-                if (ret == 0) {
-                    ForceZero(&rc2, sizeof(Rc2));
-                }
+                wc_Rc2Free(&rc2);
                 break;
             }
     #endif

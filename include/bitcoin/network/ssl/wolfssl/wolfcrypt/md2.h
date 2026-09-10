@@ -1,6 +1,6 @@
 /* md2.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -36,12 +36,10 @@
 #endif
 
 /* in bytes */
-enum {
-    WC_MD2_BLOCK_SIZE  = 16,
-    WC_MD2_DIGEST_SIZE = 16,
-    WC_MD2_PAD_SIZE    = 16,
-    WC_MD2_X_SIZE      = 48
-};
+#define WC_MD2_BLOCK_SIZE  16
+#define WC_MD2_DIGEST_SIZE 16
+#define WC_MD2_PAD_SIZE    16
+#define WC_MD2_X_SIZE      48
 
 
 /* Md2 digest */
@@ -53,20 +51,18 @@ typedef struct wc_Md2 {
 } wc_Md2;
 
 
-WOLFSSL_API void wc_InitMd2(wc_Md2* md2);
-WOLFSSL_API void wc_Md2Update(wc_Md2* md2, const byte* data, word32 len);
-WOLFSSL_API void wc_Md2Final(wc_Md2* md2, byte* hash);
-WOLFSSL_API int  wc_Md2Hash(const byte* data, word32 len, byte* hash);
+WOLFSSL_API int wc_InitMd2(wc_Md2* md2);
+WOLFSSL_API int wc_Md2Update(wc_Md2* md2, const byte* data, word32 len);
+WOLFSSL_API int wc_Md2Final(wc_Md2* md2, byte* hash);
+WOLFSSL_API int wc_Md2Hash(const byte* data, word32 len, byte* hash);
 
 #ifndef OPENSSL_COEXIST
 
-enum {
-    MD2             = WC_HASH_TYPE_MD2,
-    MD2_BLOCK_SIZE  = WC_MD2_BLOCK_SIZE,
-    MD2_DIGEST_SIZE = WC_MD2_DIGEST_SIZE,
-    MD2_PAD_SIZE    = WC_MD2_PAD_SIZE,
-    MD2_X_SIZE      = WC_MD2_X_SIZE
-};
+#define MD2             WC_HASH_TYPE_MD2
+#define MD2_BLOCK_SIZE  WC_MD2_BLOCK_SIZE
+#define MD2_DIGEST_SIZE WC_MD2_DIGEST_SIZE
+#define MD2_PAD_SIZE    WC_MD2_PAD_SIZE
+#define MD2_X_SIZE      WC_MD2_X_SIZE
 
 
 /* Md2 digest */

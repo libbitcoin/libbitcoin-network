@@ -1,6 +1,6 @@
 /* test_ossl_rsa.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -402,12 +402,11 @@ int test_wolfSSL_RSA_DER(void)
 
     for (i = 0; tbl[i].der != NULL; i++)
     {
-        /* Passing in pointer results in pointer moving. */
+        /* d2i_RSAPublicKey should fail when given private key DER.
+         * wc_RsaPublicKeyDecode correctly rejects private key format. */
         buff = tbl[i].der;
-        ExpectNotNull(d2i_RSAPublicKey(&rsa, &buff, tbl[i].sz));
-        ExpectNotNull(rsa);
-        RSA_free(rsa);
-        rsa = NULL;
+        ExpectNull(d2i_RSAPublicKey(&rsa, &buff, tbl[i].sz));
+        ExpectNull(rsa);
     }
     for (i = 0; tbl[i].der != NULL; i++)
     {
@@ -520,6 +519,24 @@ int test_wolfSSL_RSA_padding_add_PKCS1_PSS(void)
         RSA_PSS_SALTLEN_DIGEST), 1);
     ExpectIntEQ(RSA_verify_PKCS1_PSS(rsa, mHash, EVP_sha256(), em,
         RSA_PSS_SALTLEN_DIGEST), 1);
+
+    /* Negative test: a tampered PSS encoding must be rejected. Flip a byte in
+     * the encoded message, confirm failure, then restore and re-verify. */
+    em[0] ^= 0xFFU;
+    ExpectIntEQ(RSA_verify_PKCS1_PSS(rsa, mHash, EVP_sha256(), em,
+        RSA_PSS_SALTLEN_DIGEST), 0);
+    em[0] ^= 0xFFU;
+    ExpectIntEQ(RSA_verify_PKCS1_PSS(rsa, mHash, EVP_sha256(), em,
+        RSA_PSS_SALTLEN_DIGEST), 1);
+
+    /* Negative test: a tampered hash must be rejected by PSS verification. */
+    {
+        unsigned char badHash[WC_SHA256_DIGEST_SIZE];
+        XMEMCPY(badHash, mHash, sizeof(badHash));
+        badHash[0] ^= 0xFFU;
+        ExpectIntEQ(RSA_verify_PKCS1_PSS(rsa, badHash, EVP_sha256(), em,
+            RSA_PSS_SALTLEN_DIGEST), 0);
+    }
 
     ExpectIntEQ(RSA_padding_add_PKCS1_PSS(rsa, em, mHash, EVP_sha256(),
         RSA_PSS_SALTLEN_MAX_SIGN), 1);
@@ -697,8 +714,8 @@ int test_wolfSSL_RSA_verify(void)
     RSA *pubKey = NULL;
     X509 *cert = NULL;
     const char *text = "Hello wolfSSL !";
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    unsigned char signature[2048/8];
+    unsigned char hash[SHA256_DIGEST_LENGTH] = {0};
+    unsigned char signature[2048/8] = {0};
     unsigned int signatureLength;
     byte *buf = NULL;
     BIO *bio = NULL;
@@ -747,6 +764,24 @@ int test_wolfSSL_RSA_verify(void)
     ExpectNotNull(pubKey = EVP_PKEY_get1_RSA(evpPubkey));
     ExpectIntEQ(RSA_verify(NID_sha256, hash, SHA256_DIGEST_LENGTH, signature,
         signatureLength, pubKey), SSL_SUCCESS);
+
+    /* Negative test: a tampered signature must be rejected. Flip a byte in the
+     * signature, confirm verification fails, then restore it. */
+    signature[0] ^= 0xFFU;
+    ExpectIntEQ(RSA_verify(NID_sha256, hash, SHA256_DIGEST_LENGTH, signature,
+        signatureLength, pubKey), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
+    signature[0] ^= 0xFFU;
+    /* Sanity: the restored signature verifies again. */
+    ExpectIntEQ(RSA_verify(NID_sha256, hash, SHA256_DIGEST_LENGTH, signature,
+        signatureLength, pubKey), SSL_SUCCESS);
+
+    /* Negative test: a tampered hash must be rejected (the encoded comparison
+     * string differs). Flip a byte in the hash, confirm failure, then
+     * restore it. */
+    hash[0] ^= 0xFFU;
+    ExpectIntEQ(RSA_verify(NID_sha256, hash, SHA256_DIGEST_LENGTH, signature,
+        signatureLength, pubKey), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
+    hash[0] ^= 0xFFU;
 
     ExpectIntEQ(RSA_verify(NID_sha256, NULL, SHA256_DIGEST_LENGTH, NULL,
         signatureLength, NULL), WC_NO_ERR_TRACE(WOLFSSL_FAILURE));
@@ -1470,8 +1505,10 @@ int test_wolfSSL_RSA_To_Der(void)
     rsa = NULL;
     ExpectNotNull(wolfSSL_d2i_RSAPrivateKey(&rsa, &der, privDerSz));
 
-    ExpectIntEQ(wolfSSL_RSA_To_Der(NULL, &outDer, 0, HEAP_HINT), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
-    ExpectIntEQ(wolfSSL_RSA_To_Der(rsa, &outDer, 2, HEAP_HINT), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_RSA_To_Der(NULL, &outDer, 0, HEAP_HINT),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_RSA_To_Der(rsa, &outDer, 2, HEAP_HINT),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
 
     ExpectIntEQ(wolfSSL_RSA_To_Der(rsa, NULL, 0, HEAP_HINT), privDerSz);
     outDer = out;
@@ -1491,14 +1528,17 @@ int test_wolfSSL_RSA_To_Der(void)
     RSA_free(rsa);
 
     ExpectNotNull(rsa = RSA_new());
-    ExpectIntEQ(wolfSSL_RSA_To_Der(rsa, &outDer, 0, HEAP_HINT), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
-    ExpectIntEQ(wolfSSL_RSA_To_Der(rsa, &outDer, 1, HEAP_HINT), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_RSA_To_Der(rsa, &outDer, 0, HEAP_HINT),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_RSA_To_Der(rsa, &outDer, 1, HEAP_HINT),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
     RSA_free(rsa);
 
     der = pubDer;
     rsa = NULL;
     ExpectNotNull(wolfSSL_d2i_RSAPublicKey(&rsa, &der, pubDerSz));
-    ExpectIntEQ(wolfSSL_RSA_To_Der(rsa, &outDer, 0, HEAP_HINT), WC_NO_ERR_TRACE(BAD_FUNC_ARG));
+    ExpectIntEQ(wolfSSL_RSA_To_Der(rsa, &outDer, 0, HEAP_HINT),
+        WC_NO_ERR_TRACE(BAD_FUNC_ARG));
     RSA_free(rsa);
 #endif
 #endif

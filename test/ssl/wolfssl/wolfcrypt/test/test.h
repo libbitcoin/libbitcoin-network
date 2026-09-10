@@ -1,6 +1,6 @@
 /* wolfcrypt/test/test.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -104,6 +104,17 @@ wc_static_assert(-(long)MIN_CODE_E < 0x7ffL);
 
 #ifdef WC_TEST_EXPORT_SUBTESTS
 
+#if defined(NO_FILESYSTEM) || defined(WC_NO_RNG)
+    #if !defined(USE_CERT_BUFFERS_1024) && !defined(USE_CERT_BUFFERS_2048) && \
+        !defined(USE_CERT_BUFFERS_3072) && !defined(USE_CERT_BUFFERS_4096)
+        #define USE_CERT_BUFFERS_2048
+    #endif
+    #if !defined(USE_CERT_BUFFERS_256)
+        #define USE_CERT_BUFFERS_256
+    #endif
+#endif
+
+extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  macro_test(void);
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  error_test(void);
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  base64_test(void);
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  base16_test(void);
@@ -163,11 +174,23 @@ extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  sshkdf_test(void);
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  tls13_kdf_test(void);
 #endif
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  x963kdf_test(void);
-#if defined(HAVE_HPKE) && defined(HAVE_ECC) && defined(HAVE_AESGCM)
+#if defined(HAVE_HPKE) && \
+    (defined(HAVE_ECC) || defined(HAVE_CURVE25519) || \
+        defined(HAVE_CURVE448)) && \
+    defined(HAVE_AESGCM)
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  hpke_test(void);
 #endif
 #ifdef WC_SRTP_KDF
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  srtpkdf_test(void);
+#endif
+
+#if defined(WC_KDF_NIST_SP_800_56C) && \
+    (!defined(HAVE_FIPS) || FIPS_VERSION3_GE(7,0,0))
+extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  nist_sp80056c_kdf_test(void);
+#endif
+#if defined(HAVE_CMAC_KDF) && (!defined(HAVE_FIPS) || FIPS_VERSION3_GE(7,0,0))
+extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  nist_sp800108_cmac(void);
+extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  nist_sp80056c_twostep_cmac(void);
 #endif
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  arc4_test(void);
 #ifdef WC_RC2
@@ -214,16 +237,23 @@ extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  rsa_no_pad_test(void);
 #endif
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  rsa_test(void);
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  dh_test(void);
+#ifndef NO_DSA
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  dsa_test(void);
+#endif
+#ifdef WOLFCRYPT_HAVE_SRP
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  srp_test(void);
+#endif
 #ifndef WC_NO_RNG
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  random_test(void);
+#ifdef WC_RNG_BANK_SUPPORT
+extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  random_bank_test(void);
+#endif
 #endif /* WC_NO_RNG */
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  pwdbased_test(void);
 #if defined(USE_CERT_BUFFERS_2048) && \
         defined(HAVE_PKCS12) && \
             !defined(NO_ASN) && !defined(NO_PWDBASED) && !defined(NO_HMAC) && \
-            !defined(NO_CERTS) && !defined(NO_DES3)
+            !defined(NO_CERTS) && !defined(NO_DES3) && !defined(NO_SHA)
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  pkcs12_test(void);
 #endif
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  ripemd_test(void);
@@ -236,12 +266,18 @@ extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  openSSL_evpMD_test(void);
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  openssl_evpSig_test(void);
 #endif
 
+#if defined(HAVE_PBKDF1) && !defined(NO_SHA)
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t pbkdf1_test(void);
+#endif
+#if defined(HAVE_PKCS12) && !defined(NO_SHA256)
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t pkcs12_pbkdf_test(void);
+#endif
 #if defined(HAVE_PBKDF2) && !defined(NO_SHA256) && !defined(NO_HMAC)
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t pbkdf2_test(void);
 #endif
+#if !defined(NO_PWDBASED) && defined(HAVE_SCRYPT)
 extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t scrypt_test(void);
+#endif
 #ifdef HAVE_ECC
     extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  ecc_test(void);
     #if defined(HAVE_ECC_ENCRYPT) && defined(HAVE_AES_CBC) && \
@@ -251,7 +287,7 @@ extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t scrypt_test(void);
     #if defined(USE_CERT_BUFFERS_256) && !defined(WOLFSSL_ATECC508A) && \
         !defined(WOLFSSL_ATECC608A) && !defined(NO_ECC256) && \
         defined(HAVE_ECC_VERIFY) && defined(HAVE_ECC_SIGN) && \
-        !defined(WOLF_CRYPTO_CB_ONLY_ECC) && !defined(NO_ECC_SECP)
+        (!defined(WOLF_CRYPTO_CB_ONLY_ECC) || defined(WOLFSSL_SWDEV)) && !defined(NO_ECC_SECP)
         /* skip for ATECC508/608A, cannot import private key buffers */
         extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t ecc_test_buffers(void);
     #endif
@@ -271,8 +307,8 @@ extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t scrypt_test(void);
 #ifdef WOLFSSL_HAVE_MLKEM
     extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  mlkem_test(void);
 #endif
-#ifdef HAVE_DILITHIUM
-    extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  dilithium_test(void);
+#ifdef WOLFSSL_HAVE_MLDSA
+    extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  mldsa_test(void);
 #endif
 #if defined(WOLFSSL_HAVE_XMSS)
     #if !defined(WOLFSSL_SMALL_STACK) && WOLFSSL_XMSS_MIN_HEIGHT <= 10
@@ -284,8 +320,7 @@ extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t scrypt_test(void);
 #endif
 #if defined(WOLFSSL_HAVE_LMS)
     #if !defined(WOLFSSL_SMALL_STACK)
-        #if (defined(WOLFSSL_WC_LMS) && (LMS_MAX_HEIGHT >= 10) && \
-             !defined(WOLFSSL_NO_LMS_SHA256_256)) || defined(HAVE_LIBLMS)
+        #if (LMS_MAX_HEIGHT >= 10) && !defined(WOLFSSL_NO_LMS_SHA256_256)
     extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  lms_test_verify_only(void);
         #endif
     #endif
@@ -293,17 +328,22 @@ extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t scrypt_test(void);
     extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  lms_test(void);
     #endif
 #endif
+#if defined(WOLFSSL_HAVE_SLHDSA)
+    extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  slhdsa_test(void);
+#endif
 #ifdef WOLFCRYPT_HAVE_ECCSI
     extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  eccsi_test(void);
 #endif
 #ifdef WOLFCRYPT_HAVE_SAKKE
     extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  sakke_test(void);
 #endif
-#ifdef HAVE_BLAKE2
+#ifdef HAVE_BLAKE2B
     extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  blake2b_test(void);
+    extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  blake2b_hmac_test(void);
 #endif
 #ifdef HAVE_BLAKE2S
     extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  blake2s_test(void);
+    extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t  blake2s_hmac_test(void);
 #endif
 #ifdef HAVE_LIBZ
     extern WOLFSSL_TEST_SUBROUTINE wc_test_ret_t compress_test(void);

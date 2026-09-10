@@ -135,6 +135,16 @@
 // populated after a failed API call.
 ////#define WOLFSSL_HAVE_ERROR_QUEUE
 
+// Post-5.9.2 (unreleased at the time of the 5.9.2 vendor): wolfSSL_shutdown
+// returns WOLFSSL_FATAL_ERROR and records SOCKET_PEER_CLOSED_E where it
+// previously returned 0, when the connection is already closed/reset and no
+// close_notify was sent. Under WOLFSSL_ERROR_CODE_OPENSSL a 0 return means
+// WOLFSSL_SHUTDOWN_NOT_DONE, so a caller looping while the result is 0 never
+// left the loop; such a loop now terminates. That macro and the error queue
+// above are both off in this build, so 5.9.2 is unaffected. But boost asio
+// ssl::stream::shutdown maps this return and proxy graceful close depends on
+// it, so re-check that path on the next wolfssl bump.
+
 /// Debugging information.
 #if !defined(NDEBUG)
     // This will crash msvcrt on initialization if locale has been set due to

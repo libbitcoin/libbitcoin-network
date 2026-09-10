@@ -1,6 +1,6 @@
 /* test_sm3.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -28,7 +28,7 @@
     #include <wolfcrypt/src/misc.c>
 #endif
 
-///#include <wolfssl/wolfcrypt/sm3.h>
+#include <wolfssl/wolfcrypt/sm3.h>
 #include <wolfssl/wolfcrypt/types.h>
 #include <tests/api/api.h>
 #include <tests/api/test_sm3.h>

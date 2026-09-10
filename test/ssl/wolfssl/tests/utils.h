@@ -1,6 +1,6 @@
 /* utils.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -27,11 +27,31 @@
 #ifndef TESTS_UTILS_H
 #define TESTS_UTILS_H
 
-#if !defined(NO_FILESYSTEM) && !defined(NO_CERTS) && \
-    (!defined(NO_RSA) || defined(HAVE_RPK)) && \
-    !defined(NO_WOLFSSL_SERVER) && !defined(NO_WOLFSSL_CLIENT) && \
-    (!defined(WOLFSSL_NO_TLS12) || defined(WOLFSSL_TLS13))
+#ifdef WOLFSSL_DUMP_MEMIO_STREAM
+extern char tmpDirName[16];
+extern const char* currentTestName;
+#endif
+
+/* Base dependencies for the manual memio test harness. The harness itself does
+ * not require certificate support, so cert-less tests (e.g. PSK-only) can use
+ * it through this narrower macro. */
+#if !defined(NO_WOLFSSL_SERVER) && !defined(NO_WOLFSSL_CLIENT) && \
+    (!defined(WOLFSSL_NO_TLS12) || defined(WOLFSSL_TLS13)) && defined(NO_CERTS)
+#define HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES_NO_CERTS
+#define HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES_BUILD
+#endif
+
+/* Full dependencies: the base harness plus certificate support. Most memio
+ * tests set up a certificate-based handshake and must use this macro. */
+#if !defined(NO_WOLFSSL_SERVER) && !defined(NO_WOLFSSL_CLIENT) && \
+    (!defined(WOLFSSL_NO_TLS12) || defined(WOLFSSL_TLS13)) && \
+    !defined(NO_FILESYSTEM) && !defined(NO_CERTS) && \
+    (!defined(NO_RSA) || defined(HAVE_RPK))
 #define HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES
+#define HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES_BUILD
+#endif
+
+#ifdef HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES_BUILD
 #define TEST_MEMIO_BUF_SZ (64 * 1024)
 #define TEST_MEMIO_MAX_MSGS 32
 
@@ -75,11 +95,30 @@ int test_memio_copy_message(const struct test_memio_ctx *ctx, int client,
         char *out, int *out_sz, int msg_pos);
 int test_memio_get_message(const struct test_memio_ctx *ctx, int client,
         const char **out, int *out_sz, int msg_pos);
+int test_memio_msg_is_hello_retry_request(const struct test_memio_ctx *ctx);
 int test_memio_move_message(struct test_memio_ctx *ctx, int client,
         int msg_pos_in, int msg_pos_out);
 int test_memio_drop_message(struct test_memio_ctx *ctx, int client, int msg_pos);
 int test_memio_modify_message_len(struct test_memio_ctx *ctx, int client, int msg_pos, int new_len);
 int test_memio_remove_from_buffer(struct test_memio_ctx *ctx, int client, int off, int sz);
+#endif /* HAVE_MANUAL_MEMIO_TESTS_DEPENDENCIES_BUILD */
+
+/* Shared TLS server/client thread bodies, defined in tests/api.c. The
+ * definitions are gated on ENABLE_TLS_CALLBACK_TEST (a composite condition
+ * locally #defined inside api.c) or (WOLFSSL_DTLS && WOLFSSL_SESSION_EXPORT).
+ * Declared unconditionally here so api.c itself sees the prototype regardless
+ * of which side of the local #define triggers; absent the definition the
+ * prototypes are harmless and any caller would get a link error. */
+THREAD_RETURN WOLFSSL_THREAD run_wolfssl_server(void* args);
+void run_wolfssl_client(void* args);
+
+#if !defined(NO_FILESYSTEM) && defined(OPENSSL_EXTRA) && \
+    defined(DEBUG_UNIT_TEST_CERTS)
+void DEBUG_WRITE_CERT_X509(WOLFSSL_X509* x509, const char* fileName);
+void DEBUG_WRITE_DER(const byte* der, int derSz, const char* fileName);
+#else
+#define DEBUG_WRITE_CERT_X509(x509, fileName) WC_DO_NOTHING
+#define DEBUG_WRITE_DER(der, derSz, fileName) WC_DO_NOTHING
 #endif
 
 #endif /* TESTS_UTILS_H */

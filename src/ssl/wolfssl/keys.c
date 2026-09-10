@@ -1,6 +1,6 @@
 /* keys.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -33,6 +33,12 @@
         #include <stdio.h>
     #endif
 #endif
+#ifdef NO_INLINE
+    #include <wolfssl/wolfcrypt/misc.h>
+#else
+    #define WOLFSSL_MISC_INCLUDED
+    #include <wolfcrypt/src/misc.c>
+#endif
 
 #if defined(WOLFSSL_RENESAS_FSPSM_TLS) || defined(WOLFSSL_RENESAS_TSIP_TLS)
 #include <wolfssl/wolfcrypt/port/Renesas/renesas_cmn.h>
@@ -44,6 +50,20 @@ int SetCipherSpecs(WOLFSSL* ssl)
                                 ssl->options.cipherSuite, &ssl->specs,
                                 &ssl->options);
     if (ret == 0) {
+    #ifdef WOLFSSL_ALLOW_SSLV3
+         /* SSLv3 (RFC 6101) defines MAC algorithms as MD5 and SHA-1. SHA-256
+          * was introduced in TLS 1.2 (RFC 5246). SSL_hmac for old SSLv3
+          * connections can not handle newer cipher suites that use digest sizes
+          * larger than SHA-1 */
+        if (ssl->version.major == SSLv3_MAJOR &&
+                    ssl->version.minor == SSLv3_MINOR &&
+                    ssl->specs.hash_size > WC_SHA_DIGEST_SIZE) {
+                WOLFSSL_MSG("SSLv3 does not support SHA-256 or higher MAC");
+                WOLFSSL_ERROR_VERBOSE(UNSUPPORTED_SUITE);
+                return UNSUPPORTED_SUITE;
+        }
+    #endif /* WOLFSSL_ALLOW_SSLV3 */
+
         /* set TLS if it hasn't been turned off */
         if (ssl->version.major == SSLv3_MAJOR &&
                 ssl->version.minor >= TLSv1_MINOR) {
@@ -505,8 +525,6 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
         specs->block_size            = WC_AES_BLOCK_SIZE;
         specs->iv_size               = AES_IV_SIZE;
 
-        if (opts != NULL)
-            opts->usingPSK_cipher    = 1;
         if (opts != NULL)
             opts->usingPSK_cipher    = 1;
         break;
@@ -1225,7 +1243,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
         specs->static_ecdh           = 0;
         specs->key_size              = WC_SHA256_DIGEST_SIZE;
         specs->block_size            = 0;
-        specs->iv_size               = HMAC_NONCE_SZ;
+        specs->iv_size               = WC_SHA256_DIGEST_SIZE;
         specs->aead_mac_size         = WC_SHA256_DIGEST_SIZE;
 
         break;
@@ -1243,7 +1261,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
         specs->static_ecdh           = 0;
         specs->key_size              = WC_SHA384_DIGEST_SIZE;
         specs->block_size            = 0;
-        specs->iv_size               = HMAC_NONCE_SZ;
+        specs->iv_size               = WC_SHA384_DIGEST_SIZE;
         specs->aead_mac_size         = WC_SHA384_DIGEST_SIZE;
 
         break;
@@ -1354,7 +1372,8 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
     #endif
 #endif /* WOLFSSL_TLS13 */
         default:
-            break;
+            WOLFSSL_MSG("Unsupported cipher suite, SetCipherSpecs TLS 1.3");
+            return UNSUPPORTED_SUITE;
         }
     }
 
@@ -1385,7 +1404,8 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #endif
 
     default:
-        break;
+        WOLFSSL_MSG("Unsupported cipher suite, SetCipherSpecs ECDHE_PSK");
+        return UNSUPPORTED_SUITE;
     }
     }
 
@@ -1446,7 +1466,8 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #endif
 
     default:
-        break;
+        WOLFSSL_MSG("Unsupported cipher suite, SetCipherSpecs SM");
+        return UNSUPPORTED_SUITE;
     }
     }
 
@@ -2779,7 +2800,7 @@ int SetKeys(Ciphers* enc, Ciphers* dec, Keys* keys, CipherSpecs* specs,
             if (dec->aes == NULL) {
                 dec->aes = (Aes*)XMALLOC(sizeof(Aes), heap, DYNAMIC_TYPE_CIPHER);
                 if (dec->aes == NULL)
-                return MEMORY_E;
+                    return MEMORY_E;
             } else {
                 wc_AesFree(dec->aes);
             }
@@ -2813,7 +2834,7 @@ int SetKeys(Ciphers* enc, Ciphers* dec, Keys* keys, CipherSpecs* specs,
     (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION >= 2)))
                 if (!tls13) {
                     CcmRet = wc_AesCcmSetNonce(enc->aes, keys->client_write_IV,
-                            AEAD_MAX_IMP_SZ);
+                            AEAD_NONCE_SZ);
                     if (CcmRet != 0) return CcmRet;
                 }
 #endif
@@ -2842,7 +2863,7 @@ int SetKeys(Ciphers* enc, Ciphers* dec, Keys* keys, CipherSpecs* specs,
     (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION >= 2)))
                 if (!tls13) {
                     CcmRet = wc_AesCcmSetNonce(enc->aes, keys->server_write_IV,
-                            AEAD_MAX_IMP_SZ);
+                            AEAD_NONCE_SZ);
                     if (CcmRet != 0) return CcmRet;
                 }
 #endif
@@ -3227,7 +3248,7 @@ int SetKeys(Ciphers* enc, Ciphers* dec, Keys* keys, CipherSpecs* specs,
                 dec->sm4 = (wc_Sm4*)XMALLOC(sizeof(wc_Sm4), heap,
                                             DYNAMIC_TYPE_CIPHER);
                 if (dec->sm4 == NULL)
-                return MEMORY_E;
+                    return MEMORY_E;
             } else {
                 wc_Sm4Free(dec->sm4);
             }
@@ -3343,14 +3364,14 @@ int SetKeys(Ciphers* enc, Ciphers* dec, Keys* keys, CipherSpecs* specs,
             if (side == WOLFSSL_CLIENT_END) {
                 if (enc) {
                     XMEMCPY(keys->aead_enc_imp_IV, keys->client_write_IV,
-                            HMAC_NONCE_SZ);
+                            specs->iv_size);
                     hmacRet = wc_HmacSetKey(enc->hmac, hashType,
                                        keys->client_write_key, specs->key_size);
                     if (hmacRet != 0) return hmacRet;
                 }
                 if (dec) {
                     XMEMCPY(keys->aead_dec_imp_IV, keys->server_write_IV,
-                            HMAC_NONCE_SZ);
+                            specs->iv_size);
                     hmacRet = wc_HmacSetKey(dec->hmac, hashType,
                                        keys->server_write_key, specs->key_size);
                     if (hmacRet != 0) return hmacRet;
@@ -3359,14 +3380,14 @@ int SetKeys(Ciphers* enc, Ciphers* dec, Keys* keys, CipherSpecs* specs,
             else {
                 if (enc) {
                     XMEMCPY(keys->aead_enc_imp_IV, keys->server_write_IV,
-                            HMAC_NONCE_SZ);
+                            specs->iv_size);
                     hmacRet = wc_HmacSetKey(enc->hmac, hashType,
                                        keys->server_write_key, specs->key_size);
                     if (hmacRet != 0) return hmacRet;
                 }
                 if (dec) {
                     XMEMCPY(keys->aead_dec_imp_IV, keys->client_write_IV,
-                            HMAC_NONCE_SZ);
+                            specs->iv_size);
                     hmacRet = wc_HmacSetKey(dec->hmac, hashType,
                                        keys->client_write_key, specs->key_size);
                     if (hmacRet != 0) return hmacRet;
@@ -3478,6 +3499,12 @@ int SetKeysSide(WOLFSSL* ssl, enum encrypt_side side)
 
     (void)copy;
 
+    /* Cipher activation invalidates the cached AEAD record overhead. Covers
+     * TLS 1.2 / TLS 1.3 handshake completion, secure renegotiation, early
+     * data flips, and DTLS 1.3 epoch transitions (Dtls13SetEpochKeys() calls
+     * SetKeysSide() at the bottom). */
+    ssl->recordSzOverhead = 0;
+
 #ifdef HAVE_SECURE_RENEGOTIATION
     if (ssl->secure_renegotiation &&
             ssl->secure_renegotiation->cache_status != SCR_CACHE_NULL) {
@@ -3551,7 +3578,7 @@ int SetKeysSide(WOLFSSL* ssl, enum encrypt_side side)
 #endif
 
 #if !defined(NO_CERTS) && defined(HAVE_PK_CALLBACKS)
-    ret = PROTOCOLCB_UNAVAILABLE;
+    ret = WC_NO_ERR_TRACE(PROTOCOLCB_UNAVAILABLE);
     if (ssl->ctx->EncryptKeysCb) {
         void* ctx = wolfSSL_GetEncryptKeysCtx(ssl);
         #if defined(WOLFSSL_RENESAS_FSPSM_TLS)
@@ -3570,6 +3597,75 @@ int SetKeysSide(WOLFSSL* ssl, enum encrypt_side side)
         ret = SetKeys(wc_encrypt, wc_decrypt, keys, &ssl->specs, ssl->options.side,
                       ssl->heap, ssl->devId, ssl->rng, ssl->options.tls1_3);
     }
+
+    /* Zero the TLS-layer staging key buffers once the CryptoCB callback
+     * has imported the key into a Secure Element.
+     *
+     * Convention: after a successful wc_AesSetKey / wc_AesGcmSetKey where
+     * the CryptoCB handled the key import, the callback leaves
+     * aes->devCtx != NULL and the software key schedule (aes->key,
+     * aes->devKey, aes->gcm.H / aes->gcm.M0) is NOT populated.  The TLS
+     * layer may therefore destroy its staging copy of the traffic key.
+     *
+     * Only the key buffers (client_write_key / server_write_key) are
+     * zeroed.  The static IVs (client_write_IV / server_write_IV) and
+     * the AEAD implicit-IV copies (aead_{enc,dec}_imp_IV) are NOT
+     * zeroed: BuildTls13Nonce() in tls13.c reads keys->aead_*_imp_IV on
+     * every AEAD record to construct the per-record nonce
+     * (nonce = static_iv XOR seq_num, RFC 8446 Section 5.3).  Zeroing
+     * them would break the record path or, if applied symmetrically on
+     * both peers, silently degenerate the nonce to the bare sequence
+     * number and break interop with any unpatched peer.  The static_iv
+     * is not a confidentiality-critical secret in the same sense as
+     * the traffic key; losing it does not compromise plaintext.
+     *
+     * Scope:
+     *   - TLS 1.3 only.  TLS 1.2 additionally reads
+     *     keys->{client,server}_write_key for rehandshake/secure
+     *     renegotiation flows.
+     *   - Non-DTLS.  Dtls13EpochCopyKeys (called from Dtls13NewEpoch)
+     *     references keys->*_write_key for epoch switching; DTLS 1.3
+     *     needs separate analysis.
+     *   - Non-QUIC.  QUIC traffic secrets live outside these buffers
+     *     but the interaction with stack-installed QUIC handlers has
+     *     not been audited; exclude until it is.
+     *
+     * When called with ENCRYPT_SIDE_ONLY or DECRYPT_SIDE_ONLY, only the
+     * buffer consumed by this call is zeroed; the complementary buffer
+     * is written in a later SetKeysSide() from its own DeriveTls13Keys()
+     * and StoreKeys() pair (StoreKeys gates on PROVISION_CLIENT /
+     * PROVISION_SERVER so only the provisioned side is written).
+     *
+     * Ordering: this block must run AFTER SetKeys() (so offload has
+     * happened) and BEFORE Dtls13SetRecordNumberKeys() /
+     * wolfSSL_quic_keys_active() below, in case a future refactor in
+     * either starts reading keys->*_write_key.  The DTLS and QUIC gates
+     * in this block mean neither currently executes on the same ssl,
+     * but keep the order explicit. */
+#if defined(WOLF_CRYPTO_CB) && defined(WOLF_CRYPTO_CB_AES_SETKEY)
+    if (ret == 0 && ssl->options.tls1_3 && !ssl->options.dtls
+            && !WOLFSSL_IS_QUIC(ssl)) {
+        int encOffloaded = (wc_encrypt != NULL && wc_encrypt->aes != NULL &&
+                            wc_encrypt->aes->devCtx != NULL);
+        int decOffloaded = (wc_decrypt != NULL && wc_decrypt->aes != NULL &&
+                            wc_decrypt->aes->devCtx != NULL);
+
+        if (encOffloaded || decOffloaded) {
+            if (ssl->options.side == WOLFSSL_CLIENT_END) {
+                if (encOffloaded)
+                    ForceZero(keys->client_write_key, ssl->specs.key_size);
+                if (decOffloaded)
+                    ForceZero(keys->server_write_key, ssl->specs.key_size);
+            }
+            else {
+                if (encOffloaded)
+                    ForceZero(keys->server_write_key, ssl->specs.key_size);
+                if (decOffloaded)
+                    ForceZero(keys->client_write_key, ssl->specs.key_size);
+            }
+        }
+    }
+#endif /* WOLF_CRYPTO_CB && WOLF_CRYPTO_CB_AES_SETKEY */
 
 #ifdef WOLFSSL_DTLS13
     if (ret == 0 && ssl->options.dtls && IsAtLeastTLSv1_3(ssl->version))
@@ -3888,6 +3984,7 @@ int DeriveKeys(WOLFSSL* ssl)
         return MEMORY_E;
     }
 #endif
+
     XMEMSET(shaOutput, 0, WC_SHA_DIGEST_SIZE);
     ret = wc_InitMd5(md5);
     if (ret == 0) {
@@ -3934,6 +4031,26 @@ int DeriveKeys(WOLFSSL* ssl)
             ret = StoreKeys(ssl, keyData, PROVISION_CLIENT_SERVER);
     }
 
+#ifdef WOLFSSL_CHECK_MEM_ZERO
+    wc_MemZero_Add("DeriveKeys shaOutput", shaOutput, WC_SHA_DIGEST_SIZE);
+    wc_MemZero_Add("DeriveKeys md5Input", md5Input,
+                   SECRET_LEN + WC_SHA_DIGEST_SIZE);
+    wc_MemZero_Add("DeriveKeys shaInput", shaInput,
+                   KEY_PREFIX + SECRET_LEN + 2 * RAN_LEN);
+    wc_MemZero_Add("DeriveKeys keyData", keyData,
+                   KEY_PREFIX * WC_MD5_DIGEST_SIZE);
+#endif
+    ForceZero(shaOutput, WC_SHA_DIGEST_SIZE);
+    ForceZero(md5Input, SECRET_LEN + WC_SHA_DIGEST_SIZE);
+    ForceZero(shaInput, KEY_PREFIX + SECRET_LEN + 2 * RAN_LEN);
+    ForceZero(keyData, KEY_PREFIX * WC_MD5_DIGEST_SIZE);
+#ifdef WOLFSSL_CHECK_MEM_ZERO
+    wc_MemZero_Check(shaOutput, WC_SHA_DIGEST_SIZE);
+    wc_MemZero_Check(md5Input, SECRET_LEN + WC_SHA_DIGEST_SIZE);
+    wc_MemZero_Check(shaInput, KEY_PREFIX + SECRET_LEN + 2 * RAN_LEN);
+    wc_MemZero_Check(keyData, KEY_PREFIX * WC_MD5_DIGEST_SIZE);
+#endif
+
     WC_FREE_VAR_EX(shaOutput, NULL, DYNAMIC_TYPE_TMP_BUFFER);
     WC_FREE_VAR_EX(md5Input, NULL, DYNAMIC_TYPE_TMP_BUFFER);
     WC_FREE_VAR_EX(shaInput, NULL, DYNAMIC_TYPE_TMP_BUFFER);
@@ -3945,26 +4062,24 @@ int DeriveKeys(WOLFSSL* ssl)
 }
 
 
-static int CleanPreMaster(WOLFSSL* ssl)
+static void CleanPreMaster(WOLFSSL* ssl)
 {
-    int i, ret, sz = (int)(ssl->arrays->preMasterSz);
+    int sz = (int)(ssl->arrays->preMasterSz);
 
-    for (i = 0; i < sz; i++)
-        ssl->arrays->preMasterSecret[i] = 0;
+#ifdef WOLFSSL_CHECK_MEM_ZERO
+    wc_MemZero_Add("CleanPreMaster preMasterSecret",
+                   ssl->arrays->preMasterSecret, sz);
+#endif
 
-    ret = wc_RNG_GenerateBlock(ssl->rng, ssl->arrays->preMasterSecret,
-                                                            (word32)(sz));
-    if (ret != 0)
-        return ret;
+    ForceZero(ssl->arrays->preMasterSecret, sz);
 
-    for (i = 0; i < sz; i++)
-        ssl->arrays->preMasterSecret[i] = 0;
+#ifdef WOLFSSL_CHECK_MEM_ZERO
+    wc_MemZero_Check(ssl->arrays->preMasterSecret, sz);
+#endif
 
     XFREE(ssl->arrays->preMasterSecret, ssl->heap, DYNAMIC_TYPE_SECRET);
     ssl->arrays->preMasterSecret = NULL;
     ssl->arrays->preMasterSz = 0;
-
-    return 0;
 }
 
 
@@ -4024,6 +4139,15 @@ static int MakeSslMasterSecret(WOLFSSL* ssl)
         return MEMORY_E;
     }
 #endif
+#ifdef WOLFSSL_CHECK_MEM_ZERO
+    wc_MemZero_Add("MakeSslMasterSecret md5Input", md5Input,
+                   ENCRYPT_LEN + WC_SHA_DIGEST_SIZE);
+    wc_MemZero_Add("MakeSslMasterSecret shaInput", shaInput,
+                   PREFIX + ENCRYPT_LEN + 2 * RAN_LEN);
+    wc_MemZero_Add("MakeSslMasterSecret shaOutput", shaOutput,
+                   WC_SHA_DIGEST_SIZE);
+#endif
+
     XMEMSET(shaOutput, 0, WC_SHA_DIGEST_SIZE);
 
     ret = wc_InitMd5(md5);
@@ -4082,16 +4206,22 @@ static int MakeSslMasterSecret(WOLFSSL* ssl)
             ret = DeriveKeys(ssl);
     }
 
+    ForceZero(md5Input, ENCRYPT_LEN + WC_SHA_DIGEST_SIZE);
+    ForceZero(shaInput, PREFIX + ENCRYPT_LEN + 2 * RAN_LEN);
+    ForceZero(shaOutput, WC_SHA_DIGEST_SIZE);
+#ifdef WOLFSSL_CHECK_MEM_ZERO
+    wc_MemZero_Check(md5Input, ENCRYPT_LEN + WC_SHA_DIGEST_SIZE);
+    wc_MemZero_Check(shaInput, PREFIX + ENCRYPT_LEN + 2 * RAN_LEN);
+    wc_MemZero_Check(shaOutput, WC_SHA_DIGEST_SIZE);
+#endif
+
     WC_FREE_VAR_EX(shaOutput, NULL, DYNAMIC_TYPE_TMP_BUFFER);
     WC_FREE_VAR_EX(md5Input, NULL, DYNAMIC_TYPE_TMP_BUFFER);
     WC_FREE_VAR_EX(shaInput, NULL, DYNAMIC_TYPE_TMP_BUFFER);
     WC_FREE_VAR_EX(md5, NULL, DYNAMIC_TYPE_TMP_BUFFER);
     WC_FREE_VAR_EX(sha, NULL, DYNAMIC_TYPE_TMP_BUFFER);
 
-    if (ret == 0)
-        ret = CleanPreMaster(ssl);
-    else
-        CleanPreMaster(ssl);
+    CleanPreMaster(ssl);
 
     return ret;
 }

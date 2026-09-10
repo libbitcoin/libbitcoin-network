@@ -1,6 +1,6 @@
 /* test_arc4.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -26,9 +26,13 @@
 
 int test_wc_Arc4SetKey(void);
 int test_wc_Arc4Process(void);
+int test_wc_Arc4Process_no_key(void);
+int test_wc_Arc4_MonteCarlo(void);
 
-#define TEST_ARC4_DECLS                             \
-    TEST_DECL_GROUP("arc4", test_wc_Arc4SetKey),    \
-    TEST_DECL_GROUP("arc4", test_wc_Arc4Process)
+#define TEST_ARC4_DECLS                                     \
+    TEST_DECL_GROUP("arc4", test_wc_Arc4SetKey),            \
+    TEST_DECL_GROUP("arc4", test_wc_Arc4Process),           \
+    TEST_DECL_GROUP("arc4", test_wc_Arc4Process_no_key),    \
+    TEST_DECL_GROUP("arc4", test_wc_Arc4_MonteCarlo)
 
 #endif /* WOLFCRYPT_TEST_ARC4_H */

@@ -1,6 +1,6 @@
 /* sha256.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -102,13 +102,13 @@
 #define WOLFSSL_NO_HASH_RAW
 #endif
 
-#if defined(_MSC_VER)
-    #define SHA256_NOINLINE __declspec(noinline)
-#elif defined(__IAR_SYSTEMS_ICC__) || defined(__GNUC__)
-    #define SHA256_NOINLINE __attribute__((noinline))
-#else
-    #define SHA256_NOINLINE
+/* no raw hash access when software transform is stripped */
+#if defined(WOLF_CRYPTO_CB_ONLY_SHA256)
+#undef  WOLFSSL_NO_HASH_RAW
+#define WOLFSSL_NO_HASH_RAW
 #endif
+
+#define SHA256_NOINLINE WC_NO_INLINE
 
 #if !defined(NO_OLD_SHA_NAMES)
     #define SHA256             WC_SHA256
@@ -122,12 +122,10 @@
 #endif
 
 /* in bytes */
-enum {
-    WC_SHA256              =  WC_HASH_TYPE_SHA256,
-    WC_SHA256_BLOCK_SIZE   = 64,
-    WC_SHA256_DIGEST_SIZE  = 32,
-    WC_SHA256_PAD_SIZE     = 56
-};
+#define WC_SHA256              WC_HASH_TYPE_SHA256
+#define WC_SHA256_BLOCK_SIZE   64
+#define WC_SHA256_DIGEST_SIZE  32
+#define WC_SHA256_PAD_SIZE     56
 
 
 #ifdef WOLFSSL_TI_HASH
@@ -215,9 +213,6 @@ struct wc_Sha256 {
 #ifdef WOLFSSL_DEVCRYPTO_HASH
     WC_CRYPTODEV ctx;
 #endif
-#if defined(MAX3266X_SHA_CB) || defined(MAX3266X_SHA)
-    wc_MXC_Sha mxcCtx;
-#endif
 #if defined(WOLFSSL_DEVCRYPTO_HASH) || defined(WOLFSSL_HASH_KEEP)
     byte*  msg;
     word32 used;
@@ -267,13 +262,15 @@ WOLFSSL_API int wc_InitSha256(wc_Sha256* sha);
 WOLFSSL_API int wc_InitSha256_ex(wc_Sha256* sha, void* heap, int devId);
 WOLFSSL_API int wc_Sha256Update(wc_Sha256* sha, const byte* data, word32 len);
 
-#if !defined(WOLFSSL_KCAPI_HASH) && !defined(WOLFSSL_AFALG_HASH)
+#if !defined(WOLFSSL_KCAPI_HASH) && !defined(WOLFSSL_AFALG_HASH) && \
+    !defined(WOLF_CRYPTO_CB_ONLY_SHA256)
 WOLFSSL_API int wc_Sha256FinalRaw(wc_Sha256* sha256, byte* hash);
 #endif
 WOLFSSL_API int wc_Sha256Final(wc_Sha256* sha256, byte* hash);
 WOLFSSL_API void wc_Sha256Free(wc_Sha256* sha256);
 #if (defined(OPENSSL_EXTRA) || defined(HAVE_CURL)) && \
-    !defined(WOLFSSL_KCAPI_HASH) && !defined(WOLFSSL_AFALG_HASH)
+    !defined(WOLFSSL_KCAPI_HASH) && !defined(WOLFSSL_AFALG_HASH) && \
+    !defined(WOLF_CRYPTO_CB_ONLY_SHA256)
 WOLFSSL_API int wc_Sha256Transform(wc_Sha256* sha, const unsigned char* data);
 #endif
 #if defined(WOLFSSL_HAVE_LMS) && !defined(WOLFSSL_LMS_FULL_HASH)
@@ -312,12 +309,10 @@ WOLFSSL_API void wc_Sha256SizeSet(wc_Sha256* sha256, word32 len);
 #endif
 
 /* in bytes */
-enum {
-    WC_SHA224              =   WC_HASH_TYPE_SHA224,
-    WC_SHA224_BLOCK_SIZE   =   WC_SHA256_BLOCK_SIZE,
-    WC_SHA224_DIGEST_SIZE  =   28,
-    WC_SHA224_PAD_SIZE     =   WC_SHA256_PAD_SIZE
-};
+#define WC_SHA224             WC_HASH_TYPE_SHA224
+#define WC_SHA224_BLOCK_SIZE  WC_SHA256_BLOCK_SIZE
+#define WC_SHA224_DIGEST_SIZE 28
+#define WC_SHA224_PAD_SIZE    WC_SHA256_PAD_SIZE
 
 
 #ifndef WC_SHA224_TYPE_DEFINED

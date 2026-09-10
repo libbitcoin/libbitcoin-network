@@ -59,8 +59,6 @@ BOOST_AUTO_TEST_CASE(wolfssl__quic__always__success)
 }
 #endif
 
-// Disabled until setting CERT_PREFIX is worked out.
-#if defined(HAVE_MSC)
 
 #if !defined(NO_CRYPT_TEST)
 BOOST_AUTO_TEST_CASE(wolfssl__wolfcrypt__always__success)
@@ -163,6 +161,5 @@ BOOST_AUTO_TEST_CASE(encrypt_ecc_key)
     wolfSSL_Cleanup();
 }
 
-#endif // HAVE_MSC
 
 BOOST_AUTO_TEST_SUITE_END()

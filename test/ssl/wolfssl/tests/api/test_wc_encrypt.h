@@ -1,6 +1,6 @@
 /* test_wc_encrypt.h
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -25,8 +25,10 @@
 #include <tests/api/api_decl.h>
 
 int test_wc_Des3_CbcEncryptDecryptWithKey(void);
+int test_wc_Des_CbcEncryptDecryptWithKey(void);
 
-#define TEST_WC_ENCRYPT_DECLS                                               \
-    TEST_DECL_GROUP("wc_encrypt", test_wc_Des3_CbcEncryptDecryptWithKey)
+#define TEST_WC_ENCRYPT_DECLS                                                   \
+    TEST_DECL_GROUP("wc_encrypt", test_wc_Des3_CbcEncryptDecryptWithKey),       \
+    TEST_DECL_GROUP("wc_encrypt", test_wc_Des_CbcEncryptDecryptWithKey)
 
 #endif /* WOLFCRYPT_TEST_WC_ENCRYPT_H */

@@ -1,6 +1,6 @@
 /* memory.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -313,7 +313,7 @@ void wc_MemZero_Check(void* addr, size_t len)
         nextIdx--;
         if (nextIdx > 0) {
             /* Remove entry. */
-            XMEMCPY(memZero + i, memZero + i + 1,
+            XMEMMOVE(memZero + i, memZero + i + 1,
                 sizeof(MemZero) * (nextIdx - i));
             /* Clear out top to make it easier to see what is to be checked. */
             XMEMSET(&memZero[nextIdx], 0, sizeof(MemZero));
@@ -520,6 +520,12 @@ void* wolfSSL_Realloc(void *ptr, size_t size)
 #endif
 }
 #endif /* WOLFSSL_STATIC_MEMORY */
+
+#if defined(WOLFSSL_TRACK_MEMORY) && defined(USE_WOLFSSL_MEMORY) && \
+    !defined(WOLFSSL_STATIC_MEMORY)
+#include <wolfssl/wolfcrypt/mem_track.h>
+WOLFSSL_API memoryStats *wc_MemStats_Ptr;
+#endif /* WOLFSSL_TRACK_MEMORY && USE_WOLFSSL_MEMORY && !WOLFSSL_STATIC_MEMORY */
 
 #ifdef WOLFSSL_STATIC_MEMORY
 
@@ -1178,14 +1184,13 @@ void wolfSSL_Free(void *ptr, void* heap, int type)
 #endif
 {
     int i;
-    wc_Memory* pt = NULL;
 
     if (ptr) {
         /* check for testing heap hint was set */
     #ifdef WOLFSSL_HEAP_TEST
         if (heap == (void*)WOLFSSL_HEAP_TEST) {
         #ifdef WOLFSSL_DEBUG_MEMORY
-            fprintf(stderr, "[HEAP %p] Free: %p at %s:%u\n", heap, pt, func,
+            fprintf(stderr, "[HEAP %p] Free: %p at %s:%u\n", heap, ptr, func,
                 line);
         #endif
             return free(ptr); /* native heap */
@@ -1205,7 +1210,7 @@ void wolfSSL_Free(void *ptr, void* heap, int type)
         #endif
         #ifndef WOLFSSL_NO_MALLOC
             #ifdef WOLFSSL_DEBUG_MEMORY
-            fprintf(stderr, "[HEAP %p] Free: %p at %s:%u\n", heap, pt, func,
+            fprintf(stderr, "[HEAP %p] Free: %p at %s:%u\n", heap, ptr, func,
                 line);
             #endif
             #ifdef FREERTOS
@@ -1222,6 +1227,7 @@ void wolfSSL_Free(void *ptr, void* heap, int type)
         else {
             WOLFSSL_HEAP_HINT* hint = (WOLFSSL_HEAP_HINT*)heap;
             WOLFSSL_HEAP*      mem;
+            wc_Memory* pt;
             word32 padSz = -(int)sizeof(wc_Memory) & (WOLFSSL_STATIC_ALIGN - 1);
 
             if (hint == NULL) {
@@ -1317,7 +1323,6 @@ void wolfSSL_Free(void *ptr, void* heap, int type)
     }
 
     (void)i;
-    (void)pt;
     (void)type;
 }
 
@@ -1822,6 +1827,7 @@ WOLFSSL_LOCAL int SAVE_VECTOR_REGISTERS2_fuzzer(void) {
 
 #endif /* DEBUG_VECTOR_REGISTER_ACCESS_FUZZING */
 
-#ifdef WOLFSSL_LINUXKM
-    #include "../../linuxkm/linuxkm_memory.c"
+#if defined(WOLFSSL_LINUXKM) || defined(WC_SYM_RELOC_TABLES) || \
+    defined(WC_SYM_RELOC_TABLES_SUPPORT)
+    #include "linuxkm/linuxkm_memory.c"
 #endif

@@ -1,6 +1,6 @@
 /* ssl_crypto.c
  *
- * Copyright (C) 2006-2025 wolfSSL Inc.
+ * Copyright (C) 2006-2026 wolfSSL Inc.
  *
  * This file is part of wolfSSL.
  *
@@ -611,7 +611,8 @@ int wolfSSL_SHA512_Final(byte* output, WOLFSSL_SHA512_CTX* sha512)
 
 #if !defined(HAVE_SELFTEST) && (!defined(HAVE_FIPS) || \
     (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION > 2))) && \
-    !defined(WOLFSSL_KCAPI_HASH) /* doesn't support direct transform */
+    !defined(WOLFSSL_KCAPI_HASH) /* doesn't support direct transform */ && \
+    !defined(WOLF_CRYPTO_CB_ONLY_SHA512) /* no wc_Sha512Transform in CB-only */
 /* Apply SHA-512 transformation to the data.
  *
  * @param [in, out] sha512  SHA512 context object.
@@ -687,7 +688,8 @@ int wolfSSL_SHA512_224_Final(byte* output, WOLFSSL_SHA512_224_CTX* sha512)
 }
 
 #if !defined(HAVE_SELFTEST) && (!defined(HAVE_FIPS) || \
-    (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION > 2)))
+    (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION > 2))) && \
+    !defined(WOLF_CRYPTO_CB_ONLY_SHA512) /* no wc_Sha512_224Transform in CB-only */
 /* Apply SHA-512-224 transformation to the data.
  *
  * @param [in, out] sha512  SHA512 context object.
@@ -765,7 +767,8 @@ int wolfSSL_SHA512_256_Final(byte* output, WOLFSSL_SHA512_256_CTX* sha512)
 }
 
 #if !defined(HAVE_SELFTEST) && (!defined(HAVE_FIPS) || \
-    (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION > 2)))
+    (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION > 2))) && \
+    !defined(WOLF_CRYPTO_CB_ONLY_SHA512) /* no wc_Sha512_256Transform in CB-only */
 /* Apply SHA-512-256 transformation to the data.
  *
  * @param [in, out] sha512  SHA512 context object.
@@ -2659,7 +2662,7 @@ void wolfSSL_DES_cbc_encrypt(const unsigned char* input, unsigned char* output,
     WOLFSSL_ENTER("wolfSSL_DES_cbc_encrypt");
 
 #ifdef WOLFSSL_SMALL_STACK
-    des = (Des*)XMALLOC(sizeof(Des3), NULL, DYNAMIC_TYPE_CIPHER);
+    des = (Des*)XMALLOC(sizeof(Des), NULL, DYNAMIC_TYPE_CIPHER);
     if (des == NULL) {
         WOLFSSL_MSG("Failed to allocate memory for Des object");
     }
@@ -2722,11 +2725,19 @@ void wolfSSL_DES_ncbc_encrypt(const unsigned char* input, unsigned char* output,
     int enc)
 {
     unsigned char tmp[DES_IV_SIZE];
-    /* Calculate length to a multiple of block size. */
-    size_t offset = (size_t)length;
+    size_t offset;
 
     WOLFSSL_ENTER("wolfSSL_DES_ncbc_encrypt");
 
+    /* Zero/negative length: no block to derive an IV from. The offset math
+     * below would underflow for length == 0, yielding a wild-pointer read. */
+    if (length <= 0) {
+        WOLFSSL_LEAVE("wolfSSL_DES_ncbc_encrypt", 0);
+        return;
+    }
+
+    /* Calculate length to a multiple of block size. */
+    offset = (size_t)length;
     offset = (offset + DES_BLOCK_SIZE - 1) / DES_BLOCK_SIZE;
     offset *= DES_BLOCK_SIZE;
     offset -= DES_BLOCK_SIZE;
@@ -3071,8 +3082,8 @@ void wolfSSL_AES_decrypt(const unsigned char* input, unsigned char* output,
         WOLFSSL_MSG("Null argument passed in");
     }
     else
-#if !defined(HAVE_SELFTEST) && \
-    (!defined(HAVE_FIPS) || (defined(FIPS_VERSION_GE) && FIPS_VERSION3_GE(5,3,0)))
+#if !defined(HAVE_SELFTEST) && (!defined(HAVE_FIPS) || \
+    (defined(FIPS_VERSION_GE) && FIPS_VERSION3_GE(5,3,0)))
     /* Decrypt a block with wolfCrypt AES. */
     if (wc_AesDecryptDirect((Aes*)key, output, input) != 0) {
         WOLFSSL_MSG("wc_AesDecryptDirect failed");
@@ -3203,7 +3214,8 @@ void wolfSSL_AES_cbc_encrypt(const unsigned char *in, unsigned char* out,
  *                   AES_ENCRPT for encryption, AES_DECRYPTION for decryption.
  */
 void wolfSSL_AES_cfb128_encrypt(const unsigned char *in, unsigned char* out,
-    size_t len, WOLFSSL_AES_KEY *key, unsigned char* iv, int* num, const int enc)
+    size_t len, WOLFSSL_AES_KEY *key, unsigned char* iv, int* num,
+    const int enc)
 {
 #ifndef WOLFSSL_AES_CFB
     WOLFSSL_MSG("CFB mode not enabled please use macro WOLFSSL_AES_CFB");
@@ -3435,13 +3447,15 @@ size_t wolfSSL_CRYPTO_cts128_decrypt(const unsigned char *in,
          * Use 0 buffer as IV to do straight decryption.
          * This places the Cn-1 block at lastBlk */
         XMEMSET(lastBlk, 0, WOLFSSL_CTS128_BLOCK_SZ);
-        (*cbc)(in, prevBlk, WOLFSSL_CTS128_BLOCK_SZ, key, lastBlk, AES_DECRYPTION);
+        (*cbc)(in, prevBlk, WOLFSSL_CTS128_BLOCK_SZ, key, lastBlk,
+            AES_DECRYPTION);
         /* RFC2040: Append the tail (BB minus Ln) bytes of Xn to Cn
          *          to create En. */
         XMEMCPY(prevBlk, in + WOLFSSL_CTS128_BLOCK_SZ, lastBlkLen);
         /* Cn and Cn-1 can now be decrypted */
         (*cbc)(prevBlk, out, WOLFSSL_CTS128_BLOCK_SZ, key, iv, AES_DECRYPTION);
-        (*cbc)(lastBlk, lastBlk, WOLFSSL_CTS128_BLOCK_SZ, key, iv, AES_DECRYPTION);
+        (*cbc)(lastBlk, lastBlk, WOLFSSL_CTS128_BLOCK_SZ, key, iv,
+            AES_DECRYPTION);
         XMEMCPY(out + WOLFSSL_CTS128_BLOCK_SZ, lastBlk, lastBlkLen);
     }
 
