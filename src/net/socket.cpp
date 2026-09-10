@@ -42,6 +42,9 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// Bounds query overrun following caller drop, not response latency.
+constexpr auto monitor_interval = milliseconds(10);
+
 // Construct.
 // ----------------------------------------------------------------------------
 
@@ -72,6 +75,7 @@ socket::socket(const logger& log, asio::context& service,
     address_(address),
     endpoint_(endpoint),
     timer_(emplace_shared<deadline>(log, strand_, params.connect_timeout)),
+    monitor_(emplace_shared<deadline>(log, strand_, monitor_interval)),
     socket_(std::in_place_type<asio::socket>, strand_),
     reporter(log),
     tracker<socket>(log)
@@ -82,6 +86,67 @@ socket::~socket() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "socket is not stopped");
     if (!stopped_.load()) { LOGF("~socket is not stopped."); }
+}
+
+// Wait.
+// ----------------------------------------------------------------------------
+
+void socket::monitor(result_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_monitor,
+            shared_from_this(), std::move(handler)));
+}
+
+void socket::demonitor() NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_demonitor,
+            shared_from_this()));
+}
+
+// private
+void socket::do_monitor(const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (stopped_.load())
+    {
+        handler(error::success);
+        return;
+    }
+
+    monitor_->start(std::bind(&socket::handle_monitor,
+        shared_from_this(), _1, handler));
+}
+
+// private
+void socket::do_demonitor() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    monitor_->stop();
+}
+
+// private
+void socket::handle_monitor(const code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // Only timer stop results in caller not stopping the channel.
+    if (ec)
+    {
+        handler(error::success);
+        return;
+    }
+
+    if (asio::half_closed(get_base()))
+    {
+        handler(error::peer_disconnect);
+        return;
+    }
+
+    do_monitor(handler);
 }
 
 // Properties.
@@ -236,17 +301,6 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
             std::terminate();
         }
     }, socket_);
-}
-
-// The peer close is a connection state, not a readability event. A socket
-// carrying a request that arrived during a long-running query is readable
-// whether or not the peer has closed, so the state is read directly. That
-// leaves the request in the receive buffer, so a caller may pipeline up to
-// that limit without the monitor mistaking the request for a drop.
-bool socket::half_closed() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    return asio::half_closed(get_base());
 }
 
 asio::socket& socket::get_base() NOEXCEPT

@@ -117,7 +117,6 @@ private:
     void start_inactivity() NOEXCEPT;
     void handle_inactivity(const code& ec) NOEXCEPT;
 
-    void start_monitor() NOEXCEPT;
     void handle_monitor(const code& ec) NOEXCEPT;
 
     // These are thread safe (const).
@@ -132,7 +131,6 @@ private:
     // These are protected by strand.
     deadline::ptr inactivity_;
     deadline::ptr expiration_;
-    deadline::ptr monitor_;
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;

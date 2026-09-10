@@ -91,10 +91,11 @@ public:
     /// Wait (all).
     /// -----------------------------------------------------------------------
 
-    /// True if the peer has closed, false if indeterminate (requires strand).
-    /// Does not consume the receive buffer, so a request that arrived during
-    /// a long-running query is retained and remains distinct from the close.
-    virtual bool half_closed() NOEXCEPT;
+    /// Monitor the peer for close, handler posted to socket strand.
+    virtual void monitor(result_handler&& handler) NOEXCEPT;
+
+    /// End monitoring, handler invoked with success.
+    virtual void demonitor() NOEXCEPT;
 
     /// Connect (all).
     /// -----------------------------------------------------------------------
@@ -441,6 +442,10 @@ private:
     // config
     void do_ws_event(ws::frame_type kind, const std::string& data) NOEXCEPT;
 
+    // wait
+    void do_monitor(const result_handler& handler) NOEXCEPT;
+    void do_demonitor() NOEXCEPT;
+
     // connection
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
@@ -524,6 +529,10 @@ private:
     // config
     void handle_ws_event(ws::frame_type kind,
         const std::string& data) NOEXCEPT;
+
+    // wait
+    void handle_monitor(const code& ec,
+        const result_handler& handler) NOEXCEPT;
 
 
     // connect/accept
@@ -616,6 +625,7 @@ protected:
     config::address address_;
     config::endpoint endpoint_;
     deadline::ptr timer_;
+    deadline::ptr monitor_;
     socket_t socket_;
 
     // Retains the detection prefix for a v1 peer (see handle_detection).

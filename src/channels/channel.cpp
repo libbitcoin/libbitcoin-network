@@ -33,11 +33,6 @@ using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// Poll interval for peer close during a monitored (long-running) query. The
-// cost is one state read per interval per monitored channel, and the bound it
-// sets is on abandoned query duration, not on response latency.
-constexpr auto monitor_interval = milliseconds(100);
-
 // Factory for fixed deadline timer pointer construction (or null).
 inline deadline::ptr make_timer(const logger& log, asio::strand& strand,
     const deadline::duration& span) NOEXCEPT
@@ -65,8 +60,7 @@ channel::channel(const logger& log, const socket::ptr& socket,
     settings_(settings),
     identifier_(identifier),
     inactivity_(make_timer(log, socket->strand(), options.inactivity())),
-    expiration_(make_timer(log, socket->strand(), options.expiration())),
-    monitor_(make_timer(log, socket->strand(), monitor_interval))
+    expiration_(make_timer(log, socket->strand(), options.expiration()))
 {
 }
 
@@ -85,7 +79,6 @@ void channel::stopping(const code& ec) NOEXCEPT
     BC_ASSERT(stranded());
     stop_expiration();
     stop_inactivity();
-    if (monitor_) monitor_->stop();
     proxy::stopping(ec);
 }
 
@@ -110,59 +103,21 @@ void channel::resume() NOEXCEPT
     proxy::resume();
 }
 
-// A monitored query detaches the read handler, so the channel would otherwise
-// not observe a peer drop until the query completed. That allows an abandoned
-// query to run to completion, which both accumulates a backlog under abuse and
-// delays shutdown, so the connection state is polled for the duration.
 void channel::monitor(bool value) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (!monitor_)
-        return;
-
     if (value)
-        start_monitor();
+        proxy::monitor(std::bind(&channel::handle_monitor,
+            shared_from_base<channel>(), _1));
     else
-        monitor_->stop();
-}
-
-void channel::start_monitor() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (stopped())
-        return;
-
-    // Handler is posted to the socket strand.
-    monitor_->start(std::bind(&channel::handle_monitor,
-        shared_from_base<channel>(), _1));
+        demonitor();
 }
 
 void channel::handle_monitor(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // error::operation_canceled is set by timer stop (monitoring ended).
-    if (stopped() || ec == error::operation_canceled)
-        return;
-
-    if (ec)
-    {
-        LOGF("Monitor timer fail [" << endpoint() << "] " << ec.message());
-        stop(ec);
-        return;
-    }
-
-    // Reading the state does not consume the buffer, so a request that arrived
-    // during the query is retained and is not mistaken for the close.
-    if (half_closed())
-    {
-        stop(error::peer_disconnect);
-        return;
-    }
-
-    start_monitor();
+    if (ec) stop(ec);
 }
 
 // Timers.

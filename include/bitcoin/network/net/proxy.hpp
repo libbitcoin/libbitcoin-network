@@ -150,9 +150,11 @@ protected:
     /// Wait.
     /// -----------------------------------------------------------------------
 
-    /// True if the peer has closed, false if indeterminate (requires strand).
-    /// No data capture or loss, so a pipelined request remains buffered.
-    virtual bool half_closed() NOEXCEPT;
+    /// Monitor the peer for close, no data capture/loss.
+    virtual void monitor(result_handler&& handler) NOEXCEPT;
+
+    /// End monitoring, handler invoked with success.
+    virtual void demonitor() NOEXCEPT;
 
     /// WS (generic, framed).
     /// -----------------------------------------------------------------------
