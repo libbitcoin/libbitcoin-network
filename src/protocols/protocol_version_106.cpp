@@ -48,7 +48,7 @@ protocol_version_106::protocol_version_106(const session::ptr& session,
     provided_services_(session->services_provided()),
     invalid_services_(session->network_settings().invalid_services),
     maximum_skew_minutes_(session->network_settings().maximum_skew_minutes),
-    timer_(std::make_shared<deadline>(session->log, channel->strand(),
+    timer_(emplace_shared<deadline>(session->log, channel->strand(),
         session->network_settings().channel_handshake())),
     tracker<protocol_version_106>(session->log)
 {

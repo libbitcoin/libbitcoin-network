@@ -38,7 +38,7 @@ using namespace std::placeholders;
 protocol_ping_106::protocol_ping_106(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_peer(session, channel),
-    timer_(std::make_shared<deadline>(session->log, channel->strand(),
+    timer_(emplace_shared<deadline>(session->log, channel->strand(),
         session->network_settings().channel_heartbeat())),
     tracker<protocol_ping_106>(session->log)
 {
