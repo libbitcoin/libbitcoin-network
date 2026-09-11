@@ -43,7 +43,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Bounds query overrun following caller drop, not response latency.
-constexpr auto monitor_interval = milliseconds(10);
+constexpr auto watch_interval = milliseconds(10);
 
 // Construct.
 // ----------------------------------------------------------------------------
@@ -75,7 +75,7 @@ socket::socket(const logger& log, asio::context& service,
     address_(address),
     endpoint_(endpoint),
     timer_(emplace_shared<deadline>(log, strand_, params.connect_timeout)),
-    monitor_(emplace_shared<deadline>(log, strand_, monitor_interval)),
+    watch_(emplace_shared<deadline>(log, strand_, watch_interval)),
     socket_(std::in_place_type<asio::socket>, strand_),
     reporter(log),
     tracker<socket>(log)
@@ -91,22 +91,22 @@ socket::~socket() NOEXCEPT
 // Wait.
 // ----------------------------------------------------------------------------
 
-void socket::monitor(result_handler&& handler) NOEXCEPT
+void socket::watch(result_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_monitor,
+        std::bind(&socket::do_watch,
             shared_from_this(), std::move(handler)));
 }
 
-void socket::demonitor() NOEXCEPT
+void socket::unwatch() NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_demonitor,
+        std::bind(&socket::do_unwatch,
             shared_from_this()));
 }
 
 // private
-void socket::do_monitor(const result_handler& handler) NOEXCEPT
+void socket::do_watch(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -116,19 +116,19 @@ void socket::do_monitor(const result_handler& handler) NOEXCEPT
         return;
     }
 
-    monitor_->start(std::bind(&socket::handle_monitor,
+    watch_->start(std::bind(&socket::handle_watch,
         shared_from_this(), _1, handler));
 }
 
 // private
-void socket::do_demonitor() NOEXCEPT
+void socket::do_unwatch() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    monitor_->stop();
+    watch_->stop();
 }
 
 // private
-void socket::handle_monitor(const code& ec,
+void socket::handle_watch(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -146,7 +146,7 @@ void socket::handle_monitor(const code& ec,
         return;
     }
 
-    do_monitor(handler);
+    do_watch(handler);
 }
 
 // Properties.

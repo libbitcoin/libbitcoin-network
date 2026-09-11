@@ -151,10 +151,10 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Monitor the peer for close, no data capture/loss.
-    virtual void monitor(result_handler&& handler) NOEXCEPT;
+    virtual void watch(result_handler&& handler) NOEXCEPT;
 
     /// End monitoring, handler invoked with success.
-    virtual void demonitor() NOEXCEPT;
+    virtual void unwatch() NOEXCEPT;
 
     /// WS (generic, framed).
     /// -----------------------------------------------------------------------
