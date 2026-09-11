@@ -41,7 +41,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_seed_209::protocol_seed_209(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_peer(session, channel),
-    timer_(std::make_shared<deadline>(session->log, channel->strand(),
+    timer_(emplace_shared<deadline>(session->log, channel->strand(),
         session->network_settings().outbound.seeding_timeout())),
     tracker<protocol_seed_209>(session->log)
 {

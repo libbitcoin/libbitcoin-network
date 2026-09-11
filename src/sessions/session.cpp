@@ -265,7 +265,7 @@ void session::defer(const steady_clock::duration& timeout,
     }
 
     const auto key = create_key();
-    const auto timer = std::make_shared<deadline>(log, network_.strand());
+    const auto timer = emplace_shared<deadline>(log, network_.strand());
 
     timer->start(
         BIND(handle_timer, _1, key, std::move(handler)), timeout);
