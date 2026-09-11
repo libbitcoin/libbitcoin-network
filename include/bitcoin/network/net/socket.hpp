@@ -92,10 +92,10 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Monitor the peer for close, handler posted to socket strand.
-    virtual void monitor(result_handler&& handler) NOEXCEPT;
+    virtual void watch(result_handler&& handler) NOEXCEPT;
 
     /// End monitoring, handler invoked with success.
-    virtual void demonitor() NOEXCEPT;
+    virtual void unwatch() NOEXCEPT;
 
     /// Connect (all).
     /// -----------------------------------------------------------------------
@@ -443,8 +443,8 @@ private:
     void do_ws_event(ws::frame_type kind, const std::string& data) NOEXCEPT;
 
     // wait
-    void do_monitor(const result_handler& handler) NOEXCEPT;
-    void do_demonitor() NOEXCEPT;
+    void do_watch(const result_handler& handler) NOEXCEPT;
+    void do_unwatch() NOEXCEPT;
 
     // connection
     void do_connect(const asio::endpoints& range,
@@ -531,7 +531,7 @@ private:
         const std::string& data) NOEXCEPT;
 
     // wait
-    void handle_monitor(const code& ec,
+    void handle_watch(const code& ec,
         const result_handler& handler) NOEXCEPT;
 
 
@@ -625,7 +625,7 @@ protected:
     config::address address_;
     config::endpoint endpoint_;
     deadline::ptr timer_;
-    deadline::ptr monitor_;
+    deadline::ptr watch_;
     socket_t socket_;
 
     // Retains the detection prefix for a v1 peer (see handle_detection).

@@ -37,16 +37,16 @@ using namespace std::placeholders;
 // Wait (all).
 // ----------------------------------------------------------------------------
 
-void proxy::monitor(result_handler&& handler) NOEXCEPT
+void proxy::watch(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    socket_->monitor(std::move(handler));
+    socket_->watch(std::move(handler));
 }
 
-void proxy::demonitor() NOEXCEPT
+void proxy::unwatch() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    socket_->demonitor();
+    socket_->unwatch();
 }
 
 //  WS (generic, framed).

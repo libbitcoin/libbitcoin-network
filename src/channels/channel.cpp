@@ -108,10 +108,10 @@ void channel::monitor(bool value) NOEXCEPT
     BC_ASSERT(stranded());
 
     if (value)
-        proxy::monitor(std::bind(&channel::handle_monitor,
+        watch(std::bind(&channel::handle_monitor,
             shared_from_base<channel>(), _1));
     else
-        demonitor();
+        unwatch();
 }
 
 void channel::handle_monitor(const code& ec) NOEXCEPT
