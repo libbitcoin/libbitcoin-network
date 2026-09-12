@@ -86,31 +86,6 @@ std::string to_normal_host(const std::string& host,
     }
 }
 
-#if defined(HAVE_LINUX)
-std::optional<uint64_t> get_memory_setting(std::string name) NOEXCEPT
-{
-    try
-    {
-        uint64_t value{};
-        std::string line{};
-        system::ifstream file("/proc/sys/vm/" + name);
-        if (file.is_open() && std::getline(file, line) &&
-            system::decode_base10(value, line))
-            return value;
-    }
-    catch (...)
-    {
-    }
-
-    return {};
-}
-#else
-std::optional<uint64_t> get_memory_setting(std::string) NOEXCEPT
-{
-    return {};
-}
-#endif
-
 } // namespace config
 } // namespace network
 } // namespace libbitcoin

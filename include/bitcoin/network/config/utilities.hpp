@@ -48,9 +48,6 @@ BCT_API asio::address from_address(const messages::peer::ip_address& address) NO
 BCT_API std::string to_normal_host(const std::string& host,
     uint16_t default_port) NOEXCEPT;
 
-/// Read a single numeric value from /proc/sys/vm/[name].
-BCT_API std::optional<uint64_t> get_memory_setting(std::string name) NOEXCEPT;
-
 } // namespace config
 } // namespace network
 } // namespace libbitcoin
