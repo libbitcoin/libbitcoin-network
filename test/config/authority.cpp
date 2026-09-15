@@ -71,7 +71,7 @@ static bool net_equal(const messages::peer::address_item& left,
     return
         (left.timestamp == right.timestamp) &&
         (left.services == right.services) &&
-        ip_equal(left.ip, right.ip) &&
+        (left.address == right.address) &&
         (left.port == right.port);
 }
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(authority__ip_port_cidr__address_item__expected)
     constexpr uint16_t expected_port = 42;
     const messages::peer::address_item address
     {
-        0, 0, test_ipv6_address, expected_port
+        0, 0, messages::peer::ipv6_t{ test_ipv6_address }, expected_port
     };
 
     const authority host(address);
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(authority__to_ip_address__address_item__expected)
     const auto& expected_ip = test_ipv6_address;
     const messages::peer::address_item address
     {
-        0, 0, test_ipv6_address, 42
+        0, 0, messages::peer::ipv6_t{ test_ipv6_address }, 42
     };
 
     const authority host(address);
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item1__default__ipv6_unspecified)
 {
     const messages::peer::address_item expected
     {
-        0, 0, test_unspecified_ip_address, 0,
+        0, 0, messages::peer::ipv6_t{ test_unspecified_ip_address }, 0,
     };
 
     const authority host;
@@ -427,10 +427,10 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_mapped_ip_address__ipv4)
 {
     const messages::peer::address_item expected
     {
-        0, 0, test_mapped_ip_address, 42,
+        0, 0, messages::peer::ipv4_t{ test_mapped_ip_address }, 42,
     };
 
-    const authority host(from_address(expected.ip), expected.port);
+    const authority host(from_address(messages::peer::to_ip_address(expected.address)), expected.port);
     BOOST_REQUIRE(net_equal(host.to_address_item(), expected));
 }
 
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_mapped_ip_address__ipv4)
 ////
 ////    const messages::peer::address_item mapped
 ////    {
-////        0, 0, test_mapped_ip_address, 42,
+////        0, 0, messages::peer::ipv4_t{ test_mapped_ip_address }, 42,
 ////    };
 ////
 ////    const authority host(from_address(compatible.ip), compatible.port);
@@ -457,10 +457,10 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv6_address__ipv6_compressed)
 {
     const messages::peer::address_item expected
     {
-        0, 0, test_ipv6_address, 42,
+        0, 0, messages::peer::ipv6_t{ test_ipv6_address }, 42,
     };
 
-    const authority host(from_address(expected.ip), expected.port);
+    const authority host(from_address(messages::peer::to_ip_address(expected.address)), expected.port);
     BOOST_REQUIRE(net_equal(host.to_address_item(), expected));
 }
 
@@ -468,10 +468,10 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item2__parameters__expected)
 {
     const messages::peer::address_item expected
     {
-        42, 24, test_ipv6_address, 42,
+        42, 24, messages::peer::ipv6_t{ test_ipv6_address }, 42,
     };
 
-    const authority host(from_address(expected.ip), expected.port);
+    const authority host(from_address(messages::peer::to_ip_address(expected.address)), expected.port);
     BOOST_REQUIRE(net_equal(host.to_address_item(expected.timestamp, expected.services), expected));
 }
 

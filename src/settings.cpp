@@ -295,7 +295,7 @@ steady_clock::duration settings::peer_outbound::seeding_timeout() const NOEXCEPT
 
 bool settings::peer_outbound::disabled(const address_item& item) const NOEXCEPT
 {
-    return !use_ipv6 && config::is_v6(item.ip);
+    return !use_ipv6 && is_v6(item.address);
 }
 
 // [inbound]

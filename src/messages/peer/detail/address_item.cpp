@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/peer/detail/address_item.hpp>
 
-#include <tuple>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/message.hpp>
 
@@ -29,7 +28,7 @@ namespace peer {
 
 using namespace system;
 
-constexpr auto ip_address_size = std::tuple_size<ip_address>::value;
+constexpr auto ip_address_size = array_count<ip_address>;
 
 // bytereader interface cannot expose templated method, so do here.
 template <size_t Size>
@@ -38,6 +37,39 @@ data_array<Size> read_forward(reader& source) NOEXCEPT
     data_array<Size> out{};
     source.read_bytes(out.data(), Size);
     return out;
+}
+
+// The v1 protocol encodes only ip addresses, as v6 (v4 is v6-mapped).
+address_t to_address(const ip_address& ip) NOEXCEPT
+{
+    if (is_v4(ip))
+        return ipv4_t{ ip };
+
+    return ipv6_t{ ip };
+}
+
+const ip_address& to_ip_address(const address_t& address) NOEXCEPT
+{
+    if (const auto value = std::get_if<ipv4_t>(&address))
+        return value->value;
+
+    if (const auto value = std::get_if<ipv6_t>(&address))
+        return value->value;
+
+    return unspecified_ip_address;
+}
+
+size_t hash_address(const address_t& address) NOEXCEPT
+{
+    return hash_combine(std::hash<size_t>{}(address.index()),
+        std::visit([](const auto& value) NOEXCEPT
+        {
+            using type = std::decay_t<decltype(value)>;
+            if constexpr (is_same_type<type, std::monostate>)
+                return size_t{};
+            else
+                return std::hash<data_array<type::size>>{}(value.value);
+        }, address));
 }
 
 // static
@@ -57,7 +89,7 @@ address_item address_item::deserialize(uint32_t, reader& source,
     {
         with_timestamp ? source.read_4_bytes_little_endian() : 0u,
         source.read_8_bytes_little_endian(),
-        read_forward<ip_address_size>(source),
+        to_address(read_forward<ip_address_size>(source)),
         source.read_2_bytes_big_endian()
     };
 }
@@ -71,6 +103,7 @@ void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     if (with_timestamp)
         sink.write_4_bytes_little_endian(timestamp);
 
+    const auto& ip = to_ip_address(address);
     sink.write_8_bytes_little_endian(services);
     sink.write_bytes(ip.data(), ip.size());
     sink.write_2_bytes_big_endian(port);
@@ -81,7 +114,7 @@ void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
 // Equality ignores timestamp and services (used in hosts).
 bool operator==(const address_item& left, const address_item& right) NOEXCEPT
 {
-    return left.ip == right.ip
+    return left.address == right.address
         && left.port == right.port;
 }
 

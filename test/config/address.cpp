@@ -62,7 +62,7 @@ constexpr messages::peer::address_item test_unspecified_ip_address_item
 {
     10,
     20,
-    test_unspecified_ip_address,
+    messages::peer::ipv6_t{ test_unspecified_ip_address },
     30
 };
 
@@ -70,7 +70,7 @@ constexpr messages::peer::address_item test_mapped_ip_address_item
 {
     11,
     21,
-    test_mapped_ip_address,
+    messages::peer::ipv4_t{ test_mapped_ip_address },
     31
 };
 
@@ -78,7 +78,7 @@ constexpr messages::peer::address_item test_ipv6_address_item
 {
     13,
     23,
-    test_ipv6_address,
+    messages::peer::ipv6_t{ test_ipv6_address },
     33
 };
 
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(address__is_v4__unspecified_v6__true)
 
 BOOST_AUTO_TEST_CASE(address__is_v4__loopback_v6__true)
 {
-    const address item{ messages::peer::address_item{ 0, 0, messages::peer::loopback_ip_address, 42 } };
+    const address item{ messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{ messages::peer::loopback_ip_address }, 42 } };
     BOOST_REQUIRE(!item.is_v4());
 }
 
@@ -199,21 +199,21 @@ BOOST_AUTO_TEST_CASE(address__is_v4__loopback_v4__false)
 
 // is_v6
 
-BOOST_AUTO_TEST_CASE(address__is_v6__default__true)
+BOOST_AUTO_TEST_CASE(address__is_v6__default__false)
 {
     const address item{};
-    BOOST_REQUIRE(item.is_v6());
+    BOOST_REQUIRE(!item.is_v6());
 }
 
-BOOST_AUTO_TEST_CASE(address__is_v6__unspecified_v6__true)
+BOOST_AUTO_TEST_CASE(address__is_v6__unspecified__false)
 {
     const address item{ messages::peer::unspecified_address_item };
-    BOOST_REQUIRE(item.is_v6());
+    BOOST_REQUIRE(!item.is_v6());
 }
 
 BOOST_AUTO_TEST_CASE(address__is_v6__loopback_v6__true)
 {
-    const address item{ messages::peer::address_item{ 0, 0, messages::peer::loopback_ip_address, 42 } };
+    const address item{ messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{ messages::peer::loopback_ip_address }, 42 } };
     BOOST_REQUIRE(item.is_v6());
 }
 
@@ -229,16 +229,16 @@ BOOST_AUTO_TEST_CASE(address__address_item__default__unspecified)
 {
     const address host{};
     const messages::peer::address_item& item = host;
-    BOOST_REQUIRE_EQUAL(item.ip, host.ip());
+    BOOST_REQUIRE_EQUAL(messages::peer::to_ip_address(item.address), host.ip());
     BOOST_REQUIRE_EQUAL(item.port, host.port());
     BOOST_REQUIRE(!messages::peer::is_specified(item));
 }
 
 BOOST_AUTO_TEST_CASE(address__address_item__default__secified_expected)
 {
-    const address host{ messages::peer::address_item{ 0, 0, messages::peer::loopback_ip_address, 42 } };
+    const address host{ messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{ messages::peer::loopback_ip_address }, 42 } };
     const messages::peer::address_item& item = host;
-    BOOST_REQUIRE_EQUAL(item.ip, host.ip());
+    BOOST_REQUIRE_EQUAL(messages::peer::to_ip_address(item.address), host.ip());
     BOOST_REQUIRE_EQUAL(item.port, host.port());
     BOOST_REQUIRE(messages::peer::is_specified(item));
 }
@@ -439,9 +439,16 @@ BOOST_AUTO_TEST_CASE(address__equality__default_default__true)
     BOOST_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__default_unspecified_port__true)
+BOOST_AUTO_TEST_CASE(address__equality__default_unspecified__false)
 {
     const address host1{};
+    const address host2("[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]" ":42");
+    BOOST_REQUIRE(!(host1 == host2));
+}
+
+BOOST_AUTO_TEST_CASE(address__equality__unspecified_ports__true)
+{
+    const address host1("[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]");
     const address host2("[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]" ":42");
     BOOST_REQUIRE(host1 == host2);
 }
@@ -492,7 +499,7 @@ constexpr messages::peer::address_item test_ipv6_address_item_distinct_timestamp
 {
     42,
     23,
-    test_ipv6_address,
+    messages::peer::ipv6_t{ test_ipv6_address },
     33
 };
 
@@ -500,7 +507,7 @@ constexpr messages::peer::address_item test_ipv6_address_item_distinct_service
 {
     13,
     42,
-    test_ipv6_address,
+    messages::peer::ipv6_t{ test_ipv6_address },
     33
 };
 

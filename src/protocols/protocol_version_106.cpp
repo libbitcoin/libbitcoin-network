@@ -80,7 +80,7 @@ messages::peer::version protocol_version_106::version_factory(
         {
             timestamp,
             service::node_none,
-            outbound().ip(),
+            to_address(outbound().ip()),
             opposite().port()
         },
 
@@ -95,7 +95,7 @@ messages::peer::version protocol_version_106::version_factory(
         {
             timestamp,
             provided_services_,
-            network_settings().inbound.first_self().to_ip_address(),
+            to_address(network_settings().inbound.first_self().to_ip_address()),
             network_settings().inbound.first_self().port(),
         },
 

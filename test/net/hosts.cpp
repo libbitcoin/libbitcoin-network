@@ -48,13 +48,13 @@ public:
     }
 };
 
-constexpr address_item host1{ 0, 0, loopback_ip_address, 1 };
-constexpr address_item host2{ 0, 0, loopback_ip_address, 2 };
-constexpr address_item host3{ 0, 0, loopback_ip_address, 3 };
-constexpr address_item loopback00{ 0, 0, loopback_ip_address, 0 };
-constexpr address_item loopback42{ 0, 0, loopback_ip_address, 42 };
-constexpr address_item unspecified00{ 0, 0, unspecified_ip_address, 0 };
-////constexpr address_item unspecified42{ 0, 0, unspecified_ip_address, 42 };
+constexpr address_item host1{ 0, 0, ipv6_t{ loopback_ip_address }, 1 };
+constexpr address_item host2{ 0, 0, ipv6_t{ loopback_ip_address }, 2 };
+constexpr address_item host3{ 0, 0, ipv6_t{ loopback_ip_address }, 3 };
+constexpr address_item loopback00{ 0, 0, ipv6_t{ loopback_ip_address }, 0 };
+constexpr address_item loopback42{ 0, 0, ipv6_t{ loopback_ip_address }, 42 };
+constexpr address_item unspecified00{ 0, 0, ipv6_t{ unspecified_ip_address }, 0 };
+////constexpr address_item unspecified42{ 0, 0, ipv6_t{ unspecified_ip_address }, 42 };
 
 // start
 
@@ -201,14 +201,14 @@ BOOST_AUTO_TEST_CASE(hosts__count__empty__zero)
 
 // counts
 
-constexpr auto ipv4_index = to_value(config::address_type::ipv4);
-constexpr auto ipv6_index = to_value(config::address_type::ipv6);
+constexpr auto ipv4_index = ipv4_t::id;
+constexpr auto ipv6_index = ipv6_t::id;
 constexpr ip_address mapped_ip_address =
 {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01
 };
-constexpr address_item mapped42{ 0, 0, mapped_ip_address, 42 };
+constexpr address_item mapped42{ 0, 0, ipv4_t{ mapped_ip_address }, 42 };
 
 BOOST_AUTO_TEST_CASE(hosts__counts__empty__zeros)
 {
@@ -421,8 +421,8 @@ BOOST_AUTO_TEST_CASE(hosts__restore__duplicate_authority__updated)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    constexpr address_item loopback42a{ 1, 2, loopback_ip_address, 42 };
-    constexpr address_item loopback42b{ 3, 4, loopback_ip_address, 42 };
+    constexpr address_item loopback42a{ 1, 2, ipv6_t{ loopback_ip_address }, 42 };
+    constexpr address_item loopback42b{ 3, 4, ipv6_t{ loopback_ip_address }, 42 };
 
     std::promise<code> promise1{};
     instance.restore(system::to_shared(loopback42a), [&](const code& ec) NOEXCEPT

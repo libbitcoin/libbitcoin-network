@@ -66,7 +66,7 @@ address::address(const asio::endpoint& uri) NOEXCEPT
 
 asio::address address::to_ip() const NOEXCEPT
 {
-    return system::config::denormalize(from_address(address_->ip));
+    return system::config::denormalize(from_address(ip()));
 }
 
 std::string address::to_host() const NOEXCEPT
@@ -88,17 +88,17 @@ std::string address::to_string() const NOEXCEPT
 
 bool address::is_v4() const NOEXCEPT
 {
-    return config::is_v4(address_->ip);
+    return messages::peer::is_v4(address_->address);
 }
 
 bool address::is_v6() const NOEXCEPT
 {
-    return !is_v4();
+    return messages::peer::is_v6(address_->address);
 }
 
 const messages::peer::ip_address& address::ip() const NOEXCEPT
 {
-    return address_->ip;
+    return messages::peer::to_ip_address(address_->address);
 }
 
 uint16_t address::port() const NOEXCEPT
@@ -142,7 +142,7 @@ address::operator bool() const NOEXCEPT
 
 bool address::operator==(const address& other) const NOEXCEPT
 {
-    return (address_->ip == other.address_->ip)
+    return (address_->address == other.address_->address)
         && ((address_->port == other.address_->port) ||
             (is_zero(address_->port) || is_zero(other.address_->port)));
 }
@@ -154,7 +154,7 @@ bool address::operator!=(const address& other) const NOEXCEPT
 
 bool address::operator==(const messages::peer::address_item& other) const NOEXCEPT
 {
-    return (address_->ip == other.ip)
+    return (address_->address == other.address)
         && ((address_->port == other.port) ||
             (is_zero(address_->port) || is_zero(other.port)));
 }

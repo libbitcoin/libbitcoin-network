@@ -27,19 +27,12 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// Address types of the BIP155 address space (dense, for indexed counters).
-enum class address_type : uint8_t { ipv4, ipv6, onion, i2p, cjdns };
-constexpr size_t address_types = 5;
+/// Count of address networks, including the unspecified network.
+constexpr size_t address_types =
+    std::variant_size_v<messages::peer::address_t>;
 
-/// Count of pooled addresses for each address type.
+/// Count of pooled addresses, indexed by BIP155 network identifier.
 typedef std::array<size_t, address_types> address_counts;
-
-/// Only ip addresses are currently representable (v4 as v6-mapped).
-constexpr address_type to_address_type(
-    const messages::peer::ip_address& ip) NOEXCEPT
-{
-    return is_v4(ip) ? address_type::ipv4 : address_type::ipv6;
-}
 
 } // namespace config
 } // namespace network

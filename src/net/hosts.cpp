@@ -283,7 +283,7 @@ inline address_item::cptr hosts::pop() NOEXCEPT
 
     const auto host = to_shared<address_item>(std::move(buffer_.front()));
     buffer_.pop_front();
-    decrement(host->ip);
+    decrement(host->address);
     return host;
 }
 
@@ -292,22 +292,22 @@ inline void hosts::push(const address_item& host) NOEXCEPT
 {
     // Circular buffer push evicts the oldest element when full.
     if (buffer_.full())
-        decrement(buffer_.front().ip);
+        decrement(buffer_.front().address);
 
     buffer_.push_back(host);
-    increment(host.ip);
+    increment(host.address);
 }
 
 // O(1).
-inline void hosts::increment(const ip_address& ip) NOEXCEPT
+inline void hosts::increment(const address_t& address) NOEXCEPT
 {
-    ++counts_.at(to_value(config::to_address_type(ip)));
+    ++counts_.at(address.index());
 }
 
 // O(1).
-inline void hosts::decrement(const ip_address& ip) NOEXCEPT
+inline void hosts::decrement(const address_t& address) NOEXCEPT
 {
-    --counts_.at(to_value(config::to_address_type(ip)));
+    --counts_.at(address.index());
 }
 
 // O(1).

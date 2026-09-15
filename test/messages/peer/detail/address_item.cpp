@@ -36,6 +36,58 @@ BOOST_AUTO_TEST_CASE(address_item__loopback_ip_address__always__expected)
     BOOST_REQUIRE_EQUAL(loopback_ip_address, expected);
 }
 
+// is_v4/is_v6
+
+constexpr ip_address mapped_ip_address
+{
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 127, 0, 0, 1
+};
+
+BOOST_AUTO_TEST_CASE(address_item__is_v4__default__false)
+{
+    BOOST_REQUIRE(!is_v4(ip_address{}));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_v4__loopback_v6__false)
+{
+    BOOST_REQUIRE(!is_v4(loopback_ip_address));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_v4__loopback_mapped__true)
+{
+    BOOST_REQUIRE(is_v4(mapped_ip_address));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_v6__default__true)
+{
+    BOOST_REQUIRE(is_v6(ip_address{}));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_v6__loopback_v6__true)
+{
+    BOOST_REQUIRE(is_v6(loopback_ip_address));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_v6__loopback_mapped__false)
+{
+    BOOST_REQUIRE(!is_v6(mapped_ip_address));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_v4__ipv4_address__true)
+{
+    BOOST_REQUIRE(is_v4(address_t{ ipv4_t{ mapped_ip_address } }));
+    BOOST_REQUIRE(!is_v4(address_t{ ipv6_t{ loopback_ip_address } }));
+    BOOST_REQUIRE(!is_v4(address_t{}));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_v6__ipv6_address__true)
+{
+    BOOST_REQUIRE(is_v6(address_t{ ipv6_t{ loopback_ip_address } }));
+    BOOST_REQUIRE(!is_v6(address_t{ ipv4_t{ mapped_ip_address } }));
+    BOOST_REQUIRE(!is_v6(address_t{}));
+}
+
 BOOST_AUTO_TEST_CASE(address_item__unspecified_timestamp__always__expected)
 {
     BOOST_REQUIRE_EQUAL(unspecified_timestamp, 0u);
@@ -63,7 +115,7 @@ BOOST_AUTO_TEST_CASE(address_item__unspecified_address_item__always__expected)
 {
     BOOST_REQUIRE_EQUAL(unspecified_address_item.timestamp, unspecified_timestamp);
     BOOST_REQUIRE_EQUAL(unspecified_address_item.services, service::node_none);
-    BOOST_REQUIRE_EQUAL(unspecified_address_item.ip, unspecified_ip_address);
+    BOOST_REQUIRE(is_unspecified(unspecified_address_item.address));
     BOOST_REQUIRE_EQUAL(unspecified_address_item.port, unspecified_ip_port);
 }
 
@@ -95,7 +147,7 @@ BOOST_AUTO_TEST_CASE(address_item__is_specified__default__false)
 
 BOOST_AUTO_TEST_CASE(address_item__is_specified__loopback__true)
 {
-    const messages::peer::address_item item{ 0, 0, messages::peer::loopback_ip_address, 42 };
+    const messages::peer::address_item item{ 0, 0, messages::peer::ipv6_t{ messages::peer::loopback_ip_address }, 42 };
     BOOST_REQUIRE(is_specified(item));
 }
 
@@ -110,36 +162,36 @@ BOOST_AUTO_TEST_CASE(address_item__equality__default_default__true)
 
 BOOST_AUTO_TEST_CASE(address_item__equality__same__true)
 {
-    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
-    constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
+    constexpr address_item item2{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
     BOOST_REQUIRE(item1 == item2);
 }
 
 BOOST_AUTO_TEST_CASE(address_item__equality__distinct_port__false)
 {
-    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
-    constexpr address_item item2{ 1, 2, unspecified_ip_address, 4 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
+    constexpr address_item item2{ 1, 2, ipv6_t{ unspecified_ip_address }, 4 };
     BOOST_REQUIRE(!(item1 == item2));
 }
 
 BOOST_AUTO_TEST_CASE(address_item__equality__distinct_ip__false)
 {
-    constexpr address_item item1{ 1, 2, loopback_ip_address, 3 };
-    constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ loopback_ip_address }, 3 };
+    constexpr address_item item2{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
     BOOST_REQUIRE(!(item1 == item2));
 }
 
 BOOST_AUTO_TEST_CASE(address_item__equality__distinct_services__true)
 {
-    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
-    constexpr address_item item2{ 1, 4, unspecified_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
+    constexpr address_item item2{ 1, 4, ipv6_t{ unspecified_ip_address }, 3 };
     BOOST_REQUIRE(item1 == item2);
 }
 
 BOOST_AUTO_TEST_CASE(address_item__equality__distinct_timestamp__true)
 {
-    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
-    constexpr address_item item2{ 4, 2, unspecified_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
+    constexpr address_item item2{ 4, 2, ipv6_t{ unspecified_ip_address }, 3 };
     BOOST_REQUIRE(item1 == item2);
 }
 
@@ -154,36 +206,36 @@ BOOST_AUTO_TEST_CASE(address_item__inequality__default_default__false)
 
 BOOST_AUTO_TEST_CASE(address_item__inequality__same__false)
 {
-    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
-    constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
+    constexpr address_item item2{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
     BOOST_REQUIRE(!(item1 != item2));
 }
 
 BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_port__true)
 {
-    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
-    constexpr address_item item2{ 1, 2, unspecified_ip_address, 4 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
+    constexpr address_item item2{ 1, 2, ipv6_t{ unspecified_ip_address }, 4 };
     BOOST_REQUIRE(item1 != item2);
 }
 
 BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_ip__true)
 {
-    constexpr address_item item1{ 1, 2, loopback_ip_address, 3 };
-    constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ loopback_ip_address }, 3 };
+    constexpr address_item item2{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
     BOOST_REQUIRE(item1 != item2);
 }
 
 BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_services__false)
 {
-    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
-    constexpr address_item item2{ 1, 4, unspecified_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
+    constexpr address_item item2{ 1, 4, ipv6_t{ unspecified_ip_address }, 3 };
     BOOST_REQUIRE(!(item1 != item2));
 }
 
 BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_timestamp__false)
 {
-    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
-    constexpr address_item item2{ 4, 2, unspecified_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, ipv6_t{ unspecified_ip_address }, 3 };
+    constexpr address_item item2{ 4, 2, ipv6_t{ unspecified_ip_address }, 3 };
     BOOST_REQUIRE(!(item1 != item2));
 }
 
