@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__populated_file__expected)
 
     // Start with existing file and read entries.
     hosts instance2(set, log);
-    set.outbound.use_ipv6 = true;
+    set.gossip_ipv6 = true;
     BOOST_REQUIRE_EQUAL(instance2.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance2.count(), 3u);
 
