@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_addre
     mock_session session(net, 1);
 
     std::promise<code> save;
-    const address_item item{ 42, 24, unspecified_ip_address, 4224u };
+    const address_item item{ 42, 24, messages::peer::ipv6_t{ unspecified_ip_address }, 4224u };
     session.restore(system::to_shared(item), [&](const code& ec) NOEXCEPT
     {
         save.set_value(ec);
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_addre
     const auto& saved = net.restored();
     BOOST_REQUIRE_EQUAL(saved.timestamp, 42u);
     BOOST_REQUIRE_EQUAL(saved.services, 24u);
-    BOOST_REQUIRE_EQUAL(saved.ip, unspecified_ip_address);
+    BOOST_REQUIRE(is_unspecified(saved.address));
     BOOST_REQUIRE_EQUAL(saved.port, 4224u);
 }
 
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
     mock_session session(net, 1);
 
     std::promise<code> save;
-    const address_items items{ {}, { 42, 24, unspecified_ip_address, 4224u } };
+    const address_items items{ {}, { 42, 24, messages::peer::ipv6_t{ unspecified_ip_address }, 4224u } };
     session.save(system::to_shared(address{ items }), [&](const code& ec, auto) NOEXCEPT
     {
         save.set_value(ec);
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
     BOOST_REQUIRE_EQUAL(saveds.size(), 2u);
     BOOST_REQUIRE_EQUAL(saveds[1].timestamp, 42u);
     BOOST_REQUIRE_EQUAL(saveds[1].services, 24u);
-    BOOST_REQUIRE_EQUAL(saveds[1].ip, unspecified_ip_address);
+    BOOST_REQUIRE(is_unspecified(saveds[1].address));
     BOOST_REQUIRE_EQUAL(saveds[1].port, 4224u);
 }
 

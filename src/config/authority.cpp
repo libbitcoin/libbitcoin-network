@@ -27,7 +27,7 @@ namespace network {
 namespace config {
 
 authority::authority(const messages::peer::address_item& item) NOEXCEPT
-  : authority(from_address(item.ip), item.port)
+  : authority(from_address(messages::peer::to_ip_address(item.address)), item.port)
 {
 }
 
@@ -39,7 +39,7 @@ messages::peer::address_item authority::to_address_item() const NOEXCEPT
 messages::peer::address_item authority::to_address_item(uint32_t timestamp,
     uint64_t services) const NOEXCEPT
 {
-    return { timestamp, services, to_ip_address(), port() };
+    return { timestamp, services, messages::peer::to_address(to_ip_address()), port() };
 }
 
 messages::peer::ip_address authority::to_ip_address() const NOEXCEPT
@@ -54,7 +54,7 @@ bool authority::operator==(const messages::peer::address_item& other) const NOEX
         return false;
 
     using namespace system::config;
-    const auto host = denormalize(from_address(other.ip));
+    const auto host = denormalize(from_address(messages::peer::to_ip_address(other.address)));
 
     // if both zero cidr, match hosts, otherwise host membership in subnet.
     return is_zero(cidr()) ? host == ip() : is_member(host, ip(), cidr());

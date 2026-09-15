@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(settings__unsupported__default__false)
 {
     settings instance{ system::chain::selection::mainnet };
     constexpr uint64_t services = 0;
-    constexpr messages::peer::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    constexpr messages::peer::address_item loop{ 42, services, ipv6_t{ loopback_ip_address }, 8333 };
     instance.invalid_services = 0;
     BOOST_REQUIRE(!instance.unsupported(loop));
     instance.invalid_services = 1;
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(settings__unsupported__match__expected)
 {
     settings instance{ system::chain::selection::mainnet };
     constexpr uint64_t services = 0b01010101;
-    constexpr messages::peer::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    constexpr messages::peer::address_item loop{ 42, services, ipv6_t{ loopback_ip_address }, 8333 };
     instance.invalid_services = services;
     BOOST_REQUIRE(instance.unsupported(loop));
     instance.invalid_services = services | 0b00000010;
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(settings__peer_outbound__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.seeds.size(), 4u);
     BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), 50u);
     BOOST_REQUIRE(instance.seeding_timeout() == seconds(30));
-    BOOST_REQUIRE(instance.disabled(address_item{ 0, 0, loopback_ip_address, 42 }));
+    BOOST_REQUIRE(instance.disabled(address_item{ 0, 0, ipv6_t{ loopback_ip_address }, 42 }));
 }
 
 BOOST_AUTO_TEST_CASE(settings__peer_outbound_disabled__use_ipv6__both_false)

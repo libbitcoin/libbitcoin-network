@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
     // Result codes inconsistent due to context.
-    instance->start(messages::peer::address_item{ 0, 0, 0, 42 });
+    instance->start(messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{}, 42 });
 
     boost::asio::post(strand, [instance]() NOEXCEPT
     {
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_stopped_or_suspen
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
     // Result codes inconsistent due to context.
-    instance->start(messages::peer::address_item{ 0, 0, 0, 42 });
+    instance->start(messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{}, 42 });
 
     std::pair<code, socket::ptr>  result{};
     boost::asio::post(strand, [&, instance]() NOEXCEPT
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
     // Result codes inconsistent due to context.
-    instance->start(messages::peer::address_item{ 0, 0, 0, 42 });
+    instance->start(messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{}, 42 });
 
     std::pair<code, socket::ptr>  result{};
     boost::asio::post(strand, [&, instance]() NOEXCEPT

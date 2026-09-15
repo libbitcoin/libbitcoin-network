@@ -29,6 +29,84 @@ namespace peer {
 
 typedef system::data_array<16> ip_address;
 
+/// True if ip_address starts with the ip map prefix (maps to a v4 address).
+constexpr bool is_v4(const ip_address& ip) NOEXCEPT
+{
+    using namespace system::config;
+    return std::equal(ip_map_prefix.begin(), ip_map_prefix.end(), ip.begin());
+}
+
+constexpr bool is_v6(const ip_address& ip) NOEXCEPT
+{
+    return !is_v4(ip);
+}
+
+/// Distinct type per network, as variant alternatives must not repeat.
+template <uint8_t Id, size_t Size>
+struct address_of
+{
+    static constexpr uint8_t id = Id;
+    static constexpr size_t size = Size;
+
+    system::data_array<Size> value;
+
+    bool operator==(const address_of& other) const NOEXCEPT = default;
+};
+
+/// BIP155 addresses, ipv4 is v6-mapped (as encoded by the v1 protocol).
+using ipv4_t = address_of<1, 16>;
+using ipv6_t = address_of<2, 16>;
+using torv2_t = address_of<3, 10>;
+using torv3_t = address_of<4, 32>;
+using i2p_t = address_of<5, 32>;
+using cjdns_t = address_of<6, 16>;
+
+/// The alternative index is the BIP155 network identifier.
+using address_t = std::variant<std::monostate, ipv4_t, ipv6_t, torv2_t,
+    torv3_t, i2p_t, cjdns_t>;
+
+template <uint8_t Id>
+using address_at = std::variant_alternative_t<Id, address_t>;
+
+static_assert(is_same_type<address_at<ipv4_t::id>, ipv4_t>);
+static_assert(is_same_type<address_at<ipv6_t::id>, ipv6_t>);
+static_assert(is_same_type<address_at<torv2_t::id>, torv2_t>);
+static_assert(is_same_type<address_at<torv3_t::id>, torv3_t>);
+static_assert(is_same_type<address_at<i2p_t::id>, i2p_t>);
+static_assert(is_same_type<address_at<cjdns_t::id>, cjdns_t>);
+
+constexpr bool is_v4(const address_t& address) NOEXCEPT
+{
+    return std::holds_alternative<ipv4_t>(address);
+}
+
+constexpr bool is_v6(const address_t& address) NOEXCEPT
+{
+    return std::holds_alternative<ipv6_t>(address);
+}
+
+/// True if the address is unset or all zeros.
+constexpr bool is_unspecified(const address_t& address) NOEXCEPT
+{
+    return std::visit([](const auto& value) NOEXCEPT
+    {
+        using type = std::decay_t<decltype(value)>;
+        if constexpr (is_same_type<type, std::monostate>)
+            return true;
+        else
+            return value == type{};
+    }, address);
+}
+
+/// The v1 classification of an ip address (v4 is v6-mapped).
+BCT_API address_t to_address(const ip_address& ip) NOEXCEPT;
+
+/// The ip address, unspecified if the address is not an ip network.
+BCT_API const ip_address& to_ip_address(const address_t& address) NOEXCEPT;
+
+/// Hash of the network identifier and the address bytes.
+BCT_API size_t hash_address(const address_t& address) NOEXCEPT;
+
 struct BCT_API address_item
 {
     typedef std::shared_ptr<const address_item> cptr;
@@ -41,7 +119,7 @@ struct BCT_API address_item
 
     uint32_t timestamp;
     uint64_t services;
-    ip_address ip;
+    address_t address;
     uint16_t port;
 };
 
@@ -72,14 +150,14 @@ constexpr address_item unspecified_address_item
 {
     unspecified_timestamp,
     service::node_none,
-    unspecified_ip_address,
+    {},
     unspecified_ip_port
 };
 
 constexpr bool is_specified(const address_item& item) NOEXCEPT
 {
     // Specified if the host is not unspecified and port is non-zero.
-    return !is_zero(item.port) && item.ip != unspecified_ip_address;
+    return !is_zero(item.port) && !is_unspecified(item.address);
 }
 
 } // namespace peer
@@ -100,7 +178,7 @@ struct hash<bc::network::messages::peer::address_item>
         const bc::network::messages::peer::address_item& value) const NOEXCEPT
     {
         return bc::system::hash_combine(
-            std::hash<bc::network::messages::peer::ip_address>{}(value.ip),
+            bc::network::messages::peer::hash_address(value.address),
             std::hash<uint16_t>{}(value.port));
     }
 };

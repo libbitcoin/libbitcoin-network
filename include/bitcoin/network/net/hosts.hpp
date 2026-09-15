@@ -131,8 +131,8 @@ private:
     inline void push(const messages::peer::address_item& host) NOEXCEPT;
     inline void push(const std::string& line) NOEXCEPT;
     inline bool is_reserved(const config::endpoint& host) const NOEXCEPT;
-    inline void increment(const messages::peer::ip_address& ip) NOEXCEPT;
-    inline void decrement(const messages::peer::ip_address& ip) NOEXCEPT;
+    inline void increment(const messages::peer::address_t& address) NOEXCEPT;
+    inline void decrement(const messages::peer::address_t& address) NOEXCEPT;
 
     void do_take(const address_item_handler& handler) NOEXCEPT;
     void do_restore(const address_item_cptr& host,
