@@ -68,7 +68,7 @@ private:
         {
             .method = Message::command,
             .params = { array_t{ any_t{ message }, { sender } } }
-        }, sender);
+        });
     }
 
     template <typename Handler>
