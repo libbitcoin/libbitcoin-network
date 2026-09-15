@@ -416,6 +416,85 @@ BOOST_AUTO_TEST_CASE(address__to_host__ipv6_address__ipv6_compressed)
     BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
 }
 
+// onion/i2p
+
+#define BC_ADDRESS_ONION "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"
+#define BC_ADDRESS_I2P "ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p"
+
+BOOST_AUTO_TEST_CASE(address__construct__onion__torv3)
+{
+    const address host{ BC_ADDRESS_ONION ":8333" };
+    const messages::peer::address_item& item = host;
+    BOOST_REQUIRE(std::holds_alternative<messages::peer::torv3_t>(item.address));
+    BOOST_REQUIRE_EQUAL(host.port(), 8333u);
+    BOOST_REQUIRE(!host.is_v4());
+    BOOST_REQUIRE(!host.is_v6());
+}
+
+BOOST_AUTO_TEST_CASE(address__construct__i2p__i2p)
+{
+    const address host{ BC_ADDRESS_I2P ":8333" };
+    const messages::peer::address_item& item = host;
+    BOOST_REQUIRE(std::holds_alternative<messages::peer::i2p_t>(item.address));
+    BOOST_REQUIRE_EQUAL(host.port(), 8333u);
+    BOOST_REQUIRE(!host.is_v4());
+    BOOST_REQUIRE(!host.is_v6());
+}
+
+BOOST_AUTO_TEST_CASE(address__construct__onion_no_port__zero_port)
+{
+    const address host{ BC_ADDRESS_ONION };
+    BOOST_REQUIRE_EQUAL(host.port(), 0u);
+    BOOST_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
+}
+
+BOOST_AUTO_TEST_CASE(address__to_host__onion__expected)
+{
+    const address host{ BC_ADDRESS_ONION ":8333" };
+    BOOST_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
+}
+
+BOOST_AUTO_TEST_CASE(address__to_host__i2p__expected)
+{
+    const address host{ BC_ADDRESS_I2P ":8333" };
+    BOOST_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_I2P);
+}
+
+BOOST_AUTO_TEST_CASE(address__to_string__onion__round_trips)
+{
+    const address host{ BC_ADDRESS_ONION ":8333/42/24" };
+    BOOST_REQUIRE_EQUAL(host.to_string(), BC_ADDRESS_ONION ":8333/42/24");
+}
+
+BOOST_AUTO_TEST_CASE(address__to_string__i2p__round_trips)
+{
+    const address host{ BC_ADDRESS_I2P ":8333/42/24" };
+    BOOST_REQUIRE_EQUAL(host.to_string(), BC_ADDRESS_I2P ":8333/42/24");
+}
+
+BOOST_AUTO_TEST_CASE(address__construct__onion_bad_checksum__throws_invalid_option)
+{
+    // The leading character of the public key is altered.
+    BOOST_REQUIRE_THROW(address host("qg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(address__construct__onion_short__throws_invalid_option)
+{
+    BOOST_REQUIRE_THROW(address host("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscry.onion"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(address__construct__i2p_short__throws_invalid_option)
+{
+    BOOST_REQUIRE_THROW(address host("ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkd.b32.i2p"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(address__construct__onion_upper_case__torv3)
+{
+    // Names are case insensitive and serialize lowered.
+    const address host{ "PG6MMJIYJMCRSSLVYKFWNNTLARU7P5SVN6Y2YMMJU6NUBXNDF4PSCRYD.onion" };
+    BOOST_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
+}
+
 // to_ip
 
 BOOST_AUTO_TEST_CASE(address__to_ip__default__ipv6_unspecified)
