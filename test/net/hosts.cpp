@@ -542,6 +542,39 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
     BOOST_REQUIRE(!test::exists(TEST_NAME));
 }
 
+BOOST_AUTO_TEST_CASE(hosts__fetch__single_undivided__expected)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.address_lower = 1;
+    set.address_upper = 1;
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    std::promise<code> promise_restore{};
+    instance.restore(system::to_shared(loopback42), [&](const code& ec) NOEXCEPT
+    {
+        promise_restore.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_restore.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+
+    std::promise<std::pair<code, address::cptr>> promise_fetch{};
+    instance.fetch([&](const code& ec, const address::cptr& message) NOEXCEPT
+    {
+        promise_fetch.set_value({ ec, message });
+    });
+
+    const auto result = promise_fetch.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::success);
+    BOOST_REQUIRE_EQUAL(result.second->addresses.size(), 1u);
+    BOOST_REQUIRE(result.second->addresses.front() == loopback42);
+    instance.stop();
+}
+
 BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
 {
     const logger log{};
