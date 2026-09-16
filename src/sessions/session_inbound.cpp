@@ -249,16 +249,13 @@ void session_inbound::attach_protocols(
 
     // Attach is overridden to disable inbound address protocols.
 
-    if (network_settings().enable_address_v2)
-    {
-        ////// Sending address v2 is enabled in handshake.
-        ////if (peer->wants_address_v2())
-        ////    channel->attach<protocol_address_out_70016>(self)->start();
-    }
-
     if (network_settings().enable_address)
     {
-        if (peer->is_negotiated(level::get_address_message))
+        // Sending address v2 is enabled in handshake.
+        if (network_settings().enable_address_v2 &&
+            peer->wants_address_v2())
+            channel->attach<protocol_address_out_70016>(self)->start();
+        else if (peer->is_negotiated(level::get_address_message))
             channel->attach<protocol_address_out_209>(self)->start();
         ////else if (peer->is_negotiated(level::version_message))
         ////    channel->attach<protocol_address_out_106>(self)->start();

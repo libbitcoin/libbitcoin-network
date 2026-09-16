@@ -87,6 +87,12 @@ constexpr bool is_v6(const address_t& address) NOEXCEPT
     return std::holds_alternative<ipv6_t>(address);
 }
 
+/// True if the address is representable by the v1 protocol.
+constexpr bool is_v1(const address_t& address) NOEXCEPT
+{
+    return is_v4(address) || is_v6(address);
+}
+
 /// True if the address is unset or all zeros.
 constexpr bool is_unspecified(const address_t& address) NOEXCEPT
 {

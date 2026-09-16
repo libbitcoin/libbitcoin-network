@@ -186,29 +186,25 @@ void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
     else if (peer->is_negotiated(level::version_message))
         channel->attach<protocol_ping_106>(self)->start();
 
-    if (network_settings().enable_address_v2)
-    {
-        ////// Address v2 can be disabled, independent of version.
-        ////if (peer->is_negotiated(level::bip155)
-        ////    channel->attach<protocol_address_in_70016>(self)->start();
-    
-        ////// Sending address v2 is enabled in handshake.
-        ////if (peer->wants_address_v2())
-        ////    channel->attach<protocol_address_out_70016>(self)->start();
-    }
-
     if (network_settings().enable_address)
     {
-        if (peer->is_negotiated(level::get_address_message))
-        {
+        // Address v2 can be disabled, independent of version.
+        if (network_settings().enable_address_v2 &&
+            peer->is_negotiated(level::bip155))
+            channel->attach<protocol_address_in_70016>(self)->start();
+        else if (peer->is_negotiated(level::get_address_message))
             channel->attach<protocol_address_in_209>(self)->start();
+        ////else if (peer->is_negotiated(level::version_message))
+        ////    channel->attach<protocol_address_in_106>(self)->start();
+
+        // Sending address v2 is enabled in handshake.
+        if (network_settings().enable_address_v2 &&
+            peer->wants_address_v2())
+            channel->attach<protocol_address_out_70016>(self)->start();
+        else if (peer->is_negotiated(level::get_address_message))
             channel->attach<protocol_address_out_209>(self)->start();
-        }
-        else if (peer->is_negotiated(level::version_message))
-        {
-            ////channel->attach<protocol_address_in_106>(self)->start();
-            ////channel->attach<protocol_address_out_106>(self)->start();
-        }
+        ////else if (peer->is_negotiated(level::version_message))
+        ////    channel->attach<protocol_address_out_106>(self)->start();
     }
 }
 

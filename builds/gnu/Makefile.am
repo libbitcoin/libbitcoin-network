@@ -139,7 +139,9 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/p2ps/stream.cpp \
     ${srcdir}/../../src/protocols/protocol.cpp \
     ${srcdir}/../../src/protocols/protocol_address_in_209.cpp \
+    ${srcdir}/../../src/protocols/protocol_address_in_70016.cpp \
     ${srcdir}/../../src/protocols/protocol_address_out_209.cpp \
+    ${srcdir}/../../src/protocols/protocol_address_out_70016.cpp \
     ${srcdir}/../../src/protocols/protocol_alert_311.cpp \
     ${srcdir}/../../src/protocols/protocol_http.cpp \
     ${srcdir}/../../src/protocols/protocol_peer.cpp \
@@ -499,7 +501,9 @@ include_bitcoin_network_protocolsdir = \
 include_bitcoin_network_protocols_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol.hpp \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol_address_in_209.hpp \
+    ${srcdir}/../../include/bitcoin/network/protocols/protocol_address_in_70016.hpp \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol_address_out_209.hpp \
+    ${srcdir}/../../include/bitcoin/network/protocols/protocol_address_out_70016.hpp \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol_alert_311.hpp \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol_http.hpp \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol_peer.hpp \
@@ -829,7 +833,9 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/p2ps/stream.cpp \
     ${srcdir}/../../test/protocols/protocol.cpp \
     ${srcdir}/../../test/protocols/protocol_address_in_209.cpp \
+    ${srcdir}/../../test/protocols/protocol_address_in_70016.cpp \
     ${srcdir}/../../test/protocols/protocol_address_out_209.cpp \
+    ${srcdir}/../../test/protocols/protocol_address_out_70016.cpp \
     ${srcdir}/../../test/protocols/protocol_alert_311.cpp \
     ${srcdir}/../../test/protocols/protocol_http.cpp \
     ${srcdir}/../../test/protocols/protocol_peer.cpp \

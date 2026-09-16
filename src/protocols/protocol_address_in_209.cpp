@@ -56,8 +56,7 @@ void protocol_address_in_209::start() NOEXCEPT
     if (started())
         return;
 
-    // Always allow a singleton unrequested address (advertisement).
-    SUBSCRIBE_CHANNEL(address, handle_receive_address, _1, _2);
+    subscribe_address();
 
     // Do not request addresses from inbound channels.
     if (outbound_)
@@ -66,6 +65,12 @@ void protocol_address_in_209::start() NOEXCEPT
     }
 
     protocol::start();
+}
+
+// Always allow a singleton unrequested address (advertisement).
+void protocol_address_in_209::subscribe_address() NOEXCEPT
+{
+    SUBSCRIBE_CHANNEL(address, handle_receive_address, _1, _2);
 }
 
 // Inbound (store addresses).

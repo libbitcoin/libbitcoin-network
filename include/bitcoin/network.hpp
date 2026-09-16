@@ -151,7 +151,9 @@
 #include <bitcoin/network/p2ps/stream.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_address_in_209.hpp>
+#include <bitcoin/network/protocols/protocol_address_in_70016.hpp>
 #include <bitcoin/network/protocols/protocol_address_out_209.hpp>
+#include <bitcoin/network/protocols/protocol_address_out_70016.hpp>
 #include <bitcoin/network/protocols/protocol_alert_311.hpp>
 #include <bitcoin/network/protocols/protocol_http.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
