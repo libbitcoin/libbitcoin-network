@@ -59,6 +59,26 @@ BOOST_AUTO_TEST_CASE(address_v2__serialize__two__expected)
     BOOST_REQUIRE_EQUAL(data, base16_chunk("027856341201010401020304208d7856341201042079bcc625184b05194975c28b66b66b0469f7f6556fb1ac3189a79b40dda32f1f208d"));
 }
 
+BOOST_AUTO_TEST_CASE(address_v2__deserialize__empty__expected)
+{
+    constexpr auto payload = base16_array("00");
+    system::read::bytes::copy source(payload);
+    const auto message = address_v2::deserialize(level::bip155, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(message.addresses.empty());
+}
+
+BOOST_AUTO_TEST_CASE(address_v2__deserialize__two__expected)
+{
+    constexpr auto payload = base16_array("027856341201010401020304208d7856341201042079bcc625184b05194975c28b66b66b0469f7f6556fb1ac3189a79b40dda32f1f208d");
+    system::read::bytes::copy source(payload);
+    const auto message = address_v2::deserialize(level::bip155, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(source.is_exhausted());
+    BOOST_REQUIRE_EQUAL(message.addresses.size(), two);
+    BOOST_REQUIRE(message.addresses.front().address == address_t{ ipv4_t{ mapped } });
+    BOOST_REQUIRE(message.addresses.back().address == address_t{ torv3_t{ onion } });
+}
 BOOST_AUTO_TEST_CASE(address_v2__deserialize__insufficient_version__invalid)
 {
     constexpr auto payload = base16_array("00");
