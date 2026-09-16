@@ -16,52 +16,48 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_IN_209_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_IN_209_HPP
+#include <bitcoin/network/protocols/protocol_address_out_70016.hpp>
 
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_peer.hpp>
+#include <bitcoin/network/protocols/protocol_address_out_209.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class BCT_API protocol_address_in_209
-  : public protocol_peer, protected tracker<protocol_address_in_209>
+#define CLASS protocol_address_out_70016
+
+using namespace system;
+using namespace messages::peer;
+using namespace std::placeholders;
+
+// Bind throws (ok).
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+protocol_address_out_70016::protocol_address_out_70016(
+    const session::ptr& session, const channel::ptr& channel) NOEXCEPT
+  : protocol_address_out_209(session, channel),
+    tracker<protocol_address_out_70016>(session->log)
 {
-public:
-    typedef std::shared_ptr<protocol_address_in_209> ptr;
+}
 
-    protocol_address_in_209(const session::ptr& session,
-        const channel::ptr& channel) NOEXCEPT;
+// Outbound (fetch and send addresses).
+// ----------------------------------------------------------------------------
 
-    /// Start protocol (requires strand).
-    void start() NOEXCEPT override;
+// The v2 protocol represents all address networks.
+void protocol_address_out_70016::send_addresses(
+    const address& message) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_address_out_70016");
 
-protected:
-    virtual void subscribe_address() NOEXCEPT;
+    SEND((address_v2{ message.addresses }), handle_send, _1);
+}
 
-    virtual messages::peer::address::cptr filter(
-        const messages::peer::address_items& message) const NOEXCEPT;
-
-    virtual bool handle_receive_address(const code& ec,
-        const messages::peer::address::cptr& message) NOEXCEPT;
-    virtual void handle_save_addresses(const code& ec,
-        size_t accepted, size_t end_size, size_t start_size) NOEXCEPT;
-
-private:
-    // This is thread safe (const).
-    const bool outbound_;
-
-    // This is protected by strand.
-    bool first_{ true };
-};
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
-
-#endif

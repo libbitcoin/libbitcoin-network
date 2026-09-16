@@ -53,6 +53,7 @@ constexpr address_item host2{ 0, 0, ipv6_t{ loopback_ip_address }, 2 };
 constexpr address_item host3{ 0, 0, ipv6_t{ loopback_ip_address }, 3 };
 constexpr address_item loopback00{ 0, 0, ipv6_t{ loopback_ip_address }, 0 };
 constexpr address_item loopback42{ 0, 0, ipv6_t{ loopback_ip_address }, 42 };
+constexpr address_item onion42{ 0, 0, torv3_t{ { 0x01 } }, 42 };
 constexpr address_item unspecified00{ 0, 0, ipv6_t{ unspecified_ip_address }, 0 };
 ////constexpr address_item unspecified42{ 0, 0, ipv6_t{ unspecified_ip_address }, 42 };
 
@@ -293,6 +294,77 @@ BOOST_AUTO_TEST_CASE(hosts__counts__eviction__expected)
 }
 
 // take
+
+BOOST_AUTO_TEST_CASE(hosts__take__unconnectable__address_not_found_and_retained)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    std::promise<code> promise_restore{};
+    instance.restore(system::to_shared(onion42), [&](const code& ec) NOEXCEPT
+    {
+        promise_restore.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_restore.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+
+    std::promise<std::pair<code, address_item_cptr>> promise_take{};
+    instance.take([&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    {
+        promise_take.set_value({ ec, item });
+    });
+
+    const auto result = promise_take.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::address_not_found);
+    BOOST_REQUIRE(!result.second);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__take__mixed__connectable_taken_other_retained)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    std::promise<code> promise_onion{};
+    instance.restore(system::to_shared(onion42), [&](const code& ec) NOEXCEPT
+    {
+        promise_onion.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_onion.get_future().get(), error::success);
+
+    std::promise<code> promise_loopback{};
+    instance.restore(system::to_shared(loopback42), [&](const code& ec) NOEXCEPT
+    {
+        promise_loopback.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_loopback.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+
+    std::promise<std::pair<code, address_item_cptr>> promise_take{};
+    instance.take([&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    {
+        promise_take.set_value({ ec, item });
+    });
+
+    const auto result = promise_take.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::success);
+    BOOST_REQUIRE(*result.second == loopback42);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.counts().at(torv3_t::id), 1u);
+    instance.stop();
+}
 
 BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 {

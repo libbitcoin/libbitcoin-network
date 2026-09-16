@@ -150,7 +150,7 @@ size_t hosts::reserved() const NOEXCEPT
 // Usage.
 // ----------------------------------------------------------------------------
 
-// O(1).
+// O(N).
 void hosts::take(address_item_handler&& handler) NOEXCEPT
 {
     if (stopped_)
@@ -159,19 +159,29 @@ void hosts::take(address_item_handler&& handler) NOEXCEPT
         return;
     }
 
-    // O(1) average, O(N) worst case.
-    while (!buffer_.empty())
+    // Unconnectable addresses are retained, as they remain relayable.
+    for (auto it = buffer_.begin(); it != buffer_.end();)
     {
-        const auto host = pop();
+        if (!settings_.connectable(*it))
+        {
+            ++it;
+            continue;
+        }
+
+        const auto host = to_shared<address_item>(std::move(*it));
+        decrement(host->address);
+
+        // O(N).
+        it = buffer_.erase(it);
+        hosts_count_.store(buffer_.size());
+
         if (!is_reserved({ *host }))
         {
-            hosts_count_.store(buffer_.size());
             handler(error::success, host);
             return;
         }
     }
 
-    hosts_count_.store(zero);
     handler(error::address_not_found, {});
 }
 
@@ -275,17 +285,6 @@ void hosts::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 
 // private
 // ----------------------------------------------------------------------------
-
-// O(1).
-inline address_item::cptr hosts::pop() NOEXCEPT
-{
-    BC_ASSERT_MSG(!buffer_.empty(), "pop from empty buffer");
-
-    const auto host = to_shared<address_item>(std::move(buffer_.front()));
-    buffer_.pop_front();
-    decrement(host->address);
-    return host;
-}
 
 // O(1).
 inline void hosts::push(const address_item& host) NOEXCEPT

@@ -168,6 +168,7 @@
       <ObjectFileName>$(IntDir)test_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\address_item.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\address_v2.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert_item.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\block.cpp" />
@@ -201,6 +202,7 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_address_v2.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_compact.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_headers.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_transaction_reconciliation.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\version.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\version_acknowledge.cpp" />
@@ -243,7 +245,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_70016.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_209.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_70016.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_311.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_http.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_peer.cpp" />

@@ -42,19 +42,21 @@ constexpr bool is_v6(const ip_address& ip) NOEXCEPT
 }
 
 /// Distinct type per network, as variant alternatives must not repeat.
-template <uint8_t Id, size_t Size>
+template <uint8_t Id, size_t Size, size_t Wire = Size>
 struct address_of
 {
     static constexpr uint8_t id = Id;
     static constexpr size_t size = Size;
+    static constexpr size_t wire = Wire;
 
     system::data_array<Size> value;
 
     bool operator==(const address_of& other) const NOEXCEPT = default;
 };
 
-/// BIP155 addresses, ipv4 is v6-mapped (as encoded by the v1 protocol).
-using ipv4_t = address_of<1, 16>;
+/// BIP155 addresses, ipv4 is stored v6-mapped (as encoded by the v1 protocol)
+/// and is the only network whose wire size differs from its storage size.
+using ipv4_t = address_of<1, 16, 4>;
 using ipv6_t = address_of<2, 16>;
 using torv2_t = address_of<3, 10>;
 using torv3_t = address_of<4, 32>;
@@ -83,6 +85,12 @@ constexpr bool is_v4(const address_t& address) NOEXCEPT
 constexpr bool is_v6(const address_t& address) NOEXCEPT
 {
     return std::holds_alternative<ipv6_t>(address);
+}
+
+/// True if the address is representable by the v1 protocol.
+constexpr bool is_v1(const address_t& address) NOEXCEPT
+{
+    return is_v4(address) || is_v6(address);
 }
 
 /// True if the address is unset or all zeros.
@@ -116,6 +124,11 @@ struct BCT_API address_item
         bool with_timestamp) NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink,
         bool with_timestamp) const NOEXCEPT;
+
+    size_t size_v2(uint32_t version) const NOEXCEPT;
+    static address_item deserialize_v2(uint32_t version,
+        system::reader& source) NOEXCEPT;
+    void serialize_v2(uint32_t version, system::writer& sink) const NOEXCEPT;
 
     uint32_t timestamp;
     uint64_t services;

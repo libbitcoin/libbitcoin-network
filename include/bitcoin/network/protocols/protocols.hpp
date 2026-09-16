@@ -23,7 +23,9 @@
 
 // peer
 #include <bitcoin/network/protocols/protocol_address_in_209.hpp>
+#include <bitcoin/network/protocols/protocol_address_in_70016.hpp>
 #include <bitcoin/network/protocols/protocol_address_out_209.hpp>
+#include <bitcoin/network/protocols/protocol_address_out_70016.hpp>
 #include <bitcoin/network/protocols/protocol_alert_311.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/protocols/protocol_ping_106.hpp>

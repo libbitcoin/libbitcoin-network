@@ -108,6 +108,10 @@ public:
     uint32_t negotiated_version() const NOEXCEPT;
     void set_negotiated_version(uint32_t value) NOEXCEPT;
 
+    /// Peer accepts address v2, written only in handshake (bip155).
+    bool wants_address_v2() const NOEXCEPT;
+    void set_wants_address_v2() NOEXCEPT;
+
     /// Chain is current, reduces the read buffer to the configured minimum.
     bool current() const NOEXCEPT;
     void set_current(bool value) NOEXCEPT;
@@ -148,6 +152,7 @@ private:
     size_t start_height_{};
     bool reading_{};
     bool quiet_{};
+    bool wants_address_v2_{};
     bool current_{};
 };
 

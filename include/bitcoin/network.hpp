@@ -83,6 +83,7 @@
 #include <bitcoin/network/messages/peer/registry.hpp>
 #include <bitcoin/network/messages/peer/detail/address.hpp>
 #include <bitcoin/network/messages/peer/detail/address_item.hpp>
+#include <bitcoin/network/messages/peer/detail/address_v2.hpp>
 #include <bitcoin/network/messages/peer/detail/alert.hpp>
 #include <bitcoin/network/messages/peer/detail/alert_item.hpp>
 #include <bitcoin/network/messages/peer/detail/block.hpp>
@@ -116,6 +117,7 @@
 #include <bitcoin/network/messages/peer/detail/send_address_v2.hpp>
 #include <bitcoin/network/messages/peer/detail/send_compact.hpp>
 #include <bitcoin/network/messages/peer/detail/send_headers.hpp>
+#include <bitcoin/network/messages/peer/detail/send_transaction_reconciliation.hpp>
 #include <bitcoin/network/messages/peer/detail/transaction.hpp>
 #include <bitcoin/network/messages/peer/detail/version.hpp>
 #include <bitcoin/network/messages/peer/detail/version_acknowledge.hpp>
@@ -149,7 +151,9 @@
 #include <bitcoin/network/p2ps/stream.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_address_in_209.hpp>
+#include <bitcoin/network/protocols/protocol_address_in_70016.hpp>
 #include <bitcoin/network/protocols/protocol_address_out_209.hpp>
+#include <bitcoin/network/protocols/protocol_address_out_70016.hpp>
 #include <bitcoin/network/protocols/protocol_alert_311.hpp>
 #include <bitcoin/network/protocols/protocol_http.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>

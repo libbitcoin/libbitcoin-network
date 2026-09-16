@@ -16,49 +16,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_IN_209_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_IN_209_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_IN_70016_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_IN_70016_HPP
 
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_peer.hpp>
+#include <bitcoin/network/protocols/protocol_address_in_209.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class BCT_API protocol_address_in_209
-  : public protocol_peer, protected tracker<protocol_address_in_209>
+class BCT_API protocol_address_in_70016
+  : public protocol_address_in_209,
+    protected tracker<protocol_address_in_70016>
 {
 public:
-    typedef std::shared_ptr<protocol_address_in_209> ptr;
+    typedef std::shared_ptr<protocol_address_in_70016> ptr;
 
-    protocol_address_in_209(const session::ptr& session,
+    protocol_address_in_70016(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
-    /// Start protocol (requires strand).
-    void start() NOEXCEPT override;
-
 protected:
-    virtual void subscribe_address() NOEXCEPT;
+    void subscribe_address() NOEXCEPT override;
 
-    virtual messages::peer::address::cptr filter(
-        const messages::peer::address_items& message) const NOEXCEPT;
-
-    virtual bool handle_receive_address(const code& ec,
-        const messages::peer::address::cptr& message) NOEXCEPT;
-    virtual void handle_save_addresses(const code& ec,
-        size_t accepted, size_t end_size, size_t start_size) NOEXCEPT;
-
-private:
-    // This is thread safe (const).
-    const bool outbound_;
-
-    // This is protected by strand.
-    bool first_{ true };
+    virtual bool handle_receive_address_v2(const code& ec,
+        const messages::peer::address_v2::cptr& message) NOEXCEPT;
 };
 
 } // namespace network

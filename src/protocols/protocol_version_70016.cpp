@@ -80,6 +80,19 @@ void protocol_version_70016::shake(result_handler&& handle_event) NOEXCEPT
     protocol_version_70001::shake(std::move(handle_event));
 }
 
+// Outgoing [signal address v2 (bip155)].
+// ----------------------------------------------------------------------------
+
+void protocol_version_70016::signal() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_version_70016");
+
+    if (network_settings().gossip_v2() && negotiated_version() >= level::bip155)
+        SEND(send_address_v2{}, handle_send, _1);
+
+    protocol_version_70002::signal();
+}
+
 // Incoming [send_address_v2     => negotiated state change].
 // Incoming [witness_tx_id_relay => negotiated state change].
 // ----------------------------------------------------------------------------
@@ -120,7 +133,7 @@ bool protocol_version_70016::handle_receive_send_address_v2(const code& ec,
         return false;
     }
 
-    // TODO: set channel send_address_v2 property and use to attach protocols.
+    set_wants_address_v2();
     return true;
 }
 

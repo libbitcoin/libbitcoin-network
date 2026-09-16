@@ -252,6 +252,9 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\address_item.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\peer\detail\address_v2.cpp">
+      <Filter>src\messages\peer\detail</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\alert.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
@@ -354,6 +357,9 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_headers.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_transaction_reconciliation.cpp">
+      <Filter>src\messages\peer\detail</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\transaction.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
@@ -444,7 +450,13 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_in_209.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_address_in_70016.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_out_209.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_address_out_70016.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_alert_311.cpp">
@@ -866,6 +878,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_item.hpp">
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_v2.hpp">
+      <Filter>include\bitcoin\network\messages\peer\detail</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\alert.hpp">
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>
     </ClInclude>
@@ -963,6 +978,9 @@
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_headers.hpp">
+      <Filter>include\bitcoin\network\messages\peer\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_transaction_reconciliation.hpp">
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\transaction.hpp">
@@ -1082,7 +1100,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_in_209.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_in_70016.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_out_209.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_out_70016.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_alert_311.hpp">

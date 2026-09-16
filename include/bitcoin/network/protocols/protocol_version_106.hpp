@@ -49,6 +49,7 @@ public:
 protected:
     virtual messages::peer::version version_factory(bool relay=false) const NOEXCEPT;
     virtual void rejection(const code& ec) NOEXCEPT;
+    virtual void signal() NOEXCEPT;
 
     virtual bool complete() const NOEXCEPT;
     virtual void callback(const code& ec) NOEXCEPT;

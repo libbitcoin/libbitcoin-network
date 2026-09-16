@@ -71,6 +71,12 @@ protected:
     /// Set negotiated protocol version (set only during handshake).
     virtual void set_negotiated_version(uint32_t value) NOEXCEPT;
 
+    /// The peer accepts address v2 (bip155).
+    virtual bool wants_address_v2() const NOEXCEPT;
+
+    /// Set that the peer accepts address v2 (set only during handshake).
+    virtual void set_wants_address_v2() NOEXCEPT;
+
     /// Advertised addresses with own services and current timestamp.
     virtual messages::peer::address selfs() const NOEXCEPT;
 

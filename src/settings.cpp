@@ -413,6 +413,12 @@ bool settings::gossip_v2() const NOEXCEPT
     return gossip_tor || gossip_i2p;
 }
 
+bool settings::connectable(const address_item& item) const NOEXCEPT
+{
+    // Only ip addresses are routable, others require a proxy transport.
+    return is_v4(item.address) || is_v6(item.address);
+}
+
 bool settings::gossiped(const address_item& item) const NOEXCEPT
 {
     switch (item.address.index())

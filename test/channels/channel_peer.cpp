@@ -89,6 +89,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
     BOOST_REQUIRE(channel_ptr->is_negotiated(messages::peer::level::maximum_protocol));
+    BOOST_REQUIRE(!channel_ptr->wants_address_v2());
 
     // TODO: compare to default instance.
     BOOST_REQUIRE(channel_ptr->peer_version());
@@ -99,6 +100,23 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
+}
+
+BOOST_AUTO_TEST_CASE(channel_peer__set_wants_address_v2__always__latched)
+{
+    const logger log{};
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const settings set(bc::system::chain::selection::mainnet);
+    network::socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
+
+    BOOST_REQUIRE(!channel_ptr->wants_address_v2());
+    channel_ptr->set_wants_address_v2();
+    BOOST_REQUIRE(channel_ptr->wants_address_v2());
+
     channel_ptr->stop(error::invalid_magic);
 }
 

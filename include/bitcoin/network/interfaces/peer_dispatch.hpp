@@ -42,6 +42,7 @@ struct peer_dispatch
     static constexpr std::tuple messages
     {
         method<"addr", messages::peer::address::cptr>{},
+        method<"addrv2", messages::peer::address_v2::cptr>{},
         method<"alert", messages::peer::alert::cptr>{},
         method<"block", messages::peer::block::cptr>{},
         method<"filteradd", messages::peer::bloom_filter_add::cptr>{},
@@ -80,6 +81,7 @@ struct peer_dispatch
         method<"version", messages::peer::version::cptr>{},
         method<"verack", messages::peer::version_acknowledge::cptr>{},
         method<"sendaddrv2", messages::peer::send_address_v2::cptr>{},
+        method<"sendtxrcncl", messages::peer::send_transaction_reconciliation::cptr>{},
         method<"wtxidrelay", messages::peer::witness_tx_id_relay::cptr>{}
     };
 

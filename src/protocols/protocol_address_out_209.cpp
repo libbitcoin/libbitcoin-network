@@ -58,11 +58,25 @@ void protocol_address_out_209::start() NOEXCEPT
     // Advertise self if configured for inbound and with self address(es).
     if (network_settings().inbound.advertise())
     {
-        SEND(selfs(), handle_send, _1);
+        send_addresses(selfs());
     }
 
     SUBSCRIBE_CHANNEL(get_address, handle_receive_get_address, _1, _2);
     protocol::start();
+}
+
+// The v1 protocol represents only ipv4 and ipv6 addresses.
+void protocol_address_out_209::send_addresses(const address& message) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_address_out_209");
+
+    address representable{ message.addresses };
+    std::erase_if(representable.addresses, [](const address_item& item) NOEXCEPT
+    {
+        return !is_v1(item.address);
+    });
+
+    SEND(representable, handle_send, _1);
 }
 
 // Outbound (fetch and send addresses).
@@ -107,7 +121,7 @@ void protocol_address_out_209::handle_fetch_address(const code& ec,
     LOGP("Sending (" << message->addresses.size() << ") addresses to "
         "[" << opposite() << "]");
 
-    SEND(*message, handle_send, _1);
+    send_addresses(*message);
 }
 
 // ----------------------------------------------------------------------------
@@ -132,7 +146,7 @@ bool protocol_address_out_209::handle_broadcast_address(const code& ec,
     LOGP("Relay (" << message->addresses.size() << ") addresses to ["
         << opposite() << "].");
 
-    SEND(*message, handle_send, _1);
+    send_addresses(*message);
     return true;
 }
 

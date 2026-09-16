@@ -156,6 +156,7 @@
       <ObjectFileName>$(IntDir)src_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\address_item.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\peer\detail\address_v2.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\alert.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\alert_item.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\block.cpp" />
@@ -190,6 +191,7 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_address_v2.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_compact.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_headers.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_transaction_reconciliation.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\transaction.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\version_acknowledge.cpp" />
@@ -226,7 +228,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_in_209.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_address_in_70016.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_out_209.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_address_out_70016.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_alert_311.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_http.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_peer.cpp" />
@@ -376,6 +380,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_item.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_v2.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\alert.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\alert_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\block.hpp" />
@@ -409,6 +414,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_address_v2.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_compact.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_headers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_transaction_reconciliation.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\transaction.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\version_acknowledge.hpp" />
@@ -448,7 +454,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\preprocessor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_in_209.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_in_70016.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_out_209.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_out_70016.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_alert_311.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_peer.hpp" />

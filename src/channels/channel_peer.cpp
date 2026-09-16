@@ -77,6 +77,16 @@ void channel_peer::set_quiet() NOEXCEPT
     quiet_ = true;
 }
 
+bool channel_peer::wants_address_v2() const NOEXCEPT
+{
+    return wants_address_v2_;
+}
+
+void channel_peer::set_wants_address_v2() NOEXCEPT
+{
+    wants_address_v2_ = true;
+}
+
 bool channel_peer::is_negotiated(messages::peer::level level) const NOEXCEPT
 {
     return negotiated_version() >= level;

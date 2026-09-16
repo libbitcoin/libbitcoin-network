@@ -43,6 +43,8 @@ public:
     void start() NOEXCEPT override;
 
 protected:
+    virtual void send_addresses(const messages::peer::address& message) NOEXCEPT;
+
     virtual bool handle_receive_get_address(const code& ec,
         const messages::peer::get_address::cptr& message) NOEXCEPT;
     virtual void handle_fetch_address(const code& ec,
