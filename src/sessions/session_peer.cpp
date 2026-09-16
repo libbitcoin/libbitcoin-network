@@ -193,7 +193,7 @@ void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
         ////    channel->attach<protocol_address_in_70016>(self)->start();
     
         ////// Sending address v2 is enabled in handshake.
-        ////if (peer->send_address_v2())
+        ////if (peer->wants_address_v2())
         ////    channel->attach<protocol_address_out_70016>(self)->start();
     }
 

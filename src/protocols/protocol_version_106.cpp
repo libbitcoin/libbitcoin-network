@@ -112,6 +112,10 @@ void protocol_version_106::rejection(const code& ec) NOEXCEPT
     callback(ec);
 }
 
+void protocol_version_106::signal() NOEXCEPT
+{
+}
+
 // Start/Stop.
 // ----------------------------------------------------------------------------
 
@@ -362,6 +366,9 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     ////LOGP("Peer [" << opposite() << "] "
     ////    << "as {" << config::authority(message->address_sender) << "} "
     ////    << "us {" << config::authority(message->address_receiver) << "}.");
+
+    // Feature signals must precede the acknowledgement.
+    signal();
 
     SEND(version_acknowledge{}, handle_send_acknowledge, _1);
 

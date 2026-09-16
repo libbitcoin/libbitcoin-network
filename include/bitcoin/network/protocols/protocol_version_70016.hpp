@@ -49,6 +49,7 @@ public:
 
 protected:
     ////void handle_send_version(const code& ec) NOEXCEPT override;
+    void signal() NOEXCEPT override;
     bool handle_receive_acknowledge(const code& ec,
         const messages::peer::version_acknowledge::cptr& message) NOEXCEPT override;
     virtual bool handle_receive_send_address_v2(const code& ec,

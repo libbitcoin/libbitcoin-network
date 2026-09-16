@@ -381,7 +381,7 @@ struct BCT_API settings
     uint32_t protocol_minimum{ messages::peer::level::minimum_protocol };
     uint64_t invalid_services{ 0b0001'0000'0000'0000'0000'0000'1011'0000 };
     bool enable_address{ false };
-    bool enable_address_v2{ false };
+    bool enable_address_v2{ true };
     bool enable_witness_tx{ false };
     bool enable_compact{ false };
     bool enable_alert{ false };

@@ -252,7 +252,7 @@ void session_inbound::attach_protocols(
     if (network_settings().enable_address_v2)
     {
         ////// Sending address v2 is enabled in handshake.
-        ////if (peer->send_address_v2())
+        ////if (peer->wants_address_v2())
         ////    channel->attach<protocol_address_out_70016>(self)->start();
     }
 

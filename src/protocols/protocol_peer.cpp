@@ -82,6 +82,17 @@ void protocol_peer::set_negotiated_version(uint32_t value) NOEXCEPT
     channel_->set_negotiated_version(value);
 }
 
+bool protocol_peer::wants_address_v2() const NOEXCEPT
+{
+    return channel_->wants_address_v2();
+}
+
+// Call only from handshake (version protocol), for thread safety.
+void protocol_peer::set_wants_address_v2() NOEXCEPT
+{
+    channel_->set_wants_address_v2();
+}
+
 address protocol_peer::selfs() const NOEXCEPT
 {
     const auto time_now = unix_time();
