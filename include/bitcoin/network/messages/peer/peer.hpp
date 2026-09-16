@@ -58,6 +58,7 @@
 #include <bitcoin/network/messages/peer/detail/send_address_v2.hpp>
 #include <bitcoin/network/messages/peer/detail/send_compact.hpp>
 #include <bitcoin/network/messages/peer/detail/send_headers.hpp>
+#include <bitcoin/network/messages/peer/detail/send_transaction_reconciliation.hpp>
 #include <bitcoin/network/messages/peer/detail/transaction.hpp>
 #include <bitcoin/network/messages/peer/detail/version.hpp>
 #include <bitcoin/network/messages/peer/detail/version_acknowledge.hpp>

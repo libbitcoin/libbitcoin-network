@@ -85,6 +85,7 @@ struct peer_broadcast
         method<"version", messages::peer::version::cptr, key>{},
         method<"verack", messages::peer::version_acknowledge::cptr, key>{},
         method<"sendaddrv2", messages::peer::send_address_v2::cptr, key>{},
+        method<"sendtxrcncl", messages::peer::send_transaction_reconciliation::cptr, key>{},
         method<"wtxidrelay", messages::peer::witness_tx_id_relay::cptr, key>{}
     };
 

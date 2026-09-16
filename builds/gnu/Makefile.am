@@ -110,6 +110,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/messages/peer/detail/send_address_v2.cpp \
     ${srcdir}/../../src/messages/peer/detail/send_compact.cpp \
     ${srcdir}/../../src/messages/peer/detail/send_headers.cpp \
+    ${srcdir}/../../src/messages/peer/detail/send_transaction_reconciliation.cpp \
     ${srcdir}/../../src/messages/peer/detail/transaction.cpp \
     ${srcdir}/../../src/messages/peer/detail/version.cpp \
     ${srcdir}/../../src/messages/peer/detail/version_acknowledge.cpp \
@@ -434,6 +435,7 @@ include_bitcoin_network_messages_peer_detail_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/send_address_v2.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/send_compact.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/send_headers.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/peer/detail/send_transaction_reconciliation.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/transaction.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/version.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/version_acknowledge.hpp \
@@ -799,6 +801,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/messages/peer/detail/send_address_v2.cpp \
     ${srcdir}/../../test/messages/peer/detail/send_compact.cpp \
     ${srcdir}/../../test/messages/peer/detail/send_headers.cpp \
+    ${srcdir}/../../test/messages/peer/detail/send_transaction_reconciliation.cpp \
     ${srcdir}/../../test/messages/peer/detail/transaction.cpp \
     ${srcdir}/../../test/messages/peer/detail/version.cpp \
     ${srcdir}/../../test/messages/peer/detail/version_acknowledge.cpp \

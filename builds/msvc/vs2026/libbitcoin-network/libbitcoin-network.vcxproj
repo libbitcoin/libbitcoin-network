@@ -191,6 +191,7 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_address_v2.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_compact.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_headers.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\peer\detail\send_transaction_reconciliation.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\transaction.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\version_acknowledge.cpp" />
@@ -411,6 +412,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_address_v2.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_compact.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_headers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\send_transaction_reconciliation.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\transaction.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\version_acknowledge.hpp" />

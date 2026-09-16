@@ -202,6 +202,7 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_address_v2.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_compact.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_headers.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_transaction_reconciliation.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\version.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\version_acknowledge.cpp" />

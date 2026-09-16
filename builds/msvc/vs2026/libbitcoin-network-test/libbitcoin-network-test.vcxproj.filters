@@ -345,6 +345,9 @@
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_headers.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\send_transaction_reconciliation.cpp">
+      <Filter>src\messages\peer\detail</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\transaction.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
