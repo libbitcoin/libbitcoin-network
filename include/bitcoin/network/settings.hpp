@@ -298,7 +298,6 @@ struct BCT_API settings
             }
         }
 
-        bool use_ipv6{ false };
         config::endpoints seeds{};
         uint16_t connect_batch_size{ 5 };
         uint32_t host_pool_capacity{ 0 };
@@ -308,8 +307,6 @@ struct BCT_API settings
         bool enabled() const NOEXCEPT override;
         virtual size_t minimum_address_count() const NOEXCEPT;
         virtual steady_clock::duration seeding_timeout() const NOEXCEPT;
-        virtual bool disabled(
-            const messages::peer::address_item& item) const NOEXCEPT;
     };
     
     struct peer_inbound
@@ -350,20 +347,34 @@ struct BCT_API settings
         config::authority first_self() const NOEXCEPT;
     };
 
-    // [network]
-    // ----------------------------------------------------------------------------
-    // bitcoin p2p network common settings.
-
     DEFAULT_COPY_MOVE_DESTRUCT(settings);
     settings(system::chain::selection context) NOEXCEPT;
 
-    /// Bitcoin p2p protocol services.
+    /// Bitcoin p2p sessions.
     network::settings::peer_outbound outbound;
     network::settings::peer_inbound inbound;
     network::settings::peer_manual manual;
 
-    /// Properties.
+    // [network]
+    // ------------------------------------------------------------------------
+    // Transport settings, common to all sessions.
+
     uint32_t threads{ 0 };
+    uint32_t retry_timeout_seconds{ 1 };
+    uint32_t connect_timeout_seconds{ 5 };
+
+    /// Bytes/second allocated to each channel for sending, zero is unlimited.
+    /// A send is deferred by the unconsumed portion of its byte allocation,
+    /// which the next send of the channel cannot start until it expires.
+    /// Overlaps tcp_server::rate_limit (see settings::rate_limited).
+    uint32_t rate_limit{ 0 };
+    config::authorities blacklists{};
+    config::authorities whitelists{};
+
+    // [peer]
+    // ------------------------------------------------------------------------
+    // Bitcoin p2p protocol settings, common to all peer sessions.
+
     uint16_t address_upper{ 10 };
     uint16_t address_lower{ 5 };
     uint32_t protocol_maximum{ messages::peer::level::maximum_protocol };
@@ -379,22 +390,16 @@ struct BCT_API settings
     bool enable_relay{ false };
     bool enable_privacy{ false };
     bool validate_checksum{ false };
+    bool gossip_ipv4{ true };
+    bool gossip_ipv6{ false };
+    bool gossip_tor{ false };
+    bool gossip_i2p{ false };
     uint32_t identifier{ 0 };
-    uint32_t retry_timeout_seconds{ 1 };
-    uint32_t connect_timeout_seconds{ 5 };
     uint32_t handshake_timeout_seconds{ 15 };
     uint32_t channel_heartbeat_minutes{ 5 };
     uint32_t maximum_skew_minutes{ 120 };
-
-    /// Bytes/second allocated to each channel for sending, zero is unlimited.
-    /// A send is deferred by the unconsumed portion of its byte allocation,
-    /// which the next send of the channel cannot start until it expires.
-    /// Overlaps tcp_server::rate_limit (see settings::rate_limited).
-    uint32_t rate_limit{ 0 };
     std::string user_agent{ BC_USER_AGENT };
     std::filesystem::path path{};
-    config::authorities blacklists{};
-    config::authorities whitelists{};
 
     /// Helpers.
     virtual size_t threads_() const NOEXCEPT;
@@ -404,8 +409,11 @@ struct BCT_API settings
     virtual steady_clock::duration channel_heartbeat() const NOEXCEPT;
     virtual steady_clock::duration maximum_skew() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;
+    virtual bool gossip_v2() const NOEXCEPT;
 
     /// Filters.
+    virtual bool gossiped(
+        const messages::peer::address_item& item) const NOEXCEPT;
     virtual bool unsupported(
         const messages::peer::address_item& item) const NOEXCEPT;
     virtual bool blacklisted(

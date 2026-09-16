@@ -293,11 +293,6 @@ steady_clock::duration settings::peer_outbound::seeding_timeout() const NOEXCEPT
     return seconds(seeding_timeout_seconds);
 }
 
-bool settings::peer_outbound::disabled(const address_item& item) const NOEXCEPT
-{
-    return !use_ipv6 && is_v6(item.address);
-}
-
 // [inbound]
 // ----------------------------------------------------------------------------
 
@@ -412,6 +407,29 @@ std::filesystem::path settings::file() const NOEXCEPT
     BC_POP_WARNING()
 }
 
+bool settings::gossip_v2() const NOEXCEPT
+{
+    // Only tor and i2p addresses are unrepresentable in the v1 protocol.
+    return gossip_tor || gossip_i2p;
+}
+
+bool settings::gossiped(const address_item& item) const NOEXCEPT
+{
+    switch (item.address.index())
+    {
+        case ipv4_t::id: return gossip_ipv4;
+
+        // Cjdns is an ipv6 address, differentiated only by the address v2 id.
+        case cjdns_t::id:
+        case ipv6_t::id: return gossip_ipv6;
+
+        case torv2_t::id:
+        case torv3_t::id: return gossip_tor;
+        case i2p_t::id: return gossip_i2p;
+        default: return false;
+    }
+}
+
 bool settings::unsupported(const address_item& item) const NOEXCEPT
 {
     return to_bool(item.services & invalid_services);
@@ -430,7 +448,7 @@ bool settings::whitelisted(const address_item& item) const NOEXCEPT
 bool settings::excluded(const address_item& item) const NOEXCEPT
 {
     return !is_specified(item)
-        || outbound.disabled(item)
+        || !gossiped(item)
         || unsupported(item)
         || manual.peered(item)
         || blacklisted(item)

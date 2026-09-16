@@ -91,7 +91,17 @@ address protocol_peer::selfs() const NOEXCEPT
     address message{};
     message.addresses.reserve(selfs.size());
     for (const auto& self: selfs)
-        message.addresses.push_back(self.to_address_item(time_now, services));
+    {
+        auto item = self.to_address_item(time_now, services);
+        if (network_settings().gossiped(item))
+        {
+            message.addresses.push_back(std::move(item));
+        }
+        else
+        {
+            LOGN("Self [" << self << "] network is not gossiped.");
+        }
+    }
 
     return message;
 }

@@ -321,9 +321,9 @@ inline void hosts::push(const std::string& line) NOEXCEPT
         {
             LOGF("Address unspecified upon load [" << line << "].");
         }
-        else if (settings_.outbound.disabled(item))
+        else if (!settings_.gossiped(item))
         {
-            // IPv6 addresses saved and loaded with IPv6 disabled.
+            // Addresses of ungossiped networks are purged upon load.
             ////LOGF("Address disabled upon load [" << line << "].");
         }
         else if (insufficient(item))

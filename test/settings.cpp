@@ -459,46 +459,103 @@ BOOST_AUTO_TEST_CASE(settings__peer_outbound__mainnet__expected)
     BOOST_REQUIRE(instance.expiration() == minutes(60));
 
     // outbound
-    BOOST_REQUIRE(!instance.use_ipv6);
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.seeds.size(), 4u);
     BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), 50u);
     BOOST_REQUIRE(instance.seeding_timeout() == seconds(30));
-    BOOST_REQUIRE(instance.disabled(address_item{ 0, 0, ipv6_t{ loopback_ip_address }, 42 }));
 }
 
-BOOST_AUTO_TEST_CASE(settings__peer_outbound_disabled__use_ipv6__both_false)
+// gossip
+
+BOOST_AUTO_TEST_CASE(settings__gossip__default__ipv4_only)
 {
-    settings::peer_outbound instance{ system::chain::selection::mainnet };
-    instance.use_ipv6 = true;
-    BOOST_REQUIRE(!instance.disabled(config::address("42.42.42.42:27")));
-    BOOST_REQUIRE(!instance.disabled(config::address("[42:42::42:2]:27")));
+    const settings instance{ selection::mainnet };
+    BOOST_REQUIRE(instance.gossip_ipv4);
+    BOOST_REQUIRE(!instance.gossip_ipv6);
+    BOOST_REQUIRE(!instance.gossip_tor);
+    BOOST_REQUIRE(!instance.gossip_i2p);
 }
 
-BOOST_AUTO_TEST_CASE(settings__peer_outbound_disabled__ipv4__false)
+BOOST_AUTO_TEST_CASE(settings__gossiped__ipv4__gossip_ipv4)
 {
-    settings::peer_outbound instance{ system::chain::selection::mainnet };
-    instance.use_ipv6 = false;
-    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42" }));
-    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42:42" }));
+    settings instance{ selection::mainnet };
+    instance.gossip_ipv4 = false;
+    BOOST_REQUIRE(!instance.gossiped(config::address{ "42.42.42.42:42" }));
 
-    instance.use_ipv6 = true;
-    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42" }));
-    BOOST_REQUIRE(!instance.disabled(config::address{ "42.42.42.42:42" }));
+    instance.gossip_ipv4 = true;
+    BOOST_REQUIRE(instance.gossiped(config::address{ "42.42.42.42:42" }));
 }
 
-BOOST_AUTO_TEST_CASE(settings__peer_outbound_disabled__ipv6__expected)
+BOOST_AUTO_TEST_CASE(settings__gossiped__ipv6__gossip_ipv6)
 {
-    settings::peer_outbound instance{ system::chain::selection::mainnet };
-    instance.use_ipv6 = false;
-    BOOST_REQUIRE(instance.disabled(config::address{ "[2001:db8::2]" }));
-    BOOST_REQUIRE(instance.disabled(config::address{ "[2001:db8::2]:42" }));
+    settings instance{ selection::mainnet };
+    instance.gossip_ipv6 = false;
+    BOOST_REQUIRE(!instance.gossiped(config::address{ "[2001:db8::2]:42" }));
 
-    instance.use_ipv6 = true;
-    BOOST_REQUIRE(!instance.disabled(config::address{ "[2001:db8::2]" }));
-    BOOST_REQUIRE(!instance.disabled(config::address{ "[2001:db8::2]:42" }));
+    instance.gossip_ipv6 = true;
+    BOOST_REQUIRE(instance.gossiped(config::address{ "[2001:db8::2]:42" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__gossiped__cjdns__gossip_ipv6)
+{
+    // Cjdns is an ipv6 address, governed by the ipv6 setting.
+    settings instance{ selection::mainnet };
+    instance.gossip_ipv6 = true;
+    BOOST_REQUIRE(instance.gossiped(address_item{ 0, 0, cjdns_t{}, 42 }));
+
+    instance.gossip_ipv6 = false;
+    BOOST_REQUIRE(!instance.gossiped(address_item{ 0, 0, cjdns_t{}, 42 }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__gossiped__tor__gossip_tor)
+{
+    settings instance{ selection::mainnet };
+    instance.gossip_tor = true;
+    BOOST_REQUIRE(instance.gossiped(address_item{ 0, 0, torv3_t{}, 42 }));
+    BOOST_REQUIRE(instance.gossiped(address_item{ 0, 0, torv2_t{}, 42 }));
+
+    instance.gossip_tor = false;
+    BOOST_REQUIRE(!instance.gossiped(address_item{ 0, 0, torv3_t{}, 42 }));
+    BOOST_REQUIRE(!instance.gossiped(address_item{ 0, 0, torv2_t{}, 42 }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__gossiped__i2p__gossip_i2p)
+{
+    settings instance{ selection::mainnet };
+    instance.gossip_i2p = true;
+    BOOST_REQUIRE(instance.gossiped(address_item{ 0, 0, i2p_t{}, 42 }));
+
+    instance.gossip_i2p = false;
+    BOOST_REQUIRE(!instance.gossiped(address_item{ 0, 0, i2p_t{}, 42 }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__gossiped__unspecified__false)
+{
+    settings instance{ selection::mainnet };
+    instance.gossip_ipv4 = true;
+    instance.gossip_ipv6 = true;
+    instance.gossip_tor = true;
+    instance.gossip_i2p = true;
+    BOOST_REQUIRE(!instance.gossiped(address_item{}));
+}
+
+BOOST_AUTO_TEST_CASE(settings__gossip_v2__privacy_networks__expected)
+{
+    // Only tor and i2p addresses require the v2 address protocol.
+    settings instance{ selection::mainnet };
+    BOOST_REQUIRE(!instance.gossip_v2());
+
+    instance.gossip_ipv6 = true;
+    BOOST_REQUIRE(!instance.gossip_v2());
+
+    instance.gossip_tor = true;
+    BOOST_REQUIRE(instance.gossip_v2());
+
+    instance.gossip_tor = false;
+    instance.gossip_i2p = true;
+    BOOST_REQUIRE(instance.gossip_v2());
 }
 
 BOOST_AUTO_TEST_CASE(settings__peer_outbound_enabled__true_true_true__true)

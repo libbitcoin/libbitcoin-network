@@ -676,8 +676,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
     set.outbound.connections = 2;
     set.connect_timeout_seconds = 10000;
 
-    // Prevent default address from being rejected by use_ipv6 false.
-    set.outbound.use_ipv6 = true;
+    // Prevent default address from being rejected by gossip_ipv6 false.
+    set.gossip_ipv6 = true;
 
     // This invokes session.stop from within start_connect and then continues.
     // First channel is stopped for service_stopped and others for channel_dropped.
@@ -709,8 +709,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
     set.outbound.connections = 1;
     set.connect_timeout_seconds = 10000;
 
-    // Prevent default address from being rejected by use_ipv6 false.
-    set.outbound.use_ipv6 = true;
+    // Prevent default address from being rejected by gossip_ipv6 false.
+    set.gossip_ipv6 = true;
 
     // Started channel results in read failure.
     mock_net<mock_connector_connect_success> net(set, log);

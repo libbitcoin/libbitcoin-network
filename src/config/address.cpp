@@ -27,6 +27,130 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
+using namespace system;
+using address_t = messages::peer::address_t;
+using address_item = messages::peer::address_item;
+using torv3_t = messages::peer::torv3_t;
+using i2p_t = messages::peer::i2p_t;
+
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// Host names.
+// ----------------------------------------------------------------------------
+// Tor and i2p addresses are named, all other networks are ip addresses.
+
+constexpr auto onion_suffix = ".onion";
+constexpr auto i2p_suffix = ".b32.i2p";
+constexpr uint8_t onion_version = 3;
+constexpr auto onion_prefix = to_array(".onion checksum");
+constexpr auto onion_size = 56_size;
+constexpr auto i2p_size = 52_size;
+
+// The two byte checksum of the tor public key and address version.
+static data_array<2> to_checksum(const torv3_t& value) NOEXCEPT
+{
+    const auto preimage = build_array<48>(
+    {
+        onion_prefix, value.value, to_array(onion_version)
+    });
+
+    const auto digest = sha3_256::simple_hash(preimage);
+    return { digest.front(), digest.at(1) };
+}
+
+static std::string to_onion(const torv3_t& value) NOEXCEPT
+{
+    const auto payload = build_array<35>(
+    {
+        value.value, to_checksum(value), to_array(onion_version)
+    });
+
+    return ascii_to_lower(encode_base32(payload)) + onion_suffix;
+}
+
+static std::string to_i2p(const i2p_t& value) NOEXCEPT
+{
+    // Thirty two bytes encode to fifty two characters and four pads.
+    return ascii_to_lower(encode_base32(value.value).substr(zero, i2p_size)) +
+        i2p_suffix;
+}
+
+static bool from_onion(address_t& out, const std::string& name) NOEXCEPT
+{
+    data_chunk payload{};
+    if (name.size() != onion_size || !decode_base32(payload, name) ||
+        payload.size() != 35 || payload.back() != onion_version)
+        return false;
+
+    torv3_t value{};
+    std::copy_n(payload.begin(), value.value.size(), value.value.begin());
+    const auto checksum = to_checksum(value);
+    const auto start = std::next(payload.begin(), value.value.size());
+    if (!std::equal(checksum.begin(), checksum.end(), start))
+        return false;
+
+    out = value;
+    return true;
+}
+
+static bool from_i2p(address_t& out, const std::string& name) NOEXCEPT
+{
+    data_chunk payload{};
+    if (name.size() != i2p_size || !decode_base32(payload, name) ||
+        payload.size() != 32)
+        return false;
+
+    i2p_t value{};
+    std::copy(payload.begin(), payload.end(), value.value.begin());
+    out = value;
+    return true;
+}
+
+// False if the host is not a tor or i2p name (may still be an authority).
+static bool from_name(address_item& item, const std::string& token) NOEXCEPT
+{
+    const auto colon = token.rfind(':');
+    const auto host = token.substr(zero, colon);
+
+    address_t address{};
+    if (host.ends_with(onion_suffix))
+    {
+        if (!from_onion(address, host.substr(zero, host.size() -
+            std::char_traits<char>::length(onion_suffix))))
+            return false;
+    }
+    else if (host.ends_with(i2p_suffix))
+    {
+        if (!from_i2p(address, host.substr(zero, host.size() -
+            std::char_traits<char>::length(i2p_suffix))))
+            return false;
+    }
+    else
+    {
+        return false;
+    }
+
+    uint16_t port{};
+    if (colon != std::string::npos &&
+        !deserialize(port, token.substr(add1(colon))))
+        return false;
+
+    item =
+    {
+        messages::peer::unspecified_timestamp,
+        messages::peer::service::node_none, address, port
+    };
+
+    return true;
+}
+
+// True if the address has no host name (is an ip address).
+static bool is_ip(const address_t& address) NOEXCEPT
+{
+    return !std::holds_alternative<torv3_t>(address)
+        && !std::holds_alternative<i2p_t>(address);
+}
+
 // Constructors.
 // ----------------------------------------------------------------------------
 
@@ -71,6 +195,12 @@ asio::address address::to_ip() const NOEXCEPT
 
 std::string address::to_host() const NOEXCEPT
 {
+    if (const auto value = std::get_if<torv3_t>(&address_->address))
+        return to_onion(*value);
+
+    if (const auto value = std::get_if<i2p_t>(&address_->address))
+        return to_i2p(*value);
+
     return system::config::to_host(to_ip());
 }
 
@@ -178,7 +308,9 @@ std::istream& operator>>(std::istream& input,
     // Throws istream_exception if parse fails.
     // Sets default timestamp (0) and services (services::node_none).
     // IPv4 addresses are converted to IPv6-mapped for message encoding.
-    auto item = authority{ tokens.at(0) }.to_address_item();
+    messages::peer::address_item item{};
+    if (!from_name(item, tokens.at(0)))
+        item = authority{ tokens.at(0) }.to_address_item();
 
     if (tokens.size() > 1)
         if (!deserialize(item.timestamp, tokens.at(1)))
@@ -195,15 +327,19 @@ std::istream& operator>>(std::istream& input,
 std::ostream& operator<<(std::ostream& output,
     const address& argument) NOEXCEPT
 {
-    const authority host{ argument };
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    if (is_ip(argument.address_->address))
+        output << authority{ argument };
+    else
+        output << argument.to_host() << (!is_zero(argument.port()) ?
+            ":" + serialize(argument.port()) : "");
+
     output
-        << host
         << "/" << argument.address_->timestamp
         << "/" << argument.address_->services;
-    BC_POP_WARNING()
     return output;
 }
+
+BC_POP_WARNING()
 
 } // namespace config
 } // namespace network
