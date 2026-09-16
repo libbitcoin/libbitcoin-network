@@ -51,11 +51,8 @@ BOOST_AUTO_TEST_CASE(address_v2__size__two__expected)
 BOOST_AUTO_TEST_CASE(address_v2__serialize__two__expected)
 {
     const address_v2 message{ { { 0x12345678_u32, 1, ipv4_t{ mapped }, 8333 }, { 0x12345678_u32, 1, torv3_t{ onion }, 8333 } } };
-    data_chunk data{};
-    system::write::bytes::data sink(data);
-    message.serialize(level::bip155, sink);
-    sink.flush();
-    BOOST_REQUIRE(sink);
+    data_chunk data(message.size(level::bip155));
+    BOOST_REQUIRE(message.serialize(level::bip155, data));
     BOOST_REQUIRE_EQUAL(data, base16_chunk("027856341201010401020304208d7856341201042079bcc625184b05194975c28b66b66b0469f7f6556fb1ac3189a79b40dda32f1f208d"));
 }
 

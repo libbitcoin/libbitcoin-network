@@ -302,10 +302,9 @@ BOOST_AUTO_TEST_CASE(address_item__size_v2__large_services__variable_encoded)
 BOOST_AUTO_TEST_CASE(address_item__serialize_v2__unspecified__reserved_network_empty)
 {
     const address_item item{ 1, 0, {}, 0 };
-    data_chunk data{};
-    system::write::bytes::data sink(data);
+    data_chunk data(item.size_v2(level::bip155));
+    system::write::bytes::copy sink(data);
     item.serialize_v2(level::bip155, sink);
-    sink.flush();
     BOOST_REQUIRE(sink);
     BOOST_REQUIRE_EQUAL(data, base16_chunk("010000000000000000"));
 }
@@ -313,10 +312,9 @@ BOOST_AUTO_TEST_CASE(address_item__serialize_v2__unspecified__reserved_network_e
 BOOST_AUTO_TEST_CASE(address_item__serialize_v2__ipv4__four_byte_address)
 {
     const address_item item{ 0x12345678_u32, 1, ipv4_t{ v2_ipv4 }, 8333 };
-    data_chunk data{};
-    system::write::bytes::data sink(data);
+    data_chunk data(item.size_v2(level::bip155));
+    system::write::bytes::copy sink(data);
     item.serialize_v2(level::bip155, sink);
-    sink.flush();
     BOOST_REQUIRE(sink);
     BOOST_REQUIRE_EQUAL(data, base16_chunk("7856341201010401020304208d"));
 }
@@ -324,10 +322,9 @@ BOOST_AUTO_TEST_CASE(address_item__serialize_v2__ipv4__four_byte_address)
 BOOST_AUTO_TEST_CASE(address_item__serialize_v2__ipv6__expected)
 {
     const address_item item{ 0x12345678_u32, 1, ipv6_t{ v2_ipv6 }, 8333 };
-    data_chunk data{};
-    system::write::bytes::data sink(data);
+    data_chunk data(item.size_v2(level::bip155));
+    system::write::bytes::copy sink(data);
     item.serialize_v2(level::bip155, sink);
-    sink.flush();
     BOOST_REQUIRE(sink);
     BOOST_REQUIRE_EQUAL(data, base16_chunk("785634120102101a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b208d"));
 }
@@ -335,10 +332,9 @@ BOOST_AUTO_TEST_CASE(address_item__serialize_v2__ipv6__expected)
 BOOST_AUTO_TEST_CASE(address_item__serialize_v2__torv3__expected)
 {
     const address_item item{ 0x12345678_u32, 1, torv3_t{ v2_torv3 }, 8333 };
-    data_chunk data{};
-    system::write::bytes::data sink(data);
+    data_chunk data(item.size_v2(level::bip155));
+    system::write::bytes::copy sink(data);
     item.serialize_v2(level::bip155, sink);
-    sink.flush();
     BOOST_REQUIRE(sink);
     BOOST_REQUIRE_EQUAL(data, base16_chunk("7856341201042079bcc625184b05194975c28b66b66b0469f7f6556fb1ac3189a79b40dda32f1f208d"));
 }
@@ -346,10 +342,9 @@ BOOST_AUTO_TEST_CASE(address_item__serialize_v2__torv3__expected)
 BOOST_AUTO_TEST_CASE(address_item__serialize_v2__i2p__expected)
 {
     const address_item item{ 0x12345678_u32, 1, i2p_t{ v2_i2p }, 8333 };
-    data_chunk data{};
-    system::write::bytes::data sink(data);
+    data_chunk data(item.size_v2(level::bip155));
+    system::write::bytes::copy sink(data);
     item.serialize_v2(level::bip155, sink);
-    sink.flush();
     BOOST_REQUIRE(sink);
     BOOST_REQUIRE_EQUAL(data, base16_chunk("78563412010520a2894dabaec08c0051a481a6dac88b64f98232ae42d4b6fd2fa81952dfe36a87208d"));
 }
@@ -357,10 +352,9 @@ BOOST_AUTO_TEST_CASE(address_item__serialize_v2__i2p__expected)
 BOOST_AUTO_TEST_CASE(address_item__serialize_v2__cjdns__expected)
 {
     const address_item item{ 0x12345678_u32, 1, cjdns_t{ v2_cjdns }, 8333 };
-    data_chunk data{};
-    system::write::bytes::data sink(data);
+    data_chunk data(item.size_v2(level::bip155));
+    system::write::bytes::copy sink(data);
     item.serialize_v2(level::bip155, sink);
-    sink.flush();
     BOOST_REQUIRE(sink);
     BOOST_REQUIRE_EQUAL(data, base16_chunk("78563412010610fc000001000200030004000500060007208d"));
 }
