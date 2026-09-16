@@ -74,7 +74,7 @@ public:
     /// Usage.
     /// -----------------------------------------------------------------------
 
-    /// Take one random address from the table (non-const).
+    /// Take one random connectable address from the table (non-const).
     virtual void take(address_item_handler&& handler) NOEXCEPT;
 
     /// Store the address in the table (after use).
@@ -127,7 +127,6 @@ private:
     }
 
     // Inlines local to translation unit.
-    inline messages::peer::address_item::cptr pop() NOEXCEPT;
     inline void push(const messages::peer::address_item& host) NOEXCEPT;
     inline void push(const std::string& line) NOEXCEPT;
     inline bool is_reserved(const config::endpoint& host) const NOEXCEPT;

@@ -412,6 +412,8 @@ struct BCT_API settings
     virtual bool gossip_v2() const NOEXCEPT;
 
     /// Filters.
+    virtual bool connectable(
+        const messages::peer::address_item& item) const NOEXCEPT;
     virtual bool gossiped(
         const messages::peer::address_item& item) const NOEXCEPT;
     virtual bool unsupported(
