@@ -423,15 +423,16 @@ bool settings::gossiped(const address_item& item) const NOEXCEPT
 {
     switch (item.address.index())
     {
-        case ipv4_t::id: return gossip_ipv4;
-
-        // Cjdns is an ipv6 address, differentiated only by the address v2 id.
+        case ipv4_t::id:
+            return gossip_ipv4;
+        case ipv6_t::id:
         case cjdns_t::id:
-        case ipv6_t::id: return gossip_ipv6;
-
+            return gossip_ipv6;
         case torv2_t::id:
-        case torv3_t::id: return gossip_tor;
-        case i2p_t::id: return gossip_i2p;
+        case torv3_t::id:
+            return gossip_tor;
+        case i2p_t::id:
+            return gossip_i2p;
         default: return false;
     }
 }
