@@ -168,6 +168,7 @@
       <ObjectFileName>$(IntDir)test_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\address_item.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\detail\address_v2.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\alert_item.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\block.cpp" />

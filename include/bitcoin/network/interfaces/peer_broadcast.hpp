@@ -46,6 +46,7 @@ struct peer_broadcast
     static constexpr std::tuple messages
     {
         method<"addr", messages::peer::address::cptr, key>{},
+        method<"addrv2", messages::peer::address_v2::cptr, key>{},
         method<"alert", messages::peer::alert::cptr, key>{},
         method<"block", messages::peer::block::cptr, key>{},
         method<"filteradd", messages::peer::bloom_filter_add::cptr, key>{},

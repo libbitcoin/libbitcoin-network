@@ -252,6 +252,9 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\address_item.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\peer\detail\address_v2.cpp">
+      <Filter>src\messages\peer\detail</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\alert.cpp">
       <Filter>src\messages\peer\detail</Filter>
     </ClCompile>
@@ -864,6 +867,9 @@
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_item.hpp">
+      <Filter>include\bitcoin\network\messages\peer\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_v2.hpp">
       <Filter>include\bitcoin\network\messages\peer\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\alert.hpp">

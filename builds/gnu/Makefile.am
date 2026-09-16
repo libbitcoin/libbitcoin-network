@@ -75,6 +75,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/messages/peer/message.cpp \
     ${srcdir}/../../src/messages/peer/detail/address.cpp \
     ${srcdir}/../../src/messages/peer/detail/address_item.cpp \
+    ${srcdir}/../../src/messages/peer/detail/address_v2.cpp \
     ${srcdir}/../../src/messages/peer/detail/alert.cpp \
     ${srcdir}/../../src/messages/peer/detail/alert_item.cpp \
     ${srcdir}/../../src/messages/peer/detail/block.cpp \
@@ -399,6 +400,7 @@ include_bitcoin_network_messages_peer_detaildir = \
 include_bitcoin_network_messages_peer_detail_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/address.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/address_item.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/peer/detail/address_v2.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/alert.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/alert_item.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/peer/detail/block.hpp \
@@ -763,6 +765,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/messages/peer/message.cpp \
     ${srcdir}/../../test/messages/peer/detail/address.cpp \
     ${srcdir}/../../test/messages/peer/detail/address_item.cpp \
+    ${srcdir}/../../test/messages/peer/detail/address_v2.cpp \
     ${srcdir}/../../test/messages/peer/detail/alert.cpp \
     ${srcdir}/../../test/messages/peer/detail/alert_item.cpp \
     ${srcdir}/../../test/messages/peer/detail/block.cpp \

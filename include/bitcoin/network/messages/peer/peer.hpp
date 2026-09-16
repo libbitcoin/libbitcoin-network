@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/messages/peer/detail/address.hpp>
 #include <bitcoin/network/messages/peer/detail/address_item.hpp>
+#include <bitcoin/network/messages/peer/detail/address_v2.hpp>
 #include <bitcoin/network/messages/peer/detail/alert.hpp>
 #include <bitcoin/network/messages/peer/detail/alert_item.hpp>
 #include <bitcoin/network/messages/peer/detail/block.hpp>

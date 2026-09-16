@@ -31,6 +31,7 @@ namespace peer {
 
 /// Explicit limits.
 constexpr size_t max_address = 1'000;
+constexpr size_t max_address_bytes = 512;
 constexpr size_t max_bloom_filter_add = 520;
 constexpr size_t max_bloom_filter_functions = 50;
 constexpr size_t max_bloom_filter_load = 36'000;

@@ -42,6 +42,7 @@ struct peer_dispatch
     static constexpr std::tuple messages
     {
         method<"addr", messages::peer::address::cptr>{},
+        method<"addrv2", messages::peer::address_v2::cptr>{},
         method<"alert", messages::peer::alert::cptr>{},
         method<"block", messages::peer::block::cptr>{},
         method<"filteradd", messages::peer::bloom_filter_add::cptr>{},

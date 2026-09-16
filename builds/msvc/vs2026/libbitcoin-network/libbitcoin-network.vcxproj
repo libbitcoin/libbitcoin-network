@@ -156,6 +156,7 @@
       <ObjectFileName>$(IntDir)src_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\address_item.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\peer\detail\address_v2.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\alert.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\alert_item.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\block.cpp" />
@@ -376,6 +377,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_item.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\address_v2.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\alert.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\alert_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\detail\block.hpp" />
