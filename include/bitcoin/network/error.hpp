@@ -131,6 +131,20 @@ enum error_t : uint8_t
     socks_unassigned_failure,
     socks_response_invalid,
 
+    // sam
+    sam_response_invalid,
+    sam_no_version,
+    sam_cant_reach_peer,
+    sam_duplicated_dest,
+    sam_duplicated_id,
+    sam_i2p_error,
+    sam_invalid_id,
+    sam_invalid_key,
+    sam_key_not_found,
+    sam_peer_not_found,
+    sam_timeout,
+    sam_unassigned_failure,
+
     // boost
     system_unknown,
     misc_unknown,

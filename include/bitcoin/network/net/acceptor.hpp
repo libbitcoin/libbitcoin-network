@@ -34,7 +34,7 @@ namespace network {
 /// Create inbound socket connections.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API acceptor
-  : public std::enable_shared_from_this<acceptor>, public reporter,
+  : public enable_shared_from_base<acceptor>, public reporter,
     protected tracker<acceptor>
 {
 public:
@@ -81,6 +81,9 @@ protected:
     /// Start listening on the endpoint.
     virtual code start(const asio::endpoint& point) NOEXCEPT;
 
+    /// Override to inform socket construction.
+    virtual bool proxied() const NOEXCEPT;
+
     /// Running in the strand.
     bool stranded() const NOEXCEPT;
 
@@ -90,13 +93,13 @@ protected:
     std::atomic_bool& suspended_;
     const parameters parameters_;
 
+    /// Handler, overridable for proxied acceptor.
+    virtual void handle_accept(const code& ec, const socket::ptr& socket,
+        const socket_handler& handler) NOEXCEPT;
+
     // These are protected by strand.
     asio::acceptor acceptor_;
     bool stopped_{ true };
-
-private:
-    void handle_accept(const code& ec, const socket::ptr& socket,
-        const socket_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

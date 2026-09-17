@@ -227,6 +227,7 @@
     <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\acceptor_sam.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector_socks.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />

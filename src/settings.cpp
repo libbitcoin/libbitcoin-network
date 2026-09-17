@@ -49,6 +49,23 @@ bool settings::socks5::authenticated() const NOEXCEPT
     return !(username.empty() && password.empty());
 }
 
+// sam
+// ----------------------------------------------------------------------------
+
+settings::sam::sam() NOEXCEPT
+{
+}
+
+bool settings::sam::bridged() const NOEXCEPT
+{
+    return is_nonzero(bridge.port());
+}
+
+bool settings::sam::authenticated() const NOEXCEPT
+{
+    return !(username.empty() && password.empty());
+}
+
 // tcp_server
 // ----------------------------------------------------------------------------
 
@@ -303,12 +320,12 @@ config::address settings::peer_inbound::first_self() const NOEXCEPT
 
 bool settings::peer_inbound::advertise() const NOEXCEPT
 {
-    return enabled() && !selfs.empty();
+    return enabled() && (!selfs.empty() || bridged());
 }
 
 bool settings::peer_inbound::enabled() const NOEXCEPT
 {
-    return settings::tcp_server::enabled() && !binds.empty();
+    return settings::tcp_server::enabled() && (!binds.empty() || bridged());
 }
 
 // [manual]

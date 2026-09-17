@@ -119,6 +119,20 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { socks_unassigned_failure, "socks unassigned failure" },
     { socks_response_invalid, "socks response invalid" },
 
+    // sam
+    { sam_response_invalid, "sam response invalid" },
+    { sam_no_version, "sam version not supported" },
+    { sam_cant_reach_peer, "sam cannot reach peer" },
+    { sam_duplicated_dest, "sam duplicated destination" },
+    { sam_duplicated_id, "sam duplicated session" },
+    { sam_i2p_error, "sam i2p error" },
+    { sam_invalid_id, "sam invalid session" },
+    { sam_invalid_key, "sam invalid key" },
+    { sam_key_not_found, "sam key not found" },
+    { sam_peer_not_found, "sam peer not found" },
+    { sam_timeout, "sam timeout" },
+    { sam_unassigned_failure, "sam unassigned failure" },
+
     // boost
     { system_unknown, "system error" },
     { misc_unknown, "misc error" },

@@ -128,6 +128,12 @@ bool acceptor::stranded() const NOEXCEPT
     return strand_.running_in_this_thread();
 }
 
+// protected
+bool acceptor::proxied() const NOEXCEPT
+{
+    return false;
+}
+
 // Methods.
 // ----------------------------------------------------------------------------
 
@@ -149,7 +155,7 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
 
     // Create the inbound socket.
     const auto socket = std::make_shared<network::socket>(log, service_,
-        parameters_);
+        parameters_, proxied());
 
     // Posts handle_accept to the acceptor's strand.
     // Establishes a socket connection by waiting on the socket.

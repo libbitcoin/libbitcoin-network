@@ -63,6 +63,8 @@ protected:
 
 private:
     code do_accept(const config::authorities& binds) NOEXCEPT;
+    code do_accept(const acceptor::ptr& acceptor,
+        const config::authority& bind) NOEXCEPT;
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;

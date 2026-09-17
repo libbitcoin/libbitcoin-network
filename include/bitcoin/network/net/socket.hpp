@@ -62,9 +62,9 @@ public:
 
     DELETE_COPY_MOVE(socket);
 
-    /// Inbound connections.
+    /// Inbound connections (handshake is deferred to a proxied acceptor).
     socket(const logger& log, asio::context& service,
-        const parameters& params) NOEXCEPT;
+        const parameters& params, bool proxied=false) NOEXCEPT;
 
     /// Outbound connections.
     /// Endpoint represents the peer or client (non-proxy) that the connector
@@ -271,6 +271,11 @@ public:
     /// resolution for incoming and non-proxied outgoing. For a proxied
     /// connection (outgoing only) this is the value passed via construct.
     virtual const config::endpoint& endpoint() const NOEXCEPT;
+
+    /// Set the remote host address and endpoint (requires strand).
+    /// A proxied acceptor must invoke this once its negotiation has
+    /// established the connection to the peer (see handshake).
+    virtual void set_address(const config::address& address) NOEXCEPT;
 
 protected:
     using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;

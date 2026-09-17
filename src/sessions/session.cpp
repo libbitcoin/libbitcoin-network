@@ -353,6 +353,11 @@ acceptor::ptr session::create_acceptor(const socket::context& context) NOEXCEPT
     return network_.create_acceptor(context);
 }
 
+acceptor::ptr session::create_acceptor_sam() NOEXCEPT
+{
+    return network_.create_acceptor_sam();
+}
+
 // outbound (seed)
 connector::ptr session::create_seed_connector() NOEXCEPT
 {

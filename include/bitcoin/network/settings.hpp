@@ -86,6 +86,28 @@ struct BCT_API settings
         virtual bool authenticated() const NOEXCEPT;
     };
 
+    struct sam
+    {
+        DEFAULT_COPY_MOVE_DESTRUCT(sam);
+        sam() NOEXCEPT;
+
+        /// Bridge credentials are stored and passed in cleartext.
+        std::string username{};
+        std::string password{};
+
+        /// I2P sam bridge (default port convention is 7656, but not defaulted).
+        config::endpoint bridge{};
+
+        /// Destination private key file (base64), created if not existing.
+        system::config::path key_path{};
+
+        /// True if bridge::port is non-zero.
+        virtual bool bridged() const NOEXCEPT;
+
+        /// False if both username and password are empty.
+        virtual bool authenticated() const NOEXCEPT;
+    };
+
     struct tcp_server
     {
         DEFAULT_COPY_MOVE_DESTRUCT(tcp_server);
@@ -146,13 +168,13 @@ struct BCT_API settings
         std::string key_pass{};
 
         /// Path to server private key file (PEM).
-        std::filesystem::path key_path{};
+        system::config::path key_path{};
 
         /// Path to server certificate file (PEM).
-        std::filesystem::path cert_path{};
+        system::config::path cert_path{};
 
         /// Directory for CA certificates for client authentication (optional).
-        std::filesystem::path cert_auth{};
+        system::config::path cert_auth{};
 
         /// False if safes, certificate_path, or key_path is empty.
         bool secure() const NOEXCEPT override;
@@ -310,10 +332,10 @@ struct BCT_API settings
     };
     
     struct peer_inbound
-      : public tcp_server
+      : public tcp_server, public sam
     {
         peer_inbound(system::chain::selection context) NOEXCEPT
-          : tcp_server("inbound")
+          : tcp_server("inbound"), sam()
         {
             // Use emplace_back due to initializer_list bug:
             // stackoverflow.com/a/20168627/1172329
@@ -398,7 +420,7 @@ struct BCT_API settings
     uint32_t channel_heartbeat_minutes{ 5 };
     uint32_t maximum_skew_minutes{ 120 };
     std::string user_agent{ BC_USER_AGENT };
-    std::filesystem::path path{};
+    system::config::path path{};
 
     /// Helpers.
     virtual size_t threads_() const NOEXCEPT;

@@ -90,6 +90,13 @@ void socket::handle_accept(boost_code ec,
         return;
     }
 
+    // Defer handshake to the acceptor when connection is proxied.
+    if (proxied_)
+    {
+        handler(error::success);
+        return;
+    }
+
     // Not in socket strand.
     do_handshake(handler);
 }

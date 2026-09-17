@@ -97,7 +97,11 @@ address protocol_peer::selfs() const NOEXCEPT
 {
     const auto time_now = unix_time();
     const auto services = session_->services_provided();
-    const auto& selfs = network_settings().inbound.selfs;
+    auto selfs = network_settings().inbound.selfs;
+
+    // The sam session self is derived from its key, not configured.
+    if (const auto self = session_->sam_self())
+        selfs.push_back(self);
 
     address message{};
     message.addresses.reserve(selfs.size());

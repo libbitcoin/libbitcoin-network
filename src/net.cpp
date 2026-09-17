@@ -97,6 +97,26 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
         accept_suspended_, std::move(params));
 }
 
+// inbound (sam)
+acceptor::ptr net::create_acceptor_sam() NOEXCEPT
+{
+    const auto& settings = network_settings();
+
+    // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
+    socket::parameters params
+    {
+        .connect_timeout = settings.connect_timeout(),
+        .maximum_request = settings.inbound.maximum_request,
+        .context = provide_privacy_ ?
+            socket::context{ std::cref(p2ps_) } : socket::context{}
+    };
+
+    sam_ = emplace_shared<acceptor_sam>(log, strand(), service(),
+        accept_suspended_, std::move(params), settings.inbound);
+
+    return sam_;
+}
+
 // outbound (general)
 connector::ptr net::create_connector(const settings::socks5& socks,
     const steady_clock::duration& connect_timeout,
@@ -649,6 +669,14 @@ void net::do_save(const address_cptr& message,
     }
 
     hosts_.save(message, move_copy(handler));
+}
+
+// P2P self address.
+// ----------------------------------------------------------------------------
+
+config::address net::sam_self() const NOEXCEPT
+{
+    return sam_ ? sam_->self() : config::address{};
 }
 
 // P2P loopback detection.

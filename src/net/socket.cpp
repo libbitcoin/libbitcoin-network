@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2011-2026 libbitcoin developers
  *
  * This file is part of libbitcoin.
@@ -49,8 +49,8 @@ constexpr auto watch_interval = milliseconds(10);
 // ----------------------------------------------------------------------------
 
 socket::socket(const logger& log, asio::context& service,
-    const parameters& parameters) NOEXCEPT
-  : socket(log, service, parameters, {}, {}, false, true)
+    const parameters& parameters, bool proxied) NOEXCEPT
+  : socket(log, service, parameters, {}, {}, proxied, true)
 {
 }
 
@@ -200,6 +200,13 @@ const config::address& socket::address() const NOEXCEPT
 const config::endpoint& socket::endpoint() const NOEXCEPT
 {
     return endpoint_;
+}
+
+void socket::set_address(const config::address& address) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    address_ = address;
+    endpoint_ = address;
 }
 
 // Variant state (protected by strand).
