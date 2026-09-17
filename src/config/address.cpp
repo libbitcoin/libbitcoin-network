@@ -226,6 +226,11 @@ bool address::is_v6() const NOEXCEPT
     return messages::peer::is_v6(address_->address);
 }
 
+bool address::is_named() const NOEXCEPT
+{
+    return messages::peer::is_named(address_->address);
+}
+
 const messages::peer::ip_address& address::ip() const NOEXCEPT
 {
     return messages::peer::to_ip_address(address_->address);

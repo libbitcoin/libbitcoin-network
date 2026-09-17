@@ -26,6 +26,36 @@ using namespace boost::program_options;
 
 // construct
 
+BOOST_AUTO_TEST_CASE(endpoint__construct__onion_address__retains_name)
+{
+    const address host{ "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:42" };
+    const endpoint instance{ host };
+    BOOST_REQUIRE_EQUAL(instance.host(), "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion");
+    BOOST_REQUIRE_EQUAL(instance.port(), 42u);
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__construct__i2p_address__retains_name)
+{
+    const address host{ "ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p:42" };
+    const endpoint instance{ host };
+    BOOST_REQUIRE_EQUAL(instance.host(), "ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p");
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__construct__ipv6_address__literal_encoded)
+{
+    const address host{ "[2001:db8::2]:42" };
+    const endpoint instance{ host };
+    BOOST_REQUIRE_EQUAL(instance.host(), "[2001:db8::2]");
+    BOOST_REQUIRE_EQUAL(instance.to_string(), "[2001:db8::2]:42");
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__construct__ipv4_address__expected)
+{
+    const address host{ "42.42.42.42:42" };
+    const endpoint instance{ host };
+    BOOST_REQUIRE_EQUAL(instance.host(), "42.42.42.42");
+}
+
 BOOST_AUTO_TEST_CASE(endpoint__construct__empty__throws_invalid_option)
 {
     BOOST_REQUIRE_THROW(endpoint instance(""), invalid_option_value);

@@ -87,7 +87,8 @@ void protocol_version_70016::signal() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70016");
 
-    if (network_settings().gossip_v2() && negotiated_version() >= level::bip155)
+    if (network_settings().enable_address && network_settings().gossip_v2() &&
+        negotiated_version() >= level::bip155)
         SEND(send_address_v2{}, handle_send, _1);
 
     protocol_version_70002::signal();
