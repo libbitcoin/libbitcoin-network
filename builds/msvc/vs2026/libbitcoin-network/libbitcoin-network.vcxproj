@@ -203,6 +203,7 @@
     <ClCompile Include="..\..\..\..\src\messages\rpc\model.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\acceptor_sam.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector_socks.cpp" />
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp" />
@@ -441,6 +442,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor_sam.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector_socks.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp" />

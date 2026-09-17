@@ -655,6 +655,116 @@ BOOST_AUTO_TEST_CASE(error_t__code__socks_response_invalid__true_expected_messag
     BOOST_REQUIRE_EQUAL(ec.message(), "socks response invalid");
 }
 
+// sam
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_response_invalid__true_expected_message)
+{
+    constexpr auto value = error::sam_response_invalid;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam response invalid");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_no_version__true_expected_message)
+{
+    constexpr auto value = error::sam_no_version;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam version not supported");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_cant_reach_peer__true_expected_message)
+{
+    constexpr auto value = error::sam_cant_reach_peer;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam cannot reach peer");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_duplicated_dest__true_expected_message)
+{
+    constexpr auto value = error::sam_duplicated_dest;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam duplicated destination");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_duplicated_id__true_expected_message)
+{
+    constexpr auto value = error::sam_duplicated_id;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam duplicated session");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_i2p_error__true_expected_message)
+{
+    constexpr auto value = error::sam_i2p_error;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam i2p error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_invalid_id__true_expected_message)
+{
+    constexpr auto value = error::sam_invalid_id;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam invalid session");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_invalid_key__true_expected_message)
+{
+    constexpr auto value = error::sam_invalid_key;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam invalid key");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_key_not_found__true_expected_message)
+{
+    constexpr auto value = error::sam_key_not_found;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam key not found");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_peer_not_found__true_expected_message)
+{
+    constexpr auto value = error::sam_peer_not_found;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam peer not found");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_timeout__true_expected_message)
+{
+    constexpr auto value = error::sam_timeout;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam timeout");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__sam_unassigned_failure__true_expected_message)
+{
+    constexpr auto value = error::sam_unassigned_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "sam unassigned failure");
+}
+
 // boost
 
 BOOST_AUTO_TEST_CASE(error_t__code__system_unknown__true_expected_message)

@@ -408,6 +408,9 @@
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\acceptor_sam.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\connector.cpp">
       <Filter>src\net</Filter>
     </ClCompile>

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2011-2026 libbitcoin developers
  *
  * This file is part of libbitcoin.
@@ -200,6 +200,13 @@ const config::address& socket::address() const NOEXCEPT
 const config::endpoint& socket::endpoint() const NOEXCEPT
 {
     return endpoint_;
+}
+
+void socket::set_address(const config::address& address) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    address_ = address;
+    endpoint_ = address;
 }
 
 // Variant state (protected by strand).

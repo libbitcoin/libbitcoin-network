@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_NET_NET_HPP
 
 #include <bitcoin/network/net/acceptor.hpp>
+#include <bitcoin/network/net/acceptor_sam.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/connector_socks.hpp>
 #include <bitcoin/network/net/deadline.hpp>
