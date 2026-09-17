@@ -65,6 +65,11 @@ messages::peer::version protocol_version_106::version_factory(
 {
     const auto timestamp = unix_time();
 
+    // A named self is not representable here, so is sent fully unspecified.
+    const auto self = to_address(network_settings().inbound.first_self().ip());
+    const auto port = is_unspecified(self) ? unspecified_ip_port :
+        network_settings().inbound.first_self().port();
+
     return
     {
         maximum_version_,
@@ -95,8 +100,8 @@ messages::peer::version protocol_version_106::version_factory(
         {
             timestamp,
             provided_services_,
-            to_address(network_settings().inbound.first_self().ip()),
-            network_settings().inbound.first_self().port(),
+            self,
+            port
         },
 
         nonce(),
