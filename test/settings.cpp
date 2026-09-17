@@ -784,14 +784,14 @@ BOOST_AUTO_TEST_CASE(settings__peer_inbound_first_self__empty_selfs__default)
 {
     settings::peer_inbound instance{ system::chain::selection::mainnet };
     instance.selfs.clear();
-    BOOST_REQUIRE(instance.first_self() == config::authority{});
+    BOOST_REQUIRE(instance.first_self() == config::address{});
 }
 
 BOOST_AUTO_TEST_CASE(settings__peer_inbound_first_self__multiple_selfs__front)
 {
     settings::peer_inbound instance{ system::chain::selection::mainnet };
     instance.selfs.clear();
-    instance.selfs.push_back({ asio::address{}, 18333 });
+    instance.selfs.push_back(config::address{ "[::]:18333" });
     instance.selfs.emplace_back();
     BOOST_REQUIRE_EQUAL(instance.first_self(), instance.selfs.front());
 }

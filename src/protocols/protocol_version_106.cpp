@@ -95,7 +95,7 @@ messages::peer::version protocol_version_106::version_factory(
         {
             timestamp,
             provided_services_,
-            to_address(network_settings().inbound.first_self().to_ip_address()),
+            to_address(network_settings().inbound.first_self().ip()),
             network_settings().inbound.first_self().port(),
         },
 

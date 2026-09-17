@@ -254,7 +254,7 @@ struct BCT_API settings
         }
 
         config::endpoints peers{};
-        config::authorities friends{};
+        config::addresses friends{};
 
         /// Helpers.
         void initialize() NOEXCEPT;
@@ -339,12 +339,12 @@ struct BCT_API settings
         }
 
         bool enable_loopback{ false };
-        config::authorities selfs{};
+        config::addresses selfs{};
 
         /// Helpers.
         bool advertise() const NOEXCEPT;
         bool enabled() const NOEXCEPT override;
-        config::authority first_self() const NOEXCEPT;
+        config::address first_self() const NOEXCEPT;
     };
 
     DEFAULT_COPY_MOVE_DESTRUCT(settings);

@@ -296,9 +296,9 @@ steady_clock::duration settings::peer_outbound::seeding_timeout() const NOEXCEPT
 // [inbound]
 // ----------------------------------------------------------------------------
 
-config::authority settings::peer_inbound::first_self() const NOEXCEPT
+config::address settings::peer_inbound::first_self() const NOEXCEPT
 {
-    return selfs.empty() ? config::authority{} : selfs.front();
+    return selfs.empty() ? config::address{} : selfs.front();
 }
 
 bool settings::peer_inbound::advertise() const NOEXCEPT
@@ -321,7 +321,7 @@ void settings::peer_manual::initialize() NOEXCEPT
     // Dynamic conversion of peers is O(N^2), so set on initialize.
     // This converts endpoints to addresses so will produce the default
     // address for any hosts that are DNS names (i.e. not IP addresses).
-    friends = system::projection<network::config::authorities>(peers);
+    friends = system::projection<network::config::addresses>(peers);
 }
 
 bool settings::peer_manual::peered(const address_item& item) const NOEXCEPT
