@@ -38,8 +38,10 @@ using namespace system;
 using namespace std::placeholders;
 
 net::net(const settings& settings, const logger& log,
-    uint64_t required_services) NOEXCEPT
+    uint64_t required_services, uint64_t provided_services) NOEXCEPT
   : settings_(settings),
+    provide_privacy_(get_right(provided_services, right_zeros<uint64_t>(
+        messages::peer::service::node_encrypted_transport))),
     p2ps_{ settings.identifier },
     threadpool_(settings.threads_()),
     strand_(threadpool_.service().get_executor()),
@@ -80,7 +82,7 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
     const auto& settings = network_settings();
 
     // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
-    const auto accept = settings.enable_privacy &&
+    const auto accept = provide_privacy_ &&
         std::holds_alternative<std::monostate>(context) ?
             socket::context{ std::cref(p2ps_) } : context;
 
@@ -106,7 +108,7 @@ connector::ptr net::create_connector(const settings::socks5& socks,
         .maximum_request = maximum_request
     };
 
-    if (network_settings().enable_privacy)
+    if (provide_privacy_)
         params.context = std::cref(p2ps_);
 
     if (socks.proxied())
