@@ -90,13 +90,13 @@ protected:
     std::atomic_bool& suspended_;
     const parameters parameters_;
 
+    /// Handler, overridable for proxied acceptor.
+    virtual void handle_accept(const code& ec, const socket::ptr& socket,
+        const socket_handler& handler) NOEXCEPT;
+
     // These are protected by strand.
     asio::acceptor acceptor_;
     bool stopped_{ true };
-
-private:
-    void handle_accept(const code& ec, const socket::ptr& socket,
-        const socket_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

@@ -49,6 +49,23 @@ bool settings::socks5::authenticated() const NOEXCEPT
     return !(username.empty() && password.empty());
 }
 
+// sam
+// ----------------------------------------------------------------------------
+
+settings::sam::sam() NOEXCEPT
+{
+}
+
+bool settings::sam::bridged() const NOEXCEPT
+{
+    return is_nonzero(bridge.port());
+}
+
+bool settings::sam::authenticated() const NOEXCEPT
+{
+    return !(username.empty() && password.empty());
+}
+
 // tcp_server
 // ----------------------------------------------------------------------------
 

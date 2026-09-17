@@ -86,6 +86,28 @@ struct BCT_API settings
         virtual bool authenticated() const NOEXCEPT;
     };
 
+    struct sam
+    {
+        DEFAULT_COPY_MOVE_DESTRUCT(sam);
+        sam() NOEXCEPT;
+
+        /// Bridge credentials are stored and passed in cleartext.
+        std::string username{};
+        std::string password{};
+
+        /// I2P sam bridge (default port convention is 7656, but not defaulted).
+        config::endpoint bridge{};
+
+        /// Destination private key file (base64), created if not existing.
+        std::filesystem::path key_path{};
+
+        /// True if bridge::port is non-zero.
+        virtual bool bridged() const NOEXCEPT;
+
+        /// False if both username and password are empty.
+        virtual bool authenticated() const NOEXCEPT;
+    };
+
     struct tcp_server
     {
         DEFAULT_COPY_MOVE_DESTRUCT(tcp_server);
@@ -310,10 +332,10 @@ struct BCT_API settings
     };
     
     struct peer_inbound
-      : public tcp_server
+      : public tcp_server, public sam
     {
         peer_inbound(system::chain::selection context) NOEXCEPT
-          : tcp_server("inbound")
+          : tcp_server("inbound"), sam()
         {
             // Use emplace_back due to initializer_list bug:
             // stackoverflow.com/a/20168627/1172329
