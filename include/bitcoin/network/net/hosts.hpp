@@ -133,13 +133,6 @@ private:
     inline void increment(const messages::peer::address_t& address) NOEXCEPT;
     inline void decrement(const messages::peer::address_t& address) NOEXCEPT;
 
-    void do_take(const address_item_handler& handler) NOEXCEPT;
-    void do_restore(const address_item_cptr& host,
-        const result_handler& handler) NOEXCEPT;
-    void do_fetch(const address_handler& handler) const NOEXCEPT;
-    void do_save(const address_cptr& message,
-        const count_handler& handler) NOEXCEPT;
-
     // These are thread safe.
     const settings& settings_;
     const uint64_t required_;
