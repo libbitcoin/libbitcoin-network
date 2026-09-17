@@ -62,11 +62,13 @@ public:
 
     /// Construct an instance from config.
     net(const configuration& config, const logger& log,
-        uint64_t required_services=messages::peer::service::node_none) NOEXCEPT;
+        uint64_t required_services=messages::peer::service::node_none,
+        uint64_t provided_services=messages::peer::service::node_none) NOEXCEPT;
 
     /// Construct an instance from settings (deprecated).
     net(const settings& settings, const logger& log,
-        uint64_t required_services=messages::peer::service::node_none) NOEXCEPT;
+        uint64_t required_services=messages::peer::service::node_none,
+        uint64_t provided_services=messages::peer::service::node_none) NOEXCEPT;
 
     /// Calls close().
     virtual ~net() NOEXCEPT;
@@ -321,6 +323,7 @@ private:
 
     // These are thread safe.
     const settings& settings_;
+    const bool provide_privacy_;
     const p2ps::context p2ps_{};
     std::atomic_bool closed_{ false };
     std::atomic_bool accept_suspended_{ false };

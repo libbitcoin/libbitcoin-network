@@ -296,9 +296,9 @@ steady_clock::duration settings::peer_outbound::seeding_timeout() const NOEXCEPT
 // [inbound]
 // ----------------------------------------------------------------------------
 
-config::authority settings::peer_inbound::first_self() const NOEXCEPT
+config::address settings::peer_inbound::first_self() const NOEXCEPT
 {
-    return selfs.empty() ? config::authority{} : selfs.front();
+    return selfs.empty() ? config::address{} : selfs.front();
 }
 
 bool settings::peer_inbound::advertise() const NOEXCEPT
@@ -321,7 +321,7 @@ void settings::peer_manual::initialize() NOEXCEPT
     // Dynamic conversion of peers is O(N^2), so set on initialize.
     // This converts endpoints to addresses so will produce the default
     // address for any hosts that are DNS names (i.e. not IP addresses).
-    friends = system::projection<network::config::authorities>(peers);
+    friends = system::projection<network::config::addresses>(peers);
 }
 
 bool settings::peer_manual::peered(const address_item& item) const NOEXCEPT
@@ -415,23 +415,25 @@ bool settings::gossip_v2() const NOEXCEPT
 
 bool settings::connectable(const address_item& item) const NOEXCEPT
 {
-    // Only ip addresses are routable, others require a proxy transport.
-    return is_v4(item.address) || is_v6(item.address);
+    // A proxy connects by name, otherwise only an ip address is routable.
+    return is_v4(item.address) || is_v6(item.address) ||
+        (outbound.proxied() && is_named(item.address));
 }
 
 bool settings::gossiped(const address_item& item) const NOEXCEPT
 {
     switch (item.address.index())
     {
-        case ipv4_t::id: return gossip_ipv4;
-
-        // Cjdns is an ipv6 address, differentiated only by the address v2 id.
+        case ipv4_t::id:
+            return gossip_ipv4;
+        case ipv6_t::id:
         case cjdns_t::id:
-        case ipv6_t::id: return gossip_ipv6;
-
+            return gossip_ipv6;
         case torv2_t::id:
-        case torv3_t::id: return gossip_tor;
-        case i2p_t::id: return gossip_i2p;
+        case torv3_t::id:
+            return gossip_tor;
+        case i2p_t::id:
+            return gossip_i2p;
         default: return false;
     }
 }

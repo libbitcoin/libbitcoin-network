@@ -226,6 +226,17 @@ bool address::is_v6() const NOEXCEPT
     return messages::peer::is_v6(address_->address);
 }
 
+messages::peer::address_item address::to_address_item(uint32_t timestamp,
+    uint64_t services) const NOEXCEPT
+{
+    return { timestamp, services, address_->address, port() };
+}
+
+bool address::is_named() const NOEXCEPT
+{
+    return messages::peer::is_named(address_->address);
+}
+
 const messages::peer::ip_address& address::ip() const NOEXCEPT
 {
     return messages::peer::to_ip_address(address_->address);

@@ -26,8 +26,11 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
+// Named addresses have no ip, and ip addresses are literal encoded.
 endpoint::endpoint(const address& address) NOEXCEPT
-  : endpoint(address.to_ip(), address.port())
+  : endpoint(address.is_named() ?
+        endpoint{ address.to_host(), address.port() } :
+        endpoint{ address.to_ip(), address.port() })
 {
 }
 

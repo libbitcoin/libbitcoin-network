@@ -60,12 +60,17 @@ public:
     /// [IPv6]|IPv4[:8333]/timestamp/services (IPv6 [literal]).
     std::string to_string() const NOEXCEPT;
 
+    /// The address item with the given timestamp and services.
+    messages::peer::address_item to_address_item(uint32_t timestamp,
+        uint64_t services) const NOEXCEPT;
+
     /// Properties.
     /// -----------------------------------------------------------------------
 
     /// The address properties.
     bool is_v4() const NOEXCEPT;
     bool is_v6() const NOEXCEPT;
+    bool is_named() const NOEXCEPT;
     const messages::peer::ip_address& ip() const NOEXCEPT;
     uint16_t port() const NOEXCEPT;
     uint32_t timestamp() const NOEXCEPT;

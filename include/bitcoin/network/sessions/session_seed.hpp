@@ -47,9 +47,6 @@ public:
     void start(result_handler&& handler) NOEXCEPT override;
 
 protected:
-    /// Seeding provides no node services.
-    uint64_t services_provided() const NOEXCEPT override;
-
     /// Overridden to set service and version minimums upon session start.
     void attach_handshake(const channel::ptr& channel,
         result_handler&& handler) NOEXCEPT override;

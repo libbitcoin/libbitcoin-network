@@ -172,11 +172,6 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
         BIND(handle_channel_stop, _1, channel, racer));
 }
 
-uint64_t session_seed::services_provided() const NOEXCEPT
-{
-    return messages::peer::service::node_none;
-}
-
 void session_seed::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) NOEXCEPT
 {
