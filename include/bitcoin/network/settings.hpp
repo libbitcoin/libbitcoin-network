@@ -99,7 +99,7 @@ struct BCT_API settings
         config::endpoint bridge{};
 
         /// Destination private key file (base64), created if not existing.
-        std::filesystem::path key_path{};
+        system::config::path key_path{};
 
         /// True if bridge::port is non-zero.
         virtual bool bridged() const NOEXCEPT;
@@ -168,13 +168,13 @@ struct BCT_API settings
         std::string key_pass{};
 
         /// Path to server private key file (PEM).
-        std::filesystem::path key_path{};
+        system::config::path key_path{};
 
         /// Path to server certificate file (PEM).
-        std::filesystem::path cert_path{};
+        system::config::path cert_path{};
 
         /// Directory for CA certificates for client authentication (optional).
-        std::filesystem::path cert_auth{};
+        system::config::path cert_auth{};
 
         /// False if safes, certificate_path, or key_path is empty.
         bool secure() const NOEXCEPT override;
@@ -420,7 +420,7 @@ struct BCT_API settings
     uint32_t channel_heartbeat_minutes{ 5 };
     uint32_t maximum_skew_minutes{ 120 };
     std::string user_agent{ BC_USER_AGENT };
-    std::filesystem::path path{};
+    system::config::path path{};
 
     /// Helpers.
     virtual size_t threads_() const NOEXCEPT;
