@@ -62,9 +62,9 @@ public:
 
     DELETE_COPY_MOVE(socket);
 
-    /// Inbound connections.
+    /// Inbound connections (handshake is deferred to a proxied acceptor).
     socket(const logger& log, asio::context& service,
-        const parameters& params) NOEXCEPT;
+        const parameters& params, bool proxied=false) NOEXCEPT;
 
     /// Outbound connections.
     /// Endpoint represents the peer or client (non-proxy) that the connector

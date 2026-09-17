@@ -49,8 +49,8 @@ constexpr auto watch_interval = milliseconds(10);
 // ----------------------------------------------------------------------------
 
 socket::socket(const logger& log, asio::context& service,
-    const parameters& parameters) NOEXCEPT
-  : socket(log, service, parameters, {}, {}, false, true)
+    const parameters& parameters, bool proxied) NOEXCEPT
+  : socket(log, service, parameters, {}, {}, proxied, true)
 {
 }
 

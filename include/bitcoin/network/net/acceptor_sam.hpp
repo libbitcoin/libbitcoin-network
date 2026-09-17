@@ -50,7 +50,7 @@ public:
         asio::context& service, std::atomic_bool& suspended,
         parameters&& parameters, const settings::sam& sam) NOEXCEPT;
 
-    /// The session destination address, unspecified until created.
+    /// The destination address derived from the stored key (else unspecified).
     virtual config::address self() const NOEXCEPT;
 
     /// Acceptor overrides (the local binding is ignored).
@@ -60,6 +60,9 @@ public:
 
 protected:
     static code sam_result(const std::string& value) NOEXCEPT;
+
+    /// Acceptor overrides.
+    bool proxied() const NOEXCEPT override;
 
     /// Reads the peer destination line prefixed to each forwarded stream.
     void handle_accept(const code& ec, const socket::ptr& socket,
@@ -92,7 +95,7 @@ private:
         const line_ptr& line, bool transient,
         const socket_handler& handler) NOEXCEPT;
     void do_session_ready(const socket::ptr& socket,
-        const config::address& self, const socket_handler& handler) NOEXCEPT;
+        const socket_handler& handler) NOEXCEPT;
 
     // sam forward (control socket)
     void handle_forward_connect(const code& ec, const socket::ptr& socket,
@@ -113,6 +116,8 @@ private:
     // sam accept (forwarded data socket)
     void handle_peer(const code& ec, const socket::ptr& socket,
         const line_ptr& line, const socket_handler& handler) NOEXCEPT;
+    void handle_handshake(const code& ec, const socket::ptr& socket,
+        const socket_handler& handler) NOEXCEPT;
 
     // key persistence
     bool load_key(std::string& out) const NOEXCEPT;
@@ -121,11 +126,13 @@ private:
     // This is thread safe.
     const settings::sam& sam_;
 
+    // Set on start, then thread safe.
+    config::address self_{};
+
     // These are protected by strand.
     connector::ptr connector_{};
     socket::ptr session_{};
     socket::ptr forward_{};
-    config::address self_{};
     std::string id_{};
 };
 

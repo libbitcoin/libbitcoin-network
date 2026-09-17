@@ -81,6 +81,9 @@ protected:
     /// Start listening on the endpoint.
     virtual code start(const asio::endpoint& point) NOEXCEPT;
 
+    /// Override to inform socket construction.
+    virtual bool proxied() const NOEXCEPT;
+
     /// Running in the strand.
     bool stranded() const NOEXCEPT;
 

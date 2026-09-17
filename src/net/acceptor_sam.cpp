@@ -217,6 +217,17 @@ static config::address to_address(const data_chunk& destination) NOEXCEPT
     };
 }
 
+// The address of a stored private key (base64), unspecified if invalid.
+static config::address to_self(const std::string& key) NOEXCEPT
+{
+    data_chunk private_key{};
+    if (!decode_base64(private_key, key))
+        return {};
+
+    const auto destination = to_destination(private_key);
+    return destination.empty() ? config::address{} : to_address(destination);
+}
+
 static std::string to_session_id() NOEXCEPT
 {
     data_array<8> entropy{};
@@ -280,6 +291,11 @@ code acceptor_sam::start(const config::authority&) NOEXCEPT
     if (const auto ec = acceptor::start(loopback))
         return ec;
 
+    // A transient session is not advertised, its key is persisted for restart.
+    std::string key{};
+    if (load_key(key))
+        self_ = to_self(key);
+
     auto params = parameters_;
     connector_ = emplace_shared<connector>(log, strand_, service_,
         suspended_, std::move(params));
@@ -304,6 +320,11 @@ void acceptor_sam::stop() NOEXCEPT
 config::address acceptor_sam::self() const NOEXCEPT
 {
     return self_;
+}
+
+bool acceptor_sam::proxied() const NOEXCEPT
+{
+    return true;
 }
 
 // Methods.
@@ -525,12 +546,11 @@ void acceptor_sam::handle_session_create(const code& ec,
 
     boost::asio::post(strand_,
         std::bind(&acceptor_sam::do_session_ready,
-            shared_from_base<acceptor_sam>(), socket, to_address(destination),
-                handler));
+            shared_from_base<acceptor_sam>(), socket, handler));
 }
 
 void acceptor_sam::do_session_ready(const socket::ptr& socket,
-    const config::address& self, const socket_handler& handler) NOEXCEPT
+    const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -542,7 +562,6 @@ void acceptor_sam::do_session_ready(const socket::ptr& socket,
     }
 
     session_ = socket;
-    self_ = self;
 
     // The bridge closes the control socket when the session is destroyed.
     session_->watch(
@@ -692,7 +711,6 @@ void acceptor_sam::do_teardown() NOEXCEPT
 
     forward_.reset();
     session_.reset();
-    self_ = {};
 }
 
 // sam accept (forwarded data socket)
@@ -734,7 +752,17 @@ void acceptor_sam::handle_peer(const code& ec, const socket::ptr& socket,
     }
 
     socket->set_address(to_address(destination));
-    acceptor::handle_accept(error::success, socket, handler);
+
+    // The handshake is deferred by the proxied socket until peer identification.
+    socket->handshake(
+        std::bind(&acceptor_sam::handle_handshake,
+            shared_from_base<acceptor_sam>(), _1, socket, handler));
+}
+
+void acceptor_sam::handle_handshake(const code& ec,
+    const socket::ptr& socket, const socket_handler& handler) NOEXCEPT
+{
+    acceptor::handle_accept(ec, socket, handler);
 }
 
 // key persistence
