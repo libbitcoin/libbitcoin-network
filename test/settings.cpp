@@ -702,6 +702,26 @@ BOOST_AUTO_TEST_CASE(settings__peer_inbound_enabled__nonzero_nonempty__true)
     BOOST_REQUIRE(instance.enabled());
 }
 
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_enabled__nonzero_bridged__true)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.binds.clear();
+    instance.bridge = { "127.0.0.1:7656" };
+    BOOST_REQUIRE(instance.bridged());
+    BOOST_REQUIRE(instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__bridged_no_selfs__true)
+{
+    settings::peer_inbound instance{ system::chain::selection::mainnet };
+    instance.connections = 42;
+    instance.binds.clear();
+    instance.selfs.clear();
+    instance.bridge = { "127.0.0.1:7656" };
+    BOOST_REQUIRE(instance.advertise());
+}
+
 BOOST_AUTO_TEST_CASE(settings__peer_inbound_advertise__default__false)
 {
     settings::peer_inbound instance{ system::chain::selection::mainnet };

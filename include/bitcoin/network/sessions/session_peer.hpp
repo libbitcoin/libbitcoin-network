@@ -62,6 +62,9 @@ public:
     /// Number of entries in the address pool.
     virtual size_t address_count() const NOEXCEPT;
 
+    /// The sam session self address (unspecified if not bridged).
+    virtual config::address sam_self() const NOEXCEPT;
+
 protected:
     /// Constructors.
     /// -----------------------------------------------------------------------

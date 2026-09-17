@@ -86,25 +86,36 @@ code session_inbound::do_accept(const config::authorities& binds) NOEXCEPT
     BC_ASSERT(stranded());
 
     for (const auto& bind: binds)
-    {
-        const auto acceptor = create_acceptor();
-
-        // Require that all acceptors at least start.
-        if (const auto ec = acceptor->start(bind))
+        if (const auto ec = do_accept(create_acceptor(), bind))
             return ec;
 
-        LOGN("Bound to peer endpoint [" << acceptor->local() << "].");
+    // The sam bridge is treated as a single bind.
+    if (network_settings().inbound.bridged())
+        if (const auto ec = do_accept(create_acceptor_sam(), {}))
+            return ec;
 
-        // Subscribe acceptor to stop desubscriber.
-        subscribe_stop([=](const code&) NOEXCEPT
-        {
-            acceptor->stop();
-            return false;
-        });
+    return error::success;
+}
 
-        start_accept(error::success, acceptor);
-    }
+code session_inbound::do_accept(const acceptor::ptr& acceptor,
+    const config::authority& bind) NOEXCEPT
+{
+    BC_ASSERT(stranded());
 
+    // Require that all acceptors at least start.
+    if (const auto ec = acceptor->start(bind))
+        return ec;
+
+    LOGN("Bound to peer endpoint [" << acceptor->local() << "].");
+
+    // Subscribe acceptor to stop desubscriber.
+    subscribe_stop([=](const code&) NOEXCEPT
+    {
+        acceptor->stop();
+        return false;
+    });
+
+    start_accept(error::success, acceptor);
     return error::success;
 }
 

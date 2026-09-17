@@ -320,12 +320,12 @@ config::address settings::peer_inbound::first_self() const NOEXCEPT
 
 bool settings::peer_inbound::advertise() const NOEXCEPT
 {
-    return enabled() && !selfs.empty();
+    return enabled() && (!selfs.empty() || bridged());
 }
 
 bool settings::peer_inbound::enabled() const NOEXCEPT
 {
-    return settings::tcp_server::enabled() && !binds.empty();
+    return settings::tcp_server::enabled() && (!binds.empty() || bridged());
 }
 
 // [manual]
