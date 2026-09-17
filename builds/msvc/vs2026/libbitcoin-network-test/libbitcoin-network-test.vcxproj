@@ -255,6 +255,7 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_70016.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />

@@ -518,6 +518,64 @@ BOOST_AUTO_TEST_CASE(hosts__restore__duplicate_authority__updated)
 
 // fetch
 
+// file round trip
+
+BOOST_AUTO_TEST_CASE(hosts__stop__named_address__round_trips)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.gossip_tor = true;
+
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    std::promise<code> promise_restore{};
+    instance.restore(system::to_shared(onion42), [&](const code& ec) NOEXCEPT
+    {
+        promise_restore.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_restore.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.counts().at(torv3_t::id), 1u);
+    BOOST_REQUIRE_EQUAL(instance.stop(), error::success);
+    BOOST_REQUIRE(test::exists(TEST_NAME));
+
+    hosts reloaded(set, log);
+    BOOST_REQUIRE_EQUAL(reloaded.start(), error::success);
+    BOOST_REQUIRE_EQUAL(reloaded.count(), 1u);
+    BOOST_REQUIRE_EQUAL(reloaded.counts().at(torv3_t::id), 1u);
+    BOOST_REQUIRE_EQUAL(reloaded.stop(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__named_address_not_gossiped__purged)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.gossip_tor = true;
+
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    std::promise<code> promise_restore{};
+    instance.restore(system::to_shared(onion42), [&](const code& ec) NOEXCEPT
+    {
+        promise_restore.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_restore.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.stop(), error::success);
+
+    set.gossip_tor = false;
+    hosts reloaded(set, log);
+    BOOST_REQUIRE_EQUAL(reloaded.start(), error::success);
+    BOOST_REQUIRE_EQUAL(reloaded.count(), 0u);
+    BOOST_REQUIRE_EQUAL(reloaded.stop(), error::success);
+}
+
 BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 {
     const logger log{};

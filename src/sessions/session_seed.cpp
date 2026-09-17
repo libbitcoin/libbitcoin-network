@@ -244,8 +244,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
     // Seed protocol stops upon completion, causing session removal.
     if (peer->is_negotiated(level::bip155) && address_v2)
     {
-        channel->attach<protocol_seed_209>(self)->start();
-        ////channel->attach<protocol_seed_70016>(self)->start();
+        channel->attach<protocol_seed_70016>(self)->start();
     }
     else if (peer->is_negotiated(level::get_address_message))
     {
