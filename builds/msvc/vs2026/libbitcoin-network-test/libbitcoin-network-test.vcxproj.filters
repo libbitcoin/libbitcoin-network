@@ -468,6 +468,9 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_70016.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>

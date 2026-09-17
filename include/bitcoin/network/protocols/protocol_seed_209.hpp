@@ -46,6 +46,10 @@ public:
     void stopping(const code& ec) NOEXCEPT override;
 
 protected:
+    virtual void subscribe_address() NOEXCEPT;
+    virtual void send_addresses(
+        const messages::peer::address& message) NOEXCEPT;
+
     virtual bool complete() const NOEXCEPT;
     virtual void handle_timer(const code& ec) NOEXCEPT;
 

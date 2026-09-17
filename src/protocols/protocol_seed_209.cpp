@@ -57,11 +57,28 @@ void protocol_seed_209::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE_CHANNEL(address, handle_receive_address, _1, _2);
+    subscribe_address();
     SUBSCRIBE_CHANNEL(get_address, handle_receive_get_address, _1, _2);
     SEND(get_address{}, handle_send_get_address, _1);
 
     protocol::start();
+}
+
+void protocol_seed_209::subscribe_address() NOEXCEPT
+{
+    SUBSCRIBE_CHANNEL(address, handle_receive_address, _1, _2);
+}
+
+// The v1 protocol represents only ipv4 and ipv6 addresses.
+void protocol_seed_209::send_addresses(const address& message) NOEXCEPT
+{
+    address representable{ message.addresses };
+    std::erase_if(representable.addresses, [](const address_item& item) NOEXCEPT
+    {
+        return !is_v1(item.address);
+    });
+
+    SEND(representable, handle_send_address, _1);
 }
 
 bool protocol_seed_209::complete() const NOEXCEPT
@@ -208,7 +225,7 @@ bool protocol_seed_209::handle_receive_get_address(const code& ec,
     // Advertise self if configured for inbound and with self address(es).
     if (network_settings().inbound.advertise())
     {
-        SEND(selfs(), handle_send_address, _1);
+        send_addresses(selfs());
         return true;
     }
 
