@@ -434,7 +434,7 @@ bool settings::connectable(const address_item& item) const NOEXCEPT
 {
     // A proxy connects by name, otherwise only an ip address is routable.
     return is_v4(item.address) || is_v6(item.address) ||
-        (outbound.proxied() && is_named(item.address));
+        is_cjdns(item.address) || (outbound.proxied() && is_named(item.address));
 }
 
 bool settings::gossiped(const address_item& item) const NOEXCEPT

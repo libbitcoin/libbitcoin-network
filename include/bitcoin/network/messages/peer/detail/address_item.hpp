@@ -117,6 +117,12 @@ constexpr bool is_v1(const address_t& address) NOEXCEPT
     return is_v4(address) || is_v6(address);
 }
 
+/// True if the address is a cjdns address (an ip address, routed as v6).
+constexpr bool is_cjdns(const address_t& address) NOEXCEPT
+{
+    return std::holds_alternative<cjdns_t>(address);
+}
+
 /// True if the address is expressed as a host name (bip155 tor v3, i2p).
 constexpr bool is_named(const address_t& address) NOEXCEPT
 {
@@ -140,7 +146,7 @@ constexpr bool is_unspecified(const address_t& address) NOEXCEPT
 /// The v1 classification of an ip address (v4 is v6-mapped).
 BCT_API address_t to_address(const ip_address& ip) NOEXCEPT;
 
-/// The ip address, unspecified if the address is not an ip network.
+/// The ip address, unspecified if the address has no ip form.
 BCT_API const ip_address& to_ip_address(const address_t& address) NOEXCEPT;
 
 /// Hash of the network identifier and the address bytes.

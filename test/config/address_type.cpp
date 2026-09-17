@@ -104,6 +104,17 @@ BOOST_AUTO_TEST_CASE(address_type__to_ip_address__ipv6__expected)
     BOOST_REQUIRE_EQUAL(to_ip_address(address_t{ ipv6_t{ loopback_ip_address } }), loopback_ip_address);
 }
 
+BOOST_AUTO_TEST_CASE(address_type__to_ip_address__cjdns__expected)
+{
+    constexpr ip_address cjdns
+    {
+        0xfc, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x03,
+        0x00, 0x04, 0x00, 0x05, 0x00, 0x06, 0x00, 0x07
+    };
+
+    BOOST_REQUIRE_EQUAL(to_ip_address(address_t{ cjdns_t{ cjdns } }), cjdns);
+}
+
 BOOST_AUTO_TEST_CASE(address_type__to_ip_address__unspecified__unspecified)
 {
     BOOST_REQUIRE_EQUAL(to_ip_address(address_t{}), unspecified_ip_address);

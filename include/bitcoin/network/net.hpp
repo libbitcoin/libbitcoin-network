@@ -166,6 +166,9 @@ public:
     /// Get the number of address reservations.
     virtual size_t reserved_count() const NOEXCEPT;
 
+    /// Get the sam self address (unspecified if not bridged or transient).
+    virtual config::address sam_self() const NOEXCEPT;
+
     /// Get the number of channels.
     virtual size_t channel_count() const NOEXCEPT;
 
@@ -261,9 +264,6 @@ protected:
     virtual void fetch(address_handler&& handler) NOEXCEPT;
     virtual void save(const address_cptr& message,
         count_handler&& complete) NOEXCEPT;
-
-    /// P2P sam self address (unspecified if not bridged or transient).
-    virtual config::address sam_self() const NOEXCEPT;
 
     /// P2P loopback detection.
     virtual bool store_nonce(const channel_peer& channel) NOEXCEPT;

@@ -56,13 +56,17 @@ address_t to_address(const ip_address& ip) NOEXCEPT
 
 const ip_address& to_ip_address(const address_t& address) NOEXCEPT
 {
-    if (const auto value = std::get_if<ipv4_t>(&address))
-        return value->value;
-
-    if (const auto value = std::get_if<ipv6_t>(&address))
-        return value->value;
-
-    return unspecified_ip_address;
+    // The explicit return type is required, as deduction would copy.
+    return std::visit([](const auto& value) NOEXCEPT -> const ip_address&
+    {
+        using type = std::decay_t<decltype(value)>;
+        if constexpr (is_same_type<type, std::monostate>)
+            return unspecified_ip_address;
+        else if constexpr (type::size == ip_address_size)
+            return value.value;
+        else
+            return unspecified_ip_address;
+    }, address);
 }
 
 size_t hash_address(const address_t& address) NOEXCEPT
