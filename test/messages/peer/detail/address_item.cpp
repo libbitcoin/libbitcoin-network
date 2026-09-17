@@ -152,6 +152,24 @@ BOOST_AUTO_TEST_CASE(address_item__is_specified__loopback__true)
     BOOST_REQUIRE(is_specified(item));
 }
 
+BOOST_AUTO_TEST_CASE(address_item__is_specified__i2p_zero_port__true)
+{
+    const messages::peer::address_item item{ 0, 0, messages::peer::i2p_t{ { 0x01 } }, 0 };
+    BOOST_REQUIRE(is_specified(item));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_specified__i2p_unspecified__false)
+{
+    const messages::peer::address_item item{ 0, 0, messages::peer::i2p_t{}, 0 };
+    BOOST_REQUIRE(!is_specified(item));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_specified__onion_zero_port__false)
+{
+    const messages::peer::address_item item{ 0, 0, messages::peer::torv3_t{ { 0x01 } }, 0 };
+    BOOST_REQUIRE(!is_specified(item));
+}
+
 // equality
 
 BOOST_AUTO_TEST_CASE(address_item__equality__default_default__true)

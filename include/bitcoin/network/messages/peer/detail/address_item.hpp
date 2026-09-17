@@ -176,8 +176,9 @@ constexpr address_item unspecified_address_item
 
 constexpr bool is_specified(const address_item& item) NOEXCEPT
 {
-    // Specified if the host is not unspecified and port is non-zero.
-    return !is_zero(item.port) && !is_unspecified(item.address);
+    // I2P addresses have no port, others require a nonzero port.
+    return !is_unspecified(item.address) &&
+        (!is_zero(item.port) || std::holds_alternative<i2p_t>(item.address));
 }
 
 } // namespace peer
