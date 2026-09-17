@@ -446,12 +446,12 @@ bool settings::gossiped(const address_item& item) const NOEXCEPT
         case ipv6_t::id:
         case cjdns_t::id:
             return gossip_ipv6;
-        case torv2_t::id:
         case torv3_t::id:
             return gossip_tor;
         case i2p_t::id:
             return gossip_i2p;
-        default: return false;
+        default:
+            return false;
     }
 }
 

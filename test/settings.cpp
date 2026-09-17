@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(settings__gossiped__tor__gossip_tor)
     settings instance{ selection::mainnet };
     instance.gossip_tor = true;
     BOOST_REQUIRE(instance.gossiped(address_item{ 0, 0, torv3_t{}, 42 }));
-    BOOST_REQUIRE(instance.gossiped(address_item{ 0, 0, torv2_t{}, 42 }));
+    BOOST_REQUIRE(!instance.gossiped(address_item{ 0, 0, torv2_t{}, 42 }));
 
     instance.gossip_tor = false;
     BOOST_REQUIRE(!instance.gossiped(address_item{ 0, 0, torv3_t{}, 42 }));

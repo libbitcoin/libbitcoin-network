@@ -47,6 +47,10 @@ address_t to_address(const ip_address& ip) NOEXCEPT
     if (is_v4(ip))
         return ipv4_t{ ip };
 
+    // Tor v2 is not operational, and must be ignored on receive.
+    if (is_torv2(ip))
+        return {};
+
     return ipv6_t{ ip };
 }
 
@@ -87,13 +91,17 @@ size_t address_item::size(uint32_t, bool with_timestamp) NOEXCEPT
 address_item address_item::deserialize(uint32_t, reader& source,
     bool with_timestamp) NOEXCEPT
 {
-    return
-    {
-        with_timestamp ? source.read_4_bytes_little_endian() : 0u,
-        source.read_8_bytes_little_endian(),
-        to_address(read_forward<ip_address_size>(source)),
-        source.read_2_bytes_big_endian()
-    };
+    const auto timestamp = with_timestamp ?
+        source.read_4_bytes_little_endian() : 0u;
+    const auto services = source.read_8_bytes_little_endian();
+    const auto ip = read_forward<ip_address_size>(source);
+    const auto port = source.read_2_bytes_big_endian();
+
+    // Tor v2 is not operational, so advertising it is a protocol fault.
+    if (is_torv2(ip))
+        source.invalidate();
+
+    return { timestamp, services, to_address(ip), port };
 }
 
 void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
@@ -131,6 +139,30 @@ static address_t read_address(size_t size, reader& source) NOEXCEPT
     type out{};
     std::copy_n(ip_map_prefix.begin(), offset, out.value.begin());
     source.read_bytes(std::next(out.value.data(), offset), type::wire);
+
+    // A reserved v6 range is an encoding of another network.
+    if constexpr (Id == ipv6_t::id)
+    {
+        if (is_v4(out.value))
+            return ipv4_t{ out.value };
+
+        if (is_torv2(out.value))
+        {
+            source.invalidate();
+            return {};
+        }
+    }
+
+    // A cjdns address is always within the cjdns range.
+    if constexpr (Id == cjdns_t::id)
+    {
+        if (!is_cjdns(out.value))
+        {
+            source.invalidate();
+            return {};
+        }
+    }
+
     return out;
 }
 
@@ -143,10 +175,14 @@ static address_t read_address(reader& source) NOEXCEPT
     {
         case ipv4_t::id: return read_address<ipv4_t::id>(size, source);
         case ipv6_t::id: return read_address<ipv6_t::id>(size, source);
-        case torv2_t::id: return read_address<torv2_t::id>(size, source);
         case torv3_t::id: return read_address<torv3_t::id>(size, source);
         case i2p_t::id: return read_address<i2p_t::id>(size, source);
         case cjdns_t::id: return read_address<cjdns_t::id>(size, source);
+
+        // Tor v2 is not operational, so advertising it is a protocol fault.
+        case torv2_t::id:
+            source.invalidate();
+            return {};
 
         // Unknown networks are discarded, not rejected (forward compatible).
         default:

@@ -41,6 +41,28 @@ constexpr bool is_v6(const ip_address& ip) NOEXCEPT
     return !is_v4(ip);
 }
 
+/// The onioncat prefix, which maps a tor v2 address (fd87:d87e:eb43::/48).
+constexpr system::data_array<6> torv2_map_prefix
+{
+    0xfd, 0x87, 0xd8, 0x7e, 0xeb, 0x43
+};
+
+/// The cjdns network range (fc00::/8).
+constexpr uint8_t cjdns_prefix = 0xfc;
+
+/// True if ip_address starts with the onioncat prefix (maps a tor v2 address).
+constexpr bool is_torv2(const ip_address& ip) NOEXCEPT
+{
+    return std::equal(torv2_map_prefix.begin(), torv2_map_prefix.end(),
+        ip.begin());
+}
+
+/// True if ip_address is within the cjdns network range.
+constexpr bool is_cjdns(const ip_address& ip) NOEXCEPT
+{
+    return ip.front() == cjdns_prefix;
+}
+
 /// Distinct type per network, as variant alternatives must not repeat.
 template <uint8_t Id, size_t Size, size_t Wire = Size>
 struct address_of
@@ -58,6 +80,8 @@ struct address_of
 /// and is the only network whose wire size differs from its storage size.
 using ipv4_t = address_of<1, 16, 4>;
 using ipv6_t = address_of<2, 16>;
+
+/// Tor v2 is not operational, this reserves its network identifier.
 using torv2_t = address_of<3, 10>;
 using torv3_t = address_of<4, 32>;
 using i2p_t = address_of<5, 32>;
