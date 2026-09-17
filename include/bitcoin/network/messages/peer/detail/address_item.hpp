@@ -93,6 +93,13 @@ constexpr bool is_v1(const address_t& address) NOEXCEPT
     return is_v4(address) || is_v6(address);
 }
 
+/// True if the address is expressed as a host name (bip155 tor v3, i2p).
+constexpr bool is_named(const address_t& address) NOEXCEPT
+{
+    return std::holds_alternative<torv3_t>(address)
+        || std::holds_alternative<i2p_t>(address);
+}
+
 /// True if the address is unset or all zeros.
 constexpr bool is_unspecified(const address_t& address) NOEXCEPT
 {

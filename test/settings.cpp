@@ -494,6 +494,19 @@ BOOST_AUTO_TEST_CASE(settings__connectable__not_ip__false)
     BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, {}, 42 }));
 }
 
+BOOST_AUTO_TEST_CASE(settings__connectable__proxied__true)
+{
+    settings instance{ selection::mainnet };
+    instance.outbound.socks = { "127.0.0.1:9050" };
+    BOOST_REQUIRE(instance.connectable(address_item{ 0, 0, torv3_t{}, 42 }));
+    BOOST_REQUIRE(instance.connectable(address_item{ 0, 0, i2p_t{}, 42 }));
+    BOOST_REQUIRE(instance.connectable(config::address{ "42.42.42.42:42" }));
+
+    // Cjdns and tor v2 have no host name form, so remain unroutable.
+    BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, cjdns_t{}, 42 }));
+    BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, torv2_t{}, 42 }));
+}
+
 BOOST_AUTO_TEST_CASE(settings__gossiped__ipv4__gossip_ipv4)
 {
     settings instance{ selection::mainnet };
