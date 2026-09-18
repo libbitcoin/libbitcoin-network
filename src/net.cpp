@@ -36,13 +36,12 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace system;
 using namespace std::placeholders;
+constexpr auto encryption = messages::peer::service::node_encrypted_transport;
 
 net::net(const settings& settings, const logger& log,
     uint64_t required_services, uint64_t provided_services) NOEXCEPT
   : settings_(settings),
-    provide_privacy_(get_right(provided_services, right_zeros<uint64_t>(
-        messages::peer::service::node_encrypted_transport))),
-    p2ps_{ settings.identifier },
+    privacy_(to_bool(bit_and(provided_services, to_value(encryption)))),
     threadpool_(settings.threads_()),
     strand_(threadpool_.service().get_executor()),
     hosts_(settings, log, required_services),
@@ -82,9 +81,9 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
     const auto& settings = network_settings();
 
     // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
-    const auto accept = provide_privacy_ &&
+    const auto accept = privacy_ &&
         std::holds_alternative<std::monostate>(context) ?
-            socket::context{ std::cref(p2ps_) } : context;
+            settings.peer_context() : context;
 
     socket::parameters params
     {
@@ -98,7 +97,7 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
 }
 
 // inbound (sam)
-acceptor::ptr net::create_acceptor_sam() NOEXCEPT
+acceptor_sam::ptr net::create_acceptor_sam() NOEXCEPT
 {
     const auto& settings = network_settings();
 
@@ -107,14 +106,11 @@ acceptor::ptr net::create_acceptor_sam() NOEXCEPT
     {
         .connect_timeout = settings.connect_timeout(),
         .maximum_request = settings.inbound.maximum_request,
-        .context = provide_privacy_ ?
-            socket::context{ std::cref(p2ps_) } : socket::context{}
+        .context = privacy_ ? settings.peer_context() : socket::context{}
     };
 
-    sam_ = emplace_shared<acceptor_sam>(log, strand(), service(),
+    return emplace_shared<acceptor_sam>(log, strand(), service(),
         accept_suspended_, std::move(params), settings.inbound);
-
-    return sam_;
 }
 
 // outbound (general)
@@ -128,8 +124,8 @@ connector::ptr net::create_connector(const settings::socks5& socks,
         .maximum_request = maximum_request
     };
 
-    if (provide_privacy_)
-        params.context = std::cref(p2ps_);
+    if (privacy_)
+        params.context = network_settings().peer_context();
 
     if (socks.proxied())
         return emplace_shared<connector_socks>(log, strand(), service(),
@@ -673,11 +669,6 @@ void net::do_save(const address_cptr& message,
 
 // P2P self address.
 // ----------------------------------------------------------------------------
-
-config::address net::sam_self() const NOEXCEPT
-{
-    return sam_ ? sam_->self() : config::address{};
-}
 
 // P2P loopback detection.
 // ----------------------------------------------------------------------------

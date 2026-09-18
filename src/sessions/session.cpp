@@ -353,7 +353,7 @@ acceptor::ptr session::create_acceptor(const socket::context& context) NOEXCEPT
     return network_.create_acceptor(context);
 }
 
-acceptor::ptr session::create_acceptor_sam() NOEXCEPT
+acceptor_sam::ptr session::create_acceptor_sam() NOEXCEPT
 {
     return network_.create_acceptor_sam();
 }

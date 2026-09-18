@@ -91,6 +91,12 @@ struct BCT_API settings
         DEFAULT_COPY_MOVE_DESTRUCT(sam);
         sam() NOEXCEPT;
 
+        /// Read the key and derive the self address (const after initialize).
+        virtual code initialize() NOEXCEPT;
+
+        /// The address of a destination private key (base64), or unspecified.
+        static config::address to_self(const std::string& key) NOEXCEPT;
+
         /// Bridge credentials are stored and passed in cleartext.
         std::string username{};
         std::string password{};
@@ -100,6 +106,12 @@ struct BCT_API settings
 
         /// Destination private key file (base64), created if not existing.
         system::config::path key_path{};
+
+        /// The stored destination key, empty if unconfigured or not existing.
+        std::string key{};
+
+        /// The address of the stored key, unspecified if there is no key.
+        config::address self{};
 
         /// True if bridge::port is non-zero.
         virtual bool bridged() const NOEXCEPT;
@@ -139,6 +151,9 @@ struct BCT_API settings
         DEFAULT_COPY_MOVE_DESTRUCT(secure_server);
         secure_server(const std::string_view& logging_name) NOEXCEPT;
 
+        /// Initialize the secure context (required before use).
+        virtual code initialize_context() NOEXCEPT;
+
         /// Secured bindings.
         config::authorities safes{};
 
@@ -147,9 +162,6 @@ struct BCT_API settings
 
         /// Requires client authentication (default false).
         virtual bool authenticate() const NOEXCEPT;
-
-        /// Initialize the secure context (required before use).
-        virtual code initialize_context() const NOEXCEPT;
 
         /// The socket context applied to the clear bindings (default none).
         virtual transport clear_context() const NOEXCEPT;
@@ -164,6 +176,9 @@ struct BCT_API settings
         DELETE_COPY(tls_server);
         tls_server(const std::string_view& logging_name) NOEXCEPT;
 
+        /// Initialize the ssl::context (required before use).
+        code initialize_context() NOEXCEPT override;
+
         /// Path to server private key decryption password (optional).
         std::string key_pass{};
 
@@ -176,20 +191,17 @@ struct BCT_API settings
         /// Directory for CA certificates for client authentication (optional).
         system::config::path cert_auth{};
 
+        /// Thread safe socket ssl context (const after initialize).
+        std::unique_ptr<asio::ssl::context> context{};
+
         /// False if safes, certificate_path, or key_path is empty.
         bool secure() const NOEXCEPT override;
 
         /// Requires client authentication (certificate authority specified).
         bool authenticate() const NOEXCEPT override;
 
-        /// Initialize the ssl::context (required before use).
-        code initialize_context() const NOEXCEPT override;
-
         /// The ssl::context (initialized).
         transport secure_context() const NOEXCEPT override;
-
-        /// Thread safe socket ssl context (deferred construction).
-        mutable std::unique_ptr<asio::ssl::context> context{};
     };
 
     struct zmtp_server
@@ -198,11 +210,19 @@ struct BCT_API settings
         DELETE_COPY(zmtp_server);
         zmtp_server(const std::string_view& logging_name) NOEXCEPT;
 
+        /// Initialize the CURVE context (invalid_configuration if the key or
+        /// a client certificate is malformed, as the downgrade would be silent).
+        code initialize_context() NOEXCEPT override;
+
         /// The CurveZMQ server secret key (Z85) of the secured bindings.
         system::config::base85 key{};
 
         /// The CurveZMQ client certificates (Z85 public keys) authorized.
         std::vector<system::config::base85> certs{};
+
+        /// Thread safe socket zmtp contexts (const after initialize).
+        const zmtp::context clear{};
+        std::unique_ptr<zmtp::context> context{};
 
         /// False if safes or key is empty.
         bool secure() const NOEXCEPT override;
@@ -210,19 +230,11 @@ struct BCT_API settings
         /// Requires client authentication (client certificates specified).
         bool authenticate() const NOEXCEPT override;
 
-        /// Initialize the CURVE context (invalid_configuration if the key or
-        /// a client certificate is malformed, as the downgrade would be silent).
-        code initialize_context() const NOEXCEPT override;
-
         /// The NULL mechanism context.
         transport clear_context() const NOEXCEPT override;
 
         /// The CURVE mechanism context (initialized).
         transport secure_context() const NOEXCEPT override;
-
-        /// Thread safe socket zmtp contexts (secure is deferred construction).
-        const zmtp::context clear{};
-        mutable std::unique_ptr<zmtp::context> context{};
     };
 
     struct http_server
@@ -275,11 +287,13 @@ struct BCT_API settings
         {
         }
 
+        /// Map the friends from the configured peers.
+        void initialize() NOEXCEPT;
+
         config::endpoints peers{};
         config::addresses friends{};
 
         /// Helpers.
-        void initialize() NOEXCEPT;
         bool enabled() const NOEXCEPT override;
         virtual bool peered(
             const messages::peer::address_item& item) const NOEXCEPT;
@@ -372,6 +386,9 @@ struct BCT_API settings
     DEFAULT_COPY_MOVE_DESTRUCT(settings);
     settings(system::chain::selection context) NOEXCEPT;
 
+    /// Read files and derive values (once, before use, const thereafter).
+    virtual code initialize() NOEXCEPT;
+
     /// Bitcoin p2p sessions.
     network::settings::peer_outbound outbound;
     network::settings::peer_inbound inbound;
@@ -422,7 +439,11 @@ struct BCT_API settings
     std::string user_agent{ BC_USER_AGENT };
     system::config::path path{};
 
+    /// The bip324 (v2) peer socket context (const after initialize).
+    p2ps::context peer{};
+
     /// Helpers.
+    virtual transport peer_context() const NOEXCEPT;
     virtual size_t threads_() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
     virtual steady_clock::duration connect_timeout() const NOEXCEPT;

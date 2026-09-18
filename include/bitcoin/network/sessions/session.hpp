@@ -198,7 +198,7 @@ protected:
         const socket::context& context={}) NOEXCEPT;
 
     /// Create a channel acceptor (inbound via sam bridge).
-    virtual acceptor::ptr create_acceptor_sam() NOEXCEPT;
+    virtual acceptor_sam::ptr create_acceptor_sam() NOEXCEPT;
 
     /// Create a seed channel connector.
     virtual connector::ptr create_seed_connector() NOEXCEPT;
