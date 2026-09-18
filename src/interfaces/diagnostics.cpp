@@ -16,30 +16,42 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_INTERFACES_HPP
-#define LIBBITCOIN_NETWORK_INTERFACES_HPP
-
 #include <bitcoin/network/interfaces/diagnostics.hpp>
-#include <bitcoin/network/interfaces/http.hpp>
-#include <bitcoin/network/interfaces/peer_broadcast.hpp>
-#include <bitcoin/network/interfaces/peer_dispatch.hpp>
+
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace rpc {
-namespace interface {
 
-using http = publish<http_methods, grouping::positional>;
+diagnostics::diagnostics(const race::ptr& complete, target group,
+    uint64_t channel) NOEXCEPT
+  : race_(complete), group_(group), channel_(channel)
+{
+}
 
-namespace peer {
+bool diagnostics::member(uint64_t identifier) const NOEXCEPT
+{
+    return group_ == target::channel && channel_ == identifier;
+}
 
-using dispatch = publish<peer_dispatch, grouping::positional>;
-using broadcast = publish<peer_broadcast, grouping::positional>;
+bool diagnostics::member(target group) const NOEXCEPT
+{
+    return group_ == target::all || group_ == group;
+}
 
-} // namespace peer
-} // namespace interface
-} // namespace rpc
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+void diagnostics::add(row&& value) const NOEXCEPT
+{
+    std::lock_guard lock{ mutex_ };
+    rows_.push_back(std::move(value));
+}
+BC_POP_WARNING()
+
+const diagnostics::rows& diagnostics::captured() const NOEXCEPT
+{
+    return rows_;
+}
+
 } // namespace network
 } // namespace libbitcoin
-
-#endif

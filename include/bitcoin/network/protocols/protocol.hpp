@@ -186,6 +186,9 @@ protected:
     /// The nonce of the channel.
     virtual uint64_t nonce() const NOEXCEPT;
 
+    /// The bytes sent to the channel.
+    virtual uint64_t sent() const NOEXCEPT;
+
     /// Network settings.
     virtual const network::settings& network_settings() const NOEXCEPT;
 

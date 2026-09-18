@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/interfaces/diagnostics.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
@@ -42,11 +43,13 @@ struct peer_broadcast
     using signature = std::function<bool(const code&,
         const typename Message::cptr&, const key&)>;
 
-    /// Messages relayed from the receiving channel to all other channels.
+    /// Messages relayed from the receiving channel to all other channels,
+    /// and channel diagnostics, which are internal (never serialized).
     /// The v2 encoding is applied by the sender, so v1 is the relayed type.
     static constexpr std::tuple methods
     {
-        method<"addr", messages::peer::address::cptr, key>{}
+        method<"addr", messages::peer::address::cptr, key>{},
+        method<"diagnostics", diagnostics::cptr, key>{}
     };
 };
 

@@ -64,6 +64,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/config/credential.cpp \
     ${srcdir}/../../src/config/endpoint.cpp \
     ${srcdir}/../../src/config/utilities.cpp \
+    ${srcdir}/../../src/interfaces/diagnostics.cpp \
     ${srcdir}/../../src/log/capture.cpp \
     ${srcdir}/../../src/log/logger.cpp \
     ${srcdir}/../../src/log/reporter.cpp \
@@ -345,6 +346,7 @@ include_bitcoin_network_interfacesdir = \
     ${includedir}/bitcoin/network/interfaces
 
 include_bitcoin_network_interfaces_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/interfaces/diagnostics.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/http.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/interfaces.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_broadcast.hpp \
