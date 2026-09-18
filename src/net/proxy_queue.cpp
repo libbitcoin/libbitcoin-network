@@ -102,6 +102,24 @@ inline steady_clock::duration to_allocation(size_t bytes,
     return nanoseconds{ limit<nanoseconds::rep>(span) };
 }
 
+count_handler proxy::counted(count_handler&& handler) NOEXCEPT
+{
+    return std::bind(&proxy::handle_counted,
+        shared_from_this(), _1, _2, std::move(handler));
+}
+
+void proxy::count_received(size_t bytes) NOEXCEPT
+{
+    received_ = system::ceilinged_add(received_.load(), bytes);
+}
+
+void proxy::handle_counted(const code& ec, size_t bytes,
+    const count_handler& handler) NOEXCEPT
+{
+    count_received(bytes);
+    handler(ec, bytes);
+}
+
 count_handler proxy::metered(count_handler&& handler) NOEXCEPT
 {
     // Stamped at issue, so that only transmission time is credited against
@@ -130,7 +148,8 @@ void proxy::handle_metered(const code& ec, size_t bytes,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    total_ = system::ceilinged_add(total_.load(), bytes);
+    sent_ = system::ceilinged_add(sent_.load(), bytes);
+    writing();
     writing_ = false;
 
     // A send that consumed its full allocation is not deferred.

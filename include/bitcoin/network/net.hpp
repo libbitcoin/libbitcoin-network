@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_NET_HPP
 
 #include <atomic>
+#include <unordered_set>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -54,6 +55,19 @@ public:
     typedef channel_subscriber::completer channel_completer;
 
     typedef rpc::broadcaster<rpc::interface::peer::broadcast> broadcaster;
+
+    /// Identifiers of active peer channels.
+    typedef std::vector<uint64_t> channel_ids;
+
+    /// Byte totals of closed peer channels, with the active identifiers.
+    struct totals
+    {
+        uint64_t sent{};
+        uint64_t received{};
+        channel_ids actives{};
+    };
+
+    typedef std::function<void(const code&, const totals&)> totals_handler;
     
     /// Constructors.
     /// -----------------------------------------------------------------------
@@ -165,6 +179,9 @@ public:
 
     /// Get the number of address reservations.
     virtual size_t reserved_count() const NOEXCEPT;
+
+    /// Get the closed channel byte totals with the active channel identifiers.
+    virtual void fetch_totals(totals_handler&& handler) NOEXCEPT;
 
     /// Get the number of channels.
     virtual size_t channel_count() const NOEXCEPT;
@@ -322,17 +339,20 @@ private:
     void do_save(const address_cptr& message,
         const count_handler& handler) NOEXCEPT;
 
+    // P2P diagnostic accumulators.    
+    void do_fetch_totals(const totals_handler& handler) NOEXCEPT;
+
     // These are thread safe.
     const settings& settings_;
     const bool privacy_;
-
-    // Set on start, then thread safe.
     std::atomic_bool closed_{ false };
     std::atomic_bool accept_suspended_{ false };
     std::atomic_bool service_suspended_{ false };
     std::atomic_bool connect_suspended_{ false };
-    std::atomic<size_t> total_channel_count_{};
     std::atomic<size_t> inbound_channel_count_{};
+    std::atomic<size_t> total_channel_count_{};
+    std::atomic<uint64_t> peer_received_{};
+    std::atomic<uint64_t> peer_sent_{};
 
     // These are protected by strand.
     session_manual::ptr manual_{};
@@ -344,11 +364,10 @@ private:
     // These are protected by strand.
     hosts hosts_;
     object_key keys_{};
+    channel_ids actives_{};
     broadcaster broadcaster_{};
     stop_subscriber stop_subscriber_{};
     channel_subscriber connect_subscriber_{};
-
-    // Guards loopback.
     std::unordered_set<uint64_t> nonces_{};
 };
 

@@ -574,6 +574,30 @@ size_t net::reserved_count() const NOEXCEPT
     return hosts_.reserved();
 }
 
+void net::fetch_totals(totals_handler&& handler) NOEXCEPT
+{
+    if (closed())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
+    boost::asio::post(strand_,
+        std::bind(&net::do_fetch_totals, this, std::move(handler)));
+}
+
+void net::do_fetch_totals(const totals_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    handler(error::success,
+    {
+        peer_sent_.load(),
+        peer_received_.load(),
+        actives_,
+    });
+}
+
 size_t net::channel_count() const NOEXCEPT
 {
     return total_channel_count_;
@@ -755,6 +779,7 @@ code net::count_channel(const channel_peer& channel) NOEXCEPT
     if (!channel.quiet())
         ++total_channel_count_;
 
+    actives_.push_back(channel.identifier());
     return error::success;
 }
 
@@ -763,6 +788,9 @@ void net::uncount_channel(const channel_peer& channel) NOEXCEPT
     BC_ASSERT(stranded());
 
     hosts_.unreserve(channel.endpoint());
+    peer_sent_ = ceilinged_add(peer_sent_.load(), channel.sent());
+    peer_received_ = ceilinged_add(peer_received_.load(), channel.received());
+    std::erase(actives_, channel.identifier());
 
     if (channel.inbound() && is_zero(inbound_channel_count_.load()))
     {

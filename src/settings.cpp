@@ -503,6 +503,13 @@ bool settings::gossip_v2() const NOEXCEPT
     return gossip_tor || gossip_i2p;
 }
 
+uint32_t settings::rate_limited(const tcp_server& options) const NOEXCEPT
+{
+    return to_bool(rate_limit) && to_bool(options.rate_limit) ?
+        std::min(rate_limit, options.rate_limit) :
+        std::max(rate_limit, options.rate_limit);
+}
+
 bool settings::connectable(const address_item& item) const NOEXCEPT
 {
     // A proxy connects by name, otherwise only an ip address is routable.

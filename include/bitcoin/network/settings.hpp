@@ -453,6 +453,9 @@ struct BCT_API settings
     virtual std::filesystem::path file() const NOEXCEPT;
     virtual bool gossip_v2() const NOEXCEPT;
 
+    /// The send rate limit of a channel of the section, zero is unlimited.
+    virtual uint32_t rate_limited(const tcp_server& options) const NOEXCEPT;
+
     /// Filters.
     virtual bool connectable(
         const messages::peer::address_item& item) const NOEXCEPT;

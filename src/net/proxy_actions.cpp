@@ -56,7 +56,7 @@ void proxy::unwatch() NOEXCEPT
 void proxy::read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
 {
     do_reading();
-    socket_->ws_read(out, std::move(handler));
+    socket_->ws_read(out, counted(std::move(handler)));
 }
 
 void proxy::write(const asio::const_buffer& in, bool binary,
@@ -86,7 +86,7 @@ void proxy::read(const asio::mutable_buffer& out,
     count_handler&& handler) NOEXCEPT
 {
     do_reading();
-    socket_->tcp_read(out, std::move(handler));
+    socket_->tcp_read(out, counted(std::move(handler)));
 }
 
 void proxy::write(const asio::const_buffer& in,
@@ -118,7 +118,7 @@ void proxy::read(data_chunk& buffer, frame& message,
     BC_ASSERT(stranded());
     do_reading();
 
-    socket_->peer_read(buffer, message, std::move(handler));
+    socket_->peer_read(buffer, message, counted(std::move(handler)));
 }
 
 void proxy::write(frame&& message, count_handler&& handler) NOEXCEPT
@@ -196,6 +196,7 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    count_received(bytes);
 
     if (ec)
     {
@@ -380,7 +381,7 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
 
     if (socket_->websocket())
     {
-        socket_->http_read(buffer, request, std::move(handler));
+        socket_->http_read(buffer, request, counted(std::move(handler)));
         return;
     }
 
@@ -478,6 +479,7 @@ void proxy::handle_http_header(const code& ec, size_t bytes,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    count_received(bytes);
 
     if (ec)
     {
@@ -501,6 +503,7 @@ void proxy::handle_http_body(const code& ec, size_t bytes,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    count_received(bytes);
 
     // A batched body delivers each message by pausing the parse.
     const auto paused = (ec == error::need_buffer);

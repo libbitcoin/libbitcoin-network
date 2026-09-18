@@ -224,6 +224,11 @@ void proxy::reading() NOEXCEPT
 {
 }
 
+// protected
+void proxy::writing() NOEXCEPT
+{
+}
+
 // private
 void proxy::do_reading() NOEXCEPT
 {
@@ -289,9 +294,14 @@ code proxy::accept_websocket(const http::request& request) NOEXCEPT
     return socket_->accept_websocket(request);
 }
 
-uint64_t proxy::total() const NOEXCEPT
+uint64_t proxy::received() const NOEXCEPT
 {
-    return total_.load(std::memory_order_relaxed);
+    return received_.load();
+}
+
+uint64_t proxy::sent() const NOEXCEPT
+{
+    return sent_.load();
 }
 
 const config::address& proxy::address() const NOEXCEPT

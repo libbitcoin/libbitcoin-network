@@ -189,6 +189,18 @@ protected:
     /// The bytes sent to the channel.
     virtual uint64_t sent() const NOEXCEPT;
 
+    /// The bytes received from the channel.
+    virtual uint64_t received() const NOEXCEPT;
+
+    /// The channel creation time (unix).
+    virtual uint32_t created() const NOEXCEPT;
+
+    /// The last channel read time (unix).
+    virtual uint32_t last_read() const NOEXCEPT;
+
+    /// The last channel write time (unix).
+    virtual uint32_t last_write() const NOEXCEPT;
+
     /// Network settings.
     virtual const network::settings& network_settings() const NOEXCEPT;
 

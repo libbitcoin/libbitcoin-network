@@ -33,13 +33,13 @@ using namespace system;
 using namespace messages::peer;
 using namespace std::placeholders;
 
-constexpr uint64_t received = zero;
-constexpr auto minimum_nonce = add1(received);
+constexpr uint64_t acknowledged = zero;
+constexpr auto minimum_nonce = add1(acknowledged);
 
 protocol_ping_60001::protocol_ping_60001(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_ping_106(session, channel),
-    nonce_(received),
+    nonce_(acknowledged),
     tracker<protocol_ping_60001>(session->log)
 {
 }
@@ -108,7 +108,7 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
     }
 
     // Correct pong nonce, set sentinel.
-    nonce_ = received;
+    nonce_ = acknowledged;
     return true;
 }
 
@@ -128,7 +128,7 @@ void protocol_ping_60001::handle_timer(const code& ec) NOEXCEPT
     }
 
     // No error code on timeout, so check for nonce receipt.
-    if (nonce_ != received)
+    if (nonce_ != acknowledged)
     {
         // TODO: log ping timeout.
         stop(ec);
