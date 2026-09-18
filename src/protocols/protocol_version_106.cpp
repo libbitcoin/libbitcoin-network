@@ -319,7 +319,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     LOGN(prefix << " " << security << " [" << opposite() << "] version ("
         << message->value << ") " << user_agent);
 
-    if (to_bool(message->services & invalid_services_))
+    if (to_bool(bit_and(message->services, invalid_services_)))
     {
         LOGR("Unsupported services (" << message->services << ") by ["
             << opposite() << "] showing (" << outbound().services() << ") "
@@ -330,7 +330,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     }
 
     // Advertised services on many incoming connections are set to zero.
-    if ((message->services & required_services_) != required_services_)
+    if (bit_and(message->services, required_services_) != required_services_)
     {
         LOGR("Insufficient services (" << message->services << ") by ["
             << opposite() << "] showing (" << outbound().services() << ") "

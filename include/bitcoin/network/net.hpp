@@ -232,7 +232,7 @@ protected:
     virtual acceptor::ptr create_service(socket::parameters&& params) NOEXCEPT;
     virtual acceptor::ptr create_acceptor(
         const socket::context& context={}) NOEXCEPT;
-    virtual acceptor::ptr create_acceptor_sam() NOEXCEPT;
+    virtual acceptor_sam::ptr create_acceptor_sam() NOEXCEPT;
     virtual connector::ptr create_seed_connector() NOEXCEPT;
     virtual connector::ptr create_manual_connector() NOEXCEPT;
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
@@ -261,9 +261,6 @@ protected:
     virtual void fetch(address_handler&& handler) NOEXCEPT;
     virtual void save(const address_cptr& message,
         count_handler&& complete) NOEXCEPT;
-
-    /// P2P sam self address (unspecified if not bridged or transient).
-    virtual config::address sam_self() const NOEXCEPT;
 
     /// P2P loopback detection.
     virtual bool store_nonce(const channel_peer& channel) NOEXCEPT;
@@ -327,11 +324,9 @@ private:
 
     // These are thread safe.
     const settings& settings_;
-    const bool provide_privacy_;
-    const p2ps::context p2ps_{};
+    const bool privacy_;
 
     // Set on start, then thread safe.
-    acceptor_sam::ptr sam_{};
     std::atomic_bool closed_{ false };
     std::atomic_bool accept_suspended_{ false };
     std::atomic_bool service_suspended_{ false };

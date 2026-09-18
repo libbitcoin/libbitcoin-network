@@ -123,7 +123,7 @@ private:
     inline bool insufficient(
         const messages::peer::address_item& item) const NOEXCEPT
     {
-        return (item.services & required_) != required_;
+        return system::bit_and(item.services, required_) != required_;
     }
 
     // Inlines local to translation unit.

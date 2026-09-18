@@ -56,6 +56,66 @@ settings::sam::sam() NOEXCEPT
 {
 }
 
+// geti2p.net/en/docs/api/samv3
+// A destination is a fixed prefix and a length-prefixed certificate.
+constexpr auto destination_size = 387_size;
+constexpr auto certificate_position = 385_size;
+
+// I2P has no ports.
+constexpr uint16_t sam_port = 0;
+
+// The destination (public) prefix of a private key, empty if truncated.
+static data_chunk to_destination(const data_chunk& private_key) NOEXCEPT
+{
+    read::bytes::copy source(private_key);
+    source.skip_bytes(certificate_position);
+    const auto size = destination_size + source.read_2_bytes_big_endian();
+
+    if (!source || private_key.size() < size)
+        return {};
+
+    return { private_key.begin(), std::next(private_key.begin(), size) };
+}
+
+// The address of a stored private key (base64), unspecified if invalid.
+config::address settings::sam::to_self(const std::string& key) NOEXCEPT
+{
+    data_chunk private_key{};
+    if (!decode_base64(private_key, key))
+        return {};
+
+    const auto destination = to_destination(private_key);
+    if (destination.empty())
+        return {};
+
+    return address_item
+    {
+        unix_time(), service::node_none, i2p_t{ sha256_hash(destination) },
+        sam_port
+    };
+}
+
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+code settings::sam::initialize() NOEXCEPT
+{
+    if (key_path.empty())
+        return error::success;
+
+    try
+    {
+        ifstream file{ key_path, ifstream::in };
+        if (file.good() && !!std::getline(file, key) && !key.empty())
+            self = to_self(key);
+    }
+    catch (const std::exception&)
+    {
+        key.clear();
+    }
+
+    return error::success;
+}
+BC_POP_WARNING()
+
 bool settings::sam::bridged() const NOEXCEPT
 {
     return is_nonzero(bridge.port());
@@ -108,7 +168,7 @@ bool settings::secure_server::authenticate() const NOEXCEPT
     return false;
 }
 
-code settings::secure_server::initialize_context() const NOEXCEPT
+code settings::secure_server::initialize_context() NOEXCEPT
 {
     return error::success;
 }
@@ -134,7 +194,7 @@ settings::tls_server::tls_server(const std::string_view& logging_name) NOEXCEPT
 }
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-code settings::tls_server::initialize_context() const NOEXCEPT
+code settings::tls_server::initialize_context() NOEXCEPT
 {
     if (context)
         return error::operation_failed;
@@ -212,7 +272,7 @@ bool settings::zmtp_server::authenticate() const NOEXCEPT
     return secure() && !certs.empty();
 }
 
-code settings::zmtp_server::initialize_context() const NOEXCEPT
+code settings::zmtp_server::initialize_context() NOEXCEPT
 {
     if (context)
         return error::operation_failed;
@@ -379,6 +439,19 @@ settings::settings(chain::selection context) NOEXCEPT
 {
 }
 
+// Derived values are read and computed here, and are const thereafter.
+code settings::initialize() NOEXCEPT
+{
+    peer.identifier = identifier;
+    manual.initialize();
+    return inbound.initialize();
+}
+
+settings::transport settings::peer_context() const NOEXCEPT
+{
+    return std::cref(peer);
+}
+
 size_t settings::threads_() const NOEXCEPT
 {
     // Zero implies the lesser of hardware threads and the default cap.
@@ -434,7 +507,7 @@ bool settings::connectable(const address_item& item) const NOEXCEPT
 {
     // A proxy connects by name, otherwise only an ip address is routable.
     return is_v4(item.address) || is_v6(item.address) ||
-        (outbound.proxied() && is_named(item.address));
+        is_cjdns(item.address) || (outbound.proxied() && is_named(item.address));
 }
 
 bool settings::gossiped(const address_item& item) const NOEXCEPT
@@ -446,18 +519,18 @@ bool settings::gossiped(const address_item& item) const NOEXCEPT
         case ipv6_t::id:
         case cjdns_t::id:
             return gossip_ipv6;
-        case torv2_t::id:
         case torv3_t::id:
             return gossip_tor;
         case i2p_t::id:
             return gossip_i2p;
-        default: return false;
+        default:
+            return false;
     }
 }
 
 bool settings::unsupported(const address_item& item) const NOEXCEPT
 {
-    return to_bool(item.services & invalid_services);
+    return to_bool(bit_and(item.services, invalid_services));
 }
 
 bool settings::blacklisted(const address_item& item) const NOEXCEPT

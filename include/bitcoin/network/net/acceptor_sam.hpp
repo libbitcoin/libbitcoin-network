@@ -50,9 +50,6 @@ public:
         asio::context& service, std::atomic_bool& suspended,
         parameters&& parameters, const settings::sam& sam) NOEXCEPT;
 
-    /// The destination address derived from the stored key (else unspecified).
-    virtual config::address self() const NOEXCEPT;
-
     /// Acceptor overrides (the local binding is ignored).
     code start(const config::authority& local) NOEXCEPT override;
     void stop() NOEXCEPT override;
@@ -120,14 +117,10 @@ private:
         const socket_handler& handler) NOEXCEPT;
 
     // key persistence
-    bool load_key(std::string& out) const NOEXCEPT;
     bool save_key(const std::string& in) const NOEXCEPT;
 
     // This is thread safe.
     const settings::sam& sam_;
-
-    // Set on start, then thread safe.
-    config::address self_{};
 
     // These are protected by strand.
     connector::ptr connector_{};

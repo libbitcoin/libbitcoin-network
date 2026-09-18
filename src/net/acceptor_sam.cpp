@@ -44,10 +44,6 @@ using namespace std::placeholders;
 // geti2p.net/en/docs/api/samv3
 namespace sam
 {
-    // A destination is a fixed prefix and a length-prefixed certificate.
-    constexpr auto destination_size = 387_size;
-    constexpr auto certificate_position = 385_size;
-
     // Lines are newline terminated, length bounded only as a memory guard.
     constexpr auto terminator = '\n';
     constexpr auto maximum_line = 65'536_size;
@@ -194,19 +190,6 @@ static std::string to_i2p_base64(std::string standard) NOEXCEPT
     return standard;
 }
 
-// The destination (public) prefix of a private key, empty if truncated.
-static data_chunk to_destination(const data_chunk& private_key) NOEXCEPT
-{
-    read::bytes::copy source(private_key);
-    source.skip_bytes(sam::certificate_position);
-    const auto size = sam::destination_size + source.read_2_bytes_big_endian();
-
-    if (!source || private_key.size() < size)
-        return {};
-
-    return { private_key.begin(), std::next(private_key.begin(), size) };
-}
-
 // The address of a destination (sha256 of its serialization).
 static config::address to_address(const data_chunk& destination) NOEXCEPT
 {
@@ -215,17 +198,6 @@ static config::address to_address(const data_chunk& destination) NOEXCEPT
         unix_time(), service::node_none, i2p_t{ sha256_hash(destination) },
         sam::port
     };
-}
-
-// The address of a stored private key (base64), unspecified if invalid.
-static config::address to_self(const std::string& key) NOEXCEPT
-{
-    data_chunk private_key{};
-    if (!decode_base64(private_key, key))
-        return {};
-
-    const auto destination = to_destination(private_key);
-    return destination.empty() ? config::address{} : to_address(destination);
 }
 
 static std::string to_session_id() NOEXCEPT
@@ -291,11 +263,6 @@ code acceptor_sam::start(const config::authority&) NOEXCEPT
     if (const auto ec = acceptor::start(loopback))
         return ec;
 
-    // A transient session is not advertised, its key is persisted for restart.
-    std::string key{};
-    if (load_key(key))
-        self_ = to_self(key);
-
     auto params = parameters_;
     connector_ = emplace_shared<connector>(log, strand_, service_,
         suspended_, std::move(params));
@@ -316,11 +283,6 @@ void acceptor_sam::stop() NOEXCEPT
 
 // Properties.
 // ----------------------------------------------------------------------------
-
-config::address acceptor_sam::self() const NOEXCEPT
-{
-    return self_;
-}
 
 bool acceptor_sam::proxied() const NOEXCEPT
 {
@@ -488,10 +450,9 @@ void acceptor_sam::handle_session_hello(const code& ec,
     }
 
     // A stored key is base64, the bridge expects the i2p base64 alphabet.
-    std::string key{};
-    const auto transient = !load_key(key);
+    const auto transient = sam_.key.empty();
 
-    do_sam_request(socket, to_session_create(id_, to_i2p_base64(key)),
+    do_sam_request(socket, to_session_create(id_, to_i2p_base64(sam_.key)),
         std::bind(&acceptor_sam::handle_session_create,
             shared_from_base<acceptor_sam>(), _1, _2, _3, transient, handler));
 }
@@ -522,16 +483,8 @@ void acceptor_sam::handle_session_create(const code& ec,
     }
 
     // The reply destination is the private key (created or as provided).
-    data_chunk private_key{};
     const auto key = to_standard_base64(to_value(tokens, sam::destination));
-    if (!decode_base64(private_key, key))
-    {
-        acceptor::handle_accept(error::sam_response_invalid, socket, handler);
-        return;
-    }
-
-    const auto destination = to_destination(private_key);
-    if (destination.empty())
+    if (!settings::sam::to_self(key))
     {
         acceptor::handle_accept(error::sam_invalid_key, socket, handler);
         return;
@@ -667,7 +620,7 @@ void acceptor_sam::do_forward_ready(const socket::ptr& socket,
     }
 
     forward_ = socket;
-    LOGN("Forwarding sam session [" << self_ << "] to [" << local() << "].");
+    LOGN("Forwarding sam session [" << sam_.self << "] to [" << local() << "].");
 
     // The bridge closes the control socket when forwarding is stopped.
     forward_->watch(
@@ -695,7 +648,7 @@ void acceptor_sam::do_close(const code& LOG_ONLY(ec)) NOEXCEPT
     if (!session_ && !forward_)
         return;
 
-    LOGN("Closed sam session [" << self_ << "] " << ec.message());
+    LOGN("Closed sam session [" << sam_.self << "] " << ec.message());
     do_teardown();
 }
 
@@ -767,22 +720,6 @@ void acceptor_sam::handle_handshake(const code& ec,
 
 // key persistence
 // ----------------------------------------------------------------------------
-
-bool acceptor_sam::load_key(std::string& out) const NOEXCEPT
-{
-    if (sam_.key_path.empty())
-        return false;
-
-    try
-    {
-        ifstream file{ sam_.key_path, ifstream::in };
-        return file.good() && !!std::getline(file, out) && !out.empty();
-    }
-    catch (const std::exception&)
-    {
-        return false;
-    }
-}
 
 bool acceptor_sam::save_key(const std::string& in) const NOEXCEPT
 {

@@ -89,6 +89,34 @@ BOOST_AUTO_TEST_CASE(address_item__is_v6__ipv6_address__true)
     BOOST_REQUIRE(!is_v6(address_t{}));
 }
 
+// is_torv2/is_cjdns
+
+constexpr ip_address onion_cat_ip_address
+{
+    0xfd, 0x87, 0xd8, 0x7e, 0xeb, 0x43, 0xf1, 0xf2,
+    0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa
+};
+
+BOOST_AUTO_TEST_CASE(address_item__is_torv2__onion_cat__true)
+{
+    BOOST_REQUIRE(is_torv2(onion_cat_ip_address));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_torv2__loopback_v6__false)
+{
+    BOOST_REQUIRE(!is_torv2(loopback_ip_address));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_cjdns__cjdns_range__true)
+{
+    BOOST_REQUIRE(is_cjdns(ip_address{ 0xfc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_cjdns__adjacent_range__false)
+{
+    BOOST_REQUIRE(!is_cjdns(ip_address{ 0xfd, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
+}
+
 BOOST_AUTO_TEST_CASE(address_item__unspecified_timestamp__always__expected)
 {
     BOOST_REQUIRE_EQUAL(unspecified_timestamp, 0u);
@@ -258,11 +286,30 @@ BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_timestamp__false)
     BOOST_REQUIRE(!(item1 != item2));
 }
 
+// deserialize
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize__ipv6__expected)
+{
+    constexpr ip_address expected = base16_array("1a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
+    constexpr auto payload = base16_array("7856341201000000000000001a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b208d");
+    system::read::bytes::copy source(payload);
+    const auto item = address_item::deserialize(level::minimum_protocol, source, true);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(item.address == address_t{ ipv6_t{ expected } });
+}
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize__onion_cat__invalid)
+{
+    constexpr auto payload = base16_array("785634120100000000000000fd87d87eeb43f1f2f3f4f5f6f7f8f9fa208d");
+    system::read::bytes::copy source(payload);
+    address_item::deserialize(level::minimum_protocol, source, true);
+    BOOST_REQUIRE(!source);
+}
+
 // address v2 (BIP155) entry codec
 
 constexpr auto v2_ipv4 = base16_array("00000000000000000000ffff01020304");
 constexpr auto v2_ipv6 = base16_array("1a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
-constexpr auto v2_torv2 = base16_array("f1f2f3f4f5f6f7f8f9fa");
 constexpr auto v2_torv3 = base16_array("79bcc625184b05194975c28b66b66b0469f7f6556fb1ac3189a79b40dda32f1f");
 constexpr auto v2_i2p = base16_array("a2894dabaec08c0051a481a6dac88b64f98232ae42d4b6fd2fa81952dfe36a87");
 constexpr auto v2_cjdns = base16_array("fc000001000200030004000500060007");
@@ -283,12 +330,6 @@ BOOST_AUTO_TEST_CASE(address_item__size_v2__ipv6__expected)
 {
     const address_item item{ 1, 1, ipv6_t{ v2_ipv6 }, 8333 };
     BOOST_REQUIRE_EQUAL(item.size_v2(level::bip155), 25u);
-}
-
-BOOST_AUTO_TEST_CASE(address_item__size_v2__torv2__expected)
-{
-    const address_item item{ 1, 1, torv2_t{ v2_torv2 }, 8333 };
-    BOOST_REQUIRE_EQUAL(item.size_v2(level::bip155), 19u);
 }
 
 BOOST_AUTO_TEST_CASE(address_item__size_v2__torv3__expected)
@@ -402,13 +443,38 @@ BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__ipv6__expected)
     BOOST_REQUIRE(item.address == address_t{ ipv6_t{ v2_ipv6 } });
 }
 
-BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__torv2__expected)
+BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__torv2__invalid)
 {
     constexpr auto payload = base16_array("7856341201030af1f2f3f4f5f6f7f8f9fa208d");
     system::read::bytes::copy source(payload);
+    address_item::deserialize_v2(level::bip155, source);
+    BOOST_REQUIRE(!source);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__mapped_ipv6__ipv4)
+{
+    constexpr auto payload = base16_array("7856341201021000000000000000000000ffff01020304208d");
+    system::read::bytes::copy source(payload);
     const auto item = address_item::deserialize_v2(level::bip155, source);
     BOOST_REQUIRE(source);
-    BOOST_REQUIRE(item.address == address_t{ torv2_t{ v2_torv2 } });
+    BOOST_REQUIRE(source.is_exhausted());
+    BOOST_REQUIRE(item.address == address_t{ ipv4_t{ v2_ipv4 } });
+}
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__onion_cat_ipv6__invalid)
+{
+    constexpr auto payload = base16_array("78563412010210fd87d87eeb43f1f2f3f4f5f6f7f8f9fa208d");
+    system::read::bytes::copy source(payload);
+    address_item::deserialize_v2(level::bip155, source);
+    BOOST_REQUIRE(!source);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__cjdns_out_of_range__invalid)
+{
+    constexpr auto payload = base16_array("78563412010610fd000001000200030004000500060007208d");
+    system::read::bytes::copy source(payload);
+    address_item::deserialize_v2(level::bip155, source);
+    BOOST_REQUIRE(!source);
 }
 
 BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__torv3__expected)

@@ -484,13 +484,18 @@ BOOST_AUTO_TEST_CASE(settings__connectable__ip__true)
     BOOST_REQUIRE(instance.connectable(config::address{ "[2001:db8::2]:42" }));
 }
 
+BOOST_AUTO_TEST_CASE(settings__connectable__cjdns__true)
+{
+    const settings instance{ selection::mainnet };
+    BOOST_REQUIRE(instance.connectable(address_item{ 0, 0, cjdns_t{}, 42 }));
+}
+
 BOOST_AUTO_TEST_CASE(settings__connectable__not_ip__false)
 {
     const settings instance{ selection::mainnet };
     BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, torv2_t{}, 42 }));
     BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, torv3_t{}, 42 }));
     BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, i2p_t{}, 42 }));
-    BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, cjdns_t{}, 42 }));
     BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, {}, 42 }));
 }
 
@@ -502,8 +507,7 @@ BOOST_AUTO_TEST_CASE(settings__connectable__proxied__true)
     BOOST_REQUIRE(instance.connectable(address_item{ 0, 0, i2p_t{}, 42 }));
     BOOST_REQUIRE(instance.connectable(config::address{ "42.42.42.42:42" }));
 
-    // Cjdns and tor v2 have no host name form, so remain unroutable.
-    BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, cjdns_t{}, 42 }));
+    // Tor v2 has no host name form, so remains unroutable.
     BOOST_REQUIRE(!instance.connectable(address_item{ 0, 0, torv2_t{}, 42 }));
 }
 
@@ -543,7 +547,7 @@ BOOST_AUTO_TEST_CASE(settings__gossiped__tor__gossip_tor)
     settings instance{ selection::mainnet };
     instance.gossip_tor = true;
     BOOST_REQUIRE(instance.gossiped(address_item{ 0, 0, torv3_t{}, 42 }));
-    BOOST_REQUIRE(instance.gossiped(address_item{ 0, 0, torv2_t{}, 42 }));
+    BOOST_REQUIRE(!instance.gossiped(address_item{ 0, 0, torv2_t{}, 42 }));
 
     instance.gossip_tor = false;
     BOOST_REQUIRE(!instance.gossiped(address_item{ 0, 0, torv3_t{}, 42 }));

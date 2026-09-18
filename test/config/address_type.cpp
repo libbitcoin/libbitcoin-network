@@ -86,11 +86,33 @@ BOOST_AUTO_TEST_CASE(address_type__to_address__loopback_mapped__ipv4)
     BOOST_REQUIRE(to_address(mapped) == address_t{ ipv4_t{ mapped } });
 }
 
+BOOST_AUTO_TEST_CASE(address_type__to_address__onion_cat__unspecified)
+{
+    constexpr ip_address onion_cat
+    {
+        0xfd, 0x87, 0xd8, 0x7e, 0xeb, 0x43, 0xf1, 0xf2,
+        0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa
+    };
+
+    BOOST_REQUIRE(to_address(onion_cat) == address_t{});
+}
+
 // to_ip_address
 
 BOOST_AUTO_TEST_CASE(address_type__to_ip_address__ipv6__expected)
 {
     BOOST_REQUIRE_EQUAL(to_ip_address(address_t{ ipv6_t{ loopback_ip_address } }), loopback_ip_address);
+}
+
+BOOST_AUTO_TEST_CASE(address_type__to_ip_address__cjdns__expected)
+{
+    constexpr ip_address cjdns
+    {
+        0xfc, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x03,
+        0x00, 0x04, 0x00, 0x05, 0x00, 0x06, 0x00, 0x07
+    };
+
+    BOOST_REQUIRE_EQUAL(to_ip_address(address_t{ cjdns_t{ cjdns } }), cjdns);
 }
 
 BOOST_AUTO_TEST_CASE(address_type__to_ip_address__unspecified__unspecified)

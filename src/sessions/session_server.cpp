@@ -83,13 +83,6 @@ void session_server::handle_started(const code& ec,
         << " private" << (options_.authenticate() ? " authenticated" : "")
         << " bindings.");
 
-    // The contexts (transports) of the bindings are provided by the settings.
-    if (const auto code = options_.initialize_context())
-    {
-        handler(code);
-        return;
-    }
-
     if (options_.secure())
     {
         if (const auto code = do_accept(options_.safes,

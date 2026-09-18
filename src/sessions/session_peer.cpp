@@ -229,11 +229,6 @@ size_t session_peer::address_count() const NOEXCEPT
     return network_.address_count();
 }
 
-config::address session_peer::sam_self() const NOEXCEPT
-{
-    return network_.sam_self();
-}
-
 size_t session_peer::channel_count() const NOEXCEPT
 {
     return network_.channel_count();

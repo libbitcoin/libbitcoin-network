@@ -99,8 +99,8 @@ address protocol_peer::selfs() const NOEXCEPT
     const auto services = session_->services_provided();
     auto selfs = network_settings().inbound.selfs;
 
-    // The sam session self is derived from its key, not configured.
-    if (const auto self = session_->sam_self())
+    // The sam self is derived from its key, not configured.
+    if (const auto& self = network_settings().inbound.self)
         selfs.push_back(self);
 
     address message{};
