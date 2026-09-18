@@ -272,6 +272,10 @@ public:
     /// connection (outgoing only) this is the value passed via construct.
     virtual const config::endpoint& endpoint() const NOEXCEPT;
 
+    /// Get the endpoint of the local socket, established by connection. For a
+    /// proxied connection this is the local endpoint of the proxy connection.
+    virtual const config::endpoint& binding() const NOEXCEPT;
+
     /// Set the remote host address and endpoint (requires strand).
     /// A proxied acceptor must invoke this once its negotiation has
     /// established the connection to the peer (see handshake).
@@ -629,6 +633,7 @@ protected:
     // These are protected by strand (see also handle_accept).
     config::address address_;
     config::endpoint endpoint_;
+    config::endpoint binding_;
     deadline::ptr timer_;
     deadline::ptr watch_;
     socket_t socket_;

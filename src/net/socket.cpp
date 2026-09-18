@@ -202,6 +202,11 @@ const config::endpoint& socket::endpoint() const NOEXCEPT
     return endpoint_;
 }
 
+const config::endpoint& socket::binding() const NOEXCEPT
+{
+    return binding_;
+}
+
 void socket::set_address(const config::address& address) NOEXCEPT
 {
     BC_ASSERT(stranded());

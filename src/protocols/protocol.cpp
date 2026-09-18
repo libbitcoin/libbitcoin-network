@@ -138,6 +138,13 @@ const config::address& protocol::outbound() const NOEXCEPT
     return channel_->address();
 }
 
+config::endpoint protocol::binding() const NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return { channel_->binding() };
+    BC_POP_WARNING()
+}
+
 uint64_t protocol::nonce() const NOEXCEPT
 {
     return channel_->nonce();

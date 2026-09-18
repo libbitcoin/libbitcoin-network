@@ -126,6 +126,9 @@ public:
     /// Get the endpoint of the remote host.
     const config::endpoint& endpoint() const NOEXCEPT;
 
+    /// Get the endpoint of the local socket.
+    const config::endpoint& binding() const NOEXCEPT;
+
 protected:
     proxy(const socket::ptr& socket, uint32_t rate_limit) NOEXCEPT;
 
