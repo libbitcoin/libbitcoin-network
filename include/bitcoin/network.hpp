@@ -53,6 +53,7 @@
 #include <bitcoin/network/config/credential.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
+#include <bitcoin/network/interfaces/diagnostics.hpp>
 #include <bitcoin/network/interfaces/http.hpp>
 #include <bitcoin/network/interfaces/interfaces.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>

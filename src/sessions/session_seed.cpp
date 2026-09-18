@@ -44,6 +44,14 @@ session_seed::session_seed(net& network, uint64_t identifier) NOEXCEPT
 {
 }
 
+// Properties.
+// ----------------------------------------------------------------------------
+
+const session_seed::options_t& session_seed::options() const NOEXCEPT
+{
+    return static_cast<const options_t&>(session_peer::options());
+}
+
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 

@@ -139,6 +139,7 @@
     <ClCompile Include="..\..\..\..\src\error.cpp">
       <ObjectFileName>$(IntDir)src_error.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\interfaces\diagnostics.cpp" />
     <ClCompile Include="..\..\..\..\src\log\capture.cpp" />
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
@@ -355,6 +356,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\have.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\diagnostics.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp" />

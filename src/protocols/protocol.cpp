@@ -143,6 +143,11 @@ uint64_t protocol::nonce() const NOEXCEPT
     return channel_->nonce();
 }
 
+uint64_t protocol::sent() const NOEXCEPT
+{
+    return channel_->total();
+}
+
 const network::settings& protocol::network_settings() const NOEXCEPT
 {
     return session_->network_settings();

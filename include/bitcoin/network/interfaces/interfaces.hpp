@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_INTERFACES_HPP
 #define LIBBITCOIN_NETWORK_INTERFACES_HPP
 
+#include <bitcoin/network/interfaces/diagnostics.hpp>
 #include <bitcoin/network/interfaces/http.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>

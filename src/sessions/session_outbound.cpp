@@ -40,9 +40,17 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 session_outbound::session_outbound(net& network, uint64_t identifier) NOEXCEPT
-  : session_peer(network, identifier, network.network_settings().inbound),
+  : session_peer(network, identifier, network.network_settings().outbound),
     tracker<session_outbound>(network)
 {
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
+
+const session_outbound::options_t& session_outbound::options() const NOEXCEPT
+{
+    return static_cast<const options_t&>(session_peer::options());
 }
 
 // Start/stop sequence.

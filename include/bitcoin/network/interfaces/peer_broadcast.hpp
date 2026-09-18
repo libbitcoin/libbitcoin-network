@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/interfaces/diagnostics.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
@@ -42,55 +43,14 @@ struct peer_broadcast
     using signature = std::function<bool(const code&,
         const typename Message::cptr&, const key&)>;
 
-    /// Messages exchanged after the handshake completes.
-    static constexpr std::tuple messages
+    /// Messages relayed from the receiving channel to all other channels,
+    /// and channel diagnostics, which are internal (never serialized).
+    /// The v2 encoding is applied by the sender, so v1 is the relayed type.
+    static constexpr std::tuple methods
     {
         method<"addr", messages::peer::address::cptr, key>{},
-        method<"addrv2", messages::peer::address_v2::cptr, key>{},
-        method<"alert", messages::peer::alert::cptr, key>{},
-        method<"block", messages::peer::block::cptr, key>{},
-        method<"filteradd", messages::peer::bloom_filter_add::cptr, key>{},
-        method<"filterclear", messages::peer::bloom_filter_clear::cptr, key>{},
-        method<"filterload", messages::peer::bloom_filter_load::cptr, key>{},
-        method<"cfilter", messages::peer::client_filter::cptr, key>{},
-        method<"cfcheckpt", messages::peer::client_filter_checkpoint::cptr, key>{},
-        method<"cfheaders", messages::peer::client_filter_headers::cptr, key>{},
-        method<"cmpctblock", messages::peer::compact_block::cptr, key>{},
-        method<"blocktxn", messages::peer::compact_transactions::cptr, key>{},
-        method<"feefilter", messages::peer::fee_filter::cptr, key>{},
-        method<"getaddr", messages::peer::get_address::cptr, key>{},
-        method<"getblocks", messages::peer::get_blocks::cptr, key>{},
-        method<"getcfcheckpt", messages::peer::get_client_filter_checkpoint::cptr, key>{},
-        method<"getcfheaders", messages::peer::get_client_filter_headers::cptr, key>{},
-        method<"getcfilters", messages::peer::get_client_filters::cptr, key>{},
-        method<"getblocktxn", messages::peer::get_compact_transactions::cptr, key>{},
-        method<"getdata", messages::peer::get_data::cptr, key>{},
-        method<"getheaders", messages::peer::get_headers::cptr, key>{},
-        method<"headers", messages::peer::headers::cptr, key>{},
-        method<"inv", messages::peer::inventory::cptr, key>{},
-        method<"mempool", messages::peer::memory_pool::cptr, key>{},
-        method<"merkleblock", messages::peer::merkle_block::cptr, key>{},
-        method<"notfound", messages::peer::not_found::cptr, key>{},
-        method<"ping", messages::peer::ping::cptr, key>{},
-        method<"pong", messages::peer::pong::cptr, key>{},
-        method<"reject", messages::peer::reject::cptr, key>{},
-        method<"sendcmpct", messages::peer::send_compact::cptr, key>{},
-        method<"sendheaders", messages::peer::send_headers::cptr, key>{},
-        method<"tx", messages::peer::transaction::cptr, key>{}
+        method<"diagnostics", diagnostics::cptr, key>{}
     };
-
-    /// Handshake methods (exchanged before the handshake completes).
-    static constexpr std::tuple handshake
-    {
-        method<"version", messages::peer::version::cptr, key>{},
-        method<"verack", messages::peer::version_acknowledge::cptr, key>{},
-        method<"sendaddrv2", messages::peer::send_address_v2::cptr, key>{},
-        method<"sendtxrcncl", messages::peer::send_transaction_reconciliation::cptr, key>{},
-        method<"wtxidrelay", messages::peer::witness_tx_id_relay::cptr, key>{}
-    };
-
-    /// The channel dispatches on the union (the wire carries both).
-    static constexpr auto methods = std::tuple_cat(handshake, messages);
 };
 
 } // namespace rpc

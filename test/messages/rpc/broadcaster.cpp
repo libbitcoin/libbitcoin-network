@@ -229,11 +229,12 @@ BOOST_AUTO_TEST_CASE(broadcaster__subscribe__peer_broadcaster_stop__expected)
     bool result{};
 
     BOOST_REQUIRE(!instance.subscribe(
-        [&](const code& ec, const ping::cptr& ping, peer_broadcaster::key_t id)
+        [&](const code& ec, const address::cptr& address,
+            peer_broadcaster::key_t id)
         {
             // Stop notification has nullptr message, zero id, and specified code.
             result = (ec == expected_ec);
-            result &= is_null(ping);
+            result &= is_null(address);
             result &= is_zero(id);
             return true;
         }, 17));

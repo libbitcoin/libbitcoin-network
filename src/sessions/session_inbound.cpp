@@ -43,6 +43,14 @@ session_inbound::session_inbound(net& network, uint64_t identifier) NOEXCEPT
 {
 }
 
+// Properties.
+// ----------------------------------------------------------------------------
+
+const session_inbound::options_t& session_inbound::options() const NOEXCEPT
+{
+    return static_cast<const options_t&>(session_peer::options());
+}
+
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
