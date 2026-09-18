@@ -109,6 +109,42 @@ void channel_peer::set_start_height(size_t height) NOEXCEPT
     start_height_ = height;
 }
 
+// The epoch stamp indicates that there is no outstanding ping.
+static const steady_clock::time_point epoch{};
+
+steady_clock::duration channel_peer::ping_time() const NOEXCEPT
+{
+    return ping_;
+}
+
+steady_clock::duration channel_peer::minimum_ping_time() const NOEXCEPT
+{
+    return minimum_ping_;
+}
+
+steady_clock::duration channel_peer::pending_ping_time() const NOEXCEPT
+{
+    return pinged_ == epoch ? steady_clock::duration{} :
+        steady_clock::now() - pinged_;
+}
+
+void channel_peer::set_ping() NOEXCEPT
+{
+    pinged_ = steady_clock::now();
+}
+
+void channel_peer::set_pong() NOEXCEPT
+{
+    if (pinged_ == epoch)
+        return;
+
+    ping_ = steady_clock::now() - pinged_;
+    pinged_ = epoch;
+
+    if (is_zero(minimum_ping_.count()) || ping_ < minimum_ping_)
+        minimum_ping_ = ping_;
+}
+
 frame_ptr channel_peer::create_frame() const NOEXCEPT
 {
     const auto in = to_shared<frame>();

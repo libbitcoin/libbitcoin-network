@@ -116,6 +116,19 @@ public:
     bool current() const NOEXCEPT;
     void set_current(bool value) NOEXCEPT;
 
+    /// Round trip time of the last ping, zero if none completed.
+    steady_clock::duration ping_time() const NOEXCEPT;
+
+    /// Least round trip time of any ping, zero if none completed.
+    steady_clock::duration minimum_ping_time() const NOEXCEPT;
+
+    /// Elapsed time of the outstanding ping, zero if none outstanding.
+    steady_clock::duration pending_ping_time() const NOEXCEPT;
+
+    /// Stamp the outstanding ping, and time it out upon its pong.
+    void set_ping() NOEXCEPT;
+    void set_pong() NOEXCEPT;
+
     /// Peer version should be written only in handshake.
     messages::peer::version::cptr peer_version() const NOEXCEPT;
     void set_peer_version(const messages::peer::version::cptr& value) NOEXCEPT;
@@ -150,6 +163,9 @@ private:
     system::data_chunk payload_buffer_{};
     dispatcher dispatcher_{};
     size_t start_height_{};
+    steady_clock::time_point pinged_{};
+    steady_clock::duration ping_{};
+    steady_clock::duration minimum_ping_{};
     bool reading_{};
     bool quiet_{};
     bool wants_address_v2_{};
