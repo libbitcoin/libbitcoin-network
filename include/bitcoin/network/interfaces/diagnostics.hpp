@@ -60,15 +60,38 @@ public:
         uint64_t sent;
         size_t start_height;
         bool encrypted;
+        std::string agent;
     };
 
     typedef std::vector<row> rows;
 
+    /// The captured rows, shared by the message and the race completer.
+    class BCT_API sink
+    {
+    public:
+        typedef std::shared_ptr<sink> ptr;
+
+        DELETE_COPY_MOVE_DESTRUCT(sink);
+
+        sink() NOEXCEPT;
+
+        /// Add the row of a member channel (thread safe).
+        void add(row&& value) NOEXCEPT;
+
+        /// The captured rows, read only upon race completion.
+        const rows& captured() const NOEXCEPT;
+
+    private:
+        // This is protected by mutex.
+        mutable std::mutex mutex_{};
+        rows rows_{};
+    };
+
     DELETE_COPY_MOVE_DESTRUCT(diagnostics);
 
     /// Capture the given group, or the channel of the given identifier.
-    diagnostics(const race::ptr& complete, target group,
-        uint64_t channel={}) NOEXCEPT;
+    diagnostics(const race::ptr& complete, const sink::ptr& captured,
+        target group, uint64_t channel={}) NOEXCEPT;
 
     /// The identified channel is a member (target is channel).
     bool member(uint64_t identifier) const NOEXCEPT;
@@ -79,18 +102,12 @@ public:
     /// Add the row of a member channel (thread safe).
     void add(row&& value) const NOEXCEPT;
 
-    /// The captured rows, read only upon race completion.
-    const rows& captured() const NOEXCEPT;
-
 private:
-    // This is thread safe.
+    // These are thread safe.
     const race::ptr race_;
+    const sink::ptr sink_;
     const target group_;
     const uint64_t channel_;
-
-    // This is protected by mutex.
-    mutable std::mutex mutex_{};
-    mutable rows rows_{};
 };
 
 } // namespace network
