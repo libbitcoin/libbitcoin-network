@@ -45,9 +45,7 @@ inline deadline::ptr make_timer(const logger& log, asio::strand& strand,
 uint32_t channel::rate_limited(const settings_t& settings,
     const options_t& options) NOEXCEPT
 {
-    return to_bool(settings.rate_limit) && to_bool(options.rate_limit) ?
-        std::min(settings.rate_limit, options.rate_limit) :
-        std::max(settings.rate_limit, options.rate_limit);
+    return settings.rate_limited(options);
 }
 
 // Protocols invoke channel stop for application layer protocol violations.
