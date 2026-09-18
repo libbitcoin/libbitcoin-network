@@ -127,16 +127,49 @@ void channel::handle_monitor(const code& ec) NOEXCEPT
 // Called from start or strand.
 
 // protected
+// The inactivity timer arms once per window and rearms from the last read,
+// so activity costs a time stamp and not a timer reset.
 void channel::reading() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    start_inactivity();
+    last_read_ = steady_clock::now();
+}
+
+// protected
+void channel::writing() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    last_write_ = steady_clock::now();
+}
+
+steady_clock::time_point channel::created() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return created_;
+}
+
+steady_clock::time_point channel::last_read() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return last_read_;
+}
+
+steady_clock::time_point channel::last_write() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return last_write_;
 }
 
 size_t channel::remaining() const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    return inactivity_ ? limit<size_t>(inactivity_->remaining().count()) : zero;
+
+    using namespace std::chrono;
+    const auto span = duration_cast<seconds>(options_.inactivity());
+    const auto idle = duration_cast<seconds>(steady_clock::now() - last_read_);
+    return floored_subtract(
+        possible_narrow_sign_cast<size_t>(span.count()),
+        possible_narrow_sign_cast<size_t>(idle.count()));
 }
 
 void channel::stop_expiration() NOEXCEPT
@@ -209,6 +242,18 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
     {
         LOGF("Inactivity timer fail [" << endpoint() << "] " << ec.message());
         stop(ec);
+        return;
+    }
+
+    // Reads since the timer armed defer expiration to the read that is idle.
+    const auto span = options_.inactivity();
+    const auto idle = steady_clock::now() - last_read_;
+    if (idle < span)
+    {
+        if (inactivity_) inactivity_->start(
+            std::bind(&channel::handle_inactivity,
+                shared_from_base<channel>(), _1), span - idle);
+
         return;
     }
 

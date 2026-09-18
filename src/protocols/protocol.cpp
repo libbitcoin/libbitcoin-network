@@ -153,6 +153,31 @@ uint64_t protocol::received() const NOEXCEPT
     return channel_->received();
 }
 
+// The stamps are monotonic, so the wall time is derived from the elapsed.
+static uint32_t to_unix(const steady_clock::time_point& stamp) NOEXCEPT
+{
+    const auto span = std::chrono::duration_cast<std::chrono::seconds>(
+        steady_clock::now() - stamp);
+
+    return floored_subtract(unix_time(),
+        possible_narrow_sign_cast<uint32_t>(span.count()));
+}
+
+uint32_t protocol::created() const NOEXCEPT
+{
+    return to_unix(channel_->created());
+}
+
+uint32_t protocol::last_read() const NOEXCEPT
+{
+    return to_unix(channel_->last_read());
+}
+
+uint32_t protocol::last_write() const NOEXCEPT
+{
+    return to_unix(channel_->last_write());
+}
+
 const network::settings& protocol::network_settings() const NOEXCEPT
 {
     return session_->network_settings();

@@ -224,6 +224,11 @@ void proxy::reading() NOEXCEPT
 {
 }
 
+// protected
+void proxy::writing() NOEXCEPT
+{
+}
+
 // private
 void proxy::do_reading() NOEXCEPT
 {

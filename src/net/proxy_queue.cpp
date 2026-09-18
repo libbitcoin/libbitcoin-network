@@ -149,6 +149,7 @@ void proxy::handle_metered(const code& ec, size_t bytes,
 {
     BC_ASSERT(stranded());
     sent_ = system::ceilinged_add(sent_.load(), bytes);
+    writing();
     writing_ = false;
 
     // A send that consumed its full allocation is not deferred.

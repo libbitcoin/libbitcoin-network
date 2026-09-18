@@ -135,6 +135,9 @@ protected:
     /// Stranded event, allows timer reset.
     virtual void reading() NOEXCEPT;
 
+    /// Signal write activity (called on strand upon send completion).
+    virtual void writing() NOEXCEPT;
+
     /// Stranded handler invoked from stop().
     virtual void stopping(const code& ec) NOEXCEPT;
 

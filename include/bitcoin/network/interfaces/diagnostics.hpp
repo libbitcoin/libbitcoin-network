@@ -58,6 +58,9 @@ public:
         uint64_t services;
         uint64_t sent;
         uint64_t received;
+        uint32_t created;
+        uint32_t last_read;
+        uint32_t last_write;
         size_t start_height;
         bool encrypted;
         std::string agent;

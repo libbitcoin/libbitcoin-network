@@ -82,6 +82,15 @@ public:
     /// Arbitrary nonce of the channel (for loopback guard).
     uint64_t nonce() const NOEXCEPT;
 
+    /// The channel creation time (requires strand).
+    steady_clock::time_point created() const NOEXCEPT;
+
+    /// The last read time, creation if none (requires strand).
+    steady_clock::time_point last_read() const NOEXCEPT;
+
+    /// The last write time, creation if none (requires strand).
+    steady_clock::time_point last_write() const NOEXCEPT;
+
     /// Arbitrary identifier of the channel (for session subscribers).
     uint64_t identifier() const NOEXCEPT;
 
@@ -107,6 +116,7 @@ protected:
 
     /// Stranded notifier, allows timer reset.
     void reading() NOEXCEPT override;
+    void writing() NOEXCEPT override;
 
 private:
     void stop_expiration() NOEXCEPT;
@@ -131,6 +141,9 @@ private:
     // These are protected by strand.
     deadline::ptr inactivity_;
     deadline::ptr expiration_;
+    steady_clock::time_point created_{ steady_clock::now() };
+    steady_clock::time_point last_read_{ created_ };
+    steady_clock::time_point last_write_{ created_ };
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;
