@@ -38,6 +38,7 @@ class BCT_API session_seed
 {
 public:
     typedef std::shared_ptr<session_seed> ptr;
+    using options_t = network::settings::peer_outbound;
 
     /// Construct an instance.
     session_seed(net& network, uint64_t identifier) NOEXCEPT;
@@ -47,6 +48,9 @@ public:
     void start(result_handler&& handler) NOEXCEPT override;
 
 protected:
+    /// The configured options for this peer session (covariant).
+    const options_t& options() const NOEXCEPT override;
+
     /// Overridden to set service and version minimums upon session start.
     void attach_handshake(const channel::ptr& channel,
         result_handler&& handler) NOEXCEPT override;

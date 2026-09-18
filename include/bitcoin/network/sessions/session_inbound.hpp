@@ -37,6 +37,7 @@ class BCT_API session_inbound
 {
 public:
     typedef std::shared_ptr<session_inbound> ptr;
+    using options_t = network::settings::peer_inbound;
 
     /// Construct an instance (network should be started).
     session_inbound(net& network, uint64_t identifier) NOEXCEPT;
@@ -45,6 +46,9 @@ public:
     void start(result_handler&& handler) NOEXCEPT override;
 
 protected:
+    /// The configured options for this peer session (covariant).
+    const options_t& options() const NOEXCEPT override;
+
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) NOEXCEPT override;
 

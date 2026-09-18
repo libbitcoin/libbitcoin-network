@@ -40,6 +40,7 @@ public:
     typedef std::shared_ptr<session_manual> ptr;
     typedef std::function<bool(const code&, const channel::ptr&)>
         channel_notifier;
+    using options_t = network::settings::peer_manual;
 
     /// Construct an instance (network should be started).
     session_manual(net& network, uint64_t identifier) NOEXCEPT;
@@ -63,6 +64,9 @@ public:
         channel_notifier&& handler) NOEXCEPT;
 
 protected:
+    /// The configured options for this peer session (covariant).
+    const options_t& options() const NOEXCEPT override;
+
     /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,
         result_handler&& handler) NOEXCEPT override;
