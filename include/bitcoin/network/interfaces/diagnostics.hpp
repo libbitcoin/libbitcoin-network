@@ -57,6 +57,7 @@ public:
         uint32_t version;
         uint64_t services;
         uint64_t sent;
+        uint64_t received;
         size_t start_height;
         bool encrypted;
         std::string agent;
