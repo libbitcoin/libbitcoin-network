@@ -189,6 +189,9 @@ protected:
     /// The bytes sent to the channel.
     virtual uint64_t sent() const NOEXCEPT;
 
+    /// The bytes received from the channel.
+    virtual uint64_t received() const NOEXCEPT;
+
     /// Network settings.
     virtual const network::settings& network_settings() const NOEXCEPT;
 

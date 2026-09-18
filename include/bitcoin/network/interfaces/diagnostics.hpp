@@ -28,18 +28,17 @@ namespace libbitcoin {
 namespace network {
 
 /// Channel diagnostics, broadcast to peer channels (never serialized).
-/// The round completes when the last reference to the race is released, so
-/// each subscriber retains the message until it has added its own row.
+/// The round completes when the last message reference is released.
 class BCT_API diagnostics
 {
 public:
     typedef std::shared_ptr<const diagnostics> cptr;
     typedef race_all<const code&> race;
 
-    /// The broadcast method, this message has no wire representation.
+    /// The broadcast method (there is no wire representation).
     static constexpr auto command = "diagnostics";
 
-    /// The channels to be captured, each determines its own membership.
+    /// The channels to be captured.
     enum class target
     {
         all,
@@ -65,7 +64,7 @@ public:
 
     typedef std::vector<row> rows;
 
-    /// The captured rows, shared by the message and the race completer.
+    /// The captured rows.
     class BCT_API sink
     {
     public:
@@ -78,7 +77,7 @@ public:
         /// Add the row of a member channel (thread safe).
         void add(row&& value) NOEXCEPT;
 
-        /// The captured rows, read only upon race completion.
+        /// The captured rows (read upon race completion).
         const rows& captured() const NOEXCEPT;
 
     private:

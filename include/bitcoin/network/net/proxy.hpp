@@ -115,7 +115,10 @@ public:
     bool detected() const NOEXCEPT;
 
     /// The total number of bytes queued/sent to the remote endpoint.
-    uint64_t total() const NOEXCEPT;
+    uint64_t sent() const NOEXCEPT;
+
+    /// The total number of bytes received from the remote endpoint.
+    uint64_t received() const NOEXCEPT;
 
     /// Get the address of the outgoing endpoint passed via construct.
     const config::address& address() const NOEXCEPT;
@@ -295,6 +298,10 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // Meter sent bytes and defer the completion by the unconsumed allocation.
+    void count_received(size_t bytes) NOEXCEPT;
+    count_handler counted(count_handler&& handler) NOEXCEPT;
+    void handle_counted(const code& ec, size_t bytes,
+        const count_handler& handler) NOEXCEPT;
     count_handler metered(count_handler&& handler) NOEXCEPT;
     void handle_metered(const code& ec, size_t bytes,
         const steady_clock::time_point& start,
@@ -307,7 +314,8 @@ private:
 
     // These are thread safe.
     std::atomic_bool paused_{ true };
-    std::atomic<uint64_t> total_{};
+    std::atomic<uint64_t> sent_{};
+    std::atomic<uint64_t> received_{};
     const uint32_t rate_limit_;
     socket::ptr socket_;
 
