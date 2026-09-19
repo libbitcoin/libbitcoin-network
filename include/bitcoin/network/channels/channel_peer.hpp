@@ -38,6 +38,7 @@ class BCT_API channel_peer
 {
 public:
     typedef std::shared_ptr<channel_peer> ptr;
+    using counters = messages::peer::registry::counters_t;
     using options_t = settings_t::tcp_server;
     using interface = rpc::interface::peer::dispatch;
     using dispatcher = rpc::dispatcher<interface>;
@@ -62,18 +63,20 @@ public:
         using namespace messages::peer;
         using namespace std::placeholders;
 
+        constexpr auto index = messages::peer::registry::index_of<Message>();
+
         frame out{};
         out.magic = settings().identifier;
         out.version = negotiated_version();
         out.message = rpc::any_t{ system::to_shared(message) };
-        out.index = messages::peer::registry::index_of<Message>();
+        out.index = index;
 
         LOGX("Send " << Message::command << " to [" << endpoint() << "] ("
             << message.size(out.version) << " bytes)");
 
         write(std::move(out),
             std::bind(&channel_peer::handle_send,
-                shared_from_base<channel_peer>(), _1, _2, Message::command,
+                shared_from_base<channel_peer>(), _1, _2, index,
                 std::move(handler)));
     }
 
@@ -116,6 +119,12 @@ public:
     bool current() const NOEXCEPT;
     void set_current(bool value) NOEXCEPT;
 
+    /// Bytes sent to the peer of each registered message.
+    const counters& sent_by_message() const NOEXCEPT;
+
+    /// Bytes received from the peer of each registered message.
+    const counters& received_by_message() const NOEXCEPT;
+
     /// Round trip time of the last ping, zero if none completed.
     steady_clock::duration ping_time() const NOEXCEPT;
 
@@ -156,10 +165,12 @@ protected:
     bool is_handshaked() const NOEXCEPT;
 
 private:
+    static void count(counters& counts, size_t index, size_t bytes) NOEXCEPT;
+
     void log_fault(const code& ec,
         const messages::peer::frame& in) const NOEXCEPT;
-    void handle_send(const code& ec, size_t size,
-        const std::string& command, const result_handler& handler) NOEXCEPT;
+    void handle_send(const code& ec, size_t size, size_t index,
+        const result_handler& handler) NOEXCEPT;
 
     // These are protected by strand/order.
     uint32_t negotiated_version_;
@@ -167,6 +178,8 @@ private:
     system::data_chunk payload_buffer_{};
     dispatcher dispatcher_{};
     size_t start_height_{};
+    counters sent_by_message_{};
+    counters received_by_message_{};
     steady_clock::time_point pinged_{};
     steady_clock::duration ping_{};
     steady_clock::duration minimum_ping_{};

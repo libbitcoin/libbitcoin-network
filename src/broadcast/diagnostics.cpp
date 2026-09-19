@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/interfaces/diagnostics.hpp>
+#include <bitcoin/network/broadcast/diagnostics.hpp>
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -28,13 +28,14 @@ diagnostics::sink::sink() NOEXCEPT
 {
 }
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 void diagnostics::sink::add(row&& value) NOEXCEPT
 {
     std::lock_guard lock{ mutex_ };
+
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     rows_.push_back(std::move(value));
+    BC_POP_WARNING()
 }
-BC_POP_WARNING()
 
 const diagnostics::rows& diagnostics::sink::captured() const NOEXCEPT
 {
@@ -47,12 +48,12 @@ diagnostics::diagnostics(const race::ptr& complete, const sink::ptr& captured,
 {
 }
 
-bool diagnostics::member(uint64_t identifier) const NOEXCEPT
+bool diagnostics::targets(uint64_t identifier) const NOEXCEPT
 {
     return group_ == target::channel && channel_ == identifier;
 }
 
-bool diagnostics::member(target group) const NOEXCEPT
+bool diagnostics::targets(target group) const NOEXCEPT
 {
     return group_ == target::all || group_ == group;
 }

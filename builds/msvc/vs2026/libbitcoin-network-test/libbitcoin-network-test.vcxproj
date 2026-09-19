@@ -132,6 +132,7 @@
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\test\async\time.cpp" />
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\broadcast\terminator.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp" />
@@ -147,7 +148,6 @@
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer_setup_fixture.cpp" />
-    <ClCompile Include="..\..\..\..\test\interfaces\terminator.cpp" />
     <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />

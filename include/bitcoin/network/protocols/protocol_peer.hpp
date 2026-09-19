@@ -38,6 +38,7 @@ class BCT_API protocol_peer
 public:
     typedef std::shared_ptr<protocol_peer> ptr;
     using channel_t = channel_peer;
+    using counters = channel_t::counters;
     using options_t = channel_t::options_t;
 
 protected:
@@ -79,6 +80,12 @@ protected:
 
     /// Advertised addresses with own services and current timestamp.
     virtual messages::peer::address selfs() const NOEXCEPT;
+
+    /// Bytes sent to the peer of each registered message.
+    virtual const counters& sent_by_message() const NOEXCEPT;
+
+    /// Bytes received from the peer of each registered message.
+    virtual const counters& received_by_message() const NOEXCEPT;
 
     /// Round trip time of the last ping, zero if none completed.
     virtual steady_clock::duration ping_time() const NOEXCEPT;

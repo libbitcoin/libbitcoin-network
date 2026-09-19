@@ -109,6 +109,24 @@ void channel_peer::set_start_height(size_t height) NOEXCEPT
     start_height_ = height;
 }
 
+const channel_peer::counters& channel_peer::sent_by_message() const NOEXCEPT
+{
+    return sent_by_message_;
+}
+
+const channel_peer::counters& channel_peer::received_by_message() const NOEXCEPT
+{
+    return received_by_message_;
+}
+
+// static
+void channel_peer::count(counters& counts, size_t index,
+    size_t bytes) NOEXCEPT
+{
+    if (index < registry::size)
+        counts.at(index) = ceilinged_add(counts.at(index), bytes);
+}
+
 // The epoch stamp indicates that there is no outstanding ping.
 static const steady_clock::time_point epoch{};
 
@@ -247,7 +265,7 @@ void channel_peer::receive() NOEXCEPT
 // Handle errors and post message to subscribers.
 // The frame object is allocated on another thread and destroyed on this one.
 // This introduces cross-thread allocation/deallocation, though size is small.
-void channel_peer::handle_receive(const code& ec, size_t,
+void channel_peer::handle_receive(const code& ec, size_t size,
     const frame_ptr& in) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -270,6 +288,7 @@ void channel_peer::handle_receive(const code& ec, size_t,
     LOGX("Recv " << in->head.command << " from [" << endpoint() << "] ("
         << in->head.payload_size << " bytes)");
 
+    count(received_by_message_, in->head.index(), size);
     reading_ = false;
 
     // Notify subscribers of the new message.
@@ -294,9 +313,11 @@ void channel_peer::handle_receive(const code& ec, size_t,
     receive();
 }
 
-void channel_peer::handle_send(const code& ec, size_t LOG_ONLY(size),
-    const std::string& LOG_ONLY(command), const result_handler& handler) NOEXCEPT
+void channel_peer::handle_send(const code& ec, size_t size, size_t index,
+    const result_handler& handler) NOEXCEPT
 {
+    count(sent_by_message_, index, size);
+
     if (ec)
         stop(ec);
 
@@ -304,10 +325,11 @@ void channel_peer::handle_send(const code& ec, size_t LOG_ONLY(size),
     if (ec &&
         ec != error::peer_disconnect &&
         ec != error::operation_canceled &&
-        ec != error::connect_failed)
+        ec != error::connect_failed &&
+        index < registry::size)
     {
-        LOGF("Send failure " << command << " to [" << endpoint() << "] ("
-            << size << " bytes) " << ec.message());
+        LOGF("Send failure " << registry::commands().at(index) << " to ["
+            << endpoint() << "] (" << size << " bytes) " << ec.message());
     }
 
     handler(ec);

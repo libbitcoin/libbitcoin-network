@@ -51,7 +51,6 @@ BOOST_AUTO_TEST_CASE(race_all__destruct__captured__resources_deleted)
 {
     struct destructor
     {
-        using ptr = std::shared_ptr<destructor>;
         destructor(bool& deleted) NOEXCEPT : deleted_(deleted) {}
         ~destructor() NOEXCEPT { deleted_ = true; }
         bool& deleted_;

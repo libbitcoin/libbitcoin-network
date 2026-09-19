@@ -25,34 +25,45 @@ static terminator::race::ptr unused_race() NOEXCEPT
     return std::make_shared<terminator::race>([](const code&) NOEXCEPT {});
 }
 
-BOOST_AUTO_TEST_CASE(terminator__member__identifier__expected)
+BOOST_AUTO_TEST_CASE(terminator__targets__identifier__expected)
 {
     const config::address address{ "42.42.42.42:4242" };
+    const config::endpoint endpoint{ "42.42.42.42:4242" };
     const terminator instance{ unused_race(), error::channel_stopped, 42 };
 
-    BOOST_REQUIRE(instance.member(42, address));
-    BOOST_REQUIRE(!instance.member(43, address));
+    BOOST_REQUIRE(instance.targets(42, address, endpoint));
+    BOOST_REQUIRE(!instance.targets(43, address, endpoint));
 }
 
-BOOST_AUTO_TEST_CASE(terminator__member__address__expected)
+BOOST_AUTO_TEST_CASE(terminator__targets__address__expected)
 {
     const config::address address{ "42.42.42.42:4242" };
     const config::address other{ "24.24.24.24:4242" };
-    const terminator instance{ unused_race(), error::channel_stopped, 0, address };
+    const terminator instance{ unused_race(), error::channel_stopped, 0, config::endpoint{ "42.42.42.42:4242" } };
 
-    BOOST_REQUIRE(instance.member(42, address));
-    BOOST_REQUIRE(!instance.member(42, other));
+    BOOST_REQUIRE(instance.targets(42, address, config::endpoint{ "foo.bar:4242" }));
+    BOOST_REQUIRE(!instance.targets(42, other, config::endpoint{ "foo.bar:4242" }));
 }
 
-BOOST_AUTO_TEST_CASE(terminator__member__unspecified_port__any_port)
+BOOST_AUTO_TEST_CASE(terminator__targets__endpoint__expected)
 {
-    const config::address address{ "42.42.42.42" };
-    const config::address other{ "24.24.24.24:4242" };
-    const terminator instance{ unused_race(), error::channel_stopped, 0, address };
+    const config::address unresolved{};
+    const terminator instance{ unused_race(), error::channel_stopped, 0, config::endpoint{ "foo.bar:4242" } };
 
-    BOOST_REQUIRE(instance.member(42, config::address{ "42.42.42.42:4242" }));
-    BOOST_REQUIRE(instance.member(42, config::address{ "42.42.42.42:2424" }));
-    BOOST_REQUIRE(!instance.member(42, other));
+    BOOST_REQUIRE(instance.targets(42, unresolved, config::endpoint{ "foo.bar:4242" }));
+    BOOST_REQUIRE(!instance.targets(42, unresolved, config::endpoint{ "foo.bar:2424" }));
+    BOOST_REQUIRE(!instance.targets(42, unresolved, config::endpoint{ "baz.bar:4242" }));
+}
+
+BOOST_AUTO_TEST_CASE(terminator__targets__unspecified_port__any_port)
+{
+    const config::address other{ "24.24.24.24:4242" };
+    const config::endpoint endpoint{ "42.42.42.42" };
+    const terminator instance{ unused_race(), error::channel_stopped, 0, endpoint };
+
+    BOOST_REQUIRE(instance.targets(42, config::address{ "42.42.42.42:4242" }, endpoint));
+    BOOST_REQUIRE(instance.targets(42, config::address{ "42.42.42.42:2424" }, endpoint));
+    BOOST_REQUIRE(!instance.targets(42, other, config::endpoint{ "24.24.24.24:4242" }));
 }
 
 BOOST_AUTO_TEST_CASE(terminator__reason__always__expected)

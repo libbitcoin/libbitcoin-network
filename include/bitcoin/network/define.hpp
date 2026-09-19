@@ -84,9 +84,10 @@ namespace network {
 // /async         : define
 // /log           : define /async
 // /messages      : define memory /async
-// /config        : define /messages
 // /interface     : define /messages
 // /p2ps          : define /messages
+// /config        : define /messages
+// /broadcast     : define /config
 // /zmtp          : define
 // /net           : define settings memory /config /log
 // /channels      : define /net /interface

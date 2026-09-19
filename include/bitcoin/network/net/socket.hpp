@@ -263,13 +263,13 @@ public:
     /// The transport has been detected (downgraded is otherwise undefined).
     virtual bool detected() const NOEXCEPT;
 
-    /// Get the address of the outgoing endpoint passed via construct, or the
-    /// resolved endpoint address for incoming connections.
+    /// Get the resolved address of the remote host. Established by connection
+    /// for incoming and non-proxied outgoing, and by the proxied connector or
+    /// acceptor for a proxied connection (see set_address).
     virtual const config::address& address() const NOEXCEPT;
 
-    /// Get the endpoint of the remote host. Established by connection
-    /// resolution for incoming and non-proxied outgoing. For a proxied
-    /// connection (outgoing only) this is the value passed via construct.
+    /// Get the endpoint of the intended target, as passed via construct. For
+    /// an incoming connection this is the resolved endpoint of the remote.
     virtual const config::endpoint& endpoint() const NOEXCEPT;
 
     /// Get the endpoint of the local socket, established by connection. For a

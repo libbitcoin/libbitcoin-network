@@ -20,9 +20,8 @@
 #define LIBBITCOIN_NETWORK_INTERFACES_PEER_BROADCAST_HPP
 
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/broadcast/broadcast.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/interfaces/terminator.hpp>
-#include <bitcoin/network/interfaces/diagnostics.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {

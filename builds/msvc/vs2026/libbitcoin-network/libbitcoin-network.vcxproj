@@ -126,6 +126,8 @@
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
+    <ClCompile Include="..\..\..\..\src\broadcast\diagnostics.cpp" />
+    <ClCompile Include="..\..\..\..\src\broadcast\terminator.cpp" />
     <ClCompile Include="..\..\..\..\src\channels\channel.cpp" />
     <ClCompile Include="..\..\..\..\src\channels\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\src\channels\channel_peer.cpp" />
@@ -139,8 +141,6 @@
     <ClCompile Include="..\..\..\..\src\error.cpp">
       <ObjectFileName>$(IntDir)src_error.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\interfaces\diagnostics.cpp" />
-    <ClCompile Include="..\..\..\..\src\interfaces\terminator.cpp" />
     <ClCompile Include="..\..\..\..\src\log\capture.cpp" />
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
@@ -343,6 +343,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\beast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\broadcast.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\diagnostics.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\terminator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_peer.hpp" />
@@ -358,12 +361,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\have.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\diagnostics.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\terminator.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\levels.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp" />

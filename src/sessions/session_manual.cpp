@@ -100,21 +100,23 @@ void session_manual::connect(const config::endpoint& peer,
     // Create a persistent connector for the manual connection.
     const auto connector = create_manual_connector();
 
-    subscribe_stop([=](const code&) NOEXCEPT
+    // The key drops the connector with its subscription (see notify).
+    const auto key = subscribe_stop([=](const code&) NOEXCEPT
     {
         connector->stop();
         return false;
     });
 
     LOGN("Maintaining manual connection to [" << peer << "]");
-    start_connect(error::success, peer, connector, std::move(handler));
+    start_connect(error::success, peer, connector, std::move(handler), key);
 }
 
 // Connect cycle.
 // ----------------------------------------------------------------------------
 
 void session_manual::start_connect(const code&, const endpoint& peer,
-    const connector::ptr& connector, const channel_notifier& handler) NOEXCEPT
+    const connector::ptr& connector, const channel_notifier& handler,
+    object_key key) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -126,12 +128,12 @@ void session_manual::start_connect(const code&, const endpoint& peer,
     }
 
     connector->connect(peer,
-        BIND(handle_connect, _1, _2, peer, connector, handler));
+        BIND(handle_connect, _1, _2, peer, connector, handler, key));
 }
 
 void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
     const endpoint& peer, const connector::ptr& connector,
-    const channel_notifier& handler) NOEXCEPT
+    const channel_notifier& handler, object_key key) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -145,7 +147,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
 
     if (ec == error::service_suspended)
     {
-        defer(BIND(start_connect, _1, peer, connector, handler));
+        defer(BIND(start_connect, _1, peer, connector, handler, key));
         return;
     }
 
@@ -158,13 +160,13 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
         // Connect failure notification.
         if (!handler(ec, nullptr))
         {
-            // TODO: drop connector subscription.
             LOGS("Manual channel dropped at connect [" << peer << "].");
+            notify(key);
             return;
         }
 
         // Avoid tight loop with delay timer.
-        defer(BIND(start_connect, _1, peer, connector, handler));
+        defer(BIND(start_connect, _1, peer, connector, handler, key));
         return;
     }
 
@@ -173,7 +175,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
     // It is possible for start_channel to directly invoke the handlers.
     start_channel(channel,
         BIND(handle_channel_start, _1, channel, peer, handler),
-        BIND(handle_channel_stop, _1, channel, peer, connector, handler));
+        BIND(handle_channel_stop, _1, channel, peer, connector, handler, key));
 }
 
 void session_manual::attach_handshake(const channel::ptr& channel,
@@ -204,7 +206,7 @@ void session_manual::attach_protocols(
 
 void session_manual::handle_channel_stop(const code& ec,
     const channel::ptr&, const endpoint& peer, const connector::ptr& connector,
-    const channel_notifier& handler) NOEXCEPT
+    const channel_notifier& handler, object_key key) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -214,13 +216,13 @@ void session_manual::handle_channel_stop(const code& ec,
     // Handshake failure notification.
     if (ec == error::channel_dropped || !handler(ec, nullptr))
     {
-        // TODO: drop connector subscription.
         LOGS("Manual channel dropped [" << peer << "].");
+        notify(key);
         return;
     }
 
     // Handshake failure creates tight loop (e.g. not whitelisted).
-    defer(BIND(start_connect, error::success, peer, connector, handler));
+    defer(BIND(start_connect, error::success, peer, connector, handler, key));
 }
 
 BC_POP_WARNING()
