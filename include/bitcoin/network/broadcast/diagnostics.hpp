@@ -23,6 +23,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/peer/registry.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -33,6 +34,7 @@ class BCT_API diagnostics
 {
 public:
     typedef std::shared_ptr<const diagnostics> cptr;
+    using counters = messages::peer::registry::counters_t;
     using race = race_all<const code&>;
 
     /// The broadcast method (there is no wire representation).
@@ -75,6 +77,8 @@ public:
         int64_t time_offset;
         uint64_t bytes_sent;
         uint64_t bytes_received;
+        counters bytes_sent_by_message;
+        counters bytes_received_by_message;
 
         /// Ping.
         steady_clock::duration ping_time;

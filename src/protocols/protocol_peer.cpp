@@ -121,6 +121,16 @@ address protocol_peer::selfs() const NOEXCEPT
     return message;
 }
 
+const registry::counters_t& protocol_peer::sent_by_message() const NOEXCEPT
+{
+    return channel_->sent_by_message();
+}
+
+const registry::counters_t& protocol_peer::received_by_message() const NOEXCEPT
+{
+    return channel_->received_by_message();
+}
+
 steady_clock::duration protocol_peer::ping_time() const NOEXCEPT
 {
     return channel_->ping_time();

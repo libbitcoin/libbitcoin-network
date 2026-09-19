@@ -58,6 +58,9 @@ struct registry
     using commands_t = std::array<std::string_view, size>;
     using identifiers_t = std::array<uint8_t, size>;
 
+    /// Byte counts, indexed by registered message.
+    using counters_t = std::array<uint64_t, size>;
+
 private:
     using span_t = std::span<const uint8_t>;
     using deserializer_t = rpc::any_t(*)(const span_t&, uint32_t, bool);
