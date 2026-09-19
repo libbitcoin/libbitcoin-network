@@ -141,9 +141,11 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
 {
     BC_ASSERT(stranded());
 
-    // For socks proxy, peer will be the server's local binding.
-    if (!proxied_)
-        endpoint_ = peer;
+    // The endpoint is the intended target, the address is the resolved peer.
+    // An address dial retains its metadata, a proxied peer is the local
+    // binding of the proxy server, and is set by its handshake.
+    if (!proxied_ && !address_)
+        address_ = { peer };
 
     if (error::asio_is_canceled(ec))
     {
