@@ -16,16 +16,16 @@
     <Filter Include="src\async\races">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\channels">
+    <Filter Include="src\broadcast">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\config">
+    <Filter Include="src\channels">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\functional">
+    <Filter Include="src\config">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\interfaces">
+    <Filter Include="src\functional">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\log">
@@ -162,6 +162,9 @@
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\broadcast\terminator.cpp">
+      <Filter>src\broadcast</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\channels\channel.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
@@ -200,9 +203,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\functional\peer_setup_fixture.cpp">
       <Filter>src\functional</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\interfaces\terminator.cpp">
-      <Filter>src\interfaces</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\log\timer.cpp">
       <Filter>src\log</Filter>

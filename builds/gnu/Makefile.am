@@ -56,6 +56,8 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/async/thread.cpp \
     ${srcdir}/../../src/async/threadpool.cpp \
     ${srcdir}/../../src/async/time.cpp \
+    ${srcdir}/../../src/broadcast/diagnostics.cpp \
+    ${srcdir}/../../src/broadcast/terminator.cpp \
     ${srcdir}/../../src/channels/channel.cpp \
     ${srcdir}/../../src/channels/channel_http.cpp \
     ${srcdir}/../../src/channels/channel_peer.cpp \
@@ -64,8 +66,6 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/config/credential.cpp \
     ${srcdir}/../../src/config/endpoint.cpp \
     ${srcdir}/../../src/config/utilities.cpp \
-    ${srcdir}/../../src/interfaces/diagnostics.cpp \
-    ${srcdir}/../../src/interfaces/terminator.cpp \
     ${srcdir}/../../src/log/capture.cpp \
     ${srcdir}/../../src/log/logger.cpp \
     ${srcdir}/../../src/log/reporter.cpp \
@@ -278,6 +278,14 @@ include_bitcoin_network_async_races_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/async/races/race_volume.hpp \
     ${srcdir}/../../include/bitcoin/network/async/races/races.hpp
 
+include_bitcoin_network_broadcastdir = \
+    ${includedir}/bitcoin/network/broadcast
+
+include_bitcoin_network_broadcast_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/broadcast/broadcast.hpp \
+    ${srcdir}/../../include/bitcoin/network/broadcast/diagnostics.hpp \
+    ${srcdir}/../../include/bitcoin/network/broadcast/terminator.hpp
+
 include_bitcoin_network_channelsdir = \
     ${includedir}/bitcoin/network/channels
 
@@ -349,12 +357,10 @@ include_bitcoin_network_interfacesdir = \
     ${includedir}/bitcoin/network/interfaces
 
 include_bitcoin_network_interfaces_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/interfaces/diagnostics.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/http.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/interfaces.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_broadcast.hpp \
-    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp \
-    ${srcdir}/../../include/bitcoin/network/interfaces/terminator.hpp
+    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp
 
 include_bitcoin_network_logdir = \
     ${includedir}/bitcoin/network/log
@@ -754,6 +760,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/async/races/race_speed.cpp \
     ${srcdir}/../../test/async/races/race_unity.cpp \
     ${srcdir}/../../test/async/races/race_volume.cpp \
+    ${srcdir}/../../test/broadcast/terminator.cpp \
     ${srcdir}/../../test/channels/channel.cpp \
     ${srcdir}/../../test/channels/channel_http.cpp \
     ${srcdir}/../../test/channels/channel_peer.cpp \
@@ -766,7 +773,6 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/config/utilities.cpp \
     ${srcdir}/../../test/functional/peer.cpp \
     ${srcdir}/../../test/functional/peer_setup_fixture.cpp \
-    ${srcdir}/../../test/interfaces/terminator.cpp \
     ${srcdir}/../../test/log/timer.cpp \
     ${srcdir}/../../test/log/tracker.cpp \
     ${srcdir}/../../test/messages/http_body_reader.cpp \

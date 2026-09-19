@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_INTERFACES_DIAGNOSTICS_HPP
-#define LIBBITCOIN_NETWORK_INTERFACES_DIAGNOSTICS_HPP
+#ifndef LIBBITCOIN_NETWORK_BROADCAST_DIAGNOSTICS_HPP
+#define LIBBITCOIN_NETWORK_BROADCAST_DIAGNOSTICS_HPP
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -33,7 +33,7 @@ class BCT_API diagnostics
 {
 public:
     typedef std::shared_ptr<const diagnostics> cptr;
-    typedef race_all<const code&> race;
+    using race = race_all<const code&>;
 
     /// The broadcast method (there is no wire representation).
     static constexpr auto command = "diagnostics";
@@ -51,30 +51,37 @@ public:
     /// The diagnostic state of one channel.
     struct row
     {
+        /// identity.
+        target group;
         uint64_t identifier;
         config::address address;
         config::address local;
         config::endpoint binding;
-        target group;
-        uint32_t version;
-        uint64_t services;
-        uint64_t sent;
-        uint64_t received;
+
+        /// Negotiation.
+        bool encrypted;
+        bool peer_relay;
+        size_t peer_start_height;
+        uint32_t peer_version;
+        uint64_t peer_services;
+        uint64_t peer_minimum_fee;
+        std::string peer_user_agent;
+
+        /// Rate.
         uint32_t created;
         uint32_t last_read;
         uint32_t last_write;
         int64_t time_offset;
-        uint64_t minimum_fee;
+        uint64_t bytes_sent;
+        uint64_t bytes_received;
+
+        /// Ping.
         steady_clock::duration ping_time;
         steady_clock::duration minimum_ping_time;
         steady_clock::duration pending_ping_time;
-        size_t start_height;
-        bool encrypted;
-        bool relay;
-        std::string agent;
     };
 
-    typedef std::vector<row> rows;
+    using rows = std::vector<row>;
 
     /// The captured rows.
     class BCT_API sink
@@ -85,32 +92,22 @@ public:
         DELETE_COPY_MOVE_DESTRUCT(sink);
 
         sink() NOEXCEPT;
-
-        /// Add the row of a member channel (thread safe).
         void add(row&& value) NOEXCEPT;
-
-        /// The captured rows (read upon race completion).
         const rows& captured() const NOEXCEPT;
 
     private:
-        // This is protected by mutex.
+        // These are protected by mutex.
         mutable std::mutex mutex_{};
         rows rows_{};
     };
 
     DELETE_COPY_MOVE_DESTRUCT(diagnostics);
 
-    /// Capture the given group, or the channel of the given identifier.
     diagnostics(const race::ptr& complete, const sink::ptr& captured,
         target group, uint64_t channel={}) NOEXCEPT;
 
-    /// The identified channel is a member (target is channel).
-    bool member(uint64_t identifier) const NOEXCEPT;
-
-    /// The grouped channel is a member (target is not channel).
-    bool member(target group) const NOEXCEPT;
-
-    /// Add the row of a member channel (thread safe).
+    bool targets(uint64_t identifier) const NOEXCEPT;
+    bool targets(target group) const NOEXCEPT;
     void add(row&& value) const NOEXCEPT;
 
 private:

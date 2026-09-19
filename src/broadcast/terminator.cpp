@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/interfaces/terminator.hpp>
+#include <bitcoin/network/broadcast/terminator.hpp>
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -27,11 +27,14 @@ namespace network {
 
 terminator::terminator(const race::ptr& complete, const code& reason,
     uint64_t channel, const config::address& address) NOEXCEPT
-  : race_(complete), reason_(reason), channel_(channel), address_(address)
+  : race_(complete),
+    reason_(reason),
+    channel_(channel),
+    address_(address)
 {
 }
 
-bool terminator::member(uint64_t identifier,
+bool terminator::targets(uint64_t identifier,
     const config::address& address) const NOEXCEPT
 {
     return is_zero(channel_) ? address_ == address : channel_ == identifier;

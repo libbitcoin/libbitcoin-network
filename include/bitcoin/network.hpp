@@ -42,6 +42,9 @@
 #include <bitcoin/network/async/races/race_unity.hpp>
 #include <bitcoin/network/async/races/race_volume.hpp>
 #include <bitcoin/network/async/races/races.hpp>
+#include <bitcoin/network/broadcast/broadcast.hpp>
+#include <bitcoin/network/broadcast/diagnostics.hpp>
+#include <bitcoin/network/broadcast/terminator.hpp>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/channels/channel_peer.hpp>
@@ -54,12 +57,10 @@
 #include <bitcoin/network/config/credential.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
-#include <bitcoin/network/interfaces/diagnostics.hpp>
 #include <bitcoin/network/interfaces/http.hpp>
 #include <bitcoin/network/interfaces/interfaces.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
-#include <bitcoin/network/interfaces/terminator.hpp>
 #include <bitcoin/network/log/capture.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/log.hpp>
