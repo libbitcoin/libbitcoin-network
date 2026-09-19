@@ -20,9 +20,57 @@
 
 BOOST_AUTO_TEST_SUITE(race_all_tests)
 
-BOOST_AUTO_TEST_CASE(race_all_test)
+using race_all_t = race_all<const code&>;
+
+BOOST_AUTO_TEST_CASE(race_all__destruct__scoped__success)
 {
-    BOOST_REQUIRE(true);
+    code complete{ error::invalid_magic };
+
+    {
+        race_all_t race_all{ [&](const code& ec) NOEXCEPT { complete = ec; } };
+        BOOST_REQUIRE_EQUAL(complete, error::invalid_magic);
+    }
+
+    BOOST_REQUIRE_EQUAL(complete, error::success);
+}
+
+BOOST_AUTO_TEST_CASE(race_all__destruct__referenced__incomplete)
+{
+    code complete{ error::invalid_magic };
+    auto race = std::make_shared<race_all_t>([&](const code& ec) NOEXCEPT { complete = ec; });
+    auto copy = race;
+
+    race.reset();
+    BOOST_REQUIRE_EQUAL(complete, error::invalid_magic);
+
+    copy.reset();
+    BOOST_REQUIRE_EQUAL(complete, error::success);
+}
+
+BOOST_AUTO_TEST_CASE(race_all__destruct__captured__resources_deleted)
+{
+    struct destructor
+    {
+        using ptr = std::shared_ptr<destructor>;
+        destructor(bool& deleted) NOEXCEPT : deleted_(deleted) {}
+        ~destructor() NOEXCEPT { deleted_ = true; }
+        bool& deleted_;
+    };
+
+    bool deleted{ false };
+    auto foo = std::make_shared<destructor>(deleted);
+    bool complete{ false };
+
+    {
+        // foo captured into handler.
+        race_all_t race_all{ [=, &complete](const code&) NOEXCEPT { complete = !foo->deleted_; } };
+
+        foo.reset();
+        BOOST_REQUIRE(!deleted);
+    }
+
+    BOOST_REQUIRE(complete);
+    BOOST_REQUIRE(deleted);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
