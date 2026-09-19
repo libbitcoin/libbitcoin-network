@@ -146,6 +146,16 @@ void protocol_peer::set_pong() NOEXCEPT
     channel_->set_pong();
 }
 
+uint64_t protocol_peer::minimum_fee() const NOEXCEPT
+{
+    return channel_->minimum_fee();
+}
+
+void protocol_peer::set_minimum_fee(uint64_t value) NOEXCEPT
+{
+    channel_->set_minimum_fee(value);
+}
+
 // Addresses.
 // ----------------------------------------------------------------------------
 // Channel and network strands share same pool, and as long as a job is

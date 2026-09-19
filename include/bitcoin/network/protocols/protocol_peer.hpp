@@ -93,6 +93,10 @@ protected:
     virtual void set_ping() NOEXCEPT;
     virtual void set_pong() NOEXCEPT;
 
+    /// Least fee rate of a transaction announced to the peer (bip133).
+    virtual uint64_t minimum_fee() const NOEXCEPT;
+    virtual void set_minimum_fee(uint64_t value) NOEXCEPT;
+
     /// Addresses.
     /// -----------------------------------------------------------------------
 

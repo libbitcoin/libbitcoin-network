@@ -145,6 +145,16 @@ void channel_peer::set_pong() NOEXCEPT
         minimum_ping_ = ping_;
 }
 
+uint64_t channel_peer::minimum_fee() const NOEXCEPT
+{
+    return minimum_fee_.load();
+}
+
+void channel_peer::set_minimum_fee(uint64_t value) NOEXCEPT
+{
+    minimum_fee_.store(value);
+}
+
 frame_ptr channel_peer::create_frame() const NOEXCEPT
 {
     const auto in = to_shared<frame>();

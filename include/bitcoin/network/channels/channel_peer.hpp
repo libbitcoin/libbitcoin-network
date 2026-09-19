@@ -129,6 +129,10 @@ public:
     void set_ping() NOEXCEPT;
     void set_pong() NOEXCEPT;
 
+    /// Least fee rate of a transaction announced to the peer (bip133).
+    uint64_t minimum_fee() const NOEXCEPT;
+    void set_minimum_fee(uint64_t value) NOEXCEPT;
+
     /// Peer version should be written only in handshake.
     messages::peer::version::cptr peer_version() const NOEXCEPT;
     void set_peer_version(const messages::peer::version::cptr& value) NOEXCEPT;
@@ -170,6 +174,9 @@ private:
     bool quiet_{};
     bool wants_address_v2_{};
     bool current_{};
+
+    // This is thread safe.
+    std::atomic<uint64_t> minimum_fee_{};
 };
 
 } // namespace network

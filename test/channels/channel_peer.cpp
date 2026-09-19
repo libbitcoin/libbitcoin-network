@@ -120,6 +120,23 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_wants_address_v2__always__latched)
     channel_ptr->stop(error::invalid_magic);
 }
 
+BOOST_AUTO_TEST_CASE(channel_peer__set_minimum_fee__always__expected)
+{
+    const logger log{};
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const settings set(bc::system::chain::selection::mainnet);
+    network::socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
+
+    BOOST_REQUIRE(is_zero(channel_ptr->minimum_fee()));
+    channel_ptr->set_minimum_fee(42);
+    BOOST_REQUIRE_EQUAL(channel_ptr->minimum_fee(), 42u);
+
+    channel_ptr->stop(error::invalid_magic);
+}
+
 BOOST_AUTO_TEST_CASE(channel_peer__set_pong__unpinged__unchanged)
 {
     const logger log{};
