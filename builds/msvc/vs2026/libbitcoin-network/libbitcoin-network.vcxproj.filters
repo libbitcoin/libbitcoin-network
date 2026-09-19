@@ -225,6 +225,9 @@
     <ClCompile Include="..\..\..\..\src\interfaces\diagnostics.cpp">
       <Filter>src\interfaces</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\interfaces\terminator.cpp">
+      <Filter>src\interfaces</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\log\capture.cpp">
       <Filter>src\log</Filter>
     </ClCompile>
@@ -728,6 +731,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\races\race_all.hpp">
       <Filter>include\bitcoin\network\async\races</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\races\race_any.hpp">
+      <Filter>include\bitcoin\network\async\races</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\races\race_quality.hpp">
       <Filter>include\bitcoin\network\async\races</Filter>
     </ClInclude>
@@ -822,6 +828,9 @@
       <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp">
+      <Filter>include\bitcoin\network\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\terminator.hpp">
       <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp">
@@ -1619,6 +1628,9 @@
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_all.ipp">
+      <Filter>include\bitcoin\network\impl\async\races</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_any.ipp">
       <Filter>include\bitcoin\network\impl\async\races</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_quality.ipp">

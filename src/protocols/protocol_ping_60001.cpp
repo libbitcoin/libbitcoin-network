@@ -77,19 +77,9 @@ void protocol_ping_60001::send_ping() NOEXCEPT
 
     // The ping/pong nonce is arbitrary and distinct from the channel nonce.
     nonce_ = maybe_random::next<uint64_t>(add1(minimum_nonce), bc::max_int64);
-    SEND(ping{ nonce_ }, handle_send, _1);
+    set_ping();
+    SEND(ping{ nonce_ }, handle_send_ping, _1);
 }
-
-////void protocol_ping_106::handle_send_ping(const code& ec) NOEXCEPT
-////{
-////    BC_ASSERT_MSG(stranded(), "protocol_ping_106");
-////
-////    if (stopped(ec))
-////        return;
-////
-////    timer_->start(BIND(handle_timer, _1));
-////    protocol::handle_send(ec);
-////}
 
 bool protocol_ping_60001::handle_receive_pong(const code& ec,
     const pong::cptr& message) NOEXCEPT
@@ -109,6 +99,7 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
 
     // Correct pong nonce, set sentinel.
     nonce_ = acknowledged;
+    set_pong();
     return true;
 }
 
@@ -130,8 +121,8 @@ void protocol_ping_60001::handle_timer(const code& ec) NOEXCEPT
     // No error code on timeout, so check for nonce receipt.
     if (nonce_ != acknowledged)
     {
-        // TODO: log ping timeout.
-        stop(ec);
+        LOGR("Pong not received from [" << opposite() << "]");
+        stop(error::channel_timeout);
         return;
     }
 

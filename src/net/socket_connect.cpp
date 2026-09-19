@@ -90,6 +90,9 @@ void socket::handle_accept(boost_code ec,
         return;
     }
 
+    boost_code ignore{};
+    binding_ = { get_base().local_endpoint(ignore) };
+
     // Defer handshake to the acceptor when connection is proxied.
     if (proxied_)
     {
@@ -155,6 +158,9 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
         handler(code);
         return;
     }
+
+    boost_code ignore{};
+    binding_ = { get_base().local_endpoint(ignore) };
 
     // Defer handshake to the connector when connection is proxied.
     if (proxied_)

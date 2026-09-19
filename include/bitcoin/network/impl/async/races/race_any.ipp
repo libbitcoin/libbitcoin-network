@@ -16,30 +16,43 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_INTERFACES_HPP
-#define LIBBITCOIN_NETWORK_INTERFACES_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_ANY_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_ANY_IPP
 
-#include <bitcoin/network/interfaces/diagnostics.hpp>
-#include <bitcoin/network/interfaces/http.hpp>
-#include <bitcoin/network/interfaces/peer_broadcast.hpp>
-#include <bitcoin/network/interfaces/peer_dispatch.hpp>
-#include <bitcoin/network/interfaces/terminator.hpp>
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/async/handlers.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace rpc {
-namespace interface {
 
-using http = publish<http_methods, grouping::positional>;
+template <typename... Args>
+race_any<Args...>::
+race_any(handler&& complete) NOEXCEPT
+  : complete_(std::move(complete))
+{
+}
 
-namespace peer {
+template <typename... Args>
+race_any<Args...>::
+~race_any() NOEXCEPT
+{
+    if (!finished_)
+        complete_(error::operation_failed);
+}
 
-using dispatch = publish<peer_dispatch, grouping::positional>;
-using broadcast = publish<peer_broadcast, grouping::positional>;
+template <typename... Args>
+bool race_any<Args...>::
+finish(const Args&... args) NOEXCEPT
+{
+    if (finished_.exchange(true))
+        return false;
 
-} // namespace peer
-} // namespace interface
-} // namespace rpc
+    // Invoke completion handler and clear its resources.
+    complete_(args...);
+    complete_ = {};
+    return true;
+}
+
 } // namespace network
 } // namespace libbitcoin
 

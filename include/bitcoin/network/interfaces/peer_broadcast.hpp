@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/interfaces/terminator.hpp>
 #include <bitcoin/network/interfaces/diagnostics.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
@@ -49,7 +50,8 @@ struct peer_broadcast
     static constexpr std::tuple methods
     {
         method<"addr", messages::peer::address::cptr, key>{},
-        method<"diagnostics", diagnostics::cptr, key>{}
+        method<"diagnostics", diagnostics::cptr, key>{},
+        method<"terminator", terminator::cptr, key>{}
     };
 };
 

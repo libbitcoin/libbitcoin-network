@@ -80,6 +80,23 @@ protected:
     /// Advertised addresses with own services and current timestamp.
     virtual messages::peer::address selfs() const NOEXCEPT;
 
+    /// Round trip time of the last ping, zero if none completed.
+    virtual steady_clock::duration ping_time() const NOEXCEPT;
+
+    /// Least round trip time of any ping, zero if none completed.
+    virtual steady_clock::duration minimum_ping_time() const NOEXCEPT;
+
+    /// Elapsed time of the outstanding ping, zero if none outstanding.
+    virtual steady_clock::duration pending_ping_time() const NOEXCEPT;
+
+    /// Stamp the outstanding ping, and time it out upon its pong.
+    virtual void set_ping() NOEXCEPT;
+    virtual void set_pong() NOEXCEPT;
+
+    /// Least fee rate of a transaction announced to the peer (bip133).
+    virtual uint64_t minimum_fee() const NOEXCEPT;
+    virtual void set_minimum_fee(uint64_t value) NOEXCEPT;
+
     /// Addresses.
     /// -----------------------------------------------------------------------
 

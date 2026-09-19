@@ -36,6 +36,7 @@
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/unsubscriber.hpp>
 #include <bitcoin/network/async/races/race_all.hpp>
+#include <bitcoin/network/async/races/race_any.hpp>
 #include <bitcoin/network/async/races/race_quality.hpp>
 #include <bitcoin/network/async/races/race_speed.hpp>
 #include <bitcoin/network/async/races/race_unity.hpp>
@@ -58,6 +59,7 @@
 #include <bitcoin/network/interfaces/interfaces.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
+#include <bitcoin/network/interfaces/terminator.hpp>
 #include <bitcoin/network/log/capture.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/log.hpp>

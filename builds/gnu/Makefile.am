@@ -65,6 +65,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/config/endpoint.cpp \
     ${srcdir}/../../src/config/utilities.cpp \
     ${srcdir}/../../src/interfaces/diagnostics.cpp \
+    ${srcdir}/../../src/interfaces/terminator.cpp \
     ${srcdir}/../../src/log/capture.cpp \
     ${srcdir}/../../src/log/logger.cpp \
     ${srcdir}/../../src/log/reporter.cpp \
@@ -270,6 +271,7 @@ include_bitcoin_network_async_racesdir = \
 
 include_bitcoin_network_async_races_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/async/races/race_all.hpp \
+    ${srcdir}/../../include/bitcoin/network/async/races/race_any.hpp \
     ${srcdir}/../../include/bitcoin/network/async/races/race_quality.hpp \
     ${srcdir}/../../include/bitcoin/network/async/races/race_speed.hpp \
     ${srcdir}/../../include/bitcoin/network/async/races/race_unity.hpp \
@@ -312,6 +314,7 @@ include_bitcoin_network_impl_async_racesdir = \
 
 include_bitcoin_network_impl_async_races_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/impl/async/races/race_all.ipp \
+    ${srcdir}/../../include/bitcoin/network/impl/async/races/race_any.ipp \
     ${srcdir}/../../include/bitcoin/network/impl/async/races/race_quality.ipp \
     ${srcdir}/../../include/bitcoin/network/impl/async/races/race_speed.ipp \
     ${srcdir}/../../include/bitcoin/network/impl/async/races/race_unity.ipp \
@@ -350,7 +353,8 @@ include_bitcoin_network_interfaces_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/interfaces/http.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/interfaces.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_broadcast.hpp \
-    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp
+    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp \
+    ${srcdir}/../../include/bitcoin/network/interfaces/terminator.hpp
 
 include_bitcoin_network_logdir = \
     ${includedir}/bitcoin/network/log
@@ -745,6 +749,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/async/time.cpp \
     ${srcdir}/../../test/async/unsubscriber.cpp \
     ${srcdir}/../../test/async/races/race_all.cpp \
+    ${srcdir}/../../test/async/races/race_any.cpp \
     ${srcdir}/../../test/async/races/race_quality.cpp \
     ${srcdir}/../../test/async/races/race_speed.cpp \
     ${srcdir}/../../test/async/races/race_unity.cpp \
@@ -761,6 +766,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/config/utilities.cpp \
     ${srcdir}/../../test/functional/peer.cpp \
     ${srcdir}/../../test/functional/peer_setup_fixture.cpp \
+    ${srcdir}/../../test/interfaces/terminator.cpp \
     ${srcdir}/../../test/log/timer.cpp \
     ${srcdir}/../../test/log/tracker.cpp \
     ${srcdir}/../../test/messages/http_body_reader.cpp \

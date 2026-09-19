@@ -16,31 +16,36 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_INTERFACES_HPP
-#define LIBBITCOIN_NETWORK_INTERFACES_HPP
-
-#include <bitcoin/network/interfaces/diagnostics.hpp>
-#include <bitcoin/network/interfaces/http.hpp>
-#include <bitcoin/network/interfaces/peer_broadcast.hpp>
-#include <bitcoin/network/interfaces/peer_dispatch.hpp>
 #include <bitcoin/network/interfaces/terminator.hpp>
+
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace rpc {
-namespace interface {
 
-using http = publish<http_methods, grouping::positional>;
+terminator::terminator(const race::ptr& complete, const code& reason,
+    uint64_t channel, const config::address& address) NOEXCEPT
+  : race_(complete), reason_(reason), channel_(channel), address_(address)
+{
+}
 
-namespace peer {
+bool terminator::member(uint64_t identifier,
+    const config::address& address) const NOEXCEPT
+{
+    return is_zero(channel_) ? address_ == address : channel_ == identifier;
+}
 
-using dispatch = publish<peer_dispatch, grouping::positional>;
-using broadcast = publish<peer_broadcast, grouping::positional>;
+const code& terminator::reason() const NOEXCEPT
+{
+    return reason_;
+}
 
-} // namespace peer
-} // namespace interface
-} // namespace rpc
+void terminator::stopped() const NOEXCEPT
+{
+    race_->finish(error::success);
+}
+
 } // namespace network
 } // namespace libbitcoin
-
-#endif

@@ -53,6 +53,8 @@ public:
     {
         uint64_t identifier;
         config::address address;
+        config::address local;
+        config::endpoint binding;
         target group;
         uint32_t version;
         uint64_t services;
@@ -61,8 +63,14 @@ public:
         uint32_t created;
         uint32_t last_read;
         uint32_t last_write;
+        int64_t time_offset;
+        uint64_t minimum_fee;
+        steady_clock::duration ping_time;
+        steady_clock::duration minimum_ping_time;
+        steady_clock::duration pending_ping_time;
         size_t start_height;
         bool encrypted;
+        bool relay;
         std::string agent;
     };
 

@@ -314,6 +314,11 @@ const config::endpoint& proxy::endpoint() const NOEXCEPT
     return socket_->endpoint();
 }
 
+const config::endpoint& proxy::binding() const NOEXCEPT
+{
+    return socket_->binding();
+}
+
 BC_POP_WARNING()
 
 } // namespace network

@@ -122,6 +122,7 @@
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
     <ClCompile Include="..\..\..\..\test\async\races\race_all.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\races\race_any.cpp" />
     <ClCompile Include="..\..\..\..\test\async\races\race_quality.cpp" />
     <ClCompile Include="..\..\..\..\test\async\races\race_speed.cpp" />
     <ClCompile Include="..\..\..\..\test\async\races\race_unity.cpp" />
@@ -146,6 +147,7 @@
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer_setup_fixture.cpp" />
+    <ClCompile Include="..\..\..\..\test\interfaces\terminator.cpp" />
     <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_ASYNC_RACES_RACES_HPP
 
 #include <bitcoin/network/async/races/race_all.hpp>
+#include <bitcoin/network/async/races/race_any.hpp>
 #include <bitcoin/network/async/races/race_quality.hpp>
 #include <bitcoin/network/async/races/race_speed.hpp>
 #include <bitcoin/network/async/races/race_unity.hpp>

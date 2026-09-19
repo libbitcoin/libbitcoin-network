@@ -121,6 +121,41 @@ address protocol_peer::selfs() const NOEXCEPT
     return message;
 }
 
+steady_clock::duration protocol_peer::ping_time() const NOEXCEPT
+{
+    return channel_->ping_time();
+}
+
+steady_clock::duration protocol_peer::minimum_ping_time() const NOEXCEPT
+{
+    return channel_->minimum_ping_time();
+}
+
+steady_clock::duration protocol_peer::pending_ping_time() const NOEXCEPT
+{
+    return channel_->pending_ping_time();
+}
+
+void protocol_peer::set_ping() NOEXCEPT
+{
+    channel_->set_ping();
+}
+
+void protocol_peer::set_pong() NOEXCEPT
+{
+    channel_->set_pong();
+}
+
+uint64_t protocol_peer::minimum_fee() const NOEXCEPT
+{
+    return channel_->minimum_fee();
+}
+
+void protocol_peer::set_minimum_fee(uint64_t value) NOEXCEPT
+{
+    channel_->set_minimum_fee(value);
+}
+
 // Addresses.
 // ----------------------------------------------------------------------------
 // Channel and network strands share same pool, and as long as a job is

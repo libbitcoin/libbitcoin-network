@@ -183,6 +183,9 @@ protected:
     /// The outbound address of the channel.
     virtual const config::address& outbound() const NOEXCEPT;
 
+    /// The local endpoint of the channel.
+    virtual config::endpoint binding() const NOEXCEPT;
+
     /// The nonce of the channel.
     virtual uint64_t nonce() const NOEXCEPT;
 
