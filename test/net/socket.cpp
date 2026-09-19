@@ -64,6 +64,8 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
     BOOST_REQUIRE(instance->get_address() == instance->address());
     BOOST_REQUIRE(instance->get_address() == config::address{});
     BOOST_REQUIRE_EQUAL(instance->get_maximum_request(), maximum);
+    BOOST_REQUIRE(instance->binding().host().empty());
+    BOOST_REQUIRE_EQUAL(instance->binding().port(), 0u);
     instance->stop();
 }
 

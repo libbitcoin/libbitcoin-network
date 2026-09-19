@@ -147,6 +147,7 @@
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer_setup_fixture.cpp" />
+    <ClCompile Include="..\..\..\..\test\interfaces\terminator.cpp" />
     <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />

@@ -120,6 +120,70 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_wants_address_v2__always__latched)
     channel_ptr->stop(error::invalid_magic);
 }
 
+BOOST_AUTO_TEST_CASE(channel_peer__set_pong__unpinged__unchanged)
+{
+    const logger log{};
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const settings set(bc::system::chain::selection::mainnet);
+    network::socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
+
+    BOOST_REQUIRE(is_zero(channel_ptr->ping_time().count()));
+    BOOST_REQUIRE(is_zero(channel_ptr->minimum_ping_time().count()));
+    BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
+
+    channel_ptr->set_pong();
+    BOOST_REQUIRE(is_zero(channel_ptr->ping_time().count()));
+    BOOST_REQUIRE(is_zero(channel_ptr->minimum_ping_time().count()));
+    BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
+
+    channel_ptr->stop(error::invalid_magic);
+}
+
+BOOST_AUTO_TEST_CASE(channel_peer__set_ping__unponged__pending_only)
+{
+    const logger log{};
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const settings set(bc::system::chain::selection::mainnet);
+    network::socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
+
+    channel_ptr->set_ping();
+    BOOST_REQUIRE(is_zero(channel_ptr->ping_time().count()));
+    BOOST_REQUIRE(is_zero(channel_ptr->minimum_ping_time().count()));
+
+    channel_ptr->stop(error::invalid_magic);
+}
+
+BOOST_AUTO_TEST_CASE(channel_peer__set_pong__pinged__timed_not_pending)
+{
+    const logger log{};
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const settings set(bc::system::chain::selection::mainnet);
+    network::socket::parameters params{ .maximum_request = 42 };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
+
+    channel_ptr->set_ping();
+    channel_ptr->set_pong();
+    BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
+    BOOST_REQUIRE(channel_ptr->minimum_ping_time() == channel_ptr->ping_time());
+
+    const auto first = channel_ptr->ping_time();
+    channel_ptr->set_ping();
+    channel_ptr->set_pong();
+    BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
+    BOOST_REQUIRE(channel_ptr->minimum_ping_time() <= first);
+    BOOST_REQUIRE(channel_ptr->minimum_ping_time() <= channel_ptr->ping_time());
+
+    channel_ptr->stop(error::invalid_magic);
+}
+
 BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
 {
     const logger log{};
