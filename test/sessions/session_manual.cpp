@@ -133,10 +133,10 @@ public:
     // Capture first start_connect call.
     void start_connect(const code&, const endpoint& peer,
         const connector::ptr& connector,
-        const net::channel_notifier& handler) NOEXCEPT override
+        const net::channel_notifier& handler, object_key key) NOEXCEPT override
     {
         // Must be first to ensure connector::start_connect() preceeds promise release.
-        session_manual::start_connect({}, peer, connector, handler);
+        session_manual::start_connect({}, peer, connector, handler, key);
 
         if (is_one(connects_))
             reconnect_.set_value(true);

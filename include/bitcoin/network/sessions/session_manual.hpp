@@ -76,20 +76,20 @@ protected:
 
     /// Start or restart the given connection (called from connect).
     virtual void start_connect(const code& ec, const config::endpoint& peer,
-        const connector::ptr& connector,
-        const channel_notifier& handler) NOEXCEPT;
+        const connector::ptr& connector, const channel_notifier& handler,
+        object_key key) NOEXCEPT;
 
 private:
     void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const socket::ptr& socket,
         const config::endpoint& peer, const connector::ptr& connector,
-        const channel_notifier& handler) NOEXCEPT;
+        const channel_notifier& handler, object_key key) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel,
         const config::endpoint& peer, const channel_notifier& handler) NOEXCEPT;
     void handle_channel_stop(const code& ec, const channel::ptr& channel,
         const config::endpoint& peer, const connector::ptr& connector,
-        const channel_notifier& handler) NOEXCEPT;
+        const channel_notifier& handler, object_key key) NOEXCEPT;
 };
 
 } // namespace network
