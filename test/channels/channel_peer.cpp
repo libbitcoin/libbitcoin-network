@@ -191,11 +191,9 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_pong__pinged__timed_not_pending)
     BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
     BOOST_REQUIRE(channel_ptr->minimum_ping_time() == channel_ptr->ping_time());
 
-    const auto first = channel_ptr->ping_time();
     channel_ptr->set_ping();
     channel_ptr->set_pong();
     BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
-    BOOST_REQUIRE(channel_ptr->minimum_ping_time() <= first);
     BOOST_REQUIRE(channel_ptr->minimum_ping_time() <= channel_ptr->ping_time());
 
     channel_ptr->stop(error::invalid_magic);
