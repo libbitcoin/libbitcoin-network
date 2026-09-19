@@ -21,23 +21,35 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
 
+// The address is unspecified for a named target, matching no address.
 terminator::terminator(const race::ptr& complete, const code& reason,
-    uint64_t channel, const config::address& address) NOEXCEPT
+    uint64_t channel, const config::endpoint& endpoint) NOEXCEPT
   : race_(complete),
     reason_(reason),
     channel_(channel),
-    address_(address)
+    endpoint_(endpoint),
+    address_(endpoint)
 {
 }
 
-bool terminator::targets(uint64_t identifier,
-    const config::address& address) const NOEXCEPT
+bool terminator::targets(uint64_t identifier, const config::address& address,
+    const config::endpoint& endpoint) const NOEXCEPT
 {
-    return is_zero(channel_) ? address_ == address : channel_ == identifier;
+    if (!is_zero(channel_))
+        return channel_ == identifier;
+
+    if (endpoint_ == endpoint)
+        return true;
+
+    // A named endpoint has no address, which matches no channel address.
+    const messages::peer::address_item& item = address_;
+    return !messages::peer::is_unspecified(item.address) &&
+        address_ == address;
 }
 
 const code& terminator::reason() const NOEXCEPT

@@ -54,6 +54,7 @@ public:
         /// identity.
         target group;
         uint64_t identifier;
+        config::endpoint endpoint;
         config::address address;
         config::address local;
         config::endpoint binding;

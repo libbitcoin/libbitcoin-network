@@ -41,13 +41,14 @@ public:
 
     DELETE_COPY_MOVE_DESTRUCT(terminator);
 
-    /// Stop the channel of the given identifier or address with code.
+    /// Stop the channel of the given identifier or target with code.
     terminator(const race::ptr& complete, const code& reason,
-        uint64_t channel, const config::address& address={}) NOEXCEPT;
+        uint64_t channel, const config::endpoint& endpoint={}) NOEXCEPT;
 
-    /// The message targets the identified channel or address.
-    bool targets(uint64_t identifier,
-        const config::address& address) const NOEXCEPT;
+    /// The message targets the identified channel, its intended target, or
+    /// its resolved address (unresolved for a proxied connection).
+    bool targets(uint64_t identifier, const config::address& address,
+        const config::endpoint& endpoint) const NOEXCEPT;
 
     /// The code with which the targeted channel stops.
     const code& reason() const NOEXCEPT;
@@ -60,6 +61,7 @@ private:
     const race::ptr race_;
     const code reason_;
     const uint64_t channel_;
+    const config::endpoint endpoint_;
     const config::address address_;
 };
 
