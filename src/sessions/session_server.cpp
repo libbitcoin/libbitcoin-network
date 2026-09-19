@@ -114,6 +114,8 @@ code session_server::do_accept(const config::authorities& binds,
         {
             .connect_timeout = network_settings().connect_timeout(),
             .maximum_request = options_.maximum_request,
+            .minimum_buffer = options_.minimum_buffer,
+            .maximum_buffer = options_.maximum_buffer,
             .context = context,
             .role = role()
         });

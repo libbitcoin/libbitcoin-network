@@ -57,7 +57,6 @@ public:
       : channel(log, socket, identifier, settings, options),
         options_(options),
         in_band_(in_band),
-        response_buffer_(system::to_shared<http::flat_buffer>()),
         request_buffer_(options.maximum_request),
         authorized_(!options.authorize())
     {
@@ -118,9 +117,6 @@ protected:
     /// Dispatch request to subscribers by verb type.
     virtual void dispatch(const http::request_ptr& request) NOEXCEPT;
 
-    /// Size and assign response_buffer_ if value type is json or json-rpc.
-    virtual void assign_json_buffer(http::response& response) NOEXCEPT;
-
     /// Handlers.
     virtual void handle_receive(const code& ec, size_t bytes,
         const http::request_ptr& request) NOEXCEPT;
@@ -140,7 +136,6 @@ private:
     const bool in_band_;
 
     // These are protected by strand.
-    http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
     system::hash_digest digest_{};
     dispatcher dispatcher_{};

@@ -40,7 +40,9 @@ bool operator!=(const asio::const_buffer& left, const asio::const_buffer& right)
 
 BOOST_AUTO_TEST_CASE(json_body_writer__constructor1__default__null_model)
 {
+    http::flat_buffer scratch{};
     json::body<>::value_type body{};
+    body.buffer = &scratch;
     json::body<>::writer writer(body);
     BOOST_REQUIRE(boost::get<value>(body.model).is_null());
 }
@@ -48,14 +50,18 @@ BOOST_AUTO_TEST_CASE(json_body_writer__constructor1__default__null_model)
 BOOST_AUTO_TEST_CASE(json_body_writer__constructor2__default__null_model)
 {
     response_header header{};
+    http::flat_buffer scratch{};
     json::body<>::value_type body{};
+    body.buffer = &scratch;
     json::body<>::writer writer(header, body);
     BOOST_REQUIRE(boost::get<value>(body.model).is_null());
 }
 
 BOOST_AUTO_TEST_CASE(json_body_writer__init__default__success)
 {
+    http::flat_buffer scratch{};
     json::body<>::value_type body{};
+    body.buffer = &scratch;
     json::body<>::writer writer(body);
     boost_code ec{};
     writer.init(ec);
@@ -66,7 +72,9 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more
 {
     const std::string_view expected{ "null" };
     const asio::const_buffer out{ expected.data(), expected.size() };
+    http::flat_buffer scratch{};
     json::body<>::value_type body{};
+    body.buffer = &scratch;
     json::body<>::writer writer(body);
     boost_code ec{};
     writer.init(ec);
@@ -83,7 +91,9 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_m
 {
     const std::string_view expected{ R"({"key":"value"})" };
     const asio::const_buffer out{ expected.data(), expected.size() };
+    http::flat_buffer scratch{};
     json::body<>::value_type body{};
+    body.buffer = &scratch;
     body.model = object{ { "key", "value" } };
     json::body<>::writer writer(body);
     boost_code ec{};
@@ -116,7 +126,9 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four
     const asio::const_buffer out3{ expected3.data(), expected3.size() };
     const asio::const_buffer out4{ expected4.data(), expected4.size() };
 
+    http::flat_buffer scratch{};
     json::body<>::value_type body{};
+    body.buffer = &scratch;
     body.model = object{ { "key", std::string(20, 'x') } };
     body.size_hint = 8;
     json::body<>::writer writer(body);

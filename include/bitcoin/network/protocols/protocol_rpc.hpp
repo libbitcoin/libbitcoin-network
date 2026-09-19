@@ -50,21 +50,19 @@ protected:
     /// Senders with default completion (requires strand).
     virtual inline void send_code(const code& ec) NOEXCEPT;
     virtual inline void send_error(rpc::result_t&& error) NOEXCEPT;
-    virtual inline void send_result(rpc::value_t&& result,
-        size_t size_hint) NOEXCEPT;
+    virtual inline void send_result(rpc::value_t&& result) NOEXCEPT;
     virtual inline void send_notification(rpc::string_t&& method,
-        rpc::params_t&& notification, size_t size_hint) NOEXCEPT;
+        rpc::params_t&& notification) NOEXCEPT;
 
     /// Senders, rpc version and identity added to responses (requires strand).
     virtual inline void send_code(const code& ec,
         result_handler&& handler) NOEXCEPT;
     virtual inline void send_error(rpc::result_t&& error,
         result_handler&& handler) NOEXCEPT;
-    virtual inline void send_result(rpc::value_t&& result, size_t size_hint,
+    virtual inline void send_result(rpc::value_t&& result,
         result_handler&& handler) NOEXCEPT;
     virtual inline void send_notification(rpc::string_t&& method, 
-        rpc::params_t&& notification, size_t size_hint,
-        result_handler&& handler) NOEXCEPT;
+        rpc::params_t&& notification, result_handler&& handler) NOEXCEPT;
 
 private:
     // This is mostly thread safe, and used in a thread safe manner.

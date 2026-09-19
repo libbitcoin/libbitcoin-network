@@ -119,6 +119,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/messages/peer/detail/witness_tx_id_relay.cpp \
     ${srcdir}/../../src/messages/rpc/body.cpp \
     ${srcdir}/../../src/messages/rpc/model.cpp \
+    ${srcdir}/../../src/messages/rpc/size.cpp \
     ${srcdir}/../../src/net/acceptor.cpp \
     ${srcdir}/../../src/net/acceptor_sam.cpp \
     ${srcdir}/../../src/net/connector.cpp \
@@ -478,6 +479,7 @@ include_bitcoin_network_messages_rpc_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/model.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/publish.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/rpc.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/rpc/size.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/types.hpp
 
 include_bitcoin_network_messages_rpc_enumsdir = \
@@ -839,6 +841,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/messages/rpc/dispatcher.cpp \
     ${srcdir}/../../test/messages/rpc/method.cpp \
     ${srcdir}/../../test/messages/rpc/publish.cpp \
+    ${srcdir}/../../test/messages/rpc/size.cpp \
     ${srcdir}/../../test/messages/rpc/types.cpp \
     ${srcdir}/../../test/net/acceptor.cpp \
     ${srcdir}/../../test/net/acceptor_sam.cpp \

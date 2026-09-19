@@ -68,6 +68,7 @@ socket::socket(const logger& log, asio::context& service,
   : inbound_(inbound),
     proxied_(proxied),
     maximum_(params.maximum_request),
+    minimum_buffer_(params.minimum_buffer),
     strand_(service.get_executor()),
     service_(service),
     context_(params.context),
@@ -77,6 +78,7 @@ socket::socket(const logger& log, asio::context& service,
     timer_(emplace_shared<deadline>(log, strand_, params.connect_timeout)),
     watch_(emplace_shared<deadline>(log, strand_, watch_interval)),
     socket_(std::in_place_type<asio::socket>, strand_),
+    response_(params.maximum_buffer),
     reporter(log),
     tracker<socket>(log)
 {
@@ -617,6 +619,7 @@ void socket::async_write_http(http::response&& response,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    assign_buffer(response.body());
 
     try
     {

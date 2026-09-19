@@ -35,11 +35,11 @@ struct json_value
     /// JSON document object model to parse/serialize.
     boost::json::value model{};
 
-    /// Used by channel to resize reusable buffer.
+    /// Estimated serialized size, set by the writer of the message type.
     size_t size_hint{};
 
-    /// Writer serialization buffer (allocated on write if not assigned).
-    mutable http::flat_buffer_ptr buffer{};
+    /// Writer serialization buffer, owned by the socket.
+    mutable http::flat_buffer* buffer{};
 };
 
 /// boost::beast::http body for JSON messages.
@@ -109,6 +109,7 @@ struct body
     protected:
         value_type& value_;
         boost::json::serializer serializer_;
+        size_t chunk_{};
     };
 };
 

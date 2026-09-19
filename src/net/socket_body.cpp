@@ -161,9 +161,38 @@ void socket::handle_body_read(const code& ec, size_t size, size_t total,
 // Body (write).
 // ----------------------------------------------------------------------------
 
+// A json body serializes through the retained buffer, which chunks the write
+// at its bound. Other bodies write from caller memory.
+// The buffer is returned to the minimum once the write has completed.
+void socket::assign_buffer(http::body::value_type& body) NOEXCEPT
+{
+    const auto assign = [this](json::json_value& value) NOEXCEPT
+    {
+        value.buffer = &response_;
+    };
+
+    if (body.contains<http::json_value>())
+        assign(body.get<http::json_value>());
+    else if (body.contains<rpc::request>())
+        assign(body.get<rpc::request>());
+    else if (body.contains<rpc::response>())
+        assign(body.get<rpc::response>());
+}
+
+// The buffer is idle here, so its retention is reduced to the minimum.
+void socket::reclaim_buffer() NOEXCEPT
+{
+    if (response_.capacity() > minimum_buffer_)
+    {
+        response_.shrink_to_fit();
+        response_.reserve(minimum_buffer_);
+    }
+}
+
 void socket::body_write(http::response&& response,
     count_handler&& handler) NOEXCEPT
 {
+    assign_buffer(response.body());
     boost_code ec{};
     const auto out = emplace_shared<write_state>(std::move(response));
     out->writer.init(ec);
@@ -214,18 +243,21 @@ void socket::handle_body_write(const code& ec, size_t size, size_t total,
     total = ceilinged_add(total, size);
     if (ec == error::operation_canceled)
     {
+        reclaim_buffer();
         handler(error::channel_stopped, total);
         return;
     }
 
     if (!ec && !out->more)
     {
+        reclaim_buffer();
         handler(error::success, total);
         return;
     }
 
     if (ec)
     {
+        reclaim_buffer();
         handler(ec, total);
         return;
     }
@@ -241,6 +273,7 @@ void socket::handle_body_write(const code& ec, size_t size, size_t total,
 void socket::body_notify(http::request&& notification,
     count_handler&& handler) NOEXCEPT
 {
+    assign_buffer(notification.body());
     boost_code ec{};
     const auto out = emplace_shared<notify_state>(std::move(notification));
     out->writer.init(ec);
@@ -289,18 +322,21 @@ void socket::handle_body_notify(const code& ec, size_t size, size_t total,
     total = ceilinged_add(total, size);
     if (ec == error::operation_canceled)
     {
+        reclaim_buffer();
         handler(error::channel_stopped, total);
         return;
     }
 
     if (!ec && !out->more)
     {
+        reclaim_buffer();
         handler(error::success, total);
         return;
     }
 
     if (ec)
     {
+        reclaim_buffer();
         handler(ec, total);
         return;
     }

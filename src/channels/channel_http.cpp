@@ -264,8 +264,6 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    assign_json_buffer(response);
-
     std::string message{ LOG_ONLY(log_message(response)) };
 
     write(std::move(response),
@@ -299,27 +297,12 @@ void channel_http::handle_send(const code& ec, size_t bytes, bool notification,
 
     // Do not log websocket sends as it creates log subscription feedback loop.
     if (!websocket()) { LOGV(boost_format(message) % bytes); }
+
     handler(ec);
 
     // Restart the listener (only in response to requests).
     if (!notification)
         receive();
-}
-
-// private
-void channel_http::assign_json_buffer(response& response) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    // Full duplex (ws/downgrade) cannot use the shared json response buffer.
-    if (!websocket() && !downgraded())
-    {
-        const auto& body = response.body();
-        if (body.contains<json_body::value_type>())
-            body.get<json_body::value_type>().buffer = response_buffer_;
-        else if (body.contains<rpc::request>())
-            body.get<rpc::request>().buffer = response_buffer_;
-    }
 }
 
 // unauthorized helpers

@@ -37,7 +37,7 @@ class channel_rpc
 {
 public:
     typedef std::shared_ptr<channel_rpc> ptr;
-    using options_t = network::settings::tcp_server;
+    using options_t = network::settings::secure_server;
     using dispatcher = rpc::dispatcher<Interface>;
 
     /// Subscribe to request from client (requires strand).
@@ -62,11 +62,10 @@ public:
     inline void send_code(const code& ec, result_handler&& handler) NOEXCEPT;
     inline void send_error(rpc::result_t&& error,
         result_handler&& handler) NOEXCEPT;
-    inline void send_result(rpc::value_t&& result, size_t size_hint,
+    inline void send_result(rpc::value_t&& result,
         result_handler&& handler) NOEXCEPT;
     inline void send_notification(rpc::string_t&& method,
-        rpc::params_t&& notification, size_t size_hint,
-        result_handler&& handler) NOEXCEPT;
+        rpc::params_t&& notification, result_handler&& handler) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     inline void resume() NOEXCEPT override;
@@ -75,8 +74,7 @@ protected:
     /// Serialize and write response to client (requires strand).
     /// Completion handler is always invoked on the channel strand.
     template <typename Message>
-    inline void send(Message&& message, size_t size_hint,
-        result_handler&& handler) NOEXCEPT;
+    inline void send(Message&& message, result_handler&& handler) NOEXCEPT;
 
     /// Handle send completion, invokes receive() for non-notifications.
     template <typename Message>

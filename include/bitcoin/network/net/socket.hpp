@@ -53,6 +53,8 @@ public:
 
         duration connect_timeout{};
         size_t maximum_request{};
+        size_t minimum_buffer{};
+        size_t maximum_buffer{ maximum_service_buffer() };
         socket::context context{};
         zmtp::role role{};
     };
@@ -182,6 +184,12 @@ public:
     /// Write body notification to the socket, handler posted to socket strand.
     virtual void body_notify(http::request&& notification,
         count_handler&& handler) NOEXCEPT;
+
+    /// Assign the retained json serialization buffer to the message body.
+    void assign_buffer(http::body::value_type& body) NOEXCEPT;
+
+    /// Reduce the retained json serialization buffer to the minimum.
+    void reclaim_buffer() NOEXCEPT;
 
     /// HTTP/WS (generic/rpc).
     /// -----------------------------------------------------------------------
@@ -621,6 +629,7 @@ protected:
     const bool inbound_;
     const bool proxied_;
     const size_t maximum_;
+    const size_t minimum_buffer_;
     asio::strand strand_;
     asio::context& service_;
     const context context_;
@@ -640,6 +649,9 @@ protected:
 
     // Retains the detection prefix for a v1 peer (see handle_detection).
     http::flat_buffer detection_{ p2ps::stream::detection_size };
+
+    // Retains the json serialization buffer (allocated on first write).
+    http::flat_buffer response_;
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;

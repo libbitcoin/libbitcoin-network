@@ -204,6 +204,7 @@ void socket::handle_http_write(const boost_code& ec, size_t size,
     const http::response_ptr&, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    reclaim_buffer();
 
     if (error::asio_is_canceled(ec))
     {
@@ -444,6 +445,7 @@ void socket::rpc_write_chunk(rpc::response&& response,
 {
     http::response wrapper{};
     wrapper.body() = std::move(response);
+    assign_buffer(wrapper.body());
 
     boost_code ec{};
     const auto out = emplace_shared<chunk_state>(std::move(wrapper));
@@ -511,12 +513,14 @@ void socket::handle_chunk_write(const boost_code& ec, size_t size,
     total = ceilinged_add(total, size);
     if (error::asio_is_canceled(ec))
     {
+        reclaim_buffer();
         handler(error::channel_stopped, total);
         return;
     }
 
     if (ec)
     {
+        reclaim_buffer();
         const auto code = error::asio_to_error_code(ec);
         if (code == error::unknown) logx("chunk-write", ec);
         handler(code, total);
@@ -528,6 +532,8 @@ void socket::handle_chunk_write(const boost_code& ec, size_t size,
         do_chunk_write({}, total, out, handler);
         return;
     }
+
+    reclaim_buffer();
 
     // Only the batch close part terminates the chunked body.
     if (!out->last())

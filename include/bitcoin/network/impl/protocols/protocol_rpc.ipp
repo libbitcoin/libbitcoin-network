@@ -46,20 +46,20 @@ inline void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT
+inline void CLASS::send_result(rpc::value_t&& result) NOEXCEPT
 {
     using namespace std::placeholders;
-    send_result(std::move(result), size_hint, std::bind(&CLASS::handle_send,
+    send_result(std::move(result), std::bind(&CLASS::handle_send,
         shared_from_base<CLASS>(), _1));
 }
 
 TEMPLATE
 inline void CLASS::send_notification(rpc::string_t&& method,
-    rpc::params_t&& notification, size_t size_hint) NOEXCEPT
+    rpc::params_t&& notification) NOEXCEPT
 {
     using namespace std::placeholders;
     channel_->send_notification(std::move(method), std::move(notification),
-        size_hint, std::bind(&CLASS::handle_send,
+        std::bind(&CLASS::handle_send,
             shared_from_base<CLASS>(), _1));
 }
 
@@ -77,19 +77,18 @@ inline void CLASS::send_error(rpc::result_t&& error,
 }
 
 TEMPLATE
-inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
+inline void CLASS::send_result(rpc::value_t&& result,
     result_handler&& handler) NOEXCEPT
 {
-    channel_->send_result(std::move(result), size_hint, std::move(handler));
+    channel_->send_result(std::move(result), std::move(handler));
 }
 
 TEMPLATE
 inline void CLASS::send_notification(rpc::string_t&& method,
-    rpc::params_t&& notification, size_t size_hint,
-    result_handler&& handler) NOEXCEPT
+    rpc::params_t&& notification, result_handler&& handler) NOEXCEPT
 {
     channel_->send_notification(std::move(method), std::move(notification),
-        size_hint, std::move(handler));
+        std::move(handler));
 }
 
 } // namespace network

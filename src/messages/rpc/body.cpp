@@ -395,6 +395,7 @@ init(boost_code& ec) NOEXCEPT
         return;
     }
 
+    value_.size_hint = to_size(value_.message);
     base::writer::init(ec);
     if (ec) return;
 
@@ -500,6 +501,7 @@ template <>
 void body<rpc::request_t>::writer::
 init(boost_code& ec) NOEXCEPT
 {
+    value_.size_hint = to_size(value_.message);
     base::writer::init(ec);
     if (ec) return;
 

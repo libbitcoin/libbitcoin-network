@@ -47,6 +47,12 @@ constexpr uint32_t minimum_service_default() NOEXCEPT
     return 4096;
 }
 
+/// The service response buffer, above which the response is write chunked.
+constexpr uint32_t maximum_service_buffer() NOEXCEPT
+{
+    return 64 * 1024;
+}
+
 /// The largest service request, a base16 block within a message envelope.
 constexpr uint32_t maximum_service_default() NOEXCEPT
 {
@@ -156,6 +162,9 @@ struct BCT_API settings
 
         /// Secured bindings.
         config::authorities safes{};
+
+        /// The response buffer, above which the response is write chunked.
+        uint32_t maximum_buffer{ maximum_service_buffer() };
 
         /// The secured bindings are configured (default false).
         virtual bool secure() const NOEXCEPT;
