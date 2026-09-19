@@ -125,15 +125,15 @@ BOOST_AUTO_TEST_CASE(zmtp_cipher__handshake__command_names__expected)
     BOOST_REQUIRE(pair.handshake({}, {}));
 
     BOOST_REQUIRE_EQUAL(pair.hello.at(0), 5u);
-    BOOST_REQUIRE_EQUAL(std::string(std::next(pair.hello.begin()), std::next(pair.hello.begin(), 6)), "HELLO");
+    BOOST_REQUIRE_EQUAL(std::string(std::next(pair.hello.cbegin()), std::next(pair.hello.cbegin(), 6)), "HELLO");
     BOOST_REQUIRE_EQUAL(pair.hello.at(6), 1u);
     BOOST_REQUIRE_EQUAL(pair.hello.at(7), 0u);
     BOOST_REQUIRE_EQUAL(pair.welcome.at(0), 7u);
-    BOOST_REQUIRE_EQUAL(std::string(std::next(pair.welcome.begin()), std::next(pair.welcome.begin(), 8)), "WELCOME");
+    BOOST_REQUIRE_EQUAL(std::string(std::next(pair.welcome.cbegin()), std::next(pair.welcome.cbegin(), 8)), "WELCOME");
     BOOST_REQUIRE_EQUAL(pair.initiate.at(0), 8u);
-    BOOST_REQUIRE_EQUAL(std::string(std::next(pair.initiate.begin()), std::next(pair.initiate.begin(), 9)), "INITIATE");
+    BOOST_REQUIRE_EQUAL(std::string(std::next(pair.initiate.cbegin()), std::next(pair.initiate.cbegin(), 9)), "INITIATE");
     BOOST_REQUIRE_EQUAL(pair.ready.at(0), 5u);
-    BOOST_REQUIRE_EQUAL(std::string(std::next(pair.ready.begin()), std::next(pair.ready.begin(), 6)), "READY");
+    BOOST_REQUIRE_EQUAL(std::string(std::next(pair.ready.cbegin()), std::next(pair.ready.cbegin(), 6)), "READY");
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_cipher__handshake__hello_nonce_one_initiate_two__expected)
@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE(zmtp_cipher__handshake__hello_nonce_one_initiate_two__expec
     BOOST_REQUIRE(pair.handshake({}, {}));
 
     // Short nonces are big-endian (as libzmq), HELLO at 112, INITIATE at 105.
-    const data_chunk hello_nonce(std::next(pair.hello.begin(), 112), std::next(pair.hello.begin(), 120));
-    const data_chunk initiate_nonce(std::next(pair.initiate.begin(), 105), std::next(pair.initiate.begin(), 113));
+    const data_chunk hello_nonce(std::next(pair.hello.cbegin(), 112), std::next(pair.hello.cbegin(), 120));
+    const data_chunk initiate_nonce(std::next(pair.initiate.cbegin(), 105), std::next(pair.initiate.cbegin(), 113));
     BOOST_REQUIRE_EQUAL(hello_nonce, base16_chunk("0000000000000001"));
     BOOST_REQUIRE_EQUAL(initiate_nonce, base16_chunk("0000000000000002"));
 }
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(zmtp_cipher__encode_decode__both_directions__round_trip)
     BOOST_REQUIRE(pair.server->encode(message, cipher::payload_more, body));
     BOOST_REQUIRE_EQUAL(message.size(), cipher::message_minimum + body.size());
     BOOST_REQUIRE_EQUAL(message.at(0), 7u);
-    BOOST_REQUIRE_EQUAL(std::string(std::next(message.begin()), std::next(message.begin(), 8)), "MESSAGE");
+    BOOST_REQUIRE_EQUAL(std::string(std::next(message.cbegin()), std::next(message.cbegin(), 8)), "MESSAGE");
 
     uint8_t flags{};
     data_chunk decoded{};

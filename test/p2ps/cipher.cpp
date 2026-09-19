@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(p2ps_cipher__round_trip__both_directions__expected)
     const std::span<const uint8_t> rest{ std::next(packet.data(), cipher::length_size), packet.size() - cipher::length_size };
     BOOST_REQUIRE(beta.decrypt(decrypted, aad, ignore, rest));
     BOOST_REQUIRE(!ignore);
-    const data_chunk payload(std::next(decrypted.begin()), decrypted.end());
+    const data_chunk payload(std::next(decrypted.cbegin()), decrypted.cend());
     BOOST_REQUIRE_EQUAL(payload, contents);
 
     // Reply direction.
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(p2ps_cipher__round_trip__both_directions__expected)
     const std::span<const uint8_t> reply_rest{ std::next(reply.data(), cipher::length_size), reply.size() - cipher::length_size };
     BOOST_REQUIRE(alpha.decrypt(reply_decrypted, {}, ignore, reply_rest));
     BOOST_REQUIRE(ignore);
-    const data_chunk reply_payload(std::next(reply_decrypted.begin()), reply_decrypted.end());
+    const data_chunk reply_payload(std::next(reply_decrypted.cbegin()), reply_decrypted.cend());
     BOOST_REQUIRE_EQUAL(reply_payload, contents);
 }
 

@@ -321,7 +321,7 @@ static code encode_notification(data_chunk& packet, role role,
 
         std::reverse(parts.front().begin(), parts.front().end());
         auto content = parts.front();
-        content.insert(content.end(), parts.back().begin(), parts.back().end());
+        content.insert(content.end(), parts.back().cbegin(), parts.back().cend());
         packet = make_command(command_ping, content);
         return error::success;
     }

@@ -203,7 +203,7 @@ bool cipher::hello(data_chunk& out) NOEXCEPT
     out.push_back(version_major);
     out.push_back(version_minor);
     out.resize(out.size() + hello_padding);
-    out.insert(out.end(), transient_public_.begin(), transient_public_.end());
+    out.insert(out.end(), transient_public_.cbegin(), transient_public_.cend());
     const auto nonce = to_big_endian(nonce_);
     out.insert(out.end(), nonce.begin(), nonce.end());
 
@@ -253,10 +253,10 @@ bool cipher::welcome(data_chunk& out, const span& hello) NOEXCEPT
     long_nonce cookie_nonce{};
     maybe_random::fill(cookie_nonce);
     data_chunk state{};
-    state.insert(state.end(), peer_transient_.begin(), peer_transient_.end());
-    state.insert(state.end(), transient_secret_.begin(),
-        transient_secret_.end());
-    data_chunk cookie(cookie_nonce.begin(), cookie_nonce.end());
+    state.insert(state.end(), peer_transient_.cbegin(), peer_transient_.cend());
+    state.insert(state.end(), transient_secret_.cbegin(),
+        transient_secret_.cend());
+    data_chunk cookie(cookie_nonce.cbegin(), cookie_nonce.cend());
     box cookie_box{ cookie_key_ };
     seal(cookie, cookie_box, make_nonce(prefix_cookie, cookie_nonce), state);
     state = {};
@@ -265,14 +265,14 @@ bool cipher::welcome(data_chunk& out, const span& hello) NOEXCEPT
     long_nonce welcome_nonce{};
     maybe_random::fill(welcome_nonce);
     data_chunk plain{};
-    plain.insert(plain.end(), transient_public_.begin(),
-        transient_public_.end());
-    plain.insert(plain.end(), cookie.begin(), cookie.end());
+    plain.insert(plain.end(), transient_public_.cbegin(),
+        transient_public_.cend());
+    plain.insert(plain.end(), cookie.cbegin(), cookie.cend());
 
     out.clear();
     out.reserve(welcome_size);
     name(out, command_welcome);
-    out.insert(out.end(), welcome_nonce.begin(), welcome_nonce.end());
+    out.insert(out.end(), welcome_nonce.cbegin(), welcome_nonce.cend());
     seal(out, *hello_box_, make_nonce(prefix_welcome, welcome_nonce), plain);
     shared = {};
     return out.size() == welcome_size;
@@ -297,7 +297,7 @@ bool cipher::initiate(data_chunk& out, const span& welcome,
         welcome.subspan(offset + long_nonce_size)))
         return false;
 
-    std::copy_n(plain.begin(), key_size, peer_transient_.begin());
+    std::copy_n(plain.cbegin(), key_size, peer_transient_.begin());
     const span cookie{ std::next(plain.data(), key_size), cookie_size };
 
     // The session box (C' -> S') and the vouch box (C -> S').
@@ -316,16 +316,16 @@ bool cipher::initiate(data_chunk& out, const span& welcome,
     long_nonce vouch_nonce{};
     maybe_random::fill(vouch_nonce);
     data_chunk keys{};
-    keys.insert(keys.end(), transient_public_.begin(),
-        transient_public_.end());
-    keys.insert(keys.end(), peer_.begin(), peer_.end());
-    data_chunk vouch(vouch_nonce.begin(), vouch_nonce.end());
+    keys.insert(keys.end(), transient_public_.cbegin(),
+        transient_public_.cend());
+    keys.insert(keys.end(), peer_.cbegin(), peer_.cend());
+    data_chunk vouch(vouch_nonce.cbegin(), vouch_nonce.cend());
     seal(vouch, *vouch_box_, make_nonce(prefix_vouch, vouch_nonce), keys);
 
     // The initiate box (C' -> S') carries the client key, vouch and metadata.
     data_chunk content{};
-    content.insert(content.end(), public_.begin(), public_.end());
-    content.insert(content.end(), vouch.begin(), vouch.end());
+    content.insert(content.end(), public_.cbegin(), public_.cend());
+    content.insert(content.end(), vouch.cbegin(), vouch.cend());
     content.insert(content.end(), metadata.begin(), metadata.end());
 
     out.clear();
@@ -359,9 +359,9 @@ bool cipher::ready(data_chunk& out, data_chunk& peer_metadata,
         return false;
 
     // The cookie must be that of this connection.
-    if (!std::equal(peer_transient_.begin(), peer_transient_.end(),
-        state.begin()) || !std::equal(transient_secret_.begin(),
-            transient_secret_.end(), std::next(state.begin(), key_size)))
+    if (!std::equal(peer_transient_.cbegin(), peer_transient_.cend(),
+        state.cbegin()) || !std::equal(transient_secret_.cbegin(),
+            transient_secret_.cend(), std::next(state.cbegin(), key_size)))
         return false;
 
     state = {};
@@ -384,7 +384,7 @@ bool cipher::ready(data_chunk& out, data_chunk& peer_metadata,
         return false;
 
     // The client long-term key opens the vouch (C -> S').
-    std::copy_n(content.begin(), key_size, peer_.begin());
+    std::copy_n(content.cbegin(), key_size, peer_.begin());
     if (!derive(shared, transient_secret_, peer_))
         return false;
 
@@ -392,7 +392,7 @@ bool cipher::ready(data_chunk& out, data_chunk& peer_metadata,
     shared = {};
 
     long_nonce vouch_nonce{};
-    std::copy_n(std::next(content.begin(), key_size), long_nonce_size,
+    std::copy_n(std::next(content.cbegin(), key_size), long_nonce_size,
         vouch_nonce.begin());
     data_chunk keys{};
     if (!open(keys, *vouch_box_, make_nonce(prefix_vouch, vouch_nonce),
@@ -401,13 +401,13 @@ bool cipher::ready(data_chunk& out, data_chunk& peer_metadata,
         return false;
 
     // The vouch must bind the client transient key to this server.
-    if (!std::equal(peer_transient_.begin(), peer_transient_.end(),
-        keys.begin()) || !std::equal(public_.begin(), public_.end(),
-            std::next(keys.begin(), key_size)))
+    if (!std::equal(peer_transient_.cbegin(), peer_transient_.cend(),
+        keys.cbegin()) || !std::equal(public_.cbegin(), public_.cend(),
+            std::next(keys.cbegin(), key_size)))
         return false;
 
-    peer_metadata.assign(std::next(content.begin(), key_size + cookie_size),
-        content.end());
+    peer_metadata.assign(std::next(content.cbegin(), key_size + cookie_size),
+        content.cend());
 
     // The ready box (S' -> C') carries the server metadata.
     out.clear();

@@ -129,7 +129,7 @@ void stream::do_respond(data_chunk&& detected,
     // Detected v2 from initial bytes, balance of ellswift public key follows.
     const auto keyed = detected.size();
     const auto peer = std::make_shared<cipher::key>();
-    std::copy(detected.begin(), detected.end(), peer->begin());
+    std::copy(detected.cbegin(), detected.cend(), peer->begin());
     const auto begin = std::next(peer->data(), keyed);
     const boost::asio::mutable_buffer in{ begin, peer->size() - keyed };
 
@@ -313,7 +313,7 @@ void stream::read_exactly(const std::span<uint8_t>& out,
 {
     const auto size = out.size();
     const auto residue = std::min(size, residue_.size());
-    std::copy_n(residue_.begin(), residue, out.begin());
+    std::copy_n(residue_.cbegin(), residue, out.begin());
     residue_.erase(residue_.begin(), std::next(residue_.begin(), residue));
 
     if (residue == size)
