@@ -361,11 +361,18 @@ BOOST_AUTO_TEST_CASE(proxy__write__exceeds_backlog__channel_backlog)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 0, 512);
 
     std::promise<code> stopped;
+    std::promise<code> subscribed;
     proxy_ptr->subscribe_stop([&](code ec) NOEXCEPT
     {
         stopped.set_value(ec);
     },
-    [](code) NOEXCEPT {});
+    [&](code ec) NOEXCEPT
+    {
+        subscribed.set_value(ec);
+    });
+
+    // The stop subscription is posted, so the writes await its completion.
+    BOOST_REQUIRE_EQUAL(subscribed.get_future().get(), error::success);
 
     const std::string text(1024, 'x');
     const asio::const_buffer buffer{ text.data(), text.size() };
