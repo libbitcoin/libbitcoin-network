@@ -70,6 +70,8 @@ enum error_t : uint8_t
     protocol_violation,
     channel_overflow,
     channel_underflow,
+    channel_backlog,
+    message_dropped,
 
     // incoming connection failures
     listen_failed,
