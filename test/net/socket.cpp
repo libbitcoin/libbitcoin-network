@@ -344,4 +344,99 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
     BOOST_REQUIRE(pool.join());
 }
 
+BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
+{
+    using namespace std::chrono_literals;
+
+    const logger log{};
+    threadpool pool(2);
+    connector::parameters params{ .maximum_request = 1'000'000u };
+
+    // Bind a loopback acceptor on an ephemeral port.
+    asio::strand accept_strand(pool.service().get_executor());
+    asio::acceptor acceptor(accept_strand);
+    boost_code ec{};
+    const asio::endpoint bind_endpoint(asio::ipv4::loopback(), 0);
+
+    acceptor.open(bind_endpoint.protocol(), ec);
+    BOOST_REQUIRE(!ec);
+    acceptor.set_option(asio::reuse_address(true), ec);
+    BOOST_REQUIRE(!ec);
+    acceptor.bind(bind_endpoint, ec);
+    BOOST_REQUIRE(!ec);
+    acceptor.listen(1, ec);
+    BOOST_REQUIRE(!ec);
+    const auto port = acceptor.local_endpoint().port();
+
+    const auto server = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
+    const auto buffer = std::make_shared<http::flat_buffer>();
+    const auto request = std::make_shared<http::request>();
+
+    // The payload exceeds the write buffer, so the body is write chunked.
+    json::body<>::value_type content{};
+    content.model = boost::json::object{ { "key", std::string(100'000, 'x') } };
+    const auto expected = boost::json::serialize(content.model);
+
+    const auto response = std::make_shared<http::response>();
+    response->result(boost::beast::http::status::ok);
+    response->body() = std::move(content);
+    response->prepare_payload();
+
+    const auto accept_result = std::make_shared<std::promise<code>>();
+    const auto read_result = std::make_shared<std::promise<code>>();
+    const auto write_result = std::make_shared<std::promise<code>>();
+    auto accept_future = accept_result->get_future();
+    auto read_future = read_result->get_future();
+    auto write_future = write_result->get_future();
+
+    // Each stage records unconditionally, results asserted after join.
+    server->accept(acceptor,
+        [=](const code& accept_ec) mutable
+        {
+            accept_result->set_value(accept_ec);
+            server->http_read(*buffer, *request,
+                [=](const code& read_ec, size_t) mutable
+                {
+                    read_result->set_value(read_ec);
+                    server->http_write(std::move(*response),
+                        [=](const code& write_ec, size_t) NOEXCEPT
+                        {
+                            write_result->set_value(write_ec);
+                        });
+                });
+        });
+
+    // Real (blocking) http client, independent of the code under test.
+    asio::context client_service;
+    asio::socket client(client_service);
+    boost_code client_ec{};
+    client.connect({ asio::ipv4::loopback(), port }, client_ec);
+    BOOST_REQUIRE(!client_ec);
+
+    boost::beast::http::request<boost::beast::http::empty_body> get{ boost::beast::http::verb::get, "/", 11 };
+    get.set(boost::beast::http::field::host, "127.0.0.1");
+    get.prepare_payload();
+    boost::beast::http::write(client, get, client_ec);
+    BOOST_REQUIRE(!client_ec);
+
+    // One blocking read must assemble every chunk of the json body.
+    http::flat_buffer read_buffer{};
+    boost::beast::http::response<boost::beast::http::string_body> received{};
+    boost::beast::http::read(client, read_buffer, received, client_ec);
+    BOOST_REQUIRE(!client_ec);
+    BOOST_REQUIRE_EQUAL(received.result_int(), 200u);
+    BOOST_REQUIRE_EQUAL(received.body(), expected);
+
+    BOOST_REQUIRE(accept_future.wait_for(2s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(accept_future.get(), error::success);
+    BOOST_REQUIRE(read_future.wait_for(2s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(read_future.get(), error::success);
+    BOOST_REQUIRE(write_future.wait_for(2s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(write_future.get(), error::success);
+
+    server->stop();
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
