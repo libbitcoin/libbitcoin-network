@@ -28,6 +28,7 @@
 #include <bitcoin/network/messages/rpc/method.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>
 #include <bitcoin/network/messages/rpc/publish.hpp>
+#include <bitcoin/network/messages/rpc/size.hpp>
 #include <bitcoin/network/messages/rpc/types.hpp>
 
 #endif

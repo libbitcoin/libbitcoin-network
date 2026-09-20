@@ -83,9 +83,9 @@ static bool from_onion(address_t& out, const std::string& name) NOEXCEPT
         return false;
 
     torv3_t value{};
-    std::copy_n(payload.begin(), value.value.size(), value.value.begin());
+    std::copy_n(payload.cbegin(), value.value.size(), value.value.begin());
     const auto checksum = to_checksum(value);
-    const auto start = std::next(payload.begin(), value.value.size());
+    const auto start = std::next(payload.cbegin(), value.value.size());
     if (!std::equal(checksum.begin(), checksum.end(), start))
         return false;
 
@@ -101,7 +101,7 @@ static bool from_i2p(address_t& out, const std::string& name) NOEXCEPT
         return false;
 
     i2p_t value{};
-    std::copy(payload.begin(), payload.end(), value.value.begin());
+    std::copy(payload.cbegin(), payload.cend(), value.value.begin());
     out = value;
     return true;
 }

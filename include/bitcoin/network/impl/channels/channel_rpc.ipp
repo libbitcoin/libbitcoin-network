@@ -167,8 +167,7 @@ std::string extract_method(const Message& message) NOEXCEPT
 // protected
 TEMPLATE
 template <typename Message>
-inline void CLASS::send(Message&& message, size_t size_hint,
-    result_handler&& handler) NOEXCEPT
+inline void CLASS::send(Message&& message, result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     using namespace std::placeholders;
@@ -180,7 +179,7 @@ inline void CLASS::send(Message&& message, size_t size_hint,
     // Write message (response or notification) to socket.
     write(
     {
-        json::json_value{ .size_hint = size_hint },
+        json::json_value{},
         std::forward<Message>(message)
     }, std::move(complete));
 }
@@ -222,17 +221,16 @@ inline void CLASS::send_error(rpc::result_t&& error,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    const auto hint = two * error.message.size();
     send(rpc::response_t
     {
         .jsonrpc = version_,
         .id = identity_,
         .error = std::move(error)
-    }, hint, std::move(handler));
+    }, std::move(handler));
 }
 
 TEMPLATE
-inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
+inline void CLASS::send_result(rpc::value_t&& result,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -241,13 +239,12 @@ inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
         .jsonrpc = version_,
         .id = identity_,
         .result = std::move(result)
-    }, size_hint, std::move(handler));
+    }, std::move(handler));
 }
 
 TEMPLATE
 inline void CLASS::send_notification(rpc::string_t&& method,
-    rpc::params_t&& notification, size_t size_hint,
-    result_handler&& handler) NOEXCEPT
+    rpc::params_t&& notification, result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     send(rpc::request_t
@@ -255,7 +252,7 @@ inline void CLASS::send_notification(rpc::string_t&& method,
         .jsonrpc = version_,
         .method = std::move(method),
         .params = std::move(notification)
-    }, size_hint, std::move(handler));
+    }, std::move(handler));
 }
 
 BC_POP_WARNING()

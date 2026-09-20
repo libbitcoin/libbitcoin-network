@@ -158,22 +158,21 @@ TEMPLATE
 void CLASS::writer::init(boost_code& ec) NOEXCEPT
 {
     using namespace system;
-    const auto size = is_zero(value_.size_hint) ? default_buffer :
+    using namespace network::error;
+
+    // The buffer is retained by the socket, which bounds its allocation.
+    if (is_null(value_.buffer))
+    {
+        ec = to_http_code(http_error_t::bad_alloc);
+        return;
+    }
+
+    // Serialization is chunked by the estimate, within that bound.
+    const auto estimate = is_zero(value_.size_hint) ? default_buffer :
         value_.size_hint;
+    chunk_ = std::min(estimate, value_.buffer->max_size());
 
-    if (!value_.buffer)
-    {
-        value_.buffer = emplace_shared<http::flat_buffer>(size);
-    }
-    else
-    {
-        // Caller has assigned the buffer (or just reused the response).
-        // In a full duplex channel the buffer cannot be modified by caller
-        // even from the strand, due to write interleaving.
-        value_.buffer->consume(value_.buffer->size());
-        value_.buffer->max_size(size);
-    }
-
+    value_.buffer->consume(value_.buffer->size());
     ec.clear();
     serializer_.reset(&value_.model);
 }
@@ -195,7 +194,7 @@ CLASS::writer::get(boost_code& ec) NOEXCEPT
         return {};
     }
 
-    const auto size = value_.buffer->max_size();
+    const auto size = chunk_;
     if (is_zero(size))
     {
         ec = to_http_code(http_error_t::buffer_overflow);
@@ -204,7 +203,7 @@ CLASS::writer::get(boost_code& ec) NOEXCEPT
 
     try
     {
-        // Always prepares the configured max_size.
+        // Prepares the chunk, which the estimate sized within the bound.
         const auto scratch = value_.buffer->prepare(size);
         const auto data = system::pointer_cast<char>(scratch.data());
         const auto view = serializer_.read(data, scratch.size());

@@ -138,6 +138,7 @@
 #include <bitcoin/network/messages/rpc/model.hpp>
 #include <bitcoin/network/messages/rpc/publish.hpp>
 #include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/rpc/size.hpp>
 #include <bitcoin/network/messages/rpc/types.hpp>
 #include <bitcoin/network/messages/rpc/enums/grouping.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>

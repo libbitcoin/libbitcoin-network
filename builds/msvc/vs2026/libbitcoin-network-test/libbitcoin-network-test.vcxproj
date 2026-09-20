@@ -226,6 +226,7 @@
       <ObjectFileName>$(IntDir)test_messages_rpc_method.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\publish.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\size.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
