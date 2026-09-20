@@ -112,7 +112,7 @@ code session_server::do_accept(const config::authorities& binds,
         // Each acceptor owns its parameters.
         const auto acceptor = create_service(
         {
-            .connect_timeout = network_settings().connect_timeout(),
+            .connect_timeout = network_settings().connect_timeout(options_),
             .maximum_request = options_.maximum_request,
             .minimum_buffer = options_.minimum_buffer,
             .maximum_buffer = options_.maximum_buffer,

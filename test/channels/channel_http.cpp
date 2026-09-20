@@ -63,7 +63,8 @@ BOOST_AUTO_TEST_CASE(channel_http__stopped__default__false)
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
-    network::socket::parameters params{ .maximum_request = 42 };
+    network::socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, expected, set, options);
     BOOST_REQUIRE(!channel_ptr->stopped());
@@ -82,7 +83,8 @@ BOOST_AUTO_TEST_CASE(channel_http__properties__default__expected)
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
-    network::socket::parameters params{ .maximum_request = 42 };
+    network::socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, set, options);
 
@@ -100,7 +102,8 @@ BOOST_AUTO_TEST_CASE(channel_http__subscribe_message__subscribed__expected)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
-    network::socket::parameters params{ .maximum_request = 42 };
+    network::socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, set, options);
     constexpr auto expected_ec = error::invalid_magic;
@@ -139,7 +142,8 @@ BOOST_AUTO_TEST_CASE(channel_http__stop__all_subscribed__expected)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
-    network::socket::parameters params{ .maximum_request = 42 };
+    network::socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, 42, set, options);
     constexpr auto expected_ec = error::invalid_magic;
@@ -199,7 +203,8 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected__expected)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
-    network::socket::parameters params{ .maximum_request = 42 };
+    network::socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, set, options);
 
@@ -232,7 +237,8 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected_move__expected)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
-    network::socket::parameters params{ .maximum_request = 42 };
+    network::socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, set, options);
 
@@ -264,7 +270,8 @@ BOOST_AUTO_TEST_CASE(channel_http__paused__resume_after_read_fail__true)
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
-    network::socket::parameters params{ .maximum_request = 42 };
+    network::socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, 42, set, options);
 

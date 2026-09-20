@@ -166,13 +166,16 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(const settings::socks5& ,
-        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
+    connector::ptr to_connector(const settings::socks5& ,
+        const settings::tcp_server& options,
+        const steady_clock::duration& timeout) NOEXCEPT override
     {
         connector::parameters params
         {
             .connect_timeout = timeout,
-            .maximum_request = maximum
+            .maximum_request = options.maximum_request,
+            .minimum_buffer = options.minimum_buffer,
+            .maximum_buffer = options.maximum_buffer
         };
 
         return std::make_shared<mock_connector>(log, strand(), service(), std::move(params));

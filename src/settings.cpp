@@ -189,8 +189,6 @@ settings::transport settings::secure_server::secure_context() const NOEXCEPT
 settings::tls_server::tls_server(const std::string_view& logging_name) NOEXCEPT
   : secure_server(logging_name)
 {
-    maximum_request = maximum_service_default();
-    minimum_buffer = minimum_service_default();
 }
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -467,14 +465,6 @@ steady_clock::duration settings::retry_timeout() const NOEXCEPT
     return milliseconds{ system::maybe_random::next(from, to) };
 }
 
-// Randomized from 50% to maximum milliseconds (specified in seconds).
-steady_clock::duration settings::connect_timeout() const NOEXCEPT
-{
-    const auto from = connect_timeout_seconds * 500_u64;
-    const auto to = connect_timeout_seconds * 1'000_u64;
-    return milliseconds{ system::maybe_random::next(from, to) };
-}
-
 steady_clock::duration settings::channel_handshake() const NOEXCEPT
 {
     return seconds(handshake_timeout_seconds);
@@ -501,6 +491,18 @@ bool settings::gossip_v2() const NOEXCEPT
 {
     // Only tor and i2p addresses are unrepresentable in the v1 protocol.
     return gossip_tor || gossip_i2p;
+}
+
+// Randomized from 50% to maximum milliseconds (specified in seconds).
+steady_clock::duration settings::connect_timeout(
+    const tcp_server& options) const NOEXCEPT
+{
+    const auto seconds_ = to_bool(options.connect_timeout_seconds) ?
+        options.connect_timeout_seconds : connect_timeout_seconds;
+
+    const auto from = seconds_ * 500_u64;
+    const auto to = seconds_ * 1'000_u64;
+    return milliseconds{ system::maybe_random::next(from, to) };
 }
 
 uint32_t settings::rate_limited(const tcp_server& options) const NOEXCEPT

@@ -73,7 +73,8 @@ public:
     void accept(socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
-        socket::parameters params{ .maximum_request = 42 };
+        socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
         const auto socket = std::make_shared<network::socket>(log, service_,
             std::move(params));
 
@@ -943,7 +944,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     const logger log{};
     settings set(selection::mainnet);
     set.inbound.connections = 1;
-    set.connect_timeout_seconds = 10000;
+    set.inbound.connect_timeout_seconds = 10000;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 

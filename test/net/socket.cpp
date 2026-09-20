@@ -54,7 +54,8 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
     const logger log{};
     threadpool pool(1);
     constexpr auto maximum = 42u;
-    connector::parameters params{.maximum_request = maximum };
+    connector::parameters params{.maximum_request = maximum,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 
     BOOST_REQUIRE(!instance->stranded());
@@ -72,7 +73,8 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 {
     const logger log{};
     threadpool pool(2);
-    connector::parameters params{ .maximum_request = 42u };
+    connector::parameters params{ .maximum_request = 42u,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
@@ -121,7 +123,8 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////{
 ////    const logger log{};
 ////    threadpool pool(2);
-////    connector::parameters params{ .maximum_request = 42u };
+////    connector::parameters params{ .maximum_request = 42u,
+////        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
 ////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 ////    asio::strand strand(pool.service().get_executor());
 ////
@@ -160,7 +163,8 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////{
 ////    const logger log{};
 ////    threadpool pool(2);
-////    connector::parameters params{ .maximum_request = 42u };
+////    connector::parameters params{ .maximum_request = 42u,
+////        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
 ////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 ////
 ////    system::data_array<42> data{};
@@ -186,7 +190,8 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
 {
     const logger log{};
     threadpool pool(2);
-    connector::parameters params{ .maximum_request = 42u };
+    connector::parameters params{ .maximum_request = 42u,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 
     system::data_array<42> data;
@@ -212,7 +217,8 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
 {
     const logger log{};
     threadpool pool(2);
-    connector::parameters params{ .maximum_request = 42u };
+    connector::parameters params{ .maximum_request = 42u,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 
     system::data_array<42> data;
@@ -249,7 +255,8 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
 
     const logger log{};
     threadpool pool(2);
-    connector::parameters params{ .maximum_request = 1'000'000u };
+    connector::parameters params{ .maximum_request = 1'000'000u,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
 
     // Bind a loopback acceptor on an ephemeral port.
     asio::strand accept_strand(pool.service().get_executor());
@@ -350,7 +357,8 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
 
     const logger log{};
     threadpool pool(2);
-    connector::parameters params{ .maximum_request = 1'000'000u };
+    connector::parameters params{ .maximum_request = 1'000'000u,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
 
     // Bind a loopback acceptor on an ephemeral port.
     asio::strand accept_strand(pool.service().get_executor());

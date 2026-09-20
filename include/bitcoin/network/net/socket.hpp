@@ -54,7 +54,7 @@ public:
         duration connect_timeout{};
         size_t maximum_request{};
         size_t minimum_buffer{};
-        size_t maximum_buffer{ maximum_service_buffer() };
+        size_t maximum_buffer{};
         socket::context context{};
         zmtp::role role{};
     };
