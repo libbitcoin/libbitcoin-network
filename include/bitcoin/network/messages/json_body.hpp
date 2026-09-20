@@ -85,7 +85,6 @@ struct body
     class writer
     {
     public:
-        static constexpr size_t default_buffer = 4096;
         using const_buffers_type = asio::const_buffer;
         using out_buffer = http::get_buffer<const_buffers_type>;
 
