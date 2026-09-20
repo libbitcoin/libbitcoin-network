@@ -167,10 +167,11 @@ void CLASS::writer::init(boost_code& ec) NOEXCEPT
         return;
     }
 
-    // Serialization is chunked by the estimate, within that bound.
-    const auto estimate = is_zero(value_.size_hint) ? default_buffer :
-        value_.size_hint;
-    chunk_ = std::min(estimate, value_.buffer->max_size());
+    // Serialization is chunked by the estimate, within that bound. An
+    // unestimated message is chunked by the bound.
+    const auto maximum = value_.buffer->max_size();
+    chunk_ = is_zero(value_.size_hint) ? maximum :
+        std::min(value_.size_hint, maximum);
 
     value_.buffer->consume(value_.buffer->size());
     ec.clear();
