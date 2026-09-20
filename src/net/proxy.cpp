@@ -38,8 +38,10 @@ inline deadline::ptr make_throttle(const logger& log, asio::strand& strand,
 // This is created in a started state and must be stopped, as the subscribers
 // assert if not stopped. Subscribers may hold protocols even if the service
 // is not started.
-proxy::proxy(const socket::ptr& socket, uint32_t rate_limit) NOEXCEPT
+proxy::proxy(const socket::ptr& socket, uint32_t rate_limit,
+    size_t maximum_backlog) NOEXCEPT
   : rate_limit_(rate_limit),
+    maximum_backlog_(maximum_backlog),
     socket_(socket),
     throttle_(make_throttle(socket->log, socket->strand(), rate_limit)),
     reporter(socket->log)
@@ -105,9 +107,11 @@ void proxy::do_stop(const code& ec) NOEXCEPT
         return;
     }
 
+    // This is the final message of the channel, so it is not bounded.
+    const auto closing = true;
     const auto out = system::move_shared(std::move(close));
-    do_write(std::bind(&proxy::do_response_write,
-        shared_from_this(), out, complete));
+    do_write({ zero, std::bind(&proxy::do_response_write,
+        shared_from_this(), out, complete), complete }, closing);
 }
 
 // private

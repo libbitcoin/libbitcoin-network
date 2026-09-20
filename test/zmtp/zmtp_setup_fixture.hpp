@@ -156,7 +156,7 @@ class mock_proxy
 {
 public:
     mock_proxy(const socket::ptr& socket) NOEXCEPT
-      : proxy(socket, 0)
+      : proxy(socket, 0, maximum_backlog_default())
     {
     }
 

@@ -47,6 +47,12 @@ constexpr uint32_t minimum_service_default() NOEXCEPT
     return 4096;
 }
 
+/// The write backlog of a channel, above which it is congested.
+constexpr uint32_t maximum_backlog_default() NOEXCEPT
+{
+    return 8 * 1024 * 1024;
+}
+
 /// The service response buffer, above which the response is write chunked.
 constexpr uint32_t maximum_service_buffer() NOEXCEPT
 {
@@ -140,6 +146,7 @@ struct BCT_API settings
         uint32_t expiration_minutes{ 60 };
         uint32_t maximum_request{ maximum_request_default() };
         uint32_t minimum_buffer{ maximum_request_default() };
+        uint32_t maximum_backlog{ maximum_backlog_default() };
 
         /// Service send rate limit, overlapping the network rate limit (see
         /// settings::rate_limited). Zero is unlimited.

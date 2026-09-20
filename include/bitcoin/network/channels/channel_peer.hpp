@@ -70,9 +70,10 @@ public:
         out.version = negotiated_version();
         out.message = rpc::any_t{ system::to_shared(message) };
         out.index = index;
+        out.size = message.size(out.version);
 
         LOGX("Send " << Message::command << " to [" << endpoint() << "] ("
-            << message.size(out.version) << " bytes)");
+            << out.size << " bytes)");
 
         write(std::move(out),
             std::bind(&channel_peer::handle_send,

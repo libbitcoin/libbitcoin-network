@@ -38,9 +38,17 @@ using namespace std::placeholders;
 // ----------------------------------------------------------------------------
 // private
 
-void proxy::do_write(const writer& call) NOEXCEPT
+// The memory of a queue entry apart from its payload: the writer closure with
+// its bound pointers, the queue slot, control blocks and the message object.
+// This bounds queue depth implicitly, as a flood of small messages is charged
+// its actual cost and not its wire size.
+constexpr size_t entry_size = 256;
+
+void proxy::do_write(pending write_, bool closing) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    write_.cost = system::ceilinged_add(write_.cost, entry_size);
 
     if (stopped())
     {
@@ -50,7 +58,28 @@ void proxy::do_write(const writer& call) NOEXCEPT
     }
 
     const auto started = !queue_.empty();
-    queue_.push_back(call);
+
+    // An idle queue admits any message, so that one that exceeds the backlog
+    // remains sendable, as does the final message of the channel. A zmtp
+    // publisher is the only lossy channel, as its sequence numbering exposes
+    // the gap to the subscriber.
+    if (!closing && started &&
+        system::ceilinged_add(backlog_, write_.cost) > maximum_backlog_)
+    {
+        if (socket_->zeromq())
+        {
+            LOGS("Dropped message on congested channel [" << endpoint() << "]");
+            write_.handler(error::message_dropped, zero);
+            return;
+        }
+
+        LOGS("Stopping congested channel [" << endpoint() << "]");
+        stop(error::channel_backlog);
+        return;
+    }
+
+    backlog_ = system::ceilinged_add(backlog_, write_.cost);
+    queue_.push_back(std::move(write_));
 
     // Start the asynchronous loop if it wasn't already started.
     if (!started)
@@ -65,7 +94,7 @@ void proxy::write() NOEXCEPT
 
     // Invokes oldest writer on the queue, completion invokes handle_write.
     writing_ = true;
-    queue_.front()();
+    queue_.front().call();
 }
 
 void proxy::handle_write(const code& ec, size_t bytes,
@@ -78,6 +107,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
     // Handler precedes pop so that a handler send does not start a second
     // write loop (a non-empty queue defers the start to the pop below).
     handler(ec, bytes);
+    backlog_ = system::floored_subtract(backlog_, queue_.front().cost);
     queue_.pop_front();
 
     // All handlers must be invoked unless stopped, so continue despite code.
