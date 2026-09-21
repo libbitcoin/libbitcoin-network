@@ -213,6 +213,10 @@ protected:
     virtual void write(messages::peer::frame&& message,
         count_handler&& handler) NOEXCEPT;
 
+    /// Notify peer message to the socket (unsolicited, so bounded).
+    virtual void notify(messages::peer::frame&& message,
+        count_handler&& handler) NOEXCEPT;
+
     /// Write rpc response to the socket (json buffer in body).
     virtual void write(rpc::response&& response,
         count_handler&& handler) NOEXCEPT;
@@ -235,6 +239,10 @@ protected:
     virtual void write(http::response&& response,
         count_handler&& handler) NOEXCEPT;
 
+    /// Notify http response to the socket (unsolicited, so bounded).
+    virtual void notify(http::response&& notification,
+        count_handler&& handler) NOEXCEPT;
+
 private:
     typedef std::function<void()> writer;
 
@@ -248,6 +256,12 @@ private:
     };
 
     typedef std::deque<pending> queue;
+
+    // Solicited writes are unbounded, as they cannot accumulate.
+    void write(messages::peer::frame&& message, count_handler&& handler,
+        bool bounded) NOEXCEPT;
+    void write(http::response&& response, count_handler&& handler,
+        bool bounded) NOEXCEPT;
 
     // For write buffering.
     void do_http_write(const http::response_ptr& response,
@@ -310,7 +324,7 @@ private:
 
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
-    void do_write(pending write, bool closing=false) NOEXCEPT;
+    void do_write(pending write, bool bounded) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
         const count_handler& handler) NOEXCEPT;
 

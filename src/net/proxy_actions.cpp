@@ -108,7 +108,7 @@ void proxy::write(const asio::const_buffer& in, bool binary,
 
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write, shared_from_this(),
-            pending{ in.size(), std::move(call), std::move(handler) }, false));
+            pending{ in.size(), std::move(call), std::move(handler) }, true));
 }
 
 // private
@@ -138,7 +138,7 @@ void proxy::write(const asio::const_buffer& in,
 
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write, shared_from_this(),
-            pending{ in.size(), std::move(call), std::move(handler) }, false));
+            pending{ in.size(), std::move(call), std::move(handler) }, true));
 }
 
 // private
@@ -164,6 +164,18 @@ void proxy::read(data_chunk& buffer, frame& message,
 
 void proxy::write(frame&& message, count_handler&& handler) NOEXCEPT
 {
+    write(std::move(message), std::move(handler), false);
+}
+
+void proxy::notify(frame&& message, count_handler&& handler) NOEXCEPT
+{
+    write(std::move(message), std::move(handler), true);
+}
+
+// private
+void proxy::write(frame&& message, count_handler&& handler,
+    bool bounded) NOEXCEPT
+{
     // Pointer ships moveable message through the send queue.
     const auto out = move_shared(std::move(message));
     const auto cost = out->size;
@@ -172,7 +184,7 @@ void proxy::write(frame&& message, count_handler&& handler) NOEXCEPT
 
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write, shared_from_this(),
-            pending{ cost, std::move(call), std::move(handler) }, false));
+            pending{ cost, std::move(call), std::move(handler) }, bounded));
 }
 
 // private
@@ -272,7 +284,7 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
                 // The peer paces this answer and the read is re-armed
                 // without it, so it is subject to the backlog bound.
                 do_write({ zero, std::bind(&proxy::do_notification_write,
-                    shared_from_this(), pong, ignore), ignore });
+                    shared_from_this(), pong, ignore), ignore }, true);
             }
 
             socket_->rpc_read(buffer.get(), value,
@@ -304,7 +316,7 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
             shared_from_this(), _1, _2, request, buffer, handler);
 
         do_write({ zero, std::bind(&proxy::do_response_write,
-            shared_from_this(), out, complete), complete });
+            shared_from_this(), out, complete), complete }, false);
         return;
     }
 
@@ -327,7 +339,7 @@ void proxy::handle_close_write(const code& ec, size_t bytes,
     // Drain notifications deferred while the batch was open.
     while (!deferred_.empty())
     {
-        do_write(std::move(deferred_.front()));
+        do_write(std::move(deferred_.front()), true);
         deferred_.pop_front();
     }
 
@@ -379,7 +391,7 @@ void proxy::do_defer_write(pending write_) NOEXCEPT
         return;
     }
 
-    do_write(std::move(write_));
+    do_write(std::move(write_), true);
 }
 
 // private
@@ -644,6 +656,19 @@ void proxy::handle_http_close_write(const code& ec, size_t bytes,
 void proxy::write(http::response&& response,
     count_handler&& handler) NOEXCEPT
 {
+    write(std::move(response), std::move(handler), false);
+}
+
+void proxy::notify(http::response&& notification,
+    count_handler&& handler) NOEXCEPT
+{
+    write(std::move(notification), std::move(handler), true);
+}
+
+// private
+void proxy::write(http::response&& response, count_handler&& handler,
+    bool bounded) NOEXCEPT
+{
     // A downgrade is the json-rpc transport, so it writes as one (batch
     // stamping for a response, deferral while open for a notification).
     if (socket_->downgraded())
@@ -677,7 +702,7 @@ void proxy::write(http::response&& response,
 
         boost::asio::dispatch(strand(),
             std::bind(&proxy::do_write, shared_from_this(),
-                pending{ cost, std::move(call), std::move(handler) }, false));
+                pending{ cost, std::move(call), std::move(handler) }, bounded));
         return;
     }
 

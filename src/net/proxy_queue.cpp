@@ -44,11 +44,14 @@ using namespace std::placeholders;
 // its actual cost and not its wire size.
 constexpr size_t entry_size = 256;
 
-void proxy::do_write(pending write_, bool closing) NOEXCEPT
+void proxy::do_write(pending write_, bool bounded) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    write_.cost = system::ceilinged_add(write_.cost, entry_size);
+    // A solicited write is paced by the request that provoked it, so it does
+    // not accumulate and is not charged against the channel backlog.
+    write_.cost = bounded ?
+        system::ceilinged_add(write_.cost, entry_size) : zero;
 
     if (stopped())
     {
@@ -63,7 +66,7 @@ void proxy::do_write(pending write_, bool closing) NOEXCEPT
     // remains sendable, as does the final message of the channel. A zmtp
     // publisher is the only lossy channel, as its sequence numbering exposes
     // the gap to the subscriber.
-    if (!closing && started &&
+    if (bounded && started &&
         system::ceilinged_add(backlog_, write_.cost) > maximum_backlog_)
     {
         if (socket_->zeromq())

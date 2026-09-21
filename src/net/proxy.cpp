@@ -108,10 +108,10 @@ void proxy::do_stop(const code& ec) NOEXCEPT
     }
 
     // This is the final message of the channel, so it is not bounded.
-    const auto closing = true;
+    const auto bounded = false;
     const auto out = system::move_shared(std::move(close));
     do_write({ zero, std::bind(&proxy::do_response_write,
-        shared_from_this(), out, complete), complete }, closing);
+        shared_from_this(), out, complete), complete }, bounded);
 }
 
 // private
