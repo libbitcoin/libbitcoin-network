@@ -37,10 +37,30 @@ public:
         return proxy::unconsumed(bytes, start);
     }
 
-    // Access protected constructor.
-    mock_proxy(const socket::ptr& socket, uint32_t rate_limit=0) NOEXCEPT
-      : proxy(socket, rate_limit)
+    // Call must be stranded.
+    void write1(const asio::const_buffer& in,
+        count_handler&& handler) NOEXCEPT
     {
+        proxy::write(in, std::move(handler));
+    }
+
+    // Access protected constructor.
+    mock_proxy(const socket::ptr& socket, uint32_t rate_limit=0,
+        size_t maximum_backlog=settings::tcp_server{ "mock" }.maximum_backlog) NOEXCEPT
+      : proxy(socket, rate_limit, maximum_backlog)
+    {
+    }
+};
+
+class mock_zmtp_socket
+  : public network::socket
+{
+public:
+    using socket::socket;
+
+    bool zeromq() const NOEXCEPT override
+    {
+        return true;
     }
 };
 
@@ -50,7 +70,8 @@ static milliseconds get_unconsumed(uint32_t rate_limit, size_t bytes,
 {
     const logger log{};
     threadpool pool(1);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, rate_limit);
 
@@ -99,7 +120,8 @@ BOOST_AUTO_TEST_CASE(proxy__unconsumed__stopped__zero)
 {
     const logger log{};
     threadpool pool(1);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 1000);
     proxy_ptr->stop(error::invalid_magic);
@@ -118,7 +140,8 @@ BOOST_AUTO_TEST_CASE(proxy__paused__default__true)
 {
     const logger log{};
     threadpool pool(1);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
@@ -136,7 +159,8 @@ BOOST_AUTO_TEST_CASE(proxy__paused__pause__true)
 {
     const logger log{};
     threadpool pool(1);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
@@ -155,7 +179,8 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
 {
     const logger log{};
     threadpool pool(1);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
@@ -184,7 +209,8 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
 {
     const logger log{};
     threadpool pool(1);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
@@ -214,7 +240,8 @@ BOOST_AUTO_TEST_CASE(proxy__stopped__default__false)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BOOST_REQUIRE(!proxy_ptr->stopped());
@@ -226,7 +253,8 @@ BOOST_AUTO_TEST_CASE(proxy__stranded__default__false)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BOOST_REQUIRE(!proxy_ptr->stranded());
@@ -239,7 +267,8 @@ BOOST_AUTO_TEST_CASE(proxy__authority__default__expected)
     const logger log{};
     threadpool pool(2);
     const config::endpoint default_endpoint{};
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BOOST_REQUIRE(proxy_ptr->endpoint() == default_endpoint);
@@ -251,7 +280,8 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
@@ -280,7 +310,8 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42 };
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
@@ -299,6 +330,111 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
     proxy_ptr->stop(expected_ec);
     BOOST_REQUIRE_EQUAL(stop1_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE(proxy_ptr->stopped());
+}
+
+BOOST_AUTO_TEST_CASE(proxy__write__within_backlog__not_stopped)
+{
+    const logger log{};
+    threadpool pool(2);
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 0, 1'000'000);
+
+    const std::string text(1024, 'x');
+    const asio::const_buffer buffer{ text.data(), text.size() };
+
+    // Both writes are queued inline, as dispatch to the current strand.
+    std::promise<bool> queued;
+    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    {
+        proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
+        proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
+        queued.set_value(true);
+    });
+
+    BOOST_REQUIRE(queued.get_future().get());
+    BOOST_REQUIRE(!proxy_ptr->stopped());
+
+    proxy_ptr->stop(error::service_stopped);
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
+BOOST_AUTO_TEST_CASE(proxy__write__exceeds_backlog__channel_backlog)
+{
+    const logger log{};
+    threadpool pool(2);
+    socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+
+    // The first message is admitted to the idle queue, the second exceeds.
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 0, 512);
+
+    std::promise<code> stopped;
+    std::promise<code> subscribed;
+    proxy_ptr->subscribe_stop([&](code ec) NOEXCEPT
+    {
+        stopped.set_value(ec);
+    },
+    [&](code ec) NOEXCEPT
+    {
+        subscribed.set_value(ec);
+    });
+
+    // The stop subscription is posted, so the writes await its completion.
+    BOOST_REQUIRE_EQUAL(subscribed.get_future().get(), error::success);
+
+    const std::string text(1024, 'x');
+    const asio::const_buffer buffer{ text.data(), text.size() };
+
+    // Both writes are queued inline, so the first cannot complete between.
+    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    {
+        proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
+        proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
+    });
+
+    BOOST_REQUIRE_EQUAL(stopped.get_future().get(), error::channel_backlog);
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
+BOOST_AUTO_TEST_CASE(proxy__write__exceeds_backlog_zeromq__message_dropped)
+{
+    const logger log{};
+    threadpool pool(2);
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
+    auto socket_ptr = std::make_shared<mock_zmtp_socket>(log, pool.service(), std::move(params));
+
+    // The first message is admitted to the idle queue, the second exceeds.
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 0, 512);
+
+    const std::string text(1024, 'x');
+    const asio::const_buffer buffer{ text.data(), text.size() };
+
+    // Both writes are queued inline, so the first cannot complete between.
+    std::promise<code> dropped;
+    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    {
+        proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
+        proxy_ptr->write1(buffer, [&](const code& ec, size_t) NOEXCEPT
+        {
+            dropped.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(dropped.get_future().get(), error::message_dropped);
+    BOOST_REQUIRE(!proxy_ptr->stopped());
+
+    proxy_ptr->stop(error::service_stopped);
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

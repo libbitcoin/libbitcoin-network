@@ -53,7 +53,7 @@ uint32_t channel::rate_limited(const settings_t& settings,
 channel::channel(const logger& log, const socket::ptr& socket,
     uint64_t identifier, const settings_t& settings,
     const options_t& options) NOEXCEPT
-  : proxy(socket, rate_limited(settings, options)),
+  : proxy(socket, rate_limited(settings, options), options.maximum_backlog),
     options_(options),
     settings_(settings),
     identifier_(identifier),

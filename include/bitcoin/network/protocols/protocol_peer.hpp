@@ -49,6 +49,10 @@ protected:
 
     /// Forwards to channel::send.
     DECLARE_SEND()
+
+    /// Forwards to channel::notify.
+    DECLARE_NOTIFY()
+
     DECLARE_SUBSCRIBE_CHANNEL()
 
     /// Properties.

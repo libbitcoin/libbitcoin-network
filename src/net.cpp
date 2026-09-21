@@ -87,8 +87,10 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
 
     socket::parameters params
     {
-        .connect_timeout = settings.connect_timeout(),
+        .connect_timeout = settings.connect_timeout(settings.inbound),
         .maximum_request = settings.inbound.maximum_request,
+        .minimum_buffer = settings.inbound.minimum_buffer,
+        .maximum_buffer = settings.inbound.maximum_buffer,
         .context = accept
     };
 
@@ -104,8 +106,10 @@ acceptor_sam::ptr net::create_acceptor_sam() NOEXCEPT
     // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
     socket::parameters params
     {
-        .connect_timeout = settings.connect_timeout(),
+        .connect_timeout = settings.connect_timeout(settings.inbound),
         .maximum_request = settings.inbound.maximum_request,
+        .minimum_buffer = settings.inbound.minimum_buffer,
+        .maximum_buffer = settings.inbound.maximum_buffer,
         .context = privacy_ ? settings.peer_context() : socket::context{}
     };
 
@@ -113,15 +117,16 @@ acceptor_sam::ptr net::create_acceptor_sam() NOEXCEPT
         accept_suspended_, std::move(params), settings.inbound);
 }
 
-// outbound (general)
-connector::ptr net::create_connector(const settings::socks5& socks,
-    const steady_clock::duration& connect_timeout,
-    uint32_t maximum_request) NOEXCEPT
+connector::ptr net::to_connector(const settings::socks5& socks,
+    const settings::tcp_server& options,
+    const steady_clock::duration& connect_timeout) NOEXCEPT
 {
     socket::parameters params
     {
         .connect_timeout = connect_timeout,
-        .maximum_request = maximum_request
+        .maximum_request = options.maximum_request,
+        .minimum_buffer = options.minimum_buffer,
+        .maximum_buffer = options.maximum_buffer
     };
 
     if (privacy_)
@@ -136,14 +141,21 @@ connector::ptr net::create_connector(const settings::socks5& socks,
         connect_suspended_, std::move(params));
 }
 
+// outbound (general)
+connector::ptr net::create_connector(const settings::socks5& socks,
+    const settings::tcp_server& options) NOEXCEPT
+{
+    return to_connector(socks, options,
+        network_settings().connect_timeout(options));
+}
+
 // outbound (seed)
 connector::ptr net::create_seed_connector() NOEXCEPT
 {
     const auto& settings = network_settings();
 
-    return create_connector(settings.outbound,
-        settings.outbound.seeding_timeout(),
-        settings.outbound.maximum_request);
+    return to_connector(settings.outbound, settings.outbound,
+        settings.outbound.seeding_timeout());
 }
 
 // outbound (manual)
@@ -151,9 +163,7 @@ connector::ptr net::create_manual_connector() NOEXCEPT
 {
     const auto& settings = network_settings();
 
-    return create_connector(settings.manual,
-        settings.connect_timeout(),
-        settings.manual.maximum_request);
+    return create_connector(settings.manual, settings.manual);
 }
 
 // outbound (batch)
@@ -165,8 +175,7 @@ connectors_ptr net::create_connectors(size_t count) NOEXCEPT
 
     for (size_t connect{}; connect < count; ++connect)
         connects->push_back(create_connector(settings.outbound,
-            settings.connect_timeout(),
-            settings.outbound.maximum_request));
+            settings.outbound));
 
     return connects;
 }

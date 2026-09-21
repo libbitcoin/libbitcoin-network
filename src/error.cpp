@@ -58,6 +58,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { protocol_violation, "protocol violation" },
     { channel_overflow, "channel overflow" },
     { channel_underflow, "channel underflow" },
+    { channel_backlog, "channel write backlog" },
+    { message_dropped, "message dropped" },
 
     // incoming connection failures
     { listen_failed, "incoming connection failed" },

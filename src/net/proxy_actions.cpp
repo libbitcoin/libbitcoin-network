@@ -34,6 +34,47 @@ using namespace system;
 using namespace messages::peer;
 using namespace std::placeholders;
 
+// The cost of a queued message is the memory that it pins, so a streaming body
+// (file) is charged only for the queue entry that retains it.
+// The estimate is cached into the message, so the writer does not repeat it.
+template <typename Message>
+static size_t to_estimate(Message& message) NOEXCEPT
+{
+    if (is_zero(message.size_hint))
+        message.size_hint = rpc::to_size(message.message);
+
+    return message.size_hint;
+}
+
+static size_t to_cost(http::body::value_type& body) NOEXCEPT
+{
+    if (body.contains<http::json_value>())
+        return body.get<http::json_value>().size_hint;
+
+    if (body.contains<rpc::request>())
+        return to_estimate(body.get<rpc::request>());
+
+    if (body.contains<rpc::response>())
+        return to_estimate(body.get<rpc::response>());
+
+    if (body.contains<http::string_value>())
+        return body.get<http::string_value>().size();
+
+    if (body.contains<http::data_value>())
+        return body.get<http::data_value>().size();
+
+    if (body.contains<http::span_value>())
+        return body.get<http::span_value>().size();
+
+    if (body.contains<http::buffer_value>())
+        return body.get<http::buffer_value>().size;
+
+    if (body.contains<http::peer_value>())
+        return body.get<http::peer_value>().size;
+
+    return zero;
+}
+
 // Wait (all).
 // ----------------------------------------------------------------------------
 
@@ -63,11 +104,11 @@ void proxy::write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
     writer call = std::bind(&proxy::do_ws_write,
-        shared_from_this(), in, binary, std::move(handler));
+        shared_from_this(), in, binary, handler);
 
     boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), std::move(call)));
+        std::bind(&proxy::do_write, shared_from_this(),
+            pending{ in.size(), std::move(call), std::move(handler) }, true));
 }
 
 // private
@@ -93,11 +134,11 @@ void proxy::write(const asio::const_buffer& in,
     count_handler&& handler) NOEXCEPT
 {
     writer call = std::bind(&proxy::do_tcp_write,
-        shared_from_this(), in, std::move(handler));
+        shared_from_this(), in, handler);
 
     boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), std::move(call)));
+        std::bind(&proxy::do_write, shared_from_this(),
+            pending{ in.size(), std::move(call), std::move(handler) }, true));
 }
 
 // private
@@ -123,14 +164,27 @@ void proxy::read(data_chunk& buffer, frame& message,
 
 void proxy::write(frame&& message, count_handler&& handler) NOEXCEPT
 {
+    write(std::move(message), std::move(handler), false);
+}
+
+void proxy::notify(frame&& message, count_handler&& handler) NOEXCEPT
+{
+    write(std::move(message), std::move(handler), true);
+}
+
+// private
+void proxy::write(frame&& message, count_handler&& handler,
+    bool bounded) NOEXCEPT
+{
     // Pointer ships moveable message through the send queue.
     const auto out = move_shared(std::move(message));
+    const auto cost = out->size;
     writer call = std::bind(&proxy::do_peer_write,
-        shared_from_this(), out, std::move(handler));
+        shared_from_this(), out, handler);
 
     boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), std::move(call)));
+        std::bind(&proxy::do_write, shared_from_this(),
+            pending{ cost, std::move(call), std::move(handler) }, bounded));
 }
 
 // private
@@ -226,8 +280,11 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
 
                 const count_handler ignore =
                     [](const code&, size_t) NOEXCEPT {};
-                do_write(std::bind(&proxy::do_notification_write,
-                    shared_from_this(), pong, ignore));
+
+                // The peer paces this answer and the read is re-armed
+                // without it, so it is subject to the backlog bound.
+                do_write({ zero, std::bind(&proxy::do_notification_write,
+                    shared_from_this(), pong, ignore), ignore }, true);
             }
 
             socket_->rpc_read(buffer.get(), value,
@@ -258,8 +315,8 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
         const count_handler complete = std::bind(&proxy::handle_close_write,
             shared_from_this(), _1, _2, request, buffer, handler);
 
-        do_write(std::bind(&proxy::do_response_write,
-            shared_from_this(), out, complete));
+        do_write({ zero, std::bind(&proxy::do_response_write,
+            shared_from_this(), out, complete), complete }, false);
         return;
     }
 
@@ -282,7 +339,7 @@ void proxy::handle_close_write(const code& ec, size_t bytes,
     // Drain notifications deferred while the batch was open.
     while (!deferred_.empty())
     {
-        do_write(deferred_.front());
+        do_write(std::move(deferred_.front()), true);
         deferred_.pop_front();
     }
 
@@ -300,39 +357,41 @@ void proxy::write(rpc::response&& response, count_handler&& handler) NOEXCEPT
 {
     // Pointer ships moveable message through the send queue.
     const auto out = move_shared(std::move(response));
+    const auto cost = to_estimate(*out);
     writer call = std::bind(&proxy::do_response_write,
-        shared_from_this(), out, std::move(handler));
+        shared_from_this(), out, handler);
 
     boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), std::move(call)));
+        std::bind(&proxy::do_write, shared_from_this(),
+            pending{ cost, std::move(call), std::move(handler) }, false));
 }
 
-void proxy::write(rpc::request&& notification, count_handler&& handler) NOEXCEPT
+void proxy::notify(rpc::request&& notification, count_handler&& handler) NOEXCEPT
 {
     // Pointer ships moveable message through the send queue.
     const auto out = move_shared(std::move(notification));
+    const auto cost = to_estimate(*out);
     writer call = std::bind(&proxy::do_notification_write,
-        shared_from_this(), out, std::move(handler));
+        shared_from_this(), out, handler);
 
     boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_defer_write,
-            shared_from_this(), std::move(call)));
+        std::bind(&proxy::do_defer_write, shared_from_this(),
+            pending{ cost, std::move(call), std::move(handler) }));
 }
 
 // private
-void proxy::do_defer_write(const writer& call) NOEXCEPT
+void proxy::do_defer_write(pending write_) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     // Notifications are deferred while a batch is open (drained on close).
     if (batched_)
     {
-        deferred_.push_back(call);
+        deferred_.push_back(std::move(write_));
         return;
     }
 
-    do_write(call);
+    do_write(std::move(write_), true);
 }
 
 // private
@@ -597,6 +656,19 @@ void proxy::handle_http_close_write(const code& ec, size_t bytes,
 void proxy::write(http::response&& response,
     count_handler&& handler) NOEXCEPT
 {
+    write(std::move(response), std::move(handler), false);
+}
+
+void proxy::notify(http::response&& notification,
+    count_handler&& handler) NOEXCEPT
+{
+    write(std::move(notification), std::move(handler), true);
+}
+
+// private
+void proxy::write(http::response&& response, count_handler&& handler,
+    bool bounded) NOEXCEPT
+{
     // A downgrade is the json-rpc transport, so it writes as one (batch
     // stamping for a response, deferral while open for a notification).
     if (socket_->downgraded())
@@ -611,7 +683,7 @@ void proxy::write(http::response&& response,
 
         if (body.contains<rpc::request>())
         {
-            write(std::move(std::get<rpc::request>(body.value())),
+            notify(std::move(std::get<rpc::request>(body.value())),
                 std::move(handler));
             return;
         }
@@ -624,12 +696,13 @@ void proxy::write(http::response&& response,
     {
         // Pointer ships moveable message through the send queue.
         const auto out = move_shared(std::move(response));
+        const auto cost = to_cost(out->body());
         writer call = std::bind(&proxy::do_http_write,
-            shared_from_this(), out, std::move(handler));
+            shared_from_this(), out, handler);
 
         boost::asio::dispatch(strand(),
-            std::bind(&proxy::do_write,
-                shared_from_this(), std::move(call)));
+            std::bind(&proxy::do_write, shared_from_this(),
+                pending{ cost, std::move(call), std::move(handler) }, bounded));
         return;
     }
 

@@ -130,7 +130,8 @@ public:
     const config::endpoint& binding() const NOEXCEPT;
 
 protected:
-    proxy(const socket::ptr& socket, uint32_t rate_limit) NOEXCEPT;
+    proxy(const socket::ptr& socket, uint32_t rate_limit,
+        size_t maximum_backlog) NOEXCEPT;
 
     /// Accept a websocket upgrade request (requires strand).
     code accept_websocket(const http::request& request) NOEXCEPT;
@@ -212,13 +213,17 @@ protected:
     virtual void write(messages::peer::frame&& message,
         count_handler&& handler) NOEXCEPT;
 
+    /// Notify peer message to the socket (unsolicited, so bounded).
+    virtual void notify(messages::peer::frame&& message,
+        count_handler&& handler) NOEXCEPT;
+
     /// Write rpc response to the socket (json buffer in body).
     virtual void write(rpc::response&& response,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write rpc notification (request) to the socket (json buffer in body).
+    /// Notify rpc notification (request) to the socket (json buffer in body).
     /// Deferred while a batch is open, drained following the close part.
-    virtual void write(rpc::request&& notification,
+    virtual void notify(rpc::request&& notification,
         count_handler&& handler) NOEXCEPT;
 
     /// HTTP/WS (generic/rpc).
@@ -234,9 +239,29 @@ protected:
     virtual void write(http::response&& response,
         count_handler&& handler) NOEXCEPT;
 
+    /// Notify http response to the socket (unsolicited, so bounded).
+    virtual void notify(http::response&& notification,
+        count_handler&& handler) NOEXCEPT;
+
 private:
     typedef std::function<void()> writer;
-    typedef std::deque<writer> queue;
+
+    // A queued write retains memory, charged as the backlog of the channel.
+    // The handler is retained for the drop of a refused write (see do_write).
+    struct pending
+    {
+        size_t cost;
+        writer call;
+        count_handler handler;
+    };
+
+    typedef std::deque<pending> queue;
+
+    // Solicited writes are unbounded, as they cannot accumulate.
+    void write(messages::peer::frame&& message, count_handler&& handler,
+        bool bounded) NOEXCEPT;
+    void write(http::response&& response, count_handler&& handler,
+        bool bounded) NOEXCEPT;
 
     // For write buffering.
     void do_http_write(const http::response_ptr& response,
@@ -255,7 +280,7 @@ private:
         const result_handler& complete) NOEXCEPT;
 
     // For rpc batch normalization.
-    void do_defer_write(const writer& call) NOEXCEPT;
+    void do_defer_write(pending write) NOEXCEPT;
     void handle_rpc_read(const code& ec, size_t bytes,
         const ref<rpc::request>& request, const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;
@@ -299,7 +324,7 @@ private:
 
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
-    void do_write(const writer& call) NOEXCEPT;
+    void do_write(pending write, bool bounded) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
         const count_handler& handler) NOEXCEPT;
 
@@ -323,6 +348,7 @@ private:
     std::atomic<uint64_t> sent_{};
     std::atomic<uint64_t> received_{};
     const uint32_t rate_limit_;
+    const size_t maximum_backlog_;
     socket::ptr socket_;
 
     // These are protected by strand.
@@ -332,6 +358,7 @@ private:
     queue deferred_{};
     bool writing_{};
     queue queue_{};
+    size_t backlog_{};
     bool parted_{};
     bool batched_{};
 };

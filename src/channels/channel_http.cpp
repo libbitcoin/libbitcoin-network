@@ -282,7 +282,7 @@ void channel_http::notify(response&& notification,
 
     std::string message{ LOG_ONLY(log_message(notification)) };
 
-    write(std::move(notification),
+    proxy::notify(std::move(notification),
         std::bind(&channel_http::handle_send,
             shared_from_base<channel_http>(), _1, _2, true, std::move(message),
                 std::move(handler)));

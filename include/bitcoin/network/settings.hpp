@@ -32,34 +32,10 @@
 namespace libbitcoin {
 namespace network {
 
-/// The largest p2p payload request when configured for witness blocks.
-constexpr uint32_t maximum_request_default() NOEXCEPT
-{
-    using namespace system;
-    using namespace messages::peer;
-    return possible_narrow_cast<uint32_t>(
-        heading::maximum_payload(level::canonical, true));
-}
-
-/// The retained service request buffer, as requests are typically small.
-constexpr uint32_t minimum_service_default() NOEXCEPT
-{
-    return 4096;
-}
-
-/// The service response buffer, above which the response is write chunked.
-constexpr uint32_t maximum_service_buffer() NOEXCEPT
-{
-    return 64 * 1024;
-}
-
-/// The largest service request, a base16 block within a message envelope.
-constexpr uint32_t maximum_service_default() NOEXCEPT
-{
-    using namespace system;
-    return ceilinged_add(ceilinged_multiply(maximum_request_default(), 2_u32),
-        4096_u32);
-}
+constexpr auto kilobyte = system::power2<uint32_t>(10u);
+constexpr auto megabyte = system::power2<uint32_t>(20u);
+constexpr auto max_payload = system::possible_narrow_cast<uint32_t>(
+    messages::peer::max_payload);
 
 /// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
@@ -138,11 +114,11 @@ struct BCT_API settings
         uint16_t connections{ 0 };
         uint32_t inactivity_minutes{ 10 };
         uint32_t expiration_minutes{ 60 };
-        uint32_t maximum_request{ maximum_request_default() };
-        uint32_t minimum_buffer{ maximum_request_default() };
-
-        /// Service send rate limit, overlapping the network rate limit (see
-        /// settings::rate_limited). Zero is unlimited.
+        uint32_t minimum_buffer{ 4 * kilobyte };
+        uint32_t maximum_buffer{ 64 * kilobyte };
+        uint32_t maximum_request{ max_payload };
+        uint32_t maximum_backlog{ 10 * megabyte };
+        uint32_t connect_timeout_seconds{ 0 };
         uint32_t rate_limit{ 0 };
 
         /// Helpers.
@@ -162,9 +138,6 @@ struct BCT_API settings
 
         /// Secured bindings.
         config::authorities safes{};
-
-        /// The response buffer, above which the response is write chunked.
-        uint32_t maximum_buffer{ maximum_service_buffer() };
 
         /// The secured bindings are configured (default false).
         virtual bool secure() const NOEXCEPT;
@@ -409,6 +382,8 @@ struct BCT_API settings
 
     uint32_t threads{ 0 };
     uint32_t retry_timeout_seconds{ 1 };
+
+    /// Overridden by tcp_server::connect_timeout_seconds (see connect_timeout).
     uint32_t connect_timeout_seconds{ 5 };
 
     /// Bytes/second allocated to each channel for sending, zero is unlimited.
@@ -455,7 +430,6 @@ struct BCT_API settings
     virtual transport peer_context() const NOEXCEPT;
     virtual size_t threads_() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
-    virtual steady_clock::duration connect_timeout() const NOEXCEPT;
     virtual steady_clock::duration channel_handshake() const NOEXCEPT;
     virtual steady_clock::duration channel_heartbeat() const NOEXCEPT;
     virtual steady_clock::duration maximum_skew() const NOEXCEPT;
@@ -464,6 +438,10 @@ struct BCT_API settings
 
     /// The send rate limit of a channel of the section, zero is unlimited.
     virtual uint32_t rate_limited(const tcp_server& options) const NOEXCEPT;
+
+    /// The service connect timeout, defaulted to the network connect timeout.
+    virtual steady_clock::duration connect_timeout(
+        const tcp_server& options) const NOEXCEPT;
 
     /// Filters.
     virtual bool connectable(

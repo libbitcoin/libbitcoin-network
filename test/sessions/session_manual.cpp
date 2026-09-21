@@ -65,7 +65,8 @@ public:
         if (is_zero(connects_++))
             peer_ = peer;
 
-        socket::parameters params{ .maximum_request = 42 };
+        socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
         const auto socket = std::make_shared<network::socket>(log, service_,
             std::move(params));
 
@@ -238,13 +239,14 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(const settings::socks5& ,
-        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
+    connector::ptr to_connector(const settings::socks5& ,
+        const settings::tcp_server& options,
+        const steady_clock::duration& timeout) NOEXCEPT override
     {
         connector::parameters params
         {
             .connect_timeout = timeout,
-            .maximum_request = maximum
+            .maximum_request = options.maximum_request
         };
 
         return ((connector_ = std::make_shared<Connector>(log, strand(),

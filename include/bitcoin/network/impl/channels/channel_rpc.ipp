@@ -176,12 +176,23 @@ inline void CLASS::send(Message&& message, result_handler&& handler) NOEXCEPT
         shared_from_base<CLASS>(), _1, _2, extract_method(message),
         std::move(handler));
 
-    // Write message (response or notification) to socket.
-    write(
+    // The verb carries the classification, as the charge follows from it.
+    if constexpr (is_same_type<Message, rpc::request_t>)
     {
-        json::json_value{},
-        std::forward<Message>(message)
-    }, std::move(complete));
+        notify(rpc::request
+        {
+            json::json_value{},
+            std::forward<Message>(message)
+        }, std::move(complete));
+    }
+    else
+    {
+        write(rpc::response
+        {
+            json::json_value{},
+            std::forward<Message>(message)
+        }, std::move(complete));
+    }
 }
 
 // protected

@@ -245,6 +245,24 @@ BOOST_AUTO_TEST_CASE(error_t__code__channel_underflow__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "channel underflow");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__channel_backlog__true_expected_message)
+{
+    constexpr auto value = error::channel_backlog;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "channel write backlog");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__message_dropped__true_expected_message)
+{
+    constexpr auto value = error::message_dropped;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "message dropped");
+}
+
 // incoming connection failures
 
 BOOST_AUTO_TEST_CASE(error_t__code__listen_failed__true_expected_message)

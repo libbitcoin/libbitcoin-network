@@ -53,7 +53,7 @@ static frame test_frame()
         .version = messages::peer::level::bip31,
         .witness = true,
         .checksum = true,
-        .maximum = heading::maximum_payload(messages::peer::level::bip31, true)
+        .maximum = heading::maximum_payload(true)
     };
 }
 

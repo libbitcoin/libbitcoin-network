@@ -86,7 +86,8 @@ public:
             port_ = port;
         }
 
-        socket::parameters params{ .maximum_request = 42 };
+        socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
         const auto socket = std::make_shared<network::socket>(log, service_, std::move(params));
 
         // Must be asynchronous or is an infinite recursion.
@@ -242,13 +243,14 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(const settings::socks5& ,
-        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
+    connector::ptr to_connector(const settings::socks5& ,
+        const settings::tcp_server& options,
+        const steady_clock::duration& timeout) NOEXCEPT override
     {
         connector::parameters params
         {
             .connect_timeout = timeout,
-            .maximum_request = maximum
+            .maximum_request = options.maximum_request
         };
 
         return ((connector_ = std::make_shared<Connector>(log, strand(),
@@ -363,8 +365,9 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector(const settings::socks5& ,
-        const steady_clock::duration& timeout, uint32_t maximum) NOEXCEPT override
+    connector::ptr to_connector(const settings::socks5& ,
+        const settings::tcp_server& options,
+        const steady_clock::duration& timeout) NOEXCEPT override
     {
         if (connector_)
             return connector_;
@@ -372,7 +375,7 @@ public:
         connector::parameters params
         {
             .connect_timeout = timeout,
-            .maximum_request = maximum
+            .maximum_request = options.maximum_request
         };
 
         return ((connector_ = std::make_shared<mock_connector_stop_connect>(
@@ -637,7 +640,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 3;
     set.outbound.connections = 3;
-    set.connect_timeout_seconds = 10000;
+    set.outbound.connect_timeout_seconds = 10000;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -674,7 +677,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 2;
     set.outbound.connections = 2;
-    set.connect_timeout_seconds = 10000;
+    set.outbound.connect_timeout_seconds = 10000;
 
     // Prevent default address from being rejected by gossip_ipv6 false.
     set.gossip_ipv6 = true;
@@ -707,7 +710,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
-    set.connect_timeout_seconds = 10000;
+    set.outbound.connect_timeout_seconds = 10000;
 
     // Prevent default address from being rejected by gossip_ipv6 false.
     set.gossip_ipv6 = true;

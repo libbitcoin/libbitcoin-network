@@ -190,6 +190,38 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
     ////BC_ASSERT(stranded());
 
+    if (!inbound_ || is_zero(timer_->timeout().count()))
+    {
+        do_upgrade(handler);
+        return;
+    }
+
+    timer_->start(std::bind(&socket::handle_handshake_timer,
+        shared_from_this(), _1));
+
+    do_upgrade(std::bind(&socket::handle_handshaked,
+        shared_from_this(), _1, handler));
+}
+
+// private
+void socket::handle_handshaked(const code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    timer_->stop();
+    handler(ec);
+}
+
+// private
+// Socket stop cancels the pending handshake, which completes the handler.
+void socket::handle_handshake_timer(const code& ec) NOEXCEPT
+{
+    if (!ec)
+        stop();
+}
+
+// private
+void socket::do_upgrade(const result_handler& handler) NOEXCEPT
+{
     if (std::holds_alternative<cref<p2ps::context>>(context_))
     {
         // The accepted peer is detected as v1 or v2 before upgrade.
@@ -269,10 +301,12 @@ void socket::handle_detection(const boost_code& ec,
         return;
     }
 
+    using namespace system;
     constexpr auto size = p2ps::stream::detection_size;
+
     detection_.commit(size);
     const auto& context = std::get<cref<p2ps::context>>(context_).get();
-    const auto data = system::pointer_cast<const uint8_t>(detection_.data().data());
+    const auto data = pointer_cast<const uint8_t>(detection_.data().data());
     const std::span<const uint8_t> prefix{ data, size };
 
     // A v1 peer is served without upgrade, the buffer retains the prefix.
@@ -283,7 +317,7 @@ void socket::handle_detection(const boost_code& ec,
     }
 
     // The prefix is consumed by the upgrade (a partial peer key).
-    system::data_chunk key{ prefix.begin(), prefix.end() };
+    data_chunk key{ prefix.begin(), prefix.end() };
     detection_.consume(size);
 
     // Extract to temporary to avoid dangling reference after destruction.

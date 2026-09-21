@@ -53,31 +53,22 @@ public:
         dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
-    /// Write message to peer (requires strand).
+    /// Write solicited message to peer (requires strand).
     /// The message is translated to the wire by the body (transport framed).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
     inline void send(const Message& message, result_handler&& handler) NOEXCEPT
     {
-        BC_ASSERT(stranded());
-        using namespace messages::peer;
-        using namespace std::placeholders;
+        write_message(message, false, std::move(handler));
+    }
 
-        constexpr auto index = messages::peer::registry::index_of<Message>();
-
-        frame out{};
-        out.magic = settings().identifier;
-        out.version = negotiated_version();
-        out.message = rpc::any_t{ system::to_shared(message) };
-        out.index = index;
-
-        LOGX("Send " << Message::command << " to [" << endpoint() << "] ("
-            << message.size(out.version) << " bytes)");
-
-        write(std::move(out),
-            std::bind(&channel_peer::handle_send,
-                shared_from_base<channel_peer>(), _1, _2, index,
-                std::move(handler)));
+    /// Write unsolicited message to peer (requires strand).
+    /// Announcements accumulate, so these are charged to the channel backlog.
+    template <class Message>
+    inline void notify(const Message& message,
+        result_handler&& handler) NOEXCEPT
+    {
+        write_message(message, true, std::move(handler));
     }
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.
@@ -165,6 +156,36 @@ protected:
     bool is_handshaked() const NOEXCEPT;
 
 private:
+    template <class Message>
+    inline void write_message(const Message& message, bool bounded,
+        result_handler&& handler) NOEXCEPT
+    {
+        BC_ASSERT(stranded());
+        using namespace messages::peer;
+        using namespace std::placeholders;
+
+        constexpr auto index = messages::peer::registry::index_of<Message>();
+
+        frame out{};
+        out.magic = settings().identifier;
+        out.version = negotiated_version();
+        out.message = rpc::any_t{ system::to_shared(message) };
+        out.index = index;
+        out.size = message.size(out.version);
+
+        LOGX("Send " << Message::command << " to [" << endpoint() << "] ("
+            << out.size << " bytes)");
+
+        auto complete = std::bind(&channel_peer::handle_send,
+            shared_from_base<channel_peer>(), _1, _2, index,
+            std::move(handler));
+
+        if (bounded)
+            proxy::notify(std::move(out), std::move(complete));
+        else
+            proxy::write(std::move(out), std::move(complete));
+    }
+
     static void count(counters& counts, size_t index, size_t bytes) NOEXCEPT;
 
     void log_fault(const code& ec,

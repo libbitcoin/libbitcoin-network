@@ -54,6 +54,7 @@ struct BCT_API body
         /// Type-erased message with its registry index (write in).
         rpc::any_t message{};
         size_t index{};
+        size_t size{};
 
         /// Serialized v1 frame (write out).
         system::chunk_cptr data{};

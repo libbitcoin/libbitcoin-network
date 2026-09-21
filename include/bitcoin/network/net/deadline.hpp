@@ -60,6 +60,9 @@ public:
     /// The time duration until the timer expires (may be negative).
     seconds remaining() const NOEXCEPT;
 
+    /// The configured timeout of the timer.
+    const duration& timeout() const NOEXCEPT;
+
 private:
     void handle_timer(const boost_code& ec,
         const result_handler& handle) NOEXCEPT;

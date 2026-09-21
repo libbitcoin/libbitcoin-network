@@ -254,8 +254,10 @@ protected:
     virtual connector::ptr create_manual_connector() NOEXCEPT;
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
     virtual connector::ptr create_connector(const settings::socks5& socks,
-        const socket::parameters::duration& connect_timeout,
-        uint32_t maximum_request) NOEXCEPT;
+        const settings::tcp_server& options) NOEXCEPT;
+    virtual connector::ptr to_connector(const settings::socks5& socks,
+        const settings::tcp_server& options,
+        const socket::parameters::duration& connect_timeout) NOEXCEPT;
 
     /// Sequences.
     virtual void do_start(const result_handler& handler) NOEXCEPT;
