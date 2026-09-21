@@ -87,7 +87,6 @@ void channel::stopping(const code& ec) NOEXCEPT
 void channel::pause() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT_MSG(gate_, "pause outside of dispatch");
     stop_expiration();
     stop_inactivity();
     held_ = gate_;
