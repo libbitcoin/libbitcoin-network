@@ -73,8 +73,8 @@ void socket::do_peer_read(size_t total, const peer_state::ptr& in,
     if (!is_zero(residue))
     {
         const auto region = detection_.data();
-        std::copy_n(pointer_cast<const uint8_t>(region.data()), residue,
-            data);
+        const auto from = pointer_cast<const uint8_t>(region.data());
+        std::copy_n(from, residue, data);
         detection_.consume(residue);
     }
 
