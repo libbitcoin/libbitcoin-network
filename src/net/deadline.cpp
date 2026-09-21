@@ -70,6 +70,11 @@ void deadline::stop() NOEXCEPT
     BC_DEBUG_ONLY(timer_.expires_at(epoch);)
 }
 
+const deadline::duration& deadline::timeout() const NOEXCEPT
+{
+    return duration_;
+}
+
 seconds deadline::remaining() const NOEXCEPT
 {
     const auto difference = timer_.expiry() - steady_clock::now();

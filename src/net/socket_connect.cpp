@@ -190,6 +190,38 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
     ////BC_ASSERT(stranded());
 
+    if (!inbound_ || is_zero(timer_->timeout().count()))
+    {
+        do_upgrade(handler);
+        return;
+    }
+
+    timer_->start(std::bind(&socket::handle_handshake_timer,
+        shared_from_this(), _1));
+
+    do_upgrade(std::bind(&socket::handle_handshaked,
+        shared_from_this(), _1, handler));
+}
+
+// private
+void socket::handle_handshaked(const code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    timer_->stop();
+    handler(ec);
+}
+
+// private
+// Socket stop cancels the pending handshake, which completes the handler.
+void socket::handle_handshake_timer(const code& ec) NOEXCEPT
+{
+    if (!ec)
+        stop();
+}
+
+// private
+void socket::do_upgrade(const result_handler& handler) NOEXCEPT
+{
     if (std::holds_alternative<cref<p2ps::context>>(context_))
     {
         // The accepted peer is detected as v1 or v2 before upgrade.

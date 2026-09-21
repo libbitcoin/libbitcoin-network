@@ -25,10 +25,8 @@ using namespace network::messages::peer;
 // deserialize
 // serialize
 
-static_assert(heading::maximum_payload(0, true) == 4'000'000_size);
-static_assert(heading::maximum_payload(0, false) == 1'800'003_size);
-static_assert(heading::maximum_payload(max_uint32, true) == 4'000'000_size);
-static_assert(heading::maximum_payload(max_uint32, false) == 1'800'003_size);
+static_assert(heading::maximum_payload(true) == 4'000'000_size);
+static_assert(heading::maximum_payload(false) == 1'800'003_size);
 
 constexpr auto empty_hash = system::sha256::double_hash(system::sha256::ablocks_t<zero>{});
 constexpr auto empty_checksum = system::from_little_endian<uint32_t>(empty_hash);

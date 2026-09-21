@@ -467,8 +467,7 @@ private:
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
     void do_handshake(const result_handler& handler) NOEXCEPT;
-    void handle_detection(const boost_code& ec,
-        const result_handler& handler) NOEXCEPT;
+    void do_upgrade(const result_handler& handler) NOEXCEPT;
 
     // ws (framed)
     void do_ws_read(ref<http::flat_buffer> out,
@@ -559,9 +558,14 @@ private:
         const result_handler& handler) NOEXCEPT;
     void handle_handshake(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
+    void handle_handshaked(const code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void handle_handshake_timer(const code& ec) NOEXCEPT;
     void handle_encrypted_handshake(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_publisher_handshake(const boost_code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void handle_detection(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
 
     // read/write (tcp/ws)

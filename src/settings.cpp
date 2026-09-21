@@ -415,8 +415,8 @@ bool settings::peer_manual::enabled() const NOEXCEPT
 // [network]
 // ----------------------------------------------------------------------------
 
-static_assert(heading::maximum_payload(level::canonical, true) == 4'000'000);
-static_assert(heading::maximum_payload(level::canonical, false) == 1'800'003);
+static_assert(heading::maximum_payload(true) == 4'000'000);
+static_assert(heading::maximum_payload(false) == 1'800'003);
 
 static uint32_t identifier_from_context(chain::selection context) NOEXCEPT
 {

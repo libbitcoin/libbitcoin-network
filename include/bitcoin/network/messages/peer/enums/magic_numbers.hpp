@@ -44,6 +44,9 @@ constexpr size_t max_get_headers = 2'000;
 constexpr size_t max_inventory = 50'000;
 constexpr size_t heading_command_size = 12;
 
+/// The maximum p2p message payload.
+constexpr size_t max_payload = system::chain::max_block_weight;
+
 /// This is just a guess, required as memory guard.
 constexpr size_t max_reject_message = max_uint16;
 
