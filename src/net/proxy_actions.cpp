@@ -281,13 +281,15 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
 
                 // The peer paces this answer and the read is re-armed
                 // without it, so it is subject to the backlog bound.
-                do_write(
+                pending entry
                 {
                     zero,
                     std::bind(&proxy::do_notification_write,
                         shared_from_this(), pong),
                     ignore
-                }, true);
+                };
+
+                do_write(entry, true);
             }
 
             socket_->rpc_read(buffer.get(), value,
@@ -318,12 +320,14 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
         const count_handler complete = std::bind(&proxy::handle_close_write,
             shared_from_this(), _1, _2, request, buffer, handler);
 
-        do_write(
+        pending entry
         {
             zero,
             std::bind(&proxy::do_response_write, shared_from_this(), out),
             complete
-        }, false);
+        };
+
+        do_write(entry, false);
         return;
     }
 
@@ -388,12 +392,14 @@ void proxy::do_response_queue(const rpc::response_ptr& response,
         parted_ = true;
     }
 
-    do_write(
+    pending entry
     {
         to_estimate(*response),
         std::bind(&proxy::do_response_write, shared_from_this(), response),
         handler
-    }, false);
+    };
+
+    do_write(entry, false);
 }
 
 void proxy::notify(rpc::request&& notification, count_handler&& handler) NOEXCEPT
@@ -410,7 +416,7 @@ void proxy::notify(rpc::request&& notification, count_handler&& handler) NOEXCEP
 }
 
 // private
-void proxy::do_defer_write(pending write_) NOEXCEPT
+void proxy::do_defer_write(pending& write_) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -422,7 +428,7 @@ void proxy::do_defer_write(pending write_) NOEXCEPT
         return;
     }
 
-    do_write(std::move(write_), true);
+    do_write(write_, true);
 }
 
 // private
@@ -616,13 +622,15 @@ void proxy::handle_http_body(const code& ec, size_t bytes,
 
             const auto out = to_shared<http::response>();
             out->body() = std::move(close);
-            do_write(
+            pending entry
             {
                 zero,
                 std::bind(&proxy::do_http_write, shared_from_this(), out),
                 std::bind(&proxy::handle_http_close_write,
                     shared_from_this(), _1, _2, request, buffer, handler)
-            }, false);
+            };
+
+            do_write(entry, false);
             return;
         }
 
@@ -747,12 +755,14 @@ void proxy::do_http_queue(const http::response_ptr& response,
         parted_ = true;
     }
 
-    do_write(
+    pending entry
     {
         to_cost(response->body()),
         std::bind(&proxy::do_http_write, shared_from_this(), response),
         handler
-    }, bounded);
+    };
+
+    do_write(entry, bounded);
 }
 
 // private

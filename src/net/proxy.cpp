@@ -105,22 +105,26 @@ void proxy::do_stop(const code& ec) NOEXCEPT
     {
         const auto out = system::to_shared<http::response>();
         out->body() = std::move(close);
-        do_write(
+        pending entry
         {
             zero,
             std::bind(&proxy::do_http_write, shared_from_this(), out),
             complete
-        }, bounded);
+        };
+
+        do_write(entry, bounded);
         return;
     }
 
     const auto out = system::move_shared(std::move(close));
-    do_write(
+    pending entry
     {
         zero,
         std::bind(&proxy::do_response_write, shared_from_this(), out),
         complete
-    }, bounded);
+    };
+
+    do_write(entry, bounded);
 }
 
 // private

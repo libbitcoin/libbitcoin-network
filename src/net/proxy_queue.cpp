@@ -72,7 +72,8 @@ bool proxy::charge(pending& write_) NOEXCEPT
     return true;
 }
 
-void proxy::do_write(pending write_, bool notification) NOEXCEPT
+// A bound entry is an lvalue, moved to the queue from its binding.
+void proxy::do_write(pending& write_, bool notification) NOEXCEPT
 {
     BC_ASSERT(stranded());
 

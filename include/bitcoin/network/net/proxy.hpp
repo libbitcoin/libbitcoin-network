@@ -268,7 +268,7 @@ private:
         const result_handler& complete) NOEXCEPT;
 
     // For rpc batch normalization.
-    void do_defer_write(pending write) NOEXCEPT;
+    void do_defer_write(pending& write) NOEXCEPT;
     void handle_rpc_read(const code& ec, size_t bytes,
         const ref<rpc::request>& request, const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;
@@ -313,7 +313,7 @@ private:
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
     bool charge(pending& write) NOEXCEPT;
-    void do_write(pending write, bool notification) NOEXCEPT;
+    void do_write(pending& write, bool notification) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes) NOEXCEPT;
 
     // Meter sent bytes and defer the completion by the unconsumed allocation.
