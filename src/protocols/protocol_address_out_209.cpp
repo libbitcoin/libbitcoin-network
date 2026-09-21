@@ -66,17 +66,27 @@ void protocol_address_out_209::start() NOEXCEPT
 }
 
 // The v1 protocol represents only ipv4 and ipv6 addresses.
-void protocol_address_out_209::send_addresses(const address& message) NOEXCEPT
+static address to_representable(const address& message) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_address_out_209");
-
     address representable{ message.addresses };
     std::erase_if(representable.addresses, [](const address_item& item) NOEXCEPT
     {
         return !is_v1(item.address);
     });
 
-    SEND(representable, handle_send, _1);
+    return representable;
+}
+
+void protocol_address_out_209::send_addresses(const address& message) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_address_out_209");
+    SEND(to_representable(message), handle_send, _1);
+}
+
+void protocol_address_out_209::notify_addresses(const address& message) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_address_out_209");
+    NOTIFY(to_representable(message), handle_send, _1);
 }
 
 // Outbound (fetch and send addresses).
@@ -146,7 +156,7 @@ bool protocol_address_out_209::handle_broadcast_address(const code& ec,
     LOGP("Relay (" << message->addresses.size() << ") addresses to ["
         << opposite() << "].");
 
-    send_addresses(*message);
+    notify_addresses(*message);
     return true;
 }
 

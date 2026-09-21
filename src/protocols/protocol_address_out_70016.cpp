@@ -53,8 +53,14 @@ void protocol_address_out_70016::send_addresses(
     const address& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_out_70016");
-
     SEND((address_v2{ message.addresses }), handle_send, _1);
+}
+
+void protocol_address_out_70016::notify_addresses(
+    const address& message) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_address_out_70016");
+    NOTIFY((address_v2{ message.addresses }), handle_send, _1);
 }
 
 BC_POP_WARNING()
