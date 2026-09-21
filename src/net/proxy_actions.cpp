@@ -216,6 +216,17 @@ static rpc::value_t to_context(const rpc::params_option& params) NOEXCEPT
     return rpc::null_t{};
 }
 
+// Batch open rides on the first element, close on a message with no element.
+static bool batch_open(const rpc::request& value) NOEXCEPT
+{
+    return value.changed && !value.batch;
+}
+
+static bool batch_close(const rpc::request& value) NOEXCEPT
+{
+    return value.changed && value.batch;
+}
+
 void proxy::read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
 {
@@ -258,80 +269,101 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
 
     auto& value = request.get();
 
-    // ZMTP control (the channel is keepalive-blind): a PING is answered with
-    // a PONG through the write queue and the read re-armed, a PONG is
-    // dropped and the read re-armed (the channel read handler stays pending).
+    // ZMTP is not batched, a keepalive is absorbed and the read re-armed.
     if (socket_->zeromq())
     {
-        auto& message = value.message;
-        const auto ping = (message.method == "ping");
-        if (ping || message.method == "pong")
-        {
-            if (ping)
-            {
-                const auto pong = to_shared<rpc::request>();
-                pong->message.method = "pong";
-                pong->message.params = rpc::array_t
-                {
-                    to_context(message.params)
-                };
+        if (absorb_keepalive(value))
+            do_rpc_request_read(request, buffer, handler);
+        else
+            handler(ec, bytes);
 
-                const count_handler ignore =
-                    [](const code&, size_t) NOEXCEPT {};
-
-                // The peer paces this answer and the read is re-armed
-                // without it, so it is subject to the backlog bound.
-                pending entry
-                {
-                    zero,
-                    std::bind(&proxy::do_notification_write,
-                        shared_from_this(), pong),
-                    ignore
-                };
-
-                do_write(entry, true);
-            }
-
-            socket_->rpc_read(buffer.get(), value,
-                std::bind(&proxy::handle_rpc_read,
-                    shared_from_this(), _1, _2, request, buffer, handler));
-            return;
-        }
-
-        handler(ec, bytes);
         return;
     }
 
-    // Batch open rides along with the first element (message delivered).
-    if (value.changed && !value.batch)
+    if (batch_open(value))
         batched_ = true;
 
     // Batch close carries no message, absorbed here (channel never sees it).
-    if (value.changed && value.batch)
+    if (batch_close(value))
     {
-        batched_ = false;
-        parted_ = false;
+        queue_close(std::bind(&proxy::handle_close_write,
+            shared_from_this(), _1, _2, request, buffer, handler));
+        return;
+    }
 
-        // Queue the batch close part (bypassing the stamp at issue).
-        const auto out = to_shared<rpc::response>();
-        out->batch = true;
-        out->changed = true;
+    handler(ec, bytes);
+}
 
-        const count_handler complete = std::bind(&proxy::handle_close_write,
-            shared_from_this(), _1, _2, request, buffer, handler);
+// private
+// ZMTP control (the channel is keepalive-blind): a PING is answered with a
+// PONG through the write queue, a PONG is dropped (the read handler pends).
+bool proxy::absorb_keepalive(const rpc::request& value) NOEXCEPT
+{
+    BC_ASSERT(stranded());
 
+    const auto& message = value.message;
+    const auto ping = (message.method == "ping");
+    if (!ping && message.method != "pong")
+        return false;
+
+    if (ping)
+    {
+        const auto pong = to_shared<rpc::request>();
+        pong->message.method = "pong";
+        pong->message.params = rpc::array_t{ to_context(message.params) };
+
+        // The peer paces this answer and the read is re-armed without it,
+        // so it is subject to the backlog bound.
         pending entry
         {
             zero,
-            std::bind(&proxy::do_response_write, shared_from_this(), out),
-            complete
+            std::bind(&proxy::do_notification_write, shared_from_this(), pong),
+            [](const code&, size_t) NOEXCEPT {}
+        };
+
+        do_write(entry, true);
+    }
+
+    return true;
+}
+
+// private
+// The close part is proxy-created after the batch resets (not stamped).
+void proxy::queue_close(count_handler&& complete) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    batched_ = false;
+    parted_ = false;
+
+    rpc::response close{};
+    close.batch = true;
+    close.changed = true;
+
+    // The close part is queued per framing (http chunk or stream).
+    if (parser_)
+    {
+        const auto out = to_shared<http::response>();
+        out->body() = std::move(close);
+        pending entry
+        {
+            zero,
+            std::bind(&proxy::do_http_write, shared_from_this(), out),
+            std::move(complete)
         };
 
         do_write(entry, false);
         return;
     }
 
-    handler(ec, bytes);
+    const auto out = move_shared(std::move(close));
+    pending entry
+    {
+        zero,
+        std::bind(&proxy::do_response_write, shared_from_this(), out),
+        std::move(complete)
+    };
+
+    do_write(entry, false);
 }
 
 // private
@@ -359,13 +391,7 @@ void proxy::handle_close_write(const code& ec, size_t bytes,
         write();
 
     // Re-arm the read (the channel read handler remains pending).
-    auto& value = request.get();
-    value.batch = batched_;
-    value.changed = false;
-
-    socket_->rpc_read(buffer.get(), value,
-        std::bind(&proxy::handle_rpc_read,
-            shared_from_this(), _1, _2, request, buffer, handler));
+    do_rpc_request_read(request, buffer, handler);
 }
 
 void proxy::write(rpc::response&& response, count_handler&& handler) NOEXCEPT
@@ -493,10 +519,8 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
     // Continue the message in progress (batched body), else next message.
     if (parser_)
     {
-        socket_->http_read_some(buffer, *parser_,
-            std::bind(&proxy::handle_http_body,
-                shared_from_this(), _1, _2, std::ref(request),
-                std::ref(buffer), std::move(handler)));
+        do_http_body_read(std::ref(request), std::ref(buffer),
+            std::move(handler));
         return;
     }
 
@@ -583,6 +607,17 @@ void proxy::handle_http_header(const code& ec, size_t bytes,
 }
 
 // private
+void proxy::do_http_body_read(const ref<http::request>& request,
+    const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    socket_->http_read_some(buffer.get(), *parser_,
+        std::bind(&proxy::handle_http_body,
+            shared_from_this(), _1, _2, request, buffer, handler));
+}
+
+// private
 void proxy::handle_http_body(const code& ec, size_t bytes,
     const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
     const count_handler& handler) NOEXCEPT
@@ -590,71 +625,30 @@ void proxy::handle_http_body(const code& ec, size_t bytes,
     BC_ASSERT(stranded());
     count_received(bytes);
 
-    // A batched body delivers each message by pausing the parse.
-    const auto paused = (ec == error::need_buffer);
+    // A batched body pauses the parse to deliver each element.
+    if (ec == error::need_buffer)
+    {
+        handle_http_element(bytes, request, buffer, handler);
+        return;
+    }
 
-    if (ec && !paused)
+    if (ec)
     {
         parser_.reset();
         handler(ec, bytes);
         return;
     }
 
-    if (paused)
-    {
-        auto& value = std::get<rpc::request>(parser_->get().body().value());
-
-        // Batch open rides along with the first element (delivered below).
-        if (value.changed && !value.batch)
-            batched_ = true;
-
-        // Batch close carries no message, absorbed here (close flags remain
-        // set on the parser value for message completion detection).
-        if (value.changed && value.batch)
-        {
-            batched_ = false;
-            parted_ = false;
-
-            // Queue the close part chunk, then complete the message.
-            rpc::response close{};
-            close.batch = true;
-            close.changed = true;
-
-            const auto out = to_shared<http::response>();
-            out->body() = std::move(close);
-            pending entry
-            {
-                zero,
-                std::bind(&proxy::do_http_write, shared_from_this(), out),
-                std::bind(&proxy::handle_http_close_write,
-                    shared_from_this(), _1, _2, request, buffer, handler)
-            };
-
-            do_write(entry, false);
-            return;
-        }
-
-        // Deliver the element as a request (headers from the message).
-        request.get().base() = parser_->get().base();
-        request.get().body() = std::move(value);
-        value.batch = true;
-        value.changed = false;
-        handler(error::success, bytes);
-        return;
-    }
-
     // Progress without delivery or completion, continue the body read.
     if (!parser_->is_done())
     {
-        socket_->http_read_some(buffer.get(), *parser_,
-            std::bind(&proxy::handle_http_body,
-                shared_from_this(), _1, _2, request, buffer, handler));
+        do_http_body_read(request, buffer, handler);
         return;
     }
 
     // Message complete following an absorbed batch close, read the next.
     const auto& body = parser_->get().body();
-    if (body.contains<rpc::request>() && body.get<rpc::request>().changed)
+    if (body.contains<rpc::request>() && batch_close(body.get<rpc::request>()))
     {
         parser_.reset();
         do_http_request_read(request, buffer, handler);
@@ -664,6 +658,34 @@ void proxy::handle_http_body(const code& ec, size_t bytes,
     // Message complete (singleton), deliver it.
     request.get() = parser_->release();
     parser_.reset();
+    handler(error::success, bytes);
+}
+
+// private
+void proxy::handle_http_element(size_t bytes,
+    const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    auto& value = std::get<rpc::request>(parser_->get().body().value());
+
+    if (batch_open(value))
+        batched_ = true;
+
+    // Batch close carries no message, absorbed here (close flags remain set
+    // on the parser value for message completion detection).
+    if (batch_close(value))
+    {
+        queue_close(std::bind(&proxy::handle_http_close_write,
+            shared_from_this(), _1, _2, request, buffer, handler));
+        return;
+    }
+
+    // Deliver the element as a request (headers from the message).
+    request.get().base() = parser_->get().base();
+    request.get().body() = std::move(value);
+    value.batch = true;
+    value.changed = false;
     handler(error::success, bytes);
 }
 
@@ -682,9 +704,7 @@ void proxy::handle_http_close_write(const code& ec, size_t bytes,
     }
 
     // Complete the message (consumes trailing body whitespace).
-    socket_->http_read_some(buffer.get(), *parser_,
-        std::bind(&proxy::handle_http_body,
-            shared_from_this(), _1, _2, request, buffer, handler));
+    do_http_body_read(request, buffer, handler);
 }
 
 void proxy::write(http::response&& response,

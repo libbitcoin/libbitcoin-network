@@ -269,6 +269,8 @@ private:
 
     // For rpc batch normalization.
     void do_defer_write(pending& write) NOEXCEPT;
+    void queue_close(count_handler&& complete) NOEXCEPT;
+    bool absorb_keepalive(const rpc::request& value) NOEXCEPT;
     void handle_rpc_read(const code& ec, size_t bytes,
         const ref<rpc::request>& request, const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;
@@ -301,7 +303,13 @@ private:
     void handle_http_header(const code& ec, size_t bytes,
         const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;
+    void do_http_body_read(const ref<http::request>& request,
+        const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
     void handle_http_body(const code& ec, size_t bytes,
+        const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+        const count_handler& handler) NOEXCEPT;
+    void handle_http_element(size_t bytes,
         const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;
     void handle_http_close_write(const code& ec, size_t bytes,

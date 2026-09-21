@@ -87,44 +87,9 @@ void proxy::do_stop(const code& ec) NOEXCEPT
     // Release it here so that the close part is not delayed by the throttle.
     if (throttle_) throttle_->stop();
 
-    batched_ = false;
-    parted_ = false;
-
-    rpc::response close{};
-    close.batch = true;
-    close.changed = true;
-
-    const count_handler complete = std::bind(&proxy::handle_stop_write,
-        shared_from_this(), _1, _2, ec);
-
-    // This is the final message of the channel, so it is not bounded.
-    const auto bounded = false;
-
-    // The close part is queued per framing (http chunk or stream).
-    if (parser_)
-    {
-        const auto out = system::to_shared<http::response>();
-        out->body() = std::move(close);
-        pending entry
-        {
-            zero,
-            std::bind(&proxy::do_http_write, shared_from_this(), out),
-            complete
-        };
-
-        do_write(entry, bounded);
-        return;
-    }
-
-    const auto out = system::move_shared(std::move(close));
-    pending entry
-    {
-        zero,
-        std::bind(&proxy::do_response_write, shared_from_this(), out),
-        complete
-    };
-
-    do_write(entry, bounded);
+    // This is the final message of the channel.
+    queue_close(std::bind(&proxy::handle_stop_write,
+        shared_from_this(), _1, _2, ec));
 }
 
 // private
