@@ -233,7 +233,7 @@ private:
     typedef std::function<void()> writer;
 
     // A queued write retains memory, charged as the backlog of the channel.
-    // The handler is retained for the drop of a refused write (see do_write).
+    // The entry owns the handler, invoked on completion or a refused write.
     struct pending
     {
         size_t cost;
@@ -249,19 +249,21 @@ private:
     void write(http::response&& response, count_handler&& handler,
         bool bounded) NOEXCEPT;
 
+    // For batch stamping at issue (requires strand).
+    void do_response_queue(const rpc::response_ptr& response,
+        const count_handler& handler) NOEXCEPT;
+    void do_http_queue(const http::response_ptr& response,
+        const count_handler& handler, bool bounded) NOEXCEPT;
+
     // For write buffering.
-    void do_http_write(const http::response_ptr& response,
-        const count_handler& handler) NOEXCEPT;
-    void do_ws_write(const asio::const_buffer& payload, bool binary,
-        const count_handler& handler) NOEXCEPT;
-    void do_tcp_write(const asio::const_buffer& payload,
-        const count_handler& handler) NOEXCEPT;
-    void do_peer_write(const messages::peer::frame_ptr& message,
-        const count_handler& handler) NOEXCEPT;
-    void do_response_write(const rpc::response_ptr& response,
-        const count_handler& handler) NOEXCEPT;
-    void do_notification_write(const rpc::request_ptr& notification,
-        const count_handler& handler) NOEXCEPT;
+    void do_http_write(const http::response_ptr& response) NOEXCEPT;
+    void do_ws_write(const asio::const_buffer& payload,
+        bool binary) NOEXCEPT;
+    void do_tcp_write(const asio::const_buffer& payload) NOEXCEPT;
+    void do_peer_write(const messages::peer::frame_ptr& message) NOEXCEPT;
+    void do_response_write(const rpc::response_ptr& response) NOEXCEPT;
+    void do_notification_write(
+        const rpc::request_ptr& notification) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;
 
@@ -306,14 +308,13 @@ private:
         const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
         const count_handler& handler) NOEXCEPT;
     void handle_http_header_write(const code& ec, size_t bytes,
-        const rpc::response_ptr& part, const count_handler& handler) NOEXCEPT;
+        const rpc::response_ptr& part) NOEXCEPT;
 
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
     bool charge(pending& write) NOEXCEPT;
     void do_write(pending write, bool notification) NOEXCEPT;
-    void handle_write(const code& ec, size_t bytes,
-        const count_handler& handler) NOEXCEPT;
+    void handle_write(const code& ec, size_t bytes) NOEXCEPT;
 
     // Meter sent bytes and defer the completion by the unconsumed allocation.
     void count_received(size_t bytes) NOEXCEPT;

@@ -97,18 +97,30 @@ void proxy::do_stop(const code& ec) NOEXCEPT
     const count_handler complete = std::bind(&proxy::handle_stop_write,
         shared_from_this(), _1, _2, ec);
 
-    // The close part is written per framing (http chunk or stream).
+    // This is the final message of the channel, so it is not bounded.
+    const auto bounded = false;
+
+    // The close part is queued per framing (http chunk or stream).
     if (parser_)
     {
-        socket_->rpc_write_chunk(std::move(close), move_copy(complete));
+        const auto out = system::to_shared<http::response>();
+        out->body() = std::move(close);
+        do_write(
+        {
+            zero,
+            std::bind(&proxy::do_http_write, shared_from_this(), out),
+            complete
+        }, bounded);
         return;
     }
 
-    // This is the final message of the channel, so it is not bounded.
-    const auto bounded = false;
     const auto out = system::move_shared(std::move(close));
-    do_write({ zero, std::bind(&proxy::do_response_write,
-        shared_from_this(), out, complete), complete }, bounded);
+    do_write(
+    {
+        zero,
+        std::bind(&proxy::do_response_write, shared_from_this(), out),
+        complete
+    }, bounded);
 }
 
 // private

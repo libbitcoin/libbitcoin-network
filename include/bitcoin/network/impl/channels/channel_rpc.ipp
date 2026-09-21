@@ -174,9 +174,8 @@ inline void CLASS::send(Message&& message, result_handler&& handler) NOEXCEPT
     BC_ASSERT(stranded());
     using namespace std::placeholders;
 
-    // The response holds the gate, as batch parts are written unqueued.
     auto complete = std::bind(&CLASS::handle_send<Message>,
-        shared_from_base<CLASS>(), _1, _2, gate(), extract_method(message),
+        shared_from_base<CLASS>(), _1, _2, extract_method(message),
         std::move(handler));
 
     // The verb carries the classification, as the charge follows from it.
@@ -202,8 +201,7 @@ inline void CLASS::send(Message&& message, result_handler&& handler) NOEXCEPT
 TEMPLATE
 template <typename Message>
 inline void CLASS::handle_send(const code& ec, size_t bytes,
-    const gate_t::ptr&, const std::string& method,
-    const result_handler& handler) NOEXCEPT
+    const std::string& method, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     if (ec)

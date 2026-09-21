@@ -104,7 +104,7 @@ void proxy::write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
     writer call = std::bind(&proxy::do_ws_write,
-        shared_from_this(), in, binary, handler);
+        shared_from_this(), in, binary);
 
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write, shared_from_this(),
@@ -112,12 +112,12 @@ void proxy::write(const asio::const_buffer& in, bool binary,
 }
 
 // private
-void proxy::do_ws_write(const asio::const_buffer& payload, bool binary,
-    const count_handler& handler) NOEXCEPT
+void proxy::do_ws_write(const asio::const_buffer& payload,
+    bool binary) NOEXCEPT
 {
     socket_->ws_write({ payload.data(), payload.size() }, binary,
         metered(std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler)));
+            shared_from_this(), _1, _2)));
 }
 
 //  TCP (generic, fixed size).
@@ -134,7 +134,7 @@ void proxy::write(const asio::const_buffer& in,
     count_handler&& handler) NOEXCEPT
 {
     writer call = std::bind(&proxy::do_tcp_write,
-        shared_from_this(), in, handler);
+        shared_from_this(), in);
 
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write, shared_from_this(),
@@ -142,12 +142,11 @@ void proxy::write(const asio::const_buffer& in,
 }
 
 // private
-void proxy::do_tcp_write(const asio::const_buffer& payload,
-    const count_handler& handler) NOEXCEPT
+void proxy::do_tcp_write(const asio::const_buffer& payload) NOEXCEPT
 {
     socket_->tcp_write({ payload.data(), payload.size() },
         metered(std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler)));
+            shared_from_this(), _1, _2)));
 }
 
 // PEER (TCP: bitcoin p2p).
@@ -180,7 +179,7 @@ void proxy::write(frame&& message, count_handler&& handler,
     const auto out = move_shared(std::move(message));
     const auto cost = out->size;
     writer call = std::bind(&proxy::do_peer_write,
-        shared_from_this(), out, handler);
+        shared_from_this(), out);
 
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write, shared_from_this(),
@@ -188,14 +187,13 @@ void proxy::write(frame&& message, count_handler&& handler,
 }
 
 // private
-void proxy::do_peer_write(const frame_ptr& message,
-    const count_handler& handler) NOEXCEPT
+void proxy::do_peer_write(const frame_ptr& message) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     socket_->peer_write(std::move(*message),
         metered(std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler)));
+            shared_from_this(), _1, _2)));
 }
 
 // RPC (TCP: electrum/stratum_v1, WS: btcd).
@@ -283,8 +281,13 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
 
                 // The peer paces this answer and the read is re-armed
                 // without it, so it is subject to the backlog bound.
-                do_write({ zero, std::bind(&proxy::do_notification_write,
-                    shared_from_this(), pong, ignore), ignore }, true);
+                do_write(
+                {
+                    zero,
+                    std::bind(&proxy::do_notification_write,
+                        shared_from_this(), pong),
+                    ignore
+                }, true);
             }
 
             socket_->rpc_read(buffer.get(), value,
@@ -307,7 +310,7 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
         batched_ = false;
         parted_ = false;
 
-        // Queue the batch close part (do_response_write does not restamp).
+        // Queue the batch close part (bypassing the stamp at issue).
         const auto out = to_shared<rpc::response>();
         out->batch = true;
         out->changed = true;
@@ -315,8 +318,12 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
         const count_handler complete = std::bind(&proxy::handle_close_write,
             shared_from_this(), _1, _2, request, buffer, handler);
 
-        do_write({ zero, std::bind(&proxy::do_response_write,
-            shared_from_this(), out, complete), complete }, false);
+        do_write(
+        {
+            zero,
+            std::bind(&proxy::do_response_write, shared_from_this(), out),
+            complete
+        }, false);
         return;
     }
 
@@ -361,13 +368,32 @@ void proxy::write(rpc::response&& response, count_handler&& handler) NOEXCEPT
 {
     // Pointer ships moveable message through the send queue.
     const auto out = move_shared(std::move(response));
-    const auto cost = to_estimate(*out);
-    writer call = std::bind(&proxy::do_response_write,
-        shared_from_this(), out, handler);
-
     boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write, shared_from_this(),
-            pending{ cost, std::move(call), std::move(handler) }, false));
+        std::bind(&proxy::do_response_queue, shared_from_this(), out,
+            std::move(handler)));
+}
+
+// private
+void proxy::do_response_queue(const rpc::response_ptr& response,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // Stamp the response part with current batch state (open rides on the
+    // first part). The close part is proxy-created after the batch resets.
+    if (batched_)
+    {
+        response->batch = parted_;
+        response->changed = !parted_;
+        parted_ = true;
+    }
+
+    do_write(
+    {
+        to_estimate(*response),
+        std::bind(&proxy::do_response_write, shared_from_this(), response),
+        handler
+    }, false);
 }
 
 void proxy::notify(rpc::request&& notification, count_handler&& handler) NOEXCEPT
@@ -376,7 +402,7 @@ void proxy::notify(rpc::request&& notification, count_handler&& handler) NOEXCEP
     const auto out = move_shared(std::move(notification));
     const auto cost = to_estimate(*out);
     writer call = std::bind(&proxy::do_notification_write,
-        shared_from_this(), out, handler);
+        shared_from_this(), out);
 
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_defer_write, shared_from_this(),
@@ -400,32 +426,21 @@ void proxy::do_defer_write(pending write_) NOEXCEPT
 }
 
 // private
-void proxy::do_response_write(const rpc::response_ptr& response,
-    const count_handler& handler) NOEXCEPT
+void proxy::do_response_write(const rpc::response_ptr& response) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // Stamp the response part with current batch state (open rides on the
-    // first part). The close part is proxy-created after the batch resets.
-    if (batched_)
-    {
-        response->batch = parted_;
-        response->changed = !parted_;
-        parted_ = true;
-    }
-
     socket_->rpc_write(std::move(*response),
         metered(std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler)));
+            shared_from_this(), _1, _2)));
 }
 
 // private
-void proxy::do_notification_write(const rpc::request_ptr& notification,
-    const count_handler& handler) NOEXCEPT
+void proxy::do_notification_write(
+    const rpc::request_ptr& notification) NOEXCEPT
 {
     socket_->rpc_notify(std::move(*notification),
         metered(std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler)));
+            shared_from_this(), _1, _2)));
 }
 
 // HTTP/WS (generic/rpc).
@@ -594,14 +609,20 @@ void proxy::handle_http_body(const code& ec, size_t bytes,
             batched_ = false;
             parted_ = false;
 
-            // Write the close part chunk, then complete the message.
+            // Queue the close part chunk, then complete the message.
             rpc::response close{};
             close.batch = true;
             close.changed = true;
 
-            socket_->rpc_write_chunk(std::move(close),
+            const auto out = to_shared<http::response>();
+            out->body() = std::move(close);
+            do_write(
+            {
+                zero,
+                std::bind(&proxy::do_http_write, shared_from_this(), out),
                 std::bind(&proxy::handle_http_close_write,
-                    shared_from_this(), _1, _2, request, buffer, handler));
+                    shared_from_this(), _1, _2, request, buffer, handler)
+            }, false);
             return;
         }
 
@@ -697,80 +718,93 @@ void proxy::write(http::response&& response, count_handler&& handler,
         return;
     }
 
-    if (socket_->websocket())
-    {
-        // Pointer ships moveable message through the send queue.
-        const auto out = move_shared(std::move(response));
-        const auto cost = to_cost(out->body());
-        writer call = std::bind(&proxy::do_http_write,
-            shared_from_this(), out, handler);
+    // Pointer ships moveable message through the send queue.
+    const auto out = move_shared(std::move(response));
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_http_queue, shared_from_this(), out,
+            std::move(handler), bounded));
+}
 
-        boost::asio::dispatch(strand(),
-            std::bind(&proxy::do_write, shared_from_this(),
-                pending{ cost, std::move(call), std::move(handler) }, bounded));
-        return;
-    }
+// private
+void proxy::do_http_queue(const http::response_ptr& response,
+    const count_handler& handler, bool bounded) NOEXCEPT
+{
+    BC_ASSERT(stranded());
 
-    // http batch response: header once (chunked), then response parts.
-    if (batched_)
+    // Stamp an http batch part with current batch state (ws does not batch).
+    if (batched_ && !socket_->websocket())
     {
-        auto& body = response.body();
+        auto& body = response->body();
         if (!body.contains<rpc::response>())
         {
             handler(error::bad_stream, zero);
             return;
         }
 
-        // Stamp the response part with current batch state.
-        rpc::response part{ std::move(std::get<rpc::response>(body.value())) };
+        auto& part = std::get<rpc::response>(body.value());
         part.batch = parted_;
         part.changed = !parted_;
-
-        if (parted_)
-        {
-            socket_->rpc_write_chunk(std::move(part),
-                metered(std::move(handler)));
-            return;
-        }
-
-        // First part: write the header (chunked), then the open part.
         parted_ = true;
-        response.body() = http::empty_value{};
-        response.chunked(true);
-
-        const auto out = move_shared(std::move(part));
-        socket_->http_write_header(std::move(response),
-            metered(std::bind(&proxy::handle_http_header_write,
-                shared_from_this(), _1, _2, out, std::move(handler))));
-        return;
     }
 
-    // http is half duplex so there is no interleave risk.
-    socket_->http_write(std::move(response), metered(std::move(handler)));
+    do_write(
+    {
+        to_cost(response->body()),
+        std::bind(&proxy::do_http_write, shared_from_this(), response),
+        handler
+    }, bounded);
 }
 
 // private
 void proxy::handle_http_header_write(const code& ec, size_t bytes,
-    const rpc::response_ptr& part, const count_handler& handler) NOEXCEPT
+    const rpc::response_ptr& part) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     if (ec)
     {
-        handler(ec, bytes);
+        handle_write(ec, bytes);
         return;
     }
 
-    socket_->rpc_write_chunk(std::move(*part), metered(move_copy(handler)));
+    socket_->rpc_write_chunk(std::move(*part),
+        metered(std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2)));
 }
 
 // private
-void proxy::do_http_write(const http::response_ptr& response,
-    const count_handler& handler) NOEXCEPT
+void proxy::do_http_write(const http::response_ptr& response) NOEXCEPT
 {
+    BC_ASSERT(stranded());
+
+    // A stamped batch part is chunked, the first following the header.
+    auto& body = response->body();
+    if (!socket_->websocket() && body.contains<rpc::response>())
+    {
+        auto& part = std::get<rpc::response>(body.value());
+        if (part.batch)
+        {
+            socket_->rpc_write_chunk(std::move(part),
+                metered(std::bind(&proxy::handle_write,
+                    shared_from_this(), _1, _2)));
+            return;
+        }
+
+        if (part.changed)
+        {
+            const auto out = move_shared(std::move(part));
+            response->body() = http::empty_value{};
+            response->chunked(true);
+            socket_->http_write_header(std::move(*response),
+                metered(std::bind(&proxy::handle_http_header_write,
+                    shared_from_this(), _1, _2, out)));
+            return;
+        }
+    }
+
     socket_->http_write(std::move(*response),
         metered(std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler)));
+            shared_from_this(), _1, _2)));
 }
 
 // ZMTP (TCP: publisher).
