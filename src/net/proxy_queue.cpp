@@ -128,7 +128,8 @@ void proxy::handle_write(const code& ec, size_t bytes,
     queue_.pop_front();
 
     // All handlers must be invoked unless stopped, so continue despite code.
-    write();
+    if (!stopped())
+        write();
 }
 
 // Throttle (sent bytes are allocated time at the configured rate).

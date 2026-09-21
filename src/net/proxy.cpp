@@ -158,6 +158,10 @@ void proxy::stopping(const code& ec) NOEXCEPT
     // Release any http message parse in progress.
     parser_.reset();
 
+    // Release queued writes, handlers are not invoked after stop.
+    queue_.clear();
+    deferred_.clear();
+
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
     stop_subscriber_.stop(ec);
