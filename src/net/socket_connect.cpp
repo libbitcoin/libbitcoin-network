@@ -301,10 +301,12 @@ void socket::handle_detection(const boost_code& ec,
         return;
     }
 
+    using namespace system;
     constexpr auto size = p2ps::stream::detection_size;
+
     detection_.commit(size);
     const auto& context = std::get<cref<p2ps::context>>(context_).get();
-    const auto data = system::pointer_cast<const uint8_t>(detection_.data().data());
+    const auto data = pointer_cast<const uint8_t>(detection_.data().data());
     const std::span<const uint8_t> prefix{ data, size };
 
     // A v1 peer is served without upgrade, the buffer retains the prefix.
@@ -315,7 +317,7 @@ void socket::handle_detection(const boost_code& ec,
     }
 
     // The prefix is consumed by the upgrade (a partial peer key).
-    system::data_chunk key{ prefix.begin(), prefix.end() };
+    data_chunk key{ prefix.begin(), prefix.end() };
     detection_.consume(size);
 
     // Extract to temporary to avoid dangling reference after destruction.

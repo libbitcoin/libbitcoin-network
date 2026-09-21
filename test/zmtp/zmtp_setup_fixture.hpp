@@ -41,22 +41,26 @@ using peer_socket = network::asio::socket;
 // ----------------------------------------------------------------------------
 
 /// Build a command frame with the given name and trailing content.
-system::data_chunk command(const std::string& name, const system::data_chunk& content);
+system::data_chunk command(const std::string& name,
+    const system::data_chunk& content);
 
 /// Build one metadata property (name u8-length, value u32be-length).
 system::data_chunk property(const std::string& key, const std::string& value);
 
 /// Build a READY command advertising the socket type (and identity if any).
-system::data_chunk ready(const std::string& type, const std::string& identity={});
+system::data_chunk ready(const std::string& type,
+    const std::string& identity={});
 
 /// Parse a command frame body into its name and content.
-void parse_command(const system::data_chunk& body, std::string& name, system::data_chunk& content);
+void parse_command(const system::data_chunk& body, std::string& name,
+    system::data_chunk& content);
 
 /// Synchronously write the whole buffer to the peer socket.
 void peer_write(peer_socket& peer, const system::data_chunk& data);
 
 /// Synchronously read one short frame (flags and body) from the peer socket.
-void peer_read_frame(peer_socket& peer, uint8_t& flags, system::data_chunk& body);
+void peer_read_frame(peer_socket& peer, uint8_t& flags,
+    system::data_chunk& body);
 
 /// Synchronously read one whole (multipart) message from the peer socket.
 system::data_stack peer_read_message(peer_socket& peer);
@@ -66,7 +70,8 @@ std::string peer_read_command(peer_socket& peer, system::data_chunk& content);
 
 /// Synchronously perform the peer side of the handshake as the given socket
 /// type, returning the name of the first command received (READY or ERROR).
-std::string peer_handshake(peer_socket& peer, const std::string& type, const std::string& identity={}, uint8_t minor=1);
+std::string peer_handshake(peer_socket& peer, const std::string& type,
+    const std::string& identity={}, uint8_t minor=1);
 
 // Rpc (message side).
 // ----------------------------------------------------------------------------
@@ -90,7 +95,8 @@ struct socket_setup_fixture
 {
     DELETE_COPY_MOVE(socket_setup_fixture);
 
-    socket_setup_fixture(zmtp_role value, const std::string& type, size_t maximum=4096, const std::string& identity={});
+    socket_setup_fixture(zmtp_role value, const std::string& type,
+        size_t maximum=4096, const std::string& identity={});
     ~socket_setup_fixture();
 
     /// Each blocks until the socket completes the operation.
@@ -145,7 +151,8 @@ struct router_fixture
 struct identified_router_fixture
   : socket_setup_fixture
 {
-    identified_router_fixture() : socket_setup_fixture(zmtp_role::router, "DEALER", 4096, "peer1") {}
+    identified_router_fixture() : socket_setup_fixture(zmtp_role::router,
+        "DEALER", 4096, "peer1") {}
 };
 
 // Proxy (control absorption over a publisher socket).
@@ -161,7 +168,8 @@ public:
     }
 
     // Call must be stranded.
-    void read1(http::flat_buffer& buffer, rpc::request& request, count_handler&& handler) NOEXCEPT
+    void read1(http::flat_buffer& buffer, rpc::request& request,
+        count_handler&& handler) NOEXCEPT
     {
         proxy::read(buffer, request, std::move(handler));
     }
@@ -240,19 +248,22 @@ struct role_setup_fixture
 struct role_puller_fixture
   : role_setup_fixture
 {
-    role_puller_fixture() : role_setup_fixture(zmtp_role::puller, ZMTP_PULLER_PORT) {}
+    role_puller_fixture() : role_setup_fixture(zmtp_role::puller,
+        ZMTP_PULLER_PORT) {}
 };
 
 struct role_replier_fixture
   : role_setup_fixture
 {
-    role_replier_fixture() : role_setup_fixture(zmtp_role::replier, ZMTP_REPLIER_PORT) {}
+    role_replier_fixture() : role_setup_fixture(zmtp_role::replier,
+        ZMTP_REPLIER_PORT) {}
 };
 
 struct role_router_fixture
   : role_setup_fixture
 {
-    role_router_fixture() : role_setup_fixture(zmtp_role::router, ZMTP_ROUTER_PORT) {}
+    role_router_fixture() : role_setup_fixture(zmtp_role::router,
+        ZMTP_ROUTER_PORT) {}
 };
 
 #endif
