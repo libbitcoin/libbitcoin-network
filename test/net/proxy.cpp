@@ -52,6 +52,18 @@ public:
     }
 };
 
+class mock_zmtp_socket
+  : public network::socket
+{
+public:
+    using socket::socket;
+
+    bool zeromq() const NOEXCEPT override
+    {
+        return true;
+    }
+};
+
 // Obtain the deferral for a send of bytes that started at the given offset.
 static milliseconds get_unconsumed(uint32_t rate_limit, size_t bytes,
     const steady_clock::duration& elapsed) NOEXCEPT
@@ -385,6 +397,42 @@ BOOST_AUTO_TEST_CASE(proxy__write__exceeds_backlog__channel_backlog)
     });
 
     BOOST_REQUIRE_EQUAL(stopped.get_future().get(), error::channel_backlog);
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
+BOOST_AUTO_TEST_CASE(proxy__write__exceeds_backlog_zeromq__message_dropped)
+{
+    const logger log{};
+    threadpool pool(2);
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
+    auto socket_ptr = std::make_shared<mock_zmtp_socket>(log, pool.service(), std::move(params));
+
+    // The first message is admitted to the idle queue, the second exceeds.
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 0, 512);
+
+    const std::string text(1024, 'x');
+    const asio::const_buffer buffer{ text.data(), text.size() };
+
+    // Both writes are queued inline, so the first cannot complete between.
+    std::promise<code> dropped;
+    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    {
+        proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
+        proxy_ptr->write1(buffer, [&](const code& ec, size_t) NOEXCEPT
+        {
+            dropped.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(dropped.get_future().get(), error::message_dropped);
+    BOOST_REQUIRE(!proxy_ptr->stopped());
+
+    proxy_ptr->stop(error::service_stopped);
     pool.stop();
     BOOST_REQUIRE(pool.join());
 }
