@@ -68,7 +68,7 @@ public:
     /// Asserts/logs stopped.
     virtual ~channel() NOEXCEPT;
 
-    /// Hold the dispatch gate and stop timers (requires strand).
+    /// Hold the dispatch gate, or one of its own, and stop timers.
     virtual void pause() NOEXCEPT;
 
     /// Release the gate, or arm the read if none, and start timers.
@@ -142,6 +142,7 @@ private:
     void handle_inactivity(const code& ec) NOEXCEPT;
 
     void handle_monitor(const code& ec) NOEXCEPT;
+    gate_t::ptr make_gate() NOEXCEPT;
     void handle_gate(const code& ec) NOEXCEPT;
     void do_receive() NOEXCEPT;
 

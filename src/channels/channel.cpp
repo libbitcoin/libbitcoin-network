@@ -89,7 +89,9 @@ void channel::pause() NOEXCEPT
     BC_ASSERT(stranded());
     stop_expiration();
     stop_inactivity();
-    held_ = gate_;
+
+    // Outside of dispatch the hold is a gate of its own.
+    held_ = gate_ ? gate_ : make_gate();
 }
 
 // Resume timers from pause and start read loop.
@@ -146,10 +148,7 @@ void channel::open_gate() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Invokes handle_gate on gate destruct, rearming reader.
-    gate_ = emplace_shared<gate_t>(
-        std::bind(&channel::handle_gate,
-            shared_from_base<channel>(), _1));
+    gate_ = make_gate();
 }
 
 // protected
@@ -162,6 +161,15 @@ void channel::close_gate() NOEXCEPT
 // protected
 void channel::receive() NOEXCEPT
 {
+}
+
+// private
+channel::gate_t::ptr channel::make_gate() NOEXCEPT
+{
+    // Invokes handle_gate on gate destruct, rearming reader.
+    return emplace_shared<gate_t>(
+        std::bind(&channel::handle_gate,
+            shared_from_base<channel>(), _1));
 }
 
 // private
