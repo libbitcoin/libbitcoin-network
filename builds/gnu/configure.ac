@@ -306,6 +306,7 @@ AS_IF([test "x${with_ssl}" != "xno"],
 AC_CONFIG_FILES([
     Makefile
     libbitcoin-network.pc
+    include/bitcoin/network/version.hpp:${repository_root_dir}/include/bitcoin/network/version.hpp.in
   ])
 
 AC_OUTPUT
