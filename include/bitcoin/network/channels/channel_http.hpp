@@ -68,6 +68,7 @@ public:
         result_handler&& handler) NOEXCEPT;
 
     /// Send without restarting the listener.
+    using proxy::notify;
     void notify(http::response&& notification,
         result_handler&& handler) NOEXCEPT;
 
