@@ -117,7 +117,7 @@ struct BCT_API settings
         uint32_t minimum_buffer{ 4 * kilobyte };
         uint32_t maximum_buffer{ 64 * kilobyte };
         uint32_t maximum_request{ max_payload };
-        uint32_t maximum_backlog{ 10 * megabyte };
+        uint32_t maximum_backlog{ megabyte };
         uint32_t connect_timeout_seconds{ 0 };
         uint32_t rate_limit{ 0 };
 
