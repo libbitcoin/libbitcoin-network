@@ -279,14 +279,6 @@ include_bitcoin_network_async_races_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/async/races/race_volume.hpp \
     ${srcdir}/../../include/bitcoin/network/async/races/races.hpp
 
-include_bitcoin_network_broadcastdir = \
-    ${includedir}/bitcoin/network/broadcast
-
-include_bitcoin_network_broadcast_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/broadcast/broadcast.hpp \
-    ${srcdir}/../../include/bitcoin/network/broadcast/diagnostics.hpp \
-    ${srcdir}/../../include/bitcoin/network/broadcast/terminator.hpp
-
 include_bitcoin_network_channelsdir = \
     ${includedir}/bitcoin/network/channels
 
@@ -714,6 +706,14 @@ include_bitcoin_network_zmtp_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/zmtp/role.hpp \
     ${srcdir}/../../include/bitcoin/network/zmtp/stream.hpp \
     ${srcdir}/../../include/bitcoin/network/zmtp/zmtp.hpp
+
+include_bitcoin_network_broadcastdir = \
+    ${includedir}/bitcoin/network/broadcast
+
+include_bitcoin_network_broadcast_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/broadcast/broadcast.hpp \
+    ${srcdir}/../../include/bitcoin/network/broadcast/diagnostics.hpp \
+    ${srcdir}/../../include/bitcoin/network/broadcast/terminator.hpp
 
 # Tests.
 #==============================================================================

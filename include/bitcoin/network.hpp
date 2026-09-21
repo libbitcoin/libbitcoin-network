@@ -42,9 +42,6 @@
 #include <bitcoin/network/async/races/race_unity.hpp>
 #include <bitcoin/network/async/races/race_volume.hpp>
 #include <bitcoin/network/async/races/races.hpp>
-#include <bitcoin/network/broadcast/broadcast.hpp>
-#include <bitcoin/network/broadcast/diagnostics.hpp>
-#include <bitcoin/network/broadcast/terminator.hpp>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/channels/channel_peer.hpp>
@@ -321,5 +318,8 @@
 #include <bitcoin/network/zmtp/role.hpp>
 #include <bitcoin/network/zmtp/stream.hpp>
 #include <bitcoin/network/zmtp/zmtp.hpp>
+#include <bitcoin/network/broadcast/broadcast.hpp>
+#include <bitcoin/network/broadcast/diagnostics.hpp>
+#include <bitcoin/network/broadcast/terminator.hpp>
 
 #endif

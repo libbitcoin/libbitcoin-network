@@ -623,7 +623,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\wolfmath.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfio.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfssl.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\cipher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\role.hpp" />
@@ -646,6 +645,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\broadcaster.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\dispatcher.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\protocols\protocol_rpc.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\version.hpp.in" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

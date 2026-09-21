@@ -174,6 +174,15 @@ endif()
 include(CheckLinkerFlag)
 
 #------------------------------------------------------------------------------
+# Configurable file(s).
+#------------------------------------------------------------------------------
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/version.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/bitcoin/network/version.hpp
+  @ONLY )
+
+#------------------------------------------------------------------------------
 # libbitcoin-network library
 #------------------------------------------------------------------------------
 add_library( libbitcoin-network )
@@ -239,6 +248,10 @@ target_sources( libbitcoin-network
     BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../include"
     FILES
       ${libbitcoin_network_HEADERS}
+    FILE_SET HEADERS
+    BASE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/include"
+    FILES
+      "${CMAKE_CURRENT_BINARY_DIR}/include/bitcoin/network/version.hpp"
   PRIVATE
     ${libbitcoin_network_SOURCES}
 )
