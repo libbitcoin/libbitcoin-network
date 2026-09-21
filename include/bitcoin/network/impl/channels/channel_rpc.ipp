@@ -48,7 +48,6 @@ inline void CLASS::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::resume();
-    receive();
 }
 
 // Read cycle.
@@ -62,7 +61,7 @@ inline void CLASS::receive() NOEXCEPT
     using namespace std::placeholders;
     using namespace system;
 
-    if (stopped() || paused() || reading_)
+    if (stopped() || reading_)
         return;
 
     reading_ = true;

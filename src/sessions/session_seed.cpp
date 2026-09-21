@@ -184,7 +184,7 @@ void session_seed::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
+    BC_ASSERT_MSG(!channel->held(), "gate held before attach");
 
     // Tx relay is always disabled for seeding.
     using namespace messages::peer;

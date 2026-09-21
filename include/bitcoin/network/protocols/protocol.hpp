@@ -158,7 +158,7 @@ protected:
     /// Stop the channel.
     virtual void stop(const code& ec) NOEXCEPT;
 
-    /// Pause reading from the socket, stops timers (requires strand).
+    /// Hold the dispatch gate, stops timers (requires strand).
     virtual void pause() NOEXCEPT;
 
     /// Retain to defer next read until dispatches complete (requires strand).

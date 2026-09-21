@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__paused__resume_after_read_fail__true)
+BOOST_AUTO_TEST_CASE(channel_peer__stopped__resume_after_read_fail__true)
 {
     const logger log{};
     threadpool pool(2);
@@ -380,25 +380,24 @@ BOOST_AUTO_TEST_CASE(channel_peer__paused__resume_after_read_fail__true)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<mock_channel_peer>(log, socket_ptr, 42, set, options);
 
-    std::promise<bool> paused_after_resume;
-    boost::asio::post(channel_ptr->strand(), [=, &paused_after_resume]() NOEXCEPT
+    std::promise<bool> stopped_after_resume;
+    boost::asio::post(channel_ptr->strand(), [=, &stopped_after_resume]() NOEXCEPT
     {
         // Resume queues up a (failing) read that will invoke stopped.
         channel_ptr->resume();
-        paused_after_resume.set_value(channel_ptr->paused());
+        stopped_after_resume.set_value(channel_ptr->stopped());
     });
 
-    BOOST_REQUIRE(!paused_after_resume.get_future().get());
+    BOOST_REQUIRE(!stopped_after_resume.get_future().get());
     BOOST_REQUIRE(channel_ptr->require_stopped());
 
-    std::promise<bool> paused_after_read_fail;
-    boost::asio::post(channel_ptr->strand(), [=, &paused_after_read_fail]() NOEXCEPT
+    std::promise<bool> stopped_after_read_fail;
+    boost::asio::post(channel_ptr->strand(), [=, &stopped_after_read_fail]() NOEXCEPT
     {
-        // paused() requires strand.
-        paused_after_read_fail.set_value(channel_ptr->paused());
+        stopped_after_read_fail.set_value(channel_ptr->stopped());
     });
 
-    BOOST_REQUIRE(paused_after_read_fail.get_future().get());
+    BOOST_REQUIRE(stopped_after_read_fail.get_future().get());
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.

@@ -87,9 +87,10 @@ void channel::stopping(const code& ec) NOEXCEPT
 void channel::pause() NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT_MSG(gate_, "pause outside of dispatch");
     stop_expiration();
     stop_inactivity();
-    proxy::pause();
+    held_ = gate_;
 }
 
 // Resume timers from pause and start read loop.
@@ -98,7 +99,18 @@ void channel::resume() NOEXCEPT
     BC_ASSERT(stranded());
     start_expiration();
     start_inactivity();
-    proxy::resume();
+
+    // Release re-arms the read on the gate, otherwise nothing holds it.
+    if (held_)
+        held_.reset();
+    else
+        receive();
+}
+
+bool channel::held() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return held_ != nullptr;
 }
 
 void channel::monitor(bool value) NOEXCEPT

@@ -72,15 +72,6 @@ public:
     /// Pause.
     /// -----------------------------------------------------------------------
 
-    /// Pause reading from the socket (requires strand).
-    virtual void pause() NOEXCEPT;
-
-    /// Resume reading from the socket (requires strand).
-    virtual void resume() NOEXCEPT;
-
-    /// Reading from the socket is paused (requires strand).
-    virtual bool paused() const NOEXCEPT;
-
     /// Properties.
     /// -----------------------------------------------------------------------
 
@@ -345,7 +336,6 @@ private:
     void do_reading() NOEXCEPT;
 
     // These are thread safe.
-    std::atomic_bool paused_{ true };
     std::atomic<uint64_t> sent_{};
     std::atomic<uint64_t> received_{};
     const uint32_t rate_limit_;

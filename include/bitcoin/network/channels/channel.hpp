@@ -68,11 +68,14 @@ public:
     /// Asserts/logs stopped.
     virtual ~channel() NOEXCEPT;
 
-    /// Pause reading from the socket, stops timers (requires strand).
-    void pause() NOEXCEPT override;
+    /// Hold the dispatch gate and stop timers (requires strand).
+    virtual void pause() NOEXCEPT;
 
-    /// Resume reading from the socket, starts timers (requires strand).
-    void resume() NOEXCEPT override;
+    /// Release the gate, or arm the read if none, and start timers.
+    virtual void resume() NOEXCEPT;
+
+    /// The dispatch gate is held (requires strand).
+    bool held() const NOEXCEPT;
 
     /// Retain to defer next read until dispatches complete.
     const gate_t::ptr& gate() NOEXCEPT;
@@ -158,6 +161,7 @@ private:
     steady_clock::time_point last_read_{ created_ };
     steady_clock::time_point last_write_{ created_ };
     gate_t::ptr gate_{};
+    gate_t::ptr held_{};
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;

@@ -57,7 +57,6 @@ void channel_http::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::resume();
-    receive();
 }
 
 // Read cycle.
@@ -68,7 +67,7 @@ void channel_http::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (stopped() || paused() || reading_)
+    if (stopped() || reading_)
         return;
 
     reading_ = true;

@@ -88,7 +88,7 @@ void protocol::stop(const code& ec) NOEXCEPT
     channel_->stop(ec);
 }
 
-// Suspend reads from the socket until resume.
+// Hold the dispatch gate until resume.
 void protocol::pause() NOEXCEPT
 {
     BC_ASSERT(stranded());

@@ -59,7 +59,6 @@ void channel_peer::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::resume();
-    receive();
 }
 
 // Properties.
@@ -248,7 +247,7 @@ void channel_peer::receive() NOEXCEPT
     // Pause only prevents start of the read loop, it does not prevent messages
     // from being issued for sockets already past that point (e.g. waiting).
     // This is mainly for startup coordination, preventing missed messages.
-    if (stopped() || paused() || reading_)
+    if (stopped() || reading_)
         return;
 
     reading_ = true;
