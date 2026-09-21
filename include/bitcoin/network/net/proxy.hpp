@@ -72,15 +72,6 @@ public:
     /// Pause.
     /// -----------------------------------------------------------------------
 
-    /// Pause reading from the socket (requires strand).
-    virtual void pause() NOEXCEPT;
-
-    /// Resume reading from the socket (requires strand).
-    virtual void resume() NOEXCEPT;
-
-    /// Reading from the socket is paused (requires strand).
-    virtual bool paused() const NOEXCEPT;
-
     /// Properties.
     /// -----------------------------------------------------------------------
 
@@ -148,12 +139,7 @@ protected:
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
-    /// Throttle.
-    /// -----------------------------------------------------------------------
-
-    /// Unconsumed portion of the byte allocation, by which a send completing
-    /// now is deferred. Zero if unlimited, stopped, or fully consumed by the
-    /// transmission (requires strand).
+    /// Unconsumed portion of throttle byte allocation (requires strand).
     steady_clock::duration unconsumed(size_t bytes,
         const steady_clock::time_point& start) const NOEXCEPT;
 
@@ -161,33 +147,33 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Monitor the peer for close, no data capture/loss.
-    virtual void watch(result_handler&& handler) NOEXCEPT;
+    void watch(result_handler&& handler) NOEXCEPT;
 
     /// End monitoring, handler invoked with success.
-    virtual void unwatch() NOEXCEPT;
+    void unwatch() NOEXCEPT;
 
     /// WS (generic, framed).
     /// -----------------------------------------------------------------------
 
     /// Read complete logical message for websockets (not for tcp).
     /// Read available buffer from the socket, handler posted to socket strand.
-    virtual void read(http::flat_buffer& out,
+    void read(http::flat_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
     /// Binary or text mode applies to websockets (no-op for tcp).
     /// Write the provided buffer to socket, handler posted to socket strand.
-    virtual void write(const asio::const_buffer& in, bool binary,
+    void write(const asio::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
     /// TCP (generic, fixed size).
     /// -----------------------------------------------------------------------
 
     /// Read fixed-size TCP message from the remote endpoint into buffer.
-    virtual void read(const asio::mutable_buffer& buffer,
+    void read(const asio::mutable_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
     /// Write the provided buffer to socket, handler posted to socket strand.
-    virtual void write(const asio::const_buffer& buffer,
+    void write(const asio::const_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
     /// RPC (TCP: electrum/stratum_v1, WS: btcd).
@@ -198,7 +184,7 @@ protected:
 
     /// Read rpc request from the socket, using provided buffer.
     /// The proxy stamps batch state (the parse is always lax).
-    virtual void read(http::flat_buffer& buffer, rpc::request& request,
+    void read(http::flat_buffer& buffer, rpc::request& request,
         count_handler&& handler) NOEXCEPT;
 
     /// PEER (TCP: bitcoin p2p).
@@ -206,24 +192,24 @@ protected:
 
     /// Read peer message from the socket, using provided buffer.
     /// The caller stamps parse context (magic/version/witness) on the frame.
-    virtual void read(system::data_chunk& buffer,
+    void read(system::data_chunk& buffer,
         messages::peer::frame& message, count_handler&& handler) NOEXCEPT;
 
     /// Write peer message to the socket (peer::serialize frame in body).
-    virtual void write(messages::peer::frame&& message,
+    void write(messages::peer::frame&& message,
         count_handler&& handler) NOEXCEPT;
 
     /// Notify peer message to the socket (unsolicited, so bounded).
-    virtual void notify(messages::peer::frame&& message,
+    void notify(messages::peer::frame&& message,
         count_handler&& handler) NOEXCEPT;
 
     /// Write rpc response to the socket (json buffer in body).
-    virtual void write(rpc::response&& response,
+    void write(rpc::response&& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Notify rpc notification (request) to the socket (json buffer in body).
     /// Deferred while a batch is open, drained following the close part.
-    virtual void notify(rpc::request&& notification,
+    void notify(rpc::request&& notification,
         count_handler&& handler) NOEXCEPT;
 
     /// HTTP/WS (generic/rpc).
@@ -231,16 +217,16 @@ protected:
 
     /// Read http request from the socket, using provided buffer.
     /// If socket is websocket request body type must have been set by caller.
-    virtual void read(http::flat_buffer& buffer, http::request& request,
+    void read(http::flat_buffer& buffer, http::request& request,
         count_handler&& handler) NOEXCEPT;
 
     /// Write http response to the socket (json buffer in body).
     /// If socket is websocket body is written (headers ignored).
-    virtual void write(http::response&& response,
+    void write(http::response&& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Notify http response to the socket (unsolicited, so bounded).
-    virtual void notify(http::response&& notification,
+    void notify(http::response&& notification,
         count_handler&& handler) NOEXCEPT;
 
 private:
@@ -324,7 +310,8 @@ private:
 
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
-    void do_write(pending write, bool bounded) NOEXCEPT;
+    bool charge(pending& write) NOEXCEPT;
+    void do_write(pending write, bool notification) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
         const count_handler& handler) NOEXCEPT;
 
@@ -344,7 +331,6 @@ private:
     void do_reading() NOEXCEPT;
 
     // These are thread safe.
-    std::atomic_bool paused_{ true };
     std::atomic<uint64_t> sent_{};
     std::atomic<uint64_t> received_{};
     const uint32_t rate_limit_;
@@ -355,12 +341,12 @@ private:
     deadline::ptr throttle_;
     stop_subscriber stop_subscriber_{};
     socket::http_parser_ptr parser_{};
-    queue deferred_{};
-    bool writing_{};
     queue queue_{};
+    queue deferred_{};
     size_t backlog_{};
-    bool parted_{};
+    bool writing_{};
     bool batched_{};
+    bool parted_{};
 };
 
 } // namespace network

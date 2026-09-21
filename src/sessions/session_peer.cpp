@@ -97,7 +97,7 @@ void session_peer::do_attach_protocols(const channel::ptr& channel,
     const result_handler& started) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
+    BC_ASSERT_MSG(channel->held(), "gate not held for protocol attach");
 
     // Protocol attach is always synchronous, complete here.
     attach_protocols(channel);
@@ -139,7 +139,7 @@ void session_peer::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
+    BC_ASSERT_MSG(!channel->held(), "gate held before handshake attach");
 
     // Protocol must pause the channel after receiving version and verack.
     using namespace messages::peer;
@@ -166,7 +166,7 @@ void session_peer::attach_handshake(const channel::ptr& channel,
 void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
+    BC_ASSERT_MSG(channel->held(), "gate not held for protocol attach");
 
     using namespace messages::peer;
     const auto self = shared_from_this();

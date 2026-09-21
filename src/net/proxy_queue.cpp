@@ -41,17 +41,40 @@ using namespace std::placeholders;
 // The memory of a queue entry apart from its payload: the writer closure with
 // its bound pointers, the queue slot, control blocks and the message object.
 // This bounds queue depth implicitly, as a flood of small messages is charged
-// its actual cost and not its wire size.
+// its estimated cost, not its smaller wire size.
 constexpr size_t entry_size = 256;
 
-void proxy::do_write(pending write_, bool bounded) NOEXCEPT
+// Charges the entry against the backlog, false if refused.
+bool proxy::charge(pending& write_) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // A solicited write is paced by the request that provoked it, so it does
-    // not accumulate and is not charged against the channel backlog.
-    write_.cost = bounded ?
-        system::ceilinged_add(write_.cost, entry_size) : zero;
+    write_.cost = system::ceilinged_add(write_.cost, entry_size);
+
+    const auto idle = queue_.empty() && deferred_.empty();
+    if (!idle && system::ceilinged_add(backlog_, write_.cost) >
+        maximum_backlog_)
+    {
+        // zeromq messages are seuqenced, so drops are acceptable.
+        if (socket_->zeromq())
+        {
+            LOGS("Dropped message on congested channel [" << endpoint() << "]");
+            write_.handler(error::message_dropped, zero);
+            return false;
+        }
+
+        LOGS("Stopping congested channel [" << endpoint() << "]");
+        stop(error::channel_backlog);
+        return false;
+    }
+
+    backlog_ = system::ceilinged_add(backlog_, write_.cost);
+    return true;
+}
+
+void proxy::do_write(pending write_, bool notification) NOEXCEPT
+{
+    BC_ASSERT(stranded());
 
     if (stopped())
     {
@@ -60,28 +83,19 @@ void proxy::do_write(pending write_, bool bounded) NOEXCEPT
         return;
     }
 
-    const auto started = !queue_.empty();
-
-    // An idle queue admits any message, so that one that exceeds the backlog
-    // remains sendable, as does the final message of the channel. A zmtp
-    // publisher is the only lossy channel, as its sequence numbering exposes
-    // the gap to the subscriber.
-    if (bounded && started &&
-        system::ceilinged_add(backlog_, write_.cost) > maximum_backlog_)
+    // A solicited write (response) is paced by the request that provoked it.
+    // A notification must be charged as recipient can force accumulation.
+    if (notification)
     {
-        if (socket_->zeromq())
-        {
-            LOGS("Dropped message on congested channel [" << endpoint() << "]");
-            write_.handler(error::message_dropped, zero);
+        if (!charge(write_))
             return;
-        }
-
-        LOGS("Stopping congested channel [" << endpoint() << "]");
-        stop(error::channel_backlog);
-        return;
+    }
+    else
+    {
+        write_.cost = zero;
     }
 
-    backlog_ = system::ceilinged_add(backlog_, write_.cost);
+    const auto started = !queue_.empty();
     queue_.push_back(std::move(write_));
 
     // Start the asynchronous loop if it wasn't already started.
@@ -114,7 +128,8 @@ void proxy::handle_write(const code& ec, size_t bytes,
     queue_.pop_front();
 
     // All handlers must be invoked unless stopped, so continue despite code.
-    write();
+    if (!stopped())
+        write();
 }
 
 // Throttle (sent bytes are allocated time at the configured rate).

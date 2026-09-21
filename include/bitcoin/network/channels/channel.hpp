@@ -36,6 +36,7 @@ class BCT_API channel
 {
 public:
     typedef std::shared_ptr<channel> ptr;
+    using gate_t = race_all<const code&>;
     using options_t = network::settings::tcp_server;
     using settings_t = network::settings;
 
@@ -67,14 +68,17 @@ public:
     /// Asserts/logs stopped.
     virtual ~channel() NOEXCEPT;
 
-    /// Pause reading from the socket, stops timers (requires strand).
-    void pause() NOEXCEPT override;
+    /// Hold the dispatch gate, or one of its own, and stop timers.
+    virtual void pause() NOEXCEPT;
 
-    /// Resume reading from the socket, starts timers (requires strand).
-    void resume() NOEXCEPT override;
+    /// Release the gate, or arm the read if none, and start timers.
+    virtual void resume() NOEXCEPT;
 
-    /// Monitor for close during a long-running query (requires strand).
-    void monitor(bool value) NOEXCEPT;
+    /// The dispatch gate is held (requires strand).
+    bool held() const NOEXCEPT;
+
+    /// Retain to defer next read until dispatches complete.
+    const gate_t::ptr& gate() NOEXCEPT;
 
     /// Seconds before channel expires, zero if expired (requires strand).
     size_t remaining() const NOEXCEPT;
@@ -118,6 +122,16 @@ protected:
     void reading() NOEXCEPT override;
     void writing() NOEXCEPT override;
 
+    /// Monitor for close during a long-running query (requires strand).
+    void monitor(bool value) NOEXCEPT;
+
+    /// Arm the read, invoked on release of the dispatch gate.
+    virtual void receive() NOEXCEPT;
+
+    /// Publish and release the gate of a message dispatch.
+    void open_gate() NOEXCEPT;
+    void close_gate() NOEXCEPT;
+
 private:
     void stop_expiration() NOEXCEPT;
     void start_expiration() NOEXCEPT;
@@ -128,6 +142,9 @@ private:
     void handle_inactivity(const code& ec) NOEXCEPT;
 
     void handle_monitor(const code& ec) NOEXCEPT;
+    gate_t::ptr make_gate() NOEXCEPT;
+    void handle_gate(const code& ec) NOEXCEPT;
+    void do_receive() NOEXCEPT;
 
     // These are thread safe (const).
     const options_t& options_;
@@ -144,6 +161,8 @@ private:
     steady_clock::time_point created_{ steady_clock::now() };
     steady_clock::time_point last_read_{ created_ };
     steady_clock::time_point last_write_{ created_ };
+    gate_t::ptr gate_{};
+    gate_t::ptr held_{};
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;

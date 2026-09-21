@@ -43,6 +43,8 @@ public:
 protected:
     void send_addresses(
         const messages::peer::address& message) NOEXCEPT override;
+    void notify_addresses(
+        const messages::peer::address& message) NOEXCEPT override;
 };
 
 } // namespace network

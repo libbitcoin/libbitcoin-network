@@ -247,7 +247,7 @@ void session_inbound::attach_protocols(
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
+    BC_ASSERT_MSG(channel->held(), "gate not held for protocol attach");
 
     using namespace messages::peer;
     const auto self = shared_from_this();

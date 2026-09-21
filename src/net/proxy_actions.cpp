@@ -337,11 +337,15 @@ void proxy::handle_close_write(const code& ec, size_t bytes,
     }
 
     // Drain notifications deferred while the batch was open.
+    const auto started = !queue_.empty();
     while (!deferred_.empty())
     {
-        do_write(std::move(deferred_.front()), true);
+        queue_.push_back(std::move(deferred_.front()));
         deferred_.pop_front();
     }
+
+    if (!started && !queue_.empty())
+        write();
 
     // Re-arm the read (the channel read handler remains pending).
     auto& value = request.get();
@@ -385,9 +389,10 @@ void proxy::do_defer_write(pending write_) NOEXCEPT
     BC_ASSERT(stranded());
 
     // Notifications are deferred while a batch is open (drained on close).
+    // Charged on defer, as the deferral retains the entry just as the queue.
     if (batched_)
     {
-        deferred_.push_back(std::move(write_));
+        if (charge(write_)) deferred_.push_back(std::move(write_));
         return;
     }
 

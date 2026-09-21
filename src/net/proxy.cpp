@@ -63,9 +63,6 @@ void proxy::stop(const code& ec) NOEXCEPT
     if (stopped())
         return;
 
-    // Overruled by stop, set only for consistency.
-    paused_.store(true);
-
     // An open batch response is closed (written) before the socket stops.
     // Batch state is protected by the strand, so only a stranded stop can
     // close gracefully (an unstranded stop, e.g. shutdown, is immediate).
@@ -161,6 +158,10 @@ void proxy::stopping(const code& ec) NOEXCEPT
     // Release any http message parse in progress.
     parser_.reset();
 
+    // Release queued writes, handlers are not invoked after stop.
+    queue_.clear();
+    deferred_.clear();
+
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
     stop_subscriber_.stop(ec);
@@ -195,28 +196,6 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     BC_ASSERT(stranded());
     stop_subscriber_.subscribe(move_copy(handler));
     complete(error::success);
-}
-
-// Pause (proxy is created paused).
-// ----------------------------------------------------------------------------
-// public
-
-void proxy::pause() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    paused_ = true;
-}
-
-void proxy::resume() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    paused_ = false;
-}
-
-bool proxy::paused() const NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    return paused_;
 }
 
 // Signal activity.

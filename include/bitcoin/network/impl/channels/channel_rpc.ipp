@@ -48,7 +48,6 @@ inline void CLASS::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::resume();
-    receive();
 }
 
 // Read cycle.
@@ -59,11 +58,10 @@ TEMPLATE
 inline void CLASS::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT_MSG(!reading_, "already reading");
     using namespace std::placeholders;
     using namespace system;
 
-    if (stopped() || paused() || reading_)
+    if (stopped() || reading_)
         return;
 
     reading_ = true;
@@ -130,7 +128,11 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
         return;
     }
 
-    if (const auto code = dispatcher_.notify(request->message))
+    open_gate();
+    const auto code = dispatcher_.notify(request->message);
+    close_gate();
+
+    if (code)
         stop(code);
 }
 
@@ -172,8 +174,9 @@ inline void CLASS::send(Message&& message, result_handler&& handler) NOEXCEPT
     BC_ASSERT(stranded());
     using namespace std::placeholders;
 
+    // The response holds the gate, as batch parts are written unqueued.
     auto complete = std::bind(&CLASS::handle_send<Message>,
-        shared_from_base<CLASS>(), _1, _2, extract_method(message),
+        shared_from_base<CLASS>(), _1, _2, gate(), extract_method(message),
         std::move(handler));
 
     // The verb carries the classification, as the charge follows from it.
@@ -199,7 +202,8 @@ inline void CLASS::send(Message&& message, result_handler&& handler) NOEXCEPT
 TEMPLATE
 template <typename Message>
 inline void CLASS::handle_send(const code& ec, size_t bytes,
-    const std::string& method, const result_handler& handler) NOEXCEPT
+    const gate_t::ptr&, const std::string& method,
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     if (ec)
@@ -209,12 +213,6 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
 
     // Typically a noop, but handshake may pause channel here.
     handler(ec);
-
-    // Restart the listener (only in response to requests).
-    if constexpr (is_same_type<Message, rpc::response_t>)
-    {
-        receive();
-    }
 }
 
 TEMPLATE

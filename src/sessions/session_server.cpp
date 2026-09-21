@@ -270,7 +270,7 @@ void session_server::do_attach_handshake(
     const result_handler& handshake) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
+    BC_ASSERT_MSG(!channel->held(), "gate held before handshake attach");
     handshake(error::success);
 }
 

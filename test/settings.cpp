@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
     BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BOOST_REQUIRE_EQUAL(instance.minimum_buffer, minimum_buffer);
     BOOST_REQUIRE_EQUAL(instance.maximum_buffer, 64 * kilobyte);
-    BOOST_REQUIRE_EQUAL(instance.maximum_backlog, 10 * megabyte);
+    BOOST_REQUIRE_EQUAL(instance.maximum_backlog, megabyte);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 0u);
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 0u);
     BOOST_REQUIRE(!instance.enabled());

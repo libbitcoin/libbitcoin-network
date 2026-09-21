@@ -59,7 +59,6 @@ void channel_peer::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
     channel::resume();
-    receive();
 }
 
 // Properties.
@@ -248,7 +247,7 @@ void channel_peer::receive() NOEXCEPT
     // Pause only prevents start of the read loop, it does not prevent messages
     // from being issued for sockets already past that point (e.g. waiting).
     // This is mainly for startup coordination, preventing missed messages.
-    if (stopped() || paused() || reading_)
+    if (stopped() || reading_)
         return;
 
     reading_ = true;
@@ -291,13 +290,18 @@ void channel_peer::handle_receive(const code& ec, size_t size,
     count(received_by_message_, in->head.index(), size);
     reading_ = false;
 
+    open_gate();
+
     // Notify subscribers of the new message.
-    // If object passes to another thread destruction cost is very high.
-    if (const auto code = dispatcher_.notify(rpc::request_t
+    const auto code = dispatcher_.notify(rpc::request_t
     {
         .method = in->head.command,
         .params = { rpc::array_t{ std::move(in->payload) } }
-    }))
+    });
+
+    close_gate();
+
+    if (code)
     {
         stop(code);
         return;
@@ -309,8 +313,6 @@ void channel_peer::handle_receive(const code& ec, size_t size,
         payload_buffer_.resize(options().minimum_buffer);
         payload_buffer_.shrink_to_fit();
     }
-
-    receive();
 }
 
 void channel_peer::handle_send(const code& ec, size_t size, size_t index,

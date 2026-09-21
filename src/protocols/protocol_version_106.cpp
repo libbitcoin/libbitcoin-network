@@ -195,10 +195,8 @@ void protocol_version_106::callback(const code& ec) NOEXCEPT
     if (!handler_)
         return;
 
-    // There may be a post-handshake message already waiting on the socket.
-    // The channel must be paused while still on the channel strand to prevent
-    // acceptance until after protocol attachment (and resume). So session will
-    // pause the channel within this handler.
+    // A post-handshake message may already be waiting on the socket, so the
+    // gate is held (pause) until the session attaches protocols and resumes.
     (*handler_)(ec);
     handler_.reset();
 }
@@ -256,8 +254,7 @@ bool protocol_version_106::handle_receive_acknowledge(const code& ec,
 
     received_acknowledge_ = true;
 
-    // Ensure that no message is read after two required.
-    // The reader is suspended within this handler by the strand.
+    // The gate is held until the session attaches protocols and resumes.
     if (received_version_)
         pause();
 
@@ -380,8 +377,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     // Handle in handle_send_acknowledge.
     received_version_ = true;
 
-    // Ensure that no message is read after two required.
-    // The reader is suspended within this handler by the strand.
+    // The gate is held until the session attaches protocols and resumes.
     if (received_acknowledge_)
         pause();
 

@@ -89,7 +89,9 @@ void channel::pause() NOEXCEPT
     BC_ASSERT(stranded());
     stop_expiration();
     stop_inactivity();
-    proxy::pause();
+
+    // Outside of dispatch the hold is a gate of its own.
+    held_ = gate_ ? gate_ : make_gate();
 }
 
 // Resume timers from pause and start read loop.
@@ -98,7 +100,18 @@ void channel::resume() NOEXCEPT
     BC_ASSERT(stranded());
     start_expiration();
     start_inactivity();
-    proxy::resume();
+
+    // Release re-arms the read on the gate, otherwise nothing holds it.
+    if (held_)
+        held_.reset();
+    else
+        receive();
+}
+
+bool channel::held() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return held_ != nullptr;
 }
 
 void channel::monitor(bool value) NOEXCEPT
@@ -116,6 +129,65 @@ void channel::handle_monitor(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
     if (ec) stop(ec);
+}
+
+// Dispatch gate.
+// ----------------------------------------------------------------------------
+
+const channel::gate_t::ptr& channel::gate() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // The requestor unarms the reader, so watch the peer for close.
+    if (gate_) monitor(true);
+    return gate_;
+}
+
+// protected
+void channel::open_gate() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    gate_ = make_gate();
+}
+
+// protected
+void channel::close_gate() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    gate_.reset();
+}
+
+// protected
+void channel::receive() NOEXCEPT
+{
+}
+
+// private
+channel::gate_t::ptr channel::make_gate() NOEXCEPT
+{
+    // Invokes handle_gate on gate destruct, rearming reader.
+    return emplace_shared<gate_t>(
+        std::bind(&channel::handle_gate,
+            shared_from_base<channel>(), _1));
+}
+
+// private
+void channel::handle_gate(const code&) NOEXCEPT
+{
+    boost::asio::post(strand(),
+        std::bind(&channel::do_receive,
+            shared_from_base<channel>()));
+}
+
+// private
+void channel::do_receive() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // The reader detects peer close, so the watch is redundant while armed.
+    monitor(false);
+    receive();
 }
 
 // Timers.
