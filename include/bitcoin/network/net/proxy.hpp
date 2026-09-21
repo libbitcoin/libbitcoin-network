@@ -221,9 +221,9 @@ protected:
     virtual void write(rpc::response&& response,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write rpc notification (request) to the socket (json buffer in body).
+    /// Notify rpc notification (request) to the socket (json buffer in body).
     /// Deferred while a batch is open, drained following the close part.
-    virtual void write(rpc::request&& notification,
+    virtual void notify(rpc::request&& notification,
         count_handler&& handler) NOEXCEPT;
 
     /// HTTP/WS (generic/rpc).

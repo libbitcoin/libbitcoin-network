@@ -366,7 +366,7 @@ void proxy::write(rpc::response&& response, count_handler&& handler) NOEXCEPT
             pending{ cost, std::move(call), std::move(handler) }, false));
 }
 
-void proxy::write(rpc::request&& notification, count_handler&& handler) NOEXCEPT
+void proxy::notify(rpc::request&& notification, count_handler&& handler) NOEXCEPT
 {
     // Pointer ships moveable message through the send queue.
     const auto out = move_shared(std::move(notification));
@@ -683,7 +683,7 @@ void proxy::write(http::response&& response, count_handler&& handler,
 
         if (body.contains<rpc::request>())
         {
-            write(std::move(std::get<rpc::request>(body.value())),
+            notify(std::move(std::get<rpc::request>(body.value())),
                 std::move(handler));
             return;
         }

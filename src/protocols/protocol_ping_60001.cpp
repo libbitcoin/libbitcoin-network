@@ -141,7 +141,7 @@ bool protocol_ping_60001::handle_receive_ping(const code& ec,
     if (stopped(ec))
         return false;
 
-    SEND(pong{ message->nonce }, handle_send_pong, _1);
+    NOTIFY(pong{ message->nonce }, handle_send_pong, _1);
     return true;
 }
 

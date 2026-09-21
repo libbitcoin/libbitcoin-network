@@ -176,7 +176,7 @@ public:
 
     void write1(rpc::request&& notification, count_handler&& handler) NOEXCEPT
     {
-        proxy::write(std::move(notification), std::move(handler));
+        proxy::notify(std::move(notification), std::move(handler));
     }
 
     void write1(rpc::response&& response, count_handler&& handler) NOEXCEPT
