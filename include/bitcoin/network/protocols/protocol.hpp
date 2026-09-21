@@ -161,12 +161,8 @@ protected:
     /// Pause reading from the socket, stops timers (requires strand).
     virtual void pause() NOEXCEPT;
 
-    /// Read the next message from the socket, starts timers (requires
-    /// strand). The channel is resumed following pause by the session.
-    virtual void read_next() NOEXCEPT;
-
-    /// Monitor for close during a long-running query (requires strand).
-    virtual void monitor(bool value) NOEXCEPT;
+    /// Retain to defer next read until dispatches complete (requires strand).
+    virtual const channel::gate_t::ptr& gate() NOEXCEPT;
 
     /// Seconds before channel expires, zero if expired (requires strand).
     virtual size_t remaining() const NOEXCEPT;

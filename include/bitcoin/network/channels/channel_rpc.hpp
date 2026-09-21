@@ -79,7 +79,8 @@ protected:
     /// Handle send completion, invokes receive() for non-notifications.
     template <typename Message>
     inline void handle_send(const code& ec, size_t bytes,
-        const std::string& method, const result_handler& handler) NOEXCEPT;
+        const gate_t::ptr& gate, const std::string& method,
+        const result_handler& handler) NOEXCEPT;
 
     /// Stranded handler invoked from stop().
     inline void stopping(const code& ec) NOEXCEPT override;

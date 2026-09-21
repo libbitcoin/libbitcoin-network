@@ -291,13 +291,18 @@ void channel_peer::handle_receive(const code& ec, size_t size,
     count(received_by_message_, in->head.index(), size);
     reading_ = false;
 
+    open_gate();
+
     // Notify subscribers of the new message.
-    // If object passes to another thread destruction cost is very high.
-    if (const auto code = dispatcher_.notify(rpc::request_t
+    const auto code = dispatcher_.notify(rpc::request_t
     {
         .method = in->head.command,
         .params = { rpc::array_t{ std::move(in->payload) } }
-    }))
+    });
+
+    close_gate();
+
+    if (code)
     {
         stop(code);
         return;
@@ -309,8 +314,6 @@ void channel_peer::handle_receive(const code& ec, size_t size,
         payload_buffer_.resize(options().minimum_buffer);
         payload_buffer_.shrink_to_fit();
     }
-
-    receive();
 }
 
 void channel_peer::handle_send(const code& ec, size_t size, size_t index,

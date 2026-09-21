@@ -80,9 +80,6 @@ public:
     {
     }
 
-    /// Resume reading from the socket, starts timers (requires strand).
-    void resume() NOEXCEPT override;
-
     /// Quiet should be written only in handshake.
     /// The channel does not "speak" to peers (e.g. seed connection).
     bool quiet() const NOEXCEPT;
@@ -147,8 +144,11 @@ protected:
     /// Construct a frame stamped with parse context.
     virtual messages::peer::frame_ptr create_frame() const NOEXCEPT;
 
-    /// Message read and dispatch (framing is owned by peer::body).
-    void receive() NOEXCEPT;
+    /// Resume reading from the socket, starts timers (requires strand).
+    void resume() NOEXCEPT override;
+
+    /// Message read and dispatch.
+    void receive() NOEXCEPT override;
     void handle_receive(const code& ec, size_t bytes,
         const messages::peer::frame_ptr& in) NOEXCEPT;
 
@@ -178,7 +178,7 @@ private:
 
         auto complete = std::bind(&channel_peer::handle_send,
             shared_from_base<channel_peer>(), _1, _2, index,
-            std::move(handler));
+                std::move(handler));
 
         if (bounded)
             proxy::notify(std::move(out), std::move(complete));
@@ -204,10 +204,10 @@ private:
     steady_clock::time_point pinged_{};
     steady_clock::duration ping_{};
     steady_clock::duration minimum_ping_{};
-    bool reading_{};
-    bool quiet_{};
     bool wants_address_v2_{};
     bool current_{};
+    bool reading_{};
+    bool quiet_{};
 
     // This is thread safe.
     std::atomic<uint64_t> minimum_fee_{};

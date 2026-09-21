@@ -67,7 +67,6 @@ void channel_http::resume() NOEXCEPT
 void channel_http::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT_MSG(!reading_, "already reading");
 
     if (stopped() || paused() || reading_)
         return;
@@ -211,7 +210,11 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
         CASE_REQUEST_TO_MODEL(unknown, request, model);
     }
 
-    if (const auto code = dispatcher_.notify(model))
+    open_gate();
+    const auto code = dispatcher_.notify(model);
+    close_gate();
+
+    if (code)
         stop(code);
 }
 
@@ -266,10 +269,11 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
 
     std::string message{ LOG_ONLY(log_message(response)) };
 
+    // The response holds the gate, as batch parts are written unqueued.
     write(std::move(response),
         std::bind(&channel_http::handle_send,
-            shared_from_base<channel_http>(), _1, _2, false, std::move(message),
-                std::move(handler)));
+            shared_from_base<channel_http>(), _1, _2, gate(),
+                std::move(message), std::move(handler)));
 }
 
 void channel_http::notify(response&& notification,
@@ -284,12 +288,13 @@ void channel_http::notify(response&& notification,
 
     proxy::notify(std::move(notification),
         std::bind(&channel_http::handle_send,
-            shared_from_base<channel_http>(), _1, _2, true, std::move(message),
-                std::move(handler)));
+            shared_from_base<channel_http>(), _1, _2, gate_t::ptr{},
+                std::move(message), std::move(handler)));
 }
 
-void channel_http::handle_send(const code& ec, size_t bytes, bool notification,
-    const std::string& message, const result_handler& handler) NOEXCEPT
+void channel_http::handle_send(const code& ec, size_t bytes,
+    const gate_t::ptr&, const std::string& message,
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -299,10 +304,6 @@ void channel_http::handle_send(const code& ec, size_t bytes, bool notification,
     if (!websocket()) { LOGV(boost_format(message) % bytes); }
 
     handler(ec);
-
-    // Restart the listener (only in response to requests).
-    if (!notification)
-        receive();
 }
 
 // unauthorized helpers

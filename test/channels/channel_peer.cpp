@@ -25,6 +25,7 @@ class mock_channel_peer
 {
 public:
     using channel_peer::channel_peer;
+    using channel_peer::resume;
 
     // Call must be stranded.
     void subscribe_stop1(result_handler handler) NOEXCEPT

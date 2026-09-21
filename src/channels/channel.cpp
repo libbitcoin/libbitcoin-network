@@ -118,6 +118,59 @@ void channel::handle_monitor(const code& ec) NOEXCEPT
     if (ec) stop(ec);
 }
 
+// Dispatch gate.
+// ----------------------------------------------------------------------------
+
+const channel::gate_t::ptr& channel::gate() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // The requestor unarms the reader, so watch the peer for close.
+    if (gate_) monitor(true);
+    return gate_;
+}
+
+// protected
+void channel::open_gate() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // Invokes handle_gate on gate destruct, rearming reader.
+    gate_ = emplace_shared<gate_t>(
+        std::bind(&channel::handle_gate,
+            shared_from_base<channel>(), _1));
+}
+
+// protected
+void channel::close_gate() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    gate_.reset();
+}
+
+// protected
+void channel::receive() NOEXCEPT
+{
+}
+
+// private
+void channel::handle_gate(const code&) NOEXCEPT
+{
+    boost::asio::post(strand(),
+        std::bind(&channel::do_receive,
+            shared_from_base<channel>()));
+}
+
+// private
+void channel::do_receive() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // The reader detects peer close, so the watch is redundant while armed.
+    monitor(false);
+    receive();
+}
+
 // Timers.
 // ----------------------------------------------------------------------------
 // Send throttling (settings.rate_limit) is implemented by the proxy. A channel

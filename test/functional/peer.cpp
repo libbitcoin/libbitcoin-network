@@ -43,4 +43,17 @@ BOOST_AUTO_TEST_CASE(functional_peer__ping__nonce__pong_echo)
     BOOST_REQUIRE_EQUAL(message->nonce, expected);
 }
 
+BOOST_AUTO_TEST_CASE(functional_peer__ping__pipelined__ponged_in_order)
+{
+    BOOST_REQUIRE(handshake());
+
+    send(ping{ 1 }, node_version->value);
+    send(ping{ 2 }, node_version->value);
+    send(ping{ 3 }, node_version->value);
+
+    BOOST_REQUIRE_EQUAL(pong::deserialize(node_version->value, receive(pong::command))->nonce, 1_u64);
+    BOOST_REQUIRE_EQUAL(pong::deserialize(node_version->value, receive(pong::command))->nonce, 2_u64);
+    BOOST_REQUIRE_EQUAL(pong::deserialize(node_version->value, receive(pong::command))->nonce, 3_u64);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

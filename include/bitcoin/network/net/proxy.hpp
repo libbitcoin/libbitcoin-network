@@ -324,7 +324,8 @@ private:
 
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
-    void do_write(pending write, bool bounded) NOEXCEPT;
+    bool charge(pending& write) NOEXCEPT;
+    void do_write(pending write, bool notification) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
         const count_handler& handler) NOEXCEPT;
 
@@ -355,12 +356,12 @@ private:
     deadline::ptr throttle_;
     stop_subscriber stop_subscriber_{};
     socket::http_parser_ptr parser_{};
-    queue deferred_{};
-    bool writing_{};
     queue queue_{};
+    queue deferred_{};
     size_t backlog_{};
-    bool parted_{};
+    bool writing_{};
     bool batched_{};
+    bool parted_{};
 };
 
 } // namespace network

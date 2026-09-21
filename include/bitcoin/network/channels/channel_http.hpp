@@ -74,8 +74,8 @@ public:
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
-    /// Must call after successful message handling if no stop.
-    virtual void receive() NOEXCEPT;
+    /// Read the next message from the socket (requires strand).
+    void receive() NOEXCEPT override;
 
     /// True if the authorized credential permits the rpc method.
     virtual bool permitted(const std::string& method) const NOEXCEPT;
@@ -120,8 +120,9 @@ protected:
     /// Handlers.
     virtual void handle_receive(const code& ec, size_t bytes,
         const http::request_ptr& request) NOEXCEPT;
-    virtual void handle_send(const code& ec, size_t bytes, bool notification,
-        const std::string& message, const result_handler& handler) NOEXCEPT;
+    virtual void handle_send(const code& ec, size_t bytes,
+        const gate_t::ptr& gate, const std::string& message,
+        const result_handler& handler) NOEXCEPT;
 
 private:
     bool registered(const std::string_view& name) const NOEXCEPT;
