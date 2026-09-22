@@ -2322,4 +2322,234 @@ BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_writer_exception__true_expected_mess
     BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc writer exception");
 }
 
+// mapping
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(asio_is_canceled__canceled_codes__true)
+{
+    BOOST_REQUIRE(error::asio_is_canceled(error::to_asio_basic_code(error::asio_basic_error_t::operation_aborted)));
+    BOOST_REQUIRE(error::asio_is_canceled(error::to_errc_code(error::boost_errc_t::operation_canceled)));
+}
+
+BOOST_AUTO_TEST_CASE(asio_is_canceled__other_codes__false)
+{
+    BOOST_REQUIRE(!error::asio_is_canceled(error::to_asio_basic_code(error::asio_basic_error_t::connection_refused)));
+    BOOST_REQUIRE(!error::asio_is_canceled(boost_code{}));
+}
+
+BOOST_AUTO_TEST_CASE(to_error_code__default_code__success)
+{
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(boost_code{}), error::success);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(boost_code{}), error::success);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(boost_code{}), error::success);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{}), error::success);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(boost_code{}), error::success);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(boost_code{}), error::success);
+    BOOST_REQUIRE_EQUAL(error::rpc_to_error_code(boost_code{}), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(errc_to_error_code__generic_conditions__expected)
+{
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::operation_canceled)), error::operation_canceled);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::connection_reset)), error::peer_disconnect);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::no_buffer_space)), error::insufficient_buffer);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::permission_denied)), error::not_allowed);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::bad_address)), error::resolve_failed);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::connection_refused)), error::connect_failed);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::address_in_use)), error::address_in_use);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::io_error)), error::bad_stream);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::timed_out)), error::channel_timeout);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::file_exists)), error::file_system);
+}
+
+BOOST_AUTO_TEST_CASE(errc_to_error_code__unmapped_generic__errc_unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::argument_out_of_domain)), error::errc_unknown);
+}
+
+BOOST_AUTO_TEST_CASE(asio_to_error_code__basic_codes__expected)
+{
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::operation_aborted)), error::operation_canceled);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::address_family_not_supported)), error::resolve_failed);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::address_in_use)), error::address_in_use);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::connection_refused)), error::connect_failed);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::connection_reset)), error::peer_disconnect);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::message_size)), error::bad_stream);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::invalid_argument)), error::invalid_configuration);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::no_buffer_space)), error::insufficient_buffer);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::no_such_device)), error::file_system);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::access_denied)), error::not_allowed);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::timed_out)), error::channel_timeout);
+}
+
+BOOST_AUTO_TEST_CASE(http_to_error_code__beast_codes__expected)
+{
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::end_of_stream)), error::end_of_stream);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::partial_message)), error::partial_message);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::need_more)), error::need_more);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::unexpected_body)), error::unexpected_body);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::need_buffer)), error::need_buffer);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::end_of_chunk)), error::end_of_chunk);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::buffer_overflow)), error::buffer_overflow);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::header_limit)), error::header_limit);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::body_limit)), error::body_limit);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_alloc)), error::bad_alloc);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_line_ending)), error::bad_line_ending);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_method)), error::bad_method);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_target)), error::bad_target);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_version)), error::bad_version);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_status)), error::bad_status);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_reason)), error::bad_reason);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_field)), error::bad_field);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_value)), error::bad_value);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_content_length)), error::bad_content_length);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_transfer_encoding)), error::bad_transfer_encoding);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_chunk)), error::bad_chunk);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_chunk_extension)), error::bad_chunk_extension);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_obs_fold)), error::bad_obs_fold);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::multiple_content_length)), error::multiple_content_length);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::stale_parser)), error::stale_parser);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::short_read)), error::short_read);
+}
+
+BOOST_AUTO_TEST_CASE(http_to_error_code__unmapped_http_code__http_unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(static_cast<error::http_error_t>(0xff))), error::http_unknown);
+}
+
+BOOST_AUTO_TEST_CASE(http_to_error_code__json_code__json_mapping)
+{
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_json_code(error::json_error_t::syntax)), error::syntax);
+}
+
+BOOST_AUTO_TEST_CASE(ssl_to_error_code__stream_codes__expected)
+{
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(error::to_ssl_stream_code(error::asio_ssl_stream_error_t::stream_truncated)), error::tls_stream_truncated);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(error::to_ssl_stream_code(error::asio_ssl_stream_error_t::unspecified_system_error)), error::tls_unspecified_system_error);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(error::to_ssl_stream_code(error::asio_ssl_stream_error_t::unexpected_result)), error::tls_unexpected_result);
+}
+
+BOOST_AUTO_TEST_CASE(ssl_to_error_code__unmapped_stream_code__tls_unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(error::to_ssl_stream_code(static_cast<error::asio_ssl_stream_error_t>(0xff))), error::tls_unknown);
+}
+
+BOOST_AUTO_TEST_CASE(ssl_to_error_code__ssl_category_code__ssl_unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ 1, boost::asio::error::get_ssl_category() }), error::ssl_unknown);
+}
+
+BOOST_AUTO_TEST_CASE(ssl_to_error_code__asio_code__asio_mapping)
+{
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::connection_reset)), error::peer_disconnect);
+}
+
+BOOST_AUTO_TEST_CASE(ws_to_error_code__beast_codes__expected)
+{
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::closed)), error::websocket_closed);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::buffer_overflow)), error::websocket_buffer_overflow);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::partial_deflate_block)), error::partial_deflate_block);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::message_too_big)), error::message_too_big);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_http_version)), error::bad_http_version);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_method)), error::websocket_bad_method);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_host)), error::no_host);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_connection)), error::no_connection);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_connection_upgrade)), error::no_connection_upgrade);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_upgrade)), error::no_upgrade);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_upgrade_websocket)), error::no_upgrade_websocket);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_sec_key)), error::no_sec_key);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_sec_key)), error::bad_sec_key);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_sec_version)), error::no_sec_version);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_sec_version)), error::bad_sec_version);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_sec_accept)), error::no_sec_accept);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_sec_accept)), error::bad_sec_accept);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::upgrade_declined)), error::upgrade_declined);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_opcode)), error::bad_opcode);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_data_frame)), error::bad_data_frame);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_continuation)), error::bad_continuation);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_reserved_bits)), error::bad_reserved_bits);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_control_fragment)), error::bad_control_fragment);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_control_size)), error::bad_control_size);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_unmasked_frame)), error::bad_unmasked_frame);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_masked_frame)), error::bad_masked_frame);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_size)), error::bad_size);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_frame_payload)), error::bad_frame_payload);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_close_code)), error::bad_close_code);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_close_size)), error::bad_close_size);
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_close_payload)), error::bad_close_payload);
+}
+
+BOOST_AUTO_TEST_CASE(ws_to_error_code__unmapped_websocket_code__websocket_unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(static_cast<error::ws_error_t>(0xff))), error::websocket_unknown);
+}
+
+BOOST_AUTO_TEST_CASE(ws_to_error_code__http_code__http_mapping)
+{
+    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_http_code(error::http_error_t::bad_target)), error::bad_target);
+}
+
+BOOST_AUTO_TEST_CASE(json_to_error_code__json_codes__expected)
+{
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::syntax)), error::syntax);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::extra_data)), error::extra_data);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::incomplete)), error::incomplete);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::exponent_overflow)), error::exponent_overflow);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::too_deep)), error::too_deep);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::illegal_leading_surrogate)), error::illegal_leading_surrogate);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::illegal_trailing_surrogate)), error::illegal_trailing_surrogate);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::expected_hex_digit)), error::expected_hex_digit);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::expected_utf16_escape)), error::expected_utf16_escape);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::object_too_large)), error::object_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::array_too_large)), error::array_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::key_too_large)), error::key_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::string_too_large)), error::string_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::number_too_large)), error::number_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::input_error)), error::input_error);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::exception)), error::exception);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::out_of_range)), error::out_of_range);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::test_failure)), error::test_failure);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::missing_slash)), error::missing_slash);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::invalid_escape)), error::invalid_escape);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::token_not_number)), error::token_not_number);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::value_is_scalar)), error::value_is_scalar);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_found)), error::not_found);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::token_overflow)), error::token_overflow);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::past_the_end)), error::past_the_end);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_number)), error::not_number);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_exact)), error::not_exact);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_null)), error::not_null);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_bool)), error::not_bool);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_array)), error::not_array);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_object)), error::not_object);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_string)), error::not_string);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_int64)), error::not_int64);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_uint64)), error::not_uint64);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_double)), error::not_double);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_integer)), error::not_integer);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::size_mismatch)), error::size_mismatch);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::exhausted_variants)), error::exhausted_variants);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::unknown_name)), error::unknown_name);
+}
+
+BOOST_AUTO_TEST_CASE(json_to_error_code__unmapped_json_code__json_unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(static_cast<error::json_error_t>(0xff))), error::json_unknown);
+}
+
+BOOST_AUTO_TEST_CASE(json_to_error_code__asio_code__asio_mapping)
+{
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::timed_out)), error::channel_timeout);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_to_error_code__network_code__same_code)
+{
+    BOOST_REQUIRE_EQUAL(error::rpc_to_error_code(code(error::channel_timeout)), error::channel_timeout);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_to_error_code__http_code__http_mapping)
+{
+    BOOST_REQUIRE_EQUAL(error::rpc_to_error_code(error::to_http_code(error::http_error_t::bad_method)), error::bad_method);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
