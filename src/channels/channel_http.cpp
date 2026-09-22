@@ -268,11 +268,10 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
 
     std::string message{ LOG_ONLY(log_message(response)) };
 
-    // The response holds the gate, as batch parts are written unqueued.
     write(std::move(response),
         std::bind(&channel_http::handle_send,
-            shared_from_base<channel_http>(), _1, _2, gate(),
-                std::move(message), std::move(handler)));
+            shared_from_base<channel_http>(), _1, _2, std::move(message),
+                std::move(handler)));
 }
 
 void channel_http::notify(response&& notification,
@@ -287,13 +286,12 @@ void channel_http::notify(response&& notification,
 
     proxy::notify(std::move(notification),
         std::bind(&channel_http::handle_send,
-            shared_from_base<channel_http>(), _1, _2, gate_t::ptr{},
-                std::move(message), std::move(handler)));
+            shared_from_base<channel_http>(), _1, _2, std::move(message),
+                std::move(handler)));
 }
 
 void channel_http::handle_send(const code& ec, size_t bytes,
-    const gate_t::ptr&, const std::string& message,
-    const result_handler& handler) NOEXCEPT
+    const std::string& message, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 

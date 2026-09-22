@@ -72,7 +72,8 @@ bool proxy::charge(pending& write_) NOEXCEPT
     return true;
 }
 
-void proxy::do_write(pending write_, bool notification) NOEXCEPT
+// A bound entry is an lvalue, moved to the queue from its binding.
+void proxy::do_write(pending& write_, bool notification) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -114,8 +115,7 @@ void proxy::write() NOEXCEPT
     queue_.front().call();
 }
 
-void proxy::handle_write(const code& ec, size_t bytes,
-    const count_handler& handler) NOEXCEPT
+void proxy::handle_write(const code& ec, size_t bytes) NOEXCEPT
 {
     BC_ASSERT(stranded());
     if (queue_.empty())
@@ -123,6 +123,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
 
     // Handler precedes pop so that a handler send does not start a second
     // write loop (a non-empty queue defers the start to the pop below).
+    const auto handler = std::move(queue_.front().handler);
     handler(ec, bytes);
     backlog_ = system::floored_subtract(backlog_, queue_.front().cost);
     queue_.pop_front();

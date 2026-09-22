@@ -121,8 +121,7 @@ protected:
     virtual void handle_receive(const code& ec, size_t bytes,
         const http::request_ptr& request) NOEXCEPT;
     virtual void handle_send(const code& ec, size_t bytes,
-        const gate_t::ptr& gate, const std::string& message,
-        const result_handler& handler) NOEXCEPT;
+        const std::string& message, const result_handler& handler) NOEXCEPT;
 
 private:
     bool registered(const std::string_view& name) const NOEXCEPT;
