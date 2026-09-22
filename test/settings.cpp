@@ -313,6 +313,27 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
     BOOST_REQUIRE(instance.expiration() == minutes(60));
 }
 
+BOOST_AUTO_TEST_CASE(settings__tcp_server_binding__no_binds__unspecified)
+{
+    const settings::tcp_server instance{ "test" };
+    BOOST_REQUIRE(instance.binding(0).address().is_unspecified());
+    BOOST_REQUIRE(instance.binding(42).address().is_unspecified());
+    BOOST_REQUIRE_EQUAL(instance.binding(42).port(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__tcp_server_binding__two_binds__group_modulo_expected)
+{
+    settings::tcp_server instance{ "test" };
+    instance.binds.emplace_back(asio::ipv4::loopback(), 0_u16);
+    instance.binds.emplace_back(asio::ipv6::loopback(), 42_u16);
+    BOOST_REQUIRE(instance.binding(0).address() == asio::ipv4::loopback());
+    BOOST_REQUIRE_EQUAL(instance.binding(0).port(), 0u);
+    BOOST_REQUIRE(instance.binding(1).address() == asio::ipv6::loopback());
+    BOOST_REQUIRE_EQUAL(instance.binding(1).port(), 42u);
+    BOOST_REQUIRE(instance.binding(2).address() == asio::ipv4::loopback());
+    BOOST_REQUIRE(instance.binding(3).address() == asio::ipv6::loopback());
+}
+
 BOOST_AUTO_TEST_CASE(settings__tls_server__defaults__expected)
 {
     constexpr auto name = "test";

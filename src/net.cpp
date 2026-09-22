@@ -119,14 +119,15 @@ acceptor_sam::ptr net::create_acceptor_sam() NOEXCEPT
 
 connector::ptr net::to_connector(const settings::socks5& socks,
     const settings::tcp_server& options,
-    const steady_clock::duration& connect_timeout) NOEXCEPT
+    const steady_clock::duration& connect_timeout, size_t group) NOEXCEPT
 {
     socket::parameters params
     {
         .connect_timeout = connect_timeout,
         .maximum_request = options.maximum_request,
         .minimum_buffer = options.minimum_buffer,
-        .maximum_buffer = options.maximum_buffer
+        .maximum_buffer = options.maximum_buffer,
+        .bind = options.binding(group)
     };
 
     if (privacy_)
@@ -143,31 +144,31 @@ connector::ptr net::to_connector(const settings::socks5& socks,
 
 // outbound (general)
 connector::ptr net::create_connector(const settings::socks5& socks,
-    const settings::tcp_server& options) NOEXCEPT
+    const settings::tcp_server& options, size_t group) NOEXCEPT
 {
     return to_connector(socks, options,
-        network_settings().connect_timeout(options));
+        network_settings().connect_timeout(options), group);
 }
 
 // outbound (seed)
-connector::ptr net::create_seed_connector() NOEXCEPT
+connector::ptr net::create_seed_connector(size_t group) NOEXCEPT
 {
     const auto& settings = network_settings();
 
     return to_connector(settings.outbound, settings.outbound,
-        settings.outbound.seeding_timeout());
+        settings.outbound.seeding_timeout(), group);
 }
 
 // outbound (manual)
-connector::ptr net::create_manual_connector() NOEXCEPT
+connector::ptr net::create_manual_connector(size_t group) NOEXCEPT
 {
     const auto& settings = network_settings();
 
-    return create_connector(settings.manual, settings.manual);
+    return create_connector(settings.manual, settings.manual, group);
 }
 
 // outbound (batch)
-connectors_ptr net::create_connectors(size_t count) NOEXCEPT
+connectors_ptr net::create_connectors(size_t count, size_t group) NOEXCEPT
 {
     const auto& settings = network_settings();
     const auto connects = to_shared<connectors>();
@@ -175,7 +176,7 @@ connectors_ptr net::create_connectors(size_t count) NOEXCEPT
 
     for (size_t connect{}; connect < count; ++connect)
         connects->push_back(create_connector(settings.outbound,
-            settings.outbound));
+            settings.outbound, group));
 
     return connects;
 }
@@ -633,16 +634,17 @@ code net::stop_hosts() NOEXCEPT
     return hosts_.stop();
 }
 
-void net::take(address_item_handler&& handler) NOEXCEPT
+void net::take(hosts::family family, address_item_handler&& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&net::do_take, this, std::move(handler)));
+        std::bind(&net::do_take, this, family, std::move(handler)));
 }
 
-void net::do_take(const address_item_handler& handler) NOEXCEPT
+void net::do_take(hosts::family family,
+    const address_item_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    hosts_.take(move_copy(handler));
+    hosts_.take(family, move_copy(handler));
 }
 
 void net::restore(const address_item_cptr& address,

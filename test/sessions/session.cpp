@@ -122,19 +122,19 @@ public:
         return session_peer::create_acceptor(context);
     }
 
-    connector::ptr create_seed_connector() NOEXCEPT override
+    connector::ptr create_seed_connector(size_t group) NOEXCEPT override
     {
-        return session_peer::create_seed_connector();
+        return session_peer::create_seed_connector(group);
     }
 
-    connector::ptr create_manual_connector() NOEXCEPT override
+    connector::ptr create_manual_connector(size_t group) NOEXCEPT override
     {
-        return session_peer::create_manual_connector();
+        return session_peer::create_manual_connector(group);
     }
 
-    connectors_ptr create_connectors(size_t count) NOEXCEPT override
+    connectors_ptr create_connectors(size_t count, size_t group) NOEXCEPT override
     {
-        return session_peer::create_connectors(count);
+        return session_peer::create_connectors(count, group);
     }
 
     ////size_t address_count() const NOEXCEPT override
@@ -221,10 +221,10 @@ public:
 
     connector::ptr to_connector(const settings::socks5& socks,
         const settings::tcp_server& options,
-        const steady_clock::duration& timeout) NOEXCEPT override
+        const steady_clock::duration& timeout, size_t group) NOEXCEPT override
     {
         ++connectors_;
-        return net::to_connector(socks, options, timeout);
+        return net::to_connector(socks, options, timeout, group);
     }
 
     size_t acceptors() const NOEXCEPT
@@ -237,7 +237,7 @@ public:
         return connectors_;
     }
 
-    void take(address_item_handler&& handler) NOEXCEPT override
+    void take(hosts::family, address_item_handler&& handler) NOEXCEPT override
     {
         handler(error::invalid_magic, {});
     }
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(session__create_manual_connector__always__expected)
     settings set(selection::mainnet);
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_manual_connector());
+    BOOST_REQUIRE(session.create_manual_connector(0));
     BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
 }
 
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(session__create_seed_connector__always__expected)
     settings set(selection::mainnet);
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_seed_connector());
+    BOOST_REQUIRE(session.create_seed_connector(0));
     BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
 }
 
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
     mock_net net(set, log);
     mock_session session(net, 1);
     constexpr auto expected = 42u;
-    const auto connectors = session.create_connectors(expected);
+    const auto connectors = session.create_connectors(expected, 0);
     BOOST_REQUIRE(connectors);
     BOOST_REQUIRE_EQUAL(connectors->size(), expected);
     BOOST_REQUIRE_EQUAL(net.connectors(), expected);
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
     mock_session session(net, 1);
 
     std::promise<code> taken;
-    session.take([&](const code& ec, const address_item_cptr&) NOEXCEPT
+    session.take(hosts::family::any, [&](const code& ec, const address_item_cptr&) NOEXCEPT
     {
         taken.set_value(ec);
     });

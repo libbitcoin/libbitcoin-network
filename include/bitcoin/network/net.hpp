@@ -250,14 +250,16 @@ protected:
     virtual acceptor::ptr create_acceptor(
         const socket::context& context={}) NOEXCEPT;
     virtual acceptor_sam::ptr create_acceptor_sam() NOEXCEPT;
-    virtual connector::ptr create_seed_connector() NOEXCEPT;
-    virtual connector::ptr create_manual_connector() NOEXCEPT;
-    virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
+    virtual connector::ptr create_seed_connector(size_t group) NOEXCEPT;
+    virtual connector::ptr create_manual_connector(size_t group) NOEXCEPT;
+    virtual connectors_ptr create_connectors(size_t count,
+        size_t group) NOEXCEPT;
     virtual connector::ptr create_connector(const settings::socks5& socks,
-        const settings::tcp_server& options) NOEXCEPT;
+        const settings::tcp_server& options, size_t group) NOEXCEPT;
     virtual connector::ptr to_connector(const settings::socks5& socks,
         const settings::tcp_server& options,
-        const socket::parameters::duration& connect_timeout) NOEXCEPT;
+        const socket::parameters::duration& connect_timeout,
+        size_t group) NOEXCEPT;
 
     /// Sequences.
     virtual void do_start(const result_handler& handler) NOEXCEPT;
@@ -274,7 +276,8 @@ protected:
     friend class session_peer;
 
     /// P2P hosts collection.
-    virtual void take(address_item_handler&& handler) NOEXCEPT;
+    virtual void take(hosts::family family,
+        address_item_handler&& handler) NOEXCEPT;
     virtual void restore(const address_item_cptr& address,
         result_handler&& complete) NOEXCEPT;
     virtual void fetch(address_handler&& handler) NOEXCEPT;
@@ -334,7 +337,8 @@ private:
     virtual code start_hosts() NOEXCEPT;
     virtual code stop_hosts() NOEXCEPT;
 
-    void do_take(const address_item_handler& handler) NOEXCEPT;
+    void do_take(hosts::family family,
+        const address_item_handler& handler) NOEXCEPT;
     void do_restore(const address_item_cptr& address,
         const result_handler& handler) NOEXCEPT;
     void do_fetch(const address_handler& handler) NOEXCEPT;

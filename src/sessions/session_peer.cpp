@@ -257,9 +257,10 @@ const session_peer::options_t& session_peer::options() const NOEXCEPT
 // Utilities.
 // ----------------------------------------------------------------------------
 
-void session_peer::take(address_item_handler&& handler) const NOEXCEPT
+void session_peer::take(hosts::family family,
+    address_item_handler&& handler) const NOEXCEPT
 {
-    network_.take(std::move(handler));
+    network_.take(family, std::move(handler));
 }
 
 void session_peer::fetch(address_handler&& handler) const NOEXCEPT

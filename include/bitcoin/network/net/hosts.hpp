@@ -46,6 +46,9 @@ class BCT_API hosts
 public:
     DELETE_COPY_MOVE_DESTRUCT(hosts);
 
+    /// Address family selector for take.
+    enum class family : uint8_t { any, ipv4, ipv6 };
+
     /// Construct an instance.
     hosts(const settings& settings, const logger& log,
         uint64_t required_services=messages::peer::service::node_none) NOEXCEPT;
@@ -74,8 +77,8 @@ public:
     /// Usage.
     /// -----------------------------------------------------------------------
 
-    /// Take one random connectable address from the table (non-const).
-    virtual void take(address_item_handler&& handler) NOEXCEPT;
+    /// Take one random connectable address of the family from the table.
+    virtual void take(family family, address_item_handler&& handler) NOEXCEPT;
 
     /// Store the address in the table (after use).
     virtual void restore(const address_item_cptr& host,
@@ -110,6 +113,9 @@ private:
         return std::find(buffer_.begin(), buffer_.end(), host);
         BC_POP_WARNING()
     }
+
+    static bool in_family(family family,
+        const messages::peer::address_item& item) NOEXCEPT;
 
     // Equality ignores timestamp and services.
     inline bool is_pooled(const messages::peer::address_item& host) NOEXCEPT

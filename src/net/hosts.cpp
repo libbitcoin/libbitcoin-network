@@ -150,8 +150,22 @@ size_t hosts::reserved() const NOEXCEPT
 // Usage.
 // ----------------------------------------------------------------------------
 
+// private/static
+bool hosts::in_family(family family, const address_item& item) NOEXCEPT
+{
+    switch (family)
+    {
+        case family::ipv4:
+            return is_v4(item.address);
+        case family::ipv6:
+            return is_v6(item.address) || is_cjdns(item.address);
+        default:
+            return true;
+    }
+}
+
 // O(N).
-void hosts::take(address_item_handler&& handler) NOEXCEPT
+void hosts::take(family family, address_item_handler&& handler) NOEXCEPT
 {
     if (stopped_)
     {
@@ -162,7 +176,7 @@ void hosts::take(address_item_handler&& handler) NOEXCEPT
     // Unconnectable addresses are retained, as they remain relayable.
     for (auto it = buffer_.begin(); it != buffer_.end();)
     {
-        if (!settings_.connectable(*it))
+        if (!settings_.connectable(*it) || !in_family(family, *it))
         {
             ++it;
             continue;

@@ -56,8 +56,8 @@ protected:
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) NOEXCEPT override;
 
-    /// Start outbound connection loop.
-    virtual void start_connect(const code& ec) NOEXCEPT;
+    /// Start outbound connection loop for the binding group.
+    virtual void start_connect(const code& ec, size_t group) NOEXCEPT;
 
 private:
     typedef race_quality<const code&, const socket::ptr&> race;
@@ -70,12 +70,15 @@ private:
         object_key key, const config::address& peer,
         const race::ptr& racer) NOEXCEPT;
     void handle_connect(const code& ec, const socket::ptr& socket,
-        object_key key) NOEXCEPT;
+        object_key key, size_t group) NOEXCEPT;
 
     void handle_channel_start(const code& ec,
         const channel::ptr& channel) NOEXCEPT;
     void handle_channel_stop(const code& ec,
-        const channel::ptr& channel) NOEXCEPT;
+        const channel::ptr& channel, size_t group) NOEXCEPT;
+
+    /// The address family of the binding group.
+    hosts::family family(size_t group) const NOEXCEPT;
 
     /// Restore an address to the address pool.
     inline bool maybe_reclaim(const code& ec) const NOEXCEPT;

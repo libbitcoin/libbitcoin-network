@@ -122,6 +122,12 @@ void socket::do_connect(const asio::endpoints& range,
     BC_ASSERT_MSG(!websocket(), "socket is upgraded");
     BC_ASSERT_MSG(!get_base().is_open(), "connect on open socket");
 
+    if (!bind_.address().is_unspecified())
+    {
+        do_connect_bound(range, zero, handler);
+        return;
+    }
+
     try
     {
         // Establishes a socket connection by trying each endpoint in sequence.
@@ -134,6 +140,79 @@ void socket::do_connect(const asio::endpoints& range,
         LOGF("Exception @ do_connect: " << e.what());
         handler(error::connect_failed);
     }
+}
+
+// The range connect closes the socket before each attempt, discarding the
+// binding, so bound endpoints (of the bound family) are attempted singly.
+void socket::do_connect_bound(const asio::endpoints& range, size_t index,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    index = next_bound(range, index);
+    if (index == range.size())
+    {
+        handler(error::resolve_failed);
+        return;
+    }
+
+    const auto peer = std::next(range.begin(), index)->endpoint();
+    auto& base = get_base();
+    boost_code ec{};
+    base.close(ec);
+    base.open(peer.protocol(), ec);
+
+    if (!ec)
+        base.bind(bind_, ec);
+
+    if (ec)
+    {
+        const auto code = error::asio_to_error_code(ec);
+        if (code == error::unknown) logx("bind", ec);
+        handler(code);
+        return;
+    }
+
+    try
+    {
+        base.async_connect(peer,
+            std::bind(&socket::handle_connect_bound,
+                shared_from_this(), _1, range, add1(index), peer, handler));
+    }
+    catch (const std::exception& e)
+    {
+        LOGF("Exception @ do_connect_bound: " << e.what());
+        handler(error::connect_failed);
+    }
+}
+
+void socket::handle_connect_bound(const boost_code& ec,
+    const asio::endpoints& range, size_t next, const asio::endpoint& peer,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec && !error::asio_is_canceled(ec) && !stopped_.load() &&
+        next_bound(range, next) != range.size())
+    {
+        do_connect_bound(range, next, handler);
+        return;
+    }
+
+    handle_connect(ec, peer, handler);
+}
+
+// private
+size_t socket::next_bound(const asio::endpoints& range,
+    size_t index) const NOEXCEPT
+{
+    const auto v4 = bind_.address().is_v4();
+    for (auto it = std::next(range.begin(), index); it != range.end();
+        ++it, ++index)
+        if (it->endpoint().address().is_v4() == v4)
+            break;
+
+    return index;
 }
 
 void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
