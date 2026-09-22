@@ -943,4 +943,230 @@ BOOST_AUTO_TEST_CASE(settings__peer_manual_peered__ipv6_host__expected)
     BOOST_REQUIRE(instance.peered(config::address{ "[2020:db8::3]" }));
 }
 
+// sam
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(settings_sam__bridged__default__false)
+{
+    const settings::sam instance{};
+    BOOST_REQUIRE(!instance.bridged());
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__bridged__bridge_port__true)
+{
+    settings::sam instance{};
+    instance.bridge = { "127.0.0.1:7656" };
+    BOOST_REQUIRE(instance.bridged());
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__authenticated__default__false)
+{
+    const settings::sam instance{};
+    BOOST_REQUIRE(!instance.authenticated());
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__authenticated__username__true)
+{
+    settings::sam instance{};
+    instance.username = "user";
+    BOOST_REQUIRE(instance.authenticated());
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__authenticated__password__true)
+{
+    settings::sam instance{};
+    instance.password = "pass";
+    BOOST_REQUIRE(instance.authenticated());
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__to_self__invalid_base64__unspecified)
+{
+    BOOST_REQUIRE(settings::sam::to_self("~not base64~") == config::address{});
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__to_self__short_key__unspecified)
+{
+    BOOST_REQUIRE(settings::sam::to_self(system::encode_base64(system::data_chunk(42, 0x00))) == config::address{});
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__to_self__truncated_certificate__unspecified)
+{
+    system::data_chunk key(387, 0x00);
+    key[385] = 0x00;
+    key[386] = 0x01;
+    BOOST_REQUIRE(settings::sam::to_self(system::encode_base64(key)) == config::address{});
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__to_self__destination_key__expected)
+{
+    system::data_chunk key(387, 0x42);
+    key[385] = 0x00;
+    key[386] = 0x00;
+    const auto self = settings::sam::to_self(system::encode_base64(key));
+    BOOST_REQUIRE_EQUAL(self.to_host(), "fhda2dy47lj3cckiek2od4f2jevgqthdtb4kuolbwmc32ppnuhaa.b32.i2p");
+    BOOST_REQUIRE_EQUAL(self.port(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__initialize__default__success_empty_key)
+{
+    settings::sam instance{};
+    BOOST_REQUIRE_EQUAL(instance.initialize(), error::success);
+    BOOST_REQUIRE(instance.key.empty());
+}
+
+BOOST_AUTO_TEST_CASE(settings_sam__initialize__missing_file__success_empty_key)
+{
+    settings::sam instance{};
+    instance.key_path = { TEST_PATH };
+    BOOST_REQUIRE_EQUAL(instance.initialize(), error::success);
+    BOOST_REQUIRE(instance.key.empty());
+}
+
+// secure_server
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(settings_secure_server__secure__default__false)
+{
+    const settings::secure_server instance{ "test" };
+    BOOST_REQUIRE(!instance.secure());
+    BOOST_REQUIRE(!instance.authenticate());
+}
+
+BOOST_AUTO_TEST_CASE(settings_secure_server__initialize_context__default__success)
+{
+    settings::secure_server instance{ "test" };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(settings_secure_server__contexts__default__monostate)
+{
+    const settings::secure_server instance{ "test" };
+    BOOST_REQUIRE(std::holds_alternative<std::monostate>(instance.clear_context()));
+    BOOST_REQUIRE(std::holds_alternative<std::monostate>(instance.secure_context()));
+}
+
+// tls_server
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(settings_tls_server__secure__default__false)
+{
+    const settings::tls_server instance{ "test" };
+    BOOST_REQUIRE(!instance.secure());
+    BOOST_REQUIRE(!instance.authenticate());
+}
+
+BOOST_AUTO_TEST_CASE(settings_tls_server__secure__safes_and_paths__true)
+{
+    settings::tls_server instance{ "test" };
+    instance.safes.emplace_back("127.0.0.1:443");
+    instance.cert_path = { "cert.pem" };
+    instance.key_path = { "key.pem" };
+    BOOST_REQUIRE(instance.secure());
+    BOOST_REQUIRE(!instance.authenticate());
+}
+
+BOOST_AUTO_TEST_CASE(settings_tls_server__authenticate__cert_auth__true)
+{
+    settings::tls_server instance{ "test" };
+    instance.safes.emplace_back("127.0.0.1:443");
+    instance.cert_path = { "cert.pem" };
+    instance.key_path = { "key.pem" };
+    instance.cert_auth = { "authority" };
+    BOOST_REQUIRE(instance.authenticate());
+}
+
+BOOST_AUTO_TEST_CASE(settings_tls_server__authenticate__cert_auth_unsecured__false)
+{
+    settings::tls_server instance{ "test" };
+    instance.cert_auth = { "authority" };
+    BOOST_REQUIRE(!instance.authenticate());
+}
+
+BOOST_AUTO_TEST_CASE(settings_tls_server__initialize_context__unsecured__success)
+{
+    settings::tls_server instance{ "test" };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BOOST_REQUIRE(instance.context);
+}
+
+BOOST_AUTO_TEST_CASE(settings_tls_server__initialize_context__twice__operation_failed)
+{
+    settings::tls_server instance{ "test" };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::operation_failed);
+}
+
+BOOST_AUTO_TEST_CASE(settings_tls_server__secure_context__initialized__ssl_context)
+{
+    settings::tls_server instance{ "test" };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BOOST_REQUIRE(std::holds_alternative<ref<asio::ssl::context>>(instance.secure_context()));
+}
+
+// zmtp_server
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(settings_zmtp_server__secure__default__false)
+{
+    const settings::zmtp_server instance{ "test" };
+    BOOST_REQUIRE(!instance.secure());
+    BOOST_REQUIRE(!instance.authenticate());
+}
+
+BOOST_AUTO_TEST_CASE(settings_zmtp_server__initialize_context__default__success)
+{
+    settings::zmtp_server instance{ "test" };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BOOST_REQUIRE(instance.context);
+}
+
+BOOST_AUTO_TEST_CASE(settings_zmtp_server__initialize_context__twice__operation_failed)
+{
+    settings::zmtp_server instance{ "test" };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::operation_failed);
+}
+
+BOOST_AUTO_TEST_CASE(settings_zmtp_server__clear_context__default__zmtp_context)
+{
+    const settings::zmtp_server instance{ "test" };
+    BOOST_REQUIRE(std::holds_alternative<ref<const zmtp::context>>(instance.clear_context()));
+}
+
+BOOST_AUTO_TEST_CASE(settings_zmtp_server__secure_context__initialized__zmtp_context)
+{
+    settings::zmtp_server instance{ "test" };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BOOST_REQUIRE(std::holds_alternative<ref<const zmtp::context>>(instance.secure_context()));
+}
+
+// settings
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(settings__construct__invalid_context__zero_identifier)
+{
+    const settings instance{ static_cast<system::chain::selection>(0xff) };
+    BOOST_REQUIRE_EQUAL(instance.identifier, 0u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__initialize__default__success_peer_identifier)
+{
+    settings instance{ system::chain::selection::mainnet };
+    BOOST_REQUIRE_EQUAL(instance.initialize(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.peer.identifier, instance.identifier);
+}
+
+BOOST_AUTO_TEST_CASE(settings__peer_context__always__peer)
+{
+    const settings instance{ system::chain::selection::mainnet };
+    BOOST_REQUIRE(std::holds_alternative<ref<const p2ps::context>>(instance.peer_context()));
+}
+
+BOOST_AUTO_TEST_CASE(settings__file__configured_path__hosts_cache)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.path = { TEST_DIRECTORY };
+    BOOST_REQUIRE_EQUAL(instance.file().filename(), "hosts.cache");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -164,7 +164,7 @@ struct BCT_API settings
         /// Initialize the ssl::context (required before use).
         code initialize_context() NOEXCEPT override;
 
-        /// Path to server private key decryption password (optional).
+        /// Server private key decryption password (optional).
         std::string key_pass{};
 
         /// Path to server private key file (PEM).
