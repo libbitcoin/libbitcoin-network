@@ -54,7 +54,7 @@ struct socks_setup_fixture
         acceptor(context), proxy(context)
     {
         log.stop();
-        settings.socks = { SOCKS_PROXY_ENDPOINT };
+        socks_settings.socks = { SOCKS_PROXY_ENDPOINT };
         const config::authority listen{ SOCKS_PROXY_ENDPOINT };
         acceptor.open(boost::asio::ip::tcp::v4());
         acceptor.set_option(boost::asio::socket_base::reuse_address(true));
@@ -82,7 +82,7 @@ struct socks_setup_fixture
             .maximum_request = 42
         };
         instance = std::make_shared<connector_socks>(log, strand,
-            pool.service(), suspended, std::move(params), settings);
+            pool.service(), suspended, std::move(params), socks_settings);
     }
 
     // Start a connect to the target, returns the future connect result.
@@ -151,7 +151,7 @@ struct socks_setup_fixture
     threadpool pool;
     std::atomic_bool suspended{ false };
     asio::strand strand;
-    settings::socks5 settings{};
+    settings::socks5 socks_settings{};
     connector_socks::ptr instance{};
     boost::asio::io_context context{};
     boost::asio::ip::tcp::acceptor acceptor;
@@ -307,8 +307,8 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__unoffered_method__socks_method
 
 BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authenticated__success, socks_setup_fixture)
 {
-    settings.username = "user";
-    settings.password = "pass";
+    socks_settings.username = "user";
+    socks_settings.password = "pass";
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
     accept();
@@ -330,8 +330,8 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authenticated__success, socks_
 
 BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authentication_rejected__socks_authentication, socks_setup_fixture)
 {
-    settings.username = "user";
-    settings.password = "pass";
+    socks_settings.username = "user";
+    socks_settings.password = "pass";
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
     accept();
