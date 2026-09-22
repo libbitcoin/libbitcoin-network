@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(hosts__counts__mixed_take_stop__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
 
     std::promise<std::pair<code, address_item_cptr>> promise_take{};
-    instance.take([&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    instance.take(hosts::family::any, [&](const code& ec, const address_item_cptr& item) NOEXCEPT
     {
         promise_take.set_value({ ec, item });
     });
@@ -265,6 +265,66 @@ BOOST_AUTO_TEST_CASE(hosts__counts__mixed_take_stop__expected)
     counts = instance.counts();
     BOOST_REQUIRE_EQUAL(counts.at(ipv4_index), 0u);
     BOOST_REQUIRE_EQUAL(counts.at(ipv6_index), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(hosts__take__family__expected)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    std::promise<code> promise_v6{};
+    instance.restore(system::to_shared(loopback42), [&](const code& ec) NOEXCEPT
+    {
+        promise_v6.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_v6.get_future().get(), error::success);
+
+    std::promise<code> promise_v4{};
+    instance.restore(system::to_shared(mapped42), [&](const code& ec) NOEXCEPT
+    {
+        promise_v4.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_v4.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 2u);
+
+    std::promise<std::pair<code, address_item_cptr>> promise_take_v4{};
+    instance.take(hosts::family::ipv4, [&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    {
+        promise_take_v4.set_value({ ec, item });
+    });
+
+    const auto taken_v4 = promise_take_v4.get_future().get();
+    BOOST_REQUIRE_EQUAL(taken_v4.first, error::success);
+    BOOST_REQUIRE(*taken_v4.second == mapped42);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+
+    std::promise<std::pair<code, address_item_cptr>> promise_take_v4_again{};
+    instance.take(hosts::family::ipv4, [&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    {
+        promise_take_v4_again.set_value({ ec, item });
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_take_v4_again.get_future().get().first, error::address_not_found);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+
+    std::promise<std::pair<code, address_item_cptr>> promise_take_v6{};
+    instance.take(hosts::family::ipv6, [&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    {
+        promise_take_v6.set_value({ ec, item });
+    });
+
+    const auto taken_v6 = promise_take_v6.get_future().get();
+    BOOST_REQUIRE_EQUAL(taken_v6.first, error::success);
+    BOOST_REQUIRE(*taken_v6.second == loopback42);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.stop();
 }
 
 BOOST_AUTO_TEST_CASE(hosts__counts__eviction__expected)
@@ -314,7 +374,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__unconnectable__address_not_found_and_retained)
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 
     std::promise<std::pair<code, address_item_cptr>> promise_take{};
-    instance.take([&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    instance.take(hosts::family::any, [&](const code& ec, const address_item_cptr& item) NOEXCEPT
     {
         promise_take.set_value({ ec, item });
     });
@@ -353,7 +413,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__mixed__connectable_taken_other_retained)
     BOOST_REQUIRE_EQUAL(instance.count(), 2u);
 
     std::promise<std::pair<code, address_item_cptr>> promise_take{};
-    instance.take([&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    instance.take(hosts::family::any, [&](const code& ec, const address_item_cptr& item) NOEXCEPT
     {
         promise_take.set_value({ ec, item });
     });
@@ -377,7 +437,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
     std::promise<std::pair<code, address_item_cptr>> promise{};
-    instance.take([&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    instance.take(hosts::family::any, [&](const code& ec, const address_item_cptr& item) NOEXCEPT
     {
         promise.set_value({ ec, item });
     });
@@ -410,7 +470,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 
     std::promise<std::pair<code, address_item_cptr>> promise_take{};
-    instance.take([&](const code& ec, const address_item_cptr& item) NOEXCEPT
+    instance.take(hosts::family::any, [&](const code& ec, const address_item_cptr& item) NOEXCEPT
     {
         promise_take.set_value({ ec, item });
     });

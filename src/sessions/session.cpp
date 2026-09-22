@@ -358,21 +358,22 @@ acceptor_sam::ptr session::create_acceptor_sam() NOEXCEPT
 }
 
 // outbound (seed)
-connector::ptr session::create_seed_connector() NOEXCEPT
+connector::ptr session::create_seed_connector(size_t group) NOEXCEPT
 {
-    return network_.create_seed_connector();
+    return network_.create_seed_connector(group);
 }
 
 // outbound (manual)
-connector::ptr session::create_manual_connector() NOEXCEPT
+connector::ptr session::create_manual_connector(size_t group) NOEXCEPT
 {
-    return network_.create_manual_connector();
+    return network_.create_manual_connector(group);
 }
 
 // outbound (batch)
-connectors_ptr session::create_connectors(size_t count) NOEXCEPT
+connectors_ptr session::create_connectors(size_t count,
+    size_t group) NOEXCEPT
 {
-    return network_.create_connectors(count);
+    return network_.create_connectors(count, group);
 }
 
 // Properties.

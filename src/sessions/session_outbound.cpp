@@ -104,7 +104,7 @@ void session_outbound::handle_started(const code& ec,
 
     // There is currently no way to vary the number of connections at runtime.
     for (size_t peer{}; peer < peers; ++peer)
-        start_connect(error::success);
+        start_connect(error::success, peer);
 
     // This is the end of the start sequence (actually at connector->connect).
     handler(error::success);
@@ -114,7 +114,7 @@ void session_outbound::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Attempt to connect one peer using a batch of connectors.
-void session_outbound::start_connect(const code&) NOEXCEPT
+void session_outbound::start_connect(const code&, size_t group) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -124,7 +124,7 @@ void session_outbound::start_connect(const code&) NOEXCEPT
 
     // Create a set of connectors for batched stop.
     const auto connectors = create_connectors(
-        network_settings().outbound.connect_batch_size);
+        network_settings().outbound.connect_batch_size, group);
 
     // Subscribe connector set to stop desubscriber.
     const auto key = subscribe_stop([=](const code&) NOEXCEPT
@@ -140,11 +140,11 @@ void session_outbound::start_connect(const code&) NOEXCEPT
     BC_POP_WARNING()
             
     // Race to first success or last failure.
-    racer->start(BIND(handle_connect, _1, _2, key));
+    racer->start(BIND(handle_connect, _1, _2, key, group));
 
     // Attempt to connect with unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        take(BIND(do_one, _1, _2, key, racer, connector));
+        take(family(group), BIND(do_one, _1, _2, key, racer, connector));
 }
 
 // Attempt to connect the given peer and invoke handle_one.
@@ -198,7 +198,7 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
-    const socket::ptr& socket, object_key key) NOEXCEPT
+    const socket::ptr& socket, object_key key, size_t group) NOEXCEPT
 {
     BC_ASSERT(stranded());
     ////COUNT(events::outbound3, key);
@@ -217,7 +217,7 @@ void session_outbound::handle_connect(const code& ec,
     {
         LOGS("Address pool is empty.");
         defer(network_settings().connect_timeout(options()),
-            BIND(start_connect, _1));
+            BIND(start_connect, _1, group));
         return;
     }
 
@@ -237,7 +237,7 @@ void session_outbound::handle_connect(const code& ec,
         }
 
         // Avoid tight loop with delay timer.
-        defer(BIND(start_connect, _1));
+        defer(BIND(start_connect, _1, group));
         return;
     }
 
@@ -245,7 +245,7 @@ void session_outbound::handle_connect(const code& ec,
 
     start_channel(channel,
         BIND(handle_channel_start, _1, channel),
-        BIND(handle_channel_stop, _1, channel));
+        BIND(handle_channel_stop, _1, channel, group));
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
@@ -271,7 +271,7 @@ void session_outbound::attach_protocols(
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
-    const channel::ptr& channel) NOEXCEPT
+    const channel::ptr& channel, size_t group) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -281,7 +281,18 @@ void session_outbound::handle_channel_stop(const code& ec,
     reclaim(ec, channel);
 
     // May still be tight iteration given fast handshake failure.
-    start_connect(ec);
+    start_connect(ec, group);
+}
+
+// private
+hosts::family session_outbound::family(size_t group) const NOEXCEPT
+{
+    if (options().proxied())
+        return hosts::family::any;
+
+    const auto nic = options().binding(group).address();
+    return nic.is_unspecified() ? hosts::family::any :
+        nic.is_v4() ? hosts::family::ipv4 : hosts::family::ipv6;
 }
 
 // Address reclaim and socket/channel stop.

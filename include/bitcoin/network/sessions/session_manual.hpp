@@ -90,6 +90,9 @@ private:
     void handle_channel_stop(const code& ec, const channel::ptr& channel,
         const config::endpoint& peer, const connector::ptr& connector,
         const channel_notifier& handler, object_key key) NOEXCEPT;
+
+    // This is protected by strand.
+    size_t groups_{};
 };
 
 } // namespace network

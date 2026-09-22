@@ -149,6 +149,14 @@ steady_clock::duration settings::tcp_server::expiration() const NOEXCEPT
     return minutes{ expiration_minutes };
 }
 
+asio::endpoint settings::tcp_server::binding(size_t group) const NOEXCEPT
+{
+    if (binds.empty())
+        return {};
+
+    return binds.at(group % binds.size()).to_endpoint();
+}
+
 // secure_server
 // ----------------------------------------------------------------------------
 

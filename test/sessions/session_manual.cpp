@@ -241,7 +241,7 @@ public:
     // Create mock connector to inject mock channel.
     connector::ptr to_connector(const settings::socks5& ,
         const settings::tcp_server& options,
-        const steady_clock::duration& timeout) NOEXCEPT override
+        const steady_clock::duration& timeout, size_t) NOEXCEPT override
     {
         connector::parameters params
         {

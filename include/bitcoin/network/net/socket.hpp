@@ -57,6 +57,7 @@ public:
         size_t maximum_buffer{};
         socket::context context{};
         zmtp::role role{};
+        asio::endpoint bind{};
     };
 
     /// Construct.
@@ -466,6 +467,8 @@ private:
     // connection
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
+    void do_connect_bound(const asio::endpoints& range, size_t index,
+        const result_handler& handler) NOEXCEPT;
     void do_handshake(const result_handler& handler) NOEXCEPT;
     void do_upgrade(const result_handler& handler) NOEXCEPT;
 
@@ -556,6 +559,9 @@ private:
         const result_handler& handler) NOEXCEPT;
     void handle_connect(const boost_code& ec, const asio::endpoint& peer,
         const result_handler& handler) NOEXCEPT;
+    void handle_connect_bound(const boost_code& ec,
+        const asio::endpoints& range, size_t next, const asio::endpoint& peer,
+        const result_handler& handler) NOEXCEPT;
     void handle_handshake(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_handshaked(const code& ec,
@@ -627,6 +633,8 @@ private:
     // ------------------------------------------------------------------------
 
     void logx(const std::string& context, const boost_code& ec) const NOEXCEPT;
+    size_t next_bound(const asio::endpoints& range,
+        size_t index) const NOEXCEPT;
 
 protected:
     // These are thread safe.
@@ -634,6 +642,7 @@ protected:
     const bool proxied_;
     const size_t maximum_;
     const size_t minimum_buffer_;
+    const asio::endpoint bind_;
     asio::strand strand_;
     asio::context& service_;
     const context context_;

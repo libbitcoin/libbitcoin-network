@@ -136,10 +136,10 @@ public:
     }
 
     // Capture first start_connect call.
-    void start_connect(const code&) NOEXCEPT override
+    void start_connect(const code&, size_t group) NOEXCEPT override
     {
         // Must be first to ensure connector::start_connect() preceeds promise release.
-        session_outbound::start_connect({});
+        session_outbound::start_connect({}, group);
 
         if (is_one(connects_))
             reconnect_.set_value(true);
@@ -222,7 +222,7 @@ public:
     using mock_session_outbound_one_address_count::
         mock_session_outbound_one_address_count;
 
-    void take(address_item_handler&& handler) const NOEXCEPT override
+    void take(hosts::family, address_item_handler&& handler) const NOEXCEPT override
     {
         // Default address is ipv6, will case disabled(address) true.
         handler(error::success, system::to_shared<const address_item>());
@@ -245,7 +245,7 @@ public:
     // Create mock connector to inject mock channel.
     connector::ptr to_connector(const settings::socks5& ,
         const settings::tcp_server& options,
-        const steady_clock::duration& timeout) NOEXCEPT override
+        const steady_clock::duration& timeout, size_t) NOEXCEPT override
     {
         connector::parameters params
         {
@@ -367,7 +367,7 @@ public:
     // Create mock connector to inject mock channel.
     connector::ptr to_connector(const settings::socks5& ,
         const settings::tcp_server& options,
-        const steady_clock::duration& timeout) NOEXCEPT override
+        const steady_clock::duration& timeout, size_t) NOEXCEPT override
     {
         if (connector_)
             return connector_;

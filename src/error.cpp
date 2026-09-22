@@ -347,9 +347,11 @@ code errc_to_error_code(const boost_code& ec) NOEXCEPT
     if (!ec)
         return error::success;
 
-    if (ec.category() == boost::system::generic_category())
+    // Platform (system) codes are mapped to their generic condition.
+    const auto condition = ec.default_error_condition();
+    if (condition.category() == boost::system::generic_category())
     {
-        switch (static_cast<boost_errc_t>(ec.value()))
+        switch (static_cast<boost_errc_t>(condition.value()))
         {
             case boost_errc_t::connection_aborted:
             case boost_errc_t::operation_canceled:
@@ -443,8 +445,11 @@ code errc_to_error_code(const boost_code& ec) NOEXCEPT
                 return error::file_system;
 
             default:
-                return error::errc_unknown;
+                break;
         }
+
+        if (ec.category() == boost::system::generic_category())
+            return error::errc_unknown;
     }
 
     return error::unknown;

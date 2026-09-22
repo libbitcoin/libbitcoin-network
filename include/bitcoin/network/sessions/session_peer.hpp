@@ -42,8 +42,9 @@ public:
     /// Utilities.
     /// -----------------------------------------------------------------------
 
-    /// Take an entry from address pool.
-    virtual void take(address_item_handler&& handler) const NOEXCEPT;
+    /// Take an entry of the family from address pool.
+    virtual void take(hosts::family family,
+        address_item_handler&& handler) const NOEXCEPT;
 
     /// Fetch a subset of entries (count based on config) from address pool.
     virtual void fetch(address_handler&& handler) const NOEXCEPT;
