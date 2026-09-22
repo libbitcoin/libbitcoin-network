@@ -206,7 +206,7 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__ipv6_reply__success, socks_set
     accept();
 
     greet(socks_method_clear);
-    const auto request = read(4);
+    read(4);
     const auto length = read(1);
     read(length.front() + 2u);
 
