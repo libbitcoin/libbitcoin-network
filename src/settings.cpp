@@ -320,7 +320,7 @@ system::string_list settings::http_server::origin_names() const NOEXCEPT
 {
     // secure changes default port from 80 to 443.
     const auto port = secure() ? http::default_tls : http::default_http;
-    return config::to_host_names(hosts, port);
+    return config::to_host_names(origins, port);
 }
 
 // local
