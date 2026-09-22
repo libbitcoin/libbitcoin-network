@@ -182,6 +182,9 @@ protected:
     /// The local endpoint of the channel.
     virtual config::endpoint binding() const NOEXCEPT;
 
+    /// The channel slot is at or above the slot count (never if slotless).
+    virtual bool is_terminal(size_t slots) const NOEXCEPT;
+
     /// The nonce of the channel.
     virtual uint64_t nonce() const NOEXCEPT;
 

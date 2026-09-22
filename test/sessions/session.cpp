@@ -122,19 +122,19 @@ public:
         return session_peer::create_acceptor(context);
     }
 
-    connector::ptr create_seed_connector(size_t group) NOEXCEPT override
+    connector::ptr create_seed_connector(size_t slot) NOEXCEPT override
     {
-        return session_peer::create_seed_connector(group);
+        return session_peer::create_seed_connector(slot);
     }
 
-    connector::ptr create_manual_connector(size_t group) NOEXCEPT override
+    connector::ptr create_manual_connector(size_t slot) NOEXCEPT override
     {
-        return session_peer::create_manual_connector(group);
+        return session_peer::create_manual_connector(slot);
     }
 
-    connectors_ptr create_connectors(size_t count, size_t group) NOEXCEPT override
+    connectors_ptr create_connectors(size_t count, size_t slot) NOEXCEPT override
     {
-        return session_peer::create_connectors(count, group);
+        return session_peer::create_connectors(count, slot);
     }
 
     ////size_t address_count() const NOEXCEPT override
@@ -221,10 +221,10 @@ public:
 
     connector::ptr to_connector(const settings::socks5& socks,
         const settings::tcp_server& options,
-        const steady_clock::duration& timeout, size_t group) NOEXCEPT override
+        const steady_clock::duration& timeout, size_t slot) NOEXCEPT override
     {
         ++connectors_;
-        return net::to_connector(socks, options, timeout, group);
+        return net::to_connector(socks, options, timeout, slot);
     }
 
     size_t acceptors() const NOEXCEPT

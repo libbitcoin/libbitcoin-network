@@ -98,7 +98,7 @@ void session_manual::connect(const config::endpoint& peer,
     BC_ASSERT(stranded());
 
     // Create a persistent connector for the manual connection.
-    const auto connector = create_manual_connector(groups_++);
+    const auto connector = create_manual_connector(slots_++);
 
     // The key drops the connector with its subscription (see notify).
     const auto key = subscribe_stop([=](const code&) NOEXCEPT

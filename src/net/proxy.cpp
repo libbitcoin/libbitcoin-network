@@ -283,6 +283,11 @@ const config::endpoint& proxy::binding() const NOEXCEPT
     return socket_->binding();
 }
 
+size_t proxy::slot() const NOEXCEPT
+{
+    return socket_->slot();
+}
+
 BC_POP_WARNING()
 
 } // namespace network

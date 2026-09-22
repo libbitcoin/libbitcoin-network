@@ -41,7 +41,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 session_outbound::session_outbound(net& network, uint64_t identifier) NOEXCEPT
   : session_peer(network, identifier, network.network_settings().outbound),
-    tracker<session_outbound>(network)
+    tracker<session_outbound>(network),
+    connections_(network.network_settings().outbound.connections)
 {
 }
 
@@ -97,24 +98,59 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
-    const auto peers = network_settings().outbound.connections;
-
     LOG_ONLY(const auto batch = network_settings().outbound.connect_batch_size;)
-    LOGN("Create " << peers << " connections " << batch << " at a time.");
+    LOGN("Create " << connections_ << " connections " << batch << " at a time.");
 
-    // There is currently no way to vary the number of connections at runtime.
-    for (size_t peer{}; peer < peers; ++peer)
-        start_connect(error::success, peer);
+    for (size_t slot{}; slot < connections_; ++slot)
+        start_connect(error::success, slot);
 
     // This is the end of the start sequence (actually at connector->connect).
     handler(error::success);
+}
+
+// Connection count.
+// ----------------------------------------------------------------------------
+
+size_t session_outbound::connections() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return connections_;
+}
+
+// Applied at start if the session is not started.
+void session_outbound::set_connections(size_t count) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (count == connections_)
+        return;
+
+    const auto previous = connections_;
+    connections_ = count;
+
+    if (stopped())
+        return;
+
+    LOGN("Change " << previous << " connections to " << count << ".");
+
+    // Drop the slots at or above the count (each ends upon its channel stop).
+    if (count < previous)
+    {
+        broadcast<terminator>(to_shared<terminator>(error::channel_dropped,
+            count), zero);
+        return;
+    }
+
+    // Start the slots from the previous count to the new count.
+    for (auto slot = previous; slot < count; ++slot)
+        start_connect(error::success, slot);
 }
 
 // Connnect cycle.
 // ----------------------------------------------------------------------------
 
 // Attempt to connect one peer using a batch of connectors.
-void session_outbound::start_connect(const code&, size_t group) NOEXCEPT
+void session_outbound::start_connect(const code&, size_t slot) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -122,9 +158,13 @@ void session_outbound::start_connect(const code&, size_t group) NOEXCEPT
     if (stopped())
         return;
 
+    // Ends the slot when at or above the connection count.
+    if (slot >= connections_)
+        return;
+
     // Create a set of connectors for batched stop.
     const auto connectors = create_connectors(
-        network_settings().outbound.connect_batch_size, group);
+        network_settings().outbound.connect_batch_size, slot);
 
     // Subscribe connector set to stop desubscriber.
     const auto key = subscribe_stop([=](const code&) NOEXCEPT
@@ -140,11 +180,11 @@ void session_outbound::start_connect(const code&, size_t group) NOEXCEPT
     BC_POP_WARNING()
             
     // Race to first success or last failure.
-    racer->start(BIND(handle_connect, _1, _2, key, group));
+    racer->start(BIND(handle_connect, _1, _2, key, slot));
 
     // Attempt to connect with unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        take(family(group), BIND(do_one, _1, _2, key, racer, connector));
+        take(family(slot), BIND(do_one, _1, _2, key, racer, connector));
 }
 
 // Attempt to connect the given peer and invoke handle_one.
@@ -198,7 +238,7 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
-    const socket::ptr& socket, object_key key, size_t group) NOEXCEPT
+    const socket::ptr& socket, object_key key, size_t slot) NOEXCEPT
 {
     BC_ASSERT(stranded());
     ////COUNT(events::outbound3, key);
@@ -213,11 +253,18 @@ void session_outbound::handle_connect(const code& ec,
         return;
     }
 
+    // Ends the slot when at or above the connection count.
+    if (slot >= connections_)
+    {
+        reclaim(ec, socket);
+        return;
+    }
+
     if (ec == error::address_not_found)
     {
         LOGS("Address pool is empty.");
         defer(network_settings().connect_timeout(options()),
-            BIND(start_connect, _1, group));
+            BIND(start_connect, _1, slot));
         return;
     }
 
@@ -237,7 +284,7 @@ void session_outbound::handle_connect(const code& ec,
         }
 
         // Avoid tight loop with delay timer.
-        defer(BIND(start_connect, _1, group));
+        defer(BIND(start_connect, _1, slot));
         return;
     }
 
@@ -245,7 +292,7 @@ void session_outbound::handle_connect(const code& ec,
 
     start_channel(channel,
         BIND(handle_channel_start, _1, channel),
-        BIND(handle_channel_stop, _1, channel, group));
+        BIND(handle_channel_stop, _1, channel, slot));
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
@@ -271,7 +318,7 @@ void session_outbound::attach_protocols(
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
-    const channel::ptr& channel, size_t group) NOEXCEPT
+    const channel::ptr& channel, size_t slot) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -281,16 +328,16 @@ void session_outbound::handle_channel_stop(const code& ec,
     reclaim(ec, channel);
 
     // May still be tight iteration given fast handshake failure.
-    start_connect(ec, group);
+    start_connect(ec, slot);
 }
 
 // private
-hosts::family session_outbound::family(size_t group) const NOEXCEPT
+hosts::family session_outbound::family(size_t slot) const NOEXCEPT
 {
     if (options().proxied())
         return hosts::family::any;
 
-    const auto nic = options().binding(group).address();
+    const auto nic = options().binding(slot).address();
     return nic.is_unspecified() ? hosts::family::any :
         nic.is_v4() ? hosts::family::ipv4 : hosts::family::ipv6;
 }
@@ -316,6 +363,7 @@ inline bool session_outbound::always_reclaim(const code& ec) const NOEXCEPT
     // Terminations that worked or might have worked.
     return ec == error::success
         || ec == error::operation_canceled
+        || ec == error::channel_dropped
         || ec == error::channel_expired;
 }
 

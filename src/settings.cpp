@@ -149,12 +149,12 @@ steady_clock::duration settings::tcp_server::expiration() const NOEXCEPT
     return minutes{ expiration_minutes };
 }
 
-asio::endpoint settings::tcp_server::binding(size_t group) const NOEXCEPT
+asio::endpoint settings::tcp_server::binding(size_t slot) const NOEXCEPT
 {
     if (binds.empty())
         return {};
 
-    return binds.at(group % binds.size()).to_endpoint();
+    return binds.at(slot % binds.size()).to_endpoint();
 }
 
 // secure_server

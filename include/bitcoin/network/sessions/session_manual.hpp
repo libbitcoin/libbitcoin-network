@@ -92,7 +92,7 @@ private:
         const channel_notifier& handler, object_key key) NOEXCEPT;
 
     // This is protected by strand.
-    size_t groups_{};
+    size_t slots_{};
 };
 
 } // namespace network

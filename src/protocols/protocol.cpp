@@ -138,6 +138,12 @@ config::endpoint protocol::binding() const NOEXCEPT
     BC_POP_WARNING()
 }
 
+bool protocol::is_terminal(size_t slots) const NOEXCEPT
+{
+    const auto slot = channel_->slot();
+    return slot != max_size_t && slot >= slots;
+}
+
 uint64_t protocol::nonce() const NOEXCEPT
 {
     return channel_->nonce();

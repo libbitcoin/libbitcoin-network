@@ -119,7 +119,7 @@ acceptor_sam::ptr net::create_acceptor_sam() NOEXCEPT
 
 connector::ptr net::to_connector(const settings::socks5& socks,
     const settings::tcp_server& options,
-    const steady_clock::duration& connect_timeout, size_t group) NOEXCEPT
+    const steady_clock::duration& connect_timeout, size_t slot) NOEXCEPT
 {
     socket::parameters params
     {
@@ -127,7 +127,8 @@ connector::ptr net::to_connector(const settings::socks5& socks,
         .maximum_request = options.maximum_request,
         .minimum_buffer = options.minimum_buffer,
         .maximum_buffer = options.maximum_buffer,
-        .bind = options.binding(group)
+        .bind = options.binding(slot),
+        .slot = slot
     };
 
     if (privacy_)
@@ -144,31 +145,31 @@ connector::ptr net::to_connector(const settings::socks5& socks,
 
 // outbound (general)
 connector::ptr net::create_connector(const settings::socks5& socks,
-    const settings::tcp_server& options, size_t group) NOEXCEPT
+    const settings::tcp_server& options, size_t slot) NOEXCEPT
 {
     return to_connector(socks, options,
-        network_settings().connect_timeout(options), group);
+        network_settings().connect_timeout(options), slot);
 }
 
 // outbound (seed)
-connector::ptr net::create_seed_connector(size_t group) NOEXCEPT
+connector::ptr net::create_seed_connector(size_t slot) NOEXCEPT
 {
     const auto& settings = network_settings();
 
     return to_connector(settings.outbound, settings.outbound,
-        settings.outbound.seeding_timeout(), group);
+        settings.outbound.seeding_timeout(), slot);
 }
 
 // outbound (manual)
-connector::ptr net::create_manual_connector(size_t group) NOEXCEPT
+connector::ptr net::create_manual_connector(size_t slot) NOEXCEPT
 {
     const auto& settings = network_settings();
 
-    return create_connector(settings.manual, settings.manual, group);
+    return create_connector(settings.manual, settings.manual, slot);
 }
 
 // outbound (batch)
-connectors_ptr net::create_connectors(size_t count, size_t group) NOEXCEPT
+connectors_ptr net::create_connectors(size_t count, size_t slot) NOEXCEPT
 {
     const auto& settings = network_settings();
     const auto connects = to_shared<connectors>();
@@ -176,7 +177,7 @@ connectors_ptr net::create_connectors(size_t count, size_t group) NOEXCEPT
 
     for (size_t connect{}; connect < count; ++connect)
         connects->push_back(create_connector(settings.outbound,
-            settings.outbound, group));
+            settings.outbound, slot));
 
     return connects;
 }

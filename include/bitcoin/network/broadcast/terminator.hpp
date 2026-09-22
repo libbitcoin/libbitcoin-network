@@ -45,10 +45,16 @@ public:
     terminator(const race::ptr& complete, const code& reason,
         uint64_t channel, const config::endpoint& endpoint={}) NOEXCEPT;
 
+    /// Stop the channels of slots at or above the slot count (no round).
+    terminator(const code& reason, size_t slots) NOEXCEPT;
+
     /// The message targets the identified channel, its intended target, or
     /// its resolved address (unresolved for a proxied connection).
     bool targets(uint64_t identifier, const config::address& address,
         const config::endpoint& endpoint) const NOEXCEPT;
+
+    /// The slot count at or above which channels stop (max_size_t if none).
+    size_t slots() const NOEXCEPT;
 
     /// The code with which the targeted channel stops.
     const code& reason() const NOEXCEPT;
@@ -61,6 +67,7 @@ private:
     const race::ptr race_;
     const code reason_;
     const uint64_t channel_;
+    const size_t slots_;
     const config::endpoint endpoint_;
     const config::address address_;
 };
