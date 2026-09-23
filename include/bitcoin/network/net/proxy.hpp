@@ -120,6 +120,9 @@ public:
     /// Get the endpoint of the local socket.
     const config::endpoint& binding() const NOEXCEPT;
 
+    /// Get the outbound slot of the socket (max_size_t if none).
+    size_t slot() const NOEXCEPT;
+
 protected:
     proxy(const socket::ptr& socket, uint32_t rate_limit,
         size_t maximum_backlog) NOEXCEPT;

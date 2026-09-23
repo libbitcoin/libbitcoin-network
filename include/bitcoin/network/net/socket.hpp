@@ -58,6 +58,7 @@ public:
         socket::context context{};
         zmtp::role role{};
         asio::endpoint bind{};
+        size_t slot{ max_size_t };
     };
 
     /// Construct.
@@ -284,6 +285,9 @@ public:
     /// Get the endpoint of the local socket, established by connection. For a
     /// proxied connection this is the local endpoint of the proxy connection.
     virtual const config::endpoint& binding() const NOEXCEPT;
+
+    /// Get the outbound slot, as passed via construct (max_size_t if none).
+    virtual size_t slot() const NOEXCEPT;
 
     /// Set the remote host address and endpoint (requires strand).
     /// A proxied acceptor must invoke this once its negotiation has
@@ -643,6 +647,7 @@ protected:
     const size_t maximum_;
     const size_t minimum_buffer_;
     const asio::endpoint bind_;
+    const size_t slot_;
     asio::strand strand_;
     asio::context& service_;
     const context context_;

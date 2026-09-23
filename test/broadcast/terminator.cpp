@@ -66,10 +66,45 @@ BOOST_AUTO_TEST_CASE(terminator__targets__unspecified_port__any_port)
     BOOST_REQUIRE(!instance.targets(42, other, config::endpoint{ "24.24.24.24:4242" }));
 }
 
+BOOST_AUTO_TEST_CASE(terminator__slots__slots__expected)
+{
+    const terminator instance{ error::channel_dropped, 8 };
+    BOOST_REQUIRE_EQUAL(instance.slots(), 8u);
+}
+
+BOOST_AUTO_TEST_CASE(terminator__slots__identity__max_size_t)
+{
+    const terminator instance{ unused_race(), error::channel_stopped, 42 };
+    BOOST_REQUIRE_EQUAL(instance.slots(), max_size_t);
+}
+BOOST_AUTO_TEST_CASE(terminator__targets__identity_from_slot__not_targeted)
+{
+    const config::address address{ "42.42.42.42:4242" };
+    const config::endpoint endpoint{ "42.42.42.42:4242" };
+    const terminator instance{ error::channel_dropped, 0 };
+
+    BOOST_REQUIRE(!instance.targets(0, address, endpoint));
+    BOOST_REQUIRE(!instance.targets(42, address, endpoint));
+    BOOST_REQUIRE(!instance.targets(0, config::address{}, config::endpoint{}));
+}
+
 BOOST_AUTO_TEST_CASE(terminator__reason__always__expected)
 {
     const terminator instance{ unused_race(), error::channel_dropped, 42 };
     BOOST_REQUIRE_EQUAL(instance.reason(), error::channel_dropped);
+}
+
+BOOST_AUTO_TEST_CASE(terminator__reason__slot__expected)
+{
+    const terminator instance{ error::channel_dropped, 8 };
+    BOOST_REQUIRE_EQUAL(instance.reason(), error::channel_dropped);
+}
+
+BOOST_AUTO_TEST_CASE(terminator__stopped__slot__no_round)
+{
+    const terminator instance{ error::channel_dropped, 8 };
+    instance.stopped();
+    BOOST_REQUIRE_EQUAL(instance.slots(), 8u);
 }
 
 BOOST_AUTO_TEST_CASE(terminator__stopped__always__race_success)

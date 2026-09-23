@@ -250,16 +250,16 @@ protected:
     virtual acceptor::ptr create_acceptor(
         const socket::context& context={}) NOEXCEPT;
     virtual acceptor_sam::ptr create_acceptor_sam() NOEXCEPT;
-    virtual connector::ptr create_seed_connector(size_t group) NOEXCEPT;
-    virtual connector::ptr create_manual_connector(size_t group) NOEXCEPT;
+    virtual connector::ptr create_seed_connector(size_t slot) NOEXCEPT;
+    virtual connector::ptr create_manual_connector(size_t slot) NOEXCEPT;
     virtual connectors_ptr create_connectors(size_t count,
-        size_t group) NOEXCEPT;
+        size_t slot) NOEXCEPT;
     virtual connector::ptr create_connector(const settings::socks5& socks,
-        const settings::tcp_server& options, size_t group) NOEXCEPT;
+        const settings::tcp_server& options, size_t slot) NOEXCEPT;
     virtual connector::ptr to_connector(const settings::socks5& socks,
         const settings::tcp_server& options,
         const socket::parameters::duration& connect_timeout,
-        size_t group) NOEXCEPT;
+        size_t slot) NOEXCEPT;
 
     /// Sequences.
     virtual void do_start(const result_handler& handler) NOEXCEPT;

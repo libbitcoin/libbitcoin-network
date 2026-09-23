@@ -26,20 +26,36 @@
 namespace libbitcoin {
 namespace network {
 
+using namespace system;
+
 // The address is unspecified for a named target, matching no address.
 terminator::terminator(const race::ptr& complete, const code& reason,
     uint64_t channel, const config::endpoint& endpoint) NOEXCEPT
   : race_(complete),
     reason_(reason),
     channel_(channel),
+    slots_(max_size_t),
     endpoint_(endpoint),
     address_(endpoint)
+{
+}
+
+terminator::terminator(const code& reason, size_t slots) NOEXCEPT
+  : race_(),
+    reason_(reason),
+    channel_(zero),
+    slots_(slots),
+    endpoint_(),
+    address_()
 {
 }
 
 bool terminator::targets(uint64_t identifier, const config::address& address,
     const config::endpoint& endpoint) const NOEXCEPT
 {
+    if (slots_ != max_size_t)
+        return false;
+
     if (!is_zero(channel_))
         return channel_ == identifier;
 
@@ -52,6 +68,11 @@ bool terminator::targets(uint64_t identifier, const config::address& address,
         address_ == address;
 }
 
+size_t terminator::slots() const NOEXCEPT
+{
+    return slots_;
+}
+
 const code& terminator::reason() const NOEXCEPT
 {
     return reason_;
@@ -59,7 +80,8 @@ const code& terminator::reason() const NOEXCEPT
 
 void terminator::stopped() const NOEXCEPT
 {
-    race_->finish(error::success);
+    if (race_)
+        race_->finish(error::success);
 }
 
 } // namespace network

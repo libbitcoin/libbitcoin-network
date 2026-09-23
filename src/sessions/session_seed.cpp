@@ -125,10 +125,10 @@ void session_seed::handle_started(const code& ec,
     // Invoke sufficient on count, invoke complete with all seeds stopped.
     racer->start(move_copy(handler), BIND(stop_seed, _1));
 
-    size_t group{};
+    size_t slot{};
     for (const auto& seed: network_settings().outbound.seeds)
     {
-        const auto connector = create_seed_connector(group++);
+        const auto connector = create_seed_connector(slot++);
         subscribe_stop([=](const code&) NOEXCEPT
         {
             connector->stop();

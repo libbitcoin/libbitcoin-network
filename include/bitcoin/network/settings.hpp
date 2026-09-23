@@ -126,8 +126,8 @@ struct BCT_API settings
         virtual steady_clock::duration inactivity() const NOEXCEPT;
         virtual steady_clock::duration expiration() const NOEXCEPT;
 
-        /// The outbound binding of the group, unspecified if no binds.
-        virtual asio::endpoint binding(size_t group) const NOEXCEPT;
+        /// The outbound binding of the slot, unspecified if no binds.
+        virtual asio::endpoint binding(size_t slot) const NOEXCEPT;
     };
 
     struct secure_server

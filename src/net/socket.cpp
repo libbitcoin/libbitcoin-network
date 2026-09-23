@@ -70,6 +70,7 @@ socket::socket(const logger& log, asio::context& service,
     maximum_(params.maximum_request),
     minimum_buffer_(params.minimum_buffer),
     bind_(params.bind),
+    slot_(params.slot),
     strand_(service.get_executor()),
     service_(service),
     context_(params.context),
@@ -208,6 +209,11 @@ const config::endpoint& socket::endpoint() const NOEXCEPT
 const config::endpoint& socket::binding() const NOEXCEPT
 {
     return binding_;
+}
+
+size_t socket::slot() const NOEXCEPT
+{
+    return slot_;
 }
 
 void socket::set_address(const config::address& address) NOEXCEPT

@@ -200,15 +200,15 @@ protected:
     /// Create a channel acceptor (inbound via sam bridge).
     virtual acceptor_sam::ptr create_acceptor_sam() NOEXCEPT;
 
-    /// Create a seed channel connector for the binding group.
-    virtual connector::ptr create_seed_connector(size_t group) NOEXCEPT;
+    /// Create a seed channel connector for the slot.
+    virtual connector::ptr create_seed_connector(size_t slot) NOEXCEPT;
 
-    /// Create a manual channel connector for the binding group.
-    virtual connector::ptr create_manual_connector(size_t group) NOEXCEPT;
+    /// Create a manual channel connector for the slot.
+    virtual connector::ptr create_manual_connector(size_t slot) NOEXCEPT;
 
-    /// Create a batch of outbound channel connectors for the binding group.
+    /// Create a batch of outbound channel connectors for the slot.
     virtual connectors_ptr create_connectors(size_t count,
-        size_t group) NOEXCEPT;
+        size_t slot) NOEXCEPT;
 
     /// Create a channel from the started socket.
     virtual channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT = 0;
