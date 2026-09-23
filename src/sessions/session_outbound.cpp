@@ -131,7 +131,7 @@ void session_outbound::set_connections(size_t count) NOEXCEPT
     if (stopped())
         return;
 
-    LOGN("Change " << previous << " connections to " << count << ".");
+    LOGN("Changing " << previous << " connections to " << count << ".");
 
     // Drop the slots at or above the count (each ends upon its channel stop).
     if (count < previous)
