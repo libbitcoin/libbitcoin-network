@@ -63,6 +63,40 @@ constexpr bool is_cjdns(const ip_address& ip) NOEXCEPT
     return ip.front() == cjdns_prefix;
 }
 
+/// The ipv6 documentation ranges (2001:db8::/32 rfc3849, 3fff::/20 rfc9637).
+constexpr system::data_array<4> documentation_prefix
+{
+    0x20, 0x01, 0x0d, 0xb8
+};
+
+constexpr system::data_array<2> documentation_wide_prefix
+{
+    0x3f, 0xff
+};
+
+/// The ipv4 documentation ranges (rfc5737 TEST-NET-1/2/3, each a /24).
+constexpr system::data_array<3> test_net1_prefix{ 192, 0, 2 };
+constexpr system::data_array<3> test_net2_prefix{ 198, 51, 100 };
+constexpr system::data_array<3> test_net3_prefix{ 203, 0, 113 };
+
+/// True if ip_address is within a documentation range (never assigned).
+constexpr bool is_documentation(const ip_address& ip) NOEXCEPT
+{
+    using namespace system::config;
+    const auto net = std::next(ip.begin(), ip_map_prefix.size());
+    const auto has = [](const auto& prefix, auto it) NOEXCEPT
+    {
+        return std::equal(prefix.begin(), prefix.end(), it);
+    };
+
+    // An ipv4 network follows the map prefix, the wide ipv6 range is a /20.
+    return is_v4(ip) ?
+        (has(test_net1_prefix, net) || has(test_net2_prefix, net) ||
+            has(test_net3_prefix, net)) :
+        (has(documentation_prefix, ip.begin()) ||
+            (has(documentation_wide_prefix, ip.begin()) && ip.at(2) < 0x10));
+}
+
 /// Distinct type per network, as variant alternatives must not repeat.
 template <uint8_t Id, size_t Size, size_t Wire = Size>
 struct address_of

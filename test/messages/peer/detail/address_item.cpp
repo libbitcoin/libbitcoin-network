@@ -117,6 +117,63 @@ BOOST_AUTO_TEST_CASE(address_item__is_cjdns__adjacent_range__false)
     BOOST_REQUIRE(!is_cjdns(ip_address{ 0xfd, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
 }
 
+// is_documentation
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__rfc3849__true)
+{
+    BOOST_REQUIRE(is_documentation(ip_address{ 0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__rfc3849_adjacent__false)
+{
+    BOOST_REQUIRE(!is_documentation(ip_address{ 0x20, 0x01, 0x0d, 0xb9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__rfc9637_first__true)
+{
+    BOOST_REQUIRE(is_documentation(ip_address{ 0x3f, 0xff, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__rfc9637_last__true)
+{
+    BOOST_REQUIRE(is_documentation(ip_address{ 0x3f, 0xff, 0x0f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__rfc9637_adjacent__false)
+{
+    BOOST_REQUIRE(!is_documentation(ip_address{ 0x3f, 0xff, 0x10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__loopback_v6__false)
+{
+    BOOST_REQUIRE(!is_documentation(loopback_ip_address));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__test_net1__true)
+{
+    BOOST_REQUIRE(is_documentation(ip_address{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 192, 0, 2, 1 }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__test_net2__true)
+{
+    BOOST_REQUIRE(is_documentation(ip_address{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 198, 51, 100, 1 }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__test_net3__true)
+{
+    BOOST_REQUIRE(is_documentation(ip_address{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 203, 0, 113, 1 }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__test_net1_adjacent__false)
+{
+    BOOST_REQUIRE(!is_documentation(ip_address{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 192, 0, 3, 1 }));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_documentation__unmapped_test_net1__false)
+{
+    BOOST_REQUIRE(!is_documentation(ip_address{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192, 0, 2, 1 }));
+}
+
 BOOST_AUTO_TEST_CASE(address_item__unspecified_timestamp__always__expected)
 {
     BOOST_REQUIRE_EQUAL(unspecified_timestamp, 0u);
@@ -306,6 +363,26 @@ BOOST_AUTO_TEST_CASE(address_item__deserialize__onion_cat__invalid)
     BOOST_REQUIRE(!source);
 }
 
+BOOST_AUTO_TEST_CASE(address_item__deserialize__documentation__unspecified)
+{
+    constexpr auto payload = base16_array("78563412010000000000000020010db8000000000000000000000001208d");
+    system::read::bytes::copy source(payload);
+    const auto item = address_item::deserialize(level::minimum_protocol, source, true);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(is_unspecified(item.address));
+    BOOST_REQUIRE(!is_specified(item));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize__documentation_ipv4__unspecified)
+{
+    constexpr auto payload = base16_array("78563412010000000000000000000000000000000000ffffc0000201208d");
+    system::read::bytes::copy source(payload);
+    const auto item = address_item::deserialize(level::minimum_protocol, source, true);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(is_unspecified(item.address));
+    BOOST_REQUIRE(!is_specified(item));
+}
+
 // address v2 (BIP155) entry codec
 
 constexpr auto v2_ipv4 = base16_array("00000000000000000000ffff01020304");
@@ -467,6 +544,39 @@ BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__onion_cat_ipv6__invalid)
     system::read::bytes::copy source(payload);
     address_item::deserialize_v2(level::bip155, source);
     BOOST_REQUIRE(!source);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__documentation_ipv6__unspecified)
+{
+    constexpr auto payload = base16_array("785634120102103fff0000000000000000000000000001208d");
+    system::read::bytes::copy source(payload);
+    const auto item = address_item::deserialize_v2(level::bip155, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(source.is_exhausted());
+    BOOST_REQUIRE(is_unspecified(item.address));
+    BOOST_REQUIRE(!is_specified(item));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__documentation_ipv4__unspecified)
+{
+    constexpr auto payload = base16_array("78563412010104cb007101208d");
+    system::read::bytes::copy source(payload);
+    const auto item = address_item::deserialize_v2(level::bip155, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(source.is_exhausted());
+    BOOST_REQUIRE(is_unspecified(item.address));
+    BOOST_REQUIRE(!is_specified(item));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__documentation_mapped_ipv6__unspecified)
+{
+    constexpr auto payload = base16_array("7856341201021000000000000000000000ffffc6336401208d");
+    system::read::bytes::copy source(payload);
+    const auto item = address_item::deserialize_v2(level::bip155, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(source.is_exhausted());
+    BOOST_REQUIRE(is_unspecified(item.address));
+    BOOST_REQUIRE(!is_specified(item));
 }
 
 BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__cjdns_out_of_range__invalid)
