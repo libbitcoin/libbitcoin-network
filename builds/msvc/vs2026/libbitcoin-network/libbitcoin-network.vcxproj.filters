@@ -1630,6 +1630,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\build\include\bitcoin\network\version.hpp">
+      <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\desubscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
