@@ -29,6 +29,10 @@
     #include <sys/types.h>
 #endif
 
+#ifdef HAVE_APPLE
+    #include <pthread/qos.h>
+#endif
+
 #ifdef HAVE_MSC
     // A few more extreme values are not mapped.
     // #define THREAD_PRIORITY_LOWEST          -2
@@ -93,6 +97,27 @@ void set_memory_priority(memory_priority priority) NOEXCEPT
 void set_memory_priority(memory_priority) NOEXCEPT {}
 #endif
 
+#if defined(HAVE_APPLE)
+// Privately map the class enum processing priority value to a qos class.
+static qos_class_t get_processing_priority(
+    processing_priority priority) NOEXCEPT
+{
+    switch (priority)
+    {
+        case processing_priority::lowest:
+            return QOS_CLASS_BACKGROUND;
+        case processing_priority::low:
+            return QOS_CLASS_UTILITY;
+        case processing_priority::high:
+            return QOS_CLASS_USER_INITIATED;
+        case processing_priority::highest:
+            return QOS_CLASS_USER_INTERACTIVE;
+        default:
+        case processing_priority::medium:
+            return QOS_CLASS_DEFAULT;
+    }
+}
+#else
 // Privately map the class enum processing priority value to an integer.
 static int get_processing_priority(processing_priority priority) NOEXCEPT
 {
@@ -111,28 +136,26 @@ static int get_processing_priority(processing_priority priority) NOEXCEPT
             return THREAD_PRIORITY_NORMAL;
     }
 }
+#endif
 
 // Set the thread processing priority.
 void set_processing_priority(processing_priority priority) NOEXCEPT
 {
     // TODO: handle error conditions.
-    // TODO: handle potential lack of PRIO_THREAD
-    // TODO: use proper non-win32 priority levels.
-    // TODO: Linux: pthread_setschedprio()
-    // TOOD: macOS: somethign else.
-
     const auto prioritization = get_processing_priority(priority);
 
 #if defined(HAVE_MSC)
     SetThreadPriority(GetCurrentThread(), prioritization);
 
-#elif defined(PRIO_THREAD)
-    // lore.kernel.org/lkml/1220278355.3866.21.camel@localhost.localdomain/
-    setpriority(PRIO_THREAD, pthread_self(), prioritization);
+#elif defined(HAVE_APPLE)
+    pthread_set_qos_class_self_np(prioritization, 0);
+
+#elif defined(HAVE_LINUX)
+    // Linux nice is per thread, and a thread id selects the calling thread.
+    setpriority(PRIO_PROCESS, gettid(), prioritization);
 
 #else
     // BUGBUG: This will set all threads in the process.
-    // man7.org/linux/man-pages/man3/pthread_self.3.html
     setpriority(PRIO_PROCESS, getpid(), prioritization);
 #endif
 }
