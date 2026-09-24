@@ -63,6 +63,29 @@ constexpr bool is_cjdns(const ip_address& ip) NOEXCEPT
     return ip.front() == cjdns_prefix;
 }
 
+/// The ipv6 documentation ranges (2001:db8::/32 rfc3849, 3fff::/20 rfc9637).
+constexpr system::data_array<4> documentation_prefix
+{
+    0x20, 0x01, 0x0d, 0xb8
+};
+
+constexpr system::data_array<2> documentation_wide_prefix
+{
+    0x3f, 0xff
+};
+
+/// True if ip_address is within an ipv6 documentation range (never routed).
+constexpr bool is_documentation(const ip_address& ip) NOEXCEPT
+{
+    const auto& narrow = documentation_prefix;
+    const auto& wide = documentation_wide_prefix;
+
+    // The wide range is a /20, so the high nibble of the third byte is zero.
+    return std::equal(narrow.begin(), narrow.end(), ip.begin())
+        || (std::equal(wide.begin(), wide.end(), ip.begin()) &&
+            ip.at(2) < 0x10);
+}
+
 /// Distinct type per network, as variant alternatives must not repeat.
 template <uint8_t Id, size_t Size, size_t Wire = Size>
 struct address_of

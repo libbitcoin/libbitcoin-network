@@ -105,7 +105,9 @@ address_item address_item::deserialize(uint32_t, reader& source,
     if (is_torv2(ip))
         source.invalidate();
 
-    return { timestamp, services, to_address(ip), port };
+    // A documentation address is never assigned, so it is discarded.
+    const auto address = is_documentation(ip) ? address_t{} : to_address(ip);
+    return { timestamp, services, address, port };
 }
 
 void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
@@ -155,6 +157,10 @@ static address_t read_address(size_t size, reader& source) NOEXCEPT
             source.invalidate();
             return {};
         }
+
+        // A documentation address is never assigned, so it is discarded.
+        if (is_documentation(out.value))
+            return {};
     }
 
     // A cjdns address is always within the cjdns range.
