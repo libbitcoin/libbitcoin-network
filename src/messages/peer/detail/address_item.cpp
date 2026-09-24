@@ -146,6 +146,13 @@ static address_t read_address(size_t size, reader& source) NOEXCEPT
     std::copy_n(ip_map_prefix.begin(), offset, out.value.begin());
     source.read_bytes(std::next(out.value.data(), offset), type::wire);
 
+    // A documentation address is never assigned, so it is discarded.
+    if constexpr (Id == ipv4_t::id || Id == ipv6_t::id)
+    {
+        if (is_documentation(out.value))
+            return {};
+    }
+
     // A reserved v6 range is an encoding of another network.
     if constexpr (Id == ipv6_t::id)
     {
@@ -157,10 +164,6 @@ static address_t read_address(size_t size, reader& source) NOEXCEPT
             source.invalidate();
             return {};
         }
-
-        // A documentation address is never assigned, so it is discarded.
-        if (is_documentation(out.value))
-            return {};
     }
 
     // A cjdns address is always within the cjdns range.
