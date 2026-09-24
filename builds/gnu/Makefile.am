@@ -37,7 +37,9 @@ lib_LTLIBRARIES = src/libbitcoin-network.la
 src_libbitcoin_network_la_LIBS = src/libbitcoin-network.la
 
 src_libbitcoin_network_la_CPPFLAGS = \
+    -I${top_builddir}/include \
     -I${srcdir}/../../include \
+    -I${top_builddir}/include/bitcoin/network/ssl \
     -I${srcdir}/../../include/bitcoin/network/ssl \
     ${libbitcoin_system_BUILD_CPPFLAGS}
 
@@ -251,7 +253,7 @@ include_bitcoin_network_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/net.hpp \
     ${srcdir}/../../include/bitcoin/network/preprocessor.hpp \
     ${srcdir}/../../include/bitcoin/network/settings.hpp \
-    ${srcdir}/../../include/bitcoin/network/version.hpp
+    include/bitcoin/network/version.hpp
 
 include_bitcoin_network_asyncdir = \
     ${includedir}/bitcoin/network/async
@@ -724,7 +726,9 @@ if WITH_TESTS
 check_PROGRAMS = test/libbitcoin-network-test
 
 test_libbitcoin_network_test_CPPFLAGS = \
+    -I${top_builddir}/test \
     -I${srcdir}/../../test \
+    -I${top_builddir}/test/ssl/wolfssl \
     -I${srcdir}/../../test/ssl/wolfssl \
     ${boost_BUILD_CPPFLAGS} \
     ${boost_unit_test_framework_BUILD_CPPFLAGS} \

@@ -109,6 +109,22 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup Label="Prebuild">
+    <GeneratedIncludeDirBase>$(ProjectDir)..\..\..\..\non-persistent\</GeneratedIncludeDirBase>
+    <GeneratedIncludeDir>$(GeneratedIncludeDirBase)include\</GeneratedIncludeDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ConfigurableFile Include="version">
+      <FileInput>$(RepoRoot)include\bitcoin\network\version.hpp.in</FileInput>
+      <FileOutput>$(GeneratedIncludeDirBase)include\bitcoin\network\version.hpp</FileOutput>
+    </ConfigurableFile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="%(ConfigurableFile.FileInput)" />
+    <ClInclude Include="%(ConfigurableFile.FileOutput)">
+      <DependentUpon>%(ConfigurableFile.FileInput)</DependentUpon>
+    </ClInclude>
+  </ItemGroup>
   <PropertyGroup Label="Configuration">
     <ConfigurationType Condition="$(Configuration.IndexOf('DLL')) == -1">StaticLibrary</ConfigurationType>
     <ConfigurationType Condition="$(Configuration.IndexOf('DLL')) != -1">DynamicLibrary</ConfigurationType>
@@ -623,7 +639,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfcrypt\wolfmath.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfio.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfssl.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\cipher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\role.hpp" />
@@ -646,6 +661,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\broadcaster.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\dispatcher.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\protocols\protocol_rpc.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\version.hpp.in" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

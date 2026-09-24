@@ -1613,9 +1613,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\wolfssl\wolfssl.h">
       <Filter>include\bitcoin\network\ssl\wolfssl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\cipher.hpp">
       <Filter>include\bitcoin\network\zmtp</Filter>
     </ClInclude>
@@ -1677,6 +1674,9 @@
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\protocols\protocol_rpc.ipp">
       <Filter>include\bitcoin\network\impl\protocols</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\version.hpp.in">
+      <Filter>include\bitcoin\network</Filter>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
