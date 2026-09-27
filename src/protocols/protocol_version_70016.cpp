@@ -23,7 +23,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_version_70002.hpp>
+#include <bitcoin/network/protocols/protocol_version_70014.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 // sendaddrv2 is a a broken protocol in that it is a formally unversioned
@@ -51,7 +51,7 @@ protocol_version_70016::protocol_version_70016(const session::ptr& session,
     const channel::ptr& channel,
     bool relay,
     bool reject) NOEXCEPT
-  : protocol_version_70002(session, channel, relay),
+  : protocol_version_70014(session, channel, relay),
     reject_(reject),
     tracker<protocol_version_70016>(session->log)
 {
@@ -116,7 +116,7 @@ bool protocol_version_70016::handle_receive_acknowledge(const code& ec,
     complete_ = true;
 
     // Channel will pause after this and then be restarted as connected.
-    return protocol_version_70002::handle_receive_acknowledge(ec, message);
+    return protocol_version_70014::handle_receive_acknowledge(ec, message);
 }
 
 bool protocol_version_70016::handle_receive_send_address_v2(const code& ec,

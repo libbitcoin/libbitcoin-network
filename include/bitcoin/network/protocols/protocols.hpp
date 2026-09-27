@@ -36,6 +36,7 @@
 #include <bitcoin/network/protocols/protocol_version_106.hpp>
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
+#include <bitcoin/network/protocols/protocol_version_70014.hpp>
 #include <bitcoin/network/protocols/protocol_version_70016.hpp>
 
 // server

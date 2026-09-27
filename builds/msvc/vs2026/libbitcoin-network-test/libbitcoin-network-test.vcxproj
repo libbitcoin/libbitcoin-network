@@ -239,6 +239,7 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70014.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp" />
