@@ -24,7 +24,6 @@
 // Must pull in any base boost configuration before including boost.
 #include <bitcoin/system.hpp>
 
-#include <boost/circular_buffer.hpp>
 #include <boost/system/error_code.hpp>
 
 #if defined(HAVE_SSL)

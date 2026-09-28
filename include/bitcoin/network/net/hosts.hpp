@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_NET_HOSTS_HPP
 
 #include <atomic>
+#include <deque>
 #include <unordered_set>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -104,7 +105,7 @@ public:
     virtual bool unreserve(const config::endpoint& host) NOEXCEPT;
 
 private:
-    typedef boost::circular_buffer<messages::peer::address_item> buffer;
+    typedef std::deque<messages::peer::address_item> buffer;
 
     // Equality ignores timestamp and services.
     inline buffer::iterator find(const messages::peer::address_item& host) NOEXCEPT
@@ -142,6 +143,7 @@ private:
     // These are thread safe.
     const settings& settings_;
     const uint64_t required_;
+    const size_t capacity_;
     std::atomic<size_t> hosts_count_{};
     std::atomic<size_t> endpoints_count_{};
     std::array<std::atomic<size_t>, config::address_types> counts_{};
