@@ -20,7 +20,7 @@
 
 #include <bitcoin/network/define.hpp>
 
-#if defined(WITH_SSL)
+#if defined(HAVE_SSL)
     #include <wolfssl/version.h>
 #else
     #include <openssl/crypto.h>
@@ -83,7 +83,7 @@ BC_POP_WARNING()
 
 std::string_view tls_library() NOEXCEPT
 {
-#if defined(WITH_SSL)
+#if defined(HAVE_SSL)
     return "wolfssl " LIBWOLFSSL_VERSION_STRING;
 #else
     return OpenSSL_version(OPENSSL_VERSION);
