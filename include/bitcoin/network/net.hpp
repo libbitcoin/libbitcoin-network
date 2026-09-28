@@ -283,6 +283,7 @@ protected:
     virtual void fetch(address_handler&& handler) NOEXCEPT;
     virtual void save(const address_cptr& message,
         count_handler&& complete) NOEXCEPT;
+    virtual void seed() NOEXCEPT;
 
     /// P2P loopback detection.
     virtual bool store_nonce(const channel_peer& channel) NOEXCEPT;
@@ -344,6 +345,7 @@ private:
     void do_fetch(const address_handler& handler) NOEXCEPT;
     void do_save(const address_cptr& message,
         const count_handler& handler) NOEXCEPT;
+    void do_seed() NOEXCEPT;
 
     // P2P diagnostic accumulators.    
     void do_fetch_totals(const totals_handler& handler) NOEXCEPT;
@@ -362,6 +364,7 @@ private:
 
     // These are protected by strand.
     session_manual::ptr manual_{};
+    session_seed::ptr seed_{};
     threadpool threadpool_;
 
     // This is thread safe.

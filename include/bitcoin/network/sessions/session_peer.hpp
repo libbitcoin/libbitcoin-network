@@ -57,6 +57,9 @@ public:
     virtual void save(const address_cptr& message,
         count_handler&& handler) const NOEXCEPT;
 
+    /// Seed the address pool if below minimum, unless seeding or backing off.
+    virtual void seed() const NOEXCEPT;
+
     /// Properties.
     /// -----------------------------------------------------------------------
 

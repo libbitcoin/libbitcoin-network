@@ -284,6 +284,11 @@ void session_peer::save(const address_cptr& message,
     network_.save(message, std::move(handler));
 }
 
+void session_peer::seed() const NOEXCEPT
+{
+    network_.seed();
+}
+
 BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()

@@ -1067,4 +1067,275 @@ BOOST_AUTO_TEST_CASE(net__subscribe_close__stranded__subscribed_then_stopped)
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
+// seed
+
+class mock_session_seed_complete
+  : public session_seed
+{
+public:
+    using session_seed::session_seed;
+
+    void start(result_handler&& handler) NOEXCEPT override
+    {
+        handler(error::success);
+    }
+};
+
+// Sufficient upon start, with seed connections still running.
+class mock_session_seed_running
+  : public session_seed
+{
+public:
+    using session_seed::session_seed;
+
+    void start(result_handler&& handler) NOEXCEPT override
+    {
+        handler(error::success);
+    }
+
+    bool seeding() const NOEXCEPT override
+    {
+        return true;
+    }
+};
+
+// Seed connections completed just now.
+class mock_session_seed_completed_recently
+  : public session_seed
+{
+public:
+    using session_seed::session_seed;
+
+    void start(result_handler&& handler) NOEXCEPT override
+    {
+        handler(error::success);
+    }
+
+    steady_clock::time_point completed() const NOEXCEPT override
+    {
+        return steady_clock::now();
+    }
+};
+
+// Seed connections completed long before any backoff.
+class mock_session_seed_completed_long_ago
+  : public session_seed
+{
+public:
+    using session_seed::session_seed;
+
+    void start(result_handler&& handler) NOEXCEPT override
+    {
+        handler(error::success);
+    }
+
+    steady_clock::time_point completed() const NOEXCEPT override
+    {
+        return steady_clock::now() - std::chrono::hours{ 1 };
+    }
+};
+
+template <class Session, class Startup = mock_session_seed_complete>
+class mock_net_seed
+  : public net
+{
+public:
+    using net::net;
+
+    size_t seed_sessions() const NOEXCEPT
+    {
+        return seed_sessions_;
+    }
+
+    // Start, which attaches and retains the startup seed session.
+    code start_and_wait() NOEXCEPT
+    {
+        std::promise<code> started;
+        start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+
+        return started.get_future().get();
+    }
+
+    // Seed sessions attached after the startup seed session.
+    size_t reseeds() const NOEXCEPT
+    {
+        return system::floored_subtract(seed_sessions_.load(), one);
+    }
+
+    // The seed is posted to the strand, so a subsequent post follows it.
+    void seed_and_wait() NOEXCEPT
+    {
+        seed();
+        on_strand(*this, []() NOEXCEPT { return true; });
+    }
+
+    code start_hosts() NOEXCEPT override
+    {
+        return error::success;
+    }
+
+    session_manual::ptr attach_manual_session() NOEXCEPT override
+    {
+        return attach<mock_session_manual>(*this);
+    }
+
+    // The first seed session is the startup session.
+    session_seed::ptr attach_seed_session() NOEXCEPT override
+    {
+        if (is_one(++seed_sessions_))
+            return attach<Startup>(*this);
+
+        return attach<Session>(*this);
+    }
+
+private:
+    std::atomic<size_t> seed_sessions_{};
+
+    class mock_session_manual
+      : public session_manual
+    {
+    public:
+        using session_manual::session_manual;
+
+        void start(result_handler&& handler) NOEXCEPT override
+        {
+            handler(error::success);
+        }
+    };
+};
+
+template <class Session>
+class closed_mock_net_seed
+  : public mock_net_seed<Session>
+{
+public:
+    using mock_net_seed<Session>::mock_net_seed;
+
+    bool closed() const NOEXCEPT override
+    {
+        return true;
+    }
+};
+
+// The pool holds the minimum, though none may be usable for a slot.
+template <class Session>
+class sufficient_mock_net_seed
+  : public mock_net_seed<Session>
+{
+public:
+    using mock_net_seed<Session>::mock_net_seed;
+
+    size_t address_count() const NOEXCEPT override
+    {
+        return this->network_settings().outbound.minimum_address_count();
+    }
+};
+
+BOOST_AUTO_TEST_CASE(net__seed__once__one_session)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    mock_net_seed<mock_session_seed_complete> net(set, log);
+    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.reseeds(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(net__seed__startup_running__no_session)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    mock_net_seed<mock_session_seed_complete, mock_session_seed_running> net(set, log);
+    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.reseeds(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(net__seed__twice_running__one_session)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    mock_net_seed<mock_session_seed_running> net(set, log);
+    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    net.seed_and_wait();
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.reseeds(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(net__seed__twice_complete__two_sessions)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    mock_net_seed<mock_session_seed_complete> net(set, log);
+    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    net.seed_and_wait();
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.reseeds(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(net__seed__no_seeds__no_session)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.seeds.clear();
+    mock_net_seed<mock_session_seed_complete> net(set, log);
+    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.reseeds(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(net__seed__sufficient_addresses__no_session)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    sufficient_mock_net_seed<mock_session_seed_complete> net(set, log);
+    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.reseeds(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(net__seed__startup_completed_recently__no_session)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    mock_net_seed<mock_session_seed_complete, mock_session_seed_completed_recently> net(set, log);
+    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.reseeds(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(net__seed__twice_completed_recently__one_session)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    mock_net_seed<mock_session_seed_completed_recently> net(set, log);
+    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    net.seed_and_wait();
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.reseeds(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(net__seed__twice_completed_long_ago__two_sessions)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    mock_net_seed<mock_session_seed_completed_long_ago> net(set, log);
+    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    net.seed_and_wait();
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.reseeds(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(net__seed__closed__no_session)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    closed_mock_net_seed<mock_session_seed_complete> net(set, log);
+    net.seed_and_wait();
+    BOOST_REQUIRE_EQUAL(net.seed_sessions(), 0u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
