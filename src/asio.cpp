@@ -20,6 +20,12 @@
 
 #include <bitcoin/network/define.hpp>
 
+#if defined(WITH_SSL)
+    #include <wolfssl/version.h>
+#else
+    #include <openssl/crypto.h>
+#endif
+
 #if defined(HAVE_MSC)
     #include <winsock2.h>
     #include <mstcpip.h>
@@ -74,5 +80,15 @@ bool half_closed(socket& sock) NOEXCEPT
 BC_POP_WARNING()
 
 } // namespace asio
+
+std::string_view tls_library() NOEXCEPT
+{
+#if defined(WITH_SSL)
+    return "wolfssl " LIBWOLFSSL_VERSION_STRING;
+#else
+    return OpenSSL_version(OPENSSL_VERSION);
+#endif
+}
+
 } // namespace network
 } // namespace libbitcoin
