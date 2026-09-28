@@ -52,6 +52,12 @@ const session_seed::options_t& session_seed::options() const NOEXCEPT
     return static_cast<const options_t&>(session_peer::options());
 }
 
+bool session_seed::seeding() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return seeding_;
+}
+
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
@@ -121,6 +127,8 @@ void session_seed::handle_started(const code& ec,
     BC_PUSH_WARNING(NO_UNUSED_LOCAL_SMART_PTR)
     const auto racer = std::make_shared<race>(seeds, required);
     BC_POP_WARNING()
+
+    seeding_ = true;
 
     // Invoke sufficient on count, invoke complete with all seeds stopped.
     racer->start(move_copy(handler), BIND(stop_seed, _1));
@@ -278,6 +286,7 @@ void session_seed::stop_seed(const code&) NOEXCEPT
     BC_ASSERT(stranded());
 
     LOGN("Seed session complete.");
+    seeding_ = false;
     unsubscribe_close();
 }
 
