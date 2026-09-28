@@ -164,19 +164,6 @@ AC_ARG_WITH([ssl],
 AC_MSG_RESULT([$with_ssl])
 AM_CONDITIONAL([WITH_SSL], [test "x${with_ssl}" != "xno"])
 
-# Set preprocessor defines.
-#==============================================================================
-AS_IF([test "x${with_ssl}" != "xno"], [
-        AC_DEFINE([WITH_SSL])
-        AC_SUBST([ssl], [-DWITH_SSL])
-        AC_DEFINE([WOLFSSL_USER_SETTINGS])
-        AC_SUBST([wolfssl], [-DWOLFSSL_USER_SETTINGS])
-    ])
-
-AS_IF([test "x${with_ssl}" != "xno"], [
-        AC_DEFINE_UNQUOTED([CERT_PREFIX], ["${repository_root_dir}/test/ssl/vectors/"])
-    ])
-
 # Set flags.
 #==============================================================================
 AX_CHECK_COMPILE_FLAG([-Wall],
@@ -262,8 +249,10 @@ PKG_CHECK_MODULES(
     AC_MSG_ERROR([libbitcoin-system >= 4.0.0 is required but was not found.])
   ])
 AC_SUBST([libbitcoin_system_PKG], ['libbitcoin-system >= 4.0.0'])
+AC_SUBST([libbitcoin_system_VERSION], [`${PKG_CONFIG} --modversion libbitcoin-system`])
 AC_SUBST([libbitcoin_system_CPPFLAGS], [${libbitcoin_system_CFLAGS}])
 AC_SUBST([libbitcoin_system_ISYS_CPPFLAGS], [`echo ${libbitcoin_system_CPPFLAGS} | ${SED} s/^-I/-isystem/g | ${SED} s/' -I'/' -isystem'/g`])
+AC_MSG_NOTICE([libbitcoin_system_VERSION : ${libbitcoin_system_VERSION}])
 AC_MSG_NOTICE([libbitcoin_system_CPPFLAGS : ${libbitcoin_system_CPPFLAGS}])
 AC_MSG_NOTICE([libbitcoin_system_ISYS_CPPFLAGS : ${libbitcoin_system_ISYS_CPPFLAGS}])
 AC_MSG_NOTICE([libbitcoin_system_OTHER_CFLAGS : ${libbitcoin_system_OTHER_CFLAGS}])
@@ -299,6 +288,19 @@ AS_IF([(test "x${with_tests}" != "xno")],
     AC_SUBST([boost_unit_test_framework_LIBS], [${BOOST_UNIT_TEST_FRAMEWORK_LIB}])
     AC_MSG_NOTICE([boost_unit_test_framework_LIBS : ${boost_unit_test_framework_LIBS}])
   ])
+
+# Set preprocessor defines.
+#==============================================================================
+AS_IF([test "x${with_ssl}" != "xno"], [
+        AC_DEFINE([WITH_SSL])
+        AC_SUBST([ssl], [-DWITH_SSL])
+        AC_DEFINE([WOLFSSL_USER_SETTINGS])
+        AC_SUBST([wolfssl], [-DWOLFSSL_USER_SETTINGS])
+    ])
+
+AS_IF([test "x${with_ssl}" != "xno"], [
+        AC_DEFINE_UNQUOTED([CERT_PREFIX], ["${repository_root_dir}/test/ssl/vectors/"])
+    ])
 
 AS_IF([test "x${with_ssl}" != "xno"],
     [ AC_SUBST([ssl_include], [-I${includedir}/bitcoin/network/ssl]) ])
