@@ -24,13 +24,11 @@
 /// WITH_ indicates build symbol.
 /// ---------------------------------------------------------------------------
 
-// TODO: change this to condition on WITH_SSL once *nix builds are updated.
-// TODO: then also update the .props files to additionally emit WITH_SSL also.
 /// This enables integral ssl support via embedded wolfssl.
 /// If not defined then boost-compatible SSL must be externally linked.
 /// The build config must always define either the internal ssl include path or
 /// an external one, so that boost will locate the expected openssl headers.
-#if defined(WOLFSSL_USER_SETTINGS)
+#if defined(WITH_SSL)
     #define HAVE_SSL
 #endif
 
