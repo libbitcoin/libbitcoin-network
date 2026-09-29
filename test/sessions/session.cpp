@@ -152,6 +152,11 @@ public:
         return session_peer::inbound_channel_count();
     }
 
+    size_t outbound_channel_count() const NOEXCEPT override
+    {
+        return session_peer::outbound_channel_count();
+    }
+
     void start_channel(const channel::ptr& channel, result_handler&& started,
         result_handler&& stopped) NOEXCEPT override
     {
@@ -359,6 +364,19 @@ private:
     };
 };
 
+class mock_net_conflict
+  : public mock_net
+{
+public:
+    using mock_net::mock_net;
+
+protected:
+    bool store_nonce(const channel_peer&) NOEXCEPT override
+    {
+        return false;
+    }
+};
+
 // construct/settings
 
 BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
@@ -388,6 +406,7 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE(session.is_configured(messages::peer::level::canonical));
     BOOST_REQUIRE(session.is_configured(messages::peer::level::minimum_protocol));
     BOOST_REQUIRE(session.is_configured(messages::peer::level::maximum_protocol));
+    BOOST_REQUIRE(is_zero(session.outbound_channel_count()));
 }
 
 // factories
@@ -988,6 +1007,59 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     // unstored and uncounted
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
     BOOST_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
+}
+
+BOOST_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_conflict_channel_conflict)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    mock_net_conflict net(set, log);
+    auto session = std::make_shared<mock_session>(net, 1);
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+
+    socket::parameters params{ .maximum_request = 42, .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
+    const auto channel = std::make_shared<mock_channel>(net.log, socket, 42, session->network_settings(), options);
+
+    std::promise<code> started_channel;
+    std::promise<code> stopped_channel;
+    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
+    {
+        session->start_channel(channel,
+            [&](const code& ec) NOEXCEPT
+            {
+                started_channel.set_value(ec);
+            },
+            [&](const code& ec) NOEXCEPT
+            {
+                stopped_channel.set_value(ec);
+            });
+    });
+
+    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_conflict);
+    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_conflict);
+    BOOST_REQUIRE(!session->attached_handshake());
+    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::channel_conflict);
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1022,7 +1022,16 @@ struct outbound_peer
         });
 
         BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    }
 
+    ~outbound_peer()
+    {
+        socket_.close();
+        net_.close();
+    }
+
+    void run()
+    {
         std::promise<code> running{};
         net_.run([&](const code& ec) NOEXCEPT
         {
@@ -1032,10 +1041,9 @@ struct outbound_peer
         BOOST_REQUIRE_EQUAL(running.get_future().get(), error::success);
     }
 
-    ~outbound_peer()
+    void suspend()
     {
-        socket_.close();
-        net_.close();
+        net_.suspend(error::service_suspended);
     }
 
     void accept()
@@ -1118,6 +1126,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__attach_protocols__loopback_peer__address_
         set.enable_address = true;
     }, error::success, outbound_peer_port };
 
+    peer.run();
     peer.accept();
     const auto node = peer.handshake(level::bip155);
     BOOST_REQUIRE_EQUAL(node->value, level::bip155);
@@ -1135,6 +1144,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__handle_connect__address_not_found__retake
         set.outbound.connect_timeout_seconds = 1;
     }, error::address_not_found, outbound_peer_port };
 
+    peer.run();
     BOOST_REQUIRE(peer.retaken());
 }
 
@@ -1145,6 +1155,43 @@ BOOST_AUTO_TEST_CASE(session_outbound__handle_connect__connect_refused__retaken)
         set.outbound.connect_timeout_seconds = 1;
     }, error::success, outbound_closed_port };
 
+    peer.run();
+    BOOST_REQUIRE(peer.retaken());
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__handle_channel_stop__full_host_pool__reconnected)
+{
+    outbound_peer peer{ [](settings& set)
+    {
+        set.outbound.host_pool_capacity = 1;
+    }, error::success, outbound_peer_port };
+
+    peer.run();
+    peer.accept();
+    peer.handshake(level::bip155);
+    peer.close();
+    peer.accept();
+    BOOST_REQUIRE(version::deserialize(level::bip155, peer.receive(version::command)));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__handle_one__suspended__retaken)
+{
+    outbound_peer peer{ [](settings&) {}, error::success, outbound_peer_port };
+
+    peer.suspend();
+    peer.run();
+    BOOST_REQUIRE(peer.retaken());
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start_connect__proxied_unreachable__retaken)
+{
+    outbound_peer peer{ [](settings& set)
+    {
+        set.outbound.socks = { "127.0.0.1:65157" };
+        set.outbound.connect_timeout_seconds = 1;
+    }, error::success, outbound_peer_port };
+
+    peer.run();
     BOOST_REQUIRE(peer.retaken());
 }
 

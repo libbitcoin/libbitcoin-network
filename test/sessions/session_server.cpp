@@ -263,4 +263,178 @@ BOOST_AUTO_TEST_CASE(session_server__start_channel__handshake_failure__handlers_
     instance.close();
 }
 
+// Accept cycle (the test connects as a raw client on loopback).
+// ============================================================================
+
+static constexpr uint16_t server_port = 65156;
+
+static settings::secure_server enabled_options()
+{
+    settings::secure_server options{ "test" };
+    options.connections = 1;
+    options.binds.emplace_back("127.0.0.1:65156");
+    return options;
+}
+
+static const auto one_connection = enabled_options();
+
+class mock_server
+  : public session_server
+{
+public:
+    mock_server(net& network, uint64_t identifier, const options_t& options) NOEXCEPT
+      : session_server(network, identifier, options), options_(options)
+    {
+    }
+
+    void attach_protocols(const channel::ptr&) NOEXCEPT override
+    {
+        if (!protocoled_.exchange(true))
+            attached_.set_value(true);
+    }
+
+    channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT override
+    {
+        return std::make_shared<mock_channel>(log, socket, create_key(), network_settings(), options_);
+    }
+
+    bool require_attached() NOEXCEPT
+    {
+        return attached_.get_future().get();
+    }
+
+private:
+    const options_t& options_;
+    std::atomic_bool protocoled_{ false };
+    std::promise<bool> attached_{};
+};
+
+class mock_server_disabled
+  : public mock_server
+{
+public:
+    using mock_server::mock_server;
+
+    bool enabled() const NOEXCEPT override
+    {
+        return false;
+    }
+};
+
+template <class Session>
+static code start_server(net& instance, const std::shared_ptr<Session>& session)
+{
+    std::promise<code> started;
+    boost::asio::post(instance.strand(), [&]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    return started.get_future().get();
+}
+
+// Read until the server disconnects, returning true if dropped.
+static bool dropped(boost::asio::ip::tcp::socket& client)
+{
+    boost_code ec{};
+    uint8_t byte{};
+    boost::asio::read(client, boost::asio::buffer(&byte, one), ec);
+    return ec == boost::asio::error::eof || ec == boost::asio::error::connection_reset;
+}
+
+BOOST_AUTO_TEST_CASE(session_server__accept__client__protocols_attached)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    net instance(set, log);
+    const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
+    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+
+    boost::asio::io_context io{};
+    boost::asio::ip::tcp::socket client{ io };
+    client.connect({ boost::asio::ip::address_v4::loopback(), server_port });
+    BOOST_REQUIRE(session->require_attached());
+
+    stop(instance, session);
+    BOOST_REQUIRE(dropped(client));
+    instance.close();
+}
+
+BOOST_AUTO_TEST_CASE(session_server__accept__oversubscribed__second_client_dropped)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    net instance(set, log);
+    const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
+    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+
+    boost::asio::io_context io{};
+    boost::asio::ip::tcp::socket first{ io };
+    first.connect({ boost::asio::ip::address_v4::loopback(), server_port });
+    BOOST_REQUIRE(session->require_attached());
+
+    boost::asio::ip::tcp::socket second{ io };
+    second.connect({ boost::asio::ip::address_v4::loopback(), server_port });
+    BOOST_REQUIRE(dropped(second));
+
+    stop(instance, session);
+    instance.close();
+}
+
+BOOST_AUTO_TEST_CASE(session_server__accept__disabled__client_dropped)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    net instance(set, log);
+    const auto session = std::make_shared<mock_server_disabled>(instance, 1, one_connection);
+    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+
+    boost::asio::io_context io{};
+    boost::asio::ip::tcp::socket client{ io };
+    client.connect({ boost::asio::ip::address_v4::loopback(), server_port });
+    BOOST_REQUIRE(dropped(client));
+
+    stop(instance, session);
+    instance.close();
+}
+
+BOOST_AUTO_TEST_CASE(session_server__accept__blacklisted__client_dropped)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.blacklists.emplace_back("127.0.0.1");
+    net instance(set, log);
+    const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
+    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+
+    boost::asio::io_context io{};
+    boost::asio::ip::tcp::socket client{ io };
+    client.connect({ boost::asio::ip::address_v4::loopback(), server_port });
+    BOOST_REQUIRE(dropped(client));
+
+    stop(instance, session);
+    instance.close();
+}
+
+BOOST_AUTO_TEST_CASE(session_server__accept__not_whitelisted__client_dropped)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.whitelists.emplace_back("1.2.3.4");
+    net instance(set, log);
+    const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
+    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+
+    boost::asio::io_context io{};
+    boost::asio::ip::tcp::socket client{ io };
+    client.connect({ boost::asio::ip::address_v4::loopback(), server_port });
+    BOOST_REQUIRE(dropped(client));
+
+    stop(instance, session);
+    instance.close();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
