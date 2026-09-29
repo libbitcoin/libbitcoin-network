@@ -350,7 +350,8 @@ int SSL_CTX_load_verify_locations(SSL_CTX* ctx, const char* file,
 // There are no system certificate stores.
 int SSL_CTX_set_default_verify_paths(SSL_CTX*)
 {
-    return 1;
+    push_error(ERR_LIB_SSL, 0);
+    return 0;
 }
 
 X509_STORE* SSL_CTX_get_cert_store(const SSL_CTX* ctx)
