@@ -932,6 +932,23 @@ BOOST_FIXTURE_TEST_CASE(channel_http__resume__get__dispatched_and_response_sent,
     BOOST_REQUIRE_EQUAL(target->get_future().get(), "/index");
 }
 
+BOOST_FIXTURE_TEST_CASE(channel_http__resume__reading__one_response, http_channel_fixture)
+{
+    start(http_ok);
+
+    const auto self = channel;
+    const auto resumed = http_make_promise();
+    boost::asio::post(channel->strand(), [=]() NOEXCEPT
+    {
+        self->resume();
+        resumed->set_value(error::success);
+    });
+
+    BOOST_REQUIRE_EQUAL(http_await(resumed), error::success);
+    send(http_get_request);
+    BOOST_REQUIRE_EQUAL(receive().result_int(), 200u);
+}
+
 BOOST_FIXTURE_TEST_CASE(channel_http__resume__large_header_then_get__both_dispatched, http_channel_fixture)
 {
     start(http_ok);
