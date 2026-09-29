@@ -429,13 +429,23 @@ bool tls_client::handle_finished(const const_byte_span& message,
 
         if (!options_.chain.empty())
         {
-            const auto digest = sha256_hash(verify_content("TLS 1.3, client CertificateVerify", hash()));
-            secp256r1::signature_t signature{};
-            secp256r1::sign(signature, options_.key, digest);
-
+            const auto content = verify_content("TLS 1.3, client CertificateVerify", hash());
             writer verify{};
-            verify.write_16(ecdsa_secp256r1_sha256);
-            verify.write_vector_16(secp256r1::encode(signature));
+            if (options_.key384)
+            {
+                secp384r1::signature_t signature{};
+                secp384r1::sign(signature, *options_.key384, accumulator<sha512_384>::hash(content));
+                verify.write_16(ecdsa_secp384r1_sha384);
+                verify.write_vector_16(secp384r1::encode(signature));
+            }
+            else
+            {
+                secp256r1::signature_t signature{};
+                secp256r1::sign(signature, options_.key, sha256_hash(content));
+                verify.write_16(ecdsa_secp256r1_sha256);
+                verify.write_vector_16(secp256r1::encode(signature));
+            }
+
             const auto verify_message = message_of(handshake::certificate_verify, verify.data());
             add(verify_message);
             flight.insert(flight.end(), verify_message.begin(), verify_message.end());

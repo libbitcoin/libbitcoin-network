@@ -19,13 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_TEST_TLS_CLIENT_HPP
 #define LIBBITCOIN_NETWORK_TEST_TLS_CLIENT_HPP
 
+#include <optional>
 #include "../test.hpp"
 
 namespace test {
 
 /// Test harness TLS 1.3 client (in memory, not thread safe). Verifies the
 /// server chain against anchors (if any) and its CertificateVerify, and
-/// optionally authenticates with a P-256 chain and key.
+/// optionally authenticates with a chain and its P-256 (or P-384) key.
 class tls_client
 {
 public:
@@ -38,6 +39,7 @@ public:
         system::x509::certificates anchors{};
         std::vector<system::data_chunk> chain{};
         system::x509::secret key{};
+        std::optional<system::secp384r1::secret_t> key384{};
         uint64_t time{};
     };
 

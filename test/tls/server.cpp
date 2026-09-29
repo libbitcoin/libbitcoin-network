@@ -31,6 +31,25 @@ const auto server_key = base16_array("c9afa9d845ba75166b5c215767b1d6934e50c3db36
 const auto client_key = base16_array("0000000000000000000000000000000000000000000000000000000000000002");
 const auto other_key = base16_array("0000000000000000000000000000000000000000000000000000000000000003");
 
+// A self-signed secp384r1 client identity (openssl).
+const auto client384_key = base16_array("6bfc6ce1ef1beb42ecb60360242e9efab64189b1277c562b58eedad3b3586ff590179425f623bd9532ebd3091eb3cbb5");
+const std::string client384_chain
+{
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIB6zCCAXGgAwIBAgIUJtHsAFXdYgGYBXLxCgPAvtfK/PcwCgYIKoZIzj0EAwMw\n"
+    "FDESMBAGA1UEAwwJY2xpZW50Mzg0MB4XDTI2MDEwMTAwMDAwMFoXDTQ5MTIzMTIz\n"
+    "NTk1OVowFDESMBAGA1UEAwwJY2xpZW50Mzg0MHYwEAYHKoZIzj0CAQYFK4EEACID\n"
+    "YgAECOQks2KFZdRtQWoliPUFV9bhyFan2z1R+sutT7q3fTsTHK2fUZxA9HZvriMZ\n"
+    "HEKEIzdITbaBVXfFUnhH5W3UiU2P5CmOC6vwREAgpthnG8QVxJ+RqT7snfceDa7T\n"
+    "l28io4GDMIGAMB0GA1UdDgQWBBTJQ+ViudEUUbSJ+d34rwXXN4emXjAfBgNVHSME\n"
+    "GDAWgBTJQ+ViudEUUbSJ+d34rwXXN4emXjAPBgNVHRMBAf8EBTADAQH/MA4GA1Ud\n"
+    "DwEB/wQEAwIChDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwCgYIKoZI\n"
+    "zj0EAwMDaAAwZQIxAKw8qvXbX8/kRuCJQPuDpyVj5vHkOQ/T/hGqnJiXihrBvSQc\n"
+    "tWKiP+AIuqd+JpCnMgIwZ21W5QpX7QNqcFdoUbWW1BxaLDekhmmKPa6+SIte9H3V\n"
+    "6kxQ4IMBYC3p0j3En1DQ\n"
+    "-----END CERTIFICATE-----\n"
+};
+
 struct identity
 {
     std::string chain;
@@ -342,6 +361,26 @@ BOOST_AUTO_TEST_CASE(tls_server__client_certificate__trusted__peer_verified)
     BOOST_REQUIRE(server.is_established());
     BOOST_REQUIRE_EQUAL(server.peer().size(), 1u);
     BOOST_REQUIRE_EQUAL(server.peer().front().encoding, client_identity.certificate.encoding);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate__secp384r1_trusted__peer_verified)
+{
+    x509::certificates chain{};
+    BOOST_REQUIRE(x509::parse(chain, client384_chain));
+    server_setup setup{ true, true };
+    BOOST_REQUIRE(setup.context.add_anchors(client384_chain));
+    tls::server server{ setup.context };
+
+    auto options = client_options();
+    options.chain = { chain.front().encoding };
+    options.key384 = client384_key;
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(client.is_requested());
+    BOOST_REQUIRE(server.is_established());
+    BOOST_REQUIRE_EQUAL(server.peer().size(), 1u);
+    BOOST_REQUIRE(server.peer().front().curve == x509::curve::secp384r1);
 }
 
 BOOST_AUTO_TEST_CASE(tls_server__client_certificate__required_absent__certificate_required)
