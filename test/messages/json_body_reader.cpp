@@ -100,6 +100,45 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__over_length__protocol_error)
     BOOST_REQUIRE(ec == error::http_error_t::body_limit);
 }
 
+BOOST_AUTO_TEST_CASE(json_body_reader__put__empty_buffer__success_none_consumed)
+{
+    json::body<>::value_type body{};
+    json::body<>::reader reader(body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(reader.put(asio::const_buffer{}, ec), zero);
+    BOOST_REQUIRE(!ec);
+}
+
+BOOST_AUTO_TEST_CASE(json_body_reader__put__null_data__bad_alloc)
+{
+    json::body<>::value_type body{};
+    json::body<>::reader reader(body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(reader.put(asio::const_buffer{ nullptr, 5 }, ec), zero);
+    BOOST_REQUIRE(ec == error::http_error_t::bad_alloc);
+}
+
+BOOST_AUTO_TEST_CASE(json_body_reader__finish__incomplete__need_more)
+{
+    const std::string_view text{ R"({"key":)" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    json::body<>::value_type body{};
+    json::body<>::reader reader(body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(!reader.done());
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec == error::http_error_t::need_more);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 ////#endif // HAVE_SLOW_TESTS

@@ -96,6 +96,33 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__string__constructs_string_writ
     BOOST_REQUIRE(std::holds_alternative<string_writer>(variant));
 }
 
+BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__rpc_response__constructs_rpc_writer)
+{
+    message_header<false, fields> header{};
+    body::value_type value{};
+    value = rpc::response{};
+    const auto variant = accessor::to_writer(header, value);
+    BOOST_REQUIRE(std::holds_alternative<rpc::writer>(variant));
+}
+
+BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__rpc_request__constructs_rpc_notifier)
+{
+    message_header<false, fields> header{};
+    body::value_type value{};
+    value = rpc::request{};
+    const auto variant = accessor::to_writer(header, value);
+    BOOST_REQUIRE(std::holds_alternative<rpc::notifier>(variant));
+}
+
+BOOST_AUTO_TEST_CASE(http_body_writer__value_get__const_string__expected)
+{
+    body::value_type value{};
+    value = string_value{ "abc" };
+    const auto& constant = value;
+    BOOST_REQUIRE(constant.contains<string_value>());
+    BOOST_REQUIRE_EQUAL(constant.get<string_value>(), "abc");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(variant_body_writer_file_body_tests, test::directory_setup_fixture)
@@ -114,6 +141,32 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__file__constructs_file_writer)
     value = std::move(file);
     const auto variant = accessor::to_writer(header, value);
     BOOST_REQUIRE(std::holds_alternative<file_writer>(variant));
+}
+
+BOOST_AUTO_TEST_CASE(http_body_writer__get__file__expected_content_no_more)
+{
+    const std::string expected{ "abc" };
+    std::ofstream{ TEST_PATH } << expected;
+
+    boost_code ec{};
+    file_body::value_type file{};
+    file.open((TEST_PATH).c_str(), boost::beast::file_mode::read, ec);
+    BOOST_REQUIRE(!ec);
+
+    message_header<false, fields> header{};
+    body::value_type value{};
+    value = std::move(file);
+    body::writer writer(header, value);
+    BOOST_REQUIRE(writer.binary());
+
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer.has_value());
+    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE_EQUAL(std::string(system::pointer_cast<const char>(buffer.get().first.data()), buffer.get().first.size()), expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

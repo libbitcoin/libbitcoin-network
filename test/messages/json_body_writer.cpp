@@ -166,6 +166,66 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four
     BOOST_REQUIRE(writer.done());
 }
 
+BOOST_AUTO_TEST_CASE(json_body_writer__init__null_buffer__bad_alloc)
+{
+    json::body<>::value_type body{};
+    json::body<>::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(ec == error::http_error_t::bad_alloc);
+}
+
+BOOST_AUTO_TEST_CASE(json_body_writer__get__null_buffer_after_init__bad_alloc)
+{
+    http::flat_buffer scratch{ 64 * 1024 };
+    json::body<>::value_type body{};
+    body.buffer = &scratch;
+    json::body<>::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    body.buffer = nullptr;
+    const auto buffer = writer.get(ec);
+    BOOST_REQUIRE(ec == error::http_error_t::bad_alloc);
+    BOOST_REQUIRE(!buffer.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(json_body_writer__get__zero_limit_buffer__buffer_overflow)
+{
+    http::flat_buffer scratch{ 0 };
+    json::body<>::value_type body{};
+    body.buffer = &scratch;
+    json::body<>::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer = writer.get(ec);
+    BOOST_REQUIRE(ec == error::http_error_t::buffer_overflow);
+    BOOST_REQUIRE(!buffer.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(json_body_writer__get__after_done__end_of_stream)
+{
+    http::flat_buffer scratch{ 64 * 1024 };
+    json::body<>::value_type body{};
+    body.buffer = &scratch;
+    json::body<>::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer1 = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer1.has_value());
+    BOOST_REQUIRE(writer.done());
+
+    const auto buffer2 = writer.get(ec);
+    BOOST_REQUIRE(ec == error::http_error_t::end_of_stream);
+    BOOST_REQUIRE(!buffer2.has_value());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 ////#endif // HAVE_SLOW_TESTS

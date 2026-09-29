@@ -414,4 +414,20 @@ BOOST_AUTO_TEST_CASE(media_type__content_media_type__fields_defaults__expected)
     BOOST_REQUIRE(content_media_type(fields, media_type::application_json) == media_type::application_json);
 }
 
+// target_media_type
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(media_type__target_media_type__exists__expected)
+{
+    BOOST_REQUIRE(target_media_type("/index.html") == media_type::text_html);
+    BOOST_REQUIRE(target_media_type("/path/to/data.JSON") == media_type::application_json);
+}
+
+BOOST_AUTO_TEST_CASE(media_type__target_media_type__not_found__default)
+{
+    BOOST_REQUIRE(target_media_type("/") == media_type::unknown);
+    BOOST_REQUIRE(target_media_type("/file.42") == media_type::unknown);
+    BOOST_REQUIRE(target_media_type("/file", media_type::font_woff) == media_type::font_woff);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
