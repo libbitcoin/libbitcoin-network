@@ -47,6 +47,7 @@ public:
     /// Fixed server random and ephemeral secret (test vectors).
     server(const context& context, const random& random,
         const key& ephemeral) NOEXCEPT;
+    ~server() NOEXCEPT;
 
     /// Consume received transport bytes. False once failed, when output holds
     /// any alert to be sent.
@@ -130,7 +131,7 @@ private:
     // Configuration.
     const context& context_;
     const random random_;
-    const key secret_;
+    key secret_;
 
     // Connection state.
     state state_{ state::client_hello };

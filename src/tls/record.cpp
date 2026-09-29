@@ -36,6 +36,11 @@ record::record() NOEXCEPT
 {
 }
 
+record::~record() NOEXCEPT
+{
+    wipe(iv_);
+}
+
 void record::set_secret(uint16_t suite,
     const schedule::secret& traffic) NOEXCEPT
 {

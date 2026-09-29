@@ -33,6 +33,11 @@ context::context() NOEXCEPT
 {
 }
 
+context::~context() NOEXCEPT
+{
+    wipe(key_);
+}
+
 bool context::set_chain(const std::string& text) NOEXCEPT
 {
     x509::certificates certificates{};
@@ -66,17 +71,19 @@ bool context::set_key(const std::string& text,
     if (!x509::decode_private_key(value, text, password))
         return false;
 
-    const auto previous = key_;
+    auto previous = key_;
     key_ = value;
     has_key_ = true;
-    if (!matches())
+    const auto matched = matches();
+    if (!matched)
     {
         key_ = previous;
         has_key_ = false;
-        return false;
     }
 
-    return true;
+    wipe(value);
+    wipe(previous);
+    return matched;
 }
 
 bool context::add_anchors(const std::string& text) NOEXCEPT

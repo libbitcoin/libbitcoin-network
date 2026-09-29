@@ -38,6 +38,7 @@ public:
     static constexpr size_t tag_size = 16;
 
     record() NOEXCEPT;
+    ~record() NOEXCEPT;
 
     /// Protect subsequent records with the traffic secret of the suite. The
     /// sequence number is reset.

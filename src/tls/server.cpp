@@ -148,6 +148,16 @@ server::server(const context& context, const random& random,
 {
 }
 
+server::~server() NOEXCEPT
+{
+    wipe(secret_);
+    wipe(handshake_secret_);
+    wipe(client_handshake_);
+    wipe(server_handshake_);
+    wipe(client_traffic_);
+    wipe(server_traffic_);
+}
+
 // Properties.
 // ----------------------------------------------------------------------------
 
@@ -572,7 +582,7 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
 
     const auto early = schedule::early_secret();
     handshake_secret_ = schedule::handshake_secret(early, shared);
-    shared = {};
+    wipe(shared);
 
     const auto hash = transcript();
     client_handshake_ = schedule::derive_secret(handshake_secret_,

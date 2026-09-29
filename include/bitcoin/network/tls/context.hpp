@@ -36,6 +36,7 @@ public:
     typedef std::vector<system::data_chunk> chain;
 
     context() NOEXCEPT;
+    ~context() NOEXCEPT;
 
     /// Set the certificate chain (leaf first) from "CERTIFICATE" blocks. The
     /// leaf key must be P-256. False if malformed or the key does not match.
