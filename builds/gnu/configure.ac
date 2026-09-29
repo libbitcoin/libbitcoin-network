@@ -294,12 +294,6 @@ AS_IF([(test "x${with_tests}" != "xno")],
 AS_IF([test "x${with_ssl}" != "xno"], [
         AC_DEFINE([WITH_SSL])
         AC_SUBST([ssl], [-DWITH_SSL])
-        AC_DEFINE([WOLFSSL_USER_SETTINGS])
-        AC_SUBST([wolfssl], [-DWOLFSSL_USER_SETTINGS])
-    ])
-
-AS_IF([test "x${with_ssl}" != "xno"], [
-        AC_DEFINE_UNQUOTED([CERT_PREFIX], ["${repository_root_dir}/test/ssl/vectors/"])
     ])
 
 AS_IF([test "x${with_ssl}" != "xno"],

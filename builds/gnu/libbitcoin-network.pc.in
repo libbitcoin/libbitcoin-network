@@ -30,8 +30,7 @@ Requires: \
 Cflags: \
     -I${includedir} \
     @ssl_include@ \
-    @ssl@ \
-    @wolfssl@
+    @ssl@
 
 Libs: \
     -L${libdir} \

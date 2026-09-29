@@ -218,7 +218,7 @@ target_compile_options( libbitcoin-network
 
 target_compile_definitions( libbitcoin-network
   PUBLIC
-    $<$<BOOL:${with-ssl}>:WITH_SSL WOLFSSL_USER_SETTINGS>
+    $<$<BOOL:${with-ssl}>:WITH_SSL>
 )
 
 file( GLOB_RECURSE libbitcoin_network_HEADERS CONFIGURE_DEPENDS
@@ -328,40 +328,16 @@ if ( with-tests )
       $<$<COMPILE_LANGUAGE:CXX>:-Wno-uninitialized>
   )
 
-  target_compile_definitions( libbitcoin-network-test
-    PRIVATE
-      $<$<BOOL:${with-ssl}>:CERT_PREFIX="${repository_root_dir}/test/ssl/vectors/">
-  )
-
   file( GLOB_RECURSE libbitcoin_network_test_HEADERS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.ipp"
   )
 
-  file( GLOB_RECURSE libbitcoin_network_test_HEADERS_SSL CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.ipp"
-  )
-
-  if ( !with-ssl )
-    list( REMOVE_ITEM libbitcoin_network_test_HEADERS ${libbitcoin_network_test_HEADERS_SSL} )
-  endif()
-
   file( GLOB_RECURSE libbitcoin_network_test_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.cpp"
   )
-
-  file( GLOB_RECURSE libbitcoin_network_test_SOURCES_SSL CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.cpp"
-  )
-
-  if ( !with-ssl )
-    list( REMOVE_ITEM libbitcoin_network_test_SOURCES ${libbitcoin_network_test_SOURCES_SSL} )
-  endif()
 
   target_sources( libbitcoin-network-test
     PRIVATE
@@ -376,9 +352,6 @@ if ( with-tests )
   target_include_directories( libbitcoin-network-test
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../test>
-      $<$<BOOL:${with-ssl}>:
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl>
-      >
   )
 
   target_link_libraries( libbitcoin-network-test

@@ -168,6 +168,11 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/sessions/session_peer.cpp \
     ${srcdir}/../../src/sessions/session_seed.cpp \
     ${srcdir}/../../src/sessions/session_server.cpp \
+    ${srcdir}/../../src/tls/codec.cpp \
+    ${srcdir}/../../src/tls/context.cpp \
+    ${srcdir}/../../src/tls/record.cpp \
+    ${srcdir}/../../src/tls/schedule.cpp \
+    ${srcdir}/../../src/tls/server.cpp \
     ${srcdir}/../../src/zmtp/cipher.cpp \
     ${srcdir}/../../src/zmtp/context.cpp \
     ${srcdir}/../../src/zmtp/stream.cpp
@@ -175,62 +180,7 @@ src_libbitcoin_network_la_SOURCES = \
 if WITH_SSL
 
 src_libbitcoin_network_la_SOURCES += \
-    ${srcdir}/../../src/ssl/wolfssl/internal.c \
-    ${srcdir}/../../src/ssl/wolfssl/keys.c \
-    ${srcdir}/../../src/ssl/wolfssl/ssl.c \
-    ${srcdir}/../../src/ssl/wolfssl/tls.c \
-    ${srcdir}/../../src/ssl/wolfssl/tls13.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfio.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/bio.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/conf.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/evp.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/evp_pk.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/pk.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/pk_ec.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_api_cert.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_api_dtls.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_api_ext.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_api_pk.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_asn1.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_bn.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_certman.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_crypto.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_load.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_misc.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_p7p12.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_sess.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/ssl_sk.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/x509.c \
-    ${srcdir}/../../src/ssl/wolfssl/src/x509_str.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/aes.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/asn.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/chacha.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/chacha20_poly1305.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/coding.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/cryptocb.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/curve25519.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/ecc.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/ed25519.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/error.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/fe_operations.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/ge_operations.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/hash.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/hmac.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/kdf.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/logging.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/memory.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/pkcs12.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/poly1305.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/pwdbased.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/random.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/sha.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/sha256.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/sha512.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/signature.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/sp_int.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/wc_encrypt.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/wc_port.c \
-    ${srcdir}/../../src/ssl/wolfssl/wolfcrypt/wolfmath.c
+    ${srcdir}/../../src/ssl/openssl.cpp
 
 endif WITH_SSL
 
@@ -569,145 +519,19 @@ include_bitcoin_network_ssl_openssl_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/ssl/openssl/x509.h \
     ${srcdir}/../../include/bitcoin/network/ssl/openssl/x509v3.h
 
-include_bitcoin_network_ssl_wolfssldir = \
-    ${includedir}/bitcoin/network/ssl/wolfssl
-
-include_bitcoin_network_ssl_wolfssl_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/callbacks.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/certs_test.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/error-ssl.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/internal.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/ocsp.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/options.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/ssl.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/test.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/version.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfio.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfssl.h
-
-include_bitcoin_network_ssl_wolfssl_openssldir = \
-    ${includedir}/bitcoin/network/ssl/wolfssl/openssl
-
-include_bitcoin_network_ssl_wolfssl_openssl_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/aes.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/asn1.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/bio.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/bn.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/buffer.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/cmac.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/compat_types.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/conf.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/crypto.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/des.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/dh.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/dsa.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/ec.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/ec25519.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/ec448.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/ecdh.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/ecdsa.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/ed25519.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/ed448.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/engine.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/err.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/evp.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/fips_rand.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/hmac.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/kdf.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/lhash.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/md4.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/md5.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/modes.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/obj_mac.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/objects.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/opensslv.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/pem.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/pkcs12.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/pkcs7.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/rand.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/rc4.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/ripemd.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/rsa.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/sha.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/sha3.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/ssl.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/stack.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/tls1.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/x509.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/x509_vfy.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/openssl/x509v3.h
-
-include_bitcoin_network_ssl_wolfssl_wolfcryptdir = \
-    ${includedir}/bitcoin/network/ssl/wolfssl/wolfcrypt
-
-include_bitcoin_network_ssl_wolfssl_wolfcrypt_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/aes.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/arc4.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/ascon.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/asn.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/asn_public.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/blake2.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/camellia.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/chacha.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/chacha20_poly1305.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/cmac.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/coding.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/cpuid.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/cryptocb.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/curve25519.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/curve448.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/des3.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/dh.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/dsa.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/ecc.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/ed25519.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/ed448.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/error-crypt.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/fe_operations.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/fips_test.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/ge_operations.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/hash.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/hmac.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/hpke.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/kdf.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/libwolfssl_sources.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/logging.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/md2.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/md4.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/md5.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/mem_track.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/memory.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/misc.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/oid_sum.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/pkcs12.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/pkcs7.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/poly1305.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/pwdbased.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/random.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/rc2.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/ripemd.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/rsa.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/settings.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/sha.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/sha256.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/sha3.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/sha512.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/signature.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/siphash.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/sm2.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/sm3.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/sm4.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/sp_int.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/srp.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/types.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/user_settings.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/visibility.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/wc_encrypt.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/wc_port.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/wc_she.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/wolfssl/wolfcrypt/wolfmath.h
-
 endif WITH_SSL
+
+include_bitcoin_network_tlsdir = \
+    ${includedir}/bitcoin/network/tls
+
+include_bitcoin_network_tls_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/tls/codec.hpp \
+    ${srcdir}/../../include/bitcoin/network/tls/constants.hpp \
+    ${srcdir}/../../include/bitcoin/network/tls/context.hpp \
+    ${srcdir}/../../include/bitcoin/network/tls/record.hpp \
+    ${srcdir}/../../include/bitcoin/network/tls/schedule.hpp \
+    ${srcdir}/../../include/bitcoin/network/tls/server.hpp \
+    ${srcdir}/../../include/bitcoin/network/tls/tls.hpp
 
 include_bitcoin_network_zmtpdir = \
     ${includedir}/bitcoin/network/zmtp
@@ -730,8 +554,6 @@ check_PROGRAMS = test/libbitcoin-network-test
 test_libbitcoin_network_test_CPPFLAGS = \
     -I${top_builddir}/test \
     -I${srcdir}/../../test \
-    -I${top_builddir}/test/ssl/wolfssl \
-    -I${srcdir}/../../test/ssl/wolfssl \
     ${boost_BUILD_CPPFLAGS} \
     ${boost_unit_test_framework_BUILD_CPPFLAGS} \
     ${src_libbitcoin_network_la_CPPFLAGS}
@@ -884,120 +706,20 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/sessions/session_outbound.cpp \
     ${srcdir}/../../test/sessions/session_seed.cpp \
     ${srcdir}/../../test/sessions/session_server.cpp \
-    ${srcdir}/../../test/ssl/wolfssl.cpp \
+    ${srcdir}/../../test/tls/client.cpp \
+    ${srcdir}/../../test/tls/codec.cpp \
+    ${srcdir}/../../test/tls/context.cpp \
+    ${srcdir}/../../test/tls/record.cpp \
+    ${srcdir}/../../test/tls/schedule.cpp \
+    ${srcdir}/../../test/tls/server.cpp \
+    ${srcdir}/../../test/tls/server_hello.cpp \
+    ${srcdir}/../../test/tls/socket.cpp \
     ${srcdir}/../../test/zmtp/cipher.cpp \
     ${srcdir}/../../test/zmtp/proxy.cpp \
     ${srcdir}/../../test/zmtp/role.cpp \
     ${srcdir}/../../test/zmtp/socket.cpp \
     ${srcdir}/../../test/zmtp/stream.cpp \
     ${srcdir}/../../test/zmtp/zmtp_setup_fixture.cpp
-
-if WITH_SSL
-
-test_libbitcoin_network_test_SOURCES += \
-    ${srcdir}/../../test/ssl/wolfssl/examples/client/client.c \
-    ${srcdir}/../../test/ssl/wolfssl/examples/server/server.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/quic.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/srp.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/suites.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/unit.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/utils.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/w64wrapper.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_aes.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_arc4.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ascon.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_asn.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_blake2.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_camellia.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_certman.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_chacha.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_chacha20_poly1305.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_cmac.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_curve25519.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_curve448.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_des3.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_dh.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_dsa.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_dtls.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_dtls13.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ecc.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ed25519.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ed448.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_evp.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_evp_cipher.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_evp_digest.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_evp_pkey.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_hash.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_hmac.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_lms_xmss.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_md2.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_md4.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_md5.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_mldsa.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_mldsa_legacy.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_mlkem.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ocsp.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_asn1.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_bio.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_bn.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_cipher.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_dgst.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_dh.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_dsa.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_ec.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_ecx.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_mac.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_obj.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_p7p12.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_pem.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_rand.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_rsa.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_sk.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_acert.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_crypto.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_ext.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_info.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_io.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_lu.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_name.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_pk.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_str.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ossl_x509_vp.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_pkcs12.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_pkcs7.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_poly1305.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_pwdbased.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_random.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_rc2.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ripemd.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_rsa.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_session.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_sha.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_sha256.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_sha3.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_sha512.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_she.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_signature.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_slhdsa.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_sm2.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_sm3.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_sm4.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ssl_cert.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ssl_ext.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_ssl_pk.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_tls.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_tls13.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_tls_ext.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_wc_encrypt.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_wolfmath.c \
-    ${srcdir}/../../test/ssl/wolfssl/tests/api/test_x509.c \
-    ${srcdir}/../../test/ssl/wolfssl/testsuite/utils.c \
-    ${srcdir}/../../test/ssl/wolfssl/wolfcrypt/benchmark/benchmark.c \
-    ${srcdir}/../../test/ssl/wolfssl/wolfcrypt/test/test.c
-
-endif WITH_SSL
 
 TESTS = test_runner.sh
 
