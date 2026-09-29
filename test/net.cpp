@@ -732,6 +732,11 @@ public:
     using net::unstore_nonce;
     using net::count_channel;
     using net::uncount_channel;
+
+    void subscribe_close_stranded(stop_handler&& handler) NOEXCEPT
+    {
+        net::subscribe_close(std::move(handler));
+    }
 };
 
 class closed_net_accessor
@@ -1020,6 +1025,46 @@ BOOST_AUTO_TEST_CASE(net__count_channel__inbound_own_nonce__accept_failed)
     BOOST_REQUIRE_EQUAL(net.inbound_channel_count(), 0u);
     outbound->stop(error::service_stopped);
     inbound->stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__connect_handled__closed__service_stopped)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net net(set, log);
+    net.close();
+
+    code result{};
+    net.connect({ "truckers.ca", 42 }, [&](const code& ec, const channel::ptr&) NOEXCEPT
+    {
+        result = ec;
+        return false;
+    });
+
+    BOOST_REQUIRE_EQUAL(result, error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__subscribe_close__stranded__subscribed_then_stopped)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+
+    std::promise<code> promise{};
+    on_strand(net, [&]() NOEXCEPT
+    {
+        net.subscribe_close_stranded([&](const code& ec) NOEXCEPT
+        {
+            promise.set_value(ec);
+            return false;
+        });
+
+        return true;
+    });
+
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.stop_subscriber_count(); }), 1u);
+    net.close();
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

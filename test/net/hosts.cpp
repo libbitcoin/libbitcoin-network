@@ -901,7 +901,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__unspecified_line__purged)
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_ipv6 = true;
-    BOOST_REQUIRE(write_file(TEST_NAME, "[::]:0/0/0\n[::1]:42/0/0\n"));
+    BOOST_REQUIRE(write_file(TEST_NAME, "[::]\n[::1]:42/0/0\n"));
 
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
