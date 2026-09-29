@@ -117,7 +117,8 @@ private:
     bool handle_key_update(const span& body) NOEXCEPT;
 
     void send_retry(const span& client_hello, const span& session) NOEXCEPT;
-    void send_hello(const span& session) NOEXCEPT;
+    void send_hello(const random& value, const span& session,
+        const span& key_share) NOEXCEPT;
     void send_flight() NOEXCEPT;
     void send_compatibility(const span& session) NOEXCEPT;
     void send(uint8_t type, const span& data) NOEXCEPT;

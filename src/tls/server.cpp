@@ -552,9 +552,14 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     if (!x25519::multiply(shared, secret_, peer))
         return fail(alert::illegal_parameter);
 
+    x25519::key own{};
+    x25519::multiply(own, secret_);
+    writer entry{};
+    entry.write_16(x25519_group);
+    entry.write_vector_16(own);
+
     add_transcript(message);
-    send_hello(session);
-    send_compatibility(session);
+    send_hello(random_, session, entry.data());
 
     const auto early = schedule::early_secret();
     handshake_secret_ = schedule::handshake_secret(early, shared);
@@ -585,47 +590,28 @@ void server::send_retry(const span& client_hello, const span& session) NOEXCEPT
     transcript_.reset();
     add_transcript(synthetic.data());
 
-    writer extensions{};
-    extensions.write_16(extension::key_share);
-    extensions.write_16(sizeof(uint16_t));
-    extensions.write_16(x25519_group);
-    extensions.write_16(extension::supported_versions);
-    extensions.write_16(sizeof(uint16_t));
-    extensions.write_16(version_13);
-
-    writer body{};
-    body.write_16(legacy_version);
-    body.write_bytes(retry_random);
-    body.write_vector_8(session);
-    body.write_16(suite_);
-    body.write_8(0x00);
-    body.write_vector_16(extensions.data());
-
-    const auto retry = make_message(handshake::server_hello, body.data());
-    add_transcript(retry);
-    send_.seal(output_, content::handshake, retry);
-    send_compatibility(session);
+    writer entry{};
+    entry.write_16(x25519_group);
+    send_hello(retry_random, session, entry.data());
     state_ = state::retry_hello;
 }
 
-void server::send_hello(const span& session) NOEXCEPT
+// ServerHello, or HelloRetryRequest by its random and key_share (4.1.3).
+void server::send_hello(const random& value, const span& session,
+    const span& key_share) NOEXCEPT
 {
-    x25519::key own{};
-    x25519::multiply(own, secret_);
+    writer version{};
+    version.write_16(version_13);
 
     writer extensions{};
     extensions.write_16(extension::key_share);
-    extensions.write_16(narrow_cast<uint16_t>(2u * sizeof(uint16_t) +
-        own.size()));
-    extensions.write_16(x25519_group);
-    extensions.write_vector_16(own);
+    extensions.write_vector_16(key_share);
     extensions.write_16(extension::supported_versions);
-    extensions.write_16(sizeof(uint16_t));
-    extensions.write_16(version_13);
+    extensions.write_vector_16(version.data());
 
     writer body{};
     body.write_16(legacy_version);
-    body.write_bytes(random_);
+    body.write_bytes(value);
     body.write_vector_8(session);
     body.write_16(suite_);
     body.write_8(0x00);
@@ -634,6 +620,7 @@ void server::send_hello(const span& session) NOEXCEPT
     const auto hello = make_message(handshake::server_hello, body.data());
     add_transcript(hello);
     send_.seal(output_, content::handshake, hello);
+    send_compatibility(session);
 }
 
 // Sent once, after the first server handshake message, in compatibility
