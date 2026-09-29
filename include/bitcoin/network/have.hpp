@@ -24,7 +24,7 @@
 /// WITH_ indicates build symbol.
 /// ---------------------------------------------------------------------------
 
-/// This enables integral ssl support via embedded wolfssl.
+/// This enables integral ssl support via the embedded tls implementation.
 /// If not defined then boost-compatible SSL must be externally linked.
 /// The build config must always define either the internal ssl include path or
 /// an external one, so that boost will locate the expected openssl headers.
