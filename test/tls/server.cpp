@@ -315,6 +315,16 @@ BOOST_AUTO_TEST_CASE(tls_server__receive__split_records__established)
 
 // client authentication
 
+BOOST_AUTO_TEST_CASE(tls_server__receive__user_canceled__not_failed)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    BOOST_REQUIRE(server.receive(base16_chunk("1503030002015a")));
+    BOOST_REQUIRE(!server.is_failed());
+    BOOST_REQUIRE(!server.is_closed());
+    BOOST_REQUIRE(server.output().empty());
+}
+
 BOOST_AUTO_TEST_CASE(tls_server__client_certificate__trusted__peer_verified)
 {
     const auto client_identity = make_identity(client_key, "client");

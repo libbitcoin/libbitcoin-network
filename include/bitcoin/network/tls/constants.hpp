@@ -92,6 +92,7 @@ namespace alert
     constexpr uint8_t decrypt_error = 51;
     constexpr uint8_t protocol_version = 70;
     constexpr uint8_t internal_error = 80;
+    constexpr uint8_t user_canceled = 90;
     constexpr uint8_t missing_extension = 109;
     constexpr uint8_t certificate_required = 116;
 }

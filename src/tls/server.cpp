@@ -351,12 +351,16 @@ bool server::handle_alert(const span& content) NOEXCEPT
     if (content.size() != two)
         return fail(alert::decode_error);
 
+    // Closure alerts are not errors (6.1).
     const auto description = content[1];
     if (description == alert::close_notify)
     {
         closed_ = true;
         return true;
     }
+
+    if (description == alert::user_canceled)
+        return true;
 
     state_ = state::failed;
     failure_ = description;
