@@ -588,7 +588,7 @@ struct websocket_fixture
   : loopback_fixture
 {
     websocket_fixture()
-      : ws{ std::move(client) }
+      : stream{ std::move(client) }
     {
         const awaiter<code> upgraded{};
         const awaiter<code> accepted{};
@@ -602,13 +602,13 @@ struct websocket_fixture
         });
 
         boost_code ec{};
-        ws.handshake("localhost", "/", ec);
+        stream.handshake("localhost", "/", ec);
         BOOST_REQUIRE(!ec);
         upgrade_result = upgraded.get();
         accept_result = accepted.get();
     }
 
-    ws::socket ws;
+    ws::socket stream;
     code upgrade_result{};
     code accept_result{};
 };
@@ -1131,9 +1131,9 @@ BOOST_FIXTURE_TEST_CASE(proxy__write_ws__text__client_receives_text_message, web
 
     boost_code ec{};
     http::flat_buffer in{};
-    ws.read(in, ec);
+    stream.read(in, ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(ws.got_text());
+    BOOST_REQUIRE(stream.got_text());
     BOOST_REQUIRE_EQUAL(boost::beast::buffers_to_string(in.data()), text);
     BOOST_REQUIRE_EQUAL(written.get(), error::success);
 }
@@ -1148,7 +1148,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_ws__client_message__expected, websocket_fixt
     });
 
     boost_code ec{};
-    ws.write(boost::asio::buffer(text), ec);
+    stream.write(boost::asio::buffer(text), ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::success);
     BOOST_REQUIRE_EQUAL(boost::beast::buffers_to_string(buffer.data()), text);
@@ -1173,8 +1173,8 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_http__websocket_rpc_body__expected, websocke
     read_http(read);
 
     boost_code ec{};
-    ws.text(true);
-    ws.write(boost::asio::buffer(request1), ec);
+    stream.text(true);
+    stream.write(boost::asio::buffer(request1), ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::success);
     BOOST_REQUIRE_EQUAL(http_request.body().get<rpc::request>().message.method, "a");
@@ -1189,7 +1189,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__write_http__websocket_json_body__client_receives_
 
     boost_code ec{};
     http::flat_buffer in{};
-    ws.read(in, ec);
+    stream.read(in, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(boost::beast::buffers_to_string(in.data()), R"({"key":"value"})");
     BOOST_REQUIRE_EQUAL(written.get(), error::success);
@@ -1202,7 +1202,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__client_receives_close, we
 
     boost_code ec{};
     http::flat_buffer in{};
-    ws.read(in, ec);
+    stream.read(in, ec);
     BOOST_REQUIRE(ec == boost::beast::websocket::error::closed);
     BOOST_REQUIRE_EQUAL(stopped.get(), error::websocket_closed);
 }
