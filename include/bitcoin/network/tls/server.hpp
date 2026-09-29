@@ -120,7 +120,7 @@ private:
     void send_hello(const span& session) NOEXCEPT;
     void send_flight() NOEXCEPT;
     void send_compatibility(const span& session) NOEXCEPT;
-    void send_handshake(const system::data_chunk& messages) NOEXCEPT;
+    void send(uint8_t type, const span& data) NOEXCEPT;
     void set_receive(const schedule::secret& traffic) NOEXCEPT;
     void add_transcript(const span& message) NOEXCEPT;
     schedule::secret transcript() NOEXCEPT;

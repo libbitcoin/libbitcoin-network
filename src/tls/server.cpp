@@ -208,13 +208,7 @@ bool server::write(const const_byte_span& data) NOEXCEPT
     if (!is_established() || close_sent_)
         return false;
 
-    for (size_t start{}; start < data.size(); start += maximum_plaintext)
-    {
-        const auto size = std::min(maximum_plaintext, data.size() - start);
-        send_.seal(output_, content::application_data, data.subspan(start,
-            size));
-    }
-
+    send(content::application_data, data);
     return true;
 }
 
@@ -715,7 +709,7 @@ void server::send_flight() NOEXCEPT
     const auto verify_data = schedule::finished(server_handshake_,
         transcript());
     append(make_message(handshake::finished, to_chunk(verify_data)));
-    send_handshake(messages);
+    send(content::handshake, messages);
 
     // Application secrets follow the server finished (7.1).
     const auto master = schedule::master_secret(handshake_secret_);
@@ -725,13 +719,12 @@ void server::send_flight() NOEXCEPT
     send_.set_secret(suite_, server_traffic_);
 }
 
-void server::send_handshake(const data_chunk& messages) NOEXCEPT
+void server::send(uint8_t type, const span& data) NOEXCEPT
 {
-    for (size_t start{}; start < messages.size(); start += maximum_plaintext)
+    for (size_t start{}; start < data.size(); start += maximum_plaintext)
     {
-        const auto size = std::min(maximum_plaintext, messages.size() - start);
-        send_.seal(output_, content::handshake, span{ messages }.subspan(start,
-            size));
+        const auto size = std::min(maximum_plaintext, data.size() - start);
+        send_.seal(output_, type, data.subspan(start, size));
     }
 }
 
