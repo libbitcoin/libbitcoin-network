@@ -716,4 +716,310 @@ BOOST_AUTO_TEST_CASE(net__run__started_unknown_unknown__unknown)
     BOOST_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
 }
 
+// protected
+
+class net_accessor
+  : public net
+{
+public:
+    using net::net;
+    using net::create_service;
+    using net::create_acceptor_sam;
+    using net::to_connector;
+    using net::fetch;
+    using net::save;
+    using net::store_nonce;
+    using net::unstore_nonce;
+    using net::count_channel;
+    using net::uncount_channel;
+};
+
+class closed_net_accessor
+  : public net_accessor
+{
+public:
+    using net_accessor::net_accessor;
+    using net::do_run;
+
+    bool closed() const NOEXCEPT override
+    {
+        return true;
+    }
+};
+
+template <typename Function>
+static auto on_strand(net& instance, Function&& function)
+{
+    std::promise<decltype(function())> promise{};
+    boost::asio::post(instance.strand(), [&]() NOEXCEPT
+    {
+        promise.set_value(function());
+    });
+
+    return promise.get_future().get();
+}
+
+static const settings::tcp_server peer_options{ "test" };
+
+static channel_peer::ptr make_inbound(net& instance, const logger& log)
+{
+    const network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = peer_options.maximum_buffer };
+    const auto socket = std::make_shared<network::socket>(log, instance.service(), params);
+    return std::make_shared<channel_peer>(log, socket, 1, instance.network_settings(), peer_options);
+}
+
+static channel_peer::ptr make_outbound(net& instance, const logger& log)
+{
+    const network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = peer_options.maximum_buffer };
+    const config::endpoint endpoint{ "1.2.3.4", 42 };
+    const auto socket = std::make_shared<network::socket>(log, instance.service(), params, config::address{}, endpoint, false);
+    return std::make_shared<channel_peer>(log, socket, 2, instance.network_settings(), peer_options);
+}
+
+BOOST_AUTO_TEST_CASE(net__suspend__resume__expected)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net net(set, log);
+    BOOST_REQUIRE(!net.suspended());
+
+    net.suspend(error::unknown);
+    BOOST_REQUIRE(net.suspended());
+
+    BOOST_REQUIRE(net.resume());
+    BOOST_REQUIRE(!net.suspended());
+}
+
+BOOST_AUTO_TEST_CASE(net__reserved_count__unstarted__zero)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net net(set, log);
+    BOOST_REQUIRE_EQUAL(net.reserved_count(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(net__fetch_totals__unstarted__success_empty)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net net(set, log);
+
+    std::promise<std::pair<code, net::totals>> promise{};
+    net.fetch_totals([&](const code& ec, const net::totals& totals) NOEXCEPT
+    {
+        promise.set_value({ ec, totals });
+    });
+
+    const auto result = promise.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::success);
+    BOOST_REQUIRE_EQUAL(result.second.sent, 0u);
+    BOOST_REQUIRE_EQUAL(result.second.received, 0u);
+    BOOST_REQUIRE(result.second.actives.empty());
+}
+
+BOOST_AUTO_TEST_CASE(net__fetch_totals__closed__service_stopped)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net net(set, log);
+    net.close();
+
+    std::promise<code> promise{};
+    net.fetch_totals([&](const code& ec, const net::totals&) NOEXCEPT
+    {
+        promise.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__unsubscribe_connect__subscribed__desubscribed)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net net(set, log);
+
+    std::promise<code> promise_handler{};
+    const auto handler = [&](const code& ec, const channel::ptr&) NOEXCEPT
+    {
+        promise_handler.set_value(ec);
+        return false;
+    };
+
+    std::promise<net::object_key> promise_complete{};
+    const auto complete = [&](const code&, net::object_key key) NOEXCEPT
+    {
+        promise_complete.set_value(key);
+    };
+
+    net.subscribe_connect(handler, complete);
+    const auto key = promise_complete.get_future().get();
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.connect_subscriber_count(); }), 1u);
+
+    net.unsubscribe_connect(key);
+    BOOST_REQUIRE_EQUAL(promise_handler.get_future().get(), error::desubscribed);
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.connect_subscriber_count(); }), 0u);
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.stop_subscriber_count(); }), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(net__create_service__always__acceptor)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+    BOOST_REQUIRE(net.create_service({ .maximum_request = 42 }));
+}
+
+BOOST_AUTO_TEST_CASE(net__create_acceptor_sam__privacy__acceptor_sam)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log, service::node_none, service::node_encrypted_transport);
+    BOOST_REQUIRE(net.create_acceptor_sam());
+}
+
+BOOST_AUTO_TEST_CASE(net__to_connector__proxied_privacy__connector_socks)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log, service::node_none, service::node_encrypted_transport);
+    settings::socks5 socks{};
+    socks.socks = { "127.0.0.1:65140" };
+    const auto instance = net.to_connector(socks, set.outbound, seconds(1), 0);
+    BOOST_REQUIRE(std::dynamic_pointer_cast<connector_socks>(instance));
+}
+
+BOOST_AUTO_TEST_CASE(net__to_connector__unproxied__connector)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+    const auto instance = net.to_connector(settings::socks5{}, set.outbound, seconds(1), 0);
+    BOOST_REQUIRE(instance);
+    BOOST_REQUIRE(!std::dynamic_pointer_cast<connector_socks>(instance));
+}
+
+BOOST_AUTO_TEST_CASE(net__save__unstarted__service_stopped)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+
+    std::promise<code> promise{};
+    net.save(system::to_shared(address{}), [&](const code& ec, size_t) NOEXCEPT
+    {
+        promise.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__save__closed__service_stopped)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    closed_net_accessor net(set, log);
+
+    std::promise<code> promise{};
+    net.save(system::to_shared(address{}), [&](const code& ec, size_t) NOEXCEPT
+    {
+        promise.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__fetch__closed__service_stopped)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    closed_net_accessor net(set, log);
+
+    std::promise<code> promise{};
+    net.fetch([&](const code& ec, const address_cptr&) NOEXCEPT
+    {
+        promise.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__do_run__closed__service_stopped)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    closed_net_accessor net(set, log);
+
+    std::promise<code> promise{};
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    {
+        net.do_run([&](const code& ec) NOEXCEPT
+        {
+            promise.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__store_nonce__outbound__stored_once)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+    const auto channel = make_outbound(net, log);
+
+    BOOST_REQUIRE(on_strand(net, [&]() NOEXCEPT { return net.store_nonce(*channel); }));
+    BOOST_REQUIRE(!on_strand(net, [&]() NOEXCEPT { return net.store_nonce(*channel); }));
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.nonces_count(); }), 1u);
+    BOOST_REQUIRE(on_strand(net, [&]() NOEXCEPT { return net.unstore_nonce(*channel); }));
+    BOOST_REQUIRE(!on_strand(net, [&]() NOEXCEPT { return net.unstore_nonce(*channel); }));
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.nonces_count(); }), 0u);
+    channel->stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__count_channel__outbound_duplicate__address_in_use)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+    const auto channel = make_outbound(net, log);
+
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.count_channel(*channel); }), error::success);
+    BOOST_REQUIRE_EQUAL(net.channel_count(), 1u);
+    BOOST_REQUIRE_EQUAL(net.reserved_count(), 1u);
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.count_channel(*channel); }), error::address_in_use);
+    BOOST_REQUIRE_EQUAL(net.channel_count(), 1u);
+
+    on_strand(net, [&]() NOEXCEPT { net.uncount_channel(*channel); return true; });
+    BOOST_REQUIRE_EQUAL(net.channel_count(), 0u);
+    BOOST_REQUIRE_EQUAL(net.reserved_count(), 0u);
+    channel->stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__count_channel__inbound_own_nonce__accept_failed)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+    const auto outbound = make_outbound(net, log);
+    const auto inbound = make_inbound(net, log);
+
+    const auto version = std::make_shared<messages::peer::version>();
+    version->nonce = outbound->nonce();
+    std::promise<bool> promise{};
+    boost::asio::post(inbound->strand(), [&]() NOEXCEPT
+    {
+        inbound->set_peer_version(version);
+        promise.set_value(true);
+    });
+
+    BOOST_REQUIRE(promise.get_future().get());
+    BOOST_REQUIRE(on_strand(net, [&]() NOEXCEPT { return net.store_nonce(*outbound); }));
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.count_channel(*inbound); }), error::accept_failed);
+    BOOST_REQUIRE_EQUAL(net.inbound_channel_count(), 0u);
+    outbound->stop(error::service_stopped);
+    inbound->stop(error::service_stopped);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
