@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(tls_record__seal_open__chacha__round_trip)
     BOOST_REQUIRE_EQUAL(content, rfc8448::client_data);
 }
 
-BOOST_AUTO_TEST_CASE(tls_record__open__padding_only__false)
+BOOST_AUTO_TEST_CASE(tls_record__open__padding_only__zero_type)
 {
     const auto secret = rfc8448::array<32>(rfc8448::client_application_traffic);
     record sender{};
@@ -157,9 +157,11 @@ BOOST_AUTO_TEST_CASE(tls_record__open__padding_only__false)
     data_chunk sealed{};
     sender.seal(sealed, 0x00, data_chunk(4, 0x00));
 
-    uint8_t type{};
-    data_chunk content{};
-    BOOST_REQUIRE(!receiver.open(type, content, head(sealed), tail(sealed)));
+    uint8_t type{ 0xff };
+    data_chunk content{ 0x42 };
+    BOOST_REQUIRE(receiver.open(type, content, head(sealed), tail(sealed)));
+    BOOST_REQUIRE_EQUAL(type, 0u);
+    BOOST_REQUIRE(content.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

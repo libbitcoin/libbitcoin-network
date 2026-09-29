@@ -52,7 +52,7 @@ public:
         const const_byte_span& content) NOEXCEPT;
 
     /// Open the fragment of one protected record given its header. False if
-    /// not authenticated or no inner type is present.
+    /// not authenticated, type zero if no inner type is present.
     bool open(uint8_t& type, system::data_chunk& content,
         const const_byte_span& header,
         const const_byte_span& fragment) NOEXCEPT;

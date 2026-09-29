@@ -149,7 +149,11 @@ bool record::open(uint8_t& type, data_chunk& content,
     const auto last = std::find_if(plain.rbegin(), plain.rend(),
         [](uint8_t byte) NOEXCEPT { return !is_zero(byte); });
     if (last == plain.rend())
-        return false;
+    {
+        type = 0;
+        content.clear();
+        return true;
+    }
 
     type = *last;
     plain.resize(std::distance(last, plain.rend()) - one);
