@@ -84,3 +84,60 @@ BOOST_AUTO_TEST_CASE(tracker__construct__stopped_log__safe)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(logger_tests)
+
+BOOST_AUTO_TEST_CASE(logger__subscribe_messages__stopped__service_stopped)
+{
+    logger log{};
+    log.stop();
+
+    code result{};
+    log.subscribe_messages([&](const code& ec, uint8_t, time_t, const std::string&) NOEXCEPT
+    {
+        result = ec;
+        return false;
+    });
+
+    BOOST_REQUIRE_EQUAL(result, error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(logger__subscribe_events__stopped__service_stopped)
+{
+    logger log{};
+    log.stop();
+
+    code result{};
+    log.subscribe_events([&](const code& ec, uint8_t, uint64_t, const auto&) NOEXCEPT
+    {
+        result = ec;
+        return false;
+    });
+
+    BOOST_REQUIRE_EQUAL(result, error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(logger__fire__subscribed__notified_then_stopped)
+{
+    std::vector<std::tuple<code, uint8_t, uint64_t>> events{};
+
+    {
+        logger log{};
+        log.subscribe_events([&](const code& ec, uint8_t event_, uint64_t value, const auto&) NOEXCEPT
+        {
+            events.emplace_back(ec, event_, value);
+            return true;
+        });
+
+        log.fire(42, 7);
+        log.stop();
+    }
+
+    BOOST_REQUIRE_EQUAL(events.size(), 2u);
+    BOOST_REQUIRE_EQUAL(std::get<0>(events.at(0)), error::success);
+    BOOST_REQUIRE_EQUAL(std::get<1>(events.at(0)), 42u);
+    BOOST_REQUIRE_EQUAL(std::get<2>(events.at(0)), 7u);
+    BOOST_REQUIRE_EQUAL(std::get<0>(events.at(1)), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

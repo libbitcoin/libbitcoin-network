@@ -1096,6 +1096,15 @@ BOOST_AUTO_TEST_CASE(settings_tls_server__initialize_context__twice__operation_f
     BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::operation_failed);
 }
 
+BOOST_AUTO_TEST_CASE(settings_tls_server__initialize_context__missing_certificate__tls_use_certificate)
+{
+    settings::tls_server instance{ "test" };
+    instance.safes.emplace_back("127.0.0.1:443");
+    instance.cert_path = { TEST_PATH };
+    instance.key_path = { TEST_PATH };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_certificate);
+}
+
 BOOST_AUTO_TEST_CASE(settings_tls_server__secure_context__initialized__ssl_context)
 {
     settings::tls_server instance{ "test" };
@@ -1125,6 +1134,35 @@ BOOST_AUTO_TEST_CASE(settings_zmtp_server__initialize_context__twice__operation_
     settings::zmtp_server instance{ "test" };
     BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
     BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::operation_failed);
+}
+
+BOOST_AUTO_TEST_CASE(settings_zmtp_server__initialize_context__secure_key_and_certificate__success_curve)
+{
+    settings::zmtp_server instance{ "test" };
+    instance.safes.emplace_back("127.0.0.1:443");
+    instance.key = system::config::base85{ system::data_chunk(32, 0x42) };
+    instance.certs.emplace_back(system::data_chunk(32, 0x24));
+    BOOST_REQUIRE(instance.secure());
+    BOOST_REQUIRE(instance.authenticate());
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BOOST_REQUIRE(instance.context->curve());
+}
+
+BOOST_AUTO_TEST_CASE(settings_zmtp_server__initialize_context__short_key__invalid_configuration)
+{
+    settings::zmtp_server instance{ "test" };
+    instance.safes.emplace_back("127.0.0.1:443");
+    instance.key = system::config::base85{ system::data_chunk(31, 0x42) };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::invalid_configuration);
+}
+
+BOOST_AUTO_TEST_CASE(settings_zmtp_server__initialize_context__short_certificate__invalid_configuration)
+{
+    settings::zmtp_server instance{ "test" };
+    instance.safes.emplace_back("127.0.0.1:443");
+    instance.key = system::config::base85{ system::data_chunk(32, 0x42) };
+    instance.certs.emplace_back(system::data_chunk(31, 0x24));
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::invalid_configuration);
 }
 
 BOOST_AUTO_TEST_CASE(settings_zmtp_server__clear_context__default__zmtp_context)

@@ -293,4 +293,39 @@ BOOST_AUTO_TEST_CASE(endpoint__inequality1__same_v6__false)
     BOOST_REQUIRE(!(host1 != host2));
 }
 
+// address_item
+
+BOOST_AUTO_TEST_CASE(endpoint__equality_address_item__same__true)
+{
+    const endpoint host{ "42.42.42.42:4242" };
+    const messages::peer::address_item item = address{ "42.42.42.42:4242" };
+    BOOST_REQUIRE(host == item);
+    BOOST_REQUIRE(!(host != item));
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__equality_address_item__distinct__false)
+{
+    const endpoint host{ "42.42.42.42:4242" };
+    const messages::peer::address_item item = address{ "24.24.24.24:4242" };
+    BOOST_REQUIRE(!(host == item));
+    BOOST_REQUIRE(host != item);
+}
+
+// authority
+
+BOOST_AUTO_TEST_CASE(endpoint__authority__ipv4__expected)
+{
+    const endpoint host{ "42.42.42.42:4242" };
+    const authority value = host;
+    BOOST_REQUIRE_EQUAL(value.port(), 4242u);
+    BOOST_REQUIRE_EQUAL(value.ip(), asio::address{ boost::asio::ip::make_address_v4("42.42.42.42") });
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__authority__host_name__default)
+{
+    const endpoint host{ "example.com:4242" };
+    const authority value = host;
+    BOOST_REQUIRE_EQUAL(value.port(), 0u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
