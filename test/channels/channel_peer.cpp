@@ -676,4 +676,208 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__gate__retained_peer_close__peer_disconnect
     BOOST_REQUIRE_EQUAL(peer_await(stopped), error::peer_disconnect);
 }
 
+// p2ps
+
+using namespace std::chrono_literals;
+
+static const network::p2ps::context p2ps_configuration{ 0xd9b4bef9 };
+
+struct p2ps_loopback_fixture
+{
+    DELETE_COPY_MOVE(p2ps_loopback_fixture);
+
+    static constexpr uint16_t port = 65133;
+
+    p2ps_loopback_fixture() NOEXCEPT
+      : pool_(2), strand_(pool_.service().get_executor()), acceptor_(strand_),
+        client(client_service)
+    {
+        const asio::endpoint local(asio::ipv4::loopback(), port);
+        boost_code ec{};
+        acceptor_.open(local.protocol(), ec);
+        BOOST_REQUIRE(!ec);
+        acceptor_.set_option(asio::reuse_address(true), ec);
+        BOOST_REQUIRE(!ec);
+        acceptor_.bind(local, ec);
+        BOOST_REQUIRE(!ec);
+        acceptor_.listen(1, ec);
+        BOOST_REQUIRE(!ec);
+
+        network::socket::parameters params
+        {
+            .maximum_request = options.maximum_request,
+            .minimum_buffer = options.minimum_buffer,
+            .maximum_buffer = options.maximum_buffer,
+            .context = network::socket::context{ std::cref(p2ps_configuration) }
+        };
+
+        server_ = std::make_shared<network::socket>(log, pool_.service(), std::move(params));
+        const auto promise = accepted_;
+        server_->accept(acceptor_, [=](const code& accept_ec) NOEXCEPT
+        {
+            promise->set_value(accept_ec);
+        });
+
+        client.connect(local, ec);
+        BOOST_REQUIRE(!ec);
+    }
+
+    ~p2ps_loopback_fixture() NOEXCEPT
+    {
+        boost_code ignore{};
+        client.close(ignore);
+        channel ? channel->stop(error::service_stopped) : server_->stop();
+        boost::asio::post(strand_, [this]() NOEXCEPT
+        {
+            boost_code cancel{};
+            acceptor_.cancel(cancel);
+        });
+
+        pool_.stop();
+        BOOST_REQUIRE(pool_.join());
+    }
+
+    void accept() NOEXCEPT
+    {
+        BOOST_REQUIRE_EQUAL(peer_await(accepted_), error::success);
+        channel = std::make_shared<resumable_channel_peer>(log, server_, 42, peer_checked_settings, options);
+        const auto promise = stopped;
+        channel->subscribe_stop([=](const code& stop_ec) NOEXCEPT
+        {
+            promise->set_value(stop_ec);
+        }, [](const code&) NOEXCEPT {});
+    }
+
+    bool encrypted() NOEXCEPT
+    {
+        const auto self = channel;
+        const auto result = std::make_shared<std::promise<bool>>();
+        boost::asio::post(channel->strand(), [=]() NOEXCEPT
+        {
+            result->set_value(self->encrypted());
+        });
+
+        return result->get_future().get();
+    }
+
+    void start(const peer_responder& respond) NOEXCEPT
+    {
+        const auto self = channel;
+        const auto started = peer_make_promise();
+        boost::asio::post(channel->strand(), [=]() NOEXCEPT
+        {
+            using namespace messages::peer;
+            self->subscribe<ping>([=](const code& ec, const ping::cptr& message) NOEXCEPT
+            {
+                return !ec && respond(self, message);
+            });
+
+            self->resume();
+            started->set_value(error::success);
+        });
+
+        BOOST_REQUIRE_EQUAL(peer_await(started), error::success);
+    }
+
+    const logger log{};
+
+private:
+    threadpool pool_;
+    asio::strand strand_;
+    asio::acceptor acceptor_;
+    const peer_promise accepted_{ peer_make_promise() };
+    network::socket::ptr server_{};
+
+public:
+    asio::context client_service{};
+    asio::socket client;
+    const peer_promise stopped{ peer_make_promise() };
+    std::shared_ptr<resumable_channel_peer> channel{};
+};
+
+BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v1_version_prefix__v1_served, p2ps_loopback_fixture)
+{
+    boost_code ec{};
+    boost::asio::write(client, boost::asio::buffer(system::base16_chunk("f9beb4d9" "76657273696f6e0000000000" "00000000" "5df6e0e2")), ec);
+    BOOST_REQUIRE(!ec);
+
+    accept();
+    start(peer_keep);
+    BOOST_REQUIRE(!encrypted());
+    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::invalid_message);
+}
+
+BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_exchange, p2ps_loopback_fixture)
+{
+    using namespace messages::peer;
+    boost_code handshake{ boost::asio::error::would_block };
+    network::p2ps::stream initiator{ std::move(client), p2ps_configuration };
+    initiator.async_handshake([&](const boost_code& shake_ec) NOEXCEPT
+    {
+        handshake = shake_ec;
+    });
+
+    client_service.run_for(5s);
+    client_service.restart();
+    BOOST_REQUIRE(!handshake);
+
+    accept();
+    BOOST_REQUIRE(encrypted());
+
+    const auto nonce = std::make_shared<std::promise<uint64_t>>();
+    start([=](const channel_peer::ptr& self, const ping::cptr& message) NOEXCEPT
+    {
+        nonce->set_value(message->nonce);
+        self->send<ping>(ping{ 7 }, [](const code&) NOEXCEPT {});
+        return false;
+    });
+
+    boost_code sent{ boost::asio::error::would_block };
+    initiator.async_write_message(identifiers::ping, "", system::to_shared(system::base16_chunk("0100000000000000")), [&](const boost_code& write_ec, size_t) NOEXCEPT
+    {
+        sent = write_ec;
+    });
+
+    client_service.run_for(5s);
+    client_service.restart();
+    BOOST_REQUIRE(!sent);
+    BOOST_REQUIRE_EQUAL(nonce->get_future().get(), 1u);
+
+    uint8_t identifier{};
+    system::data_chunk payload{};
+    system::data_chunk buffer{};
+    boost_code received{ boost::asio::error::would_block };
+    initiator.async_read_message(buffer, network::p2ps::cipher::maximum_content, [&](const boost_code& read_ec, uint8_t id, const std::string&, const network::p2ps::stream::payload_t& data) NOEXCEPT
+    {
+        received = read_ec;
+        identifier = id;
+        payload.assign(data.begin(), data.end());
+    });
+
+    client_service.run_for(5s);
+    client_service.restart();
+    BOOST_REQUIRE(!received);
+    BOOST_REQUIRE_EQUAL(identifier, identifiers::ping);
+    BOOST_REQUIRE_EQUAL(payload, system::base16_chunk("0700000000000000"));
+}
+
+BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator_closed__peer_disconnect, p2ps_loopback_fixture)
+{
+    boost_code handshake{ boost::asio::error::would_block };
+    auto initiator = std::make_unique<network::p2ps::stream>(std::move(client), p2ps_configuration);
+    initiator->async_handshake([&](const boost_code& shake_ec) NOEXCEPT
+    {
+        handshake = shake_ec;
+    });
+
+    client_service.run_for(5s);
+    client_service.restart();
+    BOOST_REQUIRE(!handshake);
+
+    accept();
+    start(peer_keep);
+    initiator.reset();
+    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::peer_disconnect);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

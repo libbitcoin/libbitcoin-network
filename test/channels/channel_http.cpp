@@ -421,6 +421,26 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_write_chunk__batch_parts__chunked_json_array
     BOOST_REQUIRE_EQUAL(array.at(0).at("result").as_string(), "a");
 }
 
+BOOST_FIXTURE_TEST_CASE(socket__rpc_write_chunk__peer_closed__failure, http_loopback_fixture)
+{
+    http::response response{ http::status::ok, 11 };
+    response.body() = http::empty_value{};
+    response.chunked(true);
+    const auto header = http_make_promise();
+    server->http_write_header(std::move(response), http_complete(header));
+    BOOST_REQUIRE_EQUAL(http_await(header), error::success);
+
+    boost_code ignore{};
+    client.close(ignore);
+
+    rpc::response part{};
+    part.changed = true;
+    part.message = { .jsonrpc = rpc::version::v2, .id = rpc::code_t{ 1 }, .result = rpc::value_t{ rpc::string_t(16 * megabyte, 'x') } };
+    const auto result = http_make_promise();
+    server->rpc_write_chunk(std::move(part), http_complete(result));
+    BOOST_REQUIRE(http_await(result));
+}
+
 // websocket
 
 BOOST_FIXTURE_TEST_CASE(socket__ws_read__text_after_control_frames__expected, http_loopback_fixture)
@@ -912,12 +932,11 @@ BOOST_FIXTURE_TEST_CASE(channel_http__resume__get__dispatched_and_response_sent,
     BOOST_REQUIRE_EQUAL(target->get_future().get(), "/index");
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_http__resume__large_post_then_get__both_dispatched, http_channel_fixture)
+BOOST_FIXTURE_TEST_CASE(channel_http__resume__large_header_then_get__both_dispatched, http_channel_fixture)
 {
     start(http_ok);
 
-    const std::string body(8 * kilobyte, 'x');
-    send("POST / HTTP/1.1\r\nHost: example.com\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body);
+    send("GET / HTTP/1.1\r\nHost: example.com\r\nX-Pad: " + std::string(8 * kilobyte, 'x') + "\r\n\r\n");
     BOOST_REQUIRE_EQUAL(receive().result_int(), 200u);
 
     send(http_get_request);

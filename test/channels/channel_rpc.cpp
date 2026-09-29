@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../zmtp/zmtp_setup_fixture.hpp"
 
 #include <future>
 
@@ -193,6 +194,18 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__missing_method__failure, rpc_loopback_
     BOOST_REQUIRE(rpc_await(result));
 }
 
+BOOST_FIXTURE_TEST_CASE(socket__rpc_read__buffer_smaller_than_request__expected, rpc_loopback_fixture)
+{
+    http::flat_buffer buffer{ 16 };
+    rpc::request request{};
+    const auto result = rpc_make_promise();
+    server->rpc_read(buffer, request, rpc_complete(result));
+
+    send(R"({"jsonrpc":"2.0","id":42,"method":"echo","params":["hello"]})" "\n");
+    BOOST_REQUIRE_EQUAL(rpc_await(result), error::success);
+    BOOST_REQUIRE_EQUAL(request.message.method, "echo");
+}
+
 BOOST_FIXTURE_TEST_CASE(socket__rpc_read__exceeds_maximum__message_overflow, rpc_small_fixture)
 {
     http::flat_buffer buffer{ 4096 };
@@ -261,6 +274,18 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__notification__newline_terminated_jso
     BOOST_REQUIRE_EQUAL(object.at("method").as_string(), "note");
     BOOST_REQUIRE_EQUAL(object.at("params").as_array().at(0).as_string(), "x");
     BOOST_REQUIRE(!object.contains("id"));
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__peer_closed__failure, rpc_loopback_fixture)
+{
+    boost_code ignore{};
+    client.close(ignore);
+
+    rpc::request notification{};
+    notification.message = { .jsonrpc = rpc::version::v2, .method = "note", .params = rpc::array_t{ rpc::value_t{ rpc::string_t(16 * megabyte, 'x') } } };
+    const auto result = rpc_make_promise();
+    server->rpc_notify(std::move(notification), rpc_complete(result));
+    BOOST_REQUIRE(rpc_await(result));
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__body_read__unreadable_body__end_of_stream, rpc_loopback_fixture)
@@ -415,6 +440,102 @@ BOOST_FIXTURE_TEST_CASE(channel_rpc__receive__peer_close__peer_disconnect, rpc_c
     boost_code ignore{};
     client.shutdown(asio::socket::shutdown_send, ignore);
     BOOST_REQUIRE_EQUAL(rpc_await(stopped), error::peer_disconnect);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(socket_zmtp_tests)
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_read__zmtp_truncated_command_name__unexpected_command, puller_fixture)
+{
+    peer_write(peer, zmtp_stream::frame_encode(system::base16_chunk("055049"), true, false));
+
+    rpc::request request{};
+    BOOST_REQUIRE_EQUAL(read(request), error::zmtp_unexpected_command);
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_read__zmtp_ping_short_ttl__unexpected_command, puller_fixture)
+{
+    peer_write(peer, command("PING", system::base16_chunk("01")));
+
+    rpc::request request{};
+    BOOST_REQUIRE_EQUAL(read(request), error::zmtp_unexpected_command);
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_read__zmtp_command_within_message__unexpected_command, puller_fixture)
+{
+    auto frames = zmtp_stream::frame_encode(chunk("method"), false, true);
+    const auto ping = command("PING", system::base16_chunk("0001"));
+    frames.insert(frames.end(), ping.begin(), ping.end());
+    peer_write(peer, frames);
+
+    rpc::request request{};
+    BOOST_REQUIRE_EQUAL(read(request), error::zmtp_unexpected_command);
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_read__zmtp_peer_closed__peer_disconnect, puller_fixture)
+{
+    boost_code ignore{};
+    peer.shutdown(peer_socket::shutdown_send, ignore);
+
+    rpc::request request{};
+    BOOST_REQUIRE_EQUAL(read(request), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__zmtp_ping__big_endian_ttl_and_context, puller_fixture)
+{
+    const auto context = system::base16_chunk("00112233");
+    rpc::request ping{};
+    ping.message.method = "ping";
+    ping.message.params = rpc::array_t{ rpc::value_t{ uint16_t{ 0x0102 } }, rpc::any_t{ system::to_shared(system::data_chunk{ context }) } };
+    BOOST_REQUIRE_EQUAL(notify(std::move(ping)), error::success);
+
+    uint8_t flags{};
+    system::data_chunk body{};
+    peer_read_frame(peer, flags, body);
+    BOOST_REQUIRE(!is_zero(flags & zmtp_stream::flag_command));
+
+    std::string name{};
+    system::data_chunk content{};
+    parse_command(body, name, content);
+    BOOST_REQUIRE_EQUAL(name, "PING");
+    BOOST_REQUIRE_EQUAL(content, system::base16_chunk("010200112233"));
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__zmtp_ping_without_context__unserializable, puller_fixture)
+{
+    rpc::request ping{};
+    ping.message.method = "ping";
+    ping.message.params = rpc::array_t{ rpc::value_t{ uint16_t{ 0x0102 } } };
+    BOOST_REQUIRE_EQUAL(notify(std::move(ping)), error::zmtp_unserializable);
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__zmtp_pong_two_params__unserializable, puller_fixture)
+{
+    rpc::request pong{};
+    pong.message.method = "pong";
+    pong.message.params = rpc::array_t{ rpc::value_t{ rpc::string_t{ "a" } }, rpc::value_t{ rpc::string_t{ "b" } } };
+    BOOST_REQUIRE_EQUAL(notify(std::move(pong)), error::zmtp_unserializable);
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__zmtp_pong_named_params__unserializable, puller_fixture)
+{
+    rpc::request pong{};
+    pong.message.method = "pong";
+    pong.message.params = rpc::object_t{ { "context", rpc::value_t{ rpc::string_t{ "a" } } } };
+    BOOST_REQUIRE_EQUAL(notify(std::move(pong)), error::zmtp_unserializable);
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__zmtp_router_without_params__delimited_method, router_fixture)
+{
+    rpc::request notification{};
+    notification.message.method = "event";
+    BOOST_REQUIRE_EQUAL(notify(std::move(notification)), error::success);
+
+    const auto parts = peer_read_message(peer);
+    BOOST_REQUIRE_EQUAL(parts.size(), 2u);
+    BOOST_REQUIRE(parts.front().empty());
+    BOOST_REQUIRE_EQUAL(parts.back(), chunk("event"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
