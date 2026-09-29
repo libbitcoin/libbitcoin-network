@@ -240,4 +240,69 @@ BOOST_AUTO_TEST_CASE(headers__deserialize1__headers__expected)
     BOOST_REQUIRE(*message->header_ptrs.back() == *expected.header_ptrs.back());
 }
 
+static const auto genesis_hash = base16_hash("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
+static const auto genesis_headers = base16_chunk("010100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c00");
+static const auto genesis_headers_trailed = base16_chunk("010100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a29ab5f49ffff001d1dac2b7c01");
+
+BOOST_AUTO_TEST_CASE(headers__deserialize1__genesis__hash_cached)
+{
+    const auto message = headers::deserialize(level::headers_protocol, genesis_headers);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->header_ptrs.size(), one);
+    BOOST_REQUIRE_EQUAL(message->header_ptrs.front()->get_hash(), genesis_hash);
+}
+
+BOOST_AUTO_TEST_CASE(headers__deserialize1__nonzero_trail__nullptr)
+{
+    BOOST_REQUIRE(!headers::deserialize(level::headers_protocol, genesis_headers_trailed));
+}
+
+BOOST_AUTO_TEST_CASE(headers__deserialize1__excess_count__nullptr)
+{
+    const auto data = base16_chunk("fdd107");
+    BOOST_REQUIRE(!headers::deserialize(level::headers_protocol, data));
+}
+
+BOOST_AUTO_TEST_CASE(headers__deserialize1__excessive_version__nullptr)
+{
+    BOOST_REQUIRE(!headers::deserialize(level::maximum_protocol + 1u, genesis_headers));
+}
+
+BOOST_AUTO_TEST_CASE(headers__to_hashes__genesis__expected)
+{
+    const auto message = headers::deserialize(level::headers_protocol, genesis_headers);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->to_hashes(), hashes{ genesis_hash });
+}
+
+BOOST_AUTO_TEST_CASE(headers__to_hashes__empty__empty)
+{
+    BOOST_REQUIRE(headers{}.to_hashes().empty());
+}
+
+BOOST_AUTO_TEST_CASE(headers__to_inventory__genesis__expected)
+{
+    const auto message = headers::deserialize(level::headers_protocol, genesis_headers);
+    BOOST_REQUIRE(message);
+    const auto items = message->to_inventory(inventory::type_id::witness_block);
+    BOOST_REQUIRE_EQUAL(items.size(), one);
+    BOOST_REQUIRE(items.front().type == inventory::type_id::witness_block);
+    BOOST_REQUIRE_EQUAL(items.front().hash, genesis_hash);
+}
+
+BOOST_AUTO_TEST_CASE(headers__to_inventory__empty__empty)
+{
+    BOOST_REQUIRE(headers{}.to_inventory(inventory::type_id::block).empty());
+}
+
+BOOST_AUTO_TEST_CASE(headers__serialize1__genesis__round_trips)
+{
+    const auto message = headers::deserialize(level::headers_protocol, genesis_headers);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->size(level::headers_protocol), genesis_headers.size());
+    data_chunk data(message->size(level::headers_protocol));
+    BOOST_REQUIRE(message->serialize(level::headers_protocol, data));
+    BOOST_REQUIRE_EQUAL(data, genesis_headers);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -661,4 +661,62 @@ BOOST_AUTO_TEST_CASE(address_item__deserialize_v2__oversized_address__invalid)
     BOOST_REQUIRE(!source);
 }
 
+// timestamped address
+
+constexpr auto wiki_mapped = base16_array("00000000000000000000ffff0a000001");
+static const auto wiki_item = base16_chunk("e215104d010000000000000000000000000000000000ffff0a000001208d");
+
+BOOST_AUTO_TEST_CASE(address_item__deserialize__with_timestamp__expected)
+{
+    system::read::bytes::copy source(wiki_item);
+    const auto item = address_item::deserialize(level::address_timestamp, source, true);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(source.is_exhausted());
+    BOOST_REQUIRE_EQUAL(item.timestamp, 0x4d1015e2_u32);
+    BOOST_REQUIRE_EQUAL(item.services, 1u);
+    BOOST_REQUIRE(item.address == address_t{ ipv4_t{ wiki_mapped } });
+    BOOST_REQUIRE_EQUAL(item.port, 8333u);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__serialize__with_timestamp__expected)
+{
+    const address_item item{ 0x4d1015e2_u32, 1, ipv4_t{ wiki_mapped }, 8333 };
+    data_chunk data(address_item::size(level::address_timestamp, true));
+    system::write::bytes::copy sink(data);
+    item.serialize(level::address_timestamp, sink, true);
+    BOOST_REQUIRE(sink);
+    BOOST_REQUIRE_EQUAL(data, wiki_item);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__serialize__without_timestamp__expected)
+{
+    const address_item item{ 0x4d1015e2_u32, 1, ipv4_t{ wiki_mapped }, 8333 };
+    data_chunk data(address_item::size(level::address_timestamp, false));
+    system::write::bytes::copy sink(data);
+    item.serialize(level::address_timestamp, sink, false);
+    BOOST_REQUIRE(sink);
+    BOOST_REQUIRE_EQUAL(data, base16_chunk("010000000000000000000000000000000000ffff0a000001208d"));
+}
+
+// hash_address
+
+BOOST_AUTO_TEST_CASE(address_item__hash_address__same_address__same_hash)
+{
+    const address_t left{ ipv4_t{ wiki_mapped } };
+    const address_t right{ ipv4_t{ wiki_mapped } };
+    BOOST_REQUIRE_EQUAL(hash_address(left), hash_address(right));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__hash_address__unspecified__same_hash)
+{
+    BOOST_REQUIRE_EQUAL(hash_address(address_t{}), hash_address(address_t{}));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__std_hash__same_address_and_port__same_hash)
+{
+    const address_item left{ 1, 2, ipv4_t{ wiki_mapped }, 8333 };
+    const address_item right{ 3, 4, ipv4_t{ wiki_mapped }, 8333 };
+    BOOST_REQUIRE_EQUAL(std::hash<address_item>{}(left), std::hash<address_item>{}(right));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

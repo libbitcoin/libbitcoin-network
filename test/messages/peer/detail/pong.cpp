@@ -20,6 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_pong_tests)
 
+using namespace bc::system;
 using namespace network::messages::peer;
 
 BOOST_AUTO_TEST_CASE(pong__properties__always__expected)
@@ -35,6 +36,26 @@ BOOST_AUTO_TEST_CASE(pong__size__always__expected)
 {
     constexpr auto expected = sizeof(uint64_t);
     BOOST_REQUIRE_EQUAL(pong::size(level::canonical), expected);
+}
+
+BOOST_AUTO_TEST_CASE(pong__deserialize1__bip31__expected)
+{
+    const auto data = system::base16_chunk("efcdab8967452301");
+    const auto message = pong::deserialize(level::bip31, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->nonce, 0x0123456789abcdef_u64);
+}
+
+BOOST_AUTO_TEST_CASE(pong__deserialize1__insufficient_version__nullptr)
+{
+    const auto data = system::base16_chunk("efcdab8967452301");
+    BOOST_REQUIRE(!pong::deserialize(level::bip31 - 1u, data));
+}
+
+BOOST_AUTO_TEST_CASE(pong__deserialize1__underflow__nullptr)
+{
+    const auto data = system::base16_chunk("efcdab89674523");
+    BOOST_REQUIRE(!pong::deserialize(level::bip31, data));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

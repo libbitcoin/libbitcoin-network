@@ -36,4 +36,37 @@ BOOST_AUTO_TEST_CASE(memory_pool__size__always_zero)
     BOOST_REQUIRE_EQUAL(memory_pool::size(level::canonical), zero);
 }
 
+BOOST_AUTO_TEST_CASE(memory_pool__deserialize1__empty__expected)
+{
+    const system::data_chunk data{};
+    BOOST_REQUIRE(memory_pool::deserialize(level::bip35, data));
+}
+
+BOOST_AUTO_TEST_CASE(memory_pool__deserialize1__insufficient_version__nullptr)
+{
+    const system::data_chunk data{};
+    BOOST_REQUIRE(!memory_pool::deserialize(level::bip35 - 1u, data));
+}
+
+BOOST_AUTO_TEST_CASE(memory_pool__deserialize1__excessive_version__nullptr)
+{
+    const system::data_chunk data{};
+    BOOST_REQUIRE(!memory_pool::deserialize(level::maximum_protocol + 1u, data));
+}
+
+BOOST_AUTO_TEST_CASE(memory_pool__deserialize2__insufficient_version__source_false)
+{
+    const system::data_chunk data{};
+    system::read::bytes::copy source(data);
+    memory_pool::deserialize(level::bip35 - 1u, source);
+    BOOST_REQUIRE(!source);
+}
+
+BOOST_AUTO_TEST_CASE(memory_pool__serialize1__default__empty)
+{
+    system::data_chunk data{};
+    BOOST_REQUIRE(memory_pool{}.serialize(level::bip35, data));
+    BOOST_REQUIRE(data.empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
