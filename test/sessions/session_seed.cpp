@@ -760,4 +760,189 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 ////    BOOST_REQUIRE_GT(net.address_count(), zero);
 ////}
 
+// options
+
+class mock_session_seed_options
+  : public session_seed
+{
+public:
+    using session_seed::session_seed;
+    using session_seed::options;
+};
+
+BOOST_AUTO_TEST_CASE(session_seed__options__always__outbound_settings)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    net instance(set, log);
+    const auto session = std::make_shared<mock_session_seed_options>(instance, 1);
+    BOOST_REQUIRE_EQUAL(&session->options(), &instance.network_settings().outbound);
+}
+
+// Seed connection to the test acting as a raw peer on loopback.
+// ============================================================================
+
+static constexpr uint16_t seed_peer_port = 65153;
+
+struct seed_peer
+{
+    using configurator = std::function<void(settings&)>;
+
+    seed_peer(const configurator& configure)
+      : set_{ selection::mainnet }, net_{ set_, log_ }
+    {
+        test::clear(test::directory);
+        set_.path = TEST_DIRECTORY;
+        set_.inbound.connections = 0;
+        set_.outbound.connections = 1;
+        set_.outbound.connect_batch_size = 1;
+        set_.outbound.host_pool_capacity = 1;
+        set_.outbound.seeds.clear();
+        set_.outbound.seeds.emplace_back("127.0.0.1", seed_peer_port);
+        configure(set_);
+
+        net_.start([this](const code& ec) NOEXCEPT
+        {
+            started_.set_value(ec);
+        });
+
+        acceptor_.accept(socket_);
+    }
+
+    ~seed_peer()
+    {
+        socket_.close();
+        net_.close();
+    }
+
+    code started()
+    {
+        return started_.get_future().get();
+    }
+
+    void close()
+    {
+        socket_.close();
+    }
+
+    template <class Message>
+    void send(const Message& message, uint32_t version)
+    {
+        system::data_chunk payload(message.size(version));
+        BOOST_REQUIRE(message.serialize(version, payload));
+        const auto head = heading::factory(set_.identifier, Message::command, payload);
+        system::data_chunk frame(heading::size());
+        BOOST_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        boost::asio::write(socket_, boost::asio::buffer(system::splice(frame, payload)));
+    }
+
+    // Read framed messages until the command matches.
+    system::data_chunk receive(const std::string& command)
+    {
+        while (true)
+        {
+            system::data_array<heading::size()> head_data{};
+            boost::asio::read(socket_, boost::asio::buffer(head_data));
+            const auto head = heading::deserialize(head_data);
+            BOOST_REQUIRE(head);
+
+            system::data_chunk payload(head->payload_size);
+            boost::asio::read(socket_, boost::asio::buffer(payload));
+            if (head->command == command)
+                return payload;
+        }
+    }
+
+    // Receive the node version, send ours, exchange verack.
+    version::cptr handshake(uint32_t value)
+    {
+        const auto node = version::deserialize(value, receive(version::command));
+        BOOST_REQUIRE(node);
+
+        version out{};
+        out.value = value;
+        out.services = service::node_none;
+        out.timestamp = system::sign_cast<uint64_t>(zulu_time());
+        out.nonce = 42424242;
+        out.user_agent = "/test/";
+        out.start_height = 0;
+        out.relay = false;
+        send(out, value);
+
+        receive(version_acknowledge::command);
+        send(version_acknowledge{}, value);
+        return node;
+    }
+
+private:
+    settings set_;
+    const logger log_{};
+    net net_;
+    std::promise<code> started_{};
+    boost::asio::io_context io_{};
+    boost::asio::ip::tcp::acceptor acceptor_{ io_, { boost::asio::ip::address_v4::loopback(), seed_peer_port } };
+    boost::asio::ip::tcp::socket socket_{ io_ };
+};
+
+BOOST_AUTO_TEST_CASE(session_seed__attach_handshake__70016_alert_reject__address_requested)
+{
+    seed_peer peer{ [](settings& set)
+    {
+        set.enable_alert = true;
+        set.enable_reject = true;
+    } };
+
+    const auto node = peer.handshake(level::bip155);
+    BOOST_REQUIRE_EQUAL(node->value, level::bip155);
+    BOOST_REQUIRE(!node->relay);
+    BOOST_REQUIRE(get_address::deserialize(level::bip155, peer.receive(get_address::command)));
+    peer.close();
+    BOOST_REQUIRE_EQUAL(peer.started(), error::seeding_unsuccessful);
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__attach_handshake__70002_reject__address_requested)
+{
+    seed_peer peer{ [](settings& set)
+    {
+        set.protocol_maximum = level::bip61;
+        set.enable_reject = true;
+    } };
+
+    const auto node = peer.handshake(level::bip61);
+    BOOST_REQUIRE_EQUAL(node->value, level::bip61);
+    BOOST_REQUIRE(!node->relay);
+    BOOST_REQUIRE(get_address::deserialize(level::bip61, peer.receive(get_address::command)));
+    peer.close();
+    BOOST_REQUIRE_EQUAL(peer.started(), error::seeding_unsuccessful);
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__attach_handshake__70001__address_requested)
+{
+    seed_peer peer{ [](settings& set)
+    {
+        set.protocol_maximum = level::bip37;
+    } };
+
+    const auto node = peer.handshake(level::bip37);
+    BOOST_REQUIRE_EQUAL(node->value, level::bip37);
+    BOOST_REQUIRE(!node->relay);
+    BOOST_REQUIRE(get_address::deserialize(level::bip37, peer.receive(get_address::command)));
+    peer.close();
+    BOOST_REQUIRE_EQUAL(peer.started(), error::seeding_unsuccessful);
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__attach_handshake__31800__address_requested)
+{
+    seed_peer peer{ [](settings& set)
+    {
+        set.protocol_maximum = level::headers_protocol;
+    } };
+
+    const auto node = peer.handshake(level::headers_protocol);
+    BOOST_REQUIRE_EQUAL(node->value, level::headers_protocol);
+    BOOST_REQUIRE(get_address::deserialize(level::headers_protocol, peer.receive(get_address::command)));
+    peer.close();
+    BOOST_REQUIRE_EQUAL(peer.started(), error::seeding_unsuccessful);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
