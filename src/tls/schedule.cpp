@@ -21,6 +21,7 @@
 #include <string_view>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/tls/codec.hpp>
+#include <bitcoin/network/tls/constants.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -94,12 +95,13 @@ schedule::secret schedule::master_secret(const secret& handshake) NOEXCEPT
     return extract(derive_secret(handshake, "derived", empty), zeros);
 }
 
-data_chunk schedule::traffic_key(const secret& traffic, size_t size) NOEXCEPT
+data_chunk schedule::traffic_key(const secret& traffic,
+    uint16_t suite) NOEXCEPT
 {
-    if (size == aes_key_size)
+    if (suite == aes_128_gcm_sha256)
         return to_chunk(expand<aes_key_size>(traffic, "key", {}));
 
-    BC_ASSERT(size == chacha_key_size);
+    BC_ASSERT(suite == chacha20_poly1305_sha256);
     return to_chunk(expand<chacha_key_size>(traffic, "key", {}));
 }
 

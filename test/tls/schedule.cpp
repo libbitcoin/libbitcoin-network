@@ -74,21 +74,21 @@ BOOST_AUTO_TEST_CASE(tls_schedule__application_traffic__rfc8448__expected)
 BOOST_AUTO_TEST_CASE(tls_schedule__traffic_keys__server_handshake__rfc8448_aes_key_and_iv)
 {
     const auto secret = rfc8448::array<32>(rfc8448::server_handshake_traffic);
-    BOOST_REQUIRE_EQUAL(schedule::traffic_key(secret, 16), rfc8448::server_handshake_key);
+    BOOST_REQUIRE_EQUAL(schedule::traffic_key(secret, aes_128_gcm_sha256), rfc8448::server_handshake_key);
     BOOST_REQUIRE_EQUAL(to_chunk(schedule::traffic_iv(secret)), rfc8448::server_handshake_iv);
 }
 
 BOOST_AUTO_TEST_CASE(tls_schedule__traffic_keys__client_application__rfc8448_aes_key_and_iv)
 {
     const auto secret = rfc8448::array<32>(rfc8448::client_application_traffic);
-    BOOST_REQUIRE_EQUAL(schedule::traffic_key(secret, 16), rfc8448::client_application_key);
+    BOOST_REQUIRE_EQUAL(schedule::traffic_key(secret, aes_128_gcm_sha256), rfc8448::client_application_key);
     BOOST_REQUIRE_EQUAL(to_chunk(schedule::traffic_iv(secret)), rfc8448::client_application_iv);
 }
 
 BOOST_AUTO_TEST_CASE(tls_schedule__traffic_key__chacha__thirty_two_bytes)
 {
     const auto secret = rfc8448::array<32>(rfc8448::client_application_traffic);
-    BOOST_REQUIRE_EQUAL(schedule::traffic_key(secret, 32).size(), 32u);
+    BOOST_REQUIRE_EQUAL(schedule::traffic_key(secret, chacha20_poly1305_sha256).size(), 32u);
 }
 
 BOOST_AUTO_TEST_CASE(tls_schedule__finished__server__rfc8448__expected)

@@ -52,9 +52,9 @@ public:
         const const_byte_span& shared) NOEXCEPT;
     static secret master_secret(const secret& handshake) NOEXCEPT;
 
-    /// Traffic key (16 or 32 bytes) and iv of a traffic secret (7.3).
+    /// Traffic key of the cipher suite and iv of a traffic secret (7.3).
     static system::data_chunk traffic_key(const secret& traffic,
-        size_t size) NOEXCEPT;
+        uint16_t suite) NOEXCEPT;
     static iv traffic_iv(const secret& traffic) NOEXCEPT;
 
     /// Finished verify data of the transcript hash (4.4.4).

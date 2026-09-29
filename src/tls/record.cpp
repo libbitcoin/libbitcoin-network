@@ -32,9 +32,6 @@ using namespace system;
 
 BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 
-constexpr size_t aes_key_size = 16;
-constexpr size_t chacha_key_size = 32;
-
 record::record() NOEXCEPT
 {
 }
@@ -45,11 +42,11 @@ void record::set_secret(uint16_t suite,
     suite_ = suite;
     sequence_ = zero;
     iv_ = schedule::traffic_iv(traffic);
+    const auto bytes = schedule::traffic_key(traffic, suite);
 
     if (suite == aes_128_gcm_sha256)
     {
         aes128_gcm::secret key{};
-        const auto bytes = schedule::traffic_key(traffic, aes_key_size);
         std::copy(bytes.begin(), bytes.end(), key.begin());
         aes_.emplace(key);
         chacha_.reset();
@@ -58,7 +55,6 @@ void record::set_secret(uint16_t suite,
 
     BC_ASSERT(suite == chacha20_poly1305_sha256);
     chacha20::secret key{};
-    const auto bytes = schedule::traffic_key(traffic, chacha_key_size);
     std::copy(bytes.begin(), bytes.end(), key.begin());
     chacha_.emplace(key);
     aes_.reset();
