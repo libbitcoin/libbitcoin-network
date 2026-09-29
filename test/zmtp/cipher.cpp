@@ -161,6 +161,59 @@ BOOST_AUTO_TEST_CASE(zmtp_cipher__welcome__wrong_server_key__false)
     BOOST_REQUIRE(!pair.server->welcome(pair.welcome, pair.hello));
 }
 
+BOOST_AUTO_TEST_CASE(zmtp_cipher__public_key__constructed__expected)
+{
+    cipher_pair pair{};
+    BOOST_REQUIRE_EQUAL(pair.server->public_key(), pair.server_public);
+    BOOST_REQUIRE_EQUAL(pair.client->public_key(), pair.client_public);
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_cipher__hello__low_order_server_key__false)
+{
+    cipher_pair pair{};
+    cipher client{ pair.client_secret, pair.client_public, cipher::key{} };
+    BOOST_REQUIRE(!client.hello(pair.hello));
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_cipher__welcome__unsupported_version__false)
+{
+    cipher_pair pair{};
+    BOOST_REQUIRE(pair.client->hello(pair.hello));
+    pair.hello.at(6) = 2;
+    BOOST_REQUIRE(!pair.server->welcome(pair.welcome, pair.hello));
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_cipher__welcome__low_order_client_transient__false)
+{
+    cipher_pair pair{};
+    BOOST_REQUIRE(pair.client->hello(pair.hello));
+    std::fill_n(std::next(pair.hello.begin(), 80), cipher::key_size, uint8_t{ 0x00 });
+    BOOST_REQUIRE(!pair.server->welcome(pair.welcome, pair.hello));
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_cipher__ready__low_order_client_key__false)
+{
+    cipher_pair pair{};
+    cipher client{ pair.client_secret, cipher::key{}, pair.server_public };
+    BOOST_REQUIRE(client.hello(pair.hello));
+    BOOST_REQUIRE(pair.server->welcome(pair.welcome, pair.hello));
+    BOOST_REQUIRE(client.initiate(pair.initiate, pair.welcome, {}));
+    BOOST_REQUIRE(!pair.server->ready(pair.ready, pair.client_metadata_out, pair.initiate, {}));
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_cipher__ready__client_key_not_of_secret__false)
+{
+    cipher_pair pair{};
+    cipher::key other_secret{};
+    cipher::key other_public{};
+    system::x25519::generate(other_secret, other_public);
+    cipher client{ pair.client_secret, other_public, pair.server_public };
+    BOOST_REQUIRE(client.hello(pair.hello));
+    BOOST_REQUIRE(pair.server->welcome(pair.welcome, pair.hello));
+    BOOST_REQUIRE(client.initiate(pair.initiate, pair.welcome, {}));
+    BOOST_REQUIRE(!pair.server->ready(pair.ready, pair.client_metadata_out, pair.initiate, {}));
+}
+
 BOOST_AUTO_TEST_CASE(zmtp_cipher__welcome__wrong_size__false)
 {
     cipher_pair pair{};
