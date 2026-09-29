@@ -243,4 +243,54 @@ BOOST_AUTO_TEST_CASE(broadcaster__subscribe__peer_broadcaster_stop__expected)
     BOOST_REQUIRE(result);
 }
 
+BOOST_AUTO_TEST_CASE(broadcaster__notify__unknown_method_keyed__unexpected_method)
+{
+    mock_broadcaster instance{};
+    const auto ec = instance.notify(request_t{ .method = "bogus" }, 17);
+    BOOST_REQUIRE_EQUAL(ec, network::error::unexpected_method);
+    instance.stop(network::error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(broadcaster__notify__wrong_pointer_type_keyed__unexpected_type)
+{
+    mock_broadcaster instance{};
+    const auto message = emplace_shared<const pong>(42u);
+    const auto ec = instance.notify(request_t
+    {
+        .method = "ping0",
+        .params = { array_t{ any_t{ message }, uint16_t{ 42 } } }
+    }, 17);
+
+    BOOST_REQUIRE_EQUAL(ec, network::error::unexpected_type);
+    instance.stop(network::error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(broadcaster__notify__wrong_value_type_keyed__unexpected_type)
+{
+    mock_broadcaster instance{};
+    const auto message = emplace_shared<const ping>(42u);
+    const auto ec = instance.notify(request_t
+    {
+        .method = "ping0",
+        .params = { array_t{ any_t{ message }, string_t{ "42" } } }
+    }, 17);
+
+    BOOST_REQUIRE_EQUAL(ec, network::error::unexpected_type);
+    instance.stop(network::error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(broadcaster__notify__extra_positional_keyed__extra_positional)
+{
+    mock_broadcaster instance{};
+    const auto message = emplace_shared<const ping>(42u);
+    const auto ec = instance.notify(request_t
+    {
+        .method = "ping0",
+        .params = { array_t{ any_t{ message }, uint16_t{ 42 }, true } }
+    }, 17);
+
+    BOOST_REQUIRE_EQUAL(ec, network::error::extra_positional);
+    instance.stop(network::error::service_stopped);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
