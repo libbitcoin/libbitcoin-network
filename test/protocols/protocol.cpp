@@ -477,6 +477,7 @@ struct protocol_probe_setup_fixture
         settings_.address_upper = 1;
         settings_.inbound.selfs.emplace_back("1.2.3.4:8333");
         settings_.inbound.selfs.emplace_back("[2001:db8::1]:8333");
+        settings_.inbound.self = network::config::address{ "5.6.7.8:8333" };
     }
 };
 
@@ -494,8 +495,9 @@ BOOST_FIXTURE_TEST_CASE(protocol__properties__handshaken_inbound__expected, prot
     BOOST_REQUIRE_EQUAL(record.peer_version->user_agent, "/test/");
     BOOST_REQUIRE_EQUAL(record.negotiated_version, level::bip61);
     BOOST_REQUIRE(record.wants_address_v2);
-    BOOST_REQUIRE_EQUAL(record.selfs.addresses.size(), 1u);
+    BOOST_REQUIRE_EQUAL(record.selfs.addresses.size(), 2u);
     BOOST_REQUIRE(settings_.inbound.selfs.front() == record.selfs.addresses.front());
+    BOOST_REQUIRE(settings_.inbound.self == record.selfs.addresses.back());
     BOOST_REQUIRE_EQUAL(record.selfs.addresses.front().services, service::node_none);
     BOOST_REQUIRE_GT(record.remaining, 0u);
     BOOST_REQUIRE_LE(record.remaining, settings_.inbound.expiration_minutes * 60u);
@@ -519,11 +521,11 @@ BOOST_FIXTURE_TEST_CASE(protocol__properties__handshaken_inbound__expected, prot
     BOOST_REQUIRE(record.minimum_ping_time <= record.ping_time);
     BOOST_REQUIRE_EQUAL(record.sender, record.identifier);
     BOOST_REQUIRE_EQUAL(record.save_ec, error::success);
-    BOOST_REQUIRE_EQUAL(record.accepted, 1u);
-    BOOST_REQUIRE_EQUAL(record.address_count, 1u);
+    BOOST_REQUIRE_EQUAL(record.accepted, 2u);
+    BOOST_REQUIRE_EQUAL(record.address_count, 2u);
     BOOST_REQUIRE_EQUAL(record.fetch_ec, error::success);
     BOOST_REQUIRE(record.fetched);
-    BOOST_REQUIRE_EQUAL(record.fetched->addresses.size(), 1u);
+    BOOST_REQUIRE_EQUAL(record.fetched->addresses.size(), 2u);
 }
 
 BOOST_FIXTURE_TEST_CASE(protocol__stop__handshaken_inbound__dropped, protocol_probe_setup_fixture)
