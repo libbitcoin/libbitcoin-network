@@ -395,6 +395,12 @@ public:
         return future_.get();
     }
 
+    bool pending() const
+    {
+        using namespace std::chrono_literals;
+        return future_.wait_for(50ms) == std::future_status::timeout;
+    }
+
 private:
     std::shared_ptr<std::promise<Type>> promise_{ std::make_shared<std::promise<Type>>() };
     std::shared_future<Type> future_{ promise_->get_future().share() };
@@ -639,6 +645,36 @@ BOOST_FIXTURE_TEST_CASE(proxy__watch__client_shutdown__peer_disconnect, loopback
     client.shutdown(asio::socket::shutdown_send, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(watched.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__watch__connected__pending, loopback_fixture)
+{
+    const awaiter<code> watched{};
+    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+    {
+        channel->watch([=](const code& ec) NOEXCEPT
+        {
+            watched.set(ec);
+        });
+    });
+
+    BOOST_REQUIRE(watched.pending());
+    channel->stop(error::service_stopped);
+    BOOST_REQUIRE_EQUAL(watched.get(), error::success);
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__read_ws__tcp_full_buffer__buffer_overflow, loopback_fixture)
+{
+    static const std::string text{ "abcd" };
+    http::flat_buffer full{ text.size() };
+    full.commit(boost::asio::buffer_copy(full.prepare(text.size()), boost::asio::buffer(text)));
+    const awaiter<code> read{};
+    boost::asio::post(channel->strand(), [=, this, &full]() NOEXCEPT
+    {
+        channel->read(full, complete(read));
+    });
+
+    BOOST_REQUIRE_EQUAL(read.get(), error::buffer_overflow);
 }
 
 BOOST_FIXTURE_TEST_CASE(proxy__unwatch__watching__success, loopback_fixture)

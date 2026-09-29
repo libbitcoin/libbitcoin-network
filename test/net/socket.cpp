@@ -741,6 +741,26 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__proxied__success_endpoint_set, acceptor_
     instance->stop();
 }
 
+BOOST_FIXTURE_TEST_CASE(socket__accept__not_listening__invalid_configuration, acceptor_fixture)
+{
+    asio::acceptor unlistened{ strand };
+    boost_code ec{};
+    unlistened.open(raw_endpoint.protocol(), ec);
+    BOOST_REQUIRE(!ec);
+    unlistened.bind(raw_endpoint, ec);
+    BOOST_REQUIRE(!ec);
+
+    const awaiter<code> accepted{};
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), clear);
+    instance->accept(unlistened, [=](const code& accept_ec) NOEXCEPT
+    {
+        accepted.set(accept_ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::invalid_configuration);
+    instance->stop();
+}
+
 BOOST_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, acceptor_fixture)
 {
     const awaiter<code> accepted{};
