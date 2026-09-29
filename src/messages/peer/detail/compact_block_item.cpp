@@ -53,7 +53,7 @@ void compact_block_item::serialize(uint32_t BC_DEBUG_ONLY(version),
 
 size_t compact_block_item::size(uint32_t, bool witness) const NOEXCEPT
 {
-    return sizeof(uint64_t)
+    return variable_size(index)
         + (transaction_ptr ? transaction_ptr->serialized_size(witness) : zero);
 }
 
