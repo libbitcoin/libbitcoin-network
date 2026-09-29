@@ -103,11 +103,15 @@ struct ssl_st
 // Error queue.
 // ----------------------------------------------------------------------------
 
-static thread_local std::deque<unsigned long> errors{};
+static std::deque<unsigned long>& errors() NOEXCEPT
+{
+    static thread_local std::deque<unsigned long> queue{};
+    return queue;
+}
 
 static void push_error(int library, int reason) NOEXCEPT
 {
-    errors.push_back(ERR_PACK(library, 0, reason));
+    errors().push_back(ERR_PACK(library, 0, reason));
 }
 
 static std::string alert_text(int description) NOEXCEPT
@@ -729,27 +733,30 @@ size_t BIO_wpending(BIO* bio)
 
 void ERR_clear_error(void)
 {
-    errors.clear();
+    errors().clear();
 }
 
 unsigned long ERR_get_error(void)
 {
-    if (errors.empty())
+    auto& queue = errors();
+    if (queue.empty())
         return 0;
 
-    const auto code = errors.front();
-    errors.pop_front();
+    const auto code = queue.front();
+    queue.pop_front();
     return code;
 }
 
 unsigned long ERR_peek_error(void)
 {
-    return errors.empty() ? 0 : errors.front();
+    const auto& queue = errors();
+    return queue.empty() ? 0 : queue.front();
 }
 
 unsigned long ERR_peek_last_error(void)
 {
-    return errors.empty() ? 0 : errors.back();
+    const auto& queue = errors();
+    return queue.empty() ? 0 : queue.back();
 }
 
 const char* ERR_lib_error_string(unsigned long code)
