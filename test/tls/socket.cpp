@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(tls_socket__accept__absent_client_certificate__failure)
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
     BOOST_REQUIRE(peer.client.is_requested());
-    BOOST_REQUIRE(server.accept_result() != error::success);
+    BOOST_REQUIRE_EQUAL(server.accept_result(), error::tls_alert_certificate_required);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

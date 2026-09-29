@@ -904,6 +904,170 @@ BOOST_AUTO_TEST_CASE(error_t__code__tls_unexpected_result__true_expected_message
     BOOST_REQUIRE_EQUAL(ec.message(), "tls handshake failure");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__tls_unknown__true_expected_message)
+{
+    constexpr auto value = error::tls_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls error");
+}
+
+// tls alerts
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_unexpected_message__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_unexpected_message;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert unexpected message");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_bad_record_mac__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_bad_record_mac;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert bad record mac");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_record_overflow__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_record_overflow;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert record overflow");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_handshake_failure__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_handshake_failure;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert handshake failure");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_bad_certificate__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_bad_certificate;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert bad certificate");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_unsupported_certificate__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_unsupported_certificate;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert unsupported certificate");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_certificate_expired__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_certificate_expired;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert certificate expired");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_certificate_unknown__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_certificate_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert certificate unknown");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_illegal_parameter__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_illegal_parameter;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert illegal parameter");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_unknown_ca__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_unknown_ca;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert unknown ca");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_decode_error__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_decode_error;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert decode error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_decrypt_error__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_decrypt_error;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert decrypt error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_protocol_version__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_protocol_version;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert protocol version");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_internal_error__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_internal_error;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert internal error");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_missing_extension__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_missing_extension;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert missing extension");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_certificate_required__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_certificate_required;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert certificate required");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__tls_alert_unknown__true_expected_message)
+{
+    constexpr auto value = error::tls_alert_unknown;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "tls alert");
+}
+
 // http 4xx client error
 
 BOOST_AUTO_TEST_CASE(error_t__code__bad_request__true_expected_message)
@@ -2437,6 +2601,41 @@ BOOST_AUTO_TEST_CASE(ssl_to_error_code__unmapped_stream_code__tls_unknown)
 BOOST_AUTO_TEST_CASE(ssl_to_error_code__ssl_category_code__ssl_unknown)
 {
     BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ 1, boost::asio::error::get_ssl_category() }), error::ssl_unknown);
+}
+
+BOOST_AUTO_TEST_CASE(ssl_to_error_code__ssl_reason_below_alerts__ssl_unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_R_SHORT_READ)), boost::asio::error::get_ssl_category() }), error::ssl_unknown);
+}
+
+BOOST_AUTO_TEST_CASE(ssl_to_error_code__non_ssl_library_alert__ssl_unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_EVP, 0, SSL_AD_REASON_OFFSET + network::tls::alert::decode_error)), boost::asio::error::get_ssl_category() }), error::ssl_unknown);
+}
+
+BOOST_AUTO_TEST_CASE(ssl_to_error_code__alert_codes__expected)
+{
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::unexpected_message)), boost::asio::error::get_ssl_category() }), error::tls_alert_unexpected_message);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::bad_record_mac)), boost::asio::error::get_ssl_category() }), error::tls_alert_bad_record_mac);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::record_overflow)), boost::asio::error::get_ssl_category() }), error::tls_alert_record_overflow);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::handshake_failure)), boost::asio::error::get_ssl_category() }), error::tls_alert_handshake_failure);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::bad_certificate)), boost::asio::error::get_ssl_category() }), error::tls_alert_bad_certificate);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::unsupported_certificate)), boost::asio::error::get_ssl_category() }), error::tls_alert_unsupported_certificate);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::certificate_expired)), boost::asio::error::get_ssl_category() }), error::tls_alert_certificate_expired);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::certificate_unknown)), boost::asio::error::get_ssl_category() }), error::tls_alert_certificate_unknown);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::illegal_parameter)), boost::asio::error::get_ssl_category() }), error::tls_alert_illegal_parameter);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::unknown_ca)), boost::asio::error::get_ssl_category() }), error::tls_alert_unknown_ca);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::decode_error)), boost::asio::error::get_ssl_category() }), error::tls_alert_decode_error);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::decrypt_error)), boost::asio::error::get_ssl_category() }), error::tls_alert_decrypt_error);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::protocol_version)), boost::asio::error::get_ssl_category() }), error::tls_alert_protocol_version);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::internal_error)), boost::asio::error::get_ssl_category() }), error::tls_alert_internal_error);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::missing_extension)), boost::asio::error::get_ssl_category() }), error::tls_alert_missing_extension);
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + network::tls::alert::certificate_required)), boost::asio::error::get_ssl_category() }), error::tls_alert_certificate_required);
+}
+
+BOOST_AUTO_TEST_CASE(ssl_to_error_code__unmapped_alert__tls_alert_unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{ system::possible_narrow_sign_cast<int>(ERR_PACK(ERR_LIB_SSL, 0, SSL_AD_REASON_OFFSET + 0xff)), boost::asio::error::get_ssl_category() }), error::tls_alert_unknown);
 }
 
 BOOST_AUTO_TEST_CASE(ssl_to_error_code__asio_code__asio_mapping)
