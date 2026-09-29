@@ -452,4 +452,268 @@ BOOST_AUTO_TEST_CASE(tls_server__receive__rfc8448_client_hello__rfc8448_server_h
     BOOST_REQUIRE_EQUAL(content.front(), handshake::encrypted_extensions);
 }
 
+// protected client messages
+
+using writer = network::tls::writer;
+
+static data_chunk message_of(uint8_t type, const data_chunk& body)
+{
+    writer out{};
+    out.write_8(type);
+    out.write_vector_24(body);
+    return out.data();
+}
+
+static data_chunk entry_of(const data_chunk& der)
+{
+    writer out{};
+    out.write_vector_24(der);
+    out.write_vector_16(data_chunk{});
+    return out.data();
+}
+
+static data_chunk certificate_of(const data_chunk& request_context, const data_chunk& entries)
+{
+    writer out{};
+    out.write_vector_8(request_context);
+    out.write_vector_24(entries);
+    return out.data();
+}
+
+static data_chunk verify_of(uint16_t scheme, const data_chunk& signature)
+{
+    writer out{};
+    out.write_16(scheme);
+    out.write_vector_16(signature);
+    return out.data();
+}
+
+// A server keyed by the rfc8448 client hello, with a client sender under the
+// rfc8448 client handshake traffic secret.
+struct rfc8448_setup
+{
+    rfc8448_setup(bool request=false)
+      : setup(request, request), server(setup.context, rfc8448::array<32>(data_chunk(std::next(rfc8448::server_hello.begin(), 6), std::next(rfc8448::server_hello.begin(), 38))), rfc8448::array<x25519::key_size>(rfc8448::server_private))
+    {
+        BOOST_REQUIRE(server.receive(rfc8448::client_hello_record));
+        const auto& output = server.output();
+        const auto start = rfc8448::server_hello_record.size();
+        const data_chunk head(std::next(output.begin(), start), std::next(output.begin(), start + record_header_size));
+        const data_chunk tail(std::next(output.begin(), start + record_header_size), output.end());
+
+        record receiver{};
+        receiver.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::server_handshake_traffic));
+        uint8_t type{};
+        data_chunk flight{};
+        BOOST_REQUIRE(receiver.open(type, flight, head, tail));
+        server.output().clear();
+
+        transcript = sha256_hash(splice(splice(rfc8448::client_hello, rfc8448::server_hello), flight));
+        sender.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::client_handshake_traffic));
+    }
+
+    bool send(uint8_t type, const data_chunk& content)
+    {
+        data_chunk out{};
+        sender.seal(out, type, content);
+        return server.receive(out);
+    }
+
+    bool send_message(uint8_t type, const data_chunk& body)
+    {
+        return send(content::handshake, message_of(type, body));
+    }
+
+    bool finish()
+    {
+        const auto verify = schedule::finished(rfc8448::array<32>(rfc8448::client_handshake_traffic), transcript);
+        const auto sent = send_message(handshake::finished, to_chunk(verify));
+        const auto master = schedule::master_secret(rfc8448::array<32>(rfc8448::handshake_secret));
+        sender.set_secret(aes_128_gcm_sha256, schedule::derive_secret(master, "c ap traffic", transcript));
+        return sent;
+    }
+
+    server_setup setup;
+    tls::server server;
+    record sender{};
+    schedule::secret transcript{};
+};
+
+BOOST_AUTO_TEST_CASE(tls_server__receive__protected_finished__established_application_data)
+{
+    rfc8448_setup instance{};
+    BOOST_REQUIRE(instance.finish());
+    BOOST_REQUIRE(instance.server.is_established());
+    BOOST_REQUIRE(instance.send(content::application_data, to_chunk("data")));
+    BOOST_REQUIRE_EQUAL(read_all(instance.server), to_chunk("data"));
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__receive__protected_bad_finished__decrypt_error)
+{
+    rfc8448_setup instance{};
+    BOOST_REQUIRE(!instance.send_message(handshake::finished, data_chunk(32, 0x00)));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decrypt_error);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__receive__protected_short_finished__decrypt_error)
+{
+    rfc8448_setup instance{};
+    BOOST_REQUIRE(!instance.send_message(handshake::finished, data_chunk(31, 0x00)));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decrypt_error);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__receive__protected_certificate_unrequested__unexpected_message)
+{
+    rfc8448_setup instance{};
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, {})));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__receive__protected_application_data_before_finished__unexpected_message)
+{
+    rfc8448_setup instance{};
+    BOOST_REQUIRE(!instance.send(content::application_data, to_chunk("data")));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__receive__plaintext_handshake_after_keys__unexpected_message)
+{
+    rfc8448_setup instance{};
+    BOOST_REQUIRE(!instance.server.receive(base16_chunk("160303000414000000")));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__receive__key_update_long__decode_error)
+{
+    rfc8448_setup instance{};
+    BOOST_REQUIRE(instance.finish());
+    BOOST_REQUIRE(!instance.send_message(handshake::key_update, base16_chunk("0000")));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__receive__key_update_invalid_request__illegal_parameter)
+{
+    rfc8448_setup instance{};
+    BOOST_REQUIRE(instance.finish());
+    BOOST_REQUIRE(!instance.send_message(handshake::key_update, base16_chunk("02")));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::illegal_parameter);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate__finished_instead__unexpected_message)
+{
+    rfc8448_setup instance{ true };
+    BOOST_REQUIRE(!instance.send_message(handshake::finished, data_chunk(32, 0x00)));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate__request_context__illegal_parameter)
+{
+    rfc8448_setup instance{ true };
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of(base16_chunk("01"), {})));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::illegal_parameter);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate__trailing_byte__decode_error)
+{
+    rfc8448_setup instance{ true };
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate, splice(certificate_of({}, {}), base16_chunk("00"))));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate__entry_without_extensions__decode_error)
+{
+    const auto client_identity = make_identity(client_key, "client");
+    rfc8448_setup instance{ true };
+    writer entry{};
+    entry.write_vector_24(client_identity.certificate.encoding);
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entry.data())));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate__unparsable__bad_certificate)
+{
+    rfc8448_setup instance{ true };
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entry_of(base16_chunk("3000")))));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::bad_certificate);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate__issuer_mismatch__bad_certificate)
+{
+    const auto client_identity = make_identity(client_key, "client");
+    const auto other_identity = make_identity(other_key, "other");
+    rfc8448_setup instance{ true };
+    instance.setup.context.add_anchors(other_identity.chain);
+    const auto entries = splice(entry_of(client_identity.certificate.encoding), entry_of(server_identity().certificate.encoding));
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entries)));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::bad_certificate);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate__expired__certificate_expired)
+{
+    x509::subject subject{};
+    subject.common_name = "expired";
+    subject.not_before = 1735689600;
+    subject.not_after = 1750000000;
+    data_chunk der{};
+    x509::build_self_signed(der, client_key, subject);
+
+    rfc8448_setup instance{ true };
+    instance.setup.context.add_anchors(x509::encode_certificate(der));
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entry_of(der))));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::certificate_expired);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate_verify__finished_instead__unexpected_message)
+{
+    const auto client_identity = make_identity(client_key, "client");
+    rfc8448_setup instance{ true };
+    instance.setup.context.add_anchors(client_identity.chain);
+    BOOST_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
+    BOOST_REQUIRE(!instance.send_message(handshake::finished, data_chunk(32, 0x00)));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate_verify__trailing_byte__decode_error)
+{
+    const auto client_identity = make_identity(client_key, "client");
+    rfc8448_setup instance{ true };
+    instance.setup.context.add_anchors(client_identity.chain);
+    BOOST_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate_verify, splice(verify_of(ecdsa_secp256r1_sha256, data_chunk(8, 0x01)), base16_chunk("00"))));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate_verify__scheme_mismatch__illegal_parameter)
+{
+    const auto client_identity = make_identity(client_key, "client");
+    rfc8448_setup instance{ true };
+    instance.setup.context.add_anchors(client_identity.chain);
+    BOOST_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate_verify, verify_of(ecdsa_secp384r1_sha384, data_chunk(8, 0x01))));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::illegal_parameter);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__client_certificate_verify__invalid_signature__decrypt_error)
+{
+    const auto client_identity = make_identity(client_key, "client");
+    rfc8448_setup instance{ true };
+    instance.setup.context.add_anchors(client_identity.chain);
+    BOOST_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
+    BOOST_REQUIRE(!instance.send_message(handshake::certificate_verify, verify_of(ecdsa_secp256r1_sha256, data_chunk(8, 0x01))));
+    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decrypt_error);
+}
+
+// close
+
+BOOST_AUTO_TEST_CASE(tls_server__close__failed__no_close_notify)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    BOOST_REQUIRE(!server.receive(base16_chunk("170303000100")));
+    const auto output = server.output();
+    server.close();
+    BOOST_REQUIRE(!server.is_close_sent());
+    BOOST_REQUIRE_EQUAL(server.output(), output);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

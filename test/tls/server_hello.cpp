@@ -43,6 +43,8 @@ struct hello
     data_chunk group_list{ base16_chunk("001d0017") };
     data_chunk algorithm_list{ base16_chunk("04030503") };
     data_chunk key_share{ splice(base16_chunk("001d0020"), share) };
+    data_chunk share_trailer{};
+    data_chunk extension_trailer{};
 };
 
 static void extension(writer& out, uint16_t type, const data_chunk& data)
@@ -80,7 +82,7 @@ static data_chunk encode(const hello& value)
     if (value.versions) extension(extensions, extension::supported_versions, vector_8(value.version_list));
     if (value.groups) extension(extensions, extension::supported_groups, vector_16(value.group_list));
     if (value.algorithms) extension(extensions, extension::signature_algorithms, vector_16(value.algorithm_list));
-    if (value.shares) extension(extensions, extension::key_share, vector_16(value.key_share));
+    if (value.shares) extension(extensions, extension::key_share, splice(vector_16(value.key_share), value.share_trailer));
     if (value.early) extension(extensions, extension::early_data, {});
     if (value.duplicate) extension(extensions, extension::supported_groups, vector_16(value.group_list));
 
@@ -90,7 +92,7 @@ static data_chunk encode(const hello& value)
     body.write_vector_8(data_chunk(value.session, 0x00));
     body.write_vector_16(value.suites);
     body.write_vector_8(value.compression);
-    body.write_vector_16(extensions.data());
+    body.write_vector_16(splice(extensions.data(), value.extension_trailer));
 
     writer message{};
     message.write_8(handshake::client_hello);
@@ -219,6 +221,34 @@ BOOST_AUTO_TEST_CASE(tls_server_hello__malformed_share__decode_error)
     BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
 }
 
+BOOST_AUTO_TEST_CASE(tls_server_hello__malformed_versions__decode_error)
+{
+    hello value{};
+    value.version_list = base16_chunk("030403");
+    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__malformed_algorithms__decode_error)
+{
+    hello value{};
+    value.algorithm_list = base16_chunk("040305");
+    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__trailing_share_list__decode_error)
+{
+    hello value{};
+    value.share_trailer = base16_chunk("00");
+    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__truncated_extension__decode_error)
+{
+    hello value{};
+    value.extension_trailer = base16_chunk("0000ff");
+    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+}
+
 BOOST_AUTO_TEST_CASE(tls_server_hello__short_share__illegal_parameter)
 {
     hello value{};
@@ -326,6 +356,29 @@ BOOST_AUTO_TEST_CASE(tls_server_hello__trailing_message__unexpected_message)
     const data_chunk message(std::next(hello_record.begin(), record_header_size), hello_record.end());
     BOOST_REQUIRE(!server.receive(record_of(content::handshake, splice(message, base16_chunk("14000000")))));
     BOOST_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__oversized_plaintext__record_overflow)
+{
+    const setup instance{};
+    tls::server server{ instance.context };
+    BOOST_REQUIRE(!server.receive(record_of(content::handshake, data_chunk(add1(maximum_plaintext), 0x00))));
+    BOOST_REQUIRE_EQUAL(server.failure(), alert::record_overflow);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__message_across_records__accepted)
+{
+    const setup instance{};
+    tls::server server{ instance.context };
+    const auto hello_record = encode({});
+    const auto middle = std::next(hello_record.begin(), record_header_size + 10u);
+    const data_chunk first(std::next(hello_record.begin(), record_header_size), middle);
+    const data_chunk second(middle, hello_record.end());
+    BOOST_REQUIRE(server.receive(record_of(content::handshake, first)));
+    BOOST_REQUIRE(server.output().empty());
+    BOOST_REQUIRE(server.receive(record_of(content::handshake, second)));
+    BOOST_REQUIRE(!server.output().empty());
+    BOOST_REQUIRE(!server.is_failed());
 }
 
 BOOST_AUTO_TEST_CASE(tls_server_hello__failed__further_receive_false)
