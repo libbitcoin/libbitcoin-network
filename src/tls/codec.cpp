@@ -111,6 +111,32 @@ const_byte_span reader::read_vector_24() NOEXCEPT
     return valid_ ? read_bytes(size) : const_byte_span{};
 }
 
+std::vector<uint16_t> reader::read_list_8() NOEXCEPT
+{
+    return read_list(read_vector_8());
+}
+
+std::vector<uint16_t> reader::read_list_16() NOEXCEPT
+{
+    return read_list(read_vector_16());
+}
+
+std::vector<uint16_t> reader::read_list(const const_byte_span& bytes) NOEXCEPT
+{
+    std::vector<uint16_t> out{};
+    reader list{ bytes };
+    while (valid_ && list && !list.is_complete())
+        out.push_back(list.read_16());
+
+    if (!list)
+    {
+        invalidate();
+        return {};
+    }
+
+    return out;
+}
+
 void reader::invalidate() NOEXCEPT
 {
     valid_ = false;

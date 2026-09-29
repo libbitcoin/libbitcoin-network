@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_TLS_CODEC_HPP
 #define LIBBITCOIN_NETWORK_TLS_CODEC_HPP
 
+#include <vector>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -48,7 +49,12 @@ public:
     const_byte_span read_vector_16() NOEXCEPT;
     const_byte_span read_vector_24() NOEXCEPT;
 
+    /// Length-prefixed lists of 16 bit integers (prefix of 1 or 2 bytes).
+    std::vector<uint16_t> read_list_8() NOEXCEPT;
+    std::vector<uint16_t> read_list_16() NOEXCEPT;
+
 protected:
+    std::vector<uint16_t> read_list(const const_byte_span& bytes) NOEXCEPT;
     void invalidate() NOEXCEPT;
 
 private:

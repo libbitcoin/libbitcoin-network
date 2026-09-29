@@ -62,14 +62,18 @@ static data_chunk to_bytes(const const_byte_span& bytes) NOEXCEPT
     return { bytes.begin(), bytes.end() };
 }
 
-static bool contains(const const_byte_span& list, uint16_t value) NOEXCEPT
+static bool contains(const std::vector<uint16_t>& list, uint16_t value) NOEXCEPT
 {
-    reader values{ list };
-    while (values && !values.is_complete())
-        if (values.read_16() == value)
-            return values;
+    return std::find(list.begin(), list.end(), value) != list.end();
+}
 
-    return false;
+// A nonempty list that fills the extension body.
+static bool to_list(std::vector<uint16_t>& out, const const_byte_span& body,
+    bool narrow) NOEXCEPT
+{
+    reader source{ body };
+    out = narrow ? source.read_list_8() : source.read_list_16();
+    return source.is_complete() && !out.empty();
 }
 
 static data_chunk make_message(uint8_t type, const data_chunk& body) NOEXCEPT
@@ -444,7 +448,7 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     hello.read_16();
     hello.read_bytes(sizeof(random));
     const auto session = hello.read_vector_8();
-    const auto ciphers = hello.read_vector_16();
+    const auto ciphers = hello.read_list_16();
     const auto compression = hello.read_vector_8();
 
     // Without extensions the client does not offer TLS 1.3.
@@ -452,18 +456,16 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
         return fail(alert::protocol_version);
 
     const auto extensions = hello.read_vector_16();
-    if (!hello.is_complete() || (session.size() > 32u) || ciphers.empty() ||
-        is_odd(ciphers.size()))
+    if (!hello.is_complete() || (session.size() > 32u) || ciphers.empty())
         return fail(alert::decode_error);
 
     if ((compression.size() != one) || !is_zero(compression.front()))
         return fail(alert::illegal_parameter);
 
     // Extensions are unique (4.2).
-    span versions{}, groups{}, algorithms{}, shares{};
-    auto has_versions = false, has_groups = false, has_algorithms = false;
+    std::vector<uint16_t> seen{}, versions{}, groups{}, algorithms{};
+    span shares{};
     auto has_shares = false, has_early = false;
-    std::vector<uint16_t> seen{};
     reader list{ extensions };
     while (list && !list.is_complete())
     {
@@ -472,23 +474,23 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
         if (!list)
             return fail(alert::decode_error);
 
-        if (std::find(seen.begin(), seen.end(), type) != seen.end())
+        if (contains(seen, type))
             return fail(alert::illegal_parameter);
 
         seen.push_back(type);
         switch (type)
         {
             case extension::supported_versions:
-                versions = data;
-                has_versions = true;
+                if (!to_list(versions, data, true))
+                    return fail(alert::decode_error);
                 break;
             case extension::supported_groups:
-                groups = data;
-                has_groups = true;
+                if (!to_list(groups, data, false))
+                    return fail(alert::decode_error);
                 break;
             case extension::signature_algorithms:
-                algorithms = data;
-                has_algorithms = true;
+                if (!to_list(algorithms, data, false))
+                    return fail(alert::decode_error);
                 break;
             case extension::key_share:
                 shares = data;
@@ -502,12 +504,7 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
         }
     }
 
-    reader version_list{ versions };
-    const auto offered = version_list.read_vector_8();
-    if (has_versions && (!version_list.is_complete() || is_odd(offered.size())))
-        return fail(alert::decode_error);
-
-    if (!has_versions || !contains(offered, version_13))
+    if (!contains(versions, version_13))
         return fail(alert::protocol_version);
 
     const auto suite = std::find_if(suites.begin(), suites.end(),
@@ -518,19 +515,11 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     if (retried && ((*suite != suite_) || has_early))
         return fail(alert::illegal_parameter);
 
-    if (!has_algorithms || !has_groups || !has_shares)
+    if (algorithms.empty() || groups.empty() || !has_shares)
         return fail(alert::missing_extension);
 
-    reader algorithm_list{ algorithms };
-    reader group_list{ groups };
-    const auto algorithm_values = algorithm_list.read_vector_16();
-    const auto group_values = group_list.read_vector_16();
-    if (!algorithm_list.is_complete() || !group_list.is_complete() ||
-        is_odd(algorithm_values.size()) || is_odd(group_values.size()))
-        return fail(alert::decode_error);
-
-    if (!contains(algorithm_values, ecdsa_secp256r1_sha256) ||
-        !contains(group_values, x25519_group))
+    if (!contains(algorithms, ecdsa_secp256r1_sha256) ||
+        !contains(groups, x25519_group))
         return fail(alert::handshake_failure);
 
     // KeyShareClientHello (4.2.8).

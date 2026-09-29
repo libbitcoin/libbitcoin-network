@@ -87,6 +87,34 @@ BOOST_AUTO_TEST_CASE(tls_codec__reader__invalid_length_prefix__empty)
     BOOST_REQUIRE(!source24);
 }
 
+BOOST_AUTO_TEST_CASE(tls_codec__reader__lists__contents)
+{
+    const auto data = base16_chunk("020304" "00040102aabb" "00");
+    const std::vector<uint16_t> narrow{ 0x0304 };
+    const std::vector<uint16_t> wide{ 0x0102, 0xaabb };
+    reader source{ data };
+    BOOST_REQUIRE(source.read_list_8() == narrow);
+    BOOST_REQUIRE(source.read_list_16() == wide);
+    BOOST_REQUIRE(source.read_list_8().empty());
+    BOOST_REQUIRE(source.is_complete());
+}
+
+BOOST_AUTO_TEST_CASE(tls_codec__reader__odd_list__invalid)
+{
+    const auto data = base16_chunk("03030403");
+    reader source{ data };
+    BOOST_REQUIRE(source.read_list_8().empty());
+    BOOST_REQUIRE(!source);
+}
+
+BOOST_AUTO_TEST_CASE(tls_codec__reader__short_list__invalid)
+{
+    const auto data = base16_chunk("00040102");
+    reader source{ data };
+    BOOST_REQUIRE(source.read_list_16().empty());
+    BOOST_REQUIRE(!source);
+}
+
 BOOST_AUTO_TEST_CASE(tls_codec__writer__integers_and_vectors__expected)
 {
     writer sink{};
