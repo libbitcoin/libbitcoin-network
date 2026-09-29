@@ -37,4 +37,46 @@ BOOST_AUTO_TEST_CASE(fee_filter__size__always__expected)
     BOOST_REQUIRE_EQUAL(fee_filter::size(level::canonical), expected);
 }
 
+static const auto payload = system::base16_chunk("e803000000000000");
+static const uint32_t excess_version = add1<uint32_t>(level::maximum_protocol);
+
+BOOST_AUTO_TEST_CASE(fee_filter__deserialize1__valid__expected)
+{
+    const auto message = fee_filter::deserialize(level::bip133, payload);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->minimum_fee, 1000u);
+}
+
+BOOST_AUTO_TEST_CASE(fee_filter__deserialize1__insufficient_version__nullptr)
+{
+    BOOST_REQUIRE(!fee_filter::deserialize(level::bip130, payload));
+}
+
+BOOST_AUTO_TEST_CASE(fee_filter__deserialize1__excess_version__nullptr)
+{
+    BOOST_REQUIRE(!fee_filter::deserialize(excess_version, payload));
+}
+
+BOOST_AUTO_TEST_CASE(fee_filter__deserialize1__underflow__nullptr)
+{
+    const auto data = system::base16_chunk("e8030000000000");
+    BOOST_REQUIRE(!fee_filter::deserialize(level::bip133, data));
+}
+
+BOOST_AUTO_TEST_CASE(fee_filter__deserialize2__valid__expected)
+{
+    system::read::bytes::copy source(payload);
+    const auto message = fee_filter::deserialize(level::maximum_protocol, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE_EQUAL(message.minimum_fee, 1000u);
+}
+
+BOOST_AUTO_TEST_CASE(fee_filter__serialize1__valid__expected)
+{
+    const fee_filter message{ 1000 };
+    system::data_chunk data(fee_filter::size(level::bip133));
+    BOOST_REQUIRE(message.serialize(level::bip133, data));
+    BOOST_REQUIRE_EQUAL(data, payload);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
