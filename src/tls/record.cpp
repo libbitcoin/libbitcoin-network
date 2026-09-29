@@ -65,6 +65,11 @@ bool record::is_protected() const NOEXCEPT
     return aes_.has_value() || chacha_.has_value();
 }
 
+uint64_t record::sequence() const NOEXCEPT
+{
+    return sequence_;
+}
+
 // The per-record nonce is the iv xored with the padded sequence (5.3).
 record::nonce record::next_nonce() NOEXCEPT
 {

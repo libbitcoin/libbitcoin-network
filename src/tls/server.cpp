@@ -39,6 +39,7 @@ BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 
 constexpr size_t message_header_size = 4;
 constexpr size_t maximum_message = 131072;
+constexpr uint64_t maximum_records = 16777216;
 constexpr size_t verify_padding = 64;
 constexpr uint8_t verify_pad = 0x20;
 constexpr uint8_t compatibility_payload = 0x01;
@@ -207,6 +208,10 @@ bool server::write(const const_byte_span& data) NOEXCEPT
 {
     if (!is_established() || close_sent_)
         return false;
+
+    // The send key is rotated within the AES-GCM record limit (5.5).
+    if (send_.sequence() >= maximum_records)
+        send_update();
 
     send(content::application_data, data);
     return true;
@@ -839,17 +844,20 @@ bool server::handle_key_update(const span& body) NOEXCEPT
     set_receive(client_traffic_);
 
     if ((request == update_requested) && !close_sent_)
-    {
-        writer update{};
-        update.write_8(update_not_requested);
-        const auto message = make_message(handshake::key_update,
-            update.data());
-        send_.seal(output_, content::handshake, message);
-        server_traffic_ = schedule::update(server_traffic_);
-        send_.set_secret(suite_, server_traffic_);
-    }
+        send_update();
 
     return true;
+}
+
+// KeyUpdate under the current send key, then the next send key (4.6.3).
+void server::send_update() NOEXCEPT
+{
+    writer update{};
+    update.write_8(update_not_requested);
+    send(content::handshake, make_message(handshake::key_update,
+        update.data()));
+    server_traffic_ = schedule::update(server_traffic_);
+    send_.set_secret(suite_, server_traffic_);
 }
 
 // Keys and transcript.

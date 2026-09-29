@@ -146,6 +146,22 @@ BOOST_AUTO_TEST_CASE(tls_record__seal_open__chacha__round_trip)
     BOOST_REQUIRE_EQUAL(content, rfc8448::client_data);
 }
 
+BOOST_AUTO_TEST_CASE(tls_record__sequence__seal_and_set_secret__counts_and_resets)
+{
+    const auto secret = rfc8448::array<32>(rfc8448::client_application_traffic);
+    record sender{};
+    BOOST_REQUIRE_EQUAL(sender.sequence(), 0u);
+
+    sender.set_secret(aes_128_gcm_sha256, secret);
+    data_chunk sealed{};
+    sender.seal(sealed, content::application_data, rfc8448::client_data);
+    sender.seal(sealed, content::application_data, rfc8448::client_data);
+    BOOST_REQUIRE_EQUAL(sender.sequence(), 2u);
+
+    sender.set_secret(aes_128_gcm_sha256, secret);
+    BOOST_REQUIRE_EQUAL(sender.sequence(), 0u);
+}
+
 BOOST_AUTO_TEST_CASE(tls_record__open__padding_only__zero_type)
 {
     const auto secret = rfc8448::array<32>(rfc8448::client_application_traffic);

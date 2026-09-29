@@ -46,6 +46,9 @@ public:
     /// True if records are protected.
     bool is_protected() const NOEXCEPT;
 
+    /// Records sealed or opened with the traffic secret.
+    uint64_t sequence() const NOEXCEPT;
+
     /// Append one record of the content type to out. Content must not exceed
     /// the maximum plaintext size.
     void seal(system::data_chunk& out, uint8_t type,

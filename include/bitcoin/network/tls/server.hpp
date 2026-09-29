@@ -122,6 +122,7 @@ private:
     void send_flight() NOEXCEPT;
     void send_compatibility(const span& session) NOEXCEPT;
     void send(uint8_t type, const span& data) NOEXCEPT;
+    void send_update() NOEXCEPT;
     void set_receive(const schedule::secret& traffic) NOEXCEPT;
     void add_transcript(const span& message) NOEXCEPT;
     schedule::secret transcript() NOEXCEPT;
