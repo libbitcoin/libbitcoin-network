@@ -161,11 +161,11 @@ static std::string password(SSL_CTX* ctx) NOEXCEPT
         possible_narrow_sign_cast<int>(buffer.size()), 0,
         ctx->password_userdata);
 
-    if (size <= 0)
-        return {};
-
-    buffer.resize(possible_narrow_sign_cast<size_t>(size));
-    return buffer;
+    const auto count = (size <= 0) ? zero :
+        possible_narrow_sign_cast<size_t>(size);
+    const std::string value{ buffer.data(), count };
+    wipe(buffer.data(), buffer.size());
+    return value;
 }
 
 // Connection I/O.
@@ -393,7 +393,11 @@ int SSL_CTX_use_PrivateKey_file(SSL_CTX* ctx, const char* file, int type)
         return 0;
     }
 
-    if (!ctx->context.set_key(text, password(ctx)))
+    auto secret = password(ctx);
+    const auto set = ctx->context.set_key(text, secret);
+    wipe(text.data(), text.size());
+    wipe(secret.data(), secret.size());
+    if (!set)
     {
         push_error(ERR_LIB_SSL, 0);
         return 0;
