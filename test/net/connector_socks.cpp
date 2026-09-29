@@ -376,6 +376,168 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__ipv6_address__ipv6_request, so
     BOOST_REQUIRE_EQUAL(result.get(), error::success);
 }
 
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__unproxied__direct_success, socks_setup_fixture)
+{
+    socks_settings.socks = {};
+    create();
+    auto result = connect(config::endpoint{ SOCKS_PROXY_ENDPOINT });
+    accept();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::success);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__proxy_refused__connect_failed, socks_setup_fixture)
+{
+    acceptor.close();
+    create();
+    BOOST_REQUIRE_EQUAL(connect(config::endpoint{ SOCKS_TARGET_ENDPOINT }).get(), error::connect_failed);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__greeting_closed__peer_disconnect, socks_setup_fixture)
+{
+    create();
+    auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
+    accept();
+
+    read(3);
+    proxy.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__username_overflow__socks_username, socks_setup_fixture)
+{
+    socks_settings.username = std::string(256, 'u');
+    socks_settings.password = "pass";
+    create();
+    auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
+    accept();
+
+    greet(socks_method_basic);
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::socks_username);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__password_overflow__socks_password, socks_setup_fixture)
+{
+    socks_settings.username = "user";
+    socks_settings.password = std::string(256, 'p');
+    create();
+    auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
+    accept();
+
+    greet(socks_method_basic);
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::socks_password);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__maximum_credentials__expected_authenticator, socks_setup_fixture)
+{
+    socks_settings.username = std::string(255, 'u');
+    socks_settings.password = std::string(255, 'p');
+    create();
+    auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
+    accept();
+
+    greet(socks_method_basic);
+    const auto authenticator = read(1u + 1u + 255u + 1u + 255u);
+    BOOST_REQUIRE_EQUAL(authenticator.at(1), 255u);
+    BOOST_REQUIRE_EQUAL(authenticator.at(257), 255u);
+    write({ socks_basic_version, 0x01 });
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::socks_authentication);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authentication_closed__peer_disconnect, socks_setup_fixture)
+{
+    socks_settings.username = "user";
+    socks_settings.password = "pass";
+    create();
+    auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
+    accept();
+
+    greet(socks_method_basic);
+    read(11);
+    proxy.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__host_name_overflow__socks_host_name, socks_setup_fixture)
+{
+    create();
+    auto result = connect(config::endpoint{ std::string(255, 'h'), 42 });
+    accept();
+
+    greet(socks_method_clear);
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::socks_host_name);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__maximum_host_name__expected_request, socks_setup_fixture)
+{
+    create();
+    auto result = connect(config::endpoint{ std::string(254, 'h'), 42 });
+    accept();
+
+    greet(socks_method_clear);
+    const auto request = read(4u + 1u + 254u + 2u);
+    BOOST_REQUIRE_EQUAL(request.at(3), socks_address_fqdn);
+    BOOST_REQUIRE_EQUAL(request.at(4), 254u);
+    BOOST_REQUIRE_EQUAL(request.at(259), 0x00);
+    BOOST_REQUIRE_EQUAL(request.at(260), 42u);
+    write({ socks_version, 0x05, socks_reserved, socks_address_ipv4 });
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::socks_connection_refused);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__request_closed__peer_disconnect, socks_setup_fixture)
+{
+    create();
+    auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
+    accept();
+
+    greet(socks_method_clear);
+    read(4);
+    const auto length = read(1);
+    read(length.front() + 2u);
+    proxy.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_length_closed__peer_disconnect, socks_setup_fixture)
+{
+    create();
+    auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
+    accept();
+
+    greet(socks_method_clear);
+    read(4);
+    const auto length = read(1);
+    read(length.front() + 2u);
+    write({ socks_version, 0x00, socks_reserved, socks_address_fqdn });
+    proxy.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_address_truncated__peer_disconnect, socks_setup_fixture)
+{
+    create();
+    auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
+    accept();
+
+    greet(socks_method_clear);
+    read(4);
+    const auto length = read(1);
+    read(length.front() + 2u);
+    write({ socks_version, 0x00, socks_reserved, socks_address_ipv4, 0, 0 });
+    proxy.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
 BOOST_AUTO_TEST_CASE(connector_socks__socks_response__reply_codes__expected)
 {
     BOOST_REQUIRE_EQUAL(accessor::socks_response(0x00), error::success);

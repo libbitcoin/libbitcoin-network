@@ -29,6 +29,7 @@ class accessor
 public:
     using acceptor_sam::acceptor_sam;
     using acceptor_sam::sam_result;
+    using acceptor_sam::proxied;
 };
 
 // The acceptor runs on the fixture pool and the bridge is a plain socket
@@ -40,7 +41,7 @@ struct sam_setup_fixture
 
     sam_setup_fixture()
       : pool(2), strand(pool.service().get_executor()),
-        listener(context), bridge(context)
+        listener(context), bridge(context), forward(context), peer(context)
     {
         log.stop();
         sam_settings.bridge = { SAM_BRIDGE_ENDPOINT };
@@ -65,6 +66,8 @@ struct sam_setup_fixture
             stopped.get_future().get();
         }
 
+        peer.close();
+        forward.close();
         bridge.close();
         listener.close();
         pool.stop();
@@ -109,6 +112,18 @@ struct sam_setup_fixture
         return accepted.get_future();
     }
 
+    // The port of the loopback listener to which streams are forwarded.
+    uint16_t local_port()
+    {
+        std::promise<uint16_t> port{};
+        boost::asio::post(strand, [this, &port]() NOEXCEPT
+        {
+            port.set_value(instance->local().port());
+        });
+
+        return port.get_future().get();
+    }
+
     // Accept the acceptor's connection to the bridge.
     void connect()
     {
@@ -118,19 +133,76 @@ struct sam_setup_fixture
     // Read one newline-terminated line from the bridge socket.
     std::string read_line()
     {
+        return read_line(bridge);
+    }
+
+    void write_line(const std::string& line)
+    {
+        write_line(bridge, line);
+    }
+
+    static std::string read_line(boost::asio::ip::tcp::socket& socket)
+    {
         boost::asio::streambuf buffer{};
-        boost::asio::read_until(bridge, buffer, '\n');
+        boost::asio::read_until(socket, buffer, '\n');
         std::istream stream{ &buffer };
         std::string line{};
         std::getline(stream, line);
         return line;
     }
 
-    void write_line(const std::string& line)
+    static void write_line(boost::asio::ip::tcp::socket& socket, const std::string& line)
     {
         const auto text = line + "\n";
-        boost::asio::write(bridge, boost::asio::buffer(text));
+        boost::asio::write(socket, boost::asio::buffer(text));
     }
+
+    // True if the socket is closed by the remote.
+    static bool closed(boost::asio::ip::tcp::socket& socket)
+    {
+        boost::system::error_code ec{};
+        std::array<char, 1> byte{};
+        boost::asio::read(socket, boost::asio::buffer(byte), ec);
+        return ec == boost::asio::error::eof || ec == boost::asio::error::connection_reset;
+    }
+
+    // Complete the session, returning the session create request.
+    std::string create_session(const std::string& key)
+    {
+        connect();
+        read_line();
+        write_line("HELLO REPLY RESULT=OK VERSION=3.1");
+        const auto request = read_line();
+        write_line("SESSION STATUS RESULT=OK DESTINATION=" + key);
+        return request;
+    }
+
+    // Accept the forward control connection and complete its hello.
+    void forward_hello()
+    {
+        listener.accept(forward);
+        read_line(forward);
+        write_line(forward, "HELLO REPLY RESULT=OK VERSION=3.1");
+    }
+
+    // Complete session and forwarding, returning the stream forward request.
+    std::string establish()
+    {
+        create_session(destination);
+        forward_hello();
+        const auto request = read_line(forward);
+        write_line(forward, "STREAM STATUS RESULT=OK");
+        return request;
+    }
+
+    // Connect the peer stream to the forwarding listener.
+    void connect_peer()
+    {
+        peer.connect({ boost::asio::ip::address_v4::loopback(), local_port() });
+    }
+
+    // An ed25519 destination with an empty certificate (387 bytes).
+    static inline const std::string destination = system::encode_base64(system::splice(system::data_chunk(385, 0x42), system::data_chunk(2, 0x00)));
 
     logger log{};
     threadpool pool;
@@ -141,7 +213,14 @@ struct sam_setup_fixture
     boost::asio::io_context context{};
     boost::asio::ip::tcp::acceptor listener;
     boost::asio::ip::tcp::socket bridge;
+    boost::asio::ip::tcp::socket forward;
+    boost::asio::ip::tcp::socket peer;
     std::promise<code> accepted{};
+};
+
+struct sam_directory_setup_fixture
+  : test::directory_setup_fixture, sam_setup_fixture
+{
 };
 
 BOOST_AUTO_TEST_CASE(acceptor_sam__sam_result__result_values__expected)
@@ -270,6 +349,288 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__session_invalid_destination__sam_i
     write_line("SESSION STATUS RESULT=OK DESTINATION=not~a~key");
 
     BOOST_REQUIRE_EQUAL(result.get(), error::sam_invalid_key);
+}
+
+BOOST_AUTO_TEST_CASE(acceptor_sam__proxied__always__true)
+{
+    const logger log{};
+    threadpool pool(1);
+    std::atomic_bool suspended{ false };
+    asio::strand strand(pool.service().get_executor());
+    const settings::sam sam{};
+    const auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, acceptor::parameters{}, sam);
+    BOOST_REQUIRE(instance->proxied());
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__start__started__operation_failed, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+
+    std::promise<code> restarted{};
+    boost::asio::post(strand, [this, &restarted]() NOEXCEPT
+    {
+        restarted.set_value(instance->start({ "127.0.0.1:65022" }));
+    });
+
+    BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__no_bridge__connect_failed, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    listener.close();
+    BOOST_REQUIRE_EQUAL(accept().get(), error::connect_failed);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__hello_closed__peer_disconnect, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    connect();
+
+    read_line();
+    bridge.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__hello_quoted_values__result_outside_quotes, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    connect();
+
+    read_line();
+    write_line("HELLO REPLY MESSAGE=\"quoted RESULT=OK \\\"escaped RESULT=OK\\\"\" RESULT=NOVERSION");
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_no_version);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__line_overflow__sam_response_invalid, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    connect();
+
+    read_line();
+    boost::asio::write(bridge, boost::asio::buffer(std::string(65'537, 'x')));
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_response_invalid);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__session_closed__peer_disconnect, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    connect();
+
+    read_line();
+    write_line("HELLO REPLY RESULT=OK VERSION=3.1");
+    read_line();
+    bridge.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__transient__expected_session_create, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    connect();
+
+    read_line();
+    write_line("HELLO REPLY RESULT=OK VERSION=3.1");
+
+    const auto request = read_line();
+    BOOST_REQUIRE_EQUAL(request.substr(0, 31), "SESSION CREATE STYLE=STREAM ID=");
+    BOOST_REQUIRE_EQUAL(request.substr(47), " DESTINATION=TRANSIENT SIGNATURE_TYPE=7 i2cp.leaseSetEncType=4,0");
+    write_line("SESSION STATUS RESULT=DUPLICATED_DEST");
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_duplicated_dest);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__configured_key__i2p_alphabet_destination, sam_setup_fixture)
+{
+    sam_settings.key = "+/+/QkJC";
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    connect();
+
+    read_line();
+    write_line("HELLO REPLY RESULT=OK VERSION=3.1");
+
+    const auto request = read_line();
+    BOOST_REQUIRE(request.ends_with(" DESTINATION=-~-~QkJC"));
+    write_line("SESSION STATUS RESULT=INVALID_KEY");
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_invalid_key);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__key_path_directory__file_save, sam_directory_setup_fixture)
+{
+    sam_settings.key_path = { TEST_DIRECTORY };
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    create_session(destination);
+    BOOST_REQUIRE_EQUAL(result.get(), error::file_save);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_refused__connect_failed, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    connect();
+
+    read_line();
+    write_line("HELLO REPLY RESULT=OK VERSION=3.1");
+    read_line();
+    listener.close();
+    write_line("SESSION STATUS RESULT=OK DESTINATION=" + destination);
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::connect_failed);
+    BOOST_REQUIRE(closed(bridge));
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_hello__expected_request, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    create_session(destination);
+    listener.accept(forward);
+
+    BOOST_REQUIRE_EQUAL(read_line(forward), "HELLO VERSION MIN=3.1 MAX=3.1");
+    write_line(forward, "HELLO REPLY RESULT=NOVERSION");
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_no_version);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_hello_closed__peer_disconnect, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    create_session(destination);
+    listener.accept(forward);
+
+    read_line(forward);
+    forward.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_hello_not_a_reply__sam_response_invalid, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    create_session(destination);
+    listener.accept(forward);
+
+    read_line(forward);
+    write_line(forward, "SESSION STATUS RESULT=OK");
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_response_invalid);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__stream_forward__expected_request, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    const auto session = create_session(destination);
+    forward_hello();
+
+    const auto id = session.substr(31, 16);
+    const auto port = std::to_string(local_port());
+    BOOST_REQUIRE_EQUAL(read_line(forward), "STREAM FORWARD ID=" + id + " PORT=" + port + " HOST=127.0.0.1 SILENT=false");
+    write_line(forward, "STREAM STATUS RESULT=CANT_REACH_PEER");
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_cant_reach_peer);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__stream_status_closed__peer_disconnect, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    create_session(destination);
+    forward_hello();
+
+    read_line(forward);
+    forward.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__stream_not_a_status__sam_response_invalid, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    create_session(destination);
+    forward_hello();
+
+    read_line(forward);
+    write_line(forward, "STREAM REPLY RESULT=OK");
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_response_invalid);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forwarded_peer_closed__peer_disconnect, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    establish();
+    connect_peer();
+    peer.close();
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forwarded_peer_empty_line__sam_response_invalid, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    establish();
+    connect_peer();
+    write_line(peer, "");
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_response_invalid);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forwarded_peer_invalid_destination__sam_response_invalid, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    establish();
+    connect_peer();
+    write_line(peer, "!!!!");
+
+    BOOST_REQUIRE_EQUAL(result.get(), error::sam_response_invalid);
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_closed__session_closed, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    establish();
+    forward.close();
+
+    BOOST_REQUIRE(closed(bridge));
+}
+
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__transient_key_path__key_saved, sam_directory_setup_fixture)
+{
+    const auto key = system::encode_base64(system::build_chunk({ system::base16_chunk("fbffbf"), system::data_chunk(382, 0x42), system::data_chunk(2, 0x00) }));
+    const auto i2p = "-~-~" + key.substr(4);
+    sam_settings.key_path = { TEST_PATH };
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    create_session(i2p);
+    forward_hello();
+
+    std::ifstream file{ TEST_PATH };
+    std::string saved{};
+    std::getline(file, saved);
+    BOOST_REQUIRE_EQUAL(saved, key);
+    BOOST_REQUIRE(key.starts_with("+/+/"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
