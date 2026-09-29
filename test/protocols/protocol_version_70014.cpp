@@ -17,12 +17,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../functional/peer_setup_fixture.hpp"
 
-BOOST_AUTO_TEST_SUITE(protocol_tests)
-
-BOOST_AUTO_TEST_CASE(protocol_version_70014_tests)
+struct protocol_version_70014_setup_fixture
+  : peer_net_setup_fixture<>
 {
-    BOOST_REQUIRE(true);
+    protocol_version_70014_setup_fixture()
+    {
+        settings_.enable_address_v2 = false;
+        settings_.enable_compact = true;
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(protocol_version_70014_tests, protocol_version_70014_setup_fixture)
+
+using namespace network::messages::peer;
+
+BOOST_AUTO_TEST_CASE(protocol_version_70014__handshake__bip152_peer__send_compact_low_bandwidth_version_2)
+{
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip152));
+    BOOST_REQUIRE_EQUAL(node_version->value, level::maximum_protocol);
+
+    const auto message = receive<send_compact>(level::bip152);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(!message->high_bandwidth);
+    BOOST_REQUIRE_EQUAL(message->compact_version, send_compact::compact_version_2);
+}
+
+BOOST_AUTO_TEST_CASE(protocol_version_70014__handshake__bip61_peer__no_send_compact)
+{
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip61));
+    BOOST_REQUIRE_EQUAL(receive().first, ping::command);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

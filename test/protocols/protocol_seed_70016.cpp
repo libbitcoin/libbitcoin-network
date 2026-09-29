@@ -17,12 +17,69 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../functional/peer_setup_fixture.hpp"
 
-BOOST_AUTO_TEST_SUITE(protocol_tests)
-
-BOOST_AUTO_TEST_CASE(protocol_seed_70016_tests)
+struct protocol_seed_70016_setup_fixture
+  : peer_net_setup_fixture<>
 {
-    BOOST_REQUIRE(true);
+    protocol_seed_70016_setup_fixture()
+    {
+        settings_.outbound.connections = 1;
+        settings_.outbound.host_pool_capacity = 100;
+        settings_.outbound.seeds.emplace_back(PEER_LISTEN_ENDPOINT);
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(protocol_seed_70016_tests, protocol_seed_70016_setup_fixture)
+
+using namespace network::messages::peer;
+
+static const address_item host1 = network::config::address{ "1.2.3.4:8333" }.to_address_item(1700000000, service::node_network);
+static const address_item host2 = network::config::address{ "5.6.7.8:8333" }.to_address_item(1700000000, service::node_network);
+static const address_item host3 = network::config::address{ "9.10.11.12:8333" }.to_address_item(1700000000, service::node_network);
+static const address_item host4 = network::config::address{ "13.14.15.16:8333" }.to_address_item(1700000000, service::node_network);
+static const address_item host5 = network::config::address{ "17.18.19.20:8333" }.to_address_item(1700000000, service::node_network);
+static const network::config::address self4{ "9.9.9.9:8333" };
+
+BOOST_AUTO_TEST_CASE(protocol_seed_70016__receive_address_v2__sufficient__seeded)
+{
+    auto started = starting();
+    accept();
+    BOOST_REQUIRE(handshake(level::bip155));
+    BOOST_REQUIRE(receive(get_address::command).empty());
+    send(address_v2{ { host1, host2, host3, host4, host5 } }, level::bip155);
+    BOOST_REQUIRE(dropped());
+    BOOST_REQUIRE_EQUAL(started.get(), error::success);
+    BOOST_REQUIRE_EQUAL(net_->address_count(), 5u);
+}
+
+BOOST_AUTO_TEST_CASE(protocol_seed_70016__receive_address__sufficient__seeded)
+{
+    auto started = starting();
+    accept();
+    BOOST_REQUIRE(handshake(level::bip155));
+    send(address{ { host1, host2, host3, host4, host5 } }, level::bip155);
+    BOOST_REQUIRE(dropped());
+    BOOST_REQUIRE_EQUAL(started.get(), error::success);
+    BOOST_REQUIRE_EQUAL(net_->address_count(), 5u);
+}
+
+BOOST_AUTO_TEST_CASE(protocol_seed_70016__receive_get_address__selfs__self_address_v2)
+{
+    settings_.inbound.selfs.push_back(self4);
+    auto started = starting();
+    accept();
+    BOOST_REQUIRE(handshake(level::bip155));
+    send(get_address{}, level::bip155);
+
+    const auto message = receive<address_v2>(level::bip155);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->addresses.size(), 1u);
+    BOOST_REQUIRE(self4 == message->addresses.front());
+
+    send(address_v2{ { host1, host2, host3, host4, host5 } }, level::bip155);
+    BOOST_REQUIRE(dropped());
+    BOOST_REQUIRE_EQUAL(started.get(), error::success);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

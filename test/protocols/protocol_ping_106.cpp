@@ -17,12 +17,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../functional/peer_setup_fixture.hpp"
 
-BOOST_AUTO_TEST_SUITE(protocol_tests)
+BOOST_FIXTURE_TEST_SUITE(protocol_ping_106_tests, peer_net_setup_fixture<>)
 
-BOOST_AUTO_TEST_CASE(protocol_ping_106_tests)
+using namespace network::messages::peer;
+
+BOOST_AUTO_TEST_CASE(protocol_ping_106__start__address_timestamp_peer__ping_without_nonce)
 {
-    BOOST_REQUIRE(true);
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::address_timestamp));
+    BOOST_REQUIRE(receive(ping::command).empty());
+}
+
+BOOST_AUTO_TEST_CASE(protocol_ping_106__handle_timer__zero_heartbeat__pings_repeated)
+{
+    settings_.channel_heartbeat_minutes = 0;
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::address_timestamp));
+    BOOST_REQUIRE(receive(ping::command).empty());
+    BOOST_REQUIRE(receive(ping::command).empty());
+    BOOST_REQUIRE(receive(ping::command).empty());
+}
+
+BOOST_AUTO_TEST_CASE(protocol_ping_106__receive_ping__address_timestamp_peer__no_pong)
+{
+    settings_.channel_heartbeat_minutes = 0;
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::address_timestamp));
+    send(ping{}, level::address_timestamp);
+    BOOST_REQUIRE_EQUAL(receive().first, ping::command);
+    BOOST_REQUIRE_EQUAL(receive().first, ping::command);
+    BOOST_REQUIRE_EQUAL(receive().first, ping::command);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

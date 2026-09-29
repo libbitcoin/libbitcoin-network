@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../functional/peer_setup_fixture.hpp"
+#include <numeric>
 
 ////struct protocol_tests_setup_fixture
 ////{
@@ -300,9 +302,236 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(protocol_test)
+// Protocol properties captured on the channel strand by probe_protocol.
+struct probe_record
 {
-    BOOST_REQUIRE(true);
+    bool encrypted{ true };
+    size_t start_height{ max_size_t };
+    version::cptr peer_version{};
+    uint32_t negotiated_version{};
+    bool wants_address_v2{};
+    address selfs{};
+    bool gated{};
+    size_t remaining{};
+    uint16_t opposite_port{};
+    uint16_t binding_port{};
+    bool terminal{ true };
+    uint64_t nonce{};
+    uint64_t sent{};
+    uint64_t received{};
+    uint64_t sent_by_message{};
+    uint64_t received_by_message{};
+    uint32_t created{};
+    uint32_t last_read{};
+    uint32_t last_write{};
+    uint64_t identifier{};
+    uint64_t minimum_fee{};
+    steady_clock::duration ping_time{};
+    steady_clock::duration minimum_ping_time{ steady_clock::duration::max() };
+    steady_clock::duration pending_ping_time{ steady_clock::duration::max() };
+    uint64_t sender{};
+    code save_ec{ error::unknown };
+    size_t accepted{};
+    size_t address_count{};
+    code fetch_ec{ error::unknown };
+    address::cptr fetched{};
+};
+
+using probe_promise = std::promise<probe_record>;
+
+using namespace std::placeholders;
+
+#define CLASS probe_protocol
+
+class probe_protocol
+  : public protocol_peer
+{
+public:
+    typedef std::shared_ptr<probe_protocol> ptr;
+
+    probe_protocol(const network::session::ptr& session,
+        const channel::ptr& channel, probe_promise& promise) NOEXCEPT
+      : protocol_peer(session, channel), promise_(promise)
+    {
+    }
+
+    void start() NOEXCEPT override
+    {
+        if (started())
+            return;
+
+        record_.encrypted = encrypted();
+        record_.start_height = start_height();
+        set_peer_version(peer_version());
+        record_.peer_version = peer_version();
+        set_negotiated_version(negotiated_version());
+        record_.negotiated_version = negotiated_version();
+        set_wants_address_v2();
+        record_.wants_address_v2 = wants_address_v2();
+        record_.selfs = selfs();
+        record_.gated = !is_null(gate());
+        record_.remaining = remaining();
+        record_.opposite_port = opposite().port();
+        record_.binding_port = binding().port();
+        record_.terminal = is_terminal(zero);
+        record_.nonce = nonce();
+        record_.sent = sent();
+        record_.received = received();
+        record_.sent_by_message = std::accumulate(sent_by_message().begin(), sent_by_message().end(), 0_u64);
+        record_.received_by_message = std::accumulate(received_by_message().begin(), received_by_message().end(), 0_u64);
+        record_.created = created();
+        record_.last_read = last_read();
+        record_.last_write = last_write();
+        record_.identifier = identifier();
+        set_minimum_fee(42);
+        record_.minimum_fee = minimum_fee();
+        set_ping();
+        set_pong();
+        record_.pending_ping_time = pending_ping_time();
+        record_.ping_time = ping_time();
+        record_.minimum_ping_time = minimum_ping_time();
+
+        SUBSCRIBE_BROADCAST(address, handle_broadcast, _1, _2, _3);
+        BROADCAST(address, system::to_shared<address>(record_.selfs));
+        protocol::start();
+    }
+
+private:
+    bool handle_broadcast(const code&, const address::cptr& message,
+        uint64_t sender) NOEXCEPT
+    {
+        record_.sender = sender;
+        UNSUBSCRIBE_BROADCAST();
+        save(message, BIND(handle_save, _1, _2));
+        return false;
+    }
+
+    void handle_save(const code& ec, size_t accepted) NOEXCEPT
+    {
+        record_.save_ec = ec;
+        record_.accepted = accepted;
+        record_.address_count = address_count();
+        fetch(BIND(handle_fetch, _1, _2));
+    }
+
+    void handle_fetch(const code& ec, const address::cptr& message) NOEXCEPT
+    {
+        record_.fetch_ec = ec;
+        record_.fetched = message;
+        promise_.set_value(record_);
+    }
+
+    probe_promise& promise_;
+    probe_record record_{};
+};
+
+#undef CLASS
+
+class probe_session
+  : public session_inbound
+{
+public:
+    probe_session(net& network, uint64_t identifier,
+        probe_promise& promise) NOEXCEPT
+      : session_inbound(network, identifier), promise_(promise)
+    {
+    }
+
+protected:
+    void attach_protocols(const channel::ptr& channel) NOEXCEPT override
+    {
+        session_inbound::attach_protocols(channel);
+        channel->attach<probe_protocol>(shared_from_this(), promise_)->start();
+    }
+
+private:
+    probe_promise& promise_;
+};
+
+class probe_net
+  : public net
+{
+public:
+    probe_net(const network::settings& settings,
+        const network::logger& log) NOEXCEPT
+      : net(settings, log)
+    {
+    }
+
+    probe_promise promise{};
+
+protected:
+    session_inbound::ptr attach_inbound_session() NOEXCEPT override
+    {
+        return attach<probe_session>(*this, promise);
+    }
+};
+
+struct protocol_probe_setup_fixture
+  : peer_net_setup_fixture<probe_net>
+{
+    protocol_probe_setup_fixture()
+    {
+        settings_.outbound.host_pool_capacity = 100;
+        settings_.address_lower = 1;
+        settings_.address_upper = 1;
+        settings_.inbound.selfs.emplace_back("1.2.3.4:8333");
+        settings_.inbound.selfs.emplace_back("[2001:db8::1]:8333");
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(protocol__properties__handshaken_inbound__expected, protocol_probe_setup_fixture)
+{
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip61));
+    const auto record = net_->promise.get_future().get();
+    const auto now = network::unix_time();
+
+    BOOST_REQUIRE(!record.encrypted);
+    BOOST_REQUIRE_EQUAL(record.start_height, node_version->start_height);
+    BOOST_REQUIRE(record.peer_version);
+    BOOST_REQUIRE_EQUAL(record.peer_version->value, level::bip61);
+    BOOST_REQUIRE_EQUAL(record.peer_version->user_agent, "/test/");
+    BOOST_REQUIRE_EQUAL(record.negotiated_version, level::bip61);
+    BOOST_REQUIRE(record.wants_address_v2);
+    BOOST_REQUIRE_EQUAL(record.selfs.addresses.size(), 1u);
+    BOOST_REQUIRE(settings_.inbound.selfs.front() == record.selfs.addresses.front());
+    BOOST_REQUIRE_EQUAL(record.selfs.addresses.front().services, service::node_none);
+    BOOST_REQUIRE_GT(record.remaining, 0u);
+    BOOST_REQUIRE_LE(record.remaining, settings_.inbound.expiration_minutes * 60u);
+    BOOST_REQUIRE_EQUAL(record.opposite_port, port());
+    BOOST_REQUIRE_EQUAL(record.binding_port, settings_.inbound.binds.back().port());
+    BOOST_REQUIRE(!record.terminal);
+    BOOST_REQUIRE_EQUAL(record.nonce, node_version->nonce);
+    BOOST_REQUIRE_GT(record.sent, 0u);
+    BOOST_REQUIRE_GT(record.received, 0u);
+    BOOST_REQUIRE_GT(record.sent_by_message, 0u);
+    BOOST_REQUIRE_GT(record.received_by_message, 0u);
+    BOOST_REQUIRE_GT(record.created, 0u);
+    BOOST_REQUIRE_LE(record.created, now);
+    BOOST_REQUIRE_LE(record.created, record.last_read);
+    BOOST_REQUIRE_LE(record.last_read, now);
+    BOOST_REQUIRE_LE(record.created, record.last_write);
+    BOOST_REQUIRE_LE(record.last_write, now);
+    BOOST_REQUIRE_NE(record.identifier, 0u);
+    BOOST_REQUIRE_EQUAL(record.minimum_fee, 42u);
+    BOOST_REQUIRE(record.pending_ping_time == steady_clock::duration::zero());
+    BOOST_REQUIRE(record.minimum_ping_time <= record.ping_time);
+    BOOST_REQUIRE_EQUAL(record.sender, record.identifier);
+    BOOST_REQUIRE_EQUAL(record.save_ec, error::success);
+    BOOST_REQUIRE_EQUAL(record.accepted, 1u);
+    BOOST_REQUIRE_EQUAL(record.address_count, 1u);
+    BOOST_REQUIRE_EQUAL(record.fetch_ec, error::success);
+    BOOST_REQUIRE(record.fetched);
+    BOOST_REQUIRE_EQUAL(record.fetched->addresses.size(), 1u);
+}
+
+BOOST_FIXTURE_TEST_CASE(protocol__stop__handshaken_inbound__dropped, protocol_probe_setup_fixture)
+{
+    settings_.channel_heartbeat_minutes = 0;
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip61));
+    BOOST_REQUIRE(dropped());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

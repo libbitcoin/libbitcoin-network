@@ -17,12 +17,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../functional/peer_setup_fixture.hpp"
 
-BOOST_AUTO_TEST_SUITE(protocol_tests)
-
-BOOST_AUTO_TEST_CASE(protocol_alert_311_tests)
+struct protocol_alert_311_setup_fixture
+  : peer_net_setup_fixture<>
 {
-    BOOST_REQUIRE(true);
+    protocol_alert_311_setup_fixture()
+    {
+        settings_.enable_alert = true;
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(protocol_alert_311_tests, protocol_alert_311_setup_fixture)
+
+using namespace network::messages::peer;
+
+static const alert message
+{
+    alert_item
+    {
+        1,
+        9223372036854775807,
+        9223372036854775807,
+        2147483647,
+        2147483646,
+        {},
+        0,
+        2147483647,
+        {},
+        2147483647,
+        "",
+        "URGENT: Alert key compromised, upgrade required",
+        ""
+    },
+    system::data_chunk{ 0x30, 0x45, 0x02, 0x21, 0x00 }
+};
+
+BOOST_AUTO_TEST_CASE(protocol_alert_311__receive_alert__bip31_peer__connected)
+{
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip31));
+    send(message, level::bip31);
+
+    send(ping{ 42 }, level::bip31);
+    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
