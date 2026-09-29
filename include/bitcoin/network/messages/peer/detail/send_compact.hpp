@@ -33,6 +33,7 @@ struct BCT_API send_compact
     typedef std::shared_ptr<const send_compact> cptr;
 
     static constexpr uint8_t identifier{ identifiers::send_compact };
+    static constexpr uint64_t compact_version_2{ 2 };
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
     static const std::string command;

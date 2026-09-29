@@ -159,6 +159,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/protocols/protocol_version_106.cpp \
     ${srcdir}/../../src/protocols/protocol_version_70001.cpp \
     ${srcdir}/../../src/protocols/protocol_version_70002.cpp \
+    ${srcdir}/../../src/protocols/protocol_version_70014.cpp \
     ${srcdir}/../../src/protocols/protocol_version_70016.cpp \
     ${srcdir}/../../src/sessions/session.cpp \
     ${srcdir}/../../src/sessions/session_inbound.cpp \
@@ -535,6 +536,7 @@ include_bitcoin_network_protocols_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol_version_106.hpp \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol_version_70001.hpp \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol_version_70002.hpp \
+    ${srcdir}/../../include/bitcoin/network/protocols/protocol_version_70014.hpp \
     ${srcdir}/../../include/bitcoin/network/protocols/protocol_version_70016.hpp \
     ${srcdir}/../../include/bitcoin/network/protocols/protocols.hpp
 
@@ -873,6 +875,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/protocols/protocol_version_106.cpp \
     ${srcdir}/../../test/protocols/protocol_version_70001.cpp \
     ${srcdir}/../../test/protocols/protocol_version_70002.cpp \
+    ${srcdir}/../../test/protocols/protocol_version_70014.cpp \
     ${srcdir}/../../test/protocols/protocol_version_70016.cpp \
     ${srcdir}/../../test/sessions/session.cpp \
     ${srcdir}/../../test/sessions/session_html.cpp \

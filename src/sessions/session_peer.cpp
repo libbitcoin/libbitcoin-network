@@ -149,6 +149,10 @@ void session_peer::attach_handshake(const channel::ptr& channel,
     if (is_configured(level::bip155) && network_settings().enable_address_v2)
         channel->attach<protocol_version_70016>(self)->shake(std::move(handler));
 
+    // Compact blocks can be disabled, independent of version.
+    else if (is_configured(level::bip152) && network_settings().enable_compact)
+        channel->attach<protocol_version_70014>(self)->shake(std::move(handler));
+
     // Protocol versions are cumulative, but reject is deprecated.
     else if (is_configured(level::bip61) && network_settings().enable_reject)
         channel->attach<protocol_version_70002>(self)->shake(std::move(handler));
