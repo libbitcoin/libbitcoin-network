@@ -298,7 +298,7 @@ void channel_http::handle_send(const code& ec, size_t bytes,
     if (ec) stop(ec);
 
     // Do not log websocket sends as it creates log subscription feedback loop.
-    if (!websocket()) { LOGV(boost_format(message) % bytes); }
+    if (!websocket()) { LOGV(replace_copy(message, "%1%", serialize(bytes))); }
 
     handler(ec);
 }

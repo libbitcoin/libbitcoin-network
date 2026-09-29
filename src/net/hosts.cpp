@@ -36,7 +36,7 @@ hosts::hosts(const settings& settings, const logger& log,
     uint64_t required_services) NOEXCEPT
   : settings_(settings),
     required_(required_services),
-    buffer_(settings.outbound.host_pool_capacity),
+    capacity_(settings.outbound.host_pool_capacity),
     reporter(log)
 {
 }
@@ -48,7 +48,7 @@ hosts::hosts(const settings& settings, const logger& log,
 code hosts::start() NOEXCEPT
 {
     // Not idempotent start.
-    if (is_zero(buffer_.capacity()))
+    if (is_zero(capacity_))
         return error::success;
 
     if (!stopped_)
@@ -89,7 +89,7 @@ code hosts::start() NOEXCEPT
 code hosts::stop() NOEXCEPT
 {
     // Idempotent stop
-    if (is_zero(buffer_.capacity()) || stopped_)
+    if (is_zero(capacity_) || stopped_)
         return error::success;
 
     stopped_ = true;
@@ -303,9 +303,12 @@ void hosts::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 // O(1).
 inline void hosts::push(const address_item& host) NOEXCEPT
 {
-    // Circular buffer push evicts the oldest element when full.
-    if (buffer_.full())
+    // Evict the oldest element when full.
+    if (buffer_.size() == capacity_)
+    {
         decrement(buffer_.front().address);
+        buffer_.pop_front();
+    }
 
     buffer_.push_back(host);
     increment(host.address);

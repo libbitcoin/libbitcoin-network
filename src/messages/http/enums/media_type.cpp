@@ -31,56 +31,65 @@ namespace http {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-using media_bimap = boost::bimap
-<
-    boost::bimaps::set_of<media_type>, 
-    boost::bimaps::set_of<std::string>
->;
+using text_types = std::unordered_map<std::string, media_type>;
+using type_texts = std::unordered_map<media_type, std::string>;
 
-static media_bimap construct_media_bimap() NOEXCEPT
+static const text_types& media_types_map() NOEXCEPT
 {
-    media_bimap bimap{};
-    bimap.insert({ media_type::application_javascript, "application/javascript" });
-    bimap.insert({ media_type::application_json, "application/json" });
-    bimap.insert({ media_type::application_octet_stream, "application/octet-stream" });
-    bimap.insert({ media_type::application_pdf, "application/pdf" });
-    bimap.insert({ media_type::application_xml, "application/xml" });
-    bimap.insert({ media_type::application_zip, "application/zip" });
-    bimap.insert({ media_type::audio_mpeg, "audio/mpeg" });
-    bimap.insert({ media_type::font_woff, "font/woff" });
-    bimap.insert({ media_type::font_woff2, "font/woff2" });
-    bimap.insert({ media_type::image_gif, "image/gif" });
-    bimap.insert({ media_type::image_jpeg, "image/jpeg" });
-    bimap.insert({ media_type::image_png, "image/png" });
-    bimap.insert({ media_type::image_svg_xml, "image/svg+xml" });
-    bimap.insert({ media_type::image_x_icon, "image/x-icon" });
-    bimap.insert({ media_type::text_css, "text/css" });
-    bimap.insert({ media_type::text_html, "text/html" });
-    bimap.insert({ media_type::text_plain, "text/plain" });
-    bimap.insert({ media_type::video_mp4, "video/mp4" });
-    ////bimap.insert({ media_type::unknown, "unknown" });
-    return bimap;
-};
+    static const text_types types
+    {
+        { "application/javascript",   media_type::application_javascript },
+        { "application/json",         media_type::application_json },
+        { "application/octet-stream", media_type::application_octet_stream },
+        { "application/pdf",          media_type::application_pdf },
+        { "application/xml",          media_type::application_xml },
+        { "application/zip",          media_type::application_zip },
+        { "audio/mpeg",               media_type::audio_mpeg },
+        { "font/woff",                media_type::font_woff },
+        { "font/woff2",               media_type::font_woff2 },
+        { "image/gif",                media_type::image_gif },
+        { "image/jpeg",               media_type::image_jpeg },
+        { "image/png",                media_type::image_png },
+        { "image/svg+xml",            media_type::image_svg_xml },
+        { "image/x-icon",             media_type::image_x_icon },
+        { "text/css",                 media_type::text_css },
+        { "text/html",                media_type::text_html },
+        { "text/plain",               media_type::text_plain },
+        { "video/mp4",                media_type::video_mp4 }
+        ////{ "unknown",              media_type::unknown }
+    };
 
-const media_bimap& media_map() NOEXCEPT
-{
-    static const auto types = construct_media_bimap();
     return types;
+}
+
+static const type_texts& media_texts_map() NOEXCEPT
+{
+    static const auto texts = []() NOEXCEPT
+    {
+        type_texts out{};
+        for (const auto& [text, type]: media_types_map())
+            out.emplace(type, text);
+
+        return out;
+    }();
+
+    return texts;
 }
 
 media_type to_media_type(const std::string_view& accept,
     media_type default_) NOEXCEPT
 {
-    const auto type = media_map().right.find(system::ascii_to_lower(accept));
-    return type == media_map().right.end() ? default_ : type->second;
+    const auto& types = media_types_map();
+    const auto type = types.find(system::ascii_to_lower(accept));
+    return type == types.end() ? default_ : type->second;
 };
 
 std::string from_media_type(media_type type,
     const std::string_view& default_) NOEXCEPT
 {
-    const auto text = media_map().left.find(type);
-    return text == media_map().left.end() ? std::string{ default_ } :
-        text->second;
+    const auto& texts = media_texts_map();
+    const auto text = texts.find(type);
+    return text == texts.end() ? std::string{ default_ } : text->second;
 };
 
 media_types to_media_types(const std::string_view& accepts,
@@ -127,8 +136,9 @@ media_type content_media_type(const std::string_view& content_type,
         return default_;
 
     const auto type = system::ascii_to_lower(parts.front());
-    const auto found = media_map().right.find(type);
-    return found == media_map().right.end() ? default_ : found->second;
+    const auto& types = media_types_map();
+    const auto found = types.find(type);
+    return found == types.end() ? default_ : found->second;
 }
 
 media_type content_media_type(const fields& fields,
