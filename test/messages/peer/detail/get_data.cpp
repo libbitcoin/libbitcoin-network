@@ -214,4 +214,65 @@ BOOST_AUTO_TEST_CASE(get_data__view__specific_type__filtered_view)
     BOOST_CHECK(is_zero(std::ranges::distance(error_view)));
 }
 
+static const auto payload = base16_chunk(
+    "02"
+    "01000000" "0100000000000000000000000000000000000000000000000000000000000000"
+    "02000040" "0400000000000000000000000000000000000000000000000000000000000000");
+static const uint32_t excess_version = add1<uint32_t>(level::maximum_protocol);
+
+BOOST_AUTO_TEST_CASE(get_data__size__two__expected)
+{
+    const get_data message{ { { inventory_item::type_id::transaction, hash_tx }, { inventory_item::type_id::witness_block, hash_witness_block } } };
+    BOOST_REQUIRE_EQUAL(message.size(level::minimum_protocol), payload.size());
+}
+
+BOOST_AUTO_TEST_CASE(get_data__deserialize1__two__expected)
+{
+    const auto message = get_data::deserialize(level::minimum_protocol, payload);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->items.size(), two);
+    BOOST_REQUIRE(message->items.front().type == inventory_item::type_id::transaction);
+    BOOST_REQUIRE_EQUAL(message->items.front().hash, hash_tx);
+    BOOST_REQUIRE(message->items.back().type == inventory_item::type_id::witness_block);
+    BOOST_REQUIRE_EQUAL(message->items.back().hash, hash_witness_block);
+}
+
+BOOST_AUTO_TEST_CASE(get_data__deserialize1__insufficient_version__nullptr)
+{
+    BOOST_REQUIRE(!get_data::deserialize(level::canonical, payload));
+}
+
+BOOST_AUTO_TEST_CASE(get_data__deserialize1__excess_version__nullptr)
+{
+    BOOST_REQUIRE(!get_data::deserialize(excess_version, payload));
+}
+
+BOOST_AUTO_TEST_CASE(get_data__deserialize1__underflow__nullptr)
+{
+    const data_chunk data{ payload.begin(), std::prev(payload.end()) };
+    BOOST_REQUIRE(!get_data::deserialize(level::minimum_protocol, data));
+}
+
+BOOST_AUTO_TEST_CASE(get_data__deserialize1__excess_count__nullptr)
+{
+    const auto data = base16_chunk("fe51c30000");
+    BOOST_REQUIRE(!get_data::deserialize(level::minimum_protocol, data));
+}
+
+BOOST_AUTO_TEST_CASE(get_data__deserialize2__two__expected)
+{
+    read::bytes::copy source(payload);
+    const auto message = get_data::deserialize(level::maximum_protocol, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE_EQUAL(message.items.size(), two);
+}
+
+BOOST_AUTO_TEST_CASE(get_data__serialize1__two__expected)
+{
+    const get_data message{ { { inventory_item::type_id::transaction, hash_tx }, { inventory_item::type_id::witness_block, hash_witness_block } } };
+    data_chunk data(message.size(level::minimum_protocol));
+    BOOST_REQUIRE(message.serialize(level::minimum_protocol, data));
+    BOOST_REQUIRE_EQUAL(data, payload);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
