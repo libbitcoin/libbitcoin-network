@@ -875,6 +875,272 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
     BOOST_REQUIRE(!result.second);
 }
 
+// options
+
+class mock_session_manual_options
+  : public session_manual
+{
+public:
+    using session_manual::session_manual;
+    using session_manual::options;
+};
+
+BOOST_AUTO_TEST_CASE(session_manual__options__always__manual_settings)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    mock_net<> net(set, log);
+    const auto session = std::make_shared<mock_session_manual_options>(net, 1);
+    BOOST_REQUIRE_EQUAL(&session->options(), &net.network_settings().manual);
+}
+
+// Manual connection to the test acting as a raw peer on loopback.
+// ============================================================================
+
+static constexpr uint16_t manual_peer_port = 65150;
+static constexpr uint16_t manual_closed_port = 65151;
+
+struct manual_peer
+{
+    using configurator = std::function<void(settings&)>;
+
+    manual_peer(const configurator& configure)
+      : set_{ selection::mainnet }, net_{ set_, log_ }
+    {
+        test::clear(test::directory);
+        set_.path = TEST_DIRECTORY;
+        set_.inbound.connections = 0;
+        set_.outbound.connections = 0;
+        set_.outbound.seeds.clear();
+        configure(set_);
+
+        std::promise<code> started{};
+        net_.start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+
+        BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+
+        std::promise<code> running{};
+        net_.run([&](const code& ec) NOEXCEPT
+        {
+            running.set_value(ec);
+        });
+
+        BOOST_REQUIRE_EQUAL(running.get_future().get(), error::success);
+    }
+
+    ~manual_peer()
+    {
+        socket_.close();
+        net_.close();
+    }
+
+    // Start a manual connection, the notifier returns keep.
+    std::future<code> connect(uint16_t port, bool keep)
+    {
+        net_.connect({ "127.0.0.1", port }, [this, keep](const code& ec, const channel::ptr&) NOEXCEPT
+        {
+            if (!notified_.exchange(true))
+                connected_.set_value(ec);
+
+            return keep;
+        });
+
+        return connected_.get_future();
+    }
+
+    void accept()
+    {
+        acceptor_.accept(socket_);
+    }
+
+    template <class Message>
+    void send(const Message& message, uint32_t version)
+    {
+        using namespace messages::peer;
+        system::data_chunk payload(message.size(version));
+        BOOST_REQUIRE(message.serialize(version, payload));
+        const auto head = heading::factory(set_.identifier, Message::command, payload);
+        system::data_chunk frame(heading::size());
+        BOOST_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        boost::asio::write(socket_, boost::asio::buffer(system::splice(frame, payload)));
+    }
+
+    // Read framed messages until the command matches.
+    system::data_chunk receive(const std::string& command)
+    {
+        using namespace messages::peer;
+        while (true)
+        {
+            system::data_array<heading::size()> head_data{};
+            boost::asio::read(socket_, boost::asio::buffer(head_data));
+            const auto head = heading::deserialize(head_data);
+            BOOST_REQUIRE(head);
+
+            system::data_chunk payload(head->payload_size);
+            boost::asio::read(socket_, boost::asio::buffer(payload));
+            if (head->command == command)
+                return payload;
+        }
+    }
+
+    // Receive the node version, send ours (and sendaddrv2), exchange verack.
+    messages::peer::version::cptr handshake(uint32_t value, bool address_v2)
+    {
+        using namespace messages::peer;
+        const auto node = version::deserialize(value, receive(version::command));
+        BOOST_REQUIRE(node);
+
+        version out{};
+        out.value = value;
+        out.services = service::node_none;
+        out.timestamp = system::sign_cast<uint64_t>(zulu_time());
+        out.nonce = 42424242;
+        out.user_agent = "/test/";
+        out.start_height = 0;
+        out.relay = false;
+        send(out, value);
+
+        if (address_v2)
+            send(send_address_v2{}, value);
+
+        receive(version_acknowledge::command);
+        send(version_acknowledge{}, value);
+        return node;
+    }
+
+    // Read until the node disconnects, returning the terminal read code.
+    boost_code disconnected()
+    {
+        boost_code ec{};
+        uint8_t byte{};
+        while (!ec)
+            boost::asio::read(socket_, boost::asio::buffer(&byte, one), ec);
+
+        return ec;
+    }
+
+private:
+    settings set_;
+    const logger log_{};
+    mock_net<> net_;
+    std::atomic_bool notified_{ false };
+    std::promise<code> connected_{};
+    boost::asio::io_context io_{};
+    boost::asio::ip::tcp::acceptor acceptor_{ io_, { boost::asio::ip::address_v4::loopback(), manual_peer_port } };
+    boost::asio::ip::tcp::socket socket_{ io_ };
+};
+
+BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__started_address_requested)
+{
+    using namespace messages::peer;
+    manual_peer peer{ [](settings& set)
+    {
+        set.enable_address = true;
+        set.enable_alert = true;
+        set.enable_reject = true;
+    } };
+
+    auto connected = peer.connect(manual_peer_port, true);
+    peer.accept();
+    const auto node = peer.handshake(level::bip155, true);
+    BOOST_REQUIRE_EQUAL(node->value, level::bip155);
+    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+    BOOST_REQUIRE(get_address::deserialize(level::bip155, peer.receive(get_address::command)));
+}
+
+BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70014_compact__started_address_requested)
+{
+    using namespace messages::peer;
+    manual_peer peer{ [](settings& set)
+    {
+        set.protocol_maximum = level::bip152;
+        set.enable_compact = true;
+        set.enable_address = true;
+    } };
+
+    auto connected = peer.connect(manual_peer_port, true);
+    peer.accept();
+    const auto node = peer.handshake(level::bip152, false);
+    BOOST_REQUIRE_EQUAL(node->value, level::bip152);
+    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+    BOOST_REQUIRE(get_address::deserialize(level::bip152, peer.receive(get_address::command)));
+}
+
+BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70002_reject__started)
+{
+    using namespace messages::peer;
+    manual_peer peer{ [](settings& set)
+    {
+        set.protocol_maximum = level::bip61;
+        set.enable_reject = true;
+    } };
+
+    auto connected = peer.connect(manual_peer_port, true);
+    peer.accept();
+    const auto node = peer.handshake(level::bip61, false);
+    BOOST_REQUIRE_EQUAL(node->value, level::bip61);
+    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70001__started)
+{
+    using namespace messages::peer;
+    manual_peer peer{ [](settings& set)
+    {
+        set.protocol_maximum = level::bip37;
+    } };
+
+    auto connected = peer.connect(manual_peer_port, true);
+    peer.accept();
+    const auto node = peer.handshake(level::bip37, false);
+    BOOST_REQUIRE_EQUAL(node->value, level::bip37);
+    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_31800_address__started_address_requested)
+{
+    using namespace messages::peer;
+    manual_peer peer{ [](settings& set)
+    {
+        set.protocol_maximum = level::headers_protocol;
+        set.enable_address = true;
+    } };
+
+    auto connected = peer.connect(manual_peer_port, true);
+    peer.accept();
+    const auto node = peer.handshake(level::headers_protocol, false);
+    BOOST_REQUIRE_EQUAL(node->value, level::headers_protocol);
+    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+    BOOST_REQUIRE(get_address::deserialize(level::headers_protocol, peer.receive(get_address::command)));
+}
+
+BOOST_AUTO_TEST_CASE(session_manual__connect__notifier_drops_started__disconnected)
+{
+    using namespace messages::peer;
+    manual_peer peer{ [](settings&) {} };
+
+    auto connected = peer.connect(manual_peer_port, false);
+    peer.accept();
+    peer.handshake(level::bip155, false);
+    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+    const auto ec = peer.disconnected();
+    BOOST_REQUIRE(ec == boost::asio::error::eof || ec == boost::asio::error::connection_reset);
+}
+
+BOOST_AUTO_TEST_CASE(session_manual__connect__notifier_drops_connect_failure__failure)
+{
+    manual_peer peer{ [](settings& set)
+    {
+        set.connect_timeout_seconds = 1;
+    } };
+
+    auto connected = peer.connect(manual_closed_port, false);
+    BOOST_REQUIRE(connected.get());
+}
+
 BC_POP_WARNING()
 
 BOOST_AUTO_TEST_SUITE_END()

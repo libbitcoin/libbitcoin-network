@@ -996,4 +996,184 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     BOOST_REQUIRE(session->attached_handshake());
 }
 
+// options
+
+class mock_session_inbound_options
+  : public session_inbound
+{
+public:
+    using session_inbound::session_inbound;
+    using session_inbound::options;
+};
+
+BOOST_AUTO_TEST_CASE(session_inbound__options__always__inbound_settings)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    net instance(set, log);
+    const auto session = std::make_shared<mock_session_inbound_options>(instance, 1);
+    BOOST_REQUIRE_EQUAL(&session->options(), &instance.network_settings().inbound);
+}
+
+// Inbound connection from the test acting as a raw peer on loopback.
+// ============================================================================
+
+static constexpr uint16_t inbound_peer_port = 65152;
+
+struct inbound_peer
+{
+    using configurator = std::function<void(settings&)>;
+
+    inbound_peer(const configurator& configure)
+      : set_{ selection::mainnet }, net_{ set_, log_ }
+    {
+        test::clear(test::directory);
+        set_.path = TEST_DIRECTORY;
+        set_.inbound.connections = 1;
+        set_.inbound.binds.clear();
+        set_.inbound.binds.emplace_back("127.0.0.1:65152");
+        set_.inbound.selfs.emplace_back("1.2.3.4:8333");
+        set_.outbound.connections = 0;
+        set_.outbound.seeds.clear();
+        configure(set_);
+
+        std::promise<code> started{};
+        net_.start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+
+        BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+
+        std::promise<code> running{};
+        net_.run([&](const code& ec) NOEXCEPT
+        {
+            running.set_value(ec);
+        });
+
+        BOOST_REQUIRE_EQUAL(running.get_future().get(), error::success);
+        socket_.connect({ boost::asio::ip::address_v4::loopback(), inbound_peer_port });
+    }
+
+    ~inbound_peer()
+    {
+        socket_.close();
+        net_.close();
+    }
+
+    template <class Message>
+    void send(const Message& message, uint32_t version)
+    {
+        using namespace messages::peer;
+        system::data_chunk payload(message.size(version));
+        BOOST_REQUIRE(message.serialize(version, payload));
+        const auto head = heading::factory(set_.identifier, Message::command, payload);
+        system::data_chunk frame(heading::size());
+        BOOST_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        boost::asio::write(socket_, boost::asio::buffer(system::splice(frame, payload)));
+    }
+
+    // Read framed messages until the command matches.
+    system::data_chunk receive(const std::string& command)
+    {
+        using namespace messages::peer;
+        while (true)
+        {
+            system::data_array<heading::size()> head_data{};
+            boost::asio::read(socket_, boost::asio::buffer(head_data));
+            const auto head = heading::deserialize(head_data);
+            BOOST_REQUIRE(head);
+
+            system::data_chunk payload(head->payload_size);
+            boost::asio::read(socket_, boost::asio::buffer(payload));
+            if (head->command == command)
+                return payload;
+        }
+    }
+
+    // Send our version (and sendaddrv2), receive the node version, exchange verack.
+    messages::peer::version::cptr handshake(uint32_t value, bool address_v2)
+    {
+        using namespace messages::peer;
+        version out{};
+        out.value = value;
+        out.services = service::node_none;
+        out.timestamp = system::sign_cast<uint64_t>(zulu_time());
+        out.nonce = 42424242;
+        out.user_agent = "/test/";
+        out.start_height = 0;
+        out.relay = false;
+        send(out, value);
+
+        if (address_v2)
+            send(send_address_v2{}, value);
+
+        const auto node = version::deserialize(value, receive(version::command));
+        BOOST_REQUIRE(node);
+        receive(version_acknowledge::command);
+        send(version_acknowledge{}, value);
+        return node;
+    }
+
+private:
+    settings set_;
+    const logger log_{};
+    net net_;
+    boost::asio::io_context io_{};
+    boost::asio::ip::tcp::socket socket_{ io_ };
+};
+
+BOOST_AUTO_TEST_CASE(session_inbound__attach_protocols__70016_address_v2__self_advertised_v2)
+{
+    using namespace messages::peer;
+    inbound_peer peer{ [](settings& set)
+    {
+        set.enable_address = true;
+    } };
+
+    const auto node = peer.handshake(level::bip155, true);
+    BOOST_REQUIRE_EQUAL(node->value, level::maximum_protocol);
+
+    const auto message = address_v2::deserialize(level::bip155, peer.receive(address_v2::command));
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->addresses.size(), 1u);
+    BOOST_REQUIRE_EQUAL(message->addresses.front().port, 8333u);
+}
+
+BOOST_AUTO_TEST_CASE(session_inbound__attach_protocols__70002_alert_reject__self_advertised)
+{
+    using namespace messages::peer;
+    inbound_peer peer{ [](settings& set)
+    {
+        set.enable_address = true;
+        set.enable_alert = true;
+        set.enable_reject = true;
+    } };
+
+    const auto node = peer.handshake(level::bip61, false);
+    BOOST_REQUIRE_EQUAL(node->value, level::maximum_protocol);
+
+    const auto message = address::deserialize(level::bip61, peer.receive(address::command));
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->addresses.size(), 1u);
+    BOOST_REQUIRE_EQUAL(message->addresses.front().port, 8333u);
+}
+
+BOOST_AUTO_TEST_CASE(session_inbound__attach_protocols__31800__self_advertised)
+{
+    using namespace messages::peer;
+    inbound_peer peer{ [](settings& set)
+    {
+        set.enable_address = true;
+    } };
+
+    const auto node = peer.handshake(level::headers_protocol, false);
+    BOOST_REQUIRE_EQUAL(node->value, level::maximum_protocol);
+
+    const auto message = address::deserialize(level::headers_protocol, peer.receive(address::command));
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->addresses.size(), 1u);
+    BOOST_REQUIRE_EQUAL(message->addresses.front().port, 8333u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
