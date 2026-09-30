@@ -22,6 +22,11 @@
 
 BOOST_AUTO_TEST_SUITE(rpc_body_reader_tests)
 
+// boolean_t defined in global namespace by:
+// Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/
+// Developer/SDKs/MacOSX.sdk/usr/include/mach/arm/boolean.h:70:25
+using boolean_type = bc::network::rpc::boolean_t;
+
 using namespace network::http;
 using namespace network::rpc;
 using value = boost::json::value;
@@ -904,13 +909,13 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v2_nested_params__success_expected
     const auto& params = std::get<array_t>(body.message.params.value());
     BOOST_REQUIRE_EQUAL(params.size(), 4u);
     BOOST_REQUIRE(std::holds_alternative<null_t>(params.at(0).value()));
-    BOOST_REQUIRE(std::get<boolean_t>(params.at(1).value()));
+    BOOST_REQUIRE(std::get<boolean_type>(params.at(1).value()));
     const auto& nested = std::get<array_t>(params.at(2).value());
     BOOST_REQUIRE_EQUAL(nested.size(), 2u);
     BOOST_REQUIRE_EQUAL(std::get<number_t>(nested.at(0).value()), 1.0);
     BOOST_REQUIRE_EQUAL(std::get<string_t>(nested.at(1).value()), "a");
     const auto& object = std::get<object_t>(params.at(3).value());
-    BOOST_REQUIRE(!std::get<boolean_t>(object.at("k").value()));
+    BOOST_REQUIRE(!std::get<boolean_type>(object.at("k").value()));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__non_string_method__error)

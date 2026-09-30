@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(rpc_model__version_from__versions__expected)
 BOOST_AUTO_TEST_CASE(rpc_model__value_to__json_types__expected_alternatives)
 {
     BOOST_REQUIRE(std::holds_alternative<null_t>(boost::json::value_to<value_t>(boost::json::parse("null")).value()));
-    BOOST_REQUIRE(std::get<boolean_t>(boost::json::value_to<value_t>(boost::json::parse("true")).value()));
+    BOOST_REQUIRE(std::get<boolean_type>(boost::json::value_to<value_t>(boost::json::parse("true")).value()));
     BOOST_REQUIRE_EQUAL(std::get<number_t>(boost::json::value_to<value_t>(boost::json::parse("-7")).value()), -7.0);
     BOOST_REQUIRE_EQUAL(std::get<string_t>(boost::json::value_to<value_t>(boost::json::parse(R"("a")")).value()), "a");
     BOOST_REQUIRE_EQUAL(std::get<array_t>(boost::json::value_to<value_t>(boost::json::parse("[1,2]")).value()).size(), 2u);
