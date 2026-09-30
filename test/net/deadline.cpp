@@ -106,4 +106,31 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
     }, milliseconds(1));
 }
 
+BOOST_AUTO_TEST_CASE(deadline__remaining__started__within_timeout)
+{
+    const logger log{};
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const auto timer = std::make_shared<deadline>(log, strand, seconds(100));
+    std::promise<code> fired{};
+    std::promise<seconds> remaining{};
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        timer->start([&](code ec) NOEXCEPT
+        {
+            fired.set_value(ec);
+        });
+
+        remaining.set_value(timer->remaining());
+        timer->stop();
+    });
+
+    const auto left = remaining.get_future().get();
+    BOOST_REQUIRE_EQUAL(fired.get_future().get(), error::operation_canceled);
+    BOOST_REQUIRE_LE(left, seconds(100));
+    BOOST_REQUIRE_GT(left, seconds(90));
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

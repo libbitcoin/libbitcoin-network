@@ -261,4 +261,27 @@ BOOST_AUTO_TEST_CASE(target__get_file_body__invalid_characters__does_not_throw)
     BOOST_REQUIRE(!file.is_open());
 }
 
+BOOST_AUTO_TEST_CASE(target__to_canonical__root_is_file__empty)
+{
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    const auto path = to_canonical(std::filesystem::absolute(TEST_PATH), "/file.ext");
+    BOOST_REQUIRE(path.empty());
+}
+
+BOOST_AUTO_TEST_CASE(target__to_canonical__target_is_directory__empty)
+{
+    const auto root = std::filesystem::absolute(TEST_DIRECTORY);
+    BOOST_REQUIRE(std::filesystem::create_directory(root / "child"));
+    const auto path = to_canonical(root, "/child");
+    BOOST_REQUIRE(path.empty());
+}
+
+BOOST_AUTO_TEST_CASE(target__to_canonical__existing_file__canonical_file)
+{
+    BOOST_REQUIRE(test::create(TEST_PATH));
+    const auto root = std::filesystem::absolute(TEST_DIRECTORY);
+    const auto path = to_canonical(root, "/" + TEST_NAME);
+    BOOST_REQUIRE(path == std::filesystem::weakly_canonical(std::filesystem::absolute(TEST_PATH)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <future>
 #include "../test.hpp"
 
 BOOST_AUTO_TEST_SUITE(threadpool_tests)
@@ -53,6 +54,28 @@ BOOST_AUTO_TEST_CASE(threadpool__join__stopped__stopped)
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE(pool.service().stopped());
+}
+
+BOOST_AUTO_TEST_CASE(threadpool__join__joined__true)
+{
+    threadpool pool{ 1 };
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(pool.join());
+}
+
+BOOST_AUTO_TEST_CASE(threadpool__join__from_pool_thread__false)
+{
+    threadpool pool{ 1 };
+    std::promise<bool> promise{};
+    boost::asio::post(pool.service(), [&]() NOEXCEPT
+    {
+        promise.set_value(pool.join());
+    });
+
+    BOOST_REQUIRE(!promise.get_future().get());
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

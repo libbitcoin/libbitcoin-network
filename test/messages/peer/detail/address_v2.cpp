@@ -76,12 +76,35 @@ BOOST_AUTO_TEST_CASE(address_v2__deserialize__two__expected)
     BOOST_REQUIRE(message.addresses.front().address == address_t{ ipv4_t{ mapped } });
     BOOST_REQUIRE(message.addresses.back().address == address_t{ torv3_t{ onion } });
 }
+
 BOOST_AUTO_TEST_CASE(address_v2__deserialize__insufficient_version__invalid)
 {
     constexpr auto payload = base16_array("00");
     system::read::bytes::copy source(payload);
     address_v2::deserialize(level::bip155 - 1u, source);
     BOOST_REQUIRE(!source);
+}
+
+BOOST_AUTO_TEST_CASE(address_v2__deserialize1__two__expected)
+{
+    const auto data = base16_chunk("027856341201010401020304208d7856341201042079bcc625184b05194975c28b66b66b0469f7f6556fb1ac3189a79b40dda32f1f208d");
+    const auto message = address_v2::deserialize(level::bip155, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->addresses.size(), two);
+    BOOST_REQUIRE(message->addresses.front().address == address_t{ ipv4_t{ mapped } });
+    BOOST_REQUIRE(message->addresses.back().address == address_t{ torv3_t{ onion } });
+}
+
+BOOST_AUTO_TEST_CASE(address_v2__deserialize1__insufficient_version__nullptr)
+{
+    const auto data = base16_chunk("00");
+    BOOST_REQUIRE(!address_v2::deserialize(level::bip155 - 1u, data));
+}
+
+BOOST_AUTO_TEST_CASE(address_v2__deserialize1__underflow__nullptr)
+{
+    const auto data = base16_chunk("0178563412010104010203");
+    BOOST_REQUIRE(!address_v2::deserialize(level::bip155, data));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

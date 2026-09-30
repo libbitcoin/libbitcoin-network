@@ -212,4 +212,85 @@ BOOST_AUTO_TEST_CASE(inventory__view__specific_type__filtered_view)
     BOOST_CHECK(is_zero(std::ranges::distance(error_view)));
 }
 
+static const auto genesis_block_hash = base16_hash("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f");
+static const auto genesis_tx_hash = base16_hash("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+static const auto genesis_payload = base16_chunk("02020000006fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000010000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a");
+
+BOOST_AUTO_TEST_CASE(inventory__factory__move_hashes__expected)
+{
+    auto hashes = system::hashes{ genesis_block_hash, genesis_tx_hash };
+    const auto inv = inventory::factory(std::move(hashes), inventory_item::type_id::witness_block);
+    BOOST_REQUIRE_EQUAL(inv.items.size(), two);
+    BOOST_REQUIRE(inv.items.front().type == inventory_item::type_id::witness_block);
+    BOOST_REQUIRE_EQUAL(inv.items.front().hash, genesis_block_hash);
+    BOOST_REQUIRE(inv.items.back().type == inventory_item::type_id::witness_block);
+    BOOST_REQUIRE_EQUAL(inv.items.back().hash, genesis_tx_hash);
+}
+
+BOOST_AUTO_TEST_CASE(inventory__factory__copy_hashes__expected)
+{
+    const system::hashes hashes{ genesis_block_hash, genesis_tx_hash };
+    const auto inv = inventory::factory(hashes, inventory_item::type_id::transaction);
+    BOOST_REQUIRE_EQUAL(inv.items.size(), two);
+    BOOST_REQUIRE(inv.items.front().type == inventory_item::type_id::transaction);
+    BOOST_REQUIRE_EQUAL(inv.items.front().hash, genesis_block_hash);
+    BOOST_REQUIRE(inv.items.back().type == inventory_item::type_id::transaction);
+    BOOST_REQUIRE_EQUAL(inv.items.back().hash, genesis_tx_hash);
+}
+
+BOOST_AUTO_TEST_CASE(inventory__factory__empty__empty)
+{
+    const auto inv = inventory::factory(system::hashes{}, inventory_item::type_id::block);
+    BOOST_REQUIRE(inv.items.empty());
+}
+
+BOOST_AUTO_TEST_CASE(inventory__deserialize1__genesis__expected)
+{
+    const auto message = inventory::deserialize(level::minimum_protocol, genesis_payload);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->items.size(), two);
+    BOOST_REQUIRE(message->items.front().type == inventory_item::type_id::block);
+    BOOST_REQUIRE_EQUAL(message->items.front().hash, genesis_block_hash);
+    BOOST_REQUIRE(message->items.back().type == inventory_item::type_id::transaction);
+    BOOST_REQUIRE_EQUAL(message->items.back().hash, genesis_tx_hash);
+}
+
+BOOST_AUTO_TEST_CASE(inventory__deserialize1__empty__expected)
+{
+    const auto message = inventory::deserialize(level::minimum_protocol, base16_chunk("00"));
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(message->items.empty());
+}
+
+BOOST_AUTO_TEST_CASE(inventory__deserialize1__insufficient_version__nullptr)
+{
+    BOOST_REQUIRE(!inventory::deserialize(level::minimum_protocol - 1u, genesis_payload));
+}
+
+BOOST_AUTO_TEST_CASE(inventory__deserialize1__excessive_version__nullptr)
+{
+    BOOST_REQUIRE(!inventory::deserialize(level::maximum_protocol + 1u, genesis_payload));
+}
+
+BOOST_AUTO_TEST_CASE(inventory__deserialize1__underflow__nullptr)
+{
+    const auto data = base16_chunk("0202000000");
+    BOOST_REQUIRE(!inventory::deserialize(level::minimum_protocol, data));
+}
+
+BOOST_AUTO_TEST_CASE(inventory__deserialize1__excess_count__nullptr)
+{
+    const auto data = base16_chunk("fe51c30000");
+    BOOST_REQUIRE(!inventory::deserialize(level::minimum_protocol, data));
+}
+
+BOOST_AUTO_TEST_CASE(inventory__serialize1__genesis__expected)
+{
+    const inventory inv{ { { inventory_item::type_id::block, genesis_block_hash }, { inventory_item::type_id::transaction, genesis_tx_hash } } };
+    BOOST_REQUIRE_EQUAL(inv.size(level::minimum_protocol), genesis_payload.size());
+    data_chunk data(inv.size(level::minimum_protocol));
+    BOOST_REQUIRE(inv.serialize(level::minimum_protocol, data));
+    BOOST_REQUIRE_EQUAL(data, genesis_payload);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

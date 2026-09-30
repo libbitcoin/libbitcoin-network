@@ -36,4 +36,37 @@ BOOST_AUTO_TEST_CASE(witness_tx_id_relay__size__always__zero)
     BOOST_REQUIRE_EQUAL(witness_tx_id_relay::size(level::canonical), zero);
 }
 
+BOOST_AUTO_TEST_CASE(witness_tx_id_relay__deserialize1__empty__expected)
+{
+    const system::data_chunk data{};
+    BOOST_REQUIRE(witness_tx_id_relay::deserialize(level::bip339, data));
+}
+
+BOOST_AUTO_TEST_CASE(witness_tx_id_relay__deserialize1__insufficient_version__nullptr)
+{
+    const system::data_chunk data{};
+    BOOST_REQUIRE(!witness_tx_id_relay::deserialize(level::bip339 - 1u, data));
+}
+
+BOOST_AUTO_TEST_CASE(witness_tx_id_relay__deserialize1__excessive_version__nullptr)
+{
+    const system::data_chunk data{};
+    BOOST_REQUIRE(!witness_tx_id_relay::deserialize(level::maximum_protocol + 1u, data));
+}
+
+BOOST_AUTO_TEST_CASE(witness_tx_id_relay__deserialize2__insufficient_version__source_false)
+{
+    const system::data_chunk data{};
+    system::read::bytes::copy source(data);
+    witness_tx_id_relay::deserialize(level::bip339 - 1u, source);
+    BOOST_REQUIRE(!source);
+}
+
+BOOST_AUTO_TEST_CASE(witness_tx_id_relay__serialize1__default__empty)
+{
+    system::data_chunk data{};
+    BOOST_REQUIRE(witness_tx_id_relay{}.serialize(level::bip339, data));
+    BOOST_REQUIRE(data.empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -101,4 +101,40 @@ BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 
 #endif
 
+#if defined(HAVE_MEMORY_PRIORITY)
+
+static unsigned long get_memory_priority_test()
+{
+    MEMORY_PRIORITY_INFORMATION information{};
+    GetProcessInformation(GetCurrentProcess(), ProcessMemoryPriority, &information, sizeof(information));
+    return information.MemoryPriority;
+}
+
+static void set_memory_priority_test(unsigned long priority)
+{
+    MEMORY_PRIORITY_INFORMATION information{ priority };
+    SetProcessInformation(GetCurrentProcess(), ProcessMemoryPriority, &information, sizeof(information));
+}
+
+BOOST_AUTO_TEST_CASE(thread__set_memory_priority__all__set_as_expected)
+{
+    const auto save = get_memory_priority_test();
+
+    set_memory_priority(memory_priority::lowest);
+    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_VERY_LOW));
+    set_memory_priority(memory_priority::low);
+    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_LOW));
+    set_memory_priority(memory_priority::medium);
+    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_MEDIUM));
+    set_memory_priority(memory_priority::high);
+    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_BELOW_NORMAL));
+    set_memory_priority(memory_priority::highest);
+    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_NORMAL));
+
+    set_memory_priority_test(save);
+    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), save);
+}
+
+#endif
+
 BOOST_AUTO_TEST_SUITE_END()

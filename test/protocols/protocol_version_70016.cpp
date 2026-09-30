@@ -17,12 +17,66 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../functional/peer_setup_fixture.hpp"
 
-BOOST_AUTO_TEST_SUITE(protocol_tests)
+BOOST_FIXTURE_TEST_SUITE(protocol_version_70016_tests, peer_net_setup_fixture<>)
 
-BOOST_AUTO_TEST_CASE(protocol_version_70016_tests)
+using namespace network::messages::peer;
+
+BOOST_AUTO_TEST_CASE(protocol_version_70016__handshake__address_gossip_v2__send_address_v2_before_acknowledge)
 {
-    BOOST_REQUIRE(true);
+    settings_.enable_address = true;
+    settings_.gossip_tor = true;
+    BOOST_REQUIRE(open());
+    send_version(level::bip155, service::node_none, network::unix_time());
+    BOOST_REQUIRE_EQUAL(receive().first, version::command);
+    BOOST_REQUIRE_EQUAL(receive().first, send_address_v2::command);
+    BOOST_REQUIRE_EQUAL(receive().first, version_acknowledge::command);
+}
+
+BOOST_AUTO_TEST_CASE(protocol_version_70016__handshake__address_no_gossip_v2__no_send_address_v2)
+{
+    settings_.enable_address = true;
+    BOOST_REQUIRE(open());
+    send_version(level::bip155, service::node_none, network::unix_time());
+    BOOST_REQUIRE_EQUAL(receive().first, version::command);
+    BOOST_REQUIRE_EQUAL(receive().first, version_acknowledge::command);
+}
+
+BOOST_AUTO_TEST_CASE(protocol_version_70016__handshake__bip152_peer_address_gossip_v2__no_send_address_v2)
+{
+    settings_.enable_address = true;
+    settings_.gossip_tor = true;
+    BOOST_REQUIRE(open());
+    send_version(level::bip152, service::node_none, network::unix_time());
+    BOOST_REQUIRE_EQUAL(receive().first, version::command);
+    BOOST_REQUIRE_EQUAL(receive().first, version_acknowledge::command);
+}
+
+BOOST_AUTO_TEST_CASE(protocol_version_70016__handshake__send_address_v2_and_witness_tx_id_relay_before_acknowledge__handshake)
+{
+    BOOST_REQUIRE(open());
+    send_version(level::bip155, service::node_none, network::unix_time());
+    send(send_address_v2{}, level::bip155);
+    send(witness_tx_id_relay{}, level::bip155);
+    BOOST_REQUIRE(receive_handshake(level::bip155));
+    send(version_acknowledge{}, level::bip155);
+
+    send(ping{ 42 }, level::bip155);
+    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip155)->nonce, 42_u64);
+}
+
+BOOST_AUTO_TEST_CASE(protocol_version_70016__receive_version__reject_enabled_duplicate_after_handshake__reject_duplicate)
+{
+    settings_.enable_reject = true;
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip155));
+    send_version(level::bip155, service::node_none, network::unix_time());
+
+    const auto message = receive<reject>(level::bip155);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->message, version::command);
+    BOOST_REQUIRE(message->code == reject::reason_code::duplicate);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -47,6 +47,18 @@ public:
     {
         return maximum_;
     }
+
+    // Call must be stranded.
+    bool is_base1() const NOEXCEPT
+    {
+        return is_base();
+    }
+
+    // Call must be stranded.
+    void async_read_some1(const asio::mutable_buffer& buffer, const count_handler& handler) NOEXCEPT
+    {
+        async_read_some(buffer, handler);
+    }
 };
 
 BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
@@ -600,6 +612,300 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
     server->stop();
     pool.stop();
     BOOST_REQUIRE(pool.join());
+}
+
+// loopback
+// ----------------------------------------------------------------------------
+
+static const asio::endpoint open_endpoint{ asio::ipv4::loopback(), 65121 };
+static const asio::endpoint closed_endpoint{ asio::ipv4::loopback(), 65122 };
+static const asio::endpoint raw_endpoint{ asio::ipv4::loopback(), 65123 };
+static const p2ps::context mainnet_context{ 0xd9b4bef9 };
+
+template <typename Type>
+class awaiter
+{
+public:
+    void set(const Type& value) const
+    {
+        promise_->set_value(value);
+    }
+
+    Type get() const
+    {
+        using namespace std::chrono_literals;
+        BOOST_REQUIRE(future_.wait_for(10s) == std::future_status::ready);
+        return future_.get();
+    }
+
+private:
+    std::shared_ptr<std::promise<Type>> promise_{ std::make_shared<std::promise<Type>>() };
+    std::shared_future<Type> future_{ promise_->get_future().share() };
+};
+
+struct acceptor_fixture
+{
+    DELETE_COPY_MOVE(acceptor_fixture);
+
+    acceptor_fixture()
+    {
+        boost_code ec{};
+        acceptor.open(open_endpoint.protocol(), ec);
+        BOOST_REQUIRE(!ec);
+        acceptor.set_option(asio::reuse_address(true), ec);
+        BOOST_REQUIRE(!ec);
+        acceptor.bind(open_endpoint, ec);
+        BOOST_REQUIRE(!ec);
+        acceptor.listen(1, ec);
+        BOOST_REQUIRE(!ec);
+    }
+
+    ~acceptor_fixture()
+    {
+        pool.stop();
+        BOOST_REQUIRE(pool.join());
+    }
+
+    std::shared_ptr<socket_accessor> accept(const socket::parameters& params, const awaiter<code>& accepted, bool proxied=false)
+    {
+        const auto instance = std::make_shared<socket_accessor>(log, pool.service(), params, proxied);
+        instance->accept(acceptor, [=](const code& ec) NOEXCEPT
+        {
+            accepted.set(ec);
+        });
+
+        boost_code ec{};
+        client.connect(open_endpoint, ec);
+        BOOST_REQUIRE(!ec);
+        return instance;
+    }
+
+    std::shared_ptr<socket_accessor> connect(const socket::parameters& params, const std::vector<asio::endpoint>& peers, const awaiter<code>& connected)
+    {
+        const auto instance = std::make_shared<socket_accessor>(log, pool.service(), params, config::address{}, config::endpoint{}, false);
+        const auto range = asio::endpoints::create(peers.begin(), peers.end(), "127.0.0.1", "0");
+        instance->connect(range, [=](const code& ec) NOEXCEPT
+        {
+            connected.set(ec);
+        });
+
+        return instance;
+    }
+
+    const logger log{};
+    threadpool pool{ 2 };
+    asio::strand strand{ pool.service().get_executor() };
+    asio::acceptor acceptor{ strand };
+    asio::context service{};
+    asio::socket client{ service };
+    const socket::parameters clear
+    {
+        .maximum_request = 42u,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
+};
+
+BOOST_FIXTURE_TEST_CASE(socket__service__default__expected, acceptor_fixture)
+{
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), clear);
+    BOOST_REQUIRE(&instance->service() == &pool.service());
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__set_address__stranded__address_and_endpoint_set, acceptor_fixture)
+{
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), clear);
+    const config::address expected{ asio::endpoint{ boost::asio::ip::make_address_v4("1.2.3.4"), 42 } };
+    const awaiter<bool> set{};
+    boost::asio::post(instance->strand(), [=]() NOEXCEPT
+    {
+        instance->set_address(expected);
+        set.set(true);
+    });
+
+    BOOST_REQUIRE(set.get());
+    BOOST_REQUIRE(instance->address() == expected);
+    BOOST_REQUIRE_EQUAL(instance->endpoint().port(), 42u);
+    BOOST_REQUIRE_EQUAL(instance->endpoint().host(), "1.2.3.4");
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__accept__proxied__success_endpoint_set, acceptor_fixture)
+{
+    const awaiter<code> accepted{};
+    const auto instance = accept(clear, accepted, true);
+
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BOOST_REQUIRE_EQUAL(instance->endpoint().port(), client.local_endpoint().port());
+    BOOST_REQUIRE_EQUAL(instance->binding().port(), open_endpoint.port());
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__accept__not_listening__invalid_configuration, acceptor_fixture)
+{
+    asio::acceptor unlistened{ strand };
+    boost_code ec{};
+    unlistened.open(raw_endpoint.protocol(), ec);
+    BOOST_REQUIRE(!ec);
+    unlistened.bind(raw_endpoint, ec);
+    BOOST_REQUIRE(!ec);
+
+    const awaiter<code> accepted{};
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), clear);
+    instance->accept(unlistened, [=](const code& accept_ec) NOEXCEPT
+    {
+        accepted.set(accept_ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::invalid_configuration);
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, acceptor_fixture)
+{
+    const awaiter<code> accepted{};
+    const auto instance = accept(clear, accepted);
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    char byte{};
+    const awaiter<bool> base{};
+    const awaiter<code> read{};
+    boost::asio::post(instance->strand(), [=, &byte]() NOEXCEPT
+    {
+        base.set(instance->is_base1());
+        instance->async_read_some1({ &byte, 1 }, [=](const code& ec, size_t) NOEXCEPT
+        {
+            read.set(ec);
+        });
+    });
+
+    boost_code ec{};
+    boost::asio::write(client, boost::asio::buffer("x", 1), ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(base.get());
+    BOOST_REQUIRE_EQUAL(read.get(), error::success);
+    BOOST_REQUIRE_EQUAL(byte, 'x');
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__connect__refused__connect_failed, acceptor_fixture)
+{
+    const awaiter<code> connected{};
+    const auto instance = connect(clear, { closed_endpoint }, connected);
+
+    BOOST_REQUIRE_EQUAL(connected.get(), error::connect_failed);
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__connect__bound_first_refused__second_connected, acceptor_fixture)
+{
+    auto params = clear;
+    params.bind = { asio::ipv4::loopback(), 0 };
+    const awaiter<code> connected{};
+    const auto instance = connect(params, { closed_endpoint, open_endpoint }, connected);
+
+    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+    BOOST_REQUIRE_EQUAL(instance->binding().host(), "127.0.0.1");
+    BOOST_REQUIRE_EQUAL(instance->address().port(), open_endpoint.port());
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v1_prefix__success_unencrypted, acceptor_fixture)
+{
+    static const system::data_chunk prefix{ 0xf9, 0xbe, 0xb4, 0xd9, 'v', 'e', 'r', 's', 'i', 'o', 'n', 0x00, 0x00, 0x00, 0x00, 0x00 };
+    auto params = clear;
+    params.context = std::cref(mainnet_context);
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+
+    boost_code ec{};
+    boost::asio::write(client, boost::asio::buffer(prefix), ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const awaiter<bool> encrypted{};
+    boost::asio::post(instance->strand(), [=]() NOEXCEPT
+    {
+        encrypted.set(instance->encrypted());
+    });
+
+    BOOST_REQUIRE(!encrypted.get());
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v2_prefix_disconnected__peer_disconnect, acceptor_fixture)
+{
+    static const system::data_chunk prefix(p2ps::stream::detection_size, 0x42);
+    auto params = clear;
+    params.context = std::cref(mainnet_context);
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+
+    boost_code ec{};
+    boost::asio::write(client, boost::asio::buffer(prefix), ec);
+    BOOST_REQUIRE(!ec);
+    client.shutdown(asio::socket::shutdown_send, ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::peer_disconnect);
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_handshake_timeout__operation_canceled_stopped, acceptor_fixture)
+{
+    auto params = clear;
+    params.context = std::cref(mainnet_context);
+    params.connect_timeout = milliseconds(10);
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::operation_canceled);
+    BOOST_REQUIRE(instance->stopped());
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__connect__p2ps_responder_disconnected__peer_disconnect, acceptor_fixture)
+{
+    asio::acceptor raw{ service };
+    boost_code ec{};
+    raw.open(raw_endpoint.protocol(), ec);
+    BOOST_REQUIRE(!ec);
+    raw.set_option(asio::reuse_address(true), ec);
+    BOOST_REQUIRE(!ec);
+    raw.bind(raw_endpoint, ec);
+    BOOST_REQUIRE(!ec);
+    raw.listen(1, ec);
+    BOOST_REQUIRE(!ec);
+
+    auto params = clear;
+    params.context = std::cref(mainnet_context);
+    const awaiter<code> connected{};
+    const auto instance = connect(params, { raw_endpoint }, connected);
+
+    asio::socket responder{ service };
+    raw.accept(responder, ec);
+    BOOST_REQUIRE(!ec);
+
+    system::data_array<64> key{};
+    boost::asio::read(responder, boost::asio::buffer(key), ec);
+    BOOST_REQUIRE(!ec);
+    responder.shutdown(asio::socket::shutdown_send, ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(connected.get(), error::peer_disconnect);
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__lazy_stop__clear__stopped_client_end_of_file, acceptor_fixture)
+{
+    const awaiter<code> accepted{};
+    const auto instance = accept(clear, accepted);
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    instance->lazy_stop();
+    BOOST_REQUIRE(instance->stopped());
+
+    char byte{};
+    boost_code ec{};
+    client.read_some(boost::asio::buffer(&byte, 1), ec);
+    BOOST_REQUIRE(ec == boost::asio::error::eof);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

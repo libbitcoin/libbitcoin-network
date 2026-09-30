@@ -951,4 +951,248 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_en
     BOOST_REQUIRE(session->stopped());
 }
 
+// Outbound connection to the test acting as a raw peer on loopback.
+// ============================================================================
+
+static constexpr uint16_t outbound_peer_port = 65154;
+static constexpr uint16_t outbound_closed_port = 65155;
+
+// A network with one pooled address (the given port) that restores nothing.
+class outbound_net
+  : public net
+{
+public:
+    outbound_net(const settings& set, const logger& log, const code& take_code, uint16_t port) NOEXCEPT
+      : net(set, log), take_code_(take_code), port_(port)
+    {
+    }
+
+    size_t address_count() const NOEXCEPT override
+    {
+        return one;
+    }
+
+    void take(hosts::family, address_item_handler&& handler) NOEXCEPT override
+    {
+        if (is_one(takes_++))
+            retaken_.set_value(true);
+
+        const auto timestamp = system::possible_narrow_cast<uint32_t>(unix_time());
+        const auto item = config::address{ "127.0.0.1:" + std::to_string(port_) }.to_address_item(timestamp, service::node_none);
+        handler(take_code_, system::to_shared(item));
+    }
+
+    void restore(const address_item_cptr&, result_handler&& handler) NOEXCEPT override
+    {
+        handler(error::success);
+    }
+
+    bool retaken() const NOEXCEPT
+    {
+        return retaken_.get_future().get();
+    }
+
+private:
+    const code take_code_;
+    const uint16_t port_;
+    size_t takes_{};
+    mutable std::promise<bool> retaken_{};
+};
+
+struct outbound_peer
+{
+    using configurator = std::function<void(settings&)>;
+
+    outbound_peer(const configurator& configure, const code& take_code, uint16_t port)
+      : set_{ selection::mainnet }, net_{ set_, log_, take_code, port }
+    {
+        test::clear(test::directory);
+        set_.path = TEST_DIRECTORY;
+        set_.inbound.connections = 0;
+        set_.outbound.connections = 1;
+        set_.outbound.connect_batch_size = 1;
+        set_.outbound.host_pool_capacity = 10;
+        set_.outbound.seeds.clear();
+        configure(set_);
+
+        std::promise<code> started{};
+        net_.start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+
+        BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    }
+
+    ~outbound_peer()
+    {
+        socket_.close();
+        net_.close();
+    }
+
+    void run()
+    {
+        std::promise<code> running{};
+        net_.run([&](const code& ec) NOEXCEPT
+        {
+            running.set_value(ec);
+        });
+
+        BOOST_REQUIRE_EQUAL(running.get_future().get(), error::success);
+    }
+
+    void suspend()
+    {
+        net_.suspend(error::service_suspended);
+    }
+
+    void accept()
+    {
+        acceptor_.accept(socket_);
+    }
+
+    void close()
+    {
+        socket_.close();
+    }
+
+    bool retaken() const
+    {
+        return net_.retaken();
+    }
+
+    template <class Message>
+    void send(const Message& message, uint32_t version)
+    {
+        system::data_chunk payload(message.size(version));
+        BOOST_REQUIRE(message.serialize(version, payload));
+        const auto head = heading::factory(set_.identifier, Message::command, payload);
+        system::data_chunk frame(heading::size());
+        BOOST_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        boost::asio::write(socket_, boost::asio::buffer(system::splice(frame, payload)));
+    }
+
+    // Read framed messages until the command matches.
+    system::data_chunk receive(const std::string& command)
+    {
+        while (true)
+        {
+            system::data_array<heading::size()> head_data{};
+            boost::asio::read(socket_, boost::asio::buffer(head_data));
+            const auto head = heading::deserialize(head_data);
+            BOOST_REQUIRE(head);
+
+            system::data_chunk payload(head->payload_size);
+            boost::asio::read(socket_, boost::asio::buffer(payload));
+            if (head->command == command)
+                return payload;
+        }
+    }
+
+    // Receive the node version, send ours, exchange verack.
+    version::cptr handshake(uint32_t value)
+    {
+        const auto node = version::deserialize(value, receive(version::command));
+        BOOST_REQUIRE(node);
+
+        version out{};
+        out.value = value;
+        out.services = service::node_none;
+        out.timestamp = system::sign_cast<uint64_t>(zulu_time());
+        out.nonce = 42424242;
+        out.user_agent = "/test/";
+        out.start_height = 0;
+        out.relay = false;
+        send(out, value);
+
+        receive(version_acknowledge::command);
+        send(version_acknowledge{}, value);
+        return node;
+    }
+
+private:
+    settings set_;
+    const logger log_{};
+    outbound_net net_;
+    boost::asio::io_context io_{};
+    boost::asio::ip::tcp::acceptor acceptor_{ io_, { boost::asio::ip::address_v4::loopback(), outbound_peer_port } };
+    boost::asio::ip::tcp::socket socket_{ io_ };
+};
+
+BOOST_AUTO_TEST_CASE(session_outbound__attach_protocols__loopback_peer__address_requested_then_reconnected)
+{
+    outbound_peer peer{ [](settings& set)
+    {
+        set.enable_address = true;
+    }, error::success, outbound_peer_port };
+
+    peer.run();
+    peer.accept();
+    const auto node = peer.handshake(level::bip155);
+    BOOST_REQUIRE_EQUAL(node->value, level::bip155);
+    BOOST_REQUIRE(get_address::deserialize(level::bip155, peer.receive(get_address::command)));
+
+    peer.close();
+    peer.accept();
+    BOOST_REQUIRE(version::deserialize(level::bip155, peer.receive(version::command)));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__handle_connect__address_not_found__retaken)
+{
+    outbound_peer peer{ [](settings& set)
+    {
+        set.outbound.connect_timeout_seconds = 1;
+    }, error::address_not_found, outbound_peer_port };
+
+    peer.run();
+    BOOST_REQUIRE(peer.retaken());
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__handle_connect__connect_refused__retaken)
+{
+    outbound_peer peer{ [](settings& set)
+    {
+        set.outbound.connect_timeout_seconds = 1;
+    }, error::success, outbound_closed_port };
+
+    peer.run();
+    BOOST_REQUIRE(peer.retaken());
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__handle_channel_stop__full_host_pool__reconnected)
+{
+    outbound_peer peer{ [](settings& set)
+    {
+        set.outbound.host_pool_capacity = 1;
+    }, error::success, outbound_peer_port };
+
+    peer.run();
+    peer.accept();
+    peer.handshake(level::bip155);
+    peer.close();
+    peer.accept();
+    BOOST_REQUIRE(version::deserialize(level::bip155, peer.receive(version::command)));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__handle_one__suspended__retaken)
+{
+    outbound_peer peer{ [](settings&) {}, error::success, outbound_peer_port };
+
+    peer.suspend();
+    peer.run();
+    BOOST_REQUIRE(peer.retaken());
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start_connect__proxied_unreachable__retaken)
+{
+    outbound_peer peer{ [](settings& set)
+    {
+        set.outbound.socks = { "127.0.0.1:65157" };
+        set.outbound.connect_timeout_seconds = 1;
+    }, error::success, outbound_peer_port };
+
+    peer.run();
+    BOOST_REQUIRE(peer.retaken());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

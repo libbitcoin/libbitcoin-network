@@ -87,4 +87,66 @@ BOOST_AUTO_TEST_CASE(alert_item__deserialize__bitcoin_wiki_sample__expected)
     BOOST_REQUIRE(message.reserved.empty());
 }
 
+static const alert_item populated
+{
+    1, 2, 3, 4, 5, { 6, 7 }, 8, 9, { "/a/" }, 10, "c", "s", ""
+};
+
+static const auto populated_data = system::base16_chunk(
+    "01000000"
+    "0200000000000000"
+    "0300000000000000"
+    "04000000"
+    "05000000"
+    "02" "06000000" "07000000"
+    "08000000"
+    "09000000"
+    "01" "03" "2f612f"
+    "0a000000"
+    "01" "63"
+    "01" "73"
+    "00");
+
+BOOST_AUTO_TEST_CASE(alert_item__size__populated__expected)
+{
+    BOOST_REQUIRE_EQUAL(populated.size(level::canonical), populated_data.size());
+}
+
+BOOST_AUTO_TEST_CASE(alert_item__serialize__populated__expected)
+{
+    system::data_chunk data(populated_data.size());
+    system::write::bytes::copy sink(data);
+    populated.serialize(level::canonical, sink);
+    BOOST_REQUIRE(sink);
+    BOOST_REQUIRE_EQUAL(data, populated_data);
+}
+
+BOOST_AUTO_TEST_CASE(alert_item__deserialize__populated__expected)
+{
+    system::read::bytes::copy source(populated_data);
+    const auto item = alert_item::deserialize(level::canonical, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE_EQUAL(item.version, 1u);
+    BOOST_REQUIRE_EQUAL(item.relay_until, 2u);
+    BOOST_REQUIRE_EQUAL(item.expiration, 3u);
+    BOOST_REQUIRE_EQUAL(item.id, 4u);
+    BOOST_REQUIRE_EQUAL(item.cancel, 5u);
+    BOOST_REQUIRE(item.cancels == populated.cancels);
+    BOOST_REQUIRE_EQUAL(item.min_version, 8u);
+    BOOST_REQUIRE_EQUAL(item.max_version, 9u);
+    BOOST_REQUIRE(item.sub_versions == populated.sub_versions);
+    BOOST_REQUIRE_EQUAL(item.priority, 10u);
+    BOOST_REQUIRE_EQUAL(item.comment, "c");
+    BOOST_REQUIRE_EQUAL(item.status_bar, "s");
+    BOOST_REQUIRE(item.reserved.empty());
+}
+
+BOOST_AUTO_TEST_CASE(alert_item__deserialize__truncated__source_false)
+{
+    const auto data = system::base16_chunk("01000000" "0200000000000000" "03");
+    system::read::bytes::copy source(data);
+    const auto item = alert_item::deserialize(level::canonical, source);
+    BOOST_REQUIRE(!source);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

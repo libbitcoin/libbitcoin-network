@@ -773,4 +773,255 @@ BOOST_AUTO_TEST_CASE(hosts__save__redundant__expected)
     BOOST_REQUIRE(test::exists(TEST_NAME));
 }
 
+BOOST_AUTO_TEST_CASE(hosts__save__stopped__service_stopped)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    hosts instance(set, log);
+
+    const auto message = system::to_shared(address{ { host1 } });
+    std::promise<std::pair<code, size_t>> promise{};
+    instance.save(message, [&](const code& ec, size_t accepted) NOEXCEPT
+    {
+        promise.set_value({ ec, accepted });
+    });
+
+    const auto result = promise.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BOOST_REQUIRE_EQUAL(result.second, 0u);
+}
+
+BOOST_AUTO_TEST_CASE(hosts__save__empty__address_not_found)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    const auto message = system::to_shared(address{});
+    std::promise<std::pair<code, size_t>> promise{};
+    instance.save(message, [&](const code& ec, size_t accepted) NOEXCEPT
+    {
+        promise.set_value({ ec, accepted });
+    });
+
+    const auto result = promise.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::address_not_found);
+    BOOST_REQUIRE_EQUAL(result.second, 0u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__save__insufficient_services__not_accepted)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    hosts instance(set, log, service::node_network);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    constexpr address_item network42{ 0, service::node_network, ipv6_t{ loopback_ip_address }, 42 };
+    const auto message = system::to_shared(address{ { host1, network42 } });
+    std::promise<size_t> promise{};
+    instance.save(message, [&](code, size_t accepted) NOEXCEPT
+    {
+        promise.set_value(accepted);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    instance.stop();
+}
+
+// reserve
+
+BOOST_AUTO_TEST_CASE(hosts__reserve__unreserve__expected_reserved)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    hosts instance(set, log);
+    const config::endpoint host{ "[::1]:42" };
+
+    BOOST_REQUIRE_EQUAL(instance.reserved(), 0u);
+    BOOST_REQUIRE(instance.reserve(host));
+    BOOST_REQUIRE(!instance.reserve(host));
+    BOOST_REQUIRE_EQUAL(instance.reserved(), 1u);
+    BOOST_REQUIRE(instance.unreserve(host));
+    BOOST_REQUIRE(!instance.unreserve(host));
+    BOOST_REQUIRE_EQUAL(instance.reserved(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(hosts__take__reserved__address_not_found_and_removed)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    std::promise<code> promise_restore{};
+    instance.restore(system::to_shared(loopback42), [&](const code& ec) NOEXCEPT
+    {
+        promise_restore.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_restore.get_future().get(), error::success);
+    BOOST_REQUIRE(instance.reserve({ loopback42 }));
+
+    std::promise<code> promise_take{};
+    instance.take(hosts::family::any, [&](const code& ec, const address_item_cptr&) NOEXCEPT
+    {
+        promise_take.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_take.get_future().get(), error::address_not_found);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    instance.stop();
+}
+
+// load
+
+static bool write_file(const std::string& name, const std::string& text)
+{
+    std::ofstream file{ name };
+    file << text;
+    return file.good();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__unspecified_line__purged)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.gossip_ipv6 = true;
+    BOOST_REQUIRE(write_file(TEST_NAME, "[::]\n[::1]:42/0/0\n"));
+
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__malformed_line__purged)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.gossip_ipv6 = true;
+    BOOST_REQUIRE(write_file(TEST_NAME, "[::1]:42/0/0\nnot an address\n"));
+
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__insufficient_line__purged)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.gossip_ipv6 = true;
+    BOOST_REQUIRE(write_file(TEST_NAME, "[::1]:42/0/0\n[::1]:43/0/1\n"));
+
+    hosts instance(set, log, service::node_network);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__unsupported_line__purged)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.gossip_ipv6 = true;
+    set.invalid_services = service::node_bloom;
+    BOOST_REQUIRE(write_file(TEST_NAME, "[::1]:42/0/4\n[::1]:43/0/1\n"));
+
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__peered_line__purged)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.gossip_ipv6 = true;
+    set.manual.peers.emplace_back("[::1]:42");
+    set.manual.initialize();
+    BOOST_REQUIRE(write_file(TEST_NAME, "[::1]:42/0/0\n[::1]:43/0/0\n"));
+
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__blacklisted_line__purged)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.gossip_ipv6 = true;
+    set.blacklists.emplace_back("[::1]:42");
+    BOOST_REQUIRE(write_file(TEST_NAME, "[::1]:42/0/0\n[::1]:43/0/0\n"));
+
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__not_whitelisted_line__purged)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    set.gossip_ipv6 = true;
+    set.whitelists.emplace_back("[::1]:43");
+    BOOST_REQUIRE(write_file(TEST_NAME, "[::1]:42/0/0\n[::1]:43/0/0\n"));
+
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__stop__directory_path__file_save)
+{
+    const logger log{};
+    mock_settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
+    set.outbound.host_pool_capacity = 42;
+    hosts instance(set, log);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE(std::filesystem::create_directory(TEST_NAME));
+
+    std::promise<code> promise_restore{};
+    instance.restore(system::to_shared(loopback42), [&](const code& ec) NOEXCEPT
+    {
+        promise_restore.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(promise_restore.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.stop(), error::file_save);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

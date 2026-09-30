@@ -706,6 +706,264 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__over_length__body_limit)
     BOOST_REQUIRE(ec == error::http_error_t::body_limit);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__empty_buffer__success_none_consumed)
+{
+    rpc::request_body::value_type body{};
+    rpc::request_body::reader reader(body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(reader.put(asio::const_buffer{}, ec), zero);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(!reader.done());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__whitespace_after_delivered_close__consumed_done)
+{
+    const std::string_view close{ "]\n" };
+    const std::string_view padding{ " \t\r\n" };
+    const asio::const_buffer buffer1{ close.data(), close.size() };
+    const asio::const_buffer buffer2{ padding.data(), padding.size() };
+    rpc::request_body::value_type body{};
+    body.batch = true;
+    rpc::request_body::reader reader(body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), close.size());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
+    BOOST_REQUIRE(body.changed);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), padding.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__garbage_after_delivered_close__batch_malformed)
+{
+    const std::string_view close{ "]\n" };
+    const std::string_view garbage{ " x" };
+    const asio::const_buffer buffer1{ close.data(), close.size() };
+    const asio::const_buffer buffer2{ garbage.data(), garbage.size() };
+    rpc::request_body::value_type body{};
+    body.batch = true;
+    rpc::request_body::reader reader(body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), close.size());
+    BOOST_REQUIRE(ec == error::http_error_t::need_buffer);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), one);
+    BOOST_REQUIRE(ec == error::jsonrpc_batch_malformed);
+}
+
+// validation
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v2_without_method__jsonrpc_requires_method)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":1})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec == error::jsonrpc_requires_method);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v1_without_params__jsonrpc_v1_requires_params)
+{
+    const std::string_view text{ R"({"id":1,"method":"getblockcount"})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec == error::jsonrpc_v1_requires_params);
+    BOOST_REQUIRE(body.message.jsonrpc == version::v1);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v1_without_id__jsonrpc_v1_requires_id)
+{
+    const std::string_view text{ R"({"method":"getblockcount","params":[]})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec == error::jsonrpc_v1_requires_id);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v1_object_params__jsonrpc_v1_requires_array_params)
+{
+    const std::string_view text{ R"({"jsonrpc":"1.0","id":"curltest","method":"getblockhash","params":{"height":0}})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec == error::jsonrpc_v1_requires_array_params);
+    BOOST_REQUIRE(body.message.params.has_value());
+    BOOST_REQUIRE(std::holds_alternative<object_t>(body.message.params.value()));
+    BOOST_REQUIRE_EQUAL(std::get<object_t>(body.message.params.value()).size(), one);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v1_array_params__success_expected)
+{
+    const std::string_view text{ R"({"jsonrpc":"1.0","id":"curltest","method":"getblockhash","params":[1000]})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(body.message.jsonrpc == version::v1);
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(body.message.id.value()), "curltest");
+    BOOST_REQUIRE_EQUAL(body.message.method, "getblockhash");
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(std::get<array_t>(body.message.params.value()).front().value()), 1000.0);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v2_null_id_object_params__success_expected)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":null,"method":"subtract","params":{"subtrahend":23,"minuend":42}})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(body.message.jsonrpc == version::v2);
+    BOOST_REQUIRE(std::holds_alternative<null_t>(body.message.id.value()));
+    const auto& params = std::get<object_t>(body.message.params.value());
+    BOOST_REQUIRE_EQUAL(params.size(), 2u);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at("subtrahend").value()), 23.0);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at("minuend").value()), 42.0);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v2_nested_params__success_expected)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":7,"method":"m","params":[null,true,[1,"a"],{"k":false}]})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+    const auto& params = std::get<array_t>(body.message.params.value());
+    BOOST_REQUIRE_EQUAL(params.size(), 4u);
+    BOOST_REQUIRE(std::holds_alternative<null_t>(params.at(0).value()));
+    BOOST_REQUIRE(std::get<boolean_t>(params.at(1).value()));
+    const auto& nested = std::get<array_t>(params.at(2).value());
+    BOOST_REQUIRE_EQUAL(nested.size(), 2u);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(nested.at(0).value()), 1.0);
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(nested.at(1).value()), "a");
+    const auto& object = std::get<object_t>(params.at(3).value());
+    BOOST_REQUIRE(!std::get<boolean_t>(object.at("k").value()));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__non_string_method__error)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":1,"method":42})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__boolean_id__error)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":true,"method":"m"})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__batch_element_non_string_method__error_undelivered)
+{
+    const std::string_view text{ R"([{"jsonrpc":"2.0","id":1,"method":42},)" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    rpc::request_body::reader reader(body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec != error::http_error_t::need_buffer);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 ////#endif // HAVE_SLOW_TESTS

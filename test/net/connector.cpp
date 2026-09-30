@@ -295,4 +295,68 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
     BOOST_REQUIRE(result);
 }
 
+BOOST_AUTO_TEST_CASE(connector__connect__suspended_before_resolve__service_suspended)
+{
+    using namespace std::chrono_literals;
+    logger log{};
+    log.stop();
+    threadpool pool(2);
+    std::atomic_bool suspended{ false };
+    asio::strand strand(pool.service().get_executor());
+    connector::parameters params{ .connect_timeout = seconds(100), .maximum_request = 42 };
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
+    std::promise<code> connected{};
+    std::promise<bool> null{};
+
+    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    {
+        instance->connect(config::endpoint{ "127.0.0.1:65124" }, [&](const code& ec, const socket::ptr& socket) NOEXCEPT
+        {
+            null.set_value(is_null(socket));
+            connected.set_value(ec);
+        });
+
+        suspended.store(true);
+    });
+
+    auto future = connected.get_future();
+    BOOST_REQUIRE(future.wait_for(10s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(future.get(), error::service_suspended);
+    BOOST_REQUIRE(null.get_future().get());
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(instance->get_stopped());
+}
+
+BOOST_AUTO_TEST_CASE(connector__connect__unresolvable_hostname__resolve_failed)
+{
+    using namespace std::chrono_literals;
+    logger log{};
+    log.stop();
+    threadpool pool(2);
+    std::atomic_bool suspended{ false };
+    asio::strand strand(pool.service().get_executor());
+    connector::parameters params{ .connect_timeout = seconds(100), .maximum_request = 42 };
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
+    std::promise<code> connected{};
+    std::promise<bool> null{};
+
+    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    {
+        instance->connect(config::endpoint{ "bogus.invalid", 42 }, [&](const code& ec, const socket::ptr& socket) NOEXCEPT
+        {
+            null.set_value(is_null(socket));
+            connected.set_value(ec);
+        });
+    });
+
+    auto future = connected.get_future();
+    BOOST_REQUIRE(future.wait_for(60s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(future.get(), error::resolve_failed);
+    BOOST_REQUIRE(null.get_future().get());
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(instance->get_stopped());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

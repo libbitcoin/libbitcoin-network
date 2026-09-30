@@ -350,3 +350,127 @@ static_assert( is_tagged<std::tuple<const std::shared_ptr<const int>>>);
 static_assert( is_tagged<std::tuple<const std::shared_ptr<const int>&>>);
 static_assert( is_tagged<std::tuple<std::shared_ptr<const int>&&>>);
 static_assert( is_tagged<std::tuple<std::shared_ptr<int>, std::string, bool>>);
+
+// model
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_SUITE(rpc_model_tests)
+
+BOOST_AUTO_TEST_CASE(rpc_model__version_to__strings__expected)
+{
+    BOOST_REQUIRE(boost::json::value_to<version>(boost::json::value("1.0")) == version::v1);
+    BOOST_REQUIRE(boost::json::value_to<version>(boost::json::value("2.0")) == version::v2);
+    BOOST_REQUIRE(boost::json::value_to<version>(boost::json::value("3.0")) == version::invalid);
+    BOOST_REQUIRE(boost::json::value_to<version>(boost::json::value(2.0)) == version::invalid);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__version_from__versions__expected)
+{
+    BOOST_REQUIRE_EQUAL(boost::json::value_from(version::v1).as_string(), "1.0");
+    BOOST_REQUIRE_EQUAL(boost::json::value_from(version::v2).as_string(), "2.0");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__value_to__json_types__expected_alternatives)
+{
+    BOOST_REQUIRE(std::holds_alternative<null_t>(boost::json::value_to<value_t>(boost::json::parse("null")).value()));
+    BOOST_REQUIRE(std::get<boolean_t>(boost::json::value_to<value_t>(boost::json::parse("true")).value()));
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(boost::json::value_to<value_t>(boost::json::parse("-7")).value()), -7.0);
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(boost::json::value_to<value_t>(boost::json::parse(R"("a")")).value()), "a");
+    BOOST_REQUIRE_EQUAL(std::get<array_t>(boost::json::value_to<value_t>(boost::json::parse("[1,2]")).value()).size(), 2u);
+    BOOST_REQUIRE_EQUAL(std::get<object_t>(boost::json::value_to<value_t>(boost::json::parse(R"({"a":1})")).value()).size(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__identity_to__json_types__expected_alternatives)
+{
+    BOOST_REQUIRE(std::holds_alternative<null_t>(boost::json::value_to<identity_t>(boost::json::parse("null"))));
+    BOOST_REQUIRE_EQUAL(std::get<code_t>(boost::json::value_to<identity_t>(boost::json::parse("42"))), 42);
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(boost::json::value_to<identity_t>(boost::json::parse(R"("42")"))), "42");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__identity_to__boolean__throws)
+{
+    BOOST_REQUIRE_THROW(boost::json::value_to<identity_t>(boost::json::parse("true")), ostream_exception);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__identity_from__null__null)
+{
+    BOOST_REQUIRE(boost::json::value_from(identity_t{ null_t{} }).is_null());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__response_to__v2_error_with_data__expected)
+{
+    const auto model = boost::json::parse(R"({"jsonrpc":"2.0","id":"1","error":{"code":-32600,"message":"Invalid Request","data":[1,2]}})");
+    const auto response = boost::json::value_to<response_t>(model);
+    BOOST_REQUIRE(response.jsonrpc == version::v2);
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(response.id.value()), "1");
+    BOOST_REQUIRE(!response.result.has_value());
+    BOOST_REQUIRE(response.error.has_value());
+    BOOST_REQUIRE_EQUAL(response.error.value().code, -32600);
+    BOOST_REQUIRE_EQUAL(response.error.value().message, "Invalid Request");
+    BOOST_REQUIRE_EQUAL(std::get<array_t>(response.error.value().data.value().value()).size(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__response_to__v2_error_without_data_null_id__expected)
+{
+    const auto model = boost::json::parse(R"({"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error"},"id":null})");
+    const auto response = boost::json::value_to<response_t>(model);
+    BOOST_REQUIRE(response.jsonrpc == version::v2);
+    BOOST_REQUIRE(std::holds_alternative<null_t>(response.id.value()));
+    BOOST_REQUIRE_EQUAL(response.error.value().code, -32700);
+    BOOST_REQUIRE_EQUAL(response.error.value().message, "Parse error");
+    BOOST_REQUIRE(!response.error.value().data.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__response_to__v2_result_numeric_id__expected)
+{
+    const auto model = boost::json::parse(R"({"jsonrpc":"2.0","result":19,"id":1})");
+    const auto response = boost::json::value_to<response_t>(model);
+    BOOST_REQUIRE(response.jsonrpc == version::v2);
+    BOOST_REQUIRE_EQUAL(std::get<code_t>(response.id.value()), 1);
+    BOOST_REQUIRE(!response.error.has_value());
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(response.result.value().value()), 19.0);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__response_to__empty_object__defaults)
+{
+    const auto response = boost::json::value_to<response_t>(boost::json::parse("{}"));
+    BOOST_REQUIRE(response.jsonrpc == version::undefined);
+    BOOST_REQUIRE(!response.id.has_value());
+    BOOST_REQUIRE(!response.error.has_value());
+    BOOST_REQUIRE(!response.result.has_value());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__response_from__v1_result__null_error)
+{
+    const auto model = boost::json::value_from(response_t{ version::v1, identity_t{ 1 }, {}, value_t{ true } });
+    const auto& object = model.as_object();
+    BOOST_REQUIRE(object.at("result").as_bool());
+    BOOST_REQUIRE(object.at("error").is_null());
+    BOOST_REQUIRE_EQUAL(object.at("id").as_int64(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__response_from__v1_error__null_result)
+{
+    const auto model = boost::json::value_from(response_t{ version::v1, identity_t{ 1 }, result_t{ -32601, "Method not found", {} }, {} });
+    const auto& object = model.as_object();
+    BOOST_REQUIRE(object.at("result").is_null());
+    BOOST_REQUIRE_EQUAL(object.at("error").as_object().at("code").as_int64(), -32601);
+    BOOST_REQUIRE_EQUAL(object.at("error").as_object().at("message").as_string(), "Method not found");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__response_from__v2_result__no_error)
+{
+    const auto model = boost::json::value_from(response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } });
+    const auto& object = model.as_object();
+    BOOST_REQUIRE(object.at("result").as_bool());
+    BOOST_REQUIRE(!object.contains("error"));
+    BOOST_REQUIRE_EQUAL(object.at("jsonrpc").as_string(), "2.0");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__request_from__null_id_value_params__expected)
+{
+    const auto model = boost::json::value_from(request_t{ version::v2, identity_t{ null_t{} }, "m", params_t{ value_t{ string_t{ "x" } } } });
+    BOOST_REQUIRE_EQUAL(boost::json::serialize(model), R"({"jsonrpc":"2.0","id":null,"method":"m","params":"x"})");
+}
+
+BOOST_AUTO_TEST_SUITE_END()

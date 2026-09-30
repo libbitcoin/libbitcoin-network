@@ -92,6 +92,31 @@ BOOST_AUTO_TEST_CASE(tls_context__set_chain_and_key__malformed__false)
     BOOST_REQUIRE(!context.add_anchors("not a certificate"));
 }
 
+BOOST_AUTO_TEST_CASE(tls_context__set_chain__secp384r1_leaf__false)
+{
+    static const std::string chain384
+    {
+        "-----BEGIN CERTIFICATE-----\n"
+        "MIIB6zCCAXGgAwIBAgIUJtHsAFXdYgGYBXLxCgPAvtfK/PcwCgYIKoZIzj0EAwMw\n"
+        "FDESMBAGA1UEAwwJY2xpZW50Mzg0MB4XDTI2MDEwMTAwMDAwMFoXDTQ5MTIzMTIz\n"
+        "NTk1OVowFDESMBAGA1UEAwwJY2xpZW50Mzg0MHYwEAYHKoZIzj0CAQYFK4EEACID\n"
+        "YgAECOQks2KFZdRtQWoliPUFV9bhyFan2z1R+sutT7q3fTsTHK2fUZxA9HZvriMZ\n"
+        "HEKEIzdITbaBVXfFUnhH5W3UiU2P5CmOC6vwREAgpthnG8QVxJ+RqT7snfceDa7T\n"
+        "l28io4GDMIGAMB0GA1UdDgQWBBTJQ+ViudEUUbSJ+d34rwXXN4emXjAfBgNVHSME\n"
+        "GDAWgBTJQ+ViudEUUbSJ+d34rwXXN4emXjAPBgNVHRMBAf8EBTADAQH/MA4GA1Ud\n"
+        "DwEB/wQEAwIChDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwCgYIKoZI\n"
+        "zj0EAwMDaAAwZQIxAKw8qvXbX8/kRuCJQPuDpyVj5vHkOQ/T/hGqnJiXihrBvSQc\n"
+        "tWKiP+AIuqd+JpCnMgIwZ21W5QpX7QNqcFdoUbWW1BxaLDekhmmKPa6+SIte9H3V\n"
+        "6kxQ4IMBYC3p0j3En1DQ\n"
+        "-----END CERTIFICATE-----\n"
+    };
+
+    tls::context context{};
+    BOOST_REQUIRE(context.add_anchors(chain384));
+    BOOST_REQUIRE(!context.set_chain(chain384));
+    BOOST_REQUIRE(context.certificates().empty());
+}
+
 BOOST_AUTO_TEST_CASE(tls_context__add_anchors__two__accumulated)
 {
     tls::context context{};

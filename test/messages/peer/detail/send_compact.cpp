@@ -39,4 +39,59 @@ BOOST_AUTO_TEST_CASE(send_compact__size__always__expected)
     BOOST_REQUIRE_EQUAL(send_compact::size(level::canonical), expected);
 }
 
+BOOST_AUTO_TEST_CASE(send_compact__deserialize1__high_bandwidth_version1__expected)
+{
+    const auto data = system::base16_chunk("010100000000000000");
+    const auto message = send_compact::deserialize(level::bip152, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(message->high_bandwidth);
+    BOOST_REQUIRE_EQUAL(message->compact_version, 1u);
+}
+
+BOOST_AUTO_TEST_CASE(send_compact__deserialize1__low_bandwidth_version2__expected)
+{
+    const auto data = system::base16_chunk("000200000000000000");
+    const auto message = send_compact::deserialize(level::bip152, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(!message->high_bandwidth);
+    BOOST_REQUIRE_EQUAL(message->compact_version, send_compact::compact_version_2);
+}
+
+BOOST_AUTO_TEST_CASE(send_compact__deserialize1__non_boolean_mode__nullptr)
+{
+    const auto data = system::base16_chunk("020100000000000000");
+    BOOST_REQUIRE(!send_compact::deserialize(level::bip152, data));
+}
+
+BOOST_AUTO_TEST_CASE(send_compact__deserialize1__insufficient_version__nullptr)
+{
+    const auto data = system::base16_chunk("010100000000000000");
+    BOOST_REQUIRE(!send_compact::deserialize(level::bip152 - 1u, data));
+}
+
+BOOST_AUTO_TEST_CASE(send_compact__deserialize1__underflow__nullptr)
+{
+    const auto data = system::base16_chunk("0101000000000000");
+    BOOST_REQUIRE(!send_compact::deserialize(level::bip152, data));
+}
+
+BOOST_AUTO_TEST_CASE(send_compact__serialize1__high_bandwidth_version1__expected)
+{
+    const send_compact message{ true, 1u };
+    system::data_chunk data(send_compact::size(level::bip152));
+    BOOST_REQUIRE(message.serialize(level::bip152, data));
+    BOOST_REQUIRE_EQUAL(data, system::base16_chunk("010100000000000000"));
+}
+
+BOOST_AUTO_TEST_CASE(send_compact__serialize1__low_bandwidth_version2__round_trips)
+{
+    const send_compact expected{ false, send_compact::compact_version_2 };
+    system::data_chunk data(send_compact::size(level::bip152));
+    BOOST_REQUIRE(expected.serialize(level::bip152, data));
+    const auto message = send_compact::deserialize(level::bip152, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(!message->high_bandwidth);
+    BOOST_REQUIRE_EQUAL(message->compact_version, expected.compact_version);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

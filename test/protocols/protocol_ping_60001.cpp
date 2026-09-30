@@ -17,12 +17,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
+#include "../functional/peer_setup_fixture.hpp"
 
-BOOST_AUTO_TEST_SUITE(protocol_tests)
+BOOST_FIXTURE_TEST_SUITE(protocol_ping_60001_tests, peer_net_setup_fixture<>)
 
-BOOST_AUTO_TEST_CASE(protocol_ping_60001_tests)
+using namespace network::messages::peer;
+
+BOOST_AUTO_TEST_CASE(protocol_ping_60001__start__bip31_peer__ping_with_nonzero_nonce)
 {
-    BOOST_REQUIRE(true);
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip31));
+
+    const auto message = receive<ping>(level::bip31);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_NE(message->nonce, 0_u64);
+}
+
+BOOST_AUTO_TEST_CASE(protocol_ping_60001__receive_pong__matching_nonce__connected)
+{
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip31));
+
+    const auto message = receive<ping>(level::bip31);
+    BOOST_REQUIRE(message);
+    send(pong{ message->nonce }, level::bip31);
+
+    send(ping{ 42 }, level::bip31);
+    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
+}
+
+BOOST_AUTO_TEST_CASE(protocol_ping_60001__handle_timer__zero_heartbeat_no_pong__dropped)
+{
+    settings_.channel_heartbeat_minutes = 0;
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip31));
+    BOOST_REQUIRE(dropped());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

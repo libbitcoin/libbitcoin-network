@@ -68,4 +68,40 @@ BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__serialize__always__round_t
     BOOST_REQUIRE_EQUAL(data, base16_chunk("01000000efcdab8967452301"));
 }
 
+BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize1__bip330__expected)
+{
+    const auto data = base16_chunk("01000000efcdab8967452301");
+    const auto message = send_transaction_reconciliation::deserialize(level::bip330, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->value, 1u);
+    BOOST_REQUIRE_EQUAL(message->salt, 0x0123456789abcdef_u64);
+}
+
+BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize1__insufficient_version__nullptr)
+{
+    const auto data = base16_chunk("01000000efcdab8967452301");
+    BOOST_REQUIRE(!send_transaction_reconciliation::deserialize(level::bip330 - 1u, data));
+}
+
+BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize1__underflow__nullptr)
+{
+    const auto data = base16_chunk("01000000efcdab89674523");
+    BOOST_REQUIRE(!send_transaction_reconciliation::deserialize(level::bip330, data));
+}
+
+BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__serialize1__always__expected)
+{
+    const send_transaction_reconciliation message{ 1u, 0x0123456789abcdef_u64 };
+    data_chunk data(send_transaction_reconciliation::size(level::bip330));
+    BOOST_REQUIRE(message.serialize(level::bip330, data));
+    BOOST_REQUIRE_EQUAL(data, base16_chunk("01000000efcdab8967452301"));
+}
+
+BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__serialize1__overflow__false)
+{
+    const send_transaction_reconciliation message{ 1u, 0x0123456789abcdef_u64 };
+    data_chunk data(sub1(send_transaction_reconciliation::size(level::bip330)));
+    BOOST_REQUIRE(!message.serialize(level::bip330, data));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

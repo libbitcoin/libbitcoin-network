@@ -495,6 +495,28 @@ BOOST_AUTO_TEST_CASE(address__construct__onion_upper_case__torv3)
     BOOST_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
 }
 
+BOOST_AUTO_TEST_CASE(address__construct__onion_invalid_port__throws_invalid_option)
+{
+    BOOST_REQUIRE_THROW(address host(BC_ADDRESS_ONION ":bogus"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(address__construct__i2p_invalid_port__throws_invalid_option)
+{
+    BOOST_REQUIRE_THROW(address host(BC_ADDRESS_I2P ":65536"), invalid_option_value);
+}
+
+// to_address_item
+
+BOOST_AUTO_TEST_CASE(address__to_address_item__onion__expected)
+{
+    const address host{ BC_ADDRESS_ONION ":8333/42/24" };
+    const auto item = host.to_address_item(7, 9);
+    BOOST_REQUIRE_EQUAL(item.timestamp, 7u);
+    BOOST_REQUIRE_EQUAL(item.services, 9u);
+    BOOST_REQUIRE_EQUAL(item.port, 8333u);
+    BOOST_REQUIRE(std::holds_alternative<messages::peer::torv3_t>(item.address));
+    BOOST_REQUIRE(address{ item } == host);
+}
 // to_ip
 
 BOOST_AUTO_TEST_CASE(address__to_ip__default__ipv6_unspecified)

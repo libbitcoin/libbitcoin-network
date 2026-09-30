@@ -112,4 +112,19 @@ BOOST_AUTO_TEST_CASE(asio__half_closed__peer_shutdown_with_unread_data__true)
     BOOST_REQUIRE(!ec);
 }
 
+BOOST_AUTO_TEST_CASE(asio__half_closed__opened_unconnected__false)
+{
+    asio::context service{};
+    asio::socket sock(service);
+    boost_code ec{};
+    sock.open(asio::tcp::v4(), ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(!asio::half_closed(sock));
+}
+
+BOOST_AUTO_TEST_CASE(asio__tls_library__always__libbitcoin_tls)
+{
+    BOOST_REQUIRE_EQUAL(tls_library(), "libbitcoin tls 1.3");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

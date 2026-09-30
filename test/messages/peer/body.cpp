@@ -452,4 +452,100 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__no_message__error)
     BOOST_REQUIRE(ec);
 }
 
+// v2 put (identified payload)
+
+static const auto ping_payload = system::base16_chunk("efcdab8967452301");
+
+BOOST_AUTO_TEST_CASE(peer_body__put_v2__identifier__message)
+{
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put(identifiers::ping, {}, ping_payload, ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+    BOOST_REQUIRE_EQUAL(reader.need(), 0u);
+    BOOST_REQUIRE_EQUAL(value.head.magic, magic);
+    BOOST_REQUIRE_EQUAL(value.head.command, ping::command);
+    BOOST_REQUIRE_EQUAL(value.head.payload_size, ping_payload.size());
+    BOOST_REQUIRE_EQUAL(value.head.checksum, 0u);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto message = value.payload.get<const ping>();
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->nonce, nonce);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put_v2__command__message)
+{
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put(identifiers::unassigned, pong::command, ping_payload, ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+    BOOST_REQUIRE_EQUAL(value.head.command, pong::command);
+
+    const auto message = value.payload.get<const pong>();
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->nonce, nonce);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put_v2__unknown_command__unknown_message_fault)
+{
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put(identifiers::unassigned, "bogus", ping_payload, ec);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(!reader.done());
+    BOOST_REQUIRE_EQUAL(value.fault, error::unknown_message);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put_v2__unknown_identifier__unknown_message_fault)
+{
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put(uint8_t{ 255 }, ping::command, ping_payload, ec);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE_EQUAL(value.fault, error::unknown_message);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put_v2__oversized_payload__fault)
+{
+    auto value = test_frame();
+    value.maximum = sub1(ping_payload.size());
+    boost_code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put(identifiers::ping, {}, ping_payload, ec);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE_EQUAL(value.fault, error::oversized_payload);
+}
+
+BOOST_AUTO_TEST_CASE(peer_body__put_v2__short_payload__invalid_message_fault)
+{
+    auto value = test_frame();
+    boost_code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put(identifiers::ping, {}, system::base16_chunk("efcd"), ec);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(!reader.done());
+    BOOST_REQUIRE_EQUAL(value.fault, error::invalid_message);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -39,4 +39,57 @@ BOOST_AUTO_TEST_CASE(get_compact_transactions__size__default__expected)
     BOOST_REQUIRE_EQUAL(get_compact_transactions{}.size(level::canonical), expected);
 }
 
+static const auto block2_hash = system::base16_hash("000000006c02c8ea6e4ff69651f7fcde348fb9d557a06e6957b65552002a7820");
+static const auto payload = system::base16_chunk("20782a005255b657696ea057d5b98f34defcf75196f64f6eeac8026c00000000" "03" "00" "fd0301" "01");
+static const uint32_t excess_version = add1<uint32_t>(level::maximum_protocol);
+
+BOOST_AUTO_TEST_CASE(get_compact_transactions__size__three__expected)
+{
+    const get_compact_transactions message{ block2_hash, { 0, 0x0103, 1 } };
+    BOOST_REQUIRE_EQUAL(message.size(level::bip152), payload.size());
+}
+
+BOOST_AUTO_TEST_CASE(get_compact_transactions__deserialize1__three__expected)
+{
+    const auto message = get_compact_transactions::deserialize(level::bip152, payload);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->block_hash, block2_hash);
+    BOOST_REQUIRE_EQUAL(message->indexes.size(), 3u);
+    BOOST_REQUIRE_EQUAL(message->indexes[0], 0u);
+    BOOST_REQUIRE_EQUAL(message->indexes[1], 0x0103u);
+    BOOST_REQUIRE_EQUAL(message->indexes[2], 1u);
+}
+
+BOOST_AUTO_TEST_CASE(get_compact_transactions__deserialize1__insufficient_version__nullptr)
+{
+    BOOST_REQUIRE(!get_compact_transactions::deserialize(level::bip133, payload));
+}
+
+BOOST_AUTO_TEST_CASE(get_compact_transactions__deserialize1__excess_version__nullptr)
+{
+    BOOST_REQUIRE(!get_compact_transactions::deserialize(excess_version, payload));
+}
+
+BOOST_AUTO_TEST_CASE(get_compact_transactions__deserialize1__truncated__nullptr)
+{
+    const system::data_chunk data{ payload.begin(), std::prev(payload.end()) };
+    BOOST_REQUIRE(!get_compact_transactions::deserialize(level::bip152, data));
+}
+
+BOOST_AUTO_TEST_CASE(get_compact_transactions__deserialize2__three__expected)
+{
+    system::read::bytes::copy source(payload);
+    const auto message = get_compact_transactions::deserialize(level::maximum_protocol, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE_EQUAL(message.indexes.size(), 3u);
+}
+
+BOOST_AUTO_TEST_CASE(get_compact_transactions__serialize1__three__expected)
+{
+    const get_compact_transactions message{ block2_hash, { 0, 0x0103, 1 } };
+    system::data_chunk data(message.size(level::bip152));
+    BOOST_REQUIRE(message.serialize(level::bip152, data));
+    BOOST_REQUIRE_EQUAL(data, payload);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

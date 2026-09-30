@@ -80,4 +80,58 @@ BOOST_AUTO_TEST_CASE(alert__deserialize__bitcoin_wiki_sample__expected)
     BOOST_REQUIRE_EQUAL(message.signature, expected_signature);
 }
 
+static const auto sample = system::base16_chunk(
+    "73"
+    "010000003766404f00000000b305434f00000000f2030000f10300000010270000"
+    "48ee00000064000000004653656520626974636f696e2e6f72672f66656232302069"
+    "6620796f7520686176652074726f75626c6520636f6e6e656374696e672061667465"
+    "7220323020466562727561727900"
+    "47"
+    "30450221008389df45f0703f39ec8c1cc42c13"
+    "810ffcae14995bb648340219e353b63b53eb022009ec65e1c1aaeec1fd334c6b684b"
+    "de2b3f573060d5b70c3a46723326e4e8a4f1");
+
+static const uint32_t excess_version = add1<uint32_t>(level::maximum_protocol);
+
+BOOST_AUTO_TEST_CASE(alert__deserialize1__bitcoin_wiki_sample__expected_size)
+{
+    const auto message = alert::deserialize(level::minimum_protocol, sample);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->payload.id, 1010u);
+    BOOST_REQUIRE_EQUAL(message->signature.size(), 0x47u);
+    BOOST_REQUIRE_EQUAL(message->size(level::minimum_protocol), sample.size());
+}
+
+BOOST_AUTO_TEST_CASE(alert__deserialize1__insufficient_version__nullptr)
+{
+    BOOST_REQUIRE(!alert::deserialize(level::canonical, sample));
+}
+
+BOOST_AUTO_TEST_CASE(alert__deserialize1__excess_version__nullptr)
+{
+    BOOST_REQUIRE(!alert::deserialize(excess_version, sample));
+}
+
+BOOST_AUTO_TEST_CASE(alert__deserialize1__truncated_signature__nullptr)
+{
+    const system::data_chunk data{ sample.begin(), std::prev(sample.end()) };
+    BOOST_REQUIRE(!alert::deserialize(level::minimum_protocol, data));
+}
+
+BOOST_AUTO_TEST_CASE(alert__deserialize1__truncated_payload__nullptr)
+{
+    const auto data = system::base16_chunk("73010000003766404f00000000");
+    BOOST_REQUIRE(!alert::deserialize(level::minimum_protocol, data));
+}
+
+BOOST_AUTO_TEST_CASE(alert__serialize1__round_trip__expected)
+{
+    const auto message = alert::deserialize(level::minimum_protocol, sample);
+    BOOST_REQUIRE(message);
+
+    system::data_chunk data(message->size(level::minimum_protocol));
+    BOOST_REQUIRE(message->serialize(level::minimum_protocol, data));
+    BOOST_REQUIRE_EQUAL(data, sample);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

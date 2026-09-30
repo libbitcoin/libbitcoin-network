@@ -1337,4 +1337,82 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__value_nullable__expected)
     instance.stop(error::service_stopped);
 }
 
+// grouping
+// ----------------------------------------------------------------------------
+
+using positional_interface = publish<mock_methods, grouping::positional>;
+using named_interface = publish<mock_methods, grouping::named>;
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__value_params_either__missing_object)
+{
+    distributor_mock instance{};
+    const auto ec = instance.notify(
+    {
+        .method = "all_required",
+        .params = { value_t{ true } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec, error::missing_object);
+    instance.stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__object_params_positional__missing_array)
+{
+    dispatcher<positional_interface> instance{};
+    const auto ec = instance.notify(
+    {
+        .method = "all_required",
+        .params = { object_t{ { "a", true }, { "b", 42.0 }, { "c", string_t{ "c" } } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec, error::missing_array);
+    instance.stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__array_params_named__missing_object)
+{
+    dispatcher<named_interface> instance{};
+    const auto ec = instance.notify(
+    {
+        .method = "all_required",
+        .params = { array_t{ true, 42.0, string_t{ "c" } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec, error::missing_object);
+    instance.stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__no_params_named_empty_method__success)
+{
+    dispatcher<named_interface> instance{};
+    bool called{};
+
+    instance.subscribe([&](const code&, named_interface::empty_method)
+    {
+        if (called) return false;
+        called = true;
+        return true;
+    });
+
+    request_t request{};
+    request.method = "empty_method";
+    BOOST_REQUIRE(!instance.notify(request));
+    BOOST_REQUIRE(called);
+    instance.stop(error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional_wrong_pointer_type__unexpected_type)
+{
+    distributor_mock instance{};
+    const auto pointer = system::to_shared<messages::peer::pong>(42u);
+    const auto ec = instance.notify(
+    {
+        .method = "ping",
+        .params = { array_t{ any_t{ pointer } } }
+    });
+
+    BOOST_REQUIRE_EQUAL(ec, error::unexpected_type);
+    instance.stop(error::service_stopped);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
