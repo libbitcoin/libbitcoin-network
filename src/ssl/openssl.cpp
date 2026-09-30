@@ -49,10 +49,15 @@ static const SSL_METHOD client_method{ false, true };
 static const SSL_METHOD server_method{ true, false };
 
 // A memory BIO pair shares two byte queues, one for each direction.
+// The default buffer size of each direction of an openssl bio pair.
+constexpr size_t default_bio_size = 17 * 1024;
+
 struct bio_pair
 {
     std::deque<uint8_t> forward{};
     std::deque<uint8_t> backward{};
+    size_t forward_size{};
+    size_t backward_size{};
 };
 
 struct bio_st
@@ -68,6 +73,11 @@ struct bio_st
     std::deque<uint8_t>& outgoing() NOEXCEPT
     {
         return first ? pair->forward : pair->backward;
+    }
+
+    size_t outgoing_size() const NOEXCEPT
+    {
+        return first ? pair->forward_size : pair->backward_size;
     }
 };
 
@@ -175,7 +185,8 @@ static std::string password(SSL_CTX* ctx) NOEXCEPT
 // Connection I/O.
 // ----------------------------------------------------------------------------
 
-// Feed pending input to the server and publish its output.
+// Feed pending input to the server and publish its output, as much as the
+// bio holds. Output that does not fit remains in the server (blocked).
 static void pump(SSL* ssl) NOEXCEPT
 {
     auto& incoming = ssl->bio->incoming();
@@ -188,8 +199,16 @@ static void pump(SSL* ssl) NOEXCEPT
 
     auto& output = ssl->server->output();
     auto& outgoing = ssl->bio->outgoing();
-    outgoing.insert(outgoing.end(), output.begin(), output.end());
-    output.clear();
+    const auto room = floored_subtract(ssl->bio->outgoing_size(),
+        outgoing.size());
+    const auto end = std::next(output.begin(), std::min(room, output.size()));
+    outgoing.insert(outgoing.end(), output.begin(), end);
+    output.erase(output.begin(), end);
+}
+
+static bool is_blocked(SSL* ssl) NOEXCEPT
+{
+    return !ssl->server->output().empty();
 }
 
 static int failed(SSL* ssl) NOEXCEPT
@@ -203,6 +222,12 @@ static int failed(SSL* ssl) NOEXCEPT
 static int want_read(SSL* ssl) NOEXCEPT
 {
     ssl->error = SSL_ERROR_WANT_READ;
+    return -1;
+}
+
+static int want_write(SSL* ssl) NOEXCEPT
+{
+    ssl->error = SSL_ERROR_WANT_WRITE;
     return -1;
 }
 
@@ -509,6 +534,9 @@ int SSL_accept(SSL* ssl)
     if (ssl->server->is_failed())
         return failed(ssl);
 
+    if (is_blocked(ssl))
+        return want_write(ssl);
+
     if (ssl->server->is_established())
     {
         ssl->error = SSL_ERROR_NONE;
@@ -541,6 +569,9 @@ int SSL_read(SSL* ssl, void* buffer, int size)
         return possible_narrow_sign_cast<int>(count);
     }
 
+    if (is_blocked(ssl))
+        return want_write(ssl);
+
     if (ssl->server->is_closed())
     {
         ssl->shutdown |= SSL_RECEIVED_SHUTDOWN;
@@ -563,8 +594,15 @@ int SSL_write(SSL* ssl, const void* buffer, int size)
         return -1;
     }
 
+    // One record at a time into a drained bio, so that the engine takes all
+    // of its output (partial writes are enabled by the engine).
+    pump(ssl);
+    if (is_blocked(ssl) || !ssl->bio->outgoing().empty())
+        return want_write(ssl);
+
     const auto data = static_cast<const uint8_t*>(buffer);
-    const auto count = possible_narrow_sign_cast<size_t>(size);
+    const auto count = std::min(possible_narrow_sign_cast<size_t>(size),
+        tls::maximum_plaintext);
     if (!ssl->server->write({ data, count }))
     {
         push_error(ERR_LIB_SSL, 0);
@@ -574,7 +612,7 @@ int SSL_write(SSL* ssl, const void* buffer, int size)
 
     pump(ssl);
     ssl->error = SSL_ERROR_NONE;
-    return size;
+    return possible_narrow_sign_cast<int>(count);
 }
 
 // Returns zero once close_notify is sent and one once the peer's is received.
@@ -594,6 +632,9 @@ int SSL_shutdown(SSL* ssl)
     }
 
     pump(ssl);
+    if (is_blocked(ssl))
+        return want_write(ssl);
+
     if (ssl->server->is_closed())
     {
         ssl->shutdown |= SSL_RECEIVED_SHUTDOWN;
@@ -677,9 +718,13 @@ X509* SSL_get_peer_certificate(const SSL*)
 // Memory BIO pairs and files.
 // ----------------------------------------------------------------------------
 
-int BIO_new_bio_pair(BIO** first, size_t, BIO** second, size_t)
+int BIO_new_bio_pair(BIO** first, size_t first_size, BIO** second,
+    size_t second_size)
 {
     const auto pair = std::make_shared<bio_pair>();
+    pair->forward_size = is_zero(first_size) ? default_bio_size : first_size;
+    pair->backward_size = is_zero(second_size) ? default_bio_size :
+        second_size;
     *first = new BIO{ pair, true };
     *second = new BIO{ pair, false };
     return 1;

@@ -25,6 +25,7 @@
 #include <filesystem>
 #include <fstream>
 #include <future>
+#include <numeric>
 #include <string>
 
 BOOST_FIXTURE_TEST_SUITE(tls_socket_tests, test::directory_setup_fixture)
@@ -231,6 +232,19 @@ BOOST_AUTO_TEST_CASE(tls_socket__accept__handshake_and_exchange__success)
     BOOST_REQUIRE(peer.client.write(request));
     peer.flush();
     BOOST_REQUIRE_EQUAL(tcp_read(server.server, request.size()), request);
+}
+
+BOOST_AUTO_TEST_CASE(tls_socket__accept__response_of_many_records__exchanged)
+{
+    server_fixture server{ false };
+    tls_peer peer{ client_options(server, false), server.port };
+    peer.handshake();
+    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+
+    system::data_chunk response(100000);
+    std::iota(response.begin(), response.end(), uint8_t{});
+    BOOST_REQUIRE_EQUAL(tcp_write(server.server, response), error::success);
+    BOOST_REQUIRE_EQUAL(peer.read(response.size()), response);
 }
 
 BOOST_AUTO_TEST_CASE(tls_socket__accept__trusted_client_certificate__success)
