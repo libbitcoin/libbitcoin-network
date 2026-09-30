@@ -67,7 +67,7 @@ namespace asio
     namespace ssl
     {
         static constexpr auto version =
-            boost::asio::ssl::context::tls_server;
+            boost::asio::ssl::context::tlsv13_server;
         static constexpr auto options =
             boost::asio::ssl::context::no_sslv2 |
             boost::asio::ssl::context::no_sslv3 |
