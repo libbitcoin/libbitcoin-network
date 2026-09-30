@@ -36,11 +36,9 @@ using namespace std::placeholders;
 
 void socket::stop() NOEXCEPT
 {
-    if (stopped_.load())
-        return;
-
     // Stop flag accelerates work stoppage, as it does not wait on strand.
-    stopped_.store(true);
+    if (stopped_.exchange(true) && !lazy_.exchange(false))
+        return;
 
     // Stop is posted to strand to protect the socket.
     boost::asio::post(strand_,
@@ -72,11 +70,11 @@ void socket::do_stop() NOEXCEPT
 
 void socket::lazy_stop() NOEXCEPT
 {
-    if (stopped_.load())
+    // Stop flag accelerates work stoppage, as it does not wait on strand.
+    if (stopped_.exchange(true))
         return;
 
-    // Stop flag accelerates work stoppage, as it does not wait on strand.
-    stopped_.store(true);
+    lazy_.store(true);
 
     // Async stop is dispatched to strand to protect the socket.
     boost::asio::dispatch(strand_,
@@ -103,7 +101,7 @@ void socket::do_ws_stop() NOEXCEPT
 void socket::handle_ws_close(const boost_code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (ec && ec != boost::asio::error::eof)
+    if (ec && ec != boost::asio::error::eof && !error::asio_is_canceled(ec))
         logx("ws_close", ec);
 
     do_ssl_stop();
@@ -128,7 +126,7 @@ void socket::do_ssl_stop() NOEXCEPT
 void socket::handle_ssl_close(const boost_code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (ec && ec != boost::asio::error::eof)
+    if (ec && ec != boost::asio::error::eof && !error::asio_is_canceled(ec))
         logx("ssl_stop", ec);
 
     do_stop();
