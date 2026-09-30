@@ -830,7 +830,7 @@ BOOST_AUTO_TEST_CASE(tls_openssl__ssl_accept__no_common_suite__handshake_failure
     BOOST_REQUIRE(setup.load());
     const shim_connection connection{ setup.context };
     auto options = setup.options(false);
-    options.suites = { 0x1302 };
+    options.suites = { 0x1304 };
     test::tls_client client{ options };
     client.start();
     connection.send(client);

@@ -43,11 +43,19 @@ constexpr uint64_t maximum_records = 16777216;
 constexpr std::string_view server_verify{ "TLS 1.3, server CertificateVerify" };
 constexpr std::string_view client_verify{ "TLS 1.3, client CertificateVerify" };
 
-// Server preference order.
-constexpr std::array<uint16_t, 2> suites
+// Server preference orders.
+constexpr std::array<uint16_t, 3> preferred_suites
 {
     aes_128_gcm_sha256,
+    aes_256_gcm_sha384,
     chacha20_poly1305_sha256
+};
+
+constexpr std::array<uint16_t, 3> preferred_groups
+{
+    x25519_group,
+    secp256r1_group,
+    secp384r1_group
 };
 
 // Helpers.
@@ -115,6 +123,40 @@ static bool verify_signature(const data_chunk& key, const const_byte_span& der,
     return Curve::verify(signature, point, digest);
 }
 
+// The shared secret and own key_share of an ephemeral key, false if the
+// peer share is not a valid uncompressed point.
+template <typename Curve>
+static bool nist_exchange(data_chunk& shared, data_chunk& own,
+    const const_byte_span& share) NOEXCEPT
+{
+    typename Curve::point_t peer{};
+    if (share.size() != peer.size())
+        return false;
+
+    std::copy(share.begin(), share.end(), peer.begin());
+    auto secret = Curve::generate();
+    typename Curve::point_t point{};
+    typename Curve::shared_t value{};
+    const auto valid = Curve::public_key(point, secret) &&
+        Curve::agree(value, secret, peer);
+
+    shared = to_chunk(value);
+    own = to_chunk(point);
+    wipe(secret);
+    wipe(value);
+    return valid;
+}
+
+template <typename Curve>
+static void write_signature(writer& out, uint16_t scheme,
+    const typename Curve::secret_t& key, const const_byte_span& digest) NOEXCEPT
+{
+    typename Curve::signature_t signature{};
+    Curve::sign(signature, key, digest);
+    out.write_16(scheme);
+    out.write_vector_16(Curve::encode(signature));
+}
+
 static server::random make_random() NOEXCEPT
 {
     server::random value{};
@@ -145,12 +187,17 @@ server::server(const context& context, const random& random,
 
 server::~server() NOEXCEPT
 {
+    const auto clear = [](data_chunk& secret) NOEXCEPT
+    {
+        wipe(secret.data(), secret.size());
+    };
+
     wipe(secret_);
-    wipe(handshake_secret_);
-    wipe(client_handshake_);
-    wipe(server_handshake_);
-    wipe(client_traffic_);
-    wipe(server_traffic_);
+    clear(handshake_secret_);
+    clear(client_handshake_);
+    clear(server_handshake_);
+    clear(client_traffic_);
+    clear(server_traffic_);
 }
 
 // Properties.
@@ -199,6 +246,11 @@ bool server::is_failure_received() const NOEXCEPT
 uint16_t server::suite() const NOEXCEPT
 {
     return suite_;
+}
+
+uint16_t server::group() const NOEXCEPT
+{
+    return group_;
 }
 
 const x509::certificates& server::peer() const NOEXCEPT
@@ -522,9 +574,12 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     if (!contains(versions, version_13))
         return fail(alert::protocol_version);
 
-    const auto suite = std::find_if(suites.cbegin(), suites.cend(),
-        [&](uint16_t value) NOEXCEPT { return contains(ciphers, value); });
-    if (suite == suites.cend())
+    const auto suite = std::find_if(preferred_suites.cbegin(),
+        preferred_suites.cend(), [&](uint16_t value) NOEXCEPT
+        {
+            return contains(ciphers, value);
+        });
+    if (suite == preferred_suites.cend())
         return fail(alert::handshake_failure);
 
     if (retried && ((*suite != suite_) || has_early))
@@ -533,12 +588,13 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     if (algorithms.empty() || groups.empty() || !has_shares)
         return fail(alert::missing_extension);
 
-    if (!contains(algorithms, ecdsa_secp256r1_sha256) ||
-        !contains(groups, x25519_group))
+    const auto scheme = (context_.curve() == x509::curve::secp256r1) ?
+        ecdsa_secp256r1_sha256 : ecdsa_secp384r1_sha384;
+    if (!contains(algorithms, scheme))
         return fail(alert::handshake_failure);
 
-    // KeyShareClientHello (4.2.8).
-    span share{};
+    // KeyShareClientHello (4.2.8), the first share of each group.
+    std::vector<std::pair<uint16_t, span>> offered{};
     reader share_list{ shares };
     reader entries{ share_list.read_vector_16() };
     if (!share_list.is_complete())
@@ -548,48 +604,74 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     {
         const auto group = entries.read_16();
         const auto exchange = entries.read_vector_16();
-        if (entries && (group == x25519_group))
-            share = exchange;
+        if (entries)
+            offered.emplace_back(group, exchange);
     }
 
     if (!entries)
         return fail(alert::decode_error);
 
+    const auto share_of = [&](uint16_t group) NOEXCEPT
+    {
+        const auto entry = std::find_if(offered.cbegin(), offered.cend(),
+            [&](const auto& value) NOEXCEPT { return value.first == group; });
+        return (entry == offered.cend()) ? span{} : entry->second;
+    };
+
+    // The preferred mutual group with a share, else the preferred mutual one.
+    const auto mutual = [&](uint16_t group) NOEXCEPT
+    {
+        return contains(groups, group);
+    };
+    const auto with_share = [&](uint16_t group) NOEXCEPT
+    {
+        return mutual(group) && !share_of(group).empty();
+    };
+
+    const auto group = std::find_if(preferred_groups.cbegin(),
+        preferred_groups.cend(), with_share);
+    const auto retry = std::find_if(preferred_groups.cbegin(),
+        preferred_groups.cend(), mutual);
+    if (retry == preferred_groups.cend())
+        return fail(alert::handshake_failure);
+
     suite_ = *suite;
-    if (share.empty())
+    if (!retried)
+        transcript_.reset(suite_);
+
+    if (group == preferred_groups.cend())
     {
         if (retried)
             return fail(alert::illegal_parameter);
 
+        group_ = *retry;
         send_retry(message, session);
         return true;
     }
 
-    x25519::key peer{}, shared{};
-    if (share.size() != peer.size())
+    if (retried && (*group != group_))
         return fail(alert::illegal_parameter);
 
-    std::copy(share.begin(), share.end(), peer.begin());
-    if (!x25519::multiply(shared, secret_, peer))
+    group_ = *group;
+    data_chunk shared{}, own{};
+    if (!exchange(shared, own, share_of(group_)))
         return fail(alert::illegal_parameter);
 
-    x25519::key own{};
-    x25519::multiply(own, secret_);
     writer entry{};
-    entry.write_16(x25519_group);
+    entry.write_16(group_);
     entry.write_vector_16(own);
 
     add_transcript(message);
     send_hello(random_, session, entry.data());
 
-    const auto early = schedule::early_secret();
-    handshake_secret_ = schedule::handshake_secret(early, shared);
-    wipe(shared);
+    const schedule keys{ suite_ };
+    handshake_secret_ = keys.handshake_secret(keys.early_secret(), shared);
+    wipe(shared.data(), shared.size());
 
     const auto hash = transcript();
-    client_handshake_ = schedule::derive_secret(handshake_secret_,
+    client_handshake_ = keys.derive_secret(handshake_secret_,
         "c hs traffic", hash);
-    server_handshake_ = schedule::derive_secret(handshake_secret_,
+    server_handshake_ = keys.derive_secret(handshake_secret_,
         "s hs traffic", hash);
 
     send_.set_secret(suite_, server_handshake_);
@@ -604,15 +686,15 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
 void server::send_retry(const span& client_hello, const span& session) NOEXCEPT
 {
     // The transcript restarts with a hash of the first client hello (4.4.1).
-    const auto hash = sha256_hash(to_bytes(client_hello));
+    const auto hash = schedule{ suite_ }.hash(client_hello);
     writer synthetic{};
     synthetic.write_8(handshake::message_hash);
     synthetic.write_vector_24(hash);
-    transcript_.reset();
+    transcript_.reset(suite_);
     add_transcript(synthetic.data());
 
     writer entry{};
-    entry.write_16(x25519_group);
+    entry.write_16(group_);
     send_hello(retry_random, session, entry.data());
     state_ = state::retry_hello;
 }
@@ -705,25 +787,28 @@ void server::send_flight() NOEXCEPT
 
     // CertificateVerify (4.4.3).
     const auto content = verify_content(server_verify, transcript());
-    secp256r1::signature_t signature{};
-    secp256r1::sign(signature, context_.key(), sha256_hash(content));
-
     writer verify{};
-    verify.write_16(ecdsa_secp256r1_sha256);
-    verify.write_vector_16(secp256r1::encode(signature));
+    if (context_.curve() == x509::curve::secp256r1)
+        write_signature<secp256r1>(verify, ecdsa_secp256r1_sha256,
+            context_.key(), sha256_hash(content));
+    else
+        write_signature<secp384r1>(verify, ecdsa_secp384r1_sha384,
+            context_.key384(), accumulator<sha512_384>::hash(content));
+
     append(make_message(handshake::certificate_verify, verify.data()));
 
     // Finished (4.4.4).
-    const auto verify_data = schedule::finished(server_handshake_,
-        transcript());
-    append(make_message(handshake::finished, to_chunk(verify_data)));
+    const schedule keys{ suite_ };
+    const auto verify_data = keys.finished(server_handshake_, transcript());
+    append(make_message(handshake::finished, verify_data));
     send(content::handshake, messages);
 
     // Application secrets follow the server finished (7.1).
-    const auto master = schedule::master_secret(handshake_secret_);
+    auto master = keys.master_secret(handshake_secret_);
     const auto hash = transcript();
-    client_traffic_ = schedule::derive_secret(master, "c ap traffic", hash);
-    server_traffic_ = schedule::derive_secret(master, "s ap traffic", hash);
+    client_traffic_ = keys.derive_secret(master, "c ap traffic", hash);
+    server_traffic_ = keys.derive_secret(master, "s ap traffic", hash);
+    wipe(master.data(), master.size());
     send_.set_secret(suite_, server_traffic_);
 }
 
@@ -832,7 +917,8 @@ bool server::handle_certificate_verify(const span& message,
 
 bool server::handle_finished(const span& message, const span& body) NOEXCEPT
 {
-    const auto expected = schedule::finished(client_handshake_, transcript());
+    const auto expected = schedule{ suite_ }.finished(client_handshake_,
+        transcript());
     if ((body.size() != expected.size()) ||
         !constant_time_equal(expected, body))
         return fail(alert::decrypt_error);
@@ -852,7 +938,7 @@ bool server::handle_key_update(const span& body) NOEXCEPT
     if ((request != update_not_requested) && (request != update_requested))
         return fail(alert::illegal_parameter);
 
-    client_traffic_ = schedule::update(client_traffic_);
+    client_traffic_ = schedule{ suite_ }.update(client_traffic_);
     set_receive(client_traffic_);
 
     if ((request == update_requested) && !close_sent_)
@@ -868,12 +954,34 @@ void server::send_update() NOEXCEPT
     update.write_8(update_not_requested);
     send(content::handshake, make_message(handshake::key_update,
         update.data()));
-    server_traffic_ = schedule::update(server_traffic_);
+    server_traffic_ = schedule{ suite_ }.update(server_traffic_);
     send_.set_secret(suite_, server_traffic_);
 }
 
 // Keys and transcript.
 // ----------------------------------------------------------------------------
+
+bool server::exchange(data_chunk& shared, data_chunk& own,
+    const span& share) NOEXCEPT
+{
+    if (group_ == secp256r1_group)
+        return nist_exchange<secp256r1>(shared, own, share);
+
+    if (group_ == secp384r1_group)
+        return nist_exchange<secp384r1>(shared, own, share);
+
+    x25519::key peer{}, value{}, point{};
+    if (share.size() != peer.size())
+        return false;
+
+    std::copy(share.begin(), share.end(), peer.begin());
+    const auto valid = x25519::multiply(value, secret_, peer);
+    x25519::multiply(point, secret_);
+    shared = to_chunk(value);
+    own = to_chunk(point);
+    wipe(value);
+    return valid;
+}
 
 void server::set_receive(const schedule::secret& traffic) NOEXCEPT
 {
@@ -883,13 +991,12 @@ void server::set_receive(const schedule::secret& traffic) NOEXCEPT
 
 void server::add_transcript(const span& message) NOEXCEPT
 {
-    transcript_.write(message.size(), message.data());
+    transcript_.write(message);
 }
 
-schedule::secret server::transcript() NOEXCEPT
+schedule::secret server::transcript() const NOEXCEPT
 {
-    auto copy = transcript_;
-    return copy.flush();
+    return transcript_.hash();
 }
 
 BC_POP_WARNING()

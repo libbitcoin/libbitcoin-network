@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(tls_record__seal__cleartext_server_hello__rfc8448_record)
 BOOST_AUTO_TEST_CASE(tls_record__seal__server_flight__rfc8448_record)
 {
     record sender{};
-    sender.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::server_handshake_traffic));
+    sender.set_secret(aes_128_gcm_sha256, rfc8448::server_handshake_traffic);
 
     data_chunk out{};
     sender.seal(out, content::handshake, rfc8448::server_flight);
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(tls_record__seal__server_flight__rfc8448_record)
 BOOST_AUTO_TEST_CASE(tls_record__open__client_finished__rfc8448_finished)
 {
     record receiver{};
-    receiver.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::client_handshake_traffic));
+    receiver.set_secret(aes_128_gcm_sha256, rfc8448::client_handshake_traffic);
 
     uint8_t type{};
     data_chunk content{};
@@ -69,14 +69,14 @@ BOOST_AUTO_TEST_CASE(tls_record__open__client_finished__rfc8448_finished)
 BOOST_AUTO_TEST_CASE(tls_record__seal_open__application_data__rfc8448_records)
 {
     record client{};
-    client.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::client_application_traffic));
+    client.set_secret(aes_128_gcm_sha256, rfc8448::client_application_traffic);
 
     data_chunk sealed{};
     client.seal(sealed, content::application_data, rfc8448::client_data);
     BOOST_REQUIRE_EQUAL(sealed, rfc8448::client_data_record);
 
     record server{};
-    server.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::client_application_traffic));
+    server.set_secret(aes_128_gcm_sha256, rfc8448::client_application_traffic);
 
     uint8_t type{};
     data_chunk content{};
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(tls_record__seal_open__application_data__rfc8448_records)
 BOOST_AUTO_TEST_CASE(tls_record__seal__sequence__server_data_then_alert_rfc8448_records)
 {
     record server{};
-    server.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::server_application_traffic));
+    server.set_secret(aes_128_gcm_sha256, rfc8448::server_application_traffic);
 
     // The trace server sends a session ticket first (sequence zero).
     data_chunk ignored{};
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(tls_record__open__tampered__false)
     tampered.back() ^= 0x01;
 
     record receiver{};
-    receiver.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::client_application_traffic));
+    receiver.set_secret(aes_128_gcm_sha256, rfc8448::client_application_traffic);
 
     uint8_t type{};
     data_chunk content{};
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(tls_record__open__tampered__false)
 BOOST_AUTO_TEST_CASE(tls_record__open__tag_only__false)
 {
     record receiver{};
-    receiver.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::client_application_traffic));
+    receiver.set_secret(aes_128_gcm_sha256, rfc8448::client_application_traffic);
 
     uint8_t type{};
     data_chunk content{};
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(tls_record__open__tag_only__false)
 
 BOOST_AUTO_TEST_CASE(tls_record__seal_open__chacha__round_trip)
 {
-    const auto secret = rfc8448::array<32>(rfc8448::client_application_traffic);
+    const auto secret = rfc8448::client_application_traffic;
     record sender{};
     record receiver{};
     sender.set_secret(chacha20_poly1305_sha256, secret);
@@ -146,9 +146,28 @@ BOOST_AUTO_TEST_CASE(tls_record__seal_open__chacha__round_trip)
     BOOST_REQUIRE_EQUAL(content, rfc8448::client_data);
 }
 
+BOOST_AUTO_TEST_CASE(tls_record__seal_open__aes256__round_trip)
+{
+    const auto secret = base16_chunk("960606d0a2e35fbc1310cdbb5a956be93051ae930ce7b4b17dd1036d26e60e1613dce56c6e145646d50fa154d001a8ab");
+    record sender{};
+    record receiver{};
+    sender.set_secret(aes_256_gcm_sha384, secret);
+    receiver.set_secret(aes_256_gcm_sha384, secret);
+
+    data_chunk sealed{};
+    sender.seal(sealed, content::application_data, rfc8448::client_data);
+    BOOST_REQUIRE_EQUAL(sealed.size(), rfc8448::client_data_record.size());
+
+    uint8_t type{};
+    data_chunk content{};
+    BOOST_REQUIRE(receiver.open(type, content, head(sealed), tail(sealed)));
+    BOOST_REQUIRE_EQUAL(type, content::application_data);
+    BOOST_REQUIRE_EQUAL(content, rfc8448::client_data);
+}
+
 BOOST_AUTO_TEST_CASE(tls_record__sequence__seal_and_set_secret__counts_and_resets)
 {
-    const auto secret = rfc8448::array<32>(rfc8448::client_application_traffic);
+    const auto secret = rfc8448::client_application_traffic;
     record sender{};
     BOOST_REQUIRE_EQUAL(sender.sequence(), 0u);
 
@@ -164,7 +183,7 @@ BOOST_AUTO_TEST_CASE(tls_record__sequence__seal_and_set_secret__counts_and_reset
 
 BOOST_AUTO_TEST_CASE(tls_record__open__padding_only__zero_type)
 {
-    const auto secret = rfc8448::array<32>(rfc8448::client_application_traffic);
+    const auto secret = rfc8448::client_application_traffic;
     record sender{};
     record receiver{};
     sender.set_secret(aes_128_gcm_sha256, secret);

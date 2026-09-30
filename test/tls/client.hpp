@@ -24,9 +24,11 @@
 
 namespace test {
 
-/// Test harness TLS 1.3 client (in memory, not thread safe). Verifies the
-/// server chain against anchors (if any) and its CertificateVerify, and
-/// optionally authenticates with a chain and its P-256 (or P-384) key.
+/// Test harness TLS 1.3 client (in memory, not thread safe). Offers the
+/// suites, groups (with shares of some) and signature schemes of its options,
+/// verifies the server chain against anchors (if any) and its P-256 or P-384
+/// CertificateVerify, and optionally authenticates with a chain and its P-256
+/// (or P-384) key.
 class tls_client
 {
 public:
@@ -34,7 +36,11 @@ public:
     {
         std::vector<uint16_t> suites{ network::tls::aes_128_gcm_sha256,
             network::tls::chacha20_poly1305_sha256 };
-        bool share{ true };
+        std::vector<uint16_t> groups{ network::tls::x25519_group,
+            network::tls::secp256r1_group };
+        std::vector<uint16_t> shares{ network::tls::x25519_group };
+        std::vector<uint16_t> algorithms{ network::tls::ecdsa_secp256r1_sha256,
+            network::tls::ecdsa_secp384r1_sha384 };
         size_t session{};
         system::x509::certificates anchors{};
         std::vector<system::data_chunk> chain{};
@@ -81,6 +87,9 @@ private:
     bool handle_finished(const const_byte_span& message,
         const const_byte_span& body) NOEXCEPT;
     void hello(bool retry) NOEXCEPT;
+    system::data_chunk share(uint16_t group) const NOEXCEPT;
+    bool agree(system::data_chunk& shared, uint16_t group,
+        const const_byte_span& peer) const NOEXCEPT;
     void add(const const_byte_span& message) NOEXCEPT;
     secret hash() NOEXCEPT;
 
@@ -88,10 +97,12 @@ private:
 
     const options options_;
     system::x25519::key secret_{};
-    system::x25519::key public_{};
+    system::secp256r1::secret_t secret256_{};
+    system::secp384r1::secret_t secret384_{};
     system::data_chunk session_{};
     state state_{ state::hello };
     uint16_t suite_{};
+    uint16_t retry_group_{};
     uint8_t failure_{};
     bool failed_{};
     bool closed_{};
@@ -104,7 +115,7 @@ private:
     system::data_chunk output_{};
     network::tls::record send_{};
     network::tls::record receive_{};
-    system::accumulator<system::sha256> transcript_{};
+    system::data_chunk transcript_{};
     secret handshake_secret_{};
     secret client_handshake_{};
     secret server_handshake_{};

@@ -39,33 +39,36 @@ record::~record() NOEXCEPT
     wipe(iv_);
 }
 
+template <typename Cipher, typename Secret>
+static void emplace(auto& cipher, const data_chunk& bytes) NOEXCEPT
+{
+    Secret key{};
+    std::copy(bytes.cbegin(), bytes.cend(), key.begin());
+    cipher.template emplace<Cipher>(key);
+    wipe(key);
+}
+
 void record::set_secret(uint16_t suite,
     const schedule::secret& traffic) NOEXCEPT
 {
-    suite_ = suite;
+    const schedule keys{ suite };
     sequence_ = zero;
-    iv_ = schedule::traffic_iv(traffic);
-    const auto bytes = schedule::traffic_key(traffic, suite);
+    iv_ = keys.traffic_iv(traffic);
+    auto bytes = keys.traffic_key(traffic);
 
     if (suite == aes_128_gcm_sha256)
-    {
-        aes128_gcm::secret key{};
-        std::copy(bytes.cbegin(), bytes.cend(), key.begin());
-        aes_.emplace(key);
-        chacha_.reset();
-        return;
-    }
+        emplace<aes128_gcm, aes128_gcm::secret>(cipher_, bytes);
+    else if (suite == aes_256_gcm_sha384)
+        emplace<aes256_gcm, aes256_gcm::secret>(cipher_, bytes);
+    else
+        emplace<chacha20_poly1305, chacha20::secret>(cipher_, bytes);
 
-    BC_ASSERT(suite == chacha20_poly1305_sha256);
-    chacha20::secret key{};
-    std::copy(bytes.cbegin(), bytes.cend(), key.begin());
-    chacha_.emplace(key);
-    aes_.reset();
+    wipe(bytes.data(), bytes.size());
 }
 
 bool record::is_protected() const NOEXCEPT
 {
-    return aes_.has_value() || chacha_.has_value();
+    return !std::holds_alternative<std::monostate>(cipher_);
 }
 
 uint64_t record::sequence() const NOEXCEPT
@@ -114,18 +117,23 @@ void record::seal(data_chunk& out, uint8_t type,
     out.resize(out.size() + size);
 
     const auto aad = header.data();
-    const auto cipher = byte_span{ out }.subspan(start + record_header_size);
+    const auto text = byte_span{ out }.subspan(start + record_header_size);
     const auto value = next_nonce();
 
-    if (aes_)
+    std::visit([&](auto& cipher) NOEXCEPT
     {
-        aes_->encrypt(content, inner_type, aad, value, cipher);
-        return;
-    }
-
-    const auto nonce32 = from_little<uint32_t, zero>(value);
-    const auto nonce64 = from_little<uint64_t, sizeof(uint32_t)>(value);
-    chacha_->encrypt(content, inner_type, aad, nonce32, nonce64, cipher);
+        using type = std::decay_t<decltype(cipher)>;
+        if constexpr (is_same_type<type, chacha20_poly1305>)
+        {
+            const auto nonce32 = from_little<uint32_t, zero>(value);
+            const auto nonce64 = from_little<uint64_t, sizeof(uint32_t)>(value);
+            cipher.encrypt(content, inner_type, aad, nonce32, nonce64, text);
+        }
+        else if constexpr (!is_same_type<type, std::monostate>)
+        {
+            cipher.encrypt(content, inner_type, aad, value, text);
+        }
+    }, cipher_);
 }
 
 bool record::open(uint8_t& type, data_chunk& content,
@@ -138,17 +146,24 @@ bool record::open(uint8_t& type, data_chunk& content,
     data_chunk plain(fragment.size() - tag_size);
     const auto value = next_nonce();
 
-    auto valid = false;
-    if (aes_)
+    const auto valid = std::visit([&](auto& cipher) NOEXCEPT
     {
-        valid = aes_->decrypt(plain, header, value, fragment);
-    }
-    else
-    {
-        const auto nonce32 = from_little<uint32_t, zero>(value);
-        const auto nonce64 = from_little<uint64_t, sizeof(uint32_t)>(value);
-        valid = chacha_->decrypt(plain, header, nonce32, nonce64, fragment);
-    }
+        using type = std::decay_t<decltype(cipher)>;
+        if constexpr (is_same_type<type, chacha20_poly1305>)
+        {
+            const auto nonce32 = from_little<uint32_t, zero>(value);
+            const auto nonce64 = from_little<uint64_t, sizeof(uint32_t)>(value);
+            return cipher.decrypt(plain, header, nonce32, nonce64, fragment);
+        }
+        else if constexpr (is_same_type<type, std::monostate>)
+        {
+            return false;
+        }
+        else
+        {
+            return cipher.decrypt(plain, header, value, fragment);
+        }
+    }, cipher_);
 
     if (!valid)
         return false;

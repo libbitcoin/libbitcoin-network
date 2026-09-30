@@ -37,12 +37,12 @@ public:
     context() NOEXCEPT;
     ~context() NOEXCEPT;
 
-    /// Set the certificate chain (leaf first) from "CERTIFICATE" blocks. The
-    /// leaf key must be P-256. False if malformed or the key does not match.
+    /// Set the certificate chain (leaf first) from "CERTIFICATE" blocks, of a
+    /// P-256 or P-384 leaf. False if malformed or the key does not match.
     bool set_chain(const std::string& text) NOEXCEPT;
 
-    /// Set the P-256 private key from a key block (encrypted if password).
-    /// False if malformed or the key does not match the chain.
+    /// Set the P-256 or P-384 private key from a key block (encrypted if
+    /// password). False if malformed or the key does not match the chain.
     bool set_key(const std::string& text,
         const std::string& password) NOEXCEPT;
 
@@ -59,7 +59,12 @@ public:
     bool is_ready() const NOEXCEPT;
 
     const chain& certificates() const NOEXCEPT;
+
+    /// The curve of the private key, and the key of that curve.
+    system::x509::curve curve() const NOEXCEPT;
     const system::x509::secret& key() const NOEXCEPT;
+    const system::x509::secret384& key384() const NOEXCEPT;
+
     const system::x509::certificates& anchors() const NOEXCEPT;
     bool request() const NOEXCEPT;
     bool require() const NOEXCEPT;
@@ -70,6 +75,8 @@ private:
 
     chain chain_{};
     system::x509::secret key_{};
+    system::x509::secret384 key384_{};
+    system::x509::curve curve_{};
     system::data_chunk public_key_{};
     system::x509::certificates anchors_{};
     bool has_key_{};

@@ -103,9 +103,12 @@ constexpr uint8_t alert_fatal = 2;
 
 /// Cipher suites (B.4).
 constexpr uint16_t aes_128_gcm_sha256 = 0x1301;
+constexpr uint16_t aes_256_gcm_sha384 = 0x1302;
 constexpr uint16_t chacha20_poly1305_sha256 = 0x1303;
 
 /// Named groups (4.2.7).
+constexpr uint16_t secp256r1_group = 0x0017;
+constexpr uint16_t secp384r1_group = 0x0018;
 constexpr uint16_t x25519_group = 0x001d;
 
 /// Signature schemes (4.2.3).
