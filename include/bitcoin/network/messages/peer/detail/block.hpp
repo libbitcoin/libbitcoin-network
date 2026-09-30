@@ -51,7 +51,7 @@ struct BCT_API block
 
     size_t size(uint32_t version, bool witness=true) const NOEXCEPT;
 
-    system::chain::block_view block;
+    system::chain::view::block block;
 };
 
 } // namespace peer

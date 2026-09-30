@@ -45,7 +45,7 @@ typename block::cptr block::deserialize(uint32_t version,
         return {};
 
     const auto message = emplace_shared<messages::peer::block>(
-        chain::block_view{ data_chunk{ data.begin(), data.end() }, witness });
+        chain::view::block{ data_chunk{ data.begin(), data.end() }, witness });
 
     return message->block.is_valid() ? message : nullptr;
 }
@@ -57,11 +57,11 @@ block block::deserialize(uint32_t version, reader& source,
     if (version < version_minimum || version > version_maximum)
     {
         source.invalidate();
-        return { chain::block_view{ data_chunk{}, witness } };
+        return { chain::view::block{ data_chunk{}, witness } };
     }
 
     // source.read_bytes() iterates the stream (slow).
-    chain::block_view view{ source.read_bytes(), witness };
+    chain::view::block view{ source.read_bytes(), witness };
     if (!view.is_valid())
         source.invalidate();
 
