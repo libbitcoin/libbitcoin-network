@@ -850,7 +850,7 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v2_prefix_disconnected__peer_discon
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_handshake_timeout__operation_canceled_stopped, acceptor_fixture)
+BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_handshake_timeout__stopped, acceptor_fixture)
 {
     auto params = clear;
     params.context = std::cref(mainnet_context);
@@ -858,7 +858,9 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_handshake_timeout__operation_cancel
     const awaiter<code> accepted{};
     const auto instance = accept(params, accepted);
 
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::operation_canceled);
+    // The stop's shutdown may complete the pending read with end of file.
+    const auto ec = accepted.get();
+    BOOST_REQUIRE(ec == error::operation_canceled || ec == error::peer_disconnect);
     BOOST_REQUIRE(instance->stopped());
 }
 

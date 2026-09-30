@@ -84,7 +84,7 @@ public:
     /// Stop.
     /// -----------------------------------------------------------------------
 
-    /// Cancel work and close the socket (idempotent, thread safe).
+    /// Cancel work and close the socket, ending any lazy stop (thread safe).
     /// This action is deferred to the strand, not immediately affected.
     /// Block on threadpool.join() to ensure termination of the connection.
     virtual void stop() NOEXCEPT;
@@ -652,6 +652,7 @@ protected:
     asio::context& service_;
     const context context_;
     const zmtp::role role_;
+    std::atomic_bool lazy_{};
     std::atomic_bool stopped_{};
     std::atomic_bool websocket_{};
     std::atomic_bool detected_{};

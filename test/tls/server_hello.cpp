@@ -26,6 +26,8 @@ using writer = network::tls::writer;
 
 const auto server_secret = base16_array("c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721");
 const auto share = base16_chunk("99381de560e4bd43d23d8e435a7dbafeb3c06e51c13cae4d5413691e529aaf2c");
+const auto p256_generator = base16_chunk("046b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c2964fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5");
+const auto p256_generator_x = base16_chunk("6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296");
 
 // ClientHello fields, each a complete extension or field encoding.
 struct hello
@@ -172,11 +174,42 @@ BOOST_AUTO_TEST_CASE(tls_server_hello__no_p256_signature__handshake_failure)
     BOOST_REQUIRE_EQUAL(failure_of(value), alert::handshake_failure);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__no_x25519_group__handshake_failure)
+BOOST_AUTO_TEST_CASE(tls_server_hello__no_supported_group__handshake_failure)
+{
+    hello value{};
+    value.group_list = base16_chunk("001e");
+    BOOST_REQUIRE_EQUAL(failure_of(value), alert::handshake_failure);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__p256_group_without_share__retried)
 {
     hello value{};
     value.group_list = base16_chunk("0017");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::handshake_failure);
+    BOOST_REQUIRE_EQUAL(failure_of(value), alert::close_notify);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__invalid_p256_share__illegal_parameter)
+{
+    hello value{};
+    value.group_list = base16_chunk("0017");
+    value.key_share = splice(base16_chunk("0017004104"), data_chunk(64, 0x01));
+    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__short_p256_share__illegal_parameter)
+{
+    hello value{};
+    value.group_list = base16_chunk("0017");
+    value.key_share = splice(base16_chunk("0017002102"), p256_generator_x);
+    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__invalid_p384_share__illegal_parameter)
+{
+    hello value{};
+    value.group_list = base16_chunk("0018");
+    value.key_share = splice(base16_chunk("0018006104"), data_chunk(96, 0x01));
+    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
 }
 
 BOOST_AUTO_TEST_CASE(tls_server_hello__duplicate_extension__illegal_parameter)
@@ -271,6 +304,20 @@ BOOST_AUTO_TEST_CASE(tls_server_hello__retry_without_share__illegal_parameter)
     value.key_share = {};
     BOOST_REQUIRE(server.receive(encode(value)));
     BOOST_REQUIRE(!server.receive(encode(value)));
+    BOOST_REQUIRE_EQUAL(server.failure(), alert::illegal_parameter);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server_hello__retry_other_group__illegal_parameter)
+{
+    const setup instance{};
+    tls::server server{ instance.context };
+    hello first{};
+    first.key_share = {};
+    hello second{};
+    second.key_share = splice(base16_chunk("00170041"), p256_generator);
+    BOOST_REQUIRE(server.receive(encode(first)));
+    BOOST_REQUIRE_EQUAL(server.group(), x25519_group);
+    BOOST_REQUIRE(!server.receive(encode(second)));
     BOOST_REQUIRE_EQUAL(server.failure(), alert::illegal_parameter);
 }
 

@@ -18,13 +18,9 @@
  */
 #include <openssl/ssl.h>
 
-#include <algorithm>
 #include <cstdlib>
 #include <deque>
 #include <filesystem>
-#include <iterator>
-#include <memory>
-#include <string>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/tls/tls.hpp>
 
@@ -49,10 +45,15 @@ static const SSL_METHOD client_method{ false, true };
 static const SSL_METHOD server_method{ true, false };
 
 // A memory BIO pair shares two byte queues, one for each direction.
+// The default buffer size of each direction of an openssl bio pair.
+constexpr size_t default_bio_size = 17 * 1024;
+
 struct bio_pair
 {
     std::deque<uint8_t> forward{};
     std::deque<uint8_t> backward{};
+    size_t forward_size{};
+    size_t backward_size{};
 };
 
 struct bio_st
@@ -68,6 +69,11 @@ struct bio_st
     std::deque<uint8_t>& outgoing() NOEXCEPT
     {
         return first ? pair->forward : pair->backward;
+    }
+
+    size_t outgoing_size() const NOEXCEPT
+    {
+        return first ? pair->forward_size : pair->backward_size;
     }
 };
 
@@ -175,21 +181,31 @@ static std::string password(SSL_CTX* ctx) NOEXCEPT
 // Connection I/O.
 // ----------------------------------------------------------------------------
 
-// Feed pending input to the server and publish its output.
+// Feed pending input to the server and publish its output, as much as the
+// bio holds. Output that does not fit remains in the server (blocked).
 static void pump(SSL* ssl) NOEXCEPT
 {
     auto& incoming = ssl->bio->incoming();
     if (!incoming.empty())
     {
-        const data_chunk data(incoming.begin(), incoming.end());
+        const data_chunk data(incoming.cbegin(), incoming.cend());
         incoming.clear();
         ssl->server->receive(data);
     }
 
     auto& output = ssl->server->output();
     auto& outgoing = ssl->bio->outgoing();
-    outgoing.insert(outgoing.end(), output.begin(), output.end());
-    output.clear();
+    const auto room = floored_subtract(ssl->bio->outgoing_size(),
+        outgoing.size());
+    const auto count = std::min(room, output.size());
+    const auto end = std::next(output.cbegin(), count);
+    outgoing.insert(outgoing.cend(), output.cbegin(), end);
+    output.erase(output.cbegin(), end);
+}
+
+static bool is_blocked(SSL* ssl) NOEXCEPT
+{
+    return !ssl->server->output().empty();
 }
 
 static int failed(SSL* ssl) NOEXCEPT
@@ -203,6 +219,12 @@ static int failed(SSL* ssl) NOEXCEPT
 static int want_read(SSL* ssl) NOEXCEPT
 {
     ssl->error = SSL_ERROR_WANT_READ;
+    return -1;
+}
+
+static int want_write(SSL* ssl) NOEXCEPT
+{
+    ssl->error = SSL_ERROR_WANT_WRITE;
     return -1;
 }
 
@@ -263,12 +285,12 @@ unsigned long SSL_CTX_get_options(const SSL_CTX* ctx)
 // Only TLS 1.3 is implemented, so a range must include it.
 int SSL_CTX_set_min_proto_version(SSL_CTX*, int version)
 {
-    return (version == 0) || (version <= TLS1_3_VERSION) ? 1 : 0;
+    return is_zero(version) || (version <= TLS1_3_VERSION) ? 1 : 0;
 }
 
 int SSL_CTX_set_max_proto_version(SSL_CTX*, int version)
 {
-    return (version == 0) || (version >= TLS1_3_VERSION) ? 1 : 0;
+    return is_zero(version) || (version >= TLS1_3_VERSION) ? 1 : 0;
 }
 
 void* SSL_CTX_get_ex_data(const SSL_CTX* ctx, int index)
@@ -278,7 +300,7 @@ void* SSL_CTX_get_ex_data(const SSL_CTX* ctx, int index)
 
 int SSL_CTX_set_ex_data(SSL_CTX* ctx, int index, void* data)
 {
-    if (!is_zero(index))
+    if (is_nonzero(index))
         return 0;
 
     ctx->data = data;
@@ -292,8 +314,8 @@ void SSL_CTX_set_verify(SSL_CTX* ctx, int mode, SSL_verify_cb callback)
 {
     ctx->verify_mode = mode;
     ctx->verify_callback = callback;
-    const auto request = !is_zero(mode & SSL_VERIFY_PEER);
-    const auto require = !is_zero(mode & SSL_VERIFY_FAIL_IF_NO_PEER_CERT);
+    const auto request = is_nonzero(mode & SSL_VERIFY_PEER);
+    const auto require = is_nonzero(mode & SSL_VERIFY_FAIL_IF_NO_PEER_CERT);
     ctx->context.set_verify(request, require);
 }
 
@@ -509,6 +531,9 @@ int SSL_accept(SSL* ssl)
     if (ssl->server->is_failed())
         return failed(ssl);
 
+    if (is_blocked(ssl))
+        return want_write(ssl);
+
     if (ssl->server->is_established())
     {
         ssl->error = SSL_ERROR_NONE;
@@ -533,13 +558,16 @@ int SSL_read(SSL* ssl, void* buffer, int size)
         return want_read(ssl);
 
     pump(ssl);
-    if (!is_zero(ssl->server->readable()))
+    if (is_nonzero(ssl->server->readable()))
     {
         const auto count = ssl->server->read({ static_cast<uint8_t*>(buffer),
             possible_narrow_sign_cast<size_t>(size) });
         ssl->error = SSL_ERROR_NONE;
         return possible_narrow_sign_cast<int>(count);
     }
+
+    if (is_blocked(ssl))
+        return want_write(ssl);
 
     if (ssl->server->is_closed())
     {
@@ -563,8 +591,15 @@ int SSL_write(SSL* ssl, const void* buffer, int size)
         return -1;
     }
 
+    // One record at a time into a drained bio, so that the engine takes all
+    // of its output (partial writes are enabled by the engine).
+    pump(ssl);
+    if (is_blocked(ssl) || !ssl->bio->outgoing().empty())
+        return want_write(ssl);
+
     const auto data = static_cast<const uint8_t*>(buffer);
-    const auto count = possible_narrow_sign_cast<size_t>(size);
+    const auto count = std::min(possible_narrow_sign_cast<size_t>(size),
+        tls::maximum_plaintext);
     if (!ssl->server->write({ data, count }))
     {
         push_error(ERR_LIB_SSL, 0);
@@ -574,7 +609,7 @@ int SSL_write(SSL* ssl, const void* buffer, int size)
 
     pump(ssl);
     ssl->error = SSL_ERROR_NONE;
-    return size;
+    return possible_narrow_sign_cast<int>(count);
 }
 
 // Returns zero once close_notify is sent and one once the peer's is received.
@@ -586,7 +621,7 @@ int SSL_shutdown(SSL* ssl)
         return 1;
     }
 
-    const auto sent = !is_zero(ssl->shutdown & SSL_SENT_SHUTDOWN);
+    const auto sent = is_nonzero(ssl->shutdown & SSL_SENT_SHUTDOWN);
     if (!sent)
     {
         ssl->server->close();
@@ -594,6 +629,9 @@ int SSL_shutdown(SSL* ssl)
     }
 
     pump(ssl);
+    if (is_blocked(ssl))
+        return want_write(ssl);
+
     if (ssl->server->is_closed())
     {
         ssl->shutdown |= SSL_RECEIVED_SHUTDOWN;
@@ -632,7 +670,7 @@ void* SSL_get_ex_data(const SSL* ssl, int index)
 
 int SSL_set_ex_data(SSL* ssl, int index, void* data)
 {
-    if (!is_zero(index))
+    if (is_nonzero(index))
         return 0;
 
     ssl->data = data;
@@ -677,9 +715,13 @@ X509* SSL_get_peer_certificate(const SSL*)
 // Memory BIO pairs and files.
 // ----------------------------------------------------------------------------
 
-int BIO_new_bio_pair(BIO** first, size_t, BIO** second, size_t)
+int BIO_new_bio_pair(BIO** first, size_t first_size, BIO** second,
+    size_t second_size)
 {
     const auto pair = std::make_shared<bio_pair>();
+    pair->forward_size = is_zero(first_size) ? default_bio_size : first_size;
+    pair->backward_size = is_zero(second_size) ? default_bio_size :
+        second_size;
     *first = new BIO{ pair, true };
     *second = new BIO{ pair, false };
     return 1;
@@ -702,9 +744,9 @@ int BIO_read(BIO* bio, void* buffer, int size)
 
     const auto count = std::min(incoming.size(),
         possible_narrow_sign_cast<size_t>(size));
-    const auto end = std::next(incoming.begin(), count);
-    std::copy(incoming.begin(), end, static_cast<uint8_t*>(buffer));
-    incoming.erase(incoming.begin(), end);
+    const auto end = std::next(incoming.cbegin(), count);
+    std::copy(incoming.cbegin(), end, static_cast<uint8_t*>(buffer));
+    incoming.erase(incoming.cbegin(), end);
     return possible_narrow_sign_cast<int>(count);
 }
 
@@ -712,7 +754,7 @@ int BIO_write(BIO* bio, const void* buffer, int size)
 {
     const auto data = static_cast<const uint8_t*>(buffer);
     auto& outgoing = bio->outgoing();
-    outgoing.insert(outgoing.end(), data, std::next(data, size));
+    outgoing.insert(outgoing.cend(), data, std::next(data, size));
     return size;
 }
 
@@ -789,7 +831,7 @@ void ERR_error_string_n(unsigned long code, char* buffer, size_t size)
     const auto reason = ERR_reason_error_string(code);
     const std::string text{ reason == nullptr ? "" : reason };
     const auto count = std::min(text.size(), sub1(size));
-    std::copy_n(text.begin(), count, buffer);
+    std::copy_n(text.cbegin(), count, buffer);
     buffer[count] = '\0';
 }
 

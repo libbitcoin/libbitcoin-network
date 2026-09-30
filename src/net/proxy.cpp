@@ -61,7 +61,11 @@ proxy::~proxy() NOEXCEPT
 void proxy::stop(const code& ec) NOEXCEPT
 {
     if (stopped())
+    {
+        // Ends an outstanding lazy stop, otherwise nothing.
+        socket_->stop();
         return;
+    }
 
     // An open batch response is closed (written) before the socket stops.
     // Batch state is protected by the strand, so only a stranded stop can

@@ -93,6 +93,33 @@ struct server_setup
     tls::context context{};
 };
 
+// The secp384r1 identity as a server.
+static const identity& server384_identity()
+{
+    static const auto value = []()
+    {
+        x509::certificates chain{};
+        x509::parse(chain, client384_chain);
+        const auto key = x509::encode_private_key(client384_key);
+        return identity{ client384_chain, key, chain.front() };
+    }();
+
+    return value;
+}
+
+// A server context with the secp384r1 identity.
+struct server384_setup
+{
+    server384_setup()
+    {
+        context.set_chain(server384_identity().chain);
+        context.set_key(server384_identity().key, {});
+        context.set_time(now);
+    }
+
+    tls::context context{};
+};
+
 static tls_client::options client_options()
 {
     tls_client::options value{};
@@ -158,7 +185,7 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__no_key_share__retried_established)
     const server_setup setup{};
     tls::server server{ setup.context };
     auto options = client_options();
-    options.share = false;
+    options.shares = {};
     tls_client client{ options };
     client.start();
     exchange(client, server);
@@ -173,7 +200,7 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__compatibility_session__established)
     tls::server server{ setup.context };
     auto options = client_options();
     options.session = 32;
-    options.share = false;
+    options.shares = {};
     tls_client client{ options };
     client.start();
     exchange(client, server);
@@ -186,7 +213,7 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__no_common_suite__handshake_failure)
     const server_setup setup{};
     tls::server server{ setup.context };
     auto options = client_options();
-    options.suites = { 0x1302 };
+    options.suites = { 0x1304 };
     tls_client client{ options };
     client.start();
     exchange(client, server);
@@ -195,6 +222,179 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__no_common_suite__handshake_failure)
     BOOST_REQUIRE(!server.is_failure_received());
     BOOST_REQUIRE(client.is_failed());
     BOOST_REQUIRE_EQUAL(client.failure(), alert::handshake_failure);
+}
+
+// suites, groups and signature schemes
+
+BOOST_AUTO_TEST_CASE(tls_server__handshake__aes256_only__established_aes256)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.suites = { aes_256_gcm_sha384 };
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(server.is_established());
+    BOOST_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
+
+    const auto request = to_chunk("request");
+    BOOST_REQUIRE(client.write(request));
+    exchange(client, server);
+    BOOST_REQUIRE_EQUAL(read_all(server), request);
+
+    const data_chunk response(40000, 0x42);
+    BOOST_REQUIRE(server.write(response));
+    exchange(client, server);
+    BOOST_REQUIRE_EQUAL(client.read(), response);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__handshake__aes256_retried__established_aes256)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.suites = { aes_256_gcm_sha384 };
+    options.shares = {};
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(client.is_retried());
+    BOOST_REQUIRE(server.is_established());
+    BOOST_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__handshake__secp256r1_share__established_secp256r1)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.groups = { secp256r1_group };
+    options.shares = { secp256r1_group };
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(!client.is_retried());
+    BOOST_REQUIRE(server.is_established());
+    BOOST_REQUIRE_EQUAL(server.group(), secp256r1_group);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__handshake__secp384r1_share__established_secp384r1)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.groups = { secp384r1_group };
+    options.shares = { secp384r1_group };
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(!client.is_retried());
+    BOOST_REQUIRE(server.is_established());
+    BOOST_REQUIRE_EQUAL(server.group(), secp384r1_group);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__handshake__nist_groups_no_share__retried_secp256r1)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.groups = { secp384r1_group, secp256r1_group };
+    options.shares = {};
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(client.is_retried());
+    BOOST_REQUIRE(server.is_established());
+    BOOST_REQUIRE_EQUAL(server.group(), secp256r1_group);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__handshake__share_of_less_preferred_group__not_retried)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.groups = { x25519_group, secp384r1_group };
+    options.shares = { secp384r1_group };
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(!client.is_retried());
+    BOOST_REQUIRE(server.is_established());
+    BOOST_REQUIRE_EQUAL(server.group(), secp384r1_group);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__handshake__secp384r1_server__established)
+{
+    const server384_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.anchors = { server384_identity().certificate };
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(client.is_established());
+    BOOST_REQUIRE(server.is_established());
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp384r1_server__established)
+{
+    const server384_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.anchors = { server384_identity().certificate };
+    options.suites = { aes_256_gcm_sha384 };
+    options.groups = { secp384r1_group };
+    options.shares = { secp384r1_group };
+    options.algorithms = { ecdsa_secp384r1_sha384 };
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(client.is_established());
+    BOOST_REQUIRE(server.is_established());
+    BOOST_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
+    BOOST_REQUIRE_EQUAL(server.group(), secp384r1_group);
+
+    const auto request = to_chunk("request");
+    BOOST_REQUIRE(client.write(request));
+    exchange(client, server);
+    BOOST_REQUIRE_EQUAL(read_all(server), request);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp256r1_server__handshake_failure)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.algorithms = { ecdsa_secp384r1_sha384 };
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+    BOOST_REQUIRE(server.is_failed());
+    BOOST_REQUIRE_EQUAL(server.failure(), alert::handshake_failure);
+}
+
+BOOST_AUTO_TEST_CASE(tls_server__key_update__aes256__both_keys_updated)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    auto options = client_options();
+    options.suites = { aes_256_gcm_sha384 };
+    tls_client client{ options };
+    client.start();
+    exchange(client, server);
+
+    client.update(true);
+    exchange(client, server);
+
+    const auto request = to_chunk("after update");
+    BOOST_REQUIRE(client.write(request));
+    exchange(client, server);
+    BOOST_REQUIRE_EQUAL(read_all(server), request);
+
+    BOOST_REQUIRE(server.write(request));
+    exchange(client, server);
+    BOOST_REQUIRE_EQUAL(client.read(), request);
 }
 
 // application data, key update, close
@@ -443,7 +643,7 @@ BOOST_AUTO_TEST_CASE(tls_server__receive__rfc8448_client_hello__rfc8448_server_h
     const data_chunk tail(std::next(flight.begin(), record_header_size), flight.end());
 
     record receiver{};
-    receiver.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::server_handshake_traffic));
+    receiver.set_secret(aes_128_gcm_sha256, rfc8448::server_handshake_traffic);
 
     uint8_t type{};
     data_chunk content{};
@@ -502,14 +702,14 @@ struct rfc8448_setup
         const data_chunk tail(std::next(output.begin(), start + record_header_size), output.end());
 
         record receiver{};
-        receiver.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::server_handshake_traffic));
+        receiver.set_secret(aes_128_gcm_sha256, rfc8448::server_handshake_traffic);
         uint8_t type{};
         data_chunk flight{};
         BOOST_REQUIRE(receiver.open(type, flight, head, tail));
         server.output().clear();
 
-        transcript = sha256_hash(splice(splice(rfc8448::client_hello, rfc8448::server_hello), flight));
-        sender.set_secret(aes_128_gcm_sha256, rfc8448::array<32>(rfc8448::client_handshake_traffic));
+        transcript = to_chunk(sha256_hash(splice(splice(rfc8448::client_hello, rfc8448::server_hello), flight)));
+        sender.set_secret(aes_128_gcm_sha256, rfc8448::client_handshake_traffic);
     }
 
     bool send(uint8_t type, const data_chunk& content)
@@ -526,10 +726,11 @@ struct rfc8448_setup
 
     bool finish()
     {
-        const auto verify = schedule::finished(rfc8448::array<32>(rfc8448::client_handshake_traffic), transcript);
-        const auto sent = send_message(handshake::finished, to_chunk(verify));
-        const auto master = schedule::master_secret(rfc8448::array<32>(rfc8448::handshake_secret));
-        sender.set_secret(aes_128_gcm_sha256, schedule::derive_secret(master, "c ap traffic", transcript));
+        const schedule keys{ aes_128_gcm_sha256 };
+        const auto verify = keys.finished(rfc8448::client_handshake_traffic, transcript);
+        const auto sent = send_message(handshake::finished, verify);
+        const auto master = keys.master_secret(rfc8448::handshake_secret);
+        sender.set_secret(aes_128_gcm_sha256, keys.derive_secret(master, "c ap traffic", transcript));
         return sent;
     }
 

@@ -29,7 +29,6 @@ using reader = network::tls::reader;
 using writer = network::tls::writer;
 
 constexpr size_t verify_padding = 64;
-constexpr uint16_t secp256r1_group = 0x0017;
 
 static data_chunk message_of(uint8_t type, const data_chunk& body)
 {
@@ -53,7 +52,8 @@ tls_client::tls_client(const options& value) NOEXCEPT
   : options_(value)
 {
     maybe_random::fill(secret_);
-    x25519::multiply(public_, secret_);
+    secret256_ = secp256r1::generate();
+    secret384_ = secp384r1::generate();
     session_.resize(value.session);
     maybe_random::fill(session_);
 }
@@ -82,18 +82,19 @@ void tls_client::hello(bool retry) NOEXCEPT
     versions.write_16(version_13);
 
     writer groups{};
-    groups.write_16(x25519_group);
-    groups.write_16(secp256r1_group);
+    for (const auto group: options_.groups)
+        groups.write_16(group);
 
     writer algorithms{};
-    algorithms.write_16(ecdsa_secp256r1_sha256);
-    algorithms.write_16(ecdsa_secp384r1_sha384);
+    for (const auto algorithm: options_.algorithms)
+        algorithms.write_16(algorithm);
 
     writer shares{};
-    if (options_.share || retry)
+    const auto shared = retry ? std::vector<uint16_t>{ retry_group_ } : options_.shares;
+    for (const auto group: shared)
     {
-        shares.write_16(x25519_group);
-        shares.write_vector_16(public_);
+        shares.write_16(group);
+        shares.write_vector_16(share(group));
     }
 
     writer vector_versions{};
@@ -266,7 +267,7 @@ bool tls_client::handle_message(uint8_t type, const const_byte_span& message,
         case state::done:
             if (type == handshake::key_update)
             {
-                server_traffic_ = schedule::update(server_traffic_);
+                server_traffic_ = schedule{ suite_ }.update(server_traffic_);
                 receive_.set_secret(suite_, server_traffic_);
                 if (!body.empty() && (body.front() == 1u))
                     update(false);
@@ -297,44 +298,49 @@ bool tls_client::handle_hello(const const_byte_span& message,
         if (retried_)
             return fail(alert::unexpected_message);
 
+        while (extensions && !extensions.is_complete())
+        {
+            const auto type = extensions.read_16();
+            reader data{ extensions.read_vector_16() };
+            if (type == extension::key_share)
+                retry_group_ = data.read_16();
+        }
+
         retried_ = true;
-        auto copy = transcript_;
-        const auto first = copy.flush();
+        const auto first = hash();
         writer synthetic{};
         synthetic.write_8(handshake::message_hash);
         synthetic.write_vector_24(first);
-        transcript_.reset();
+        transcript_.clear();
         add(synthetic.data());
         add(message);
         hello(true);
         return true;
     }
 
-    const_byte_span share{};
+    uint16_t group{};
+    const_byte_span peer{};
     while (extensions && !extensions.is_complete())
     {
         const auto type = extensions.read_16();
         reader data{ extensions.read_vector_16() };
         if (type == extension::key_share)
         {
-            data.read_16();
-            share = data.read_vector_16();
+            group = data.read_16();
+            peer = data.read_vector_16();
         }
     }
 
-    x25519::key peer{}, shared{};
-    if (share.size() != peer.size())
-        return fail(alert::illegal_parameter);
-
-    std::copy(share.begin(), share.end(), peer.begin());
-    if (!x25519::multiply(shared, secret_, peer))
+    data_chunk shared{};
+    if (!agree(shared, group, peer))
         return fail(alert::illegal_parameter);
 
     add(message);
-    handshake_secret_ = schedule::handshake_secret(schedule::early_secret(), shared);
+    const schedule keys{ suite_ };
+    handshake_secret_ = keys.handshake_secret(keys.early_secret(), shared);
     const auto transcript = hash();
-    client_handshake_ = schedule::derive_secret(handshake_secret_, "c hs traffic", transcript);
-    server_handshake_ = schedule::derive_secret(handshake_secret_, "s hs traffic", transcript);
+    client_handshake_ = keys.derive_secret(handshake_secret_, "c hs traffic", transcript);
+    server_handshake_ = keys.derive_secret(handshake_secret_, "s hs traffic", transcript);
     receive_.set_secret(suite_, server_handshake_);
     state_ = state::encrypted;
     return true;
@@ -380,15 +386,35 @@ bool tls_client::handle_verify(const const_byte_span& message,
     reader verify{ body };
     const auto scheme = verify.read_16();
     const auto der = verify.read_vector_16();
-    const auto digest = sha256_hash(verify_content("TLS 1.3, server CertificateVerify", hash()));
+    const auto content = verify_content("TLS 1.3, server CertificateVerify", hash());
 
-    secp256r1::point_t point{};
-    secp256r1::signature_t signature{};
-    if ((scheme != ecdsa_secp256r1_sha256) || (server_key_.size() != point.size()) || !secp256r1::decode(signature, der))
+    auto valid = false;
+    if (scheme == ecdsa_secp256r1_sha256)
+    {
+        secp256r1::point_t point{};
+        secp256r1::signature_t signature{};
+        if ((server_key_.size() != point.size()) || !secp256r1::decode(signature, der))
+            return fail(alert::illegal_parameter);
+
+        std::copy(server_key_.cbegin(), server_key_.cend(), point.begin());
+        valid = secp256r1::verify(signature, point, sha256_hash(content));
+    }
+    else if (scheme == ecdsa_secp384r1_sha384)
+    {
+        secp384r1::point_t point{};
+        secp384r1::signature_t signature{};
+        if ((server_key_.size() != point.size()) || !secp384r1::decode(signature, der))
+            return fail(alert::illegal_parameter);
+
+        std::copy(server_key_.cbegin(), server_key_.cend(), point.begin());
+        valid = secp384r1::verify(signature, point, accumulator<sha512_384>::hash(content));
+    }
+    else
+    {
         return fail(alert::illegal_parameter);
+    }
 
-    std::copy(server_key_.begin(), server_key_.end(), point.begin());
-    if (!secp256r1::verify(signature, point, digest))
+    if (!valid)
         return fail(alert::decrypt_error);
 
     add(message);
@@ -399,15 +425,16 @@ bool tls_client::handle_verify(const const_byte_span& message,
 bool tls_client::handle_finished(const const_byte_span& message,
     const const_byte_span& body) NOEXCEPT
 {
-    const auto expected = schedule::finished(server_handshake_, hash());
+    const schedule keys{ suite_ };
+    const auto expected = keys.finished(server_handshake_, hash());
     if (!std::equal(body.begin(), body.end(), expected.begin(), expected.end()))
         return fail(alert::decrypt_error);
 
     add(message);
-    const auto master = schedule::master_secret(handshake_secret_);
+    const auto master = keys.master_secret(handshake_secret_);
     const auto transcript = hash();
-    client_traffic_ = schedule::derive_secret(master, "c ap traffic", transcript);
-    server_traffic_ = schedule::derive_secret(master, "s ap traffic", transcript);
+    client_traffic_ = keys.derive_secret(master, "c ap traffic", transcript);
+    server_traffic_ = keys.derive_secret(master, "s ap traffic", transcript);
 
     send_.set_secret(suite_, client_handshake_);
     data_chunk flight{};
@@ -452,7 +479,7 @@ bool tls_client::handle_finished(const const_byte_span& message,
         }
     }
 
-    const auto finished = message_of(handshake::finished, to_chunk(schedule::finished(client_handshake_, hash())));
+    const auto finished = message_of(handshake::finished, keys.finished(client_handshake_, hash()));
     add(finished);
     flight.insert(flight.end(), finished.begin(), finished.end());
     send_.seal(output_, content::handshake, flight);
@@ -483,7 +510,7 @@ void tls_client::update(bool request) NOEXCEPT
 {
     const data_array<1> value{ request ? uint8_t{ 1 } : uint8_t{ 0 } };
     send_.seal(output_, content::handshake, message_of(handshake::key_update, to_chunk(value)));
-    client_traffic_ = schedule::update(client_traffic_);
+    client_traffic_ = schedule{ suite_ }.update(client_traffic_);
     send_.set_secret(suite_, client_traffic_);
 }
 
@@ -495,13 +522,71 @@ void tls_client::close() NOEXCEPT
 
 void tls_client::add(const const_byte_span& message) NOEXCEPT
 {
-    transcript_.write(message.size(), message.data());
+    transcript_.insert(transcript_.cend(), message.begin(), message.end());
 }
 
 tls_client::secret tls_client::hash() NOEXCEPT
 {
-    auto copy = transcript_;
-    return copy.flush();
+    return schedule{ suite_ }.hash(transcript_);
+}
+
+data_chunk tls_client::share(uint16_t group) const NOEXCEPT
+{
+    if (group == secp256r1_group)
+    {
+        secp256r1::point_t point{};
+        secp256r1::public_key(point, secret256_);
+        return to_chunk(point);
+    }
+
+    if (group == secp384r1_group)
+    {
+        secp384r1::point_t point{};
+        secp384r1::public_key(point, secret384_);
+        return to_chunk(point);
+    }
+
+    x25519::key point{};
+    x25519::multiply(point, secret_);
+    return to_chunk(point);
+}
+
+bool tls_client::agree(data_chunk& shared, uint16_t group, const const_byte_span& peer) const NOEXCEPT
+{
+    if (group == secp256r1_group)
+    {
+        secp256r1::point_t point{};
+        secp256r1::shared_t value{};
+        if (peer.size() != point.size())
+            return false;
+
+        std::copy(peer.begin(), peer.end(), point.begin());
+        const auto valid = secp256r1::agree(value, secret256_, point);
+        shared = to_chunk(value);
+        return valid;
+    }
+
+    if (group == secp384r1_group)
+    {
+        secp384r1::point_t point{};
+        secp384r1::shared_t value{};
+        if (peer.size() != point.size())
+            return false;
+
+        std::copy(peer.begin(), peer.end(), point.begin());
+        const auto valid = secp384r1::agree(value, secret384_, point);
+        shared = to_chunk(value);
+        return valid;
+    }
+
+    x25519::key point{}, value{};
+    if (peer.size() != point.size())
+        return false;
+
+    std::copy(peer.begin(), peer.end(), point.begin());
+    const auto valid = x25519::multiply(value, secret_, point);
+    shared = to_chunk(value);
+    return valid;
 }
 
 } // namespace test

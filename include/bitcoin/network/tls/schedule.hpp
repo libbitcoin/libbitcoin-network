@@ -19,50 +19,82 @@
 #ifndef LIBBITCOIN_NETWORK_TLS_SCHEDULE_HPP
 #define LIBBITCOIN_NETWORK_TLS_SCHEDULE_HPP
 
-#include <string_view>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// The TLS 1.3 key schedule (rfc8446 7) over SHA-256, the hash of both
-/// supported cipher suites.
+/// The TLS 1.3 key schedule (rfc8446 7) over the hash of a cipher suite,
+/// SHA-384 for TLS_AES_256_GCM_SHA384 and otherwise SHA-256.
 class BCT_API schedule final
 {
 public:
-    typedef system::hash_digest secret;
+    typedef system::data_chunk secret;
     typedef system::data_array<12> iv;
 
+    schedule(uint16_t suite) NOEXCEPT;
+
+    /// Size of the hash and of each secret.
+    size_t size() const NOEXCEPT;
+
+    /// Hash of the data.
+    secret hash(const const_byte_span& data) const NOEXCEPT;
+
     /// HKDF-Extract of the material with the salt.
-    static secret extract(const secret& salt,
-        const const_byte_span& material) NOEXCEPT;
+    secret extract(const secret& salt,
+        const const_byte_span& material) const NOEXCEPT;
 
     /// HKDF-Expand-Label of secret size.
-    static secret expand_label(const secret& key, std::string_view label,
-        const const_byte_span& context) NOEXCEPT;
+    secret expand_label(const secret& key, std::string_view label,
+        const const_byte_span& context) const NOEXCEPT;
 
     /// Derive-Secret of the transcript hash.
-    static secret derive_secret(const secret& key, std::string_view label,
-        const secret& transcript) NOEXCEPT;
+    secret derive_secret(const secret& key, std::string_view label,
+        const secret& transcript) const NOEXCEPT;
 
     /// Early, handshake and master secrets (without pre-shared keys).
-    static secret early_secret() NOEXCEPT;
-    static secret handshake_secret(const secret& early,
-        const const_byte_span& shared) NOEXCEPT;
-    static secret master_secret(const secret& handshake) NOEXCEPT;
+    secret early_secret() const NOEXCEPT;
+    secret handshake_secret(const secret& early,
+        const const_byte_span& shared) const NOEXCEPT;
+    secret master_secret(const secret& handshake) const NOEXCEPT;
 
     /// Traffic key of the cipher suite and iv of a traffic secret (7.3).
-    static system::data_chunk traffic_key(const secret& traffic,
-        uint16_t suite) NOEXCEPT;
-    static iv traffic_iv(const secret& traffic) NOEXCEPT;
+    system::data_chunk traffic_key(const secret& traffic) const NOEXCEPT;
+    iv traffic_iv(const secret& traffic) const NOEXCEPT;
 
     /// Finished verify data of the transcript hash (4.4.4).
-    static secret finished(const secret& traffic,
-        const secret& transcript) NOEXCEPT;
+    secret finished(const secret& traffic,
+        const secret& transcript) const NOEXCEPT;
 
     /// Next application traffic secret (7.2).
-    static secret update(const secret& traffic) NOEXCEPT;
+    secret update(const secret& traffic) const NOEXCEPT;
+
+private:
+    bool is_sha384() const NOEXCEPT;
+
+    uint16_t suite_;
+};
+
+/// Running hash of the handshake messages (4.4.1), over the hash of a
+/// cipher suite. Not thread safe.
+class BCT_API transcript final
+{
+public:
+    transcript() NOEXCEPT;
+
+    /// Restart empty, hashing with the hash of the cipher suite.
+    void reset(uint16_t suite) NOEXCEPT;
+
+    /// Append a handshake message.
+    void write(const const_byte_span& message) NOEXCEPT;
+
+    /// Hash of the messages written.
+    schedule::secret hash() const NOEXCEPT;
+
+private:
+    std::variant<system::accumulator<system::sha256>,
+        system::accumulator<system::sha512_384>> state_{};
 };
 
 } // namespace tls

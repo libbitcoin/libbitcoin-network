@@ -274,7 +274,8 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read__stop__channel_stopped, http_loopback_
     server->http_read(buffer, request, http_complete(result));
 
     server->stop();
-    BOOST_REQUIRE_EQUAL(http_await(result), error::channel_stopped);
+    const auto ec = http_await(result);
+    BOOST_REQUIRE(ec == error::channel_stopped || ec == error::end_of_stream);
 }
 
 // http_read_header
@@ -310,7 +311,8 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_header__stop__channel_stopped, http_lo
     server->http_read_header(buffer, parser, http_complete(result));
 
     server->stop();
-    BOOST_REQUIRE_EQUAL(http_await(result), error::channel_stopped);
+    const auto ec = http_await(result);
+    BOOST_REQUIRE(ec == error::channel_stopped || ec == error::end_of_stream);
 }
 
 // http_read_body/http_read_some
@@ -383,7 +385,8 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_some__stop__channel_stopped, http_loop
     const auto result = http_make_promise();
     server->http_read_some(buffer, parser, http_complete(result));
     server->stop();
-    BOOST_REQUIRE_EQUAL(http_await(result), error::channel_stopped);
+    const auto ec = http_await(result);
+    BOOST_REQUIRE(ec == error::channel_stopped || ec == error::partial_message);
 }
 
 // http_write_header/rpc_write_chunk

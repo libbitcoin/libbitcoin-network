@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_TLS_RECORD_HPP
 #define LIBBITCOIN_NETWORK_TLS_RECORD_HPP
 
-#include <optional>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/tls/schedule.hpp>
 
@@ -34,7 +33,7 @@ class BCT_API record final
 public:
     DELETE_COPY_MOVE(record);
 
-    /// Authentication tag size of both supported suites.
+    /// Authentication tag size of each supported suite.
     static constexpr size_t tag_size = 16;
 
     record() NOEXCEPT;
@@ -66,11 +65,10 @@ private:
 
     nonce next_nonce() NOEXCEPT;
 
-    uint16_t suite_{};
     schedule::iv iv_{};
     uint64_t sequence_{};
-    std::optional<system::aes128_gcm> aes_{};
-    std::optional<system::chacha20_poly1305> chacha_{};
+    std::variant<std::monostate, system::aes128_gcm, system::aes256_gcm,
+        system::chacha20_poly1305> cipher_{};
 };
 
 } // namespace tls

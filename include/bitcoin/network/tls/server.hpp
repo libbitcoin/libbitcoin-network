@@ -28,9 +28,10 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// The server side of one TLS 1.3 connection (rfc8446): x25519, ECDSA P-256
-/// server authentication, optional client authentication (P-256 or P-384),
-/// AES-128-GCM or ChaCha20-Poly1305, without pre-shared keys or early data.
+/// The server side of one TLS 1.3 connection (rfc8446): x25519, P-256 or P-384
+/// key exchange, ECDSA P-256 or P-384 server authentication, optional client
+/// authentication (P-256 or P-384), AES-128-GCM, AES-256-GCM or
+/// ChaCha20-Poly1305, without pre-shared keys or early data.
 /// Transport bytes are consumed by receive and produced into output. Not
 /// thread safe.
 class BCT_API server final
@@ -44,7 +45,7 @@ public:
     /// The context must outlive the server.
     server(const context& context) NOEXCEPT;
 
-    /// Fixed server random and ephemeral secret (test vectors).
+    /// Fixed server random and x25519 ephemeral secret (test vectors).
     server(const context& context, const random& random,
         const key& ephemeral) NOEXCEPT;
     ~server() NOEXCEPT;
@@ -82,8 +83,10 @@ public:
     uint8_t failure() const NOEXCEPT;
     bool is_failure_received() const NOEXCEPT;
 
-    /// Negotiated cipher suite (once the client hello is accepted).
+    /// Negotiated cipher suite and key exchange group (once the client hello
+    /// is accepted).
     uint16_t suite() const NOEXCEPT;
+    uint16_t group() const NOEXCEPT;
 
     /// Verified client certificate chain (empty if not authenticated).
     const system::x509::certificates& peer() const NOEXCEPT;
@@ -124,9 +127,11 @@ private:
     void send_compatibility(const span& session) NOEXCEPT;
     void send(uint8_t type, const span& data) NOEXCEPT;
     void send_update() NOEXCEPT;
+    bool exchange(system::data_chunk& shared, system::data_chunk& own,
+        const span& share) NOEXCEPT;
     void set_receive(const schedule::secret& traffic) NOEXCEPT;
     void add_transcript(const span& message) NOEXCEPT;
-    schedule::secret transcript() NOEXCEPT;
+    schedule::secret transcript() const NOEXCEPT;
 
     // Configuration.
     const context& context_;
@@ -136,6 +141,7 @@ private:
     // Connection state.
     state state_{ state::client_hello };
     uint16_t suite_{};
+    uint16_t group_{};
     uint8_t failure_{};
     bool failure_received_{};
     bool closed_{};
@@ -153,7 +159,7 @@ private:
     // Keys.
     record send_{};
     record receive_{};
-    system::accumulator<system::sha256> transcript_{};
+    tls::transcript transcript_{};
     schedule::secret handshake_secret_{};
     schedule::secret client_handshake_{};
     schedule::secret server_handshake_{};

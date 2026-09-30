@@ -237,7 +237,8 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__stop__channel_stopped, rpc_loopback_fi
     server->rpc_read(buffer, request, rpc_complete(result));
 
     server->stop();
-    BOOST_REQUIRE_EQUAL(rpc_await(result), error::channel_stopped);
+    const auto ec = rpc_await(result);
+    BOOST_REQUIRE(ec == error::channel_stopped || ec == error::peer_disconnect);
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__rpc_write__response__newline_terminated_json, rpc_loopback_fixture)

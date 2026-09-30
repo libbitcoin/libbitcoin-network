@@ -25,7 +25,9 @@
 #include <filesystem>
 #include <fstream>
 #include <future>
+#include <numeric>
 #include <string>
+#include <thread>
 
 BOOST_FIXTURE_TEST_SUITE(tls_socket_tests, test::directory_setup_fixture)
 
@@ -40,7 +42,10 @@ static void write_text(const std::filesystem::path& path, const std::string& tex
     file.write(text.data(), system::possible_narrow_sign_cast<std::streamsize>(text.size()));
 }
 
-static system::x509::certificate make_identity(const system::x509::secret& key, const std::string& name, const std::filesystem::path& certificate, const std::filesystem::path& private_key)
+static system::x509::certificate make_identity(
+    const system::x509::secret& key, const std::string& name,
+    const std::filesystem::path& certificate,
+    const std::filesystem::path& private_key)
 {
     system::x509::subject subject{};
     subject.common_name = name;
@@ -62,7 +67,9 @@ static system::x509::certificate make_identity(const system::x509::secret& key, 
 struct server_fixture
 {
     server_fixture(bool authenticate)
-      : pool(2), tls("test"), strand(pool.service().get_executor()), acceptor(strand)
+      : pool(2), tls("test"),
+        strand(pool.service().get_executor()),
+        acceptor(strand)
     {
         const std::filesystem::path directory{ TEST_DIRECTORY };
         tls.cert_path = directory / "server.pem";
@@ -72,7 +79,8 @@ struct server_fixture
 
         const auto clients = directory / "clients";
         std::filesystem::create_directories(clients);
-        client = make_identity(client_secret, "client", clients / "client.pem", directory / "client.key");
+        client = make_identity(client_secret,
+            "client", clients / "client.pem", directory / "client.key");
         tls.cert_auth = authenticate ? clients : std::filesystem::path{};
 
         BOOST_REQUIRE_EQUAL(tls.initialize_context(), error::success);
@@ -172,17 +180,42 @@ struct tls_peer
         return out;
     }
 
+    // Feed received records to the client until end of file or timeout.
+    bool receive(const std::chrono::milliseconds& timeout)
+    {
+        std::array<uint8_t, 4096> buffer{};
+        const auto deadline = std::chrono::steady_clock::now() + timeout;
+        socket.non_blocking(true);
+        while (std::chrono::steady_clock::now() < deadline)
+        {
+            boost::system::error_code ec{};
+            const auto size = socket.read_some(boost::asio::buffer(buffer), ec);
+            if (ec == boost::asio::error::would_block ||
+                ec == boost::asio::error::try_again)
+                std::this_thread::sleep_for(10ms);
+            else if (ec)
+                return true;
+            else
+                client.receive({ buffer.data(), size });
+        }
+
+        return false;
+    }
+
     boost::asio::io_context io{};
     boost::asio::ip::tcp::socket socket;
     test::tls_client client;
 };
 
-static test::tls_client::options client_options(const server_fixture& server, bool present)
+static test::tls_client::options client_options(const server_fixture& server,
+    bool present)
 {
     test::tls_client::options value{};
     value.anchors = { server.certificate };
     value.time = 1767225600;
-    value.chain = present ? std::vector<system::data_chunk>{ server.client.encoding } : std::vector<system::data_chunk>{};
+    value.chain = present ?
+        std::vector<system::data_chunk>{ server.client.encoding } :
+        std::vector<system::data_chunk>{};
     value.key = client_secret;
     return value;
 }
@@ -191,10 +224,11 @@ static code tcp_write(const socket::ptr& server, const system::data_chunk& data)
 {
     const auto promise = std::make_shared<std::promise<code>>();
     auto future = promise->get_future();
-    server->tcp_write({ data.data(), data.size() }, [=](const code& ec, size_t) NOEXCEPT
-    {
-        promise->set_value(ec);
-    });
+    server->tcp_write({ data.data(), data.size() },
+        [=](const code& ec, size_t) NOEXCEPT
+        {
+            promise->set_value(ec);
+        });
 
     BOOST_REQUIRE(future.wait_for(5s) == std::future_status::ready);
     return future.get();
@@ -205,10 +239,11 @@ static system::data_chunk tcp_read(const socket::ptr& server, size_t size)
     const auto buffer = std::make_shared<system::data_chunk>(size);
     const auto promise = std::make_shared<std::promise<code>>();
     auto future = promise->get_future();
-    server->tcp_read({ buffer->data(), buffer->size() }, [=](const code& ec, size_t) NOEXCEPT
-    {
-        promise->set_value(ec);
-    });
+    server->tcp_read({ buffer->data(), buffer->size() },
+        [=](const code& ec, size_t) NOEXCEPT
+        {
+            promise->set_value(ec);
+        });
 
     BOOST_REQUIRE(future.wait_for(5s) == std::future_status::ready);
     BOOST_REQUIRE_EQUAL(future.get(), error::success);
@@ -233,6 +268,19 @@ BOOST_AUTO_TEST_CASE(tls_socket__accept__handshake_and_exchange__success)
     BOOST_REQUIRE_EQUAL(tcp_read(server.server, request.size()), request);
 }
 
+BOOST_AUTO_TEST_CASE(tls_socket__accept__response_of_many_records__exchanged)
+{
+    server_fixture server{ false };
+    tls_peer peer{ client_options(server, false), server.port };
+    peer.handshake();
+    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+
+    system::data_chunk response(100000);
+    std::iota(response.begin(), response.end(), uint8_t{});
+    BOOST_REQUIRE_EQUAL(tcp_write(server.server, response), error::success);
+    BOOST_REQUIRE_EQUAL(peer.read(response.size()), response);
+}
+
 BOOST_AUTO_TEST_CASE(tls_socket__accept__trusted_client_certificate__success)
 {
     server_fixture server{ true };
@@ -250,6 +298,26 @@ BOOST_AUTO_TEST_CASE(tls_socket__accept__absent_client_certificate__failure)
     peer.handshake();
     BOOST_REQUIRE(peer.client.is_requested());
     BOOST_REQUIRE_EQUAL(server.accept_result(), error::tls_alert_certificate_required);
+}
+
+// A peer is not required to answer close_notify (rfc8446 6.1).
+BOOST_AUTO_TEST_CASE(tls_socket__stop__lazy_stop_unanswered__closed)
+{
+    server_fixture server{ false };
+    tls_peer peer{ client_options(server, false), server.port };
+    peer.handshake();
+    BOOST_REQUIRE(peer.client.is_established());
+    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+
+    server.server->lazy_stop();
+    BOOST_REQUIRE(server.server->stopped());
+    BOOST_REQUIRE(!peer.receive(200ms));
+    BOOST_REQUIRE(peer.client.is_closed());
+
+    server.server->stop();
+    const auto closed = peer.receive(5s);
+    peer.socket.close();
+    BOOST_REQUIRE(closed);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -816,7 +884,7 @@ BOOST_AUTO_TEST_CASE(tls_openssl__ssl_accept__no_common_suite__handshake_failure
     BOOST_REQUIRE(setup.load());
     const shim_connection connection{ setup.context };
     auto options = setup.options(false);
-    options.suites = { 0x1302 };
+    options.suites = { 0x1304 };
     test::tls_client client{ options };
     client.start();
     connection.send(client);
