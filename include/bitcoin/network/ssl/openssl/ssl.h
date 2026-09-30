@@ -26,6 +26,25 @@
 #include <stddef.h>
 #include <bitcoin/network/preprocessor.hpp>
 
+/* The include guards of the OpenSSL headers that boost::asio includes, so
+ * that an OpenSSL elsewhere on the include path is excluded. */
+#define OPENSSL_CONF_H
+#define HEADER_CONF_H
+#define OPENSSL_SSL_H
+#define HEADER_SSL_H
+#define OPENSSL_DH_H
+#define HEADER_DH_H
+#define OPENSSL_ERR_H
+#define HEADER_ERR_H
+#define OPENSSL_RSA_H
+#define HEADER_RSA_H
+#define OPENSSL_X509_H
+#define HEADER_X509_H
+#define OPENSSL_X509V3_H
+#define HEADER_X509V3_H
+#define OPENSSL_ENGINE_H
+#define HEADER_ENGINE_H
+
 #define OPENSSL_VERSION_NUMBER 0x1010100fL
 #define OPENSSL_VERSION 0
 #define OPENSSL_NO_SSL2

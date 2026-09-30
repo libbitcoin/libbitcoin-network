@@ -269,10 +269,8 @@ target_include_directories( libbitcoin-network
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
     $<INSTALL_INTERFACE:include>
-    $<$<BOOL:${with-ssl}>:
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl>
-      $<INSTALL_INTERFACE:include/bitcoin/network/ssl>
-    >
+    $<$<BOOL:${with-ssl}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl>>
+    $<$<BOOL:${with-ssl}>:$<INSTALL_INTERFACE:include/bitcoin/network/ssl>>
 )
 
 target_link_libraries( libbitcoin-network

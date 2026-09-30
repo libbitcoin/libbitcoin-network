@@ -180,13 +180,15 @@ struct tls_peer
         return out;
     }
 
-    // Feed received records to the client until end of file or timeout.
-    bool receive(const std::chrono::milliseconds& timeout)
+    // Feed received records to the client until end of file or timeout, or
+    // until the client is closed (if closing). True if end of file.
+    bool receive(const std::chrono::milliseconds& timeout, bool closing=false)
     {
         std::array<uint8_t, 4096> buffer{};
         const auto deadline = std::chrono::steady_clock::now() + timeout;
         socket.non_blocking(true);
-        while (std::chrono::steady_clock::now() < deadline)
+        while ((std::chrono::steady_clock::now() < deadline) &&
+            !(closing && client.is_closed()))
         {
             boost::system::error_code ec{};
             const auto size = socket.read_some(boost::asio::buffer(buffer), ec);
@@ -277,8 +279,16 @@ BOOST_AUTO_TEST_CASE(tls_socket__accept__response_of_many_records__exchanged)
 
     system::data_chunk response(100000);
     std::iota(response.begin(), response.end(), uint8_t{});
-    BOOST_REQUIRE_EQUAL(tcp_write(server.server, response), error::success);
+    const auto promise = std::make_shared<std::promise<code>>();
+    auto written = promise->get_future();
+    server.server->tcp_write({ response.data(), response.size() }, [=](const code& ec, size_t) NOEXCEPT
+    {
+        promise->set_value(ec);
+    });
+
     BOOST_REQUIRE_EQUAL(peer.read(response.size()), response);
+    BOOST_REQUIRE(written.wait_for(5s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(written.get(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(tls_socket__accept__trusted_client_certificate__success)
@@ -311,8 +321,9 @@ BOOST_AUTO_TEST_CASE(tls_socket__stop__lazy_stop_unanswered__closed)
 
     server.server->lazy_stop();
     BOOST_REQUIRE(server.server->stopped());
-    BOOST_REQUIRE(!peer.receive(200ms));
+    BOOST_REQUIRE(!peer.receive(5s, true));
     BOOST_REQUIRE(peer.client.is_closed());
+    BOOST_REQUIRE(!peer.receive(200ms));
 
     server.server->stop();
     const auto closed = peer.receive(5s);

@@ -20,6 +20,6 @@
 #define LIBBITCOIN_NETWORK_SSL_OPENSSL_CONF_H
 
 /* Declarations are consolidated in <openssl/ssl.h>. */
-#include <openssl/ssl.h>
+#include "ssl.h"
 
 #endif

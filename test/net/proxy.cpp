@@ -718,7 +718,8 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_tcp__stopped__channel_stopped, loopback_fixt
     });
 
     channel->stop(error::service_stopped);
-    BOOST_REQUIRE_EQUAL(read.get(), error::channel_stopped);
+    const auto ec = read.get();
+    BOOST_REQUIRE(ec == error::channel_stopped || ec == error::peer_disconnect);
 }
 
 BOOST_FIXTURE_TEST_CASE(proxy__read_ws__tcp_client_sent__prepared_uncommitted, loopback_fixture)

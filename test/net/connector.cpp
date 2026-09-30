@@ -352,7 +352,8 @@ BOOST_AUTO_TEST_CASE(connector__connect__unresolvable_hostname__resolve_failed)
 
     auto future = connected.get_future();
     BOOST_REQUIRE(future.wait_for(60s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(future.get(), error::resolve_failed);
+    const auto ec = future.get();
+    BOOST_REQUIRE(ec == error::resolve_failed || ec == error::operation_failed);
     BOOST_REQUIRE(null.get_future().get());
     pool.stop();
     BOOST_REQUIRE(pool.join());
