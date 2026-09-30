@@ -351,6 +351,7 @@ code publisher_setup_fixture::respond(rpc::response&& response)
 // role_setup_fixture
 // ----------------------------------------------------------------------------
 
+BC_PUSH_WARNING(DEPRECATED_DECLARATION)
 role_setup_fixture::role_setup_fixture(zmtp_role value, uint16_t port)
   : enabled(!is_null(std::getenv("ZMTP_HARNESS"))),
     pool(1),
@@ -386,6 +387,7 @@ role_setup_fixture::role_setup_fixture(zmtp_role value, uint16_t port)
 
     BOOST_REQUIRE_EQUAL(promised.get_future().get(), error::success);
 }
+BC_POP_WARNING()
 
 role_setup_fixture::~role_setup_fixture()
 {
