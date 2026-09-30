@@ -27,6 +27,14 @@
 #include <boost/system/error_code.hpp>
 
 /// SSL is always defined, must be externally linked if !HAVE_SSL.
-#include <boost/asio/ssl.hpp>
+/// boost/asio/ssl.hpp less the deprecated rfc2818_verification.
+#include <boost/asio/ssl/context.hpp>
+#include <boost/asio/ssl/context_base.hpp>
+#include <boost/asio/ssl/error.hpp>
+#include <boost/asio/ssl/host_name_verification.hpp>
+#include <boost/asio/ssl/stream.hpp>
+#include <boost/asio/ssl/stream_base.hpp>
+#include <boost/asio/ssl/verify_context.hpp>
+#include <boost/asio/ssl/verify_mode.hpp>
 
 #endif
