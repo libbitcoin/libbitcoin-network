@@ -51,7 +51,7 @@ bool reader::is_complete() const NOEXCEPT
 uint8_t reader::read_8() NOEXCEPT
 {
     const auto bytes = read_bytes(one);
-    return bytes.empty() ? uint8_t{} : bytes[0];
+    return bytes.empty() ? 0_u8 : bytes[0];
 }
 
 uint16_t reader::read_16() NOEXCEPT
@@ -60,8 +60,8 @@ uint16_t reader::read_16() NOEXCEPT
     if (bytes.empty())
         return {};
 
-    const auto high = shift_left(wide_cast<uint16_t>(bytes[0]), byte_bits);
-    return bit_or(high, wide_cast<uint16_t>(bytes[1]));
+    const auto high = shift_left<uint16_t>(bytes[0], byte_bits);
+    return bit_or<uint16_t>(high, bytes[1]);
 }
 
 uint32_t reader::read_24() NOEXCEPT
@@ -74,7 +74,7 @@ uint32_t reader::read_24() NOEXCEPT
     for (const auto byte: bytes)
     {
         const auto shifted = shift_left(value, byte_bits);
-        value = bit_or(shifted, wide_cast<uint32_t>(byte));
+        value = bit_or<uint32_t>(shifted, byte);
     }
 
     return value;
@@ -123,8 +123,8 @@ std::vector<uint16_t> reader::read_list_16() NOEXCEPT
 
 std::vector<uint16_t> reader::read_list(const const_byte_span& bytes) NOEXCEPT
 {
-    std::vector<uint16_t> out{};
     reader list{ bytes };
+    std::vector<uint16_t> out{};
     while (valid_ && list && !list.is_complete())
         out.push_back(list.read_16());
 
@@ -172,7 +172,7 @@ void writer::write_24(uint32_t value) NOEXCEPT
 
 void writer::write_bytes(const const_byte_span& bytes) NOEXCEPT
 {
-    data_.insert(data_.end(), bytes.begin(), bytes.end());
+    data_.insert(data_.cend(), bytes.begin(), bytes.end());
 }
 
 void writer::write_vector_8(const const_byte_span& bytes) NOEXCEPT

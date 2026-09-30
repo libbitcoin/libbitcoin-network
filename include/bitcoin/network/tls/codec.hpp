@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_TLS_CODEC_HPP
 #define LIBBITCOIN_NETWORK_TLS_CODEC_HPP
 
-#include <vector>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

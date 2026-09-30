@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_TLS_SCHEDULE_HPP
 #define LIBBITCOIN_NETWORK_TLS_SCHEDULE_HPP
 
-#include <string_view>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_TLS_CONTEXT_HPP
 #define LIBBITCOIN_NETWORK_TLS_CONTEXT_HPP
 
-#include <string>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

@@ -18,11 +18,6 @@
  */
 #include <bitcoin/network/tls/server.hpp>
 
-#include <algorithm>
-#include <array>
-#include <string_view>
-#include <utility>
-#include <vector>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/tls/codec.hpp>
 #include <bitcoin/network/tls/constants.hpp>
@@ -37,14 +32,14 @@ using namespace system;
 
 BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 
-constexpr size_t message_header_size = 4;
 constexpr size_t maximum_message = 131072;
-constexpr uint64_t maximum_records = 16777216;
+constexpr size_t message_header_size = 4;
 constexpr size_t verify_padding = 64;
 constexpr uint8_t verify_pad = 0x20;
-constexpr uint8_t compatibility_payload = 0x01;
-constexpr uint8_t update_not_requested = 0;
 constexpr uint8_t update_requested = 1;
+constexpr uint8_t update_not_requested = 0;
+constexpr uint8_t compatibility_payload = 0x01;
+constexpr uint64_t maximum_records = 16777216;
 constexpr std::string_view server_verify{ "TLS 1.3, server CertificateVerify" };
 constexpr std::string_view client_verify{ "TLS 1.3, client CertificateVerify" };
 
@@ -65,7 +60,7 @@ static data_chunk to_bytes(const const_byte_span& bytes) NOEXCEPT
 
 static bool contains(const std::vector<uint16_t>& list, uint16_t value) NOEXCEPT
 {
-    return std::find(list.begin(), list.end(), value) != list.end();
+    return std::find(list.cbegin(), list.cend(), value) != list.cend();
 }
 
 // A nonempty list that fills the extension body.
@@ -89,9 +84,9 @@ static data_chunk verify_content(std::string_view label,
     const schedule::secret& transcript) NOEXCEPT
 {
     data_chunk content(verify_padding, verify_pad);
-    content.insert(content.end(), label.begin(), label.end());
+    content.insert(content.cend(), label.cbegin(), label.cend());
     content.push_back(0x00);
-    content.insert(content.end(), transcript.begin(), transcript.end());
+    content.insert(content.cend(), transcript.cbegin(), transcript.cend());
     return content;
 }
 
@@ -116,7 +111,7 @@ static bool verify_signature(const data_chunk& key, const const_byte_span& der,
     if ((key.size() != point.size()) || !Curve::decode(signature, der))
         return false;
 
-    std::copy(key.begin(), key.end(), point.begin());
+    std::copy(key.cbegin(), key.cend(), point.begin());
     return Curve::verify(signature, point, digest);
 }
 
@@ -230,9 +225,9 @@ bool server::write(const const_byte_span& data) NOEXCEPT
 size_t server::read(const byte_span& out) NOEXCEPT
 {
     const auto size = std::min(out.size(), application_.size());
-    const auto end = std::next(application_.begin(), size);
-    std::copy(application_.begin(), end, out.begin());
-    application_.erase(application_.begin(), end);
+    const auto end = std::next(application_.cbegin(), size);
+    std::copy(application_.cbegin(), end, out.begin());
+    application_.erase(application_.cbegin(), end);
     return size;
 }
 
@@ -266,7 +261,7 @@ bool server::receive(const const_byte_span& data) NOEXCEPT
     if (is_failed())
         return false;
 
-    input_.insert(input_.end(), data.begin(), data.end());
+    input_.insert(input_.cend(), data.begin(), data.end());
 
     size_t start{};
     while (!is_failed() && !closed_ &&
@@ -285,17 +280,16 @@ bool server::receive(const const_byte_span& data) NOEXCEPT
             break;
 
         // Copies, since handlers may append to buffers.
-        const data_chunk head{ available.begin(),
-            std::next(available.begin(), record_header_size) };
-        const auto fragment = to_bytes(available.subspan(record_header_size,
-            size));
+        const auto to = std::next(available.begin(), record_header_size);
+        const data_chunk head{ available.begin(), to };
+        const auto fragment = available.subspan(record_header_size, size);
         start += record_header_size + size;
 
-        if (!handle_record(type, head, fragment))
+        if (!handle_record(type, head, to_bytes(fragment)))
             return false;
     }
 
-    input_.erase(input_.begin(), std::next(input_.begin(), start));
+    input_.erase(input_.cbegin(), std::next(input_.cbegin(), start));
     return !is_failed();
 }
 
@@ -305,9 +299,11 @@ bool server::handle_record(uint8_t type, const span& header,
     // A compatibility change_cipher_spec is unprotected and ignored (5).
     if (type == content::change_cipher_spec)
     {
-        const auto handshaking = (state_ != state::client_hello) &&
+        const auto handshaking =
+            (state_ != state::client_hello) &&
             (state_ != state::established);
-        if (!handshaking || (fragment.size() != one) ||
+
+        if (!handshaking || (!is_one(fragment.size())) ||
             (fragment.front() != compatibility_payload))
             return fail(alert::unexpected_message);
 
@@ -344,20 +340,26 @@ bool server::handle_content(uint8_t type, const span& content) NOEXCEPT
     switch (type)
     {
         case content::alert:
+        {
             return handle_alert(content);
+        }
         case content::handshake:
+        {
             return handle_handshake(content);
+        }
         case content::application_data:
         {
             if (!is_established())
                 return fail(alert::unexpected_message);
 
-            application_.insert(application_.end(), content.begin(),
+            application_.insert(application_.cend(), content.begin(),
                 content.end());
             return true;
         }
         default:
+        {
             return fail(alert::unexpected_message);
+        }
     }
 }
 
@@ -367,7 +369,7 @@ bool server::handle_alert(const span& content) NOEXCEPT
         return fail(alert::decode_error);
 
     // Closure alerts are not errors (6.1).
-    const auto description = content[1];
+    const auto description = content[one];
     if (description == alert::close_notify)
     {
         closed_ = true;
@@ -388,7 +390,7 @@ bool server::handle_handshake(const span& content) NOEXCEPT
     if (content.empty())
         return fail(alert::unexpected_message);
 
-    handshake_.insert(handshake_.end(), content.begin(), content.end());
+    handshake_.insert(handshake_.cend(), content.begin(), content.end());
     while (handshake_.size() >= message_header_size)
     {
         reader header{ span{ handshake_ }.first(message_header_size) };
@@ -402,8 +404,8 @@ bool server::handle_handshake(const span& content) NOEXCEPT
             break;
 
         const auto message = to_bytes(span{ handshake_ }.first(total));
-        handshake_.erase(handshake_.begin(), std::next(handshake_.begin(),
-            total));
+        const auto to = std::next(handshake_.cbegin(), total);
+        handshake_.erase(handshake_.cbegin(), to);
 
         const auto epoch = receive_epoch_;
         const auto body = span{ message }.subspan(message_header_size);
@@ -472,7 +474,7 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     if (!hello.is_complete() || (session.size() > 32u) || ciphers.empty())
         return fail(alert::decode_error);
 
-    if ((compression.size() != one) || !is_zero(compression.front()))
+    if ((compression.size() != one) || is_nonzero(compression.front()))
         return fail(alert::illegal_parameter);
 
     // Extensions are unique (4.2).
@@ -520,9 +522,9 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     if (!contains(versions, version_13))
         return fail(alert::protocol_version);
 
-    const auto suite = std::find_if(suites.begin(), suites.end(),
+    const auto suite = std::find_if(suites.cbegin(), suites.cend(),
         [&](uint16_t value) NOEXCEPT { return contains(ciphers, value); });
-    if (suite == suites.end())
+    if (suite == suites.cend())
         return fail(alert::handshake_failure);
 
     if (retried && ((*suite != suite_) || has_early))
@@ -660,7 +662,7 @@ void server::send_flight() NOEXCEPT
     const auto append = [&](const data_chunk& message) NOEXCEPT
     {
         add_transcript(message);
-        messages.insert(messages.end(), message.begin(), message.end());
+        messages.insert(messages.cend(), message.cbegin(), message.cend());
     };
 
     // EncryptedExtensions (none).

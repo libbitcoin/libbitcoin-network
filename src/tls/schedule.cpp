@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/tls/schedule.hpp>
 
-#include <string_view>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/tls/codec.hpp>
 #include <bitcoin/network/tls/constants.hpp>
@@ -29,9 +28,9 @@ namespace tls {
 
 using namespace system;
 
-constexpr std::string_view label_prefix{ "tls13 " };
 constexpr size_t aes_key_size = 16;
 constexpr size_t chacha_key_size = 32;
+constexpr std::string_view label_prefix{ "tls13 " };
 
 // HkdfLabel (7.1).
 static data_chunk make_label(size_t size, std::string_view label,

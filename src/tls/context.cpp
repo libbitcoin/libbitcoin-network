@@ -18,9 +18,7 @@
  */
 #include <bitcoin/network/tls/context.hpp>
 
-#include <algorithm>
 #include <chrono>
-#include <string>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -92,7 +90,8 @@ bool context::add_anchors(const std::string& text) NOEXCEPT
     if (!x509::parse(certificates, text))
         return false;
 
-    anchors_.insert(anchors_.end(), certificates.begin(), certificates.end());
+    anchors_.insert(anchors_.cend(), certificates.cbegin(),
+        certificates.cend());
     return true;
 }
 
@@ -139,7 +138,7 @@ bool context::require() const NOEXCEPT
 
 uint64_t context::time() const NOEXCEPT
 {
-    if (!is_zero(time_))
+    if (is_nonzero(time_))
         return time_;
 
     using namespace std::chrono;
@@ -156,8 +155,8 @@ bool context::matches() const NOEXCEPT
 
     secp256r1::point_t point{};
     return secp256r1::public_key(point, key_) &&
-        std::equal(point.begin(), point.end(), public_key_.begin(),
-            public_key_.end());
+        std::equal(point.cbegin(), point.cend(), public_key_.cbegin(),
+            public_key_.cend());
 }
 
 } // namespace tls

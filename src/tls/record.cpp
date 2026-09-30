@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/tls/record.hpp>
 
-#include <algorithm>
-#include <iterator>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/tls/codec.hpp>
 #include <bitcoin/network/tls/constants.hpp>
@@ -52,7 +50,7 @@ void record::set_secret(uint16_t suite,
     if (suite == aes_128_gcm_sha256)
     {
         aes128_gcm::secret key{};
-        std::copy(bytes.begin(), bytes.end(), key.begin());
+        std::copy(bytes.cbegin(), bytes.cend(), key.begin());
         aes_.emplace(key);
         chacha_.reset();
         return;
@@ -60,7 +58,7 @@ void record::set_secret(uint16_t suite,
 
     BC_ASSERT(suite == chacha20_poly1305_sha256);
     chacha20::secret key{};
-    std::copy(bytes.begin(), bytes.end(), key.begin());
+    std::copy(bytes.cbegin(), bytes.cend(), key.begin());
     chacha_.emplace(key);
     aes_.reset();
 }
@@ -98,7 +96,7 @@ void record::seal(data_chunk& out, uint8_t type,
         header.write_8(type);
         header.write_16(legacy_version);
         header.write_vector_16(content);
-        out.insert(out.end(), header.data().begin(), header.data().end());
+        out.insert(out.cend(), header.data().cbegin(), header.data().cend());
         return;
     }
 
@@ -112,7 +110,7 @@ void record::seal(data_chunk& out, uint8_t type,
     header.write_16(possible_narrow_cast<uint16_t>(size));
 
     const auto start = out.size();
-    out.insert(out.end(), header.data().begin(), header.data().end());
+    out.insert(out.cend(), header.data().cbegin(), header.data().cend());
     out.resize(out.size() + size);
 
     const auto aad = header.data();
@@ -156,9 +154,13 @@ bool record::open(uint8_t& type, data_chunk& content,
         return false;
 
     // The inner type is the last nonzero byte, followed by zero padding.
-    const auto last = std::find_if(plain.rbegin(), plain.rend(),
-        [](uint8_t byte) NOEXCEPT { return !is_zero(byte); });
-    if (last == plain.rend())
+    const auto last = std::find_if(plain.crbegin(), plain.crend(),
+        [](uint8_t byte) NOEXCEPT
+        {
+            return is_nonzero(byte);
+        });
+
+    if (last == plain.crend())
     {
         type = 0;
         content.clear();
@@ -166,7 +168,7 @@ bool record::open(uint8_t& type, data_chunk& content,
     }
 
     type = *last;
-    plain.resize(std::distance(last, plain.rend()) - one);
+    plain.resize(sub1(std::distance(last, plain.crend())));
     content = std::move(plain);
     return true;
 }
