@@ -206,8 +206,14 @@ code settings::tls_server::initialize_context() NOEXCEPT
         return error::operation_failed;
 
     context = std::make_unique<asio::ssl::context>(asio::ssl::version);
-    if (!secure())
+    if (safes.empty())
         return error::success;
+
+    if (cert_path.empty())
+        return error::tls_use_certificate;
+
+    if (key_path.empty())
+        return error::tls_use_private_key;
 
     boost_code ec{};
     context->set_options(asio::ssl::options, ec);

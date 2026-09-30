@@ -1105,6 +1105,22 @@ BOOST_AUTO_TEST_CASE(settings_tls_server__initialize_context__missing_certificat
     BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_certificate);
 }
 
+BOOST_AUTO_TEST_CASE(settings_tls_server__initialize_context__safes_without_certificate_path__tls_use_certificate)
+{
+    settings::tls_server instance{ "test" };
+    instance.safes.emplace_back("127.0.0.1:443");
+    instance.key_path = { TEST_PATH };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_certificate);
+}
+
+BOOST_AUTO_TEST_CASE(settings_tls_server__initialize_context__safes_without_key_path__tls_use_private_key)
+{
+    settings::tls_server instance{ "test" };
+    instance.safes.emplace_back("127.0.0.1:443");
+    instance.cert_path = { TEST_PATH };
+    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_private_key);
+}
+
 BOOST_AUTO_TEST_CASE(settings_tls_server__secure_context__initialized__ssl_context)
 {
     settings::tls_server instance{ "test" };
