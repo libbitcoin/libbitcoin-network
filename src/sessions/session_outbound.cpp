@@ -177,19 +177,21 @@ void session_outbound::start_connect(const code&, size_t slot) NOEXCEPT
     // Bogus warning, this pointer is copied into std::bind().
     BC_PUSH_WARNING(NO_UNUSED_LOCAL_SMART_PTR)
     const auto racer = std::make_shared<race>(connectors->size());
+    const auto members = std::make_shared<batch>();
     BC_POP_WARNING()
             
     // Race to first success or last failure.
-    racer->start(BIND(handle_connect, _1, _2, key, slot));
+    racer->start(BIND(handle_connect, _1, _2, key, slot, members));
 
     // Attempt to connect with unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        take(family(slot), BIND(do_one, _1, _2, key, racer, connector));
+        take(family(slot), BIND(do_one, _1, _2, key, racer, members,
+            connector));
 }
 
 // Attempt to connect the given peer and invoke handle_one.
 void session_outbound::do_one(const code& ec, const config::address& peer,
-    object_key key, const race::ptr& racer,
+    object_key key, const race::ptr& racer, const batch::ptr& members,
     const connector::ptr& connector) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -210,19 +212,32 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    connector->connect(peer, BIND(handle_one, _1, _2, key, peer, racer));
+    connector->connect(peer, BIND(handle_one, _1, _2, key, peer, racer,
+        members));
 }
 
 // Handle each do_one connection attempt, stopping on first success.
 void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
-    object_key key, const config::address& peer,
-    const race::ptr& racer) NOEXCEPT
+    object_key key, const config::address& peer, const race::ptr& racer,
+    const batch::ptr& members) NOEXCEPT
 {
     BC_ASSERT(stranded());
     ////COUNT(events::outbound2, key);
 
-    if (ec == error::service_suspended)
-        restore(peer, BIND(handle_reclaim, _1));
+    // A failed connect as unreachable is decided once its batch completes.
+    if (!socket && batch_reclaim(ec))
+    {
+        members->unreachable.push_back(peer);
+    }
+    else
+    {
+        // Any other outcome attributes unreachable members to their address.
+        members->attributable = true;
+
+        // Without a socket, reclaim below cannot restore the address.
+        if (ec == error::service_suspended || (!socket && maybe_reclaim(ec)))
+            restore(peer, BIND(handle_reclaim, _1));
+    }
 
     // Winner in quality race is first to pass success.
     if (racer->finish(ec, socket))
@@ -238,13 +253,25 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
-    const socket::ptr& socket, object_key key, size_t slot) NOEXCEPT
+    const socket::ptr& socket, object_key key, size_t slot,
+    const batch::ptr& members) NOEXCEPT
 {
     BC_ASSERT(stranded());
     ////COUNT(events::outbound3, key);
 
     // Unregister connectors, in case there was no winner.
     notify(key);
+
+    // A batch that failed only as unreachable implies a local outage, so
+    // restore its unreachable members (up to free pool capacity).
+    if (!members->attributable)
+    {
+        const auto pool = network_settings().outbound.host_pool_capacity;
+        const auto room = floored_subtract(pool, address_count());
+        const auto count = std::min(room, members->unreachable.size());
+        for (size_t index{}; index < count; ++index)
+            restore(members->unreachable.at(index), BIND(handle_reclaim, _1));
+    }
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
@@ -272,6 +299,9 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         if (ec == error::connect_failed ||
+            ec == error::net_unreachable ||
+            ec == error::host_unreachable ||
+            ec == error::connection_refused ||
             ec == error::operation_timeout ||
             ec == error::service_suspended ||
             ec == error::socks_failure)
@@ -352,10 +382,22 @@ inline bool session_outbound::maybe_reclaim(const code& ec) const NOEXCEPT
     if (address_count() >= network_settings().outbound.host_pool_capacity)
         return false;
 
-    // Failures that might work later (timeouts can drain pool).
+    // Failures that might work later, not attributable to the address. An
+    // address that connected is not the cause of an unreachable failure.
     return ec == error::operation_timeout
         || ec == error::channel_timeout
-        || ec == error::peer_disconnect;
+        || ec == error::peer_disconnect
+        || ec == error::insufficient_buffer
+        || batch_reclaim(ec);
+}
+
+inline bool session_outbound::batch_reclaim(const code& ec) const NOEXCEPT
+{
+    // Unreachable, from a local outage or a missing route to the address.
+    return ec == error::net_unreachable
+        || ec == error::host_unreachable
+        || ec == error::socks_net_unreachable
+        || ec == error::socks_host_unreachable;
 }
 
 inline bool session_outbound::always_reclaim(const code& ec) const NOEXCEPT
