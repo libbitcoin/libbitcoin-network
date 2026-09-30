@@ -27,6 +27,10 @@
 #include <boost/system/error_code.hpp>
 
 /// SSL is always defined, must be externally linked if !HAVE_SSL.
+#if defined(HAVE_SSL)
+    #include <bitcoin/network/ssl/openssl/ssl.h>
+#endif
+
 /// boost/asio/ssl.hpp less the deprecated rfc2818_verification.
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/ssl/context_base.hpp>
