@@ -221,7 +221,8 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
     BC_ASSERT(stranded());
     ////COUNT(events::outbound2, key);
 
-    if (ec == error::service_suspended)
+    // Without a socket, reclaim below cannot restore the address.
+    if (ec == error::service_suspended || (!socket && maybe_reclaim(ec)))
         restore(peer, BIND(handle_reclaim, _1));
 
     // Winner in quality race is first to pass success.
@@ -272,6 +273,9 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         if (ec == error::connect_failed ||
+            ec == error::net_unreachable ||
+            ec == error::host_unreachable ||
+            ec == error::connection_refused ||
             ec == error::operation_timeout ||
             ec == error::service_suspended ||
             ec == error::socks_failure)
@@ -352,10 +356,15 @@ inline bool session_outbound::maybe_reclaim(const code& ec) const NOEXCEPT
     if (address_count() >= network_settings().outbound.host_pool_capacity)
         return false;
 
-    // Failures that might work later (timeouts can drain pool).
+    // Failures that might work later, not attributable to the address.
     return ec == error::operation_timeout
         || ec == error::channel_timeout
-        || ec == error::peer_disconnect;
+        || ec == error::peer_disconnect
+        || ec == error::net_unreachable
+        || ec == error::host_unreachable
+        || ec == error::socks_net_unreachable
+        || ec == error::socks_host_unreachable
+        || ec == error::insufficient_buffer;
 }
 
 inline bool session_outbound::always_reclaim(const code& ec) const NOEXCEPT
