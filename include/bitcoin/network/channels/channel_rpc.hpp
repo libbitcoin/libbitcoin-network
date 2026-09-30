@@ -94,7 +94,7 @@ protected:
     virtual inline void dispatch(const rpc::request_cptr& request) NOEXCEPT;
 
     /// Must call after successful message handling if no stop.
-    virtual inline void receive() NOEXCEPT;
+    inline void receive() NOEXCEPT override;
 
     /// Handle incoming messages.
     virtual inline void handle_receive(const code& ec, size_t bytes,

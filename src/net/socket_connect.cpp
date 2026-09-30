@@ -353,11 +353,11 @@ void socket::do_upgrade(const result_handler& handler) NOEXCEPT
         auto socket = std::move(get_base());
 
         // TLS context is applied to the socket.
-        socket_.emplace<asio::ssl::socket>(std::move(socket),
+        auto& stream = socket_.emplace<asio::ssl::socket>(std::move(socket),
             std::get<ref<asio::ssl::context>>(context_));
 
         // Posts handler to socket strand.
-        get_ssl().async_handshake(direction,
+        stream.async_handshake(direction,
             std::bind(&socket::handle_handshake,
                 shared_from_this(), _1, handler));
         return;

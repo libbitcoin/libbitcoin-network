@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(get_address__deserialize2__empty__source_true)
 {
     const system::data_chunk data{};
     system::read::bytes::copy source(data);
-    const auto message = get_address::deserialize(level::maximum_protocol, source);
+    get_address::deserialize(level::maximum_protocol, source);
     BOOST_REQUIRE(source);
 }
 
