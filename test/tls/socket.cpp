@@ -279,8 +279,16 @@ BOOST_AUTO_TEST_CASE(tls_socket__accept__response_of_many_records__exchanged)
 
     system::data_chunk response(100000);
     std::iota(response.begin(), response.end(), uint8_t{});
-    BOOST_REQUIRE_EQUAL(tcp_write(server.server, response), error::success);
+    const auto promise = std::make_shared<std::promise<code>>();
+    auto written = promise->get_future();
+    server.server->tcp_write({ response.data(), response.size() }, [=](const code& ec, size_t) NOEXCEPT
+    {
+        promise->set_value(ec);
+    });
+
     BOOST_REQUIRE_EQUAL(peer.read(response.size()), response);
+    BOOST_REQUIRE(written.wait_for(5s) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(written.get(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(tls_socket__accept__trusted_client_certificate__success)

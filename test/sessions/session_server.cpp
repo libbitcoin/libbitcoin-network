@@ -287,10 +287,19 @@ public:
     {
     }
 
-    void attach_protocols(const channel::ptr&) NOEXCEPT override
+    void attach_protocols(const channel::ptr& channel) NOEXCEPT override
     {
-        if (!protocoled_.exchange(true))
-            attached_.set_value(true);
+        if (protocoled_.exchange(true))
+            return;
+
+        // Queued behind the channel start handler, which counts the channel.
+        boost::asio::post(channel->strand(), [this]() NOEXCEPT
+        {
+            boost::asio::post(strand(), [this]() NOEXCEPT
+            {
+                attached_.set_value(true);
+            });
+        });
     }
 
     channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT override
