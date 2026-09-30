@@ -26,10 +26,6 @@
 
 #include <boost/system/error_code.hpp>
 
-#if defined(HAVE_SSL)
-    #define BOOST_ASIO_USE_WOLFSSL
-#endif
-
 /// SSL is always defined, must be externally linked if !HAVE_SSL.
 #include <boost/asio/ssl.hpp>
 

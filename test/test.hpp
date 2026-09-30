@@ -23,7 +23,6 @@
 
 #include <filesystem>
 #include <bitcoin/network.hpp>
-#include <wolfssl/test.h>
 
 // copied from libbitcoin-system-test
 

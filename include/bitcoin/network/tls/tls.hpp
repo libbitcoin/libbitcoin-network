@@ -16,10 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SSL_OPENSSL_RSA_H
-#define LIBBITCOIN_NETWORK_SSL_OPENSSL_RSA_H
+#ifndef LIBBITCOIN_NETWORK_TLS_TLS_HPP
+#define LIBBITCOIN_NETWORK_TLS_TLS_HPP
 
-/* Declarations are consolidated in <openssl/ssl.h>. */
-#include <openssl/ssl.h>
+#include <bitcoin/network/tls/codec.hpp>
+#include <bitcoin/network/tls/constants.hpp>
+#include <bitcoin/network/tls/context.hpp>
+#include <bitcoin/network/tls/record.hpp>
+#include <bitcoin/network/tls/schedule.hpp>
+#include <bitcoin/network/tls/server.hpp>
 
 #endif

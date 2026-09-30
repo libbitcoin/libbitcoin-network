@@ -226,16 +226,8 @@ code settings::tls_server::initialize_context() NOEXCEPT
     if (authenticate())
     {
         context->set_verify_mode(asio::ssl::authenticate);
-        if (cert_auth.empty())
-        {
-            context->set_default_verify_paths(ec);
-            if (ec) return error::tls_set_default_verify;
-        }
-        else
-        {
-            context->add_verify_path(cert_auth.string(), ec);
-            if (ec) return error::tls_set_add_verify;
-        }
+        context->add_verify_path(cert_auth.string(), ec);
+        if (ec) return error::tls_set_add_verify;
     }
 
     return error::success;

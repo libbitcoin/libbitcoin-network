@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_SSL_OPENSSL_X509V3_H
 #define LIBBITCOIN_NETWORK_SSL_OPENSSL_X509V3_H
 
-/* Forward <boost/asio/ssl/detail/openssl_types.hpp> load of <openssl/x509v3.h>. */
-#include <wolfssl/openssl/x509v3.h>
+/* Declarations are consolidated in <openssl/ssl.h>. */
+#include <openssl/ssl.h>
 
 #endif

@@ -165,6 +165,25 @@ enum error_t : uint8_t
     tls_unexpected_result,
     tls_unknown,
 
+    // tls alerts
+    tls_alert_unexpected_message,
+    tls_alert_bad_record_mac,
+    tls_alert_record_overflow,
+    tls_alert_handshake_failure,
+    tls_alert_bad_certificate,
+    tls_alert_unsupported_certificate,
+    tls_alert_certificate_expired,
+    tls_alert_certificate_unknown,
+    tls_alert_illegal_parameter,
+    tls_alert_unknown_ca,
+    tls_alert_decode_error,
+    tls_alert_decrypt_error,
+    tls_alert_protocol_version,
+    tls_alert_internal_error,
+    tls_alert_missing_extension,
+    tls_alert_certificate_required,
+    tls_alert_unknown,
+
     // boost beast http 4xx client error
     bad_request,
     unauthorized,

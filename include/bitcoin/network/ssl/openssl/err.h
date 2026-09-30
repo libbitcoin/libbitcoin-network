@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_SSL_OPENSSL_ERR_H
 #define LIBBITCOIN_NETWORK_SSL_OPENSSL_ERR_H
 
-/* Forward <boost/asio/ssl/detail/openssl_types.hpp> load of <openssl/err.h>. */
-#include <wolfssl/openssl/err.h>
+/* Declarations are consolidated in <openssl/ssl.h>. */
+#include <openssl/ssl.h>
 
 #endif

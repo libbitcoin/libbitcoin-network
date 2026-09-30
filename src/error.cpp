@@ -19,6 +19,7 @@
 #include <bitcoin/network/error.hpp>
 
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/tls/constants.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -151,6 +152,26 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tls_stream_truncated, "tls stream truncated" },
     { tls_unspecified_system_error, "tls unspecified system error" },
     { tls_unexpected_result, "tls handshake failure" },
+    { tls_unknown, "tls error" },
+
+    // tls alerts
+    { tls_alert_unexpected_message, "tls alert unexpected message" },
+    { tls_alert_bad_record_mac, "tls alert bad record mac" },
+    { tls_alert_record_overflow, "tls alert record overflow" },
+    { tls_alert_handshake_failure, "tls alert handshake failure" },
+    { tls_alert_bad_certificate, "tls alert bad certificate" },
+    { tls_alert_unsupported_certificate, "tls alert unsupported certificate" },
+    { tls_alert_certificate_expired, "tls alert certificate expired" },
+    { tls_alert_certificate_unknown, "tls alert certificate unknown" },
+    { tls_alert_illegal_parameter, "tls alert illegal parameter" },
+    { tls_alert_unknown_ca, "tls alert unknown ca" },
+    { tls_alert_decode_error, "tls alert decode error" },
+    { tls_alert_decrypt_error, "tls alert decrypt error" },
+    { tls_alert_protocol_version, "tls alert protocol version" },
+    { tls_alert_internal_error, "tls alert internal error" },
+    { tls_alert_missing_extension, "tls alert missing extension" },
+    { tls_alert_certificate_required, "tls alert certificate required" },
+    { tls_alert_unknown, "tls alert" },
 
     // boost beast http 4xx client error
     { bad_request, "bad request" },
@@ -638,21 +659,34 @@ code ssl_to_error_code(const boost_code& ec) NOEXCEPT
         }
     }
 
-    // Boost defines this for error numbers produced by openssl. But we get
-    // generic error codes because WOLFSSL_HAVE_ERROR_QUEUE is not defined.
-    // This is because otherwise in some cases we fail to get failure results
-    // when necessary. These are openssl-in-boost-category codes, for
-    // simplified transport.
-
+    // Alerts sent or received are reported as ssl reasons offset by 1000.
     if (ec.category() == boost::asio::error::get_ssl_category())
     {
-        // TODO: map openssl native code values to network.
-        ////switch (ec.value())
-        ////{
-        ////    default: return error::ssl_unknown;
-        ////}
+        const auto value = static_cast<unsigned long>(ec.value());
+        const auto reason = ERR_GET_REASON(value);
+        if (ERR_GET_LIB(value) != ERR_LIB_SSL || reason < SSL_AD_REASON_OFFSET)
+            return error::ssl_unknown;
 
-        return error::ssl_unknown;
+        switch (reason - SSL_AD_REASON_OFFSET)
+        {
+            case tls::alert::unexpected_message: return error::tls_alert_unexpected_message;
+            case tls::alert::bad_record_mac: return error::tls_alert_bad_record_mac;
+            case tls::alert::record_overflow: return error::tls_alert_record_overflow;
+            case tls::alert::handshake_failure: return error::tls_alert_handshake_failure;
+            case tls::alert::bad_certificate: return error::tls_alert_bad_certificate;
+            case tls::alert::unsupported_certificate: return error::tls_alert_unsupported_certificate;
+            case tls::alert::certificate_expired: return error::tls_alert_certificate_expired;
+            case tls::alert::certificate_unknown: return error::tls_alert_certificate_unknown;
+            case tls::alert::illegal_parameter: return error::tls_alert_illegal_parameter;
+            case tls::alert::unknown_ca: return error::tls_alert_unknown_ca;
+            case tls::alert::decode_error: return error::tls_alert_decode_error;
+            case tls::alert::decrypt_error: return error::tls_alert_decrypt_error;
+            case tls::alert::protocol_version: return error::tls_alert_protocol_version;
+            case tls::alert::internal_error: return error::tls_alert_internal_error;
+            case tls::alert::missing_extension: return error::tls_alert_missing_extension;
+            case tls::alert::certificate_required: return error::tls_alert_certificate_required;
+            default: return error::tls_alert_unknown;
+        }
     }
 
     return asio_to_error_code(ec);

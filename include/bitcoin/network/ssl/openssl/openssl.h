@@ -19,19 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_SSL_OPENSSL_OPENSSL_H
 #define LIBBITCOIN_NETWORK_SSL_OPENSSL_OPENSSL_H
 
-/* This directory is defined by libbitcoin to provide the expected path for */
-/* boost::asio to #include the contained headers. Each header forwards to: */
-/* #include <wolfssl/openssl/*.h> */
-
-/* The inclusion of the above openssl headers and invocation of contained */
-/* functions by boost requires that these all exist in the global namespace. */
-/* Wolfssl consistently prefixes these C names, however they remain global */
-/* and must be exposed to all dependent projects. The larger pollution is */
-/* dependent headers that these headers then include, which export a very */
-/* large number of symbols. By forwarding all of the functions invoked by */
-/* boost these other headers and their symbols could be isolated to the */
-/* compilation units. The forwarding is large however, up to 100 functions. */
-/* Furthermore wolfssl tests reach directly into these secondary includes. */
-/* So to retain the test coverage would require accessible headers. */
+/* This directory provides the <openssl/*.h> headers included by */
+/* boost::asio::ssl. Declarations are consolidated in <openssl/ssl.h> and */
+/* implemented over the libbitcoin TLS 1.3 server (tls::server). */
 
 #endif
