@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(bloom_filter_clear__deserialize2__empty__source_true)
 {
     const system::data_chunk data{};
     system::read::bytes::copy source(data);
-    const auto message = bloom_filter_clear::deserialize(level::maximum_protocol, source);
+    bloom_filter_clear::deserialize(level::maximum_protocol, source);
     BOOST_REQUIRE(source);
 }
 
