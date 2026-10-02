@@ -263,6 +263,7 @@ void session_outbound::handle_connect(const code& ec,
     if (ec == error::address_not_found)
     {
         LOGS("Address pool is empty.");
+        seed();
         defer(network_settings().connect_timeout(options()),
             BIND(start_connect, _1, slot));
         return;

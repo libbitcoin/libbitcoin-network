@@ -217,7 +217,8 @@ void net::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_seed_session()->start(move_copy(handler));
+    seed_ = attach_seed_session();
+    seed_->start(move_copy(handler));
 }
 
 // Run sequence (seeding may be ongoing after its handler is invoked).
@@ -296,8 +297,9 @@ void net::do_close() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Release reference to manual session (also held by stop subscriber).
+    // Release session references (also held by stop subscriber).
     if (manual_) manual_.reset();
+    if (seed_) seed_.reset();
 
     // Notify and delete all stop subscribers (all sessions).
     stop_subscriber_.stop(error::service_stopped);
@@ -701,6 +703,26 @@ void net::do_save(const address_cptr& message,
     }
 
     hosts_.save(message, move_copy(handler));
+}
+
+void net::seed() NOEXCEPT
+{
+    boost::asio::post(strand_,
+        std::bind(&net::do_seed, this));
+}
+
+void net::do_seed() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // One seed session at a time, and none without seeds to seed from.
+    if (closed() || network_settings().outbound.seeds.empty() ||
+        (seed_ && seed_->seeding()))
+        return;
+
+    // The handler signals sufficiency, seeding ends upon completion.
+    seed_ = attach_seed_session();
+    seed_->start([](const code&) NOEXCEPT {});
 }
 
 // P2P self address.

@@ -47,6 +47,10 @@ public:
     /// Seeding is complete invocation of the handler.
     void start(result_handler&& handler) NOEXCEPT override;
 
+    /// Seed connections are running, which may outlast start completion
+    /// (call from network strand).
+    virtual bool seeding() const NOEXCEPT;
+
 protected:
     /// The configured options for this peer session (covariant).
     const options_t& options() const NOEXCEPT override;
@@ -77,6 +81,9 @@ private:
         const channel::ptr& channel) NOEXCEPT;
     void handle_channel_stop(const code& ec,
         const channel::ptr& channel, const race::ptr& racer) NOEXCEPT;
+
+    // This is protected by strand.
+    bool seeding_{};
 };
 
 } // namespace network
