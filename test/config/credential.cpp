@@ -119,6 +119,14 @@ BOOST_AUTO_TEST_CASE(credential__to_string__methoded__round_trips)
     BOOST_REQUIRE_EQUAL(instance.to_string(), "username:password:getblock,getblockcount");
 }
 
+BOOST_AUTO_TEST_CASE(credential__construct__spaced_password__expected_digest)
+{
+    const credential instance{ "Aladdin:open sesame" };
+    BOOST_REQUIRE_EQUAL(instance.username(), "Aladdin");
+    BOOST_REQUIRE_EQUAL(instance.password(), "open sesame");
+    BOOST_REQUIRE_EQUAL(instance.digest(), system::sha256_hash("Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="));
+}
+
 // operators
 
 BOOST_AUTO_TEST_CASE(credential__istream__methoded__expected)
