@@ -85,10 +85,12 @@ static void to_request(rpc::request& value, boost_code& ec) NOEXCEPT
     {
         // Primary exception type for parsing operations.
         ec = e.code();
+        return;
     }
     catch (...)
     {
         ec = code{ error::jsonrpc_reader_exception };
+        return;
     }
 
     // Set version default.
