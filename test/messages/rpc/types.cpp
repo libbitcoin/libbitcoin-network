@@ -380,6 +380,11 @@ BOOST_AUTO_TEST_CASE(rpc_model__value_to__json_types__expected_alternatives)
     BOOST_REQUIRE_EQUAL(std::get<object_t>(boost::json::value_to<value_t>(boost::json::parse(R"({"a":1})")).value()).size(), 1u);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_model__value_from__any__throws)
+{
+    BOOST_REQUIRE_THROW(boost::json::value_from(value_t{ any_t{ system::to_shared<int>(42) } }), ostream_exception);
+}
+
 BOOST_AUTO_TEST_CASE(rpc_model__identity_to__json_types__expected_alternatives)
 {
     BOOST_REQUIRE(std::holds_alternative<null_t>(boost::json::value_to<identity_t>(boost::json::parse("null"))));
