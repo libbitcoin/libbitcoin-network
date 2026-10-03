@@ -36,6 +36,10 @@ BCT_API asio::address from_address(const messages::peer::ip_address& address) NO
 BCT_API std::string to_normal_host(const std::string& host,
     uint16_t default_port) NOEXCEPT;
 
+/// Get ascii lowered host:port form of a url, with default substitution.
+BCT_API std::string to_normal_origin(const std::string& origin,
+    uint16_t default_port) NOEXCEPT;
+
 } // namespace config
 } // namespace network
 } // namespace libbitcoin

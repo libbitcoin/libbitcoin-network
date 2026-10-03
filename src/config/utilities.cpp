@@ -86,6 +86,20 @@ std::string to_normal_host(const std::string& host,
     }
 }
 
+std::string to_normal_origin(const std::string& origin,
+    uint16_t default_port) NOEXCEPT
+{
+    try
+    {
+        const url url{ origin };
+        return endpoint{ url.host(), url.port() }.to_lower(default_port);
+    }
+    catch (const std::exception&)
+    {
+        return {};
+    }
+}
+
 } // namespace config
 } // namespace network
 } // namespace libbitcoin
