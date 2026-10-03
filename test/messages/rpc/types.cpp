@@ -431,6 +431,25 @@ BOOST_AUTO_TEST_CASE(rpc_model__response_to__v2_result_numeric_id__expected)
     BOOST_REQUIRE_EQUAL(std::get<number_t>(response.result.value().value()), 19.0);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_model__response_to__v1_result_null_error__expected)
+{
+    const auto model = boost::json::parse(R"({"result":1,"error":null,"id":1})");
+    const auto response = boost::json::value_to<response_t>(model);
+    BOOST_REQUIRE(response.jsonrpc == version::undefined);
+    BOOST_REQUIRE_EQUAL(std::get<code_t>(response.id.value()), 1);
+    BOOST_REQUIRE(!response.error.has_value());
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(response.result.value().value()), 1.0);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_model__response_to__v1_result__round_trips)
+{
+    const auto model = boost::json::value_from(response_t{ version::v1, identity_t{ 1 }, {}, value_t{ true } });
+    const auto response = boost::json::value_to<response_t>(model);
+    BOOST_REQUIRE(response.jsonrpc == version::v1);
+    BOOST_REQUIRE(!response.error.has_value());
+    BOOST_REQUIRE(std::get<boolean_t>(response.result.value().value()));
+}
+
 BOOST_AUTO_TEST_CASE(rpc_model__response_to__empty_object__defaults)
 {
     const auto response = boost::json::value_to<response_t>(boost::json::parse("{}"));

@@ -381,7 +381,8 @@ DEFINE_JSON_TO_TAG(response_t)
     }
 
     // error
-    if (const auto it = object.find("error"); it != object.end())
+    if (const auto it = object.find("error");
+        it != object.end() && !it->value().is_null())
     {
         result_t result{};
         const auto& error = it->value().as_object();
