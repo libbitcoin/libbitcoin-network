@@ -470,17 +470,18 @@ void socket::do_chunk_write(boost_code ec, size_t total,
     }
 
     const auto buffer = ec ? chunk_state::out_buffer{} : out->writer.get(ec);
-    if (!buffer.has_value())
-    {
-        handler(error::bad_stream, total);
-        return;
-    }
-
     if (ec)
     {
         const auto code = error::http_to_error_code(ec);
         if (code == error::unknown) logx("chunk-write", ec);
         handler(code, total);
+        return;
+    }
+
+    if (!buffer.has_value())
+    {
+        out->more = false;
+        handle_chunk_write({}, zero, total, out, handler);
         return;
     }
 

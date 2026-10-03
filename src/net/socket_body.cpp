@@ -209,12 +209,6 @@ void socket::do_body_write(boost_code ec, size_t total,
     BC_ASSERT(stranded());
 
     const auto buffer = ec ? write_state::out_buffer{} : out->writer.get(ec);
-    if (!buffer.has_value())
-    {
-        handler(error::bad_stream, total);
-        return;
-    }
-
     if (ec)
     {
         const auto code = error::http_to_error_code(ec);
@@ -223,8 +217,9 @@ void socket::do_body_write(boost_code ec, size_t total,
         return;
     }
 
-    out->more = buffer.value().second;
-    const auto& data = buffer.value().first;
+    out->more = buffer.has_value() && buffer.value().second;
+    const auto data = buffer.has_value() ?
+        buffer.value().first : asio::const_buffer{};
 
     // A ws message closes on the final chunk (finish = !more), so a body
     // that spans multiple get() passes is delivered as one multi-frame
@@ -290,12 +285,6 @@ void socket::do_body_notify(boost_code ec, size_t total,
     BC_ASSERT(stranded());
 
     const auto buffer = ec ? notify_state::out_buffer{} : out->writer.get(ec);
-    if (!buffer.has_value())
-    {
-        handler(error::bad_stream, total);
-        return;
-    }
-
     if (ec)
     {
         const auto code = error::http_to_error_code(ec);
@@ -304,8 +293,9 @@ void socket::do_body_notify(boost_code ec, size_t total,
         return;
     }
 
-    out->more = buffer.value().second;
-    const auto& data = buffer.value().first;
+    out->more = buffer.has_value() && buffer.value().second;
+    const auto data = buffer.has_value() ?
+        buffer.value().first : asio::const_buffer{};
 
     // TODO: derive websocket binary/text from body type mapping.
     async_write(data, false, !out->more,

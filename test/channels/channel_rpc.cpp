@@ -132,6 +132,11 @@ struct rpc_small_fixture
     }
 };
 
+struct rpc_directory_fixture
+  : test::directory_setup_fixture, rpc_loopback_fixture
+{
+};
+
 BOOST_AUTO_TEST_SUITE(socket_rpc_tests)
 
 BOOST_FIXTURE_TEST_CASE(socket__rpc_read__request__expected, rpc_loopback_fixture)
@@ -287,6 +292,22 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__peer_closed__failure, rpc_loopback_f
     const auto result = rpc_make_promise();
     server->rpc_notify(std::move(notification), rpc_complete(result));
     BOOST_REQUIRE(rpc_await(result));
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__body_write__empty_file__success, rpc_directory_fixture)
+{
+    BOOST_REQUIRE(test::create(TEST_PATH));
+
+    boost_code ec{};
+    http::file_value file{};
+    file.open((TEST_PATH).c_str(), boost::beast::file_mode::read, ec);
+    BOOST_REQUIRE(!ec);
+
+    http::response response{};
+    response.body() = std::move(file);
+    const auto result = rpc_make_promise();
+    server->body_write(std::move(response), rpc_complete(result));
+    BOOST_REQUIRE_EQUAL(rpc_await(result), error::success);
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__body_read__unreadable_body__end_of_stream, rpc_loopback_fixture)
