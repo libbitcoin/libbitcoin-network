@@ -63,7 +63,7 @@ void socket::do_body_read(boost_code ec, size_t total,
 
     if (ec)
     {
-        const auto code = error::http_to_error_code(ec);
+        const auto code = error::rpc_to_error_code(ec);
         if (code == error::unknown) logx("body-read", ec);
         handler(code, total);
         return;
@@ -103,7 +103,7 @@ void socket::do_body_read(boost_code ec, size_t total,
 
     if (ec)
     {
-        const auto code = error::http_to_error_code(ec);
+        const auto code = error::rpc_to_error_code(ec);
         if (code == error::unknown) logx("body-read", ec);
         handler(code, total);
         return;

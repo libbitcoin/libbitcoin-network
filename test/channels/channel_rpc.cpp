@@ -183,7 +183,7 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__trailing_comma__syntax, rpc_loopback_f
     BOOST_REQUIRE_EQUAL(rpc_await(result), error::syntax);
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__rpc_read__missing_method__failure, rpc_loopback_fixture)
+BOOST_FIXTURE_TEST_CASE(socket__rpc_read__missing_method__jsonrpc_requires_method, rpc_loopback_fixture)
 {
     http::flat_buffer buffer{ 4096 };
     rpc::request request{};
@@ -191,7 +191,7 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__missing_method__failure, rpc_loopback_
     server->rpc_read(buffer, request, rpc_complete(result));
 
     send(R"({"jsonrpc":"2.0","id":1,"params":[]})" "\n");
-    BOOST_REQUIRE(rpc_await(result));
+    BOOST_REQUIRE_EQUAL(rpc_await(result), error::jsonrpc_requires_method);
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__rpc_read__buffer_smaller_than_request__expected, rpc_loopback_fixture)
