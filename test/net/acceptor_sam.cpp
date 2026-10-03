@@ -606,6 +606,18 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forwarded_peer_invalid_destination
     BOOST_REQUIRE_EQUAL(result.get(), error::sam_response_invalid);
 }
 
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forwarded_peer_destination__success, sam_setup_fixture)
+{
+    BOOST_REQUIRE_EQUAL(create(), error::success);
+    auto result = accept();
+    establish();
+    connect_peer();
+    write_line(peer, destination + " FROM_PORT=0 TO_PORT=0");
+
+    BOOST_REQUIRE(result.wait_for(seconds(10)) == std::future_status::ready);
+    BOOST_REQUIRE_EQUAL(result.get(), error::success);
+}
+
 BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_closed__session_closed, sam_setup_fixture)
 {
     BOOST_REQUIRE_EQUAL(create(), error::success);

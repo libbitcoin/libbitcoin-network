@@ -173,10 +173,19 @@ void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
     if (!stranded())
     {
         boost::asio::post(strand_,
-            std::bind(&acceptor::handle_accept,
+            std::bind(&acceptor::do_handle_accept,
                 shared_from_this(), ec, socket, handler));
         return;
     }
+
+    do_handle_accept(ec, socket, handler);
+}
+
+// private
+void acceptor::do_handle_accept(const code& ec, const socket::ptr& socket,
+    const socket_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
 
     if (ec)
     {
