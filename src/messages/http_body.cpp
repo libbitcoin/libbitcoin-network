@@ -40,6 +40,23 @@ void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
         {
             ec = to_http_code(http_error_t::end_of_stream);
         },
+        [&](file_reader& read) NOEXCEPT
+        {
+            if (!value_.get<file_value>().is_open())
+            {
+                ec = to_errc_code(boost_errc_t::bad_file_descriptor);
+                return;
+            }
+
+            try
+            {
+                read.init(length, ec);
+            }
+            catch (...)
+            {
+                ec = to_http_code(http_error_t::end_of_stream);
+            }
+        },
         [&](auto& read) NOEXCEPT
         {
             try

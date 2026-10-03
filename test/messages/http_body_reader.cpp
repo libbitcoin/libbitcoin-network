@@ -104,33 +104,33 @@ BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stre
     BOOST_REQUIRE(std::holds_alternative<data_reader>(reader.reader_));
 }
 
-// TODO: linux debug boost asserts on body_.file_.is_open().
-////BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream_with_attachment__constructs_file_reader)
-////{
-////    message_header<true, fields> header{};
-////    header.set(http::field::content_type, "application/octet-stream");
-////    header.set(http::field::content_disposition, "filename=somenonsense.jpg");
-////    body::value_type value{};
-////    accessor reader(header, value);
-////    length_type length{ max_size_t };
-////    boost_code ec{};
-////    reader.init(length, ec);
-////    BOOST_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
-////}
+BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream_with_attachment__file_reader_bad_file_descriptor)
+{
+    message_header<true, fields> header{};
+    header.set(http::field::content_type, "application/octet-stream");
+    header.set(http::field::content_disposition, "filename=somenonsense.jpg");
+    body::value_type value{};
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    boost_code ec{};
+    reader.init(length, ec);
+    BOOST_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
+    BOOST_REQUIRE(ec == error::to_errc_code(error::boost_errc_t::bad_file_descriptor));
+}
 
-// TODO: linux debug boost asserts on body_.file_.is_open().
-////BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream_with_dirty_attachment__constructs_file_reader)
-////{
-////    message_header<true, fields> header{};
-////    header.set(http::field::content_type, "application/octet-stream");
-////    header.set(http::field::content_disposition, "dirty 42; filename* = somenonsense.jpg; some other nonsense");
-////    body::value_type value{};
-////    accessor reader(header, value);
-////    length_type length{ max_size_t };
-////    boost_code ec{};
-////    reader.init(length, ec);
-////    BOOST_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
-////}
+BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream_with_dirty_attachment__file_reader_bad_file_descriptor)
+{
+    message_header<true, fields> header{};
+    header.set(http::field::content_type, "application/octet-stream");
+    header.set(http::field::content_disposition, "dirty 42; filename* = somenonsense.jpg; some other nonsense");
+    body::value_type value{};
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    boost_code ec{};
+    reader.init(length, ec);
+    BOOST_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
+    BOOST_REQUIRE(ec == error::to_errc_code(error::boost_errc_t::bad_file_descriptor));
+}
 
 BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_text_plain__constructs_string_reader)
 {
