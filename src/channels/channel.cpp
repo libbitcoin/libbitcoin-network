@@ -91,6 +91,9 @@ void channel::pause() NOEXCEPT
     stop_expiration();
     stop_inactivity();
 
+    if (stopped())
+        return;
+
     // Outside of dispatch the hold is a gate of its own.
     held_ = gate_ ? gate_ : make_gate();
 }
