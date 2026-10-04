@@ -214,6 +214,36 @@ BOOST_AUTO_TEST_CASE(channel__pause__resume__held_then_released)
     channel_ptr->stop(error::invalid_magic);
 }
 
+BOOST_AUTO_TEST_CASE(channel__stop__paused__released)
+{
+    const logger log{};
+    threadpool pool(2);
+    const settings set(bc::system::chain::selection::mainnet);
+    network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = default_options.maximum_buffer };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, untimed);
+    const std::weak_ptr<accessor> weak{ channel_ptr };
+
+    std::promise<bool> paused{};
+    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    {
+        channel_ptr->pause();
+        const auto held = channel_ptr->held();
+        channel_ptr->stop(error::invalid_magic);
+        paused.set_value(held);
+    });
+
+    auto future = paused.get_future();
+    BOOST_REQUIRE(future.wait_for(std::chrono::seconds(10)) == std::future_status::ready);
+    BOOST_REQUIRE(future.get());
+
+    channel_ptr.reset();
+    socket_ptr.reset();
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(weak.expired());
+}
+
 BOOST_AUTO_TEST_CASE(channel__resume__expiration_elapsed__channel_expired)
 {
     const logger log{};

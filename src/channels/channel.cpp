@@ -77,6 +77,7 @@ void channel::stopping(const code& ec) NOEXCEPT
     BC_ASSERT(stranded());
     stop_expiration();
     stop_inactivity();
+    held_.reset();
     proxy::stopping(ec);
 }
 
