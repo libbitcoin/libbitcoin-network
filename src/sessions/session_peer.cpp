@@ -97,7 +97,7 @@ void session_peer::do_attach_protocols(const channel::ptr& channel,
     const result_handler& started) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->held(), "gate not held for protocol attach");
+    BC_ASSERT_MSG(channel->held() || channel->stopped(), "gate not held");
 
     // Protocol attach is always synchronous, complete here.
     attach_protocols(channel);
@@ -170,7 +170,7 @@ void session_peer::attach_handshake(const channel::ptr& channel,
 void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->held(), "gate not held for protocol attach");
+    BC_ASSERT_MSG(channel->held() || channel->stopped(), "gate not held");
 
     using namespace messages::peer;
     const auto self = shared_from_this();
