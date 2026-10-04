@@ -545,6 +545,28 @@ BOOST_FIXTURE_TEST_CASE(socket__accept_websocket__missing_key__operation_failed_
     BOOST_REQUIRE_EQUAL(receive().result_int(), 400u);
 }
 
+BOOST_FIXTURE_TEST_CASE(socket__accept_websocket__missing_key__tcp_write_success, http_loopback_fixture)
+{
+    const auto socket = server;
+    const auto buffer = std::make_shared<http::flat_buffer>();
+    const auto request = std::make_shared<http::request>();
+    const auto accepted = http_make_promise();
+    server->http_read(*buffer, *request, [=](const code&, size_t) NOEXCEPT
+    {
+        accepted->set_value(socket->accept_websocket(*request));
+    });
+
+    send(http_keyless_upgrade_request);
+    BOOST_REQUIRE_EQUAL(http_await(accepted), error::operation_failed);
+    BOOST_REQUIRE_EQUAL(receive().result_int(), 400u);
+
+    static const std::string_view text{ "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n" };
+    const auto written = http_make_promise();
+    server->tcp_write({ text.data(), text.size() }, http_complete(written));
+    BOOST_REQUIRE_EQUAL(http_await(written), error::success);
+    BOOST_REQUIRE_EQUAL(receive().result_int(), 200u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(channel_http_tests)

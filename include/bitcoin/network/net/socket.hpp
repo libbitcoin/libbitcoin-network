@@ -463,6 +463,9 @@ private:
 
     // config
     void do_ws_event(ws::frame_type kind, const std::string& data) NOEXCEPT;
+    void accept_secure_websocket(const http::request& request) THROWS;
+    void accept_clear_websocket(const http::request& request) THROWS;
+    void revert_websocket() NOEXCEPT;
 
     // wait
     void do_watch(const result_handler& handler) NOEXCEPT;

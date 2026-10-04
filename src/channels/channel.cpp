@@ -77,6 +77,7 @@ void channel::stopping(const code& ec) NOEXCEPT
     BC_ASSERT(stranded());
     stop_expiration();
     stop_inactivity();
+    held_.reset();
     proxy::stopping(ec);
 }
 
@@ -89,6 +90,9 @@ void channel::pause() NOEXCEPT
     BC_ASSERT(stranded());
     stop_expiration();
     stop_inactivity();
+
+    if (stopped())
+        return;
 
     // Outside of dispatch the hold is a gate of its own.
     held_ = gate_ ? gate_ : make_gate();

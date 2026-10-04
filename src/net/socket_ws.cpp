@@ -133,45 +133,9 @@ code socket::accept_websocket(const http::request& request) NOEXCEPT
     try
     {
         if (secure())
-        {
-            // Extract before emplacing back to same variant.
-            auto ws = std::move(std::get<asio::ssl::socket>(socket_));
-            socket_.emplace<ws::ssl::socket>(std::move(ws));
-
-            auto& sock = std::get<ws::ssl::socket>(socket_);
-            sock.read_message_max(maximum_);
-            sock.set_option(ws::decorator
-            {
-                [](http::fields& header) NOEXCEPT
-                {
-                    header.set(http::field::server, BC_HTTP_SERVER_NAME);
-                }
-            });
-            sock.control_callback(std::bind(&socket::do_ws_event,
-                shared_from_this(), _1, _2));
-            sock.text(true);
-            sock.accept(request);
-        }
+            accept_secure_websocket(request);
         else
-        {
-            // Extract before emplacing back to same variant.
-            auto ws = std::move(get_base());
-            socket_.emplace<ws::socket>(std::move(ws));
-
-            auto& sock = std::get<ws::socket>(socket_);
-            sock.read_message_max(maximum_);
-            sock.set_option(ws::decorator
-            {
-                [](http::fields& header) NOEXCEPT
-                {
-                    header.set(http::field::server, BC_HTTP_SERVER_NAME);
-                }
-            });
-            sock.control_callback(std::bind(&socket::do_ws_event,
-                shared_from_this(), _1, _2));
-            sock.text(true);
-            sock.accept(request);
-        }
+            accept_clear_websocket(request);
 
         websocket_.store(true);
         return error::success;
@@ -179,7 +143,89 @@ code socket::accept_websocket(const http::request& request) NOEXCEPT
     catch (const std::exception& e)
     {
         LOGF("Exception @ accept_websocket: " << e.what());
-        return error::operation_failed;
+    }
+
+    revert_websocket();
+    return error::operation_failed;
+}
+
+// private
+void socket::accept_secure_websocket(const http::request& request) THROWS
+{
+    BC_ASSERT(stranded());
+
+    // Extract before emplacing back to same variant.
+    auto ws = std::move(std::get<asio::ssl::socket>(socket_));
+    socket_.emplace<ws::ssl::socket>(std::move(ws));
+
+    auto& sock = std::get<ws::ssl::socket>(socket_);
+    sock.read_message_max(maximum_);
+    sock.set_option(ws::decorator
+    {
+        [](http::fields& header) NOEXCEPT
+        {
+            header.set(http::field::server, BC_HTTP_SERVER_NAME);
+        }
+    });
+
+    sock.control_callback(
+        std::bind(&socket::do_ws_event,
+            shared_from_this(), _1, _2));
+
+    sock.text(true);
+    sock.accept(request);
+}
+
+// private
+void socket::accept_clear_websocket(const http::request& request) THROWS
+{
+    BC_ASSERT(stranded());
+
+    // Extract before emplacing back to same variant.
+    auto ws = std::move(get_base());
+    socket_.emplace<ws::socket>(std::move(ws));
+
+    auto& sock = std::get<ws::socket>(socket_);
+    sock.read_message_max(maximum_);
+    sock.set_option(ws::decorator
+    {
+        [](http::fields& header) NOEXCEPT
+        {
+            header.set(http::field::server, BC_HTTP_SERVER_NAME);
+        }
+    });
+
+    sock.control_callback(
+        std::bind(&socket::do_ws_event,
+            shared_from_this(), _1, _2));
+
+    sock.text(true);
+    sock.accept(request);
+}
+
+// private
+void socket::revert_websocket() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    try
+    {
+        if (std::holds_alternative<ws::ssl::socket>(socket_))
+        {
+            auto& stream = std::get<ws::ssl::socket>(socket_);
+            auto ssl = std::move(stream.next_layer());
+            socket_.emplace<asio::ssl::socket>(std::move(ssl));
+        }
+        else if (std::holds_alternative<ws::socket>(socket_))
+        {
+            auto& stream = std::get<ws::socket>(socket_);
+            auto tcp = std::move(stream.next_layer());
+            socket_.emplace<asio::socket>(std::move(tcp));
+        }
+    }
+    catch (const std::exception& e)
+    {
+        LOGF("Exception @ revert_websocket: " << e.what());
     }
 }
 
