@@ -495,7 +495,7 @@ struct shim_connection
 
 BOOST_AUTO_TEST_CASE(tls_openssl__library__version__tls13)
 {
-    BOOST_REQUIRE_EQUAL(std::string{ OpenSSL_version(OPENSSL_VERSION) }, "libbitcoin tls 1.3");
+    BOOST_REQUIRE_EQUAL(std::string{ OpenSSL_version(OPENSSL_VERSION) }, "internal tls 1.3");
     CONF_modules_unload(1);
     OPENSSL_free(nullptr);
     OPENSSL_free(std::malloc(1));

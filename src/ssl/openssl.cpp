@@ -238,7 +238,7 @@ extern "C" {
 // Library.
 // ----------------------------------------------------------------------------
 
-const char* OpenSSL_version(int) { return "libbitcoin tls 1.3"; }
+const char* OpenSSL_version(int) { return "internal tls 1.3"; }
 void CONF_modules_unload(int) {}
 void OPENSSL_free(void* pointer) { std::free(pointer); }
 
