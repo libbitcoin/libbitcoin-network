@@ -63,11 +63,12 @@ bool protocol_version_70014::handle_receive_acknowledge(const code& ec,
     if (!protocol_version_70002::handle_receive_acknowledge(ec, message))
         return false;
 
-    // High bandwidth is requested by the compact protocol once current.
-    if (network_settings().enable_compact &&
-        negotiated_version() >= level::bip152)
-        SEND((send_compact{ false, send_compact::compact_version_2 }),
-            handle_send, _1);
+    const auto compact = network_settings().enable_compact;
+    if (compact && negotiated_version() >= level::bip152)
+    {
+        constexpr auto version = send_compact::compact_version_2;
+        SEND((send_compact{ false, version }), handle_send, _1);
+    }
 
     return true;
 }
