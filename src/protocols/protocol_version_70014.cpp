@@ -27,7 +27,7 @@
 #include <bitcoin/network/sessions/sessions.hpp>
 
 // sendcmpct (bip152) is sent after verack, so it cannot inform protocol
-// attachment. The peer's sendcmpct is handled by the compact protocols.
+// attachment. The peer's signal is recorded on the channel for the protocols.
 
 namespace libbitcoin {
 namespace network {
@@ -41,15 +41,39 @@ using namespace std::placeholders;
 protocol_version_70014::protocol_version_70014(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70014(session, channel,
-        session->network_settings().enable_relay)
+        session->network_settings().enable_relay,
+        session->network_settings().enable_reject)
 {
 }
 
 protocol_version_70014::protocol_version_70014(const session::ptr& session,
-    const channel::ptr& channel, bool relay) NOEXCEPT
+    const channel::ptr& channel, bool relay, bool reject) NOEXCEPT
   : protocol_version_70002(session, channel, relay),
+    reject_(reject),
     tracker<protocol_version_70014>(session->log)
 {
+}
+
+// Start.
+// ----------------------------------------------------------------------------
+
+void protocol_version_70014::shake(result_handler&& handle_event) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_version_70014");
+
+    if (started())
+        return;
+
+    SUBSCRIBE_CHANNEL(send_compact, handle_receive_send_compact, _1, _2);
+
+    // Protocol versions are cumulative, but reject is optional.
+    if (reject_)
+    {
+        protocol_version_70002::shake(std::move(handle_event));
+        return;
+    }
+
+    protocol_version_70001::shake(std::move(handle_event));
 }
 
 // Outgoing [signal compact blocks version 2, low bandwidth (bip152)].
@@ -69,6 +93,24 @@ bool protocol_version_70014::handle_receive_acknowledge(const code& ec,
         constexpr auto version = send_compact::compact_version_2;
         SEND((send_compact{ false, version }), handle_send, _1);
     }
+
+    return true;
+}
+
+// Incoming [send_compact => negotiated state change].
+// ----------------------------------------------------------------------------
+
+// The peer may signal more than one version, and may change bandwidth mode.
+bool protocol_version_70014::handle_receive_send_compact(const code& ec,
+    const send_compact::cptr& message) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_version_70014");
+
+    if (stopped(ec))
+        return false;
+
+    if (message->compact_version == send_compact::compact_version_2)
+        set_compact_blocks(message->high_bandwidth);
 
     return true;
 }

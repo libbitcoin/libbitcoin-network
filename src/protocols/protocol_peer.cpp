@@ -93,6 +93,22 @@ void protocol_peer::set_wants_address_v2() NOEXCEPT
     channel_->set_wants_address_v2();
 }
 
+bool protocol_peer::accepts_compact_blocks() const NOEXCEPT
+{
+    return channel_->accepts_compact_blocks();
+}
+
+bool protocol_peer::wants_compact_blocks() const NOEXCEPT
+{
+    return channel_->wants_compact_blocks();
+}
+
+// Call only from the version protocol, for thread safety.
+void protocol_peer::set_compact_blocks(bool high_bandwidth) NOEXCEPT
+{
+    channel_->set_compact_blocks(high_bandwidth);
+}
+
 address protocol_peer::selfs() const NOEXCEPT
 {
     const auto time_now = unix_time();

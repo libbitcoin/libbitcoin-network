@@ -86,6 +86,22 @@ void channel_peer::set_wants_address_v2() NOEXCEPT
     wants_address_v2_ = true;
 }
 
+bool channel_peer::accepts_compact_blocks() const NOEXCEPT
+{
+    return accepts_compact_blocks_;
+}
+
+bool channel_peer::wants_compact_blocks() const NOEXCEPT
+{
+    return wants_compact_blocks_;
+}
+
+void channel_peer::set_compact_blocks(bool high_bandwidth) NOEXCEPT
+{
+    accepts_compact_blocks_ = true;
+    wants_compact_blocks_ = high_bandwidth;
+}
+
 bool channel_peer::is_negotiated(messages::peer::level level) const NOEXCEPT
 {
     return negotiated_version() >= level;
