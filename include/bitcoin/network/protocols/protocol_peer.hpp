@@ -82,6 +82,13 @@ protected:
     /// Set that the peer accepts address v2 (set only during handshake).
     virtual void set_wants_address_v2() NOEXCEPT;
 
+    /// The peer signaled compact blocks version 2, and high bandwidth.
+    virtual bool accepts_compact_blocks() const NOEXCEPT;
+    virtual bool wants_compact_blocks() const NOEXCEPT;
+
+    /// Set the peer's compact blocks signal (version protocol only).
+    virtual void set_compact_blocks(bool high_bandwidth) NOEXCEPT;
+
     /// Advertised addresses with own services and current timestamp.
     virtual messages::peer::address selfs() const NOEXCEPT;
 

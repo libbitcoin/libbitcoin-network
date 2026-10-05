@@ -51,8 +51,7 @@ protocol_version_70016::protocol_version_70016(const session::ptr& session,
     const channel::ptr& channel,
     bool relay,
     bool reject) NOEXCEPT
-  : protocol_version_70014(session, channel, relay),
-    reject_(reject),
+  : protocol_version_70014(session, channel, relay, reject),
     tracker<protocol_version_70016>(session->log)
 {
 }
@@ -70,14 +69,7 @@ void protocol_version_70016::shake(result_handler&& handle_event) NOEXCEPT
     SUBSCRIBE_CHANNEL(send_address_v2, handle_receive_send_address_v2, _1, _2);
     SUBSCRIBE_CHANNEL(witness_tx_id_relay, handle_receive_witness_tx_id_relay, _1, _2);
 
-    // Protocol versions are cumulative, but reject is optional.
-    if (reject_)
-    {
-        protocol_version_70002::shake(std::move(handle_event));
-        return;
-    }
-
-    protocol_version_70001::shake(std::move(handle_event));
+    protocol_version_70014::shake(std::move(handle_event));
 }
 
 // Outgoing [signal address v2 (bip155)].

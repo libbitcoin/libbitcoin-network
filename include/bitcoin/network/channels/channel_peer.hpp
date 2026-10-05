@@ -103,6 +103,11 @@ public:
     bool wants_address_v2() const NOEXCEPT;
     void set_wants_address_v2() NOEXCEPT;
 
+    /// Peer signaled compact blocks version 2, and high bandwidth (bip152).
+    bool accepts_compact_blocks() const NOEXCEPT;
+    bool wants_compact_blocks() const NOEXCEPT;
+    void set_compact_blocks(bool high_bandwidth) NOEXCEPT;
+
     /// Chain is current, reduces the read buffer to the configured minimum.
     bool current() const NOEXCEPT;
     void set_current(bool value) NOEXCEPT;
@@ -205,6 +210,8 @@ private:
     steady_clock::duration ping_{};
     steady_clock::duration minimum_ping_{};
     bool wants_address_v2_{};
+    bool accepts_compact_blocks_{};
+    bool wants_compact_blocks_{};
     bool current_{};
     bool reading_{};
     bool quiet_{};

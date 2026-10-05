@@ -58,9 +58,6 @@ protected:
         const messages::peer::witness_tx_id_relay::cptr& message) NOEXCEPT;
 
 private:
-    // This is thread safe.
-    const bool reject_;
-
     // This is protected by strand.
     bool complete_{};
 };
