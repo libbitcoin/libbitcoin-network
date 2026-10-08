@@ -164,6 +164,12 @@ struct peer_net_setup_fixture
         settings_.inbound.binds.emplace_back(PEER_FUNCTIONAL_ENDPOINT);
         settings_.outbound.connections = 0;
         settings_.outbound.seeds.clear();
+
+        // Timed channel drops are not under test (a test of one enables it).
+        settings_.handshake_timeout_seconds = 0;
+        settings_.channel_heartbeat_minutes = 0;
+        settings_.inbound.inactivity_minutes = 0;
+        settings_.inbound.expiration_minutes = 0;
         listen({ PEER_LISTEN_ENDPOINT });
     }
 

@@ -82,7 +82,10 @@ void protocol_ping_106::handle_send_ping(const code& ec) NOEXCEPT
     if (stopped(ec))
         return;
 
-    timer_->start(BIND(handle_timer, _1));
+    // A zero heartbeat disables the timer.
+    if (!is_zero(network_settings().channel_heartbeat().count()))
+        timer_->start(BIND(handle_timer, _1));
+
     protocol::handle_send(ec);
 }
 

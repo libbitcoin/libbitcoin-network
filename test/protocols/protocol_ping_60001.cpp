@@ -19,9 +19,59 @@
 #include "../test.hpp"
 #include "../functional/peer_setup_fixture.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(protocol_ping_60001_tests, peer_net_setup_fixture<>)
-
 using namespace network::messages::peer;
+
+// A ping protocol whose heartbeat timer is expired by the test.
+class ping_60001_probe
+  : public protocol_ping_60001
+{
+public:
+    typedef std::shared_ptr<ping_60001_probe> ptr;
+    using protocol_ping_60001::protocol_ping_60001;
+
+    void expire() NOEXCEPT
+    {
+        post<ping_60001_probe>(&ping_60001_probe::handle_timer, code{});
+    }
+};
+
+class ping_60001_session
+  : public session_inbound
+{
+public:
+    ping_60001_session(net& network, uint64_t identifier,
+        std::promise<ping_60001_probe::ptr>& probe) NOEXCEPT
+      : session_inbound(network, identifier), probe_(probe)
+    {
+    }
+
+protected:
+    void attach_protocols(const channel::ptr& channel) NOEXCEPT override
+    {
+        const auto probe = channel->attach<ping_60001_probe>(shared_from_this());
+        probe_.set_value(probe);
+        probe->start();
+    }
+
+private:
+    std::promise<ping_60001_probe::ptr>& probe_;
+};
+
+class ping_60001_net
+  : public net
+{
+public:
+    using net::net;
+    std::promise<ping_60001_probe::ptr> probe{};
+
+protected:
+    session_inbound::ptr attach_inbound_session() NOEXCEPT override
+    {
+        return attach<ping_60001_session>(*this, probe);
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(protocol_ping_60001_tests, peer_net_setup_fixture<>)
 
 BOOST_AUTO_TEST_CASE(protocol_ping_60001__start__bip31_peer__ping_with_nonzero_nonce)
 {
@@ -46,12 +96,33 @@ BOOST_AUTO_TEST_CASE(protocol_ping_60001__receive_pong__matching_nonce__connecte
     BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
 }
 
-BOOST_AUTO_TEST_CASE(protocol_ping_60001__handle_timer__zero_heartbeat_no_pong__dropped)
+BOOST_FIXTURE_TEST_CASE(protocol_ping_60001__handle_timer__expired_no_pong__dropped, peer_net_setup_fixture<ping_60001_net>)
 {
-    settings_.channel_heartbeat_minutes = 0;
     BOOST_REQUIRE(open());
     BOOST_REQUIRE(handshake(level::bip31));
+    BOOST_REQUIRE(receive<ping>(level::bip31));
+
+    net_->probe.get_future().get()->expire();
     BOOST_REQUIRE(dropped());
+}
+
+BOOST_FIXTURE_TEST_CASE(protocol_ping_60001__handle_timer__expired_after_pong__ping_again, peer_net_setup_fixture<ping_60001_net>)
+{
+    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(handshake(level::bip31));
+
+    const auto first = receive<ping>(level::bip31);
+    BOOST_REQUIRE(first);
+    send(pong{ first->nonce }, level::bip31);
+
+    // The pong echo orders the node's handling of the peer's pong.
+    send(ping{ 42 }, level::bip31);
+    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
+
+    net_->probe.get_future().get()->expire();
+    const auto next = receive<ping>(level::bip31);
+    BOOST_REQUIRE(next);
+    BOOST_REQUIRE_NE(next->nonce, 0_u64);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
