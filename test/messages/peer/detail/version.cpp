@@ -63,6 +63,47 @@ BOOST_AUTO_TEST_CASE(version__size__default_bip37_version__expected)
     BOOST_REQUIRE_EQUAL(version{}.size(level::maximum_protocol), expected);
 }
 
+// relay
+
+BOOST_AUTO_TEST_CASE(version__deserialize__pre_bip37__relay_true)
+{
+    version instance{};
+    instance.value = level::bip35;
+    instance.relay = false;
+    data_chunk data(instance.size(level::bip35));
+    BOOST_REQUIRE(instance.serialize(level::bip35, data));
+
+    const auto message = version::deserialize(level::bip35, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(message->relay);
+}
+
+BOOST_AUTO_TEST_CASE(version__deserialize__bip37_relay_false__relay_false)
+{
+    version instance{};
+    instance.value = level::bip37;
+    instance.relay = false;
+    data_chunk data(instance.size(level::bip37));
+    BOOST_REQUIRE(instance.serialize(level::bip37, data));
+
+    const auto message = version::deserialize(level::bip37, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(!message->relay);
+}
+
+BOOST_AUTO_TEST_CASE(version__deserialize__bip37_relay_true__relay_true)
+{
+    version instance{};
+    instance.value = level::bip37;
+    instance.relay = true;
+    data_chunk data(instance.size(level::bip37));
+    BOOST_REQUIRE(instance.serialize(level::bip37, data));
+
+    const auto message = version::deserialize(level::bip37, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE(message->relay);
+}
+
 // wire examples
 
 // "/Satoshi:1.1.1/" (70006) no relay

@@ -77,8 +77,8 @@ version version::deserialize(uint32_t version, reader& source) NOEXCEPT
         // version, since the specified version is not yet negotiated. A true
         // relay value may then be ignored when negotiated version is < bip37.
         // If value >= bip37 with no relay byte, the source is invalidated.
-        return (value >= level::bip37) && (source.is_exhausted() ||
-            to_bool(source.read_byte()));
+        return (value < level::bip37) || source.is_exhausted() ||
+            to_bool(source.read_byte());
     };
 
     // ************************************************************************
