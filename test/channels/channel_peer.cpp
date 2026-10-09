@@ -134,6 +134,28 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_compact_blocks__high_bandwidth__expected)
     channel_ptr->stop(error::invalid_magic);
 }
 
+BOOST_AUTO_TEST_CASE(channel_peer__set_wants_witness_tx__default_false__expected)
+{
+    const logger log{};
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const settings set(bc::system::chain::selection::mainnet);
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
+
+    BOOST_REQUIRE(!channel_ptr->wants_witness_tx());
+
+    channel_ptr->set_wants_witness_tx();
+    BOOST_REQUIRE(channel_ptr->wants_witness_tx());
+
+    channel_ptr->stop(error::invalid_magic);
+}
+
 BOOST_AUTO_TEST_CASE(channel_peer__set_wants_address_v2__always__latched)
 {
     const logger log{};

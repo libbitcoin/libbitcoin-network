@@ -72,16 +72,20 @@ void protocol_version_70016::shake(result_handler&& handle_event) NOEXCEPT
     protocol_version_70014::shake(std::move(handle_event));
 }
 
-// Outgoing [signal address v2 (bip155)].
+// Outgoing [signal address v2 (bip155), witness tx id relay (bip339)].
 // ----------------------------------------------------------------------------
 
 void protocol_version_70016::signal() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70016");
 
-    if (network_settings().enable_address && network_settings().gossip_v2() &&
-        negotiated_version() >= level::bip155)
+    const auto& settings = network_settings();
+    if (settings.enable_address && settings.enable_address_v2 &&
+        settings.gossip_v2() && negotiated_version() >= level::bip155)
         SEND(send_address_v2{}, handle_send, _1);
+
+    if (settings.enable_witness_tx && negotiated_version() >= level::bip339)
+        SEND(witness_tx_id_relay{}, handle_send, _1);
 
     protocol_version_70002::signal();
 }
@@ -145,7 +149,10 @@ bool protocol_version_70016::handle_receive_witness_tx_id_relay(const code& ec,
         return false;
     }
 
-    // TODO: set channel witness_tx_id_relay_relay property and use to attach protocols.
+    // Ignored from a peer below the version that defines it.
+    if (negotiated_version() >= level::bip339)
+        set_wants_witness_tx();
+
     return true;
 }
 

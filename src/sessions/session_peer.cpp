@@ -145,8 +145,9 @@ void session_peer::attach_handshake(const channel::ptr& channel,
     using namespace messages::peer;
     const auto self = shared_from_this();
 
-    // Address v2 can be disabled, independent of version.
-    if (is_configured(level::bip155) && network_settings().enable_address_v2)
+    // Address v2 and witness tx relay can be disabled, independent of version.
+    if (is_configured(level::bip155) && (network_settings().enable_address_v2 ||
+        network_settings().enable_witness_tx))
         channel->attach<protocol_version_70016>(self)->shake(std::move(handler));
 
     // Compact blocks can be disabled, independent of version.

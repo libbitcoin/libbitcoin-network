@@ -89,6 +89,12 @@ protected:
     /// Set the peer's compact blocks signal (version protocol only).
     virtual void set_compact_blocks(bool high_bandwidth) NOEXCEPT;
 
+    /// The peer signaled witness tx id relay (bip339).
+    virtual bool wants_witness_tx() const NOEXCEPT;
+
+    /// Set that the peer signaled witness tx id relay (version protocol only).
+    virtual void set_wants_witness_tx() NOEXCEPT;
+
     /// Advertised addresses with own services and current timestamp.
     virtual messages::peer::address selfs() const NOEXCEPT;
 
