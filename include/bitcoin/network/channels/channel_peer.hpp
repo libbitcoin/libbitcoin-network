@@ -108,6 +108,10 @@ public:
     bool wants_compact_blocks() const NOEXCEPT;
     void set_compact_blocks(bool high_bandwidth) NOEXCEPT;
 
+    /// Peer signaled witness tx id relay, written only in handshake (bip339).
+    bool wants_witness_tx() const NOEXCEPT;
+    void set_wants_witness_tx() NOEXCEPT;
+
     /// Chain is current, reduces the read buffer to the configured minimum.
     bool current() const NOEXCEPT;
     void set_current(bool value) NOEXCEPT;
@@ -212,6 +216,7 @@ private:
     bool wants_address_v2_{};
     bool accepts_compact_blocks_{};
     bool wants_compact_blocks_{};
+    bool wants_witness_tx_{};
     bool current_{};
     bool reading_{};
     bool quiet_{};

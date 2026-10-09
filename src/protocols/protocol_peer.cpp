@@ -109,6 +109,17 @@ void protocol_peer::set_compact_blocks(bool high_bandwidth) NOEXCEPT
     channel_->set_compact_blocks(high_bandwidth);
 }
 
+bool protocol_peer::wants_witness_tx() const NOEXCEPT
+{
+    return channel_->wants_witness_tx();
+}
+
+// Call only from handshake (version protocol), for thread safety.
+void protocol_peer::set_wants_witness_tx() NOEXCEPT
+{
+    channel_->set_wants_witness_tx();
+}
+
 address protocol_peer::selfs() const NOEXCEPT
 {
     const auto time_now = unix_time();

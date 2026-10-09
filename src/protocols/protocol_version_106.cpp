@@ -230,7 +230,10 @@ void protocol_version_106::handle_send_version(const code& ec) NOEXCEPT
     if (stopped(ec))
         return;
 
-    timer_->start(BIND(handle_timer, _1));
+    // A zero timeout disables the handshake timer.
+    if (!is_zero(network_settings().channel_handshake().count()))
+        timer_->start(BIND(handle_timer, _1));
+
     sent_version_ = true;
 
     if (complete())

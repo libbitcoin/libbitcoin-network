@@ -350,8 +350,9 @@ public:
     typedef std::shared_ptr<probe_protocol> ptr;
 
     probe_protocol(const network::session::ptr& session,
-        const channel::ptr& channel, probe_promise& promise) NOEXCEPT
-      : protocol_peer(session, channel), promise_(promise)
+        const channel::ptr& channel, probe_promise& promise,
+        bool drop) NOEXCEPT
+      : protocol_peer(session, channel), promise_(promise), drop_(drop)
     {
     }
 
@@ -394,6 +395,9 @@ public:
         SUBSCRIBE_BROADCAST(address, handle_broadcast, _1, _2, _3);
         BROADCAST(address, system::to_shared<address>(record_.selfs));
         protocol::start();
+
+        if (drop_)
+            stop(error::channel_timeout);
     }
 
 private:
@@ -423,6 +427,7 @@ private:
 
     probe_promise& promise_;
     probe_record record_{};
+    const bool drop_;
 };
 
 #undef CLASS
@@ -432,8 +437,8 @@ class probe_session
 {
 public:
     probe_session(net& network, uint64_t identifier,
-        probe_promise& promise) NOEXCEPT
-      : session_inbound(network, identifier), promise_(promise)
+        probe_promise& promise, const bool& drop) NOEXCEPT
+      : session_inbound(network, identifier), promise_(promise), drop_(drop)
     {
     }
 
@@ -441,11 +446,12 @@ protected:
     void attach_protocols(const channel::ptr& channel) NOEXCEPT override
     {
         session_inbound::attach_protocols(channel);
-        channel->attach<probe_protocol>(shared_from_this(), promise_)->start();
+        channel->attach<probe_protocol>(shared_from_this(), promise_, drop_)->start();
     }
 
 private:
     probe_promise& promise_;
+    const bool& drop_;
 };
 
 class probe_net
@@ -459,11 +465,12 @@ public:
     }
 
     probe_promise promise{};
+    bool drop{};
 
 protected:
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
     {
-        return attach<probe_session>(*this, promise);
+        return attach<probe_session>(*this, promise, drop);
     }
 };
 
@@ -483,6 +490,8 @@ struct protocol_probe_setup_fixture
 
 BOOST_FIXTURE_TEST_CASE(protocol__properties__handshaken_inbound__expected, protocol_probe_setup_fixture)
 {
+    settings_.inbound.inactivity_minutes = 10;
+    settings_.inbound.expiration_minutes = 60;
     BOOST_REQUIRE(open());
     BOOST_REQUIRE(handshake(level::bip61));
     const auto record = net_->promise.get_future().get();
@@ -530,8 +539,10 @@ BOOST_FIXTURE_TEST_CASE(protocol__properties__handshaken_inbound__expected, prot
 
 BOOST_FIXTURE_TEST_CASE(protocol__stop__handshaken_inbound__dropped, protocol_probe_setup_fixture)
 {
-    settings_.channel_heartbeat_minutes = 0;
-    BOOST_REQUIRE(open());
+    BOOST_REQUIRE(!start());
+    net_->drop = true;
+    BOOST_REQUIRE(!run());
+    connect(settings_.inbound.binds.back().to_endpoint());
     BOOST_REQUIRE(handshake(level::bip61));
     BOOST_REQUIRE(dropped());
 }

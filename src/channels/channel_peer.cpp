@@ -102,6 +102,16 @@ void channel_peer::set_compact_blocks(bool high_bandwidth) NOEXCEPT
     wants_compact_blocks_ = high_bandwidth;
 }
 
+bool channel_peer::wants_witness_tx() const NOEXCEPT
+{
+    return wants_witness_tx_;
+}
+
+void channel_peer::set_wants_witness_tx() NOEXCEPT
+{
+    wants_witness_tx_ = true;
+}
+
 bool channel_peer::is_negotiated(messages::peer::level level) const NOEXCEPT
 {
     return negotiated_version() >= level;
