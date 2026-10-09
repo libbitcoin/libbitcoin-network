@@ -54,6 +54,7 @@ namespace peer {
 // submitorder  --        209   N/A     obsolete
 // alert        v4        311   N/A     disabled by default, deprecated
 // ----------------------------------------------------------------------------
+// version      v1      60000   BIP014  standardized user agent (no code)
 // ping         v2      60001   BIP031  added nonce field
 // pong         v1      60001   BIP031
 // reject       v3      70002   BIP061  disabled by default, deprecated
