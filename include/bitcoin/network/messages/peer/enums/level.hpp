@@ -34,11 +34,8 @@ namespace peer {
 // implementations reject messages they don't know. As a courtesy, don't send
 // it to nodes with a version before 70016, as no software is known to support
 // BIP155 that doesn't announce at least that protocol version number."
-// ** TODO: these should be based solely on NODE_COMPACT_FILTERS signal, but we
-// may associate the protocol version at which it was deployed (70015).
-// *** BIP330 is not versioned, but states "Since sketches are based on the
-// WTXIDs, the negotiation and support of Erlay should be enabled only if both
-// peers signal BIP-339 support." Therefore it requires version 70016.
+// ** Filters are technically gated only by our service::node_client_filters,
+// but we also require the peer to negotiate protocol version 70015.
 
 // libbitcoin-network
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -100,11 +97,6 @@ namespace peer {
 // getcfheaders v4      70015   BIP157  not BIP-associated to net version (**)
 // ----------------------------------------------------------------------------
 // wtxidrelay   v4      70016   BIP339  in-handshake, single
-// sendtxrcncl  --      70016   BIP330  no intent to support (***)
-// reqrecon     --      70016   BIP330  no intent to support (***)
-// sketch       --      70016   BIP330  no intent to support (***)
-// reqsketchext --      70016   BIP330  no intent to support (***)
-// reconcildiff --      70016   BIP330  no intent to support (***)
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 enum level: uint32_t
