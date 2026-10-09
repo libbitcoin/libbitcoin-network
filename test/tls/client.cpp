@@ -41,11 +41,9 @@ static data_chunk message_of(uint8_t type, const data_chunk& body)
 static data_chunk verify_content(const std::string& label,
     const schedule::secret& hash)
 {
-    data_chunk content(verify_padding, 0x20);
-    content.insert(content.end(), label.begin(), label.end());
-    content.push_back(0x00);
-    content.insert(content.end(), hash.begin(), hash.end());
-    return content;
+    const data_chunk padding(verify_padding, 0x20);
+    const data_array<one> separator{ 0x00 };
+    return build_chunk({ padding, label, separator, hash });
 }
 
 tls_client::tls_client(const options& value) NOEXCEPT
