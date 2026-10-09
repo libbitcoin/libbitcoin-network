@@ -413,6 +413,7 @@ struct BCT_API settings
     bool enable_alert{ false };
     bool enable_reject{ false };
     bool enable_not_found{ false };
+    bool enable_memory_pool{ false };
     bool enable_relay{ false };
     bool validate_checksum{ false };
     bool gossip_ipv4{ true };
