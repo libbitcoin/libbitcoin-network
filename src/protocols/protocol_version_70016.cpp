@@ -126,7 +126,8 @@ bool protocol_version_70016::handle_receive_send_address_v2(const code& ec,
     // Late send_address_v2.
     if (complete_)
     {
-        rejection(error::protocol_violation);
+        LOGR("Late send_address_v2 from [" << opposite() << "].");
+        stop(error::protocol_violation);
         return false;
     }
 
@@ -145,7 +146,8 @@ bool protocol_version_70016::handle_receive_witness_tx_id_relay(const code& ec,
     // Late witness_tx_id_relay.
     if (complete_)
     {
-        rejection(error::protocol_violation);
+        LOGR("Late witness_tx_id_relay from [" << opposite() << "].");
+        stop(error::protocol_violation);
         return false;
     }
 
