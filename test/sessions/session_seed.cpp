@@ -117,6 +117,56 @@ public:
     }
 };
 
+class mock_connector_connect_pending
+  : public mock_connector_connect_success
+{
+public:
+    typedef std::shared_ptr<mock_connector_connect_pending> ptr;
+
+    using mock_connector_connect_success::mock_connector_connect_success;
+
+    void start(const std::string&, uint16_t, const config::address&,
+        const config::endpoint&, socket_handler&& handler) NOEXCEPT override
+    {
+        handler_ = std::move(handler);
+    }
+
+    // The pending connect is canceled upon stop.
+    void stop() NOEXCEPT override
+    {
+        if (handler_)
+        {
+            const auto handler = std::move(handler_);
+            handler_ = {};
+            boost::asio::post(strand_, [=]() NOEXCEPT
+            {
+                handler(error::operation_canceled, nullptr);
+            });
+        }
+
+        mock_connector_connect_success::stop();
+    }
+
+private:
+    socket_handler handler_{};
+};
+
+class mock_connector_connect_suspended
+  : public mock_connector_connect_success
+{
+public:
+    typedef std::shared_ptr<mock_connector_connect_suspended> ptr;
+
+    using mock_connector_connect_success::mock_connector_connect_success;
+
+    // A suspended connector invokes its handler without posting.
+    void start(const std::string&, uint16_t, const config::address&,
+        const config::endpoint&, socket_handler&& handler) NOEXCEPT override
+    {
+        handler(error::service_suspended, nullptr);
+    }
+};
+
 class mock_session_seed
   : public session_seed
 {
@@ -216,6 +266,32 @@ public:
 
 private:
     mutable size_t count_{ zero };
+};
+
+class mock_session_seed_first_fails
+  : public mock_session_seed_increasing_address_count
+{
+public:
+    using mock_session_seed_increasing_address_count::
+        mock_session_seed_increasing_address_count;
+
+    // Fail the first seed, so the race is sufficient as the others connect.
+    void start_seed(const code& ec, const config::endpoint& seed,
+        const connector::ptr& connector,
+        const socket_handler& handler) NOEXCEPT override
+    {
+        if (!failed_.exchange(true))
+        {
+            handler(error::invalid_magic, nullptr);
+            return;
+        }
+
+        mock_session_seed_increasing_address_count::start_seed(ec, seed,
+            connector, handler);
+    }
+
+private:
+    std::atomic_bool failed_{ false };
 };
 
 template <class Connector = connector>
@@ -723,6 +799,342 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 
     BOOST_REQUIRE(net.get_connector()->connected_());
     BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+}
+
+// seeding
+
+BOOST_AUTO_TEST_CASE(session_seed__seeding__not_started__false)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    mock_net<mock_connector_connect_success> net(set, log);
+    auto session = std::make_shared<mock_session_seed>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<bool> seeding;
+    boost::asio::post(net.strand(), [=, &seeding]() NOEXCEPT
+    {
+        seeding.set_value(session->seeding());
+    });
+
+    BOOST_REQUIRE(!seeding.get_future().get());
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__seeding__no_outbound__false)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.connections = 0;
+    mock_net<mock_connector_connect_success> net(set, log);
+    auto session = std::make_shared<mock_session_seed>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+
+    std::promise<bool> seeding;
+    boost::asio::post(net.strand(), [=, &seeding]() NOEXCEPT
+    {
+        seeding.set_value(session->seeding());
+    });
+
+    BOOST_REQUIRE(!seeding.get_future().get());
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__seeding__connect_fail__false)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.connections = 1;
+    set.outbound.host_pool_capacity = 1;
+    mock_net<mock_connector_connect_fail> net(set, log);
+    auto session = std::make_shared<mock_session_seed>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
+
+    std::promise<bool> seeding;
+    boost::asio::post(net.strand(), [=, &seeding]() NOEXCEPT
+    {
+        seeding.set_value(session->seeding());
+    });
+
+    BOOST_REQUIRE(!seeding.get_future().get());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__completed__not_started__zero)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    mock_net<mock_connector_connect_success> net(set, log);
+    auto session = std::make_shared<mock_session_seed>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<steady_clock::time_point> completed;
+    boost::asio::post(net.strand(), [=, &completed]() NOEXCEPT
+    {
+        completed.set_value(session->completed());
+    });
+
+    BOOST_REQUIRE(completed.get_future().get() == steady_clock::time_point{});
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__completed__no_outbound__zero)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.connections = 0;
+    mock_net<mock_connector_connect_success> net(set, log);
+    auto session = std::make_shared<mock_session_seed>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+
+    std::promise<steady_clock::time_point> completed;
+    boost::asio::post(net.strand(), [=, &completed]() NOEXCEPT
+    {
+        completed.set_value(session->completed());
+    });
+
+    BOOST_REQUIRE(completed.get_future().get() == steady_clock::time_point{});
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__completed__connect_fail__nonzero)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.connections = 1;
+    set.outbound.host_pool_capacity = 1;
+    mock_net<mock_connector_connect_fail> net(set, log);
+    auto session = std::make_shared<mock_session_seed>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
+
+    std::promise<steady_clock::time_point> completed;
+    boost::asio::post(net.strand(), [=, &completed]() NOEXCEPT
+    {
+        completed.set_value(session->completed());
+    });
+
+    BOOST_REQUIRE(completed.get_future().get() != steady_clock::time_point{});
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__seeding__connecting__true)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.connections = 1;
+    set.outbound.host_pool_capacity = 1;
+    mock_net<mock_connector_connect_pending> net(set, log);
+    auto session = std::make_shared<mock_session_seed>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    std::promise<bool> seeding;
+    boost::asio::post(net.strand(), [=, &seeding]() NOEXCEPT
+    {
+        seeding.set_value(session->seeding());
+    });
+
+    const auto connecting = seeding.get_future().get();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
+    BOOST_REQUIRE(connecting);
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__seeding__connecting_stopped__false)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.connections = 1;
+    set.outbound.host_pool_capacity = 1;
+    mock_net<mock_connector_connect_pending> net(set, log);
+    auto session = std::make_shared<mock_session_seed>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
+
+    std::promise<bool> seeding;
+    boost::asio::post(net.strand(), [=, &seeding]() NOEXCEPT
+    {
+        seeding.set_value(session->seeding());
+    });
+
+    BOOST_REQUIRE(!seeding.get_future().get());
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__seeding__sufficient_connecting__true)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.connections = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.seeds.resize(2);
+    BOOST_REQUIRE_EQUAL(set.outbound.minimum_address_count(), one);
+    mock_net<mock_connector_connect_pending> net(set, log);
+    auto session = std::make_shared<mock_session_seed_first_fails>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    std::promise<bool> seeding;
+    boost::asio::post(net.strand(), [=, &seeding]() NOEXCEPT
+    {
+        seeding.set_value(session->seeding());
+    });
+
+    const auto connecting = seeding.get_future().get();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(connecting);
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__seeding__connect_suspended__false)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.connections = 1;
+    set.outbound.host_pool_capacity = 1;
+    mock_net<mock_connector_connect_suspended> net(set, log);
+    auto session = std::make_shared<mock_session_seed>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
+
+    std::promise<bool> seeding;
+    boost::asio::post(net.strand(), [=, &seeding]() NOEXCEPT
+    {
+        seeding.set_value(session->seeding());
+    });
+
+    BOOST_REQUIRE(!seeding.get_future().get());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
 }

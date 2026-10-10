@@ -38,6 +38,9 @@ using namespace system;
 using namespace std::placeholders;
 constexpr auto encryption = messages::peer::service::node_encrypted_transport;
 
+// Seeding is not repeated within this many seeding timeouts of completion.
+constexpr auto seed_backoff = 10;
+
 net::net(const settings& settings, const logger& log,
     uint64_t required_services, uint64_t provided_services) NOEXCEPT
   : settings_(settings),
@@ -217,7 +220,8 @@ void net::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_seed_session()->start(move_copy(handler));
+    seed_ = attach_seed_session();
+    seed_->start(move_copy(handler));
 }
 
 // Run sequence (seeding may be ongoing after its handler is invoked).
@@ -296,8 +300,9 @@ void net::do_close() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Release reference to manual session (also held by stop subscriber).
+    // Release session references (also held by stop subscriber).
     if (manual_) manual_.reset();
+    if (seed_) seed_.reset();
 
     // Notify and delete all stop subscribers (all sessions).
     stop_subscriber_.stop(error::service_stopped);
@@ -701,6 +706,39 @@ void net::do_save(const address_cptr& message,
     }
 
     hosts_.save(message, move_copy(handler));
+}
+
+void net::seed() NOEXCEPT
+{
+    boost::asio::post(strand_,
+        std::bind(&net::do_seed, this));
+}
+
+void net::do_seed() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // address_not_found may only mean that no pooled address suits the slot,
+    // so seed only below the minimum (and never without seeds).
+    const auto& outbound = network_settings().outbound;
+    if (closed() || outbound.seeds.empty() ||
+        address_count() >= outbound.minimum_address_count())
+        return;
+
+    // The startup seed session is retained before outbound can seed.
+    BC_ASSERT(seed_);
+
+    // One seed session at a time, and none soon after one completes.
+    const auto completed = seed_->completed();
+    const auto backoff = outbound.seeding_timeout() * seed_backoff;
+
+    if (seed_->seeding() || (completed != steady_clock::time_point{} &&
+        (steady_clock::now() - completed) < backoff))
+        return;
+
+    // The handler signals sufficiency, seeding ends upon completion.
+    seed_ = attach_seed_session();
+    seed_->start([](const code&) NOEXCEPT {});
 }
 
 // P2P self address.

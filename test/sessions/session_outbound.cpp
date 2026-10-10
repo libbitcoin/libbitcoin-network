@@ -229,6 +229,34 @@ public:
     }
 };
 
+class mock_session_outbound_no_address
+  : public mock_session_outbound_one_address_count
+{
+public:
+    typedef std::shared_ptr<mock_session_outbound_no_address> ptr;
+
+    using mock_session_outbound_one_address_count::
+        mock_session_outbound_one_address_count;
+
+    void take(hosts::family, address_item_handler&& handler) const NOEXCEPT override
+    {
+        handler(error::address_not_found, {});
+    }
+
+    void seed() const NOEXCEPT override
+    {
+        seeded_ = true;
+    }
+
+    bool seeded() const NOEXCEPT
+    {
+        return seeded_;
+    }
+
+private:
+    mutable std::atomic_bool seeded_{ false };
+};
+
 class mock_session_outbound_groups
   : public mock_session_outbound_one_address
 {
@@ -608,6 +636,49 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_foun
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::address_not_found);
     BOOST_REQUIRE(session->stopped());
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__no_address__seeded)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    mock_net<> net(set, log);
+    auto session = std::make_shared<mock_session_outbound_no_address>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+
+    std::promise<bool> seed;
+    boost::asio::post(net.strand(), [=, &seed]() NOEXCEPT
+    {
+        seed.set_value(session->seeded());
+    });
+
+    const auto seeded = seed.get_future().get();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(seeded);
 }
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
