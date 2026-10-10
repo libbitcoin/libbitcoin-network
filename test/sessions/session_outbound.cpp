@@ -337,6 +337,210 @@ private:
     };
 };
 
+template <error::error_t Code>
+class mock_connector_connect_code
+  : public connector
+{
+public:
+    typedef std::shared_ptr<mock_connector_connect_code> ptr;
+
+    using connector::connector;
+
+    void start(const std::string&, uint16_t, const config::address&,
+        const config::endpoint&, socket_handler&& handler) NOEXCEPT override
+    {
+        boost::asio::post(strand_, [=]() NOEXCEPT
+        {
+            handler(Code, nullptr);
+        });
+    }
+};
+
+template <class Connector>
+class mock_net_restore
+  : public mock_net<Connector>
+{
+public:
+    using mock_net<Connector>::mock_net;
+
+    size_t address_count() const NOEXCEPT override
+    {
+        return one;
+    }
+
+    void take(hosts::family, address_item_handler&& handler) NOEXCEPT override
+    {
+        const auto item = config::address{ "127.0.0.1:65154" }.to_address_item(0, service::node_none);
+        handler(error::success, system::to_shared(item));
+    }
+
+    void restore(const address_item_cptr&, result_handler&& handler) NOEXCEPT override
+    {
+        ++restores_;
+        handler(error::success);
+    }
+
+    size_t restores() const NOEXCEPT
+    {
+        return restores_;
+    }
+
+private:
+    std::atomic<size_t> restores_{};
+};
+
+// Alternates the two codes across connects (one of each per pair).
+template <error::error_t First, error::error_t Second>
+class mock_connector_connect_codes
+  : public connector
+{
+public:
+    typedef std::shared_ptr<mock_connector_connect_codes> ptr;
+
+    using connector::connector;
+
+    void start(const std::string&, uint16_t, const config::address&,
+        const config::endpoint&, socket_handler&& handler) NOEXCEPT override
+    {
+        const auto code = is_odd(count_++) ? Second : First;
+        boost::asio::post(strand_, [=]() NOEXCEPT
+        {
+            handler(code, nullptr);
+        });
+    }
+
+private:
+    static inline std::atomic<size_t> count_{};
+};
+
+// Alternates take between an address and none (one of each per pair).
+template <class Connector>
+class mock_net_restore_sparse
+  : public mock_net_restore<Connector>
+{
+public:
+    using mock_net_restore<Connector>::mock_net_restore;
+
+    void take(hosts::family family, address_item_handler&& handler) NOEXCEPT override
+    {
+        if (is_odd(takes_++))
+        {
+            handler(error::address_not_found, {});
+            return;
+        }
+
+        mock_net_restore<Connector>::take(family, std::move(handler));
+    }
+
+private:
+    std::atomic<size_t> takes_{};
+};
+
+// Fails each connect by port parity (Even code on even ports, Odd on odd).
+template <error::error_t Even, error::error_t Odd>
+class mock_connector_connect_parity
+  : public connector
+{
+public:
+    typedef std::shared_ptr<mock_connector_connect_parity> ptr;
+
+    using connector::connector;
+
+    void start(const std::string&, uint16_t port, const config::address&,
+        const config::endpoint&, socket_handler&& handler) NOEXCEPT override
+    {
+        const auto code = is_odd(port) ? Odd : Even;
+        boost::asio::post(strand_, [=]() NOEXCEPT
+        {
+            handler(code, nullptr);
+        });
+    }
+};
+
+// Connects on even ports (real socket), fails net_unreachable on odd.
+class mock_connector_success_or_unreachable
+  : public connector
+{
+public:
+    typedef std::shared_ptr<mock_connector_success_or_unreachable> ptr;
+
+    using connector::connector;
+
+    void start(const std::string&, uint16_t port, const config::address&,
+        const config::endpoint&, socket_handler&& handler) NOEXCEPT override
+    {
+        if (is_odd(port))
+        {
+            boost::asio::post(strand_, [=]() NOEXCEPT
+            {
+                handler(error::net_unreachable, nullptr);
+            });
+
+            return;
+        }
+
+        socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+        const auto socket = std::make_shared<network::socket>(log, service_, std::move(params));
+        boost::asio::post(strand_, [=]() NOEXCEPT
+        {
+            handler(error::success, socket);
+        });
+    }
+};
+
+// Takes a distinct port per draw and records the ports restored.
+template <class Connector>
+class mock_net_restore_keyed
+  : public mock_net<Connector>
+{
+public:
+    mock_net_restore_keyed(const settings& set, const logger& log,
+        size_t count=one) NOEXCEPT
+      : mock_net<Connector>(set, log), count_(count)
+    {
+    }
+
+    size_t address_count() const NOEXCEPT override
+    {
+        return count_;
+    }
+
+    void take(hosts::family, address_item_handler&& handler) NOEXCEPT override
+    {
+        const auto port = std::to_string(40000u + takes_++);
+        const auto item = config::address{ "127.0.0.1:" + port }.to_address_item(0, service::node_none);
+        handler(error::success, system::to_shared(item));
+    }
+
+    void restore(const address_item_cptr& host, result_handler&& handler) NOEXCEPT override
+    {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            restored_.push_back(host->port);
+        }
+
+        handler(error::success);
+    }
+
+    size_t takes() const NOEXCEPT
+    {
+        return takes_;
+    }
+
+    std::vector<uint16_t> restored() const NOEXCEPT
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return restored_;
+    }
+
+private:
+    const size_t count_;
+    std::atomic<size_t> takes_{};
+    mutable std::mutex mutex_{};
+    std::vector<uint16_t> restored_{};
+};
+
 class mock_connector_stop_connect
   : public mock_connector_connect_success
 {
@@ -725,6 +929,591 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE(session->stopped());
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable__restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_code<error::net_unreachable>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__host_unreachable__restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_code<error::host_unreachable>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__socks_net_unreachable__restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_code<error::socks_net_unreachable>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__socks_host_unreachable__restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_code<error::socks_host_unreachable>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__insufficient_buffer__restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_code<error::insufficient_buffer>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__batch_all_unreachable__restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 2;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_codes<error::net_unreachable, error::host_unreachable>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_refused__not_restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 2;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_codes<error::net_unreachable, error::connection_refused>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_connected__not_restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 2;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore_keyed<mock_connector_success_or_unreachable> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_attached_handshake());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_GE(net.takes(), 2u);
+
+    const auto restored = net.restored();
+    BOOST_REQUIRE(std::none_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
+    {
+        return is_odd(port);
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 2;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore_sparse<mock_connector_connect_code<error::net_unreachable>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__channel_timeout__restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_code<error::channel_timeout>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!is_zero(net.restores()));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__peer_disconnect__restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_code<error::peer_disconnect>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!is_zero(net.restores()));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__timeout_restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 2;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore_keyed<mock_connector_connect_parity<error::net_unreachable, error::operation_timeout>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+
+    const auto restored = net.restored();
+    BOOST_REQUIRE(!restored.empty());
+    BOOST_REQUIRE(std::all_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
+    {
+        return is_odd(port);
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_near_full_pool__room_restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 2;
+    set.outbound.connect_batch_size = 2;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore_keyed<mock_connector_connect_parity<error::net_unreachable, error::host_unreachable>> net(set, log, 1);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+
+    // Each batch draws a port pair (2n, 2n+1), with room to restore only one.
+    const auto restored = net.restored();
+    BOOST_REQUIRE(!restored.empty());
+    BOOST_REQUIRE(std::none_of(restored.begin(), restored.end(), [&](uint16_t port) NOEXCEPT
+    {
+        const auto pair = static_cast<uint16_t>(port ^ 1u);
+        return std::find(restored.begin(), restored.end(), pair) != restored.end();
+    }));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable_full_host_pool__not_restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 1;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_code<error::net_unreachable>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__connection_refused__not_restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 1;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore<mock_connector_connect_code<error::connection_refused>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(is_zero(restores));
 }
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
