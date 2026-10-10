@@ -18,4 +18,4 @@
  */
 #define BOOST_TEST_MODULE libbitcoin_network_test
 
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
