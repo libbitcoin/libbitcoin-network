@@ -28,6 +28,8 @@ using namespace system;
 
 BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 
+BC_DEBUG_ONLY(constexpr uint32_t maximum_24 = 0x00ffffff;)
+
 // reader
 // ----------------------------------------------------------------------------
 
