@@ -28,28 +28,15 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
-// This is sub1(size_t)! so we use an internal define (e.g. 1kb).
-////constexpr auto max_url = boost::url_view::max_size();
-
 bool is_origin_form(const std::string& target) NOEXCEPT
 {
     if (target.size() > max_url)
         return false;
 
-    // Excludes leading "//", which is allowed by parse_origin_form.
-    if (target.starts_with("//"))
-        return false;
-
-    try
-    {
-        // "/index.html?field=value" (no authority).
-        return !boost::urls::parse_origin_form(target).has_error();
-    }
-    catch (...)
-    {
-        // target.size() > url_view::max_size.
-        return false;
-    }
+    // "/index.html?field=value" (no authority, no fragment).
+    system::wallet::uri uri{};
+    return target.starts_with('/') && !target.starts_with("//") &&
+        uri.decode(target) && !uri.has_fragment();
 }
 
 bool is_absolute_form(const std::string& target) NOEXCEPT
@@ -57,23 +44,14 @@ bool is_absolute_form(const std::string& target) NOEXCEPT
     if (target.size() > max_url)
         return false;
 
-    try
-    {
-        // "scheme://www.boost.org/index.html?field=value" (no fragment).
-        const auto uri = boost::urls::parse_absolute_uri(target);
-        if (uri.has_error())
-            return false;
-
-        // Limit to http/s.
-        const auto scheme = uri->scheme_id();
-        return scheme == boost::urls::scheme::http
-            || scheme == boost::urls::scheme::https;
-    }
-    catch (...)
-    {
-        // target.size() > url_view::max_size.
+    // "scheme://www.boost.org/index.html?field=value" (no fragment).
+    system::wallet::uri uri{};
+    if (!uri.decode(target) || !uri.has_scheme() || uri.has_fragment())
         return false;
-    }
+
+    // Limit to http/s.
+    const auto scheme = uri.scheme();
+    return scheme == "http" || scheme == "https";
 }
 
 // Used for CONNECT method.
@@ -82,14 +60,10 @@ bool is_authority_form(const std::string& target) NOEXCEPT
     if (target.size() > max_url)
         return false;
 
-    // Requires leading "//", which is not allowed by parse_authority.
-    if (!target.starts_with("//"))
-        return false;
-
-    // "[ userinfo "@" ] host [ ":" port ]"
-    const auto at = std::next(target.begin(), two);
-    const auto authority = std::string_view{ at, target.end() };
-    return !boost::urls::parse_authority(authority).has_error();
+    // "//[ userinfo "@" ] host [ ":" port ]"
+    system::wallet::uri uri{};
+    return target.starts_with("//") && uri.decode(target) &&
+        uri.path().empty() && !uri.has_query() && !uri.has_fragment();
 }
 
 // Used for OPTIONS method.
