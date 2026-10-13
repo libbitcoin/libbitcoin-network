@@ -164,7 +164,7 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
             shared_from_this(), _1, socket, std::move(handler)));
 }
 
-// private
+// protected
 void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
     const socket_handler& handler) NOEXCEPT
 {
