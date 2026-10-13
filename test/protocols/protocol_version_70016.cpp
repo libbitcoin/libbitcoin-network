@@ -114,6 +114,23 @@ BOOST_AUTO_TEST_CASE(protocol_version_70016__handshake__witness_tx_bip152_peer__
     BOOST_REQUIRE_EQUAL(receive().first, version_acknowledge::command);
 }
 
+BOOST_AUTO_TEST_CASE(protocol_version_70016__receive_send_address_v2__before_version__dropped)
+{
+    BOOST_REQUIRE(open());
+
+    send(send_address_v2{}, level::bip155);
+    BOOST_REQUIRE(dropped());
+}
+
+BOOST_AUTO_TEST_CASE(protocol_version_70016__receive_witness_tx_id_relay__before_version__dropped)
+{
+    settings_.enable_witness_tx = true;
+    BOOST_REQUIRE(open());
+
+    send(witness_tx_id_relay{}, level::bip339);
+    BOOST_REQUIRE(dropped());
+}
+
 BOOST_AUTO_TEST_CASE(protocol_version_70016__receive_send_address_v2__after_acknowledge__dropped)
 {
     BOOST_REQUIRE(open());

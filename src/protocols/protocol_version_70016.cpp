@@ -123,6 +123,14 @@ bool protocol_version_70016::handle_receive_send_address_v2(const code& ec,
     if (stopped(ec))
         return false;
 
+    // Early send_address_v2.
+    if (is_zero(peer_version()->value))
+    {
+        LOGR("Early send_address_v2 from [" << opposite() << "].");
+        stop(error::protocol_violation);
+        return false;
+    }
+
     // Late send_address_v2.
     if (complete_)
     {
@@ -142,6 +150,14 @@ bool protocol_version_70016::handle_receive_witness_tx_id_relay(const code& ec,
 
     if (stopped(ec))
         return false;
+
+    // Early witness_tx_id_relay.
+    if (is_zero(peer_version()->value))
+    {
+        LOGR("Early witness_tx_id_relay from [" << opposite() << "].");
+        stop(error::protocol_violation);
+        return false;
+    }
 
     // Late witness_tx_id_relay.
     if (complete_)
