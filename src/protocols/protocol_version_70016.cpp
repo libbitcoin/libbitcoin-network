@@ -82,10 +82,14 @@ void protocol_version_70016::signal() NOEXCEPT
     const auto& settings = network_settings();
     if (settings.enable_address && settings.enable_address_v2 &&
         settings.gossip_v2() && negotiated_version() >= level::bip155)
+    {
         SEND(send_address_v2{}, handle_send, _1);
+    }
 
     if (settings.enable_witness_tx && negotiated_version() >= level::bip339)
+    {
         SEND(witness_tx_id_relay{}, handle_send, _1);
+    }
 
     protocol_version_70002::signal();
 }
