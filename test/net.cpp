@@ -749,6 +749,7 @@ class mock_service_session
   : public session_manual
 {
 public:
+    typedef std::shared_ptr<mock_service_session> ptr;
     using session_manual::session_manual;
 
     void stop() NOEXCEPT override
