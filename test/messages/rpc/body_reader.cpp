@@ -890,6 +890,42 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v2_null_id_object_params__success_
     BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at("minuend").value()), 42.0);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__version_3_0__jsonrpc_invalid_version)
+{
+    const std::string_view text{ R"({"jsonrpc":"3.0","id":1,"method":"getblockcount","params":[]})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec == error::jsonrpc_invalid_version);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__numeric_version__jsonrpc_invalid_version)
+{
+    const std::string_view text{ R"({"jsonrpc":2.0,"id":1,"method":"getblockcount","params":[]})" };
+    const asio::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init(text.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BOOST_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BOOST_REQUIRE(ec == error::jsonrpc_invalid_version);
+}
+
 BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v2_nested_params__success_expected)
 {
     const std::string_view text{ R"({"jsonrpc":"2.0","id":7,"method":"m","params":[null,true,[1,"a"],{"k":false}]})" };

@@ -337,6 +337,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { missing_parameter, "missing parameter" },
 
     // json-rpc error
+    { jsonrpc_invalid_version, "jsonrpc invalid version" },
     { jsonrpc_requires_method, "jsonrpc requires method" },
     { jsonrpc_v1_requires_params, "jsonrpc v1 requires params" },
     { jsonrpc_v1_requires_array_params, "jsonrpc v1 requires array params" },

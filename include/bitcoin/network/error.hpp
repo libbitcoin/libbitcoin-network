@@ -348,6 +348,7 @@ enum error_t : uint8_t
     missing_parameter,
 
     // json-rpc error
+    jsonrpc_invalid_version,
     jsonrpc_requires_method,
     jsonrpc_v1_requires_params,
     jsonrpc_v1_requires_array_params,
