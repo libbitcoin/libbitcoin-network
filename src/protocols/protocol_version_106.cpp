@@ -251,7 +251,11 @@ bool protocol_version_106::handle_receive_acknowledge(const code& ec,
     // Premature or multiple verack disallowed (persists for channel life).
     if (!sent_version_ || received_acknowledge_)
     {
-        rejection(error::protocol_violation);
+        if (complete())
+            stop(error::protocol_violation);
+        else
+            rejection(error::protocol_violation);
+
         return false;
     }
 
@@ -301,7 +305,11 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     // Multiple version messages not allowed (persists for channel life).
     if (received_version_)
     {
-        rejection(error::protocol_violation);
+        if (complete())
+            stop(error::protocol_violation);
+        else
+            rejection(error::protocol_violation);
+
         return false;
     }
 

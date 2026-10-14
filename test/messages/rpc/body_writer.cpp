@@ -68,6 +68,18 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__init__default__success)
     BOOST_REQUIRE(!ec);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_body_writer__init__any_result__jsonrpc_writer_exception)
+{
+    http::flat_buffer scratch{ 64 * 1024 };
+    rpc::response_body::value_type body{};
+    body.buffer = &scratch;
+    body.message.result = value_t{ any_t{ system::to_shared<int>(42) } };
+    rpc::response_body::writer writer(body);
+    boost_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(ec == error::jsonrpc_writer_exception);
+}
+
 BOOST_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success_expected_no_more)
 {
     const std::string_view expected{ R"({"error":null,"result":null})" };

@@ -85,10 +85,12 @@ static void to_request(rpc::request& value, boost_code& ec) NOEXCEPT
     {
         // Primary exception type for parsing operations.
         ec = e.code();
+        return;
     }
     catch (...)
     {
         ec = code{ error::jsonrpc_reader_exception };
+        return;
     }
 
     // Set version default.
@@ -96,7 +98,11 @@ static void to_request(rpc::request& value, boost_code& ec) NOEXCEPT
         value.message.jsonrpc = version::v1;
 
     // Post-parse semantic validation.
-    if (value.message.method.empty())
+    if (value.message.jsonrpc == version::invalid)
+    {
+        ec = code{ error::jsonrpc_invalid_version };
+    }
+    else if (value.message.method.empty())
     {
         ec = code{ error::jsonrpc_requires_method };
     }

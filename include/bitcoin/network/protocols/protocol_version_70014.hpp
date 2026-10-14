@@ -52,10 +52,6 @@ protected:
         const messages::peer::version_acknowledge::cptr& message) NOEXCEPT override;
     virtual bool handle_receive_send_compact(const code& ec,
         const messages::peer::send_compact::cptr& message) NOEXCEPT;
-
-private:
-    // This is thread safe.
-    const bool reject_;
 };
 
 } // namespace network

@@ -40,6 +40,23 @@ void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
         {
             ec = to_http_code(http_error_t::end_of_stream);
         },
+        [&](file_reader& read) NOEXCEPT
+        {
+            if (!value_.get<file_value>().is_open())
+            {
+                ec = to_errc_code(boost_errc_t::bad_file_descriptor);
+                return;
+            }
+
+            try
+            {
+                read.init(length, ec);
+            }
+            catch (...)
+            {
+                ec = to_http_code(http_error_t::end_of_stream);
+            }
+        },
         [&](auto& read) NOEXCEPT
         {
             try
@@ -132,15 +149,8 @@ body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
     {
         [&] (std::monostate&) NOEXCEPT
         {
-            ec = {};
+            ec = to_http_code(http_error_t::end_of_stream);
             return out_buffer{};
-        },
-        [&](empty_writer&) NOEXCEPT
-        {
-            ec = {};
-
-            // Socket body writer requires non-empty buffer to write empty.
-            return out_buffer{ std::make_pair(asio::const_buffer{}, false) };
         },
         [&](auto& write) NOEXCEPT
         {

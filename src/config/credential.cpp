@@ -92,7 +92,7 @@ std::string credential::to_string() const NOEXCEPT
 std::istream& operator>>(std::istream& input, credential& argument) THROWS
 {
     std::string value{};
-    input >> value;
+    std::getline(input, value);
 
     // Methods are optional, so a credential has two or three tokens.
     const auto tokens = split(value, ":", true, false);

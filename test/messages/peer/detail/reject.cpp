@@ -100,6 +100,36 @@ BOOST_AUTO_TEST_CASE(reject__deserialize1__tx__expected)
     BOOST_REQUIRE_EQUAL(message->message, transaction::command);
     BOOST_REQUIRE(message->code == reject::reason_code::dust);
     BOOST_REQUIRE_EQUAL(message->reason, "dust");
+    BOOST_REQUIRE_EQUAL(message->hash, genesis_tx_hash);
+}
+
+BOOST_AUTO_TEST_CASE(reject__deserialize1__tx_without_hash__null_hash)
+{
+    const auto data = system::base16_chunk("027478410464757374");
+    const auto message = reject::deserialize(level::bip61, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->message, transaction::command);
+    BOOST_REQUIRE_EQUAL(message->reason, "dust");
+    BOOST_REQUIRE_EQUAL(message->hash, system::null_hash);
+}
+
+BOOST_AUTO_TEST_CASE(reject__deserialize1__tx_partial_hash__null_hash)
+{
+    const auto data = system::base16_chunk("0274784104647573743ba3edfd7a7b12b2");
+    const auto message = reject::deserialize(level::bip61, data);
+    BOOST_REQUIRE(message);
+    BOOST_REQUIRE_EQUAL(message->message, transaction::command);
+    BOOST_REQUIRE_EQUAL(message->reason, "dust");
+    BOOST_REQUIRE_EQUAL(message->hash, system::null_hash);
+}
+
+BOOST_AUTO_TEST_CASE(reject__deserialize2__tx__exhausted)
+{
+    system::read::bytes::copy source(dust_tx_payload);
+    const auto message = reject::deserialize(level::bip61, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE(source.is_exhausted());
+    BOOST_REQUIRE_EQUAL(message.hash, genesis_tx_hash);
 }
 
 BOOST_AUTO_TEST_CASE(reject__deserialize1__version__null_hash)

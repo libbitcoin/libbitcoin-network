@@ -364,7 +364,7 @@ bool protocol_http::is_allowed_origin(const fields& fields,
         return options_.allow_opaque_origin;
 
     return options_.origins.empty() || contains(options_.origin_names(),
-        config::to_normal_host(origin, default_port()));
+        config::to_normal_origin(origin, default_port()));
 }
 
 void protocol_http::add_common_headers(fields& fields,

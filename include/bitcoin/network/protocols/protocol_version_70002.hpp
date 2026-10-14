@@ -42,7 +42,7 @@ public:
 
     /// Construct a version protocol instance using parameterized relay.
     protocol_version_70002(const session::ptr& session,
-        const channel::ptr& channel, bool relay) NOEXCEPT;
+        const channel::ptr& channel, bool relay, bool reject) NOEXCEPT;
 
     /// Perform the handshake (requires strand), handler invoked on completion.
     void shake(result_handler&& handle_event) NOEXCEPT override;
@@ -52,6 +52,10 @@ protected:
 
     virtual bool handle_receive_reject(const code& ec,
         const messages::peer::reject::cptr& message) NOEXCEPT;
+
+private:
+    // This is thread safe.
+    const bool reject_;
 };
 
 } // namespace network

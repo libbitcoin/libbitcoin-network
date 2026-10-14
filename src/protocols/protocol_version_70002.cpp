@@ -38,14 +38,15 @@ using namespace std::placeholders;
 protocol_version_70002::protocol_version_70002(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70002(session, channel,
-        session->network_settings().enable_relay)
+        session->network_settings().enable_relay,
+        session->network_settings().enable_reject)
 {
 }
 
 protocol_version_70002::protocol_version_70002(const session::ptr& session,
-    const channel::ptr& channel,
-    bool relay) NOEXCEPT
+    const channel::ptr& channel, bool relay, bool reject) NOEXCEPT
   : protocol_version_70001(session, channel, relay),
+    reject_(reject),
     tracker<protocol_version_70002>(session->log)
 {
 }
@@ -60,7 +61,10 @@ void protocol_version_70002::shake(result_handler&& handle_event) NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE_CHANNEL(reject, handle_receive_reject, _1, _2);
+    if (reject_)
+    {
+        SUBSCRIBE_CHANNEL(reject, handle_receive_reject, _1, _2);
+    }
 
     protocol_version_70001::shake(std::move(handle_event));
 }
@@ -72,6 +76,12 @@ void protocol_version_70002::shake(result_handler&& handle_event) NOEXCEPT
 void protocol_version_70002::rejection(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
+
+    if (!reject_)
+    {
+        protocol_version_70001::rejection(ec);
+        return;
+    }
 
     // Handshake completion may result before completion of this send (okay).
     if (ec == error::peer_insufficient)

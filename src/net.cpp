@@ -301,6 +301,7 @@ void net::do_close() NOEXCEPT
 
     // Notify and delete all stop subscribers (all sessions).
     stop_subscriber_.stop(error::service_stopped);
+    service_subscriber_.stop(error::service_stopped);
 
     // Notify and delete subscribers to channel notifications.
     connect_subscriber_.stop_default(error::service_stopped);
@@ -342,6 +343,19 @@ bool net::resume() NOEXCEPT
     resume_acceptors();
     resume_connectors();
     return true;
+}
+
+void net::stop_services(const code& ec) NOEXCEPT
+{
+    boost::asio::post(strand_,
+        std::bind(&net::do_stop_services, this, ec));
+}
+
+void net::do_stop_services(const code& ec) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    suspend_services();
+    service_subscriber_.stop(ec);
 }
 
 bool net::suspended() const NOEXCEPT
@@ -464,6 +478,12 @@ code net::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 {
     BC_ASSERT(stranded());
     return stop_subscriber_.subscribe(std::move(handler), key);
+}
+
+code net::subscribe_service(stop_handler&& handler, object_key key) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return service_subscriber_.subscribe(std::move(handler), key);
 }
 
 // public

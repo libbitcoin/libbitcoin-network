@@ -543,4 +543,51 @@ BOOST_AUTO_TEST_CASE(utilities__to_normal_host__numeric_nonzero_nonzero__numeric
     BOOST_REQUIRE_EQUAL(to_normal_host("127.0.0.1:80", 42), "127.0.0.1:80");
 }
 
+// to_normal_origin
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__empty__empty)
+{
+    BOOST_REQUIRE(to_normal_origin("", 42).empty());
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__no_scheme__default_port)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_origin("Example.com", 42), "example.com:42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__http__default_port)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_origin("http://Example.com", 42), "example.com:42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__https__default_port)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_origin("https://example.com", 42), "example.com:42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__upper_scheme__empty)
+{
+    BOOST_REQUIRE(to_normal_origin("HTTPS://example.com", 42).empty());
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__tcp_scheme__default_port)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_origin("tcp://example.com", 42), "example.com:42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__explicit_port__explicit_port)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_origin("http://127.0.0.1:8080", 42), "127.0.0.1:8080");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__ipv6__expected)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_origin("https://[::1]", 42), "[::1]:42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__scheme_only__empty)
+{
+    BOOST_REQUIRE(to_normal_origin("http://", 42).empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

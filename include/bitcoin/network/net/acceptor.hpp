@@ -100,6 +100,10 @@ protected:
     // These are protected by strand.
     asio::acceptor acceptor_;
     bool stopped_{ true };
+
+private:
+    void do_handle_accept(const code& ec, const socket::ptr& socket,
+        const socket_handler& handler) NOEXCEPT;
 };
 
 } // namespace network
