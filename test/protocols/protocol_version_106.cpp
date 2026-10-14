@@ -193,26 +193,22 @@ BOOST_AUTO_TEST_CASE(protocol_version_106__receive_version__timestamp_within_ske
     BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
 }
 
-BOOST_AUTO_TEST_CASE(protocol_version_106__receive_version__duplicate_after_handshake__ignored)
+BOOST_AUTO_TEST_CASE(protocol_version_106__receive_version__duplicate_after_handshake__dropped)
 {
     settings_.protocol_maximum = level::bip31;
     BOOST_REQUIRE(open());
     BOOST_REQUIRE(handshake(level::bip31));
     send_version(level::bip31, service::node_none, network::unix_time());
-
-    send(ping{ 42 }, level::bip31);
-    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
+    BOOST_REQUIRE(dropped());
 }
 
-BOOST_AUTO_TEST_CASE(protocol_version_106__receive_acknowledge__duplicate_after_handshake__ignored)
+BOOST_AUTO_TEST_CASE(protocol_version_106__receive_acknowledge__duplicate_after_handshake__dropped)
 {
     settings_.protocol_maximum = level::bip31;
     BOOST_REQUIRE(open());
     BOOST_REQUIRE(handshake(level::bip31));
     send(version_acknowledge{}, level::bip31);
-
-    send(ping{ 42 }, level::bip31);
-    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
+    BOOST_REQUIRE(dropped());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

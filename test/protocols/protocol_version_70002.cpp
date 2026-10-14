@@ -61,16 +61,12 @@ BOOST_AUTO_TEST_CASE(protocol_version_70002__receive_reject__during_handshake__h
     BOOST_REQUIRE_EQUAL(receive<pong>(level::bip61)->nonce, 42_u64);
 }
 
-BOOST_AUTO_TEST_CASE(protocol_version_70002__receive_version__duplicate_after_handshake__reject_duplicate)
+BOOST_AUTO_TEST_CASE(protocol_version_70002__receive_version__duplicate_after_handshake__dropped)
 {
     BOOST_REQUIRE(open());
     BOOST_REQUIRE(handshake(level::bip61));
     send_version(level::bip61, service::node_none, network::unix_time());
-
-    const auto message = receive<reject>(level::bip61);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->message, version::command);
-    BOOST_REQUIRE(message->code == reject::reason_code::duplicate);
+    BOOST_REQUIRE(dropped());
 }
 
 BOOST_AUTO_TEST_CASE(protocol_version_70002__receive_version__below_minimum__dropped)

@@ -133,17 +133,12 @@ BOOST_AUTO_TEST_CASE(protocol_version_70016__receive_witness_tx_id_relay__after_
     BOOST_REQUIRE(dropped());
 }
 
-BOOST_AUTO_TEST_CASE(protocol_version_70016__receive_version__reject_enabled_duplicate_after_handshake__reject_duplicate)
+BOOST_AUTO_TEST_CASE(protocol_version_70016__receive_version__duplicate_after_handshake__dropped)
 {
-    settings_.enable_reject = true;
     BOOST_REQUIRE(open());
     BOOST_REQUIRE(handshake(level::bip155));
-
     send_version(level::bip155, service::node_none, network::unix_time());
-    const auto message = receive<reject>(level::bip155);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->message, version::command);
-    BOOST_REQUIRE(message->code == reject::reason_code::duplicate);
+    BOOST_REQUIRE(dropped());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
