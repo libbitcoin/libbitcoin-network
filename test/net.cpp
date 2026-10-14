@@ -737,6 +737,27 @@ public:
     {
         net::subscribe_close(std::move(handler));
     }
+
+    template <class Session>
+    typename Session::ptr attach_service_stranded() NOEXCEPT
+    {
+        return net::attach_service<Session>(*this);
+    }
+};
+
+class mock_service_session
+  : public session_manual
+{
+public:
+    using session_manual::session_manual;
+
+    void stop() NOEXCEPT override
+    {
+        ++stops;
+        session_manual::stop();
+    }
+
+    size_t stops{};
 };
 
 class closed_net_accessor
@@ -1042,6 +1063,23 @@ BOOST_AUTO_TEST_CASE(net__connect_handled__closed__service_stopped)
     });
 
     BOOST_REQUIRE_EQUAL(result, error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(net__stop_services__attached_service__stopped_once)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+
+    const auto session = on_strand(net, [&]() NOEXCEPT { return net.attach_service_stranded<mock_service_session>(); });
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.service_subscriber_count(); }), 1u);
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.stop_subscriber_count(); }), 1u);
+
+    net.stop_services(error::service_stopped);
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.service_subscriber_count(); }), 0u);
+    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return session->stops; }), 1u);
+    net.close();
+    BOOST_REQUIRE_EQUAL(session->stops, 2u);
 }
 
 BOOST_AUTO_TEST_CASE(net__subscribe_close__stranded__subscribed_then_stopped)

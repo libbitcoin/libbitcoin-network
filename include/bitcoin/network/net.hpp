@@ -116,6 +116,9 @@ public:
     /// Resume all P2P connection.
     virtual bool resume() NOEXCEPT;
 
+    /// Stop all service connections (not resumable).
+    virtual void stop_services(const code& ec) NOEXCEPT;
+
     /// Properties.
     /// -----------------------------------------------------------------------
 
@@ -207,6 +210,11 @@ public:
         return stop_subscriber_.size();
     }
 
+    virtual size_t service_subscriber_count() const NOEXCEPT
+    {
+        return service_subscriber_.size();
+    }
+
     virtual size_t connect_subscriber_count() const NOEXCEPT
     {
         return connect_subscriber_.size();
@@ -237,6 +245,22 @@ protected:
             session->stop();
             return false;
         }, id);
+
+        return session;
+    }
+
+    /// Attach service session to network, caller must start (requires strand).
+    template <class Session, class Network, typename... Args>
+    typename Session::ptr attach_service(Network& net, Args&&... args) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "subscribe_service");
+        const auto session = attach<Session>(net, std::forward<Args>(args)...);
+
+        subscribe_service([=](const code&) NOEXCEPT
+        {
+            session->stop();
+            return false;
+        }, create_key());
 
         return session;
     }
@@ -324,6 +348,9 @@ private:
     void do_subscribe_close(const stop_handler& handler,
         const stop_completer& complete) NOEXCEPT;
 
+    code subscribe_service(stop_handler&& handler, object_key key) NOEXCEPT;
+    void do_stop_services(const code& ec) NOEXCEPT;
+
     // P2P
     // ------------------------------------------------------------------------
 
@@ -373,6 +400,7 @@ private:
     channel_ids actives_{};
     broadcaster broadcaster_{};
     stop_subscriber stop_subscriber_{};
+    stop_subscriber service_subscriber_{};
     channel_subscriber connect_subscriber_{};
     std::unordered_set<uint64_t> nonces_{};
 };
