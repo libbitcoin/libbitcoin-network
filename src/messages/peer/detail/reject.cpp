@@ -90,14 +90,18 @@ reject reject::deserialize(uint32_t, reader& source) NOEXCEPT
     const auto code = byte_to_reason(source.read_byte());
     auto reason = source.read_string(max_reject_message);
 
-    const auto position = source.get_read_position();
-    auto hash = is_chain(message) ? source.read_hash() : null_hash;
-
-    // Some nodes don't follow documented convention of hash for tx/block.
-    if (!source)
+    auto hash = null_hash;
+    if (source && is_chain(message))
     {
-        source.set_position(position);
-        hash = null_hash;
+        const auto position = source.get_read_position();
+        hash = source.read_hash();
+
+        // Some nodes don't follow documented convention of hash for tx/block.
+        if (!source)
+        {
+            source.set_position(position);
+            hash = null_hash;
+        }
     }
 
     return
