@@ -1316,7 +1316,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__
     const logger log{};
     settings set(selection::mainnet);
     set.outbound.host_pool_capacity = 10;
-    set.outbound.connect_batch_size = 2;
+    set.outbound.connect_batch_size = 3;
     set.outbound.connections = 1;
     set.outbound.connect_timeout_seconds = 10000;
     set.retry_timeout_seconds = 0;
@@ -1347,6 +1347,44 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE(!is_zero(restores));
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__batch_lone_unreachable_and_no_address__not_restored)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.outbound.host_pool_capacity = 10;
+    set.outbound.connect_batch_size = 2;
+    set.outbound.connections = 1;
+    set.outbound.connect_timeout_seconds = 10000;
+    set.retry_timeout_seconds = 0;
+    mock_net_restore_sparse<mock_connector_connect_code<error::net_unreachable>> net(set, log);
+    auto session = std::make_shared<mock_session_outbound>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    {
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->require_reconnect());
+    const auto restores = net.restores();
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(is_zero(restores));
 }
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__channel_timeout__restored)
@@ -1423,7 +1461,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__peer_disconnect__restored)
     BOOST_REQUIRE(!is_zero(net.restores()));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__timeout_restored)
+BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__restored)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -1459,8 +1497,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__tim
     BOOST_REQUIRE(session->stopped());
 
     const auto restored = net.restored();
-    BOOST_REQUIRE(!restored.empty());
-    BOOST_REQUIRE(std::all_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
+    BOOST_REQUIRE(std::any_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
+    {
+        return is_even(port);
+    }));
+    BOOST_REQUIRE(std::any_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
     {
         return is_odd(port);
     }));
