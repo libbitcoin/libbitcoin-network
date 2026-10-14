@@ -330,6 +330,33 @@ BOOST_AUTO_TEST_CASE(error_t__code__connect_failed__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "unable to reach remote host");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__net_unreachable__true_expected_message)
+{
+    constexpr auto value = error::net_unreachable;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "network unreachable");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__host_unreachable__true_expected_message)
+{
+    constexpr auto value = error::host_unreachable;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "host unreachable");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__connection_refused__true_expected_message)
+{
+    constexpr auto value = error::connection_refused;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "connection refused");
+}
+
 // heading read failures
 
 BOOST_AUTO_TEST_CASE(error_t__code__invalid_heading__true_expected_message)
@@ -2519,7 +2546,13 @@ BOOST_AUTO_TEST_CASE(errc_to_error_code__generic_conditions__expected)
     BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::no_buffer_space)), error::insufficient_buffer);
     BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::permission_denied)), error::not_allowed);
     BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::bad_address)), error::resolve_failed);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::connection_refused)), error::connect_failed);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::connection_refused)), error::connection_refused);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::network_unreachable)), error::net_unreachable);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::network_down)), error::net_unreachable);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::address_not_available)), error::net_unreachable);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::no_link)), error::net_unreachable);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::host_unreachable)), error::host_unreachable);
+    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::broken_pipe)), error::connect_failed);
     BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::address_in_use)), error::address_in_use);
     BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::io_error)), error::bad_stream);
     BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::timed_out)), error::channel_timeout);
@@ -2536,7 +2569,11 @@ BOOST_AUTO_TEST_CASE(asio_to_error_code__basic_codes__expected)
     BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::operation_aborted)), error::operation_canceled);
     BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::address_family_not_supported)), error::resolve_failed);
     BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::address_in_use)), error::address_in_use);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::connection_refused)), error::connect_failed);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::connection_refused)), error::connection_refused);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::network_unreachable)), error::net_unreachable);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::network_down)), error::net_unreachable);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::host_unreachable)), error::host_unreachable);
+    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::shut_down)), error::connect_failed);
     BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::connection_reset)), error::peer_disconnect);
     BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::message_size)), error::bad_stream);
     BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::invalid_argument)), error::invalid_configuration);

@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_family_mismatch__resolve_failed)
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(socket__connect__bound_unavailable__connect_failed)
+BOOST_AUTO_TEST_CASE(socket__connect__bound_unavailable__net_unreachable)
 {
     using namespace std::chrono_literals;
 
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_unavailable__connect_failed)
     });
 
     BOOST_REQUIRE(connect_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(connect_future.get(), error::connect_failed);
+    BOOST_REQUIRE_EQUAL(connect_future.get(), error::net_unreachable);
 
     client->stop();
     pool.stop();
@@ -788,12 +788,12 @@ BOOST_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, acc
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__connect__refused__connect_failed, acceptor_fixture)
+BOOST_FIXTURE_TEST_CASE(socket__connect__refused__connection_refused, acceptor_fixture)
 {
     const awaiter<code> connected{};
     const auto instance = connect(clear, { closed_endpoint }, connected);
 
-    BOOST_REQUIRE_EQUAL(connected.get(), error::connect_failed);
+    BOOST_REQUIRE_EQUAL(connected.get(), error::connection_refused);
     instance->stop();
 }
 

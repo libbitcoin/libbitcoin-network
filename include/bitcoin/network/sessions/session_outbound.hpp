@@ -69,15 +69,25 @@ protected:
 private:
     typedef race_quality<const code&, const socket::ptr&> race;
 
+    /// Unreachable members of a connect batch, restored only if every member
+    /// failed as unreachable (protected by strand).
+    struct batch
+    {
+        typedef std::shared_ptr<batch> ptr;
+        config::addresses unreachable{};
+        bool attributable{};
+    };
+
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
     void do_one(const code& ec, const config::address& peer, object_key key,
-        const race::ptr& racer, const connector::ptr& connector) NOEXCEPT;
+        const race::ptr& racer, const batch::ptr& members,
+        const connector::ptr& connector) NOEXCEPT;
     void handle_one(const code& ec, const socket::ptr& socket,
-        object_key key, const config::address& peer,
-        const race::ptr& racer) NOEXCEPT;
+        object_key key, const config::address& peer, const race::ptr& racer,
+        const batch::ptr& members) NOEXCEPT;
     void handle_connect(const code& ec, const socket::ptr& socket,
-        object_key key, size_t slot) NOEXCEPT;
+        object_key key, size_t slot, const batch::ptr& members) NOEXCEPT;
 
     void handle_channel_start(const code& ec,
         const channel::ptr& channel) NOEXCEPT;
@@ -89,6 +99,7 @@ private:
 
     /// Restore an address to the address pool.
     inline bool maybe_reclaim(const code& ec) const NOEXCEPT;
+    inline bool batch_reclaim(const code& ec) const NOEXCEPT;
     inline bool always_reclaim(const code& ec) const NOEXCEPT;
     void reclaim(const code& ec, const socket::ptr& socket) NOEXCEPT;
     void reclaim(const code& ec, const channel::ptr& channel) NOEXCEPT;

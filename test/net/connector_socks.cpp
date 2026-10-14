@@ -386,11 +386,11 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__unproxied__direct_success, soc
     BOOST_REQUIRE_EQUAL(result.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__proxy_refused__connect_failed, socks_setup_fixture)
+BOOST_FIXTURE_TEST_CASE(connector_socks__connect__proxy_refused__connection_refused, socks_setup_fixture)
 {
     acceptor.close();
     create();
-    BOOST_REQUIRE_EQUAL(connect(config::endpoint{ SOCKS_TARGET_ENDPOINT }).get(), error::connect_failed);
+    BOOST_REQUIRE_EQUAL(connect(config::endpoint{ SOCKS_TARGET_ENDPOINT }).get(), error::connection_refused);
 }
 
 BOOST_FIXTURE_TEST_CASE(connector_socks__connect__greeting_closed__peer_disconnect, socks_setup_fixture)

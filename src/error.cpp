@@ -74,6 +74,9 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { address_in_use, "address already in use" },
     { resolve_failed, "resolving hostname failed" },
     { connect_failed, "unable to reach remote host" },
+    { net_unreachable, "network unreachable" },
+    { host_unreachable, "host unreachable" },
+    { connection_refused, "connection refused" },
 
     // heading read failures
     { invalid_heading, "invalid message heading" },
@@ -403,14 +406,20 @@ code errc_to_error_code(const boost_code& ec) NOEXCEPT
 
             // connect-connect
             case boost_errc_t::address_not_available:
-            case boost_errc_t::not_connected:
-            case boost_errc_t::connection_refused:
-            case boost_errc_t::broken_pipe:
-            case boost_errc_t::host_unreachable:
             case boost_errc_t::network_down:
-            case boost_errc_t::network_reset:
             case boost_errc_t::network_unreachable:
             case boost_errc_t::no_link:
+                return error::net_unreachable;
+
+            case boost_errc_t::host_unreachable:
+                return error::host_unreachable;
+
+            case boost_errc_t::connection_refused:
+                return error::connection_refused;
+
+            case boost_errc_t::not_connected:
+            case boost_errc_t::broken_pipe:
+            case boost_errc_t::network_reset:
             case boost_errc_t::no_protocol_option:
             case boost_errc_t::no_such_file_or_directory:
             case boost_errc_t::not_a_socket:
@@ -500,14 +509,20 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
             case asio_basic_error_t::in_progress:
                 return error::address_in_use;
 
+            case asio_basic_error_t::network_down:
+            case asio_basic_error_t::network_unreachable:
+                return error::net_unreachable;
+
+            case asio_basic_error_t::host_unreachable:
+                return error::host_unreachable;
+
+            case asio_basic_error_t::connection_refused:
+                return error::connection_refused;
+
             case asio_basic_error_t::shut_down:
             case asio_basic_error_t::would_block:
             case asio_basic_error_t::broken_pipe:
-            case asio_basic_error_t::connection_refused:
-            case asio_basic_error_t::host_unreachable:
-            case asio_basic_error_t::network_down:
             case asio_basic_error_t::network_reset:
-            case asio_basic_error_t::network_unreachable:
             case asio_basic_error_t::no_protocol_option:
             case asio_basic_error_t::not_connected:
             case asio_basic_error_t::not_socket:

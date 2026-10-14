@@ -377,11 +377,11 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__start__started__operation_failed, sam_setu
     BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
 }
 
-BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__no_bridge__connect_failed, sam_setup_fixture)
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__no_bridge__connection_refused, sam_setup_fixture)
 {
     BOOST_REQUIRE_EQUAL(create(), error::success);
     listener.close();
-    BOOST_REQUIRE_EQUAL(accept().get(), error::connect_failed);
+    BOOST_REQUIRE_EQUAL(accept().get(), error::connection_refused);
 }
 
 BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__hello_closed__peer_disconnect, sam_setup_fixture)
@@ -477,7 +477,7 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__key_path_directory__file_save, sam
     BOOST_REQUIRE_EQUAL(result.get(), error::file_save);
 }
 
-BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_refused__connect_failed, sam_setup_fixture)
+BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_refused__connection_refused, sam_setup_fixture)
 {
     BOOST_REQUIRE_EQUAL(create(), error::success);
     auto result = accept();
@@ -489,7 +489,7 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_refused__connect_failed, s
     listener.close();
     write_line("SESSION STATUS RESULT=OK DESTINATION=" + destination);
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::connect_failed);
+    BOOST_REQUIRE_EQUAL(result.get(), error::connection_refused);
     BOOST_REQUIRE(closed(bridge));
 }
 
