@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(rpc_model__response_to__v1_result__round_trips)
     const auto response = boost::json::value_to<response_t>(model);
     BOOST_REQUIRE(response.jsonrpc == version::v1);
     BOOST_REQUIRE(!response.error.has_value());
-    BOOST_REQUIRE(std::get<boolean_t>(response.result.value().value()));
+    BOOST_REQUIRE(std::get<boolean_type>(response.result.value().value()));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_model__response_to__empty_object__defaults)
