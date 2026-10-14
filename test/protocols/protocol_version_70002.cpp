@@ -81,6 +81,15 @@ BOOST_AUTO_TEST_CASE(protocol_version_70002__receive_version__below_minimum__dro
     BOOST_REQUIRE(dropped());
 }
 
+BOOST_AUTO_TEST_CASE(protocol_version_70002__receive_version__reject_disabled_below_minimum__dropped)
+{
+    settings_.enable_reject = false;
+    settings_.protocol_minimum = level::bip61;
+    BOOST_REQUIRE(open());
+    send_version(level::bip37, service::node_none, network::unix_time());
+    BOOST_REQUIRE(dropped());
+}
+
 BOOST_AUTO_TEST_CASE(protocol_version_70002__receive_version__invalid_services__dropped)
 {
     BOOST_REQUIRE(open());

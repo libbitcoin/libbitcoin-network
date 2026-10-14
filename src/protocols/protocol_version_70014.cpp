@@ -48,8 +48,7 @@ protocol_version_70014::protocol_version_70014(const session::ptr& session,
 
 protocol_version_70014::protocol_version_70014(const session::ptr& session,
     const channel::ptr& channel, bool relay, bool reject) NOEXCEPT
-  : protocol_version_70002(session, channel, relay),
-    reject_(reject),
+  : protocol_version_70002(session, channel, relay, reject),
     tracker<protocol_version_70014>(session->log)
 {
 }
@@ -66,14 +65,7 @@ void protocol_version_70014::shake(result_handler&& handle_event) NOEXCEPT
 
     SUBSCRIBE_CHANNEL(send_compact, handle_receive_send_compact, _1, _2);
 
-    // Protocol versions are cumulative, but reject is optional.
-    if (reject_)
-    {
-        protocol_version_70002::shake(std::move(handle_event));
-        return;
-    }
-
-    protocol_version_70001::shake(std::move(handle_event));
+    protocol_version_70002::shake(std::move(handle_event));
 }
 
 // Outgoing [signal compact blocks version 2, low bandwidth (bip152)].
