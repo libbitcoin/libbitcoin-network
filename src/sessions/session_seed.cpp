@@ -203,8 +203,8 @@ void session_seed::attach_handshake(const channel::ptr& channel,
 
     // Protocol versions are cumulative, but reject is deprecated.
     else if (is_configured(level::bip61) && reject)
-        channel->attach<protocol_version_70002>(self,
-            relay)->shake(std::move(handler));
+        channel->attach<protocol_version_70002>(self, relay,
+            reject)->shake(std::move(handler));
 
     else if (is_configured(level::bip37))
         channel->attach<protocol_version_70001>(self,
