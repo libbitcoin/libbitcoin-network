@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
     BOOST_REQUIRE_EQUAL(instance.outbound.connect_timeout_seconds, 0u);
     BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
-    BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
+    BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 0u);
     BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
