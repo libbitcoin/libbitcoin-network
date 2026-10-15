@@ -422,7 +422,7 @@ struct BCT_API settings
     bool gossip_i2p{ false };
     uint32_t identifier{ 0 };
     uint32_t handshake_timeout_seconds{ 15 };
-    uint32_t channel_heartbeat_minutes{ 5 };
+    uint32_t channel_heartbeat_minutes{ 10 };
     uint32_t maximum_skew_minutes{ 120 };
     std::string user_agent{ BC_USER_AGENT };
     system::config::path path{};
