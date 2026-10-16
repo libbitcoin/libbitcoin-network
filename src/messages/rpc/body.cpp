@@ -27,6 +27,7 @@ namespace rpc {
 
 using namespace system;
 using namespace network::error;
+using json::is_json_whitespace;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
@@ -42,12 +43,6 @@ constexpr bool is_electrum_terminator(char character) NOEXCEPT
 {
     // Electrum rpc messages require a trailing newline.
     return character == '\n';
-}
-
-constexpr bool is_json_whitespace(char character) NOEXCEPT
-{
-    return character == ' ' || character == '\t' ||
-        character == '\r' || character == '\n';
 }
 
 // rpc::body<request_t>::reader
@@ -146,6 +141,9 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     {
         return terminated_ && (closed_ || (!value_.batch && !opened_));
     };
+
+    // A completed element is re-fed (beast) only with its trailer.
+    const auto completed = started_ && base::reader::done();
 
     // Prologue: consume whitespace and batch delimiters until element start,
     // batch close, or buffer exhaustion.
@@ -260,6 +258,24 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
                 if (is_rpc_terminator(character))
                     break;
             }
+    }
+
+    // Trailer: consume whitespace trailing a non-terminated singleton (http),
+    // other characters start the next message (stream) unless re-fed.
+    if (!terminated_ && !opened_ && !value_.batch && started_ &&
+        base::reader::done())
+    {
+        for (; index < size; ++index)
+        {
+            if (is_json_whitespace(data[index]))
+                continue;
+
+            if (!completed)
+                break;
+
+            ec = code{ error::jsonrpc_reader_stall };
+            return index;
+        }
     }
 
     // Terminator: consume whitespace through the terminator, allowing padded

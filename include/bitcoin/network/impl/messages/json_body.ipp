@@ -75,7 +75,21 @@ size_t CLASS::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     try
     {
         const auto data = pointer_cast<const char>(buffer.data());
-        const auto parsed = parser_.write_some(data, buffer.size(), ec);
+        size_t parsed{};
+
+        // The parser stops after the document, beast re-feeds the remainder.
+        if (parser_.done())
+        {
+            while (parsed < size && is_json_whitespace(data[parsed]))
+                ++parsed;
+
+            if (parsed < size)
+                ec = to_json_code(json_error_t::extra_data);
+        }
+        else
+        {
+            parsed = parser_.write_some(data, size, ec);
+        }
 
         total_ = ceilinged_add(total_, parsed);
         if (!ec && total_ > expected_.value_or(max_size_t))

@@ -652,6 +652,74 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__put__garbage_where_terminator_expected__re
     BOOST_REQUIRE(ec == error::jsonrpc_reader_stall);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__split_whitespace_after_non_terminated_singleton__consumed)
+{
+    const std::string_view document{ R"({"jsonrpc":"2.0","id":1,"method":"test"})" };
+    const std::string_view whitespace{ "\r\n" };
+    const asio::const_buffer buffer1{ document.data(), document.size() };
+    const asio::const_buffer buffer2{ whitespace.data(), whitespace.size() };
+    request_header header{};
+    rpc::request_body::value_type body{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), document.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), whitespace.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(body.message.method, "test");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__split_garbage_after_non_terminated_singleton__reader_stall)
+{
+    const std::string_view document{ R"({"jsonrpc":"2.0","id":1,"method":"test"})" };
+    const std::string_view garbage{ " x" };
+    const asio::const_buffer buffer1{ document.data(), document.size() };
+    const asio::const_buffer buffer2{ garbage.data(), garbage.size() };
+    request_header header{};
+    rpc::request_body::value_type body{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), document.size());
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), 1u);
+    BOOST_REQUIRE(ec == error::jsonrpc_reader_stall);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_body_reader__put__garbage_within_non_terminated_singleton__reader_stall)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":1,"method":"test"}x)" };
+    const auto document = text.substr(0, sub1(text.size()));
+    const auto garbage = text.substr(document.size());
+    const asio::const_buffer buffer1{ text.data(), text.size() };
+    const asio::const_buffer buffer2{ garbage.data(), garbage.size() };
+    request_header header{};
+    rpc::request_body::value_type body{};
+    rpc::request_body::reader reader(header, body);
+    boost_code ec{};
+    reader.init({}, ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), document.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), 0u);
+    BOOST_REQUIRE(ec == error::jsonrpc_reader_stall);
+}
+
 // lax
 // ----------------------------------------------------------------------------
 
