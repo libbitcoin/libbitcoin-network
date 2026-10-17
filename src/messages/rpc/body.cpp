@@ -420,6 +420,11 @@ init(boost_code& ec) NOEXCEPT
     if (is_zero(value_.size_hint))
         value_.size_hint = to_size(value_.message);
 
+    // Batched parts are terminated by the batch close part (not per part).
+    const auto terminated = value_.terminate && !opens_batch(value_) &&
+        !continues_batch(value_);
+
+    terminator_ = terminated ? '\n' : char{};
     base::writer::init(ec);
     if (ec) return;
 
@@ -484,24 +489,7 @@ get(boost_code& ec) NOEXCEPT
         return single(line, false);
     }
 
-    auto out = base::writer::done() ? out_buffer{} : base::writer::get(ec);
-
-    // Batched parts are terminated by the batch close part (not per part),
-    // and unterminated (http) messages complete on serialization.
-    if (ec || !value_.terminate ||
-        opens_batch(value_) || continues_batch(value_))
-        return out;
-
-    // Override json reader !more so terminator can be added.
-    if (out.has_value())
-    {
-        out.value().second = true;
-        return out;
-    }
-
-    // Add terminator and signal done.
-    set_terminator_ = true;
-    return single(line, false);
+    return base::writer::done() ? out_buffer{} : base::writer::get(ec);
 }
 
 template <>
@@ -512,10 +500,8 @@ done() const NOEXCEPT
     if (closes_batch(value_))
         return set_close_ && (!value_.terminate || set_terminator_);
 
-    // Batched parts are done on serialization (terminator rides on close).
     // Done is redundant with !out.second, but provides a cleaner interface.
-    return base::writer::done() && (opens_batch(value_) ||
-        continues_batch(value_) || !value_.terminate || set_terminator_);
+    return base::writer::done();
 }
 
 // rpc::body<request_t>::writer
@@ -528,6 +514,7 @@ init(boost_code& ec) NOEXCEPT
     if (is_zero(value_.size_hint))
         value_.size_hint = to_size(value_.message);
 
+    terminator_ = value_.terminate ? '\n' : char{};
     base::writer::init(ec);
     if (ec) return;
 
@@ -547,7 +534,6 @@ init(boost_code& ec) NOEXCEPT
         return;
     }
 
-    set_terminator_ = false;
     serializer_.reset(&value_.model);
 }
 
@@ -556,24 +542,7 @@ body<rpc::request_t>::writer::out_buffer
 body<rpc::request_t>::writer::
 get(boost_code& ec) NOEXCEPT
 {
-    auto out = base::writer::done() ? out_buffer{} : base::writer::get(ec);
-
-    // Unterminated (http) messages complete on serialization.
-    if (ec || !value_.terminate)
-        return out;
-
-    // Override json reader !more so terminator can be added.
-    if (out.has_value())
-    {
-        out.value().second = true;
-        return out;
-    }
-
-    // Add terminator and signal done.
-    set_terminator_ = true;
-    using namespace boost::asio;
-    static constexpr auto line = '\n';
-    return out_buffer{ std::make_pair(buffer(&line, sizeof(line)), false) };
+    return base::writer::done() ? out_buffer{} : base::writer::get(ec);
 }
 
 template <>
@@ -581,7 +550,7 @@ bool body<rpc::request_t>::writer::
 done() const NOEXCEPT
 {
     // Done is redundant with !out.second, but provides a cleaner interface.
-    return base::writer::done() && (!value_.terminate || set_terminator_);
+    return base::writer::done();
 }
 
 BC_POP_WARNING()

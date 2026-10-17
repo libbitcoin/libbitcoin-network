@@ -181,9 +181,10 @@ void CLASS::writer::init(boost_code& ec) NOEXCEPT
         return;
     }
 
-    // Serialization is chunked by the estimate, within that bound. An
-    // unestimated message is chunked by the bound.
-    const auto maximum = value_.buffer->max_size();
+    // Serialization is chunked by the estimate, within that bound less any
+    // terminator. An unestimated message is chunked by the bound.
+    const auto reserve = is_zero(terminator_) ? zero : one;
+    const auto maximum = floored_subtract(value_.buffer->max_size(), reserve);
     chunk_ = is_zero(value_.size_hint) ? maximum :
         std::min(value_.size_hint, maximum);
 
@@ -218,10 +219,12 @@ CLASS::writer::get(boost_code& ec) NOEXCEPT
 
     try
     {
-        // Prepares the chunk, which the estimate sized within the bound.
-        const auto scratch = value_.buffer->prepare(size);
+        // Prepares the chunk, which the estimate sized within the bound, and
+        // any terminator, which follows the final serialized byte.
+        const auto reserve = is_zero(terminator_) ? zero : one;
+        const auto scratch = value_.buffer->prepare(size + reserve);
         const auto data = system::pointer_cast<char>(scratch.data());
-        const auto view = serializer_.read(data, scratch.size());
+        const auto view = serializer_.read(data, size);
 
         // No progress (edge case).
         if (view.empty() && !serializer_.done())
@@ -233,7 +236,12 @@ CLASS::writer::get(boost_code& ec) NOEXCEPT
         ec.clear();
         value_.buffer->consume(scratch.size());
         const auto more = !serializer_.done();
-        return out_buffer{ std::make_pair(boost::asio::buffer(view), more) };
+        if (more || is_zero(terminator_))
+            return out_buffer{ std::make_pair(boost::asio::buffer(view), more) };
+
+        data[view.size()] = terminator_;
+        const auto bytes = add1(view.size());
+        return out_buffer{ std::make_pair(boost::asio::buffer(data, bytes), more) };
     }
     catch (const boost::system::system_error& e)
     {
