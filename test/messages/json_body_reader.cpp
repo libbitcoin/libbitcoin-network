@@ -66,6 +66,50 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__simple_object__success_expected_cons
     BOOST_REQUIRE(!ec);
 }
 
+BOOST_AUTO_TEST_CASE(json_body_reader__put__split_whitespace_after_object__consumed)
+{
+    const std::string_view document{ R"({"key":"value"})" };
+    const std::string_view whitespace{ "\r\n" };
+    const asio::const_buffer buffer1{ document.data(), document.size() };
+    const asio::const_buffer buffer2{ whitespace.data(), whitespace.size() };
+    json::body<>::value_type body{};
+    json::body<>::reader reader(body);
+    boost_code ec{};
+    reader.init(document.size() + whitespace.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), document.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), whitespace.size());
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(reader.done());
+
+    reader.finish(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(body.model.at("key").as_string(), "value");
+}
+
+BOOST_AUTO_TEST_CASE(json_body_reader__put__split_garbage_after_object__extra_data)
+{
+    const std::string_view document{ R"({"key":"value"})" };
+    const std::string_view garbage{ " x" };
+    const asio::const_buffer buffer1{ document.data(), document.size() };
+    const asio::const_buffer buffer2{ garbage.data(), garbage.size() };
+    json::body<>::value_type body{};
+    json::body<>::reader reader(body);
+    boost_code ec{};
+    reader.init(document.size() + garbage.size(), ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), document.size());
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), 1u);
+    BOOST_REQUIRE(ec == error::json_error_t::extra_data);
+}
+
 BOOST_AUTO_TEST_CASE(json_body_reader__finish__simple_object__success_expected_model)
 {
     const std::string_view text{ R"({"key":"value"})" };

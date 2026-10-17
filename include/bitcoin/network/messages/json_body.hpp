@@ -25,6 +25,14 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
+constexpr bool is_json_whitespace(char character) NOEXCEPT
+{
+    return character == ' '
+        || character == '\t'
+        || character == '\r'
+        || character == '\n';
+}
+
 /// Content passed to/from reader/writer via request/response.
 /// `static uint64_t size(const value_type&)` must be defined for beast to 
 /// produce `content_length`, otherwise the response is chunked. Predeter-
