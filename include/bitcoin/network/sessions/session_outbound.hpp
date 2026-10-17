@@ -69,12 +69,13 @@ protected:
 private:
     typedef race_quality<const code&, const socket::ptr&> race;
 
-    /// Unreachable members of a connect batch, restored only if every member
-    /// failed as unreachable (protected by strand).
+    /// Unreachable members of a connect batch, restored only if at least two
+    /// members drew an address and none was attributable (protected by strand).
     struct batch
     {
         typedef std::shared_ptr<batch> ptr;
         config::addresses unreachable{};
+        size_t drawn{};
         bool attributable{};
     };
 
