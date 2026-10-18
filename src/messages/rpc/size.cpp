@@ -44,6 +44,10 @@ size_t to_size(const value_t& value) NOEXCEPT
         {
             return to_size(values);
         },
+        [](const json_t& value) NOEXCEPT
+        {
+            return to_size(value);
+        },
         [](const auto&) NOEXCEPT
         {
             return element_size;
@@ -67,6 +71,39 @@ size_t to_size(const object_t& values) NOEXCEPT
         {
             return total + value.first.size() + to_size(value.second);
         });
+}
+
+size_t to_size(const json_t& value) NOEXCEPT
+{
+    switch (value.kind())
+    {
+        case boost::json::kind::string:
+        {
+            return value.get_string().size() + element_size;
+        }
+        case boost::json::kind::array:
+        {
+            const auto& values = value.get_array();
+            return std::accumulate(values.begin(), values.end(), element_size,
+                [](size_t total, const json_t& value) NOEXCEPT
+                {
+                    return total + to_size(value);
+                });
+        }
+        case boost::json::kind::object:
+        {
+            const auto& values = value.get_object();
+            return std::accumulate(values.begin(), values.end(), element_size,
+                [](size_t total, const auto& value) NOEXCEPT
+                {
+                    return total + value.key().size() + to_size(value.value());
+                });
+        }
+        default:
+        {
+            return element_size;
+        }
+    }
 }
 
 size_t to_size(const params_option& params) NOEXCEPT

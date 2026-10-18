@@ -117,6 +117,7 @@ struct body
         value_type& value_;
         boost::json::serializer serializer_;
         size_t chunk_{};
+        char terminator_{};
     };
 };
 
