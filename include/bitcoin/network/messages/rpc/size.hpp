@@ -35,6 +35,7 @@ constexpr size_t envelope_size = 64;
 BCT_API size_t to_size(const value_t& value) NOEXCEPT;
 BCT_API size_t to_size(const array_t& values) NOEXCEPT;
 BCT_API size_t to_size(const object_t& values) NOEXCEPT;
+BCT_API size_t to_size(const json_t& value) NOEXCEPT;
 BCT_API size_t to_size(const params_option& params) NOEXCEPT;
 BCT_API size_t to_size(const response_t& message) NOEXCEPT;
 BCT_API size_t to_size(const request_t& message) NOEXCEPT;
