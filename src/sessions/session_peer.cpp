@@ -144,24 +144,28 @@ void session_peer::attach_handshake(const channel::ptr& channel,
     // Protocol must pause the channel after receiving version and verack.
     using namespace messages::peer;
     const auto self = shared_from_this();
+    const auto relaying = relay();
+    const auto reject = network_settings().enable_reject;
 
     // Address v2 and witness tx relay can be disabled, independent of version.
     if (is_configured(level::bip155) && (network_settings().enable_address_v2 ||
         network_settings().enable_witness_tx))
-        channel->attach<protocol_version_70016>(self)->shake(std::move(handler));
+        channel->attach<protocol_version_70016>(self, relaying, reject)->shake(
+            std::move(handler));
 
     // Compact blocks can be disabled, independent of version.
     else if (is_configured(level::bip152) && network_settings().enable_compact)
-        channel->attach<protocol_version_70014>(self)->shake(std::move(handler));
+        channel->attach<protocol_version_70014>(self, relaying, reject)->shake(
+            std::move(handler));
 
     // Protocol versions are cumulative, but reject is deprecated.
-    else if (is_configured(level::bip61) && network_settings().enable_reject)
-        channel->attach<protocol_version_70002>(self)->shake(std::move(handler));
+    else if (is_configured(level::bip61) && reject)
+        channel->attach<protocol_version_70002>(self, relaying, reject)->shake(
+            std::move(handler));
 
-    // TODO: consider relay may be dynamic (disabled until current).
-    // .enable_relay is always passed to the peer during handshake.
     else if (is_configured(level::bip37))
-        channel->attach<protocol_version_70001>(self)->shake(std::move(handler));
+        channel->attach<protocol_version_70001>(self, relaying)->shake(
+            std::move(handler));
 
     else if (is_configured(level::version_message))
         channel->attach<protocol_version_106>(self)->shake(std::move(handler));
@@ -252,6 +256,11 @@ size_t session_peer::outbound_channel_count() const NOEXCEPT
 bool session_peer::is_configured(messages::peer::level level) const NOEXCEPT
 {
     return network_settings().protocol_maximum >= level;
+}
+
+bool session_peer::relay() const NOEXCEPT
+{
+    return network_settings().enable_relay;
 }
 
 const session_peer::options_t& session_peer::options() const NOEXCEPT

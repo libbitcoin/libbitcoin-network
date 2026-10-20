@@ -107,6 +107,9 @@ protected:
     /// Message level is supported by confired protocol level.
     virtual bool is_configured(messages::peer::level level) const NOEXCEPT;
 
+    /// Transaction relay is requested of the peer in the version handshake.
+    virtual bool relay() const NOEXCEPT;
+
     /// The configured options for this peer session.
     virtual const options_t& options() const NOEXCEPT;
 
