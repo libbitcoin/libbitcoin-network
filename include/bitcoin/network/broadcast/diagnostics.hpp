@@ -87,28 +87,14 @@ public:
     };
 
     using rows = std::vector<row>;
+    typedef std::shared_ptr<rows> rows_ptr;
 
-    /// The captured rows.
-    class BCT_API sink
-    {
-    public:
-        typedef std::shared_ptr<sink> ptr;
-
-        DELETE_COPY_MOVE_DESTRUCT(sink);
-
-        sink() NOEXCEPT;
-        void add(row&& value) NOEXCEPT;
-        const rows& captured() const NOEXCEPT;
-
-    private:
-        // These are protected by mutex.
-        mutable std::mutex mutex_{};
-        rows rows_{};
-    };
+    /// Receives each captured row, invoked on the captured channel's strand.
+    using collector = std::function<void(row&&)>;
 
     DELETE_COPY_MOVE_DESTRUCT(diagnostics);
 
-    diagnostics(const race::ptr& complete, const sink::ptr& captured,
+    diagnostics(const race::ptr& complete, collector&& collect,
         target group, uint64_t channel={}) NOEXCEPT;
 
     bool targets(uint64_t identifier) const NOEXCEPT;
@@ -118,7 +104,7 @@ public:
 private:
     // These are thread safe.
     const race::ptr race_;
-    const sink::ptr sink_;
+    const collector collect_;
     const target group_;
     const uint64_t channel_;
 };
