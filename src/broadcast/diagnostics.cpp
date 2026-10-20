@@ -24,27 +24,10 @@
 namespace libbitcoin {
 namespace network {
 
-diagnostics::sink::sink() NOEXCEPT
-{
-}
-
-void diagnostics::sink::add(row&& value) NOEXCEPT
-{
-    std::lock_guard lock{ mutex_ };
-
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    rows_.push_back(std::move(value));
-    BC_POP_WARNING()
-}
-
-const diagnostics::rows& diagnostics::sink::captured() const NOEXCEPT
-{
-    return rows_;
-}
-
-diagnostics::diagnostics(const race::ptr& complete, const sink::ptr& captured,
+diagnostics::diagnostics(const race::ptr& complete, collector&& collect,
     target group, uint64_t channel) NOEXCEPT
-  : race_(complete), sink_(captured), group_(group), channel_(channel)
+  : race_(complete), collect_(std::move(collect)), group_(group),
+    channel_(channel)
 {
 }
 
@@ -60,7 +43,7 @@ bool diagnostics::targets(target group) const NOEXCEPT
 
 void diagnostics::add(row&& value) const NOEXCEPT
 {
-    sink_->add(std::move(value));
+    collect_(std::move(value));
 }
 
 } // namespace network
