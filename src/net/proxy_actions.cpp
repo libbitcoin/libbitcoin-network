@@ -590,6 +590,13 @@ void proxy::handle_http_header(const code& ec, size_t bytes,
     BC_ASSERT(stranded());
     count_received(bytes);
 
+    // Stopping released the parse while this read was in flight.
+    if (!parser_)
+    {
+        handler(error::channel_stopped, bytes);
+        return;
+    }
+
     if (ec)
     {
         // The upgrade request is published, the channel accepts or refuses.
@@ -624,6 +631,13 @@ void proxy::handle_http_body(const code& ec, size_t bytes,
 {
     BC_ASSERT(stranded());
     count_received(bytes);
+
+    // Stopping released the parse while this read was in flight.
+    if (!parser_)
+    {
+        handler(error::channel_stopped, bytes);
+        return;
+    }
 
     // A batched body pauses the parse to deliver each element.
     if (ec == error::need_buffer)
@@ -695,6 +709,13 @@ void proxy::handle_http_close_write(const code& ec, size_t bytes,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+
+    // Stopping released the parse while this read was in flight.
+    if (!parser_)
+    {
+        handler(error::channel_stopped, bytes);
+        return;
+    }
 
     if (ec)
     {
