@@ -141,6 +141,7 @@ private:
     void start_inactivity() NOEXCEPT;
     void handle_inactivity(const code& ec) NOEXCEPT;
 
+    void start_monitor() NOEXCEPT;
     void handle_monitor(const code& ec) NOEXCEPT;
     gate_t::ptr make_gate() NOEXCEPT;
     void handle_gate(const code& ec) NOEXCEPT;
@@ -163,6 +164,8 @@ private:
     steady_clock::time_point last_write_{ created_ };
     gate_t::ptr gate_{};
     gate_t::ptr held_{};
+    bool monitored_{};
+    bool polling_{};
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;

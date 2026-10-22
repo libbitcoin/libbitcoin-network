@@ -102,11 +102,11 @@ void socket::watch(result_handler&& handler) NOEXCEPT
             shared_from_this(), std::move(handler)));
 }
 
-void socket::unwatch() NOEXCEPT
+void socket::poll(result_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_unwatch,
-            shared_from_this()));
+        std::bind(&socket::do_poll,
+            shared_from_this(), std::move(handler)));
 }
 
 // private
@@ -125,10 +125,18 @@ void socket::do_watch(const result_handler& handler) NOEXCEPT
 }
 
 // private
-void socket::do_unwatch() NOEXCEPT
+void socket::do_poll(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    watch_->stop();
+
+    if (stopped_.load())
+    {
+        handler(error::success);
+        return;
+    }
+
+    watch_->start(std::bind(&socket::handle_poll,
+        shared_from_this(), _1, handler));
 }
 
 // private
@@ -151,6 +159,22 @@ void socket::handle_watch(const code& ec,
     }
 
     do_watch(handler);
+}
+
+// private
+void socket::handle_poll(const code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // Timer stop (socket stop) results in caller not stopping the channel.
+    if (!ec && asio::half_closed(get_base()))
+    {
+        handler(error::peer_disconnect);
+        return;
+    }
+
+    handler(error::success);
 }
 
 // Properties.

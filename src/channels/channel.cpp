@@ -119,21 +119,38 @@ bool channel::held() const NOEXCEPT
     return held_ != nullptr;
 }
 
+// The poll is not canceled on release, so it lapses within an interval.
 void channel::monitor(bool value) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (value)
-        watch(std::bind(&channel::handle_monitor,
-            shared_from_base<channel>(), _1));
-    else
-        unwatch();
+    monitored_ = value;
+    if (monitored_ && !polling_)
+        start_monitor();
+}
+
+void channel::start_monitor() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    polling_ = true;
+    poll(std::bind(&channel::handle_monitor,
+        shared_from_base<channel>(), _1));
 }
 
 void channel::handle_monitor(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (ec) stop(ec);
+
+    polling_ = false;
+    if (ec)
+    {
+        stop(ec);
+        return;
+    }
+
+    if (monitored_ && !stopped())
+        start_monitor();
 }
 
 // Dispatch gate.

@@ -78,16 +78,10 @@ static size_t to_cost(http::body::value_type& body) NOEXCEPT
 // Wait (all).
 // ----------------------------------------------------------------------------
 
-void proxy::watch(result_handler&& handler) NOEXCEPT
+void proxy::poll(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    socket_->watch(std::move(handler));
-}
-
-void proxy::unwatch() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    socket_->unwatch();
+    socket_->poll(std::move(handler));
 }
 
 //  WS (generic, framed).

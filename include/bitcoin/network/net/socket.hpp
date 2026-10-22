@@ -96,10 +96,12 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Monitor the peer for close, handler posted to socket strand.
+    /// Shares the poll timer, so a socket is watched or polled, not both.
     virtual void watch(result_handler&& handler) NOEXCEPT;
 
-    /// End monitoring, handler invoked with success.
-    virtual void unwatch() NOEXCEPT;
+    /// Check the peer for close once after an interval (success if open).
+    /// Shares the watch timer, so a socket is watched or polled, not both.
+    virtual void poll(result_handler&& handler) NOEXCEPT;
 
     /// Connect (all).
     /// -----------------------------------------------------------------------
@@ -469,7 +471,7 @@ private:
 
     // wait
     void do_watch(const result_handler& handler) NOEXCEPT;
-    void do_unwatch() NOEXCEPT;
+    void do_poll(const result_handler& handler) NOEXCEPT;
 
     // connection
     void do_connect(const asio::endpoints& range,
@@ -558,6 +560,8 @@ private:
 
     // wait
     void handle_watch(const code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void handle_poll(const code& ec,
         const result_handler& handler) NOEXCEPT;
 
 
