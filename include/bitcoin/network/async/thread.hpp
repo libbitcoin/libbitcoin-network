@@ -53,6 +53,9 @@ BCT_API void set_memory_priority(memory_priority priority) NOEXCEPT;
 // Set processing priority for the current THREAD.
 BCT_API void set_processing_priority(processing_priority priority) NOEXCEPT;
 
+// Raise the open file descriptor limit for the current PROCESS.
+BCT_API void raise_descriptor_limit() NOEXCEPT;
+
 } // namespace network
 } // namespace libbitcoin
 

@@ -31,6 +31,7 @@
 
 #ifdef HAVE_APPLE
     #include <pthread/qos.h>
+    #include <sys/syslimits.h>
 #endif
 
 #ifdef HAVE_MSC
@@ -157,6 +158,25 @@ void set_processing_priority(processing_priority priority) NOEXCEPT
 #else
     // BUGBUG: This will set all threads in the process.
     setpriority(PRIO_PROCESS, getpid(), prioritization);
+#endif
+}
+
+// Raise the open file descriptor soft limit to the hard limit.
+void raise_descriptor_limit() NOEXCEPT
+{
+#if !defined(HAVE_MSC)
+    rlimit limit{};
+    if (getrlimit(RLIMIT_NOFILE, &limit) != 0)
+        return;
+
+#if defined(HAVE_APPLE)
+    // Apple rejects a soft limit above OPEN_MAX.
+    limit.rlim_cur = std::min(limit.rlim_max, rlim_t{ OPEN_MAX });
+#else
+    limit.rlim_cur = limit.rlim_max;
+#endif
+
+    setrlimit(RLIMIT_NOFILE, &limit);
 #endif
 }
 

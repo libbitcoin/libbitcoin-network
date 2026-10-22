@@ -195,6 +195,7 @@ void net::start(result_handler&& handler) NOEXCEPT
 void net::do_start(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    raise_descriptor_limit();
     manual_ = attach_manual_session();
     manual_->start(std::bind(&net::handle_start, this, _1, handler));
 }
