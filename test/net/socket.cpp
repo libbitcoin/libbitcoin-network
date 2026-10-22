@@ -614,93 +614,6 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
     BOOST_REQUIRE(pool.join());
 }
 
-// Reads one http request whose header carries a field of the given size.
-static code http_read_field(size_t field_size)
-{
-    using namespace std::chrono_literals;
-
-    const logger log{};
-    threadpool pool(2);
-    connector::parameters params
-    {
-        .maximum_request = 4'000'000u,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
-    };
-
-    asio::strand accept_strand(pool.service().get_executor());
-    asio::acceptor acceptor(accept_strand);
-    boost_code ec{};
-    const asio::endpoint bind_endpoint(asio::ipv4::loopback(), 0);
-    acceptor.open(bind_endpoint.protocol(), ec);
-    acceptor.set_option(asio::reuse_address(true), ec);
-    acceptor.bind(bind_endpoint, ec);
-    acceptor.listen(1, ec);
-    BOOST_REQUIRE(!ec);
-    const auto port = acceptor.local_endpoint().port();
-
-    const auto server = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
-    const auto buffer = std::make_shared<http::flat_buffer>();
-    const auto request = std::make_shared<http::request>();
-    const auto read_result = std::make_shared<std::promise<code>>();
-    auto read_future = read_result->get_future();
-
-    server->accept(acceptor,
-        [=](const code& accept_ec) mutable
-        {
-            if (accept_ec)
-            {
-                read_result->set_value(accept_ec);
-                return;
-            }
-
-            server->http_read(*buffer, *request,
-                [=](const code& read_ec, size_t) NOEXCEPT
-                {
-                    read_result->set_value(read_ec);
-                });
-        });
-
-    asio::context client_service;
-    asio::socket client(client_service);
-    boost_code client_ec{};
-    client.connect({ asio::ipv4::loopback(), port }, client_ec);
-    BOOST_REQUIRE(!client_ec);
-
-    // The field exceeds a single socket read, so the parser completes it in
-    // the asynchronous read handler, not within the initiating call.
-    const std::string head{ "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Big: " };
-    const std::string field(field_size, 'a');
-    boost::asio::write(client, boost::asio::buffer(head), client_ec);
-    boost::asio::write(client, boost::asio::buffer(field), client_ec);
-    boost::asio::write(client, boost::asio::buffer(std::string{ "\r\n\r\n" }), client_ec);
-
-    BOOST_REQUIRE(read_future.wait_for(5s) == std::future_status::ready);
-    const auto result = read_future.get();
-
-    client.close(client_ec);
-    server->stop();
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-    return result;
-}
-
-BOOST_AUTO_TEST_CASE(socket__http_read__field_below_header_limit__success)
-{
-    BOOST_REQUIRE_EQUAL(http_read_field(1'000), error::success);
-}
-
-BOOST_AUTO_TEST_CASE(socket__http_read__header_above_header_limit__header_limit)
-{
-    BOOST_REQUIRE_EQUAL(http_read_field(maximum_http_header), error::header_limit);
-}
-
-// beast throws std::length_error for a field above 65533 bytes, which would
-// terminate the process if the header limit admitted it.
-BOOST_AUTO_TEST_CASE(socket__http_read__field_above_beast_field_limit__header_limit)
-{
-    BOOST_REQUIRE_EQUAL(http_read_field(200'000), error::header_limit);
-}
-
 // loopback
 // ----------------------------------------------------------------------------
 
@@ -872,6 +785,85 @@ BOOST_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, acc
     BOOST_REQUIRE(base.get());
     BOOST_REQUIRE_EQUAL(read.get(), error::success);
     BOOST_REQUIRE_EQUAL(byte, 'x');
+    instance->stop();
+}
+
+// The field exceeds a single socket read, so the parser completes it in the
+// asynchronous read handler, not within the initiating call.
+static std::string request_with_field(size_t size)
+{
+    return "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Big: " +
+        std::string(size, 'a') + "\r\n\r\n";
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__http_read__field_below_header_limit__success, acceptor_fixture)
+{
+    auto params = clear;
+    params.maximum_request = 4'000'000u;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const auto buffer = std::make_shared<http::flat_buffer>();
+    const auto request = std::make_shared<http::request>();
+    const awaiter<code> read{};
+    instance->http_read(*buffer, *request, [=](const code& ec, size_t) NOEXCEPT
+    {
+        read.set(ec);
+    });
+
+    boost_code ec{};
+    boost::asio::write(client, boost::asio::buffer(request_with_field(1'000)), ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(read.get(), error::success);
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__http_read__header_above_header_limit__header_limit, acceptor_fixture)
+{
+    auto params = clear;
+    params.maximum_request = 4'000'000u;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const auto buffer = std::make_shared<http::flat_buffer>();
+    const auto request = std::make_shared<http::request>();
+    const awaiter<code> read{};
+    instance->http_read(*buffer, *request, [=](const code& ec, size_t) NOEXCEPT
+    {
+        read.set(ec);
+    });
+
+    boost_code ec{};
+    boost::asio::write(client, boost::asio::buffer(request_with_field(maximum_http_header)), ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(read.get(), error::header_limit);
+    instance->stop();
+}
+
+// beast throws std::length_error for a field above 65533 bytes, which would
+// terminate the process if the header limit admitted it.
+BOOST_FIXTURE_TEST_CASE(socket__http_read__field_above_beast_field_limit__header_limit, acceptor_fixture)
+{
+    auto params = clear;
+    params.maximum_request = 4'000'000u;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const auto buffer = std::make_shared<http::flat_buffer>();
+    const auto request = std::make_shared<http::request>();
+    const awaiter<code> read{};
+    instance->http_read(*buffer, *request, [=](const code& ec, size_t) NOEXCEPT
+    {
+        read.set(ec);
+    });
+
+    boost_code ec{};
+    boost::asio::write(client, boost::asio::buffer(request_with_field(200'000)), ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(read.get(), error::header_limit);
     instance->stop();
 }
 
