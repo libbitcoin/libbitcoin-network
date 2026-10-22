@@ -37,8 +37,6 @@ system::chunk_ptr serialize<transaction>(const transaction& message,
     const auto data = emplace_shared<data_chunk>(size);
     const auto start = std::next(data->begin(), heading::size());
     const data_slab body(start, data->end());
-    if (!message.serialize(version, body))
-        return {};
 
     if (message.transaction_ptr->is_segregated())
     {
