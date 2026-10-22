@@ -248,7 +248,7 @@ void socket::do_http_read_header(ref<http::flat_buffer> buffer,
 
         auto& parse = parser.get();
         parse.body_limit(maximum_);
-        parse.header_limit(limit<uint32_t>(maximum_));
+        parse.header_limit(limit<uint32_t>(header_));
 
         VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_read_header,
             get_tcp(), buffer.get(), parse,

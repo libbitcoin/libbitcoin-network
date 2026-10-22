@@ -68,6 +68,7 @@ socket::socket(const logger& log, asio::context& service,
   : inbound_(inbound),
     proxied_(proxied),
     maximum_(params.maximum_request),
+    header_(std::min(params.maximum_request, maximum_http_header)),
     minimum_buffer_(params.minimum_buffer),
     bind_(params.bind),
     slot_(params.slot),
@@ -630,7 +631,7 @@ void socket::async_read_http(http::flat_buffer& buffer, http::request& request,
             // Explicit parser override gives access to limits.
             auto parser = to_shared<http_parser>();
             parser->body_limit(maximum_);
-            parser->header_limit(limit<uint32_t>(maximum_));
+            parser->header_limit(limit<uint32_t>(header_));
 
             VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_read,
                 get_tcp(), buffer, *parser,
