@@ -160,6 +160,7 @@ void socket::accept_secure_websocket(const http::request& request) THROWS
 
     auto& sock = std::get<ws::ssl::socket>(socket_);
     sock.read_message_max(maximum_);
+    sock.auto_fragment(false);
     sock.set_option(ws::decorator
     {
         [](http::fields& header) NOEXCEPT
@@ -187,6 +188,7 @@ void socket::accept_clear_websocket(const http::request& request) THROWS
 
     auto& sock = std::get<ws::socket>(socket_);
     sock.read_message_max(maximum_);
+    sock.auto_fragment(false);
     sock.set_option(ws::decorator
     {
         [](http::fields& header) NOEXCEPT
