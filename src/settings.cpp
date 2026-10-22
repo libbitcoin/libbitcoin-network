@@ -307,18 +307,26 @@ settings::transport settings::zmtp_server::secure_context() const NOEXCEPT
 // http_server
 // ----------------------------------------------------------------------------
 
-system::string_list settings::http_server::host_names() const NOEXCEPT
+code settings::http_server::initialize_context() NOEXCEPT
 {
+    if (const auto ec = tls_server::initialize_context())
+        return ec;
+
     // secure changes default port from 80 to 443.
     const auto port = secure() ? http::default_tls : http::default_http;
-    return config::to_host_names(hosts, port);
+    host_names_ = config::to_host_names(hosts, port);
+    origin_names_ = config::to_host_names(origins, port);
+    return error::success;
 }
 
-system::string_list settings::http_server::origin_names() const NOEXCEPT
+const system::string_list& settings::http_server::host_names() const NOEXCEPT
 {
-    // secure changes default port from 80 to 443.
-    const auto port = secure() ? http::default_tls : http::default_http;
-    return config::to_host_names(origins, port);
+    return host_names_;
+}
+
+const system::string_list& settings::http_server::origin_names() const NOEXCEPT
+{
+    return origin_names_;
 }
 
 // local
