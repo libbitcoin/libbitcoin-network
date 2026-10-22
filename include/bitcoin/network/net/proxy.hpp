@@ -149,11 +149,8 @@ protected:
     /// Wait.
     /// -----------------------------------------------------------------------
 
-    /// Monitor the peer for close, no data capture/loss.
-    void watch(result_handler&& handler) NOEXCEPT;
-
-    /// End monitoring, handler invoked with success.
-    void unwatch() NOEXCEPT;
+    /// Check the peer for close after one interval, no data capture/loss.
+    void poll(result_handler&& handler) NOEXCEPT;
 
     /// WS (generic, framed).
     /// -----------------------------------------------------------------------

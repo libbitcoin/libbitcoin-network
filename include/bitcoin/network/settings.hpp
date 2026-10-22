@@ -227,6 +227,9 @@ struct BCT_API settings
     {
         using tls_server::tls_server;
 
+        /// Initialize the ssl::context and normalize hosts/origins.
+        code initialize_context() NOEXCEPT override;
+
         /// Sent via responses if configured.
         std::string server{ BC_HTTP_SERVER_NAME };
 
@@ -250,9 +253,13 @@ struct BCT_API settings
         virtual bool permitted(const system::hash_digest& digest,
             const std::string& method) const NOEXCEPT;
 
-        /// Normalized configured hosts/origins helpers.
-        virtual system::string_list host_names() const NOEXCEPT;
-        virtual system::string_list origin_names() const NOEXCEPT;
+        /// Normalized configured hosts/origins (initialized).
+        virtual const system::string_list& host_names() const NOEXCEPT;
+        virtual const system::string_list& origin_names() const NOEXCEPT;
+
+    private:
+        system::string_list host_names_{};
+        system::string_list origin_names_{};
     };
 
     struct websocket_server

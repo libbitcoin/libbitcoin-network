@@ -26,8 +26,7 @@ class mock_proxy
   : public proxy
 {
 public:
-    using proxy::watch;
-    using proxy::unwatch;
+    using proxy::poll;
     using proxy::read;
     using proxy::accept_websocket;
 
@@ -628,39 +627,35 @@ BOOST_FIXTURE_TEST_CASE(proxy__properties__accepted__expected, loopback_fixture)
     BOOST_REQUIRE_EQUAL(channel->endpoint().port(), client.local_endpoint().port());
 }
 
-// watch
+// poll
 
-BOOST_FIXTURE_TEST_CASE(proxy__watch__client_shutdown__peer_disconnect, loopback_fixture)
+BOOST_FIXTURE_TEST_CASE(proxy__poll__connected__success, loopback_fixture)
 {
-    const awaiter<code> watched{};
+    const awaiter<code> polled{};
     boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
     {
-        channel->watch([=](const code& ec) NOEXCEPT
+        channel->poll([=](const code& ec) NOEXCEPT
         {
-            watched.set(ec);
+            polled.set(ec);
         });
     });
 
-    boost_code ec{};
-    client.shutdown(asio::socket::shutdown_send, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(watched.get(), error::peer_disconnect);
+    BOOST_REQUIRE_EQUAL(polled.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(proxy__watch__connected__pending, loopback_fixture)
+BOOST_FIXTURE_TEST_CASE(proxy__poll__stopped__success, loopback_fixture)
 {
-    const awaiter<code> watched{};
+    const awaiter<code> polled{};
+    channel->stop(error::service_stopped);
     boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
     {
-        channel->watch([=](const code& ec) NOEXCEPT
+        channel->poll([=](const code& ec) NOEXCEPT
         {
-            watched.set(ec);
+            polled.set(ec);
         });
     });
 
-    BOOST_REQUIRE(watched.pending());
-    channel->stop(error::service_stopped);
-    BOOST_REQUIRE_EQUAL(watched.get(), error::success);
+    BOOST_REQUIRE_EQUAL(polled.get(), error::success);
 }
 
 BOOST_FIXTURE_TEST_CASE(proxy__read_ws__tcp_full_buffer__buffer_overflow, loopback_fixture)
@@ -675,22 +670,6 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_ws__tcp_full_buffer__buffer_overflow, loopba
     });
 
     BOOST_REQUIRE_EQUAL(read.get(), error::buffer_overflow);
-}
-
-BOOST_FIXTURE_TEST_CASE(proxy__unwatch__watching__success, loopback_fixture)
-{
-    const awaiter<code> watched{};
-    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
-    {
-        channel->watch([=](const code& ec) NOEXCEPT
-        {
-            watched.set(ec);
-        });
-
-        channel->unwatch();
-    });
-
-    BOOST_REQUIRE_EQUAL(watched.get(), error::success);
 }
 
 // tcp
