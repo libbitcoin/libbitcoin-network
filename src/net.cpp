@@ -525,6 +525,35 @@ void net::do_unsubscribe_close(object_key key) NOEXCEPT
     stop_subscriber_.notify_one(key, error::desubscribed);
 }
 
+// Broadcasts.
+// ----------------------------------------------------------------------------
+
+void net::demand_wire_tx(bool demand) NOEXCEPT
+{
+    if (demand)
+        ++wire_tx_demand_;
+    else
+        --wire_tx_demand_;
+}
+
+void net::demand_wire_block(bool demand) NOEXCEPT
+{
+    if (demand)
+        ++wire_block_demand_;
+    else
+        --wire_block_demand_;
+}
+
+bool net::wire_tx_demanded() const NOEXCEPT
+{
+    return is_nonzero(wire_tx_demand_.load());
+}
+
+bool net::wire_block_demanded() const NOEXCEPT
+{
+    return is_nonzero(wire_block_demand_.load());
+}
+
 // At one object/session/ns, this overflows in ~585 years (and handled).
 net::object_key net::create_key() NOEXCEPT
 {

@@ -1106,4 +1106,97 @@ BOOST_AUTO_TEST_CASE(net__subscribe_close__stranded__subscribed_then_stopped)
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
+BOOST_AUTO_TEST_CASE(net__wire_tx_demanded__unstarted__false)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net net(set, log);
+    BOOST_REQUIRE(!net.wire_tx_demanded());
+    BOOST_REQUIRE(!net.wire_block_demanded());
+}
+
+BOOST_AUTO_TEST_CASE(net__demand_wire_tx__demanded_twice_undemanded_twice__expected)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net net(set, log);
+
+    net.demand_wire_tx(true);
+    net.demand_wire_tx(true);
+    BOOST_REQUIRE(net.wire_tx_demanded());
+    BOOST_REQUIRE(!net.wire_block_demanded());
+
+    net.demand_wire_tx(false);
+    BOOST_REQUIRE(net.wire_tx_demanded());
+
+    net.demand_wire_tx(false);
+    BOOST_REQUIRE(!net.wire_tx_demanded());
+}
+
+BOOST_AUTO_TEST_CASE(net__demand_wire_block__demanded_twice_undemanded_twice__expected)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net net(set, log);
+
+    net.demand_wire_block(true);
+    net.demand_wire_block(true);
+    BOOST_REQUIRE(net.wire_block_demanded());
+    BOOST_REQUIRE(!net.wire_tx_demanded());
+
+    net.demand_wire_block(false);
+    BOOST_REQUIRE(net.wire_block_demanded());
+
+    net.demand_wire_block(false);
+    BOOST_REQUIRE(!net.wire_block_demanded());
+}
+
+BOOST_AUTO_TEST_CASE(net__broadcast__wire_tx_subscribed__expected)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+    const auto session = on_strand(net, [&]() NOEXCEPT { return net.attach_service_stranded<mock_service_session>(); });
+
+    std::promise<std::pair<wire_tx::cptr, uint64_t>> promise{};
+    session->subscribe<wire_tx>([&](const code&, const wire_tx::cptr& message, uint64_t sender) NOEXCEPT
+    {
+        promise.set_value({ message, sender });
+        return false;
+    }, 42);
+
+    const auto expected = system::emplace_shared<const wire_tx>(wire_tx::view::cptr{});
+    net.broadcast<wire_tx>(expected, 7);
+    const auto result = promise.get_future().get();
+    net.close();
+
+    BOOST_REQUIRE(result.first == expected);
+    BOOST_REQUIRE_EQUAL(result.second, 7u);
+}
+
+BOOST_AUTO_TEST_CASE(net__broadcast__wire_block_subscribed__expected)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    net_accessor net(set, log);
+    const auto session = on_strand(net, [&]() NOEXCEPT { return net.attach_service_stranded<mock_service_session>(); });
+
+    std::promise<std::pair<wire_block::cptr, uint64_t>> promise{};
+    session->subscribe<wire_block>([&](const code&, const wire_block::cptr& message, uint64_t sender) NOEXCEPT
+    {
+        promise.set_value({ message, sender });
+        return false;
+    }, 42);
+
+    const system::settings bitcoin{ selection::mainnet };
+    const auto block = system::emplace_shared<const wire_block::view>(bitcoin.genesis_block.to_data(true), true);
+    const auto expected = system::emplace_shared<const wire_block>(block, true);
+    net.broadcast<wire_block>(expected, 7);
+    const auto result = promise.get_future().get();
+    net.close();
+
+    BOOST_REQUIRE(result.first == expected);
+    BOOST_REQUIRE_EQUAL(result.second, 7u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

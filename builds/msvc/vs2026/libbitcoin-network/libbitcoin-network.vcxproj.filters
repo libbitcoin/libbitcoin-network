@@ -617,6 +617,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\terminator.hpp">
       <Filter>include\bitcoin\network\broadcast</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\wire_block.hpp">
+      <Filter>include\bitcoin\network\broadcast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\wire_tx.hpp">
+      <Filter>include\bitcoin\network\broadcast</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel.hpp">
       <Filter>include\bitcoin\network\channels</Filter>
     </ClInclude>

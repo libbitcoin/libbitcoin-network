@@ -45,6 +45,8 @@
 #include <bitcoin/network/broadcast/broadcast.hpp>
 #include <bitcoin/network/broadcast/diagnostics.hpp>
 #include <bitcoin/network/broadcast/terminator.hpp>
+#include <bitcoin/network/broadcast/wire_block.hpp>
+#include <bitcoin/network/broadcast/wire_tx.hpp>
 #include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/channels/channel_peer.hpp>

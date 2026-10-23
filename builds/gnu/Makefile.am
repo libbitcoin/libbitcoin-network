@@ -238,7 +238,9 @@ include_bitcoin_network_broadcastdir = \
 include_bitcoin_network_broadcast_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/broadcast/broadcast.hpp \
     ${srcdir}/../../include/bitcoin/network/broadcast/diagnostics.hpp \
-    ${srcdir}/../../include/bitcoin/network/broadcast/terminator.hpp
+    ${srcdir}/../../include/bitcoin/network/broadcast/terminator.hpp \
+    ${srcdir}/../../include/bitcoin/network/broadcast/wire_block.hpp \
+    ${srcdir}/../../include/bitcoin/network/broadcast/wire_tx.hpp
 
 include_bitcoin_network_channelsdir = \
     ${includedir}/bitcoin/network/channels
@@ -589,6 +591,8 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/async/races/race_unity.cpp \
     ${srcdir}/../../test/async/races/race_volume.cpp \
     ${srcdir}/../../test/broadcast/terminator.cpp \
+    ${srcdir}/../../test/broadcast/wire_block.cpp \
+    ${srcdir}/../../test/broadcast/wire_tx.cpp \
     ${srcdir}/../../test/channels/channel.cpp \
     ${srcdir}/../../test/channels/channel_http.cpp \
     ${srcdir}/../../test/channels/channel_peer.cpp \
