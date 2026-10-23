@@ -72,6 +72,8 @@ private:
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
+    void handle_connected(const code& ec,
+        const acceptor::ptr& acceptor) NOEXCEPT;
     void handle_accepted(const code& ec, const socket::ptr& socket,
         const acceptor::ptr& acceptor) NOEXCEPT;
 
@@ -79,6 +81,9 @@ private:
         const channel::ptr& channel) NOEXCEPT;
     void handle_channel_stop(const code& ec,
         const channel::ptr& channel) NOEXCEPT;
+
+    // This is protected by strand.
+    size_t handshake_count_{};
 };
 
 } // namespace network
