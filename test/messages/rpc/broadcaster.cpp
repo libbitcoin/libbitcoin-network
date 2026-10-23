@@ -243,6 +243,40 @@ BOOST_AUTO_TEST_CASE(broadcaster__subscribe__peer_broadcaster_stop__expected)
     BOOST_REQUIRE(result);
 }
 
+BOOST_AUTO_TEST_CASE(broadcaster__notify__peer_broadcaster_wire_tx__expected)
+{
+    using peer_broadcaster = broadcaster<interface::peer::broadcast>;
+
+    peer_broadcaster instance{};
+    constexpr peer_broadcaster::key_t expected_sender = 42;
+    const auto expected = emplace_shared<const wire_tx>(wire_tx::view::cptr{});
+    wire_tx::cptr result{};
+    peer_broadcaster::key_t sender{};
+
+    BOOST_REQUIRE(!instance.subscribe(
+        [&](const code& ec, const wire_tx::cptr& message, peer_broadcaster::key_t id)
+        {
+            // Handle stop notification (unavoidable test condition).
+            if (ec)
+                return false;
+
+            result = message;
+            sender = id;
+            return true;
+        }, 17));
+
+    const auto ec = instance.notify(request_t
+    {
+        .method = wire_tx::command,
+        .params = { array_t{ any_t{ expected }, { expected_sender } } }
+    });
+
+    instance.stop(network::error::service_stopped);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(result == expected);
+    BOOST_REQUIRE_EQUAL(sender, expected_sender);
+}
+
 BOOST_AUTO_TEST_CASE(broadcaster__notify__unknown_method_keyed__unexpected_method)
 {
     mock_broadcaster instance{};

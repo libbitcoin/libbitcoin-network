@@ -160,6 +160,13 @@ public:
     static system::data_chunk frame_encode(const std::span<const uint8_t>& body,
         bool command, bool more) NOEXCEPT;
 
+    /// The size of a frame (flags + length + body) of the body size.
+    static size_t frame_size(size_t body) NOEXCEPT;
+
+    /// Write the head of a frame (flags + length) of the body size.
+    static void write_frame_head(system::writer& sink, size_t body,
+        bool command, bool more) NOEXCEPT;
+
     /// Decode the frame at the front of a buffer into flags and body, setting
     /// the buffer to the remainder. False if the buffer is malformed.
     static bool frame_decode(uint8_t& flags, std::span<const uint8_t>& body,

@@ -109,6 +109,8 @@
     <ClCompile Include="..\..\..\..\test\async\time.cpp" />
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\broadcast\terminator.cpp" />
+    <ClCompile Include="..\..\..\..\test\broadcast\wire_block.cpp" />
+    <ClCompile Include="..\..\..\..\test\broadcast\wire_tx.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp" />

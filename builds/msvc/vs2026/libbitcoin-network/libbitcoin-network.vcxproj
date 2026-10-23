@@ -279,6 +279,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\diagnostics.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\terminator.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\wire_block.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\wire_tx.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_peer.hpp" />
@@ -379,6 +381,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\publish.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\rpc.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\size.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\streamable.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />

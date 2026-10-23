@@ -222,29 +222,39 @@ data_chunk stream::make_pong(const std::span<const uint8_t>& context) NOEXCEPT
 data_chunk stream::frame_encode(const std::span<const uint8_t>& body,
     bool command, bool more) NOEXCEPT
 {
-    data_chunk frame{};
+    data_chunk frame(frame_size(body.size()));
+    system::stream::out::fast sink{ frame };
+    write::bytes::fast out{ sink };
+    write_frame_head(out, body.size(), command, more);
+    out.write_bytes(body.data(), body.size());
+    return frame;
+}
+
+size_t stream::frame_size(size_t body) NOEXCEPT
+{
+    const auto length = body > 0xff ? sizeof(uint64_t) : sizeof(uint8_t);
+    return add1(length) + body;
+}
+
+void stream::write_frame_head(writer& sink, size_t body, bool command,
+    bool more) NOEXCEPT
+{
     uint8_t flags{};
     if (command) flags |= flag_command;
     if (more) flags |= flag_more;
 
-    const auto size = body.size();
-    if (size > 0xff)
+    if (body > 0xff)
     {
         // Long frame: LONG flag and an 8-byte big-endian length.
-        flags |= flag_long;
-        frame.push_back(flags);
-        const auto length = to_big_endian(possible_wide_cast<uint64_t>(size));
-        frame.insert(frame.end(), length.begin(), length.end());
+        sink.write_byte(bit_or<uint8_t>(flags, flag_long));
+        sink.write_8_bytes_big_endian(possible_wide_cast<uint64_t>(body));
     }
     else
     {
         // Short frame: a single length byte.
-        frame.push_back(flags);
-        frame.push_back(possible_narrow_cast<uint8_t>(size));
+        sink.write_byte(flags);
+        sink.write_byte(possible_narrow_cast<uint8_t>(body));
     }
-
-    frame.insert(frame.end(), body.begin(), body.end());
-    return frame;
 }
 
 bool stream::frame_decode(uint8_t& flags, std::span<const uint8_t>& body,

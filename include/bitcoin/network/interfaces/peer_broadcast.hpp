@@ -44,13 +44,15 @@ struct peer_broadcast
         const typename Message::cptr&, const key&)>;
 
     /// Messages relayed from the receiving channel to all other channels,
-    /// and channel diagnostics, which are internal (never serialized).
+    /// and internal messages (never serialized).
     /// The v2 encoding is applied by the sender, so v1 is the relayed type.
     static constexpr std::tuple methods
     {
         method<"addr", messages::peer::address::cptr, key>{},
+        method<"block", wire_block::cptr, key>{},
         method<"diagnostics", diagnostics::cptr, key>{},
-        method<"terminator", terminator::cptr, key>{}
+        method<"terminator", terminator::cptr, key>{},
+        method<"tx", wire_tx::cptr, key>{}
     };
 };
 

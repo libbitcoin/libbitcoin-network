@@ -120,6 +120,12 @@
     <ClCompile Include="..\..\..\..\test\broadcast\terminator.cpp">
       <Filter>src\broadcast</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\broadcast\wire_block.cpp">
+      <Filter>src\broadcast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\broadcast\wire_tx.cpp">
+      <Filter>src\broadcast</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\channels\channel.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>

@@ -26,6 +26,30 @@
 using system::data_chunk;
 using system::data_stack;
 
+// A streamable value of fixed bytes.
+class mock_streamable final
+  : public rpc::streamable
+{
+public:
+    mock_streamable(const data_chunk& data) NOEXCEPT
+      : data_(data)
+    {
+    }
+
+    size_t size() const NOEXCEPT override
+    {
+        return data_.size();
+    }
+
+    void write(system::write::bytes::fast& sink) const NOEXCEPT override
+    {
+        sink.write_bytes(data_.data(), data_.size());
+    }
+
+private:
+    const data_chunk data_;
+};
+
 // Compatibility (the role admits only compatible peer socket types).
 // ----------------------------------------------------------------------------
 
@@ -310,6 +334,22 @@ BOOST_AUTO_TEST_CASE(zmtp_socket__notify__router__delimited_message)
     BOOST_REQUIRE(received.at(0).empty());
     BOOST_REQUIRE_EQUAL(received.at(1), chunk("topic"));
     BOOST_REQUIRE_EQUAL(received.at(2), data_chunk{ 0x01 });
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_socket__notify__router_streamable_and_chunk__written_in_place)
+{
+    const rpc::streamable::cptr streamed = system::emplace_shared<const mock_streamable>(data_chunk(3, 0x42));
+    const auto shared = system::to_shared(data_chunk{ 0x01, 0x02 });
+    rpc::request notification{};
+    notification.message.method = "topic";
+    notification.message.params = rpc::array_t{ rpc::value_t{ rpc::any_t{ streamed } }, rpc::value_t{ rpc::any_t{ shared } } };
+    BOOST_REQUIRE_EQUAL(notify(std::move(notification)), error::success);
+
+    const auto received = peer_read_message(peer);
+    BOOST_REQUIRE_EQUAL(received.size(), 4u);
+    BOOST_REQUIRE_EQUAL(received.at(1), chunk("topic"));
+    BOOST_REQUIRE_EQUAL(received.at(2), data_chunk(3, 0x42));
+    BOOST_REQUIRE_EQUAL(received.at(3), (data_chunk{ 0x01, 0x02 }));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

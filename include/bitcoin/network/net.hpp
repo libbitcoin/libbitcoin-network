@@ -87,6 +87,26 @@ public:
     /// Calls close().
     virtual ~net() NOEXCEPT;
 
+    /// Broadcasts.
+    /// -----------------------------------------------------------------------
+
+    /// Broadcast a message to subscribed channels, sender identifies source.
+    template <class Message>
+    void broadcast(const typename Message::cptr& message,
+        object_key sender) NOEXCEPT
+    {
+        boost::asio::post(strand_,
+            std::bind(&net::do_broadcast<Message>, this, message, sender));
+    }
+
+    /// Count a channel demand for wire tx|block broadcasts (or uncount).
+    virtual void demand_wire_tx(bool demand) NOEXCEPT;
+    virtual void demand_wire_block(bool demand) NOEXCEPT;
+
+    /// Some channel demands wire tx|block broadcasts.
+    virtual bool wire_tx_demanded() const NOEXCEPT;
+    virtual bool wire_block_demanded() const NOEXCEPT;
+
     /// Sequences.
     /// -----------------------------------------------------------------------
 
@@ -324,6 +344,21 @@ protected:
     virtual session_outbound::ptr attach_outbound_session() NOEXCEPT;
 
 private:
+    // Broadcasts.
+    template <class Message>
+    void do_broadcast(const typename Message::cptr& message,
+        object_key sender) NOEXCEPT
+    {
+        BC_ASSERT(stranded());
+
+        using namespace rpc;
+        broadcaster_.notify(request_t
+        {
+            .method = Message::command,
+            .params = { array_t{ any_t{ message }, { sender } } }
+        });
+    }
+
     // Suspensions.
     void suspend_services() NOEXCEPT;
     void resume_services() NOEXCEPT;
@@ -386,6 +421,8 @@ private:
     std::atomic<size_t> total_channel_count_{};
     std::atomic<uint64_t> peer_received_{};
     std::atomic<uint64_t> peer_sent_{};
+    std::atomic<size_t> wire_tx_demand_{};
+    std::atomic<size_t> wire_block_demand_{};
 
     // These are protected by strand.
     session_manual::ptr manual_{};
