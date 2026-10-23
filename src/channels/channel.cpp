@@ -214,9 +214,7 @@ void channel::do_receive() NOEXCEPT
 
 // Timers.
 // ----------------------------------------------------------------------------
-// Send throttling (settings.rate_limit) is implemented by the proxy. A channel
-// whose accrued deferral exceeds inactivity is dropped by that timer, which is
-// the intended outcome (the throttle degrades to disconnection under abuse).
+// Send throttling (settings.rate_limit) is implemented by the proxy.
 // A restarted timer invokes completion handler with error::operation_canceled.
 // Called from start or strand.
 
