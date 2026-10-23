@@ -50,8 +50,7 @@ public:
     /// Seed connections are running (call from network strand).
     virtual bool seeding() const NOEXCEPT;
 
-    /// Time seed connections last completed, zero if never (call from network
-    /// strand).
+    /// Time seed connections last completed, zero if never (network strand).
     virtual steady_clock::time_point completed() const NOEXCEPT;
 
 protected:

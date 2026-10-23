@@ -768,17 +768,13 @@ void net::do_seed() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // address_not_found may only mean that no pooled address suits the slot,
-    // so seed only below the minimum (and never without seeds).
+    // address_not_found may only mean that no pooled address suits the slot.
     const auto& outbound = network_settings().outbound;
     if (closed() || outbound.seeds.empty() ||
         address_count() >= outbound.minimum_address_count())
         return;
 
-    // The startup seed session is retained before outbound can seed.
     BC_ASSERT(seed_);
-
-    // One seed session at a time, and none soon after one completes.
     const auto completed = seed_->completed();
     const auto backoff = outbound.seeding_timeout() * seed_backoff;
 
@@ -786,7 +782,6 @@ void net::do_seed() NOEXCEPT
         (steady_clock::now() - completed) < backoff))
         return;
 
-    // The handler signals sufficiency, seeding ends upon completion.
     seed_ = attach_seed_session();
     seed_->start([](const code&) NOEXCEPT {});
 }
