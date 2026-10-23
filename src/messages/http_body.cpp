@@ -116,6 +116,10 @@ void body::reader::finish(boost_code& ec) NOEXCEPT
             }
         }
     }, reader_);
+
+    // Beast finishes a complete body, so incomplete json cannot need more.
+    if (!streamed_ && ec == http_error_t::need_more)
+        ec = to_json_code(json_error_t::json_incomplete);
 }
 
 // http::body::writer

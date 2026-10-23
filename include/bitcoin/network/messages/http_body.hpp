@@ -171,10 +171,12 @@ struct BCT_API body
     public:
         using buffer_type = asio::const_buffer;
 
+        /// Streamed reads may finish before the message is complete.
         template <bool IsRequest, class Fields>
         inline explicit reader(http::message_header<IsRequest, Fields>& header,
-            value_type& value) NOEXCEPT
-          : header_{ header }, value_{ value }, reader_{ std::monostate{} }
+            value_type& value, bool streamed=false) NOEXCEPT
+          : header_{ header }, value_{ value }, reader_{ std::monostate{} },
+            streamed_{ streamed }
         {
         }
 
@@ -260,6 +262,7 @@ struct BCT_API body
         header& header_;
         value_type& value_;
         body_reader reader_;
+        const bool streamed_;
     };
 
     class writer

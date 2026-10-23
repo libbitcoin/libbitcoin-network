@@ -97,8 +97,14 @@ void socket::do_body_read(boost_code ec, size_t total,
             return;
         }
 
+        // A websocket message is complete, a tcp stream may need more.
         if (ec == error::http_error_t::need_more)
-            ec.clear();
+        {
+            if (websocket())
+                ec = error::to_json_code(error::json_error_t::json_incomplete);
+            else
+                ec.clear();
+        }
     }
 
     if (ec)
