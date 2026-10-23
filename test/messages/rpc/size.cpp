@@ -115,13 +115,13 @@ BOOST_AUTO_TEST_CASE(rpc_size__json__text__text_size_plus_element)
 
 BOOST_AUTO_TEST_CASE(rpc_size__json__array__accumulates_elements)
 {
-    const json_t value = boost::json::array{ "abc", 1 };
+    const json_t value = system::json::array{ "abc", 1 };
     BOOST_REQUIRE_EQUAL(to_size(value), 3u + 3u * element);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_size__json__object__accumulates_keys_and_values)
 {
-    const json_t value = boost::json::object{ { "key", "value" }, { "nested", boost::json::array{ "abc" } } };
+    const json_t value = system::json::object{ { "key", "value" }, { "nested", system::json::array{ "abc" } } };
     BOOST_REQUIRE_EQUAL(to_size(value), 3u + 5u + 6u + 3u + 4u * element);
 }
 
@@ -207,14 +207,14 @@ BOOST_AUTO_TEST_CASE(rpc_size__response__large_text_result__not_less_than_serial
 {
     const string_t text(1'000, 'x');
     const response_t message{ .jsonrpc = version::v2, .id = identity_t{ 42_i64 }, .result = value_t{ text } };
-    BOOST_REQUIRE_GE(to_size(message), boost::json::serialize(value_from(message)).size());
+    BOOST_REQUIRE_GE(to_size(message), system::json::serialize(value_from(message)).size());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_size__response__large_json_text_result__not_less_than_serialized)
 {
     const string_t text(1'000, 'x');
     const response_t message{ .jsonrpc = version::v2, .id = identity_t{ 42_i64 }, .result = value_t{ json_t(text) } };
-    BOOST_REQUIRE_GE(to_size(message), boost::json::serialize(value_from(message)).size());
+    BOOST_REQUIRE_GE(to_size(message), system::json::serialize(value_from(message)).size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

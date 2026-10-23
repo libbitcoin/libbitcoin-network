@@ -24,13 +24,13 @@ BOOST_AUTO_TEST_SUITE(json_body_reader_tests)
 
 using namespace network::http;
 using namespace network::json;
-using value = boost::json::value;
+using value = system::json::value;
 
 BOOST_AUTO_TEST_CASE(json_body_reader__construct1__default__null_model)
 {
     json::body<>::value_type body{};
     json::body<>::reader reader(body);
-    BOOST_REQUIRE(boost::get<value>(body.model).is_null());
+    BOOST_REQUIRE(body.model.is_null());
 }
 
 BOOST_AUTO_TEST_CASE(json_body_reader__construct2__default__null_model)
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(json_body_reader__construct2__default__null_model)
     request_header header{};
     json::body<>::value_type body{};
     json::body<>::reader reader(header, body);
-    BOOST_REQUIRE(boost::get<value>(body.model).is_null());
+    BOOST_REQUIRE(body.model.is_null());
 }
 
 BOOST_AUTO_TEST_CASE(json_body_reader__init__simple_object__success)
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__split_garbage_after_object__extra_da
     BOOST_REQUIRE(!ec);
 
     BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), 1u);
-    BOOST_REQUIRE(ec == error::json_error_t::extra_data);
+    BOOST_REQUIRE(ec == error::to_json_code(error::json_error_t::json_extra_data));
 }
 
 BOOST_AUTO_TEST_CASE(json_body_reader__finish__simple_object__success_expected_model)

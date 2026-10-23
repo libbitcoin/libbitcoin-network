@@ -41,7 +41,7 @@ constexpr bool is_json_whitespace(char character) NOEXCEPT
 struct json_value
 {
     /// JSON document object model to parse/serialize.
-    boost::json::value model{};
+    system::json::value model{};
 
     /// Estimated serialized size, set by the writer of the message type.
     size_t size_hint{};
@@ -87,7 +87,7 @@ struct body
     private:
         size_t total_{};
         http::length_type expected_{};
-        boost::json::stream_parser parser_{};
+        system::json::parser parser_{};
     };
 
     class writer
@@ -97,7 +97,7 @@ struct body
         using out_buffer = http::get_buffer<const_buffers_type>;
 
         inline explicit writer(value_type& value) NOEXCEPT
-          : value_{ value }, serializer_{ value.model.storage() }
+          : value_{ value }
         {
         }
 
@@ -115,7 +115,7 @@ struct body
         
     protected:
         value_type& value_;
-        boost::json::serializer serializer_;
+        system::json::serializer serializer_{};
         size_t chunk_{};
         char terminator_{};
     };

@@ -76,6 +76,7 @@ size_t CLASS::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     {
         const auto data = pointer_cast<const char>(buffer.data());
         size_t parsed{};
+        ec.clear();
 
         // The parser stops after the document, beast re-feeds the remainder.
         if (parser_.done())
@@ -84,11 +85,14 @@ size_t CLASS::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
                 ++parsed;
 
             if (parsed < size)
-                ec = to_json_code(json_error_t::extra_data);
+                ec = to_json_code(json_error_t::json_extra_data);
         }
         else
         {
-            parsed = parser_.write_some(data, size, ec);
+            code error{};
+            parsed = parser_.write_some(data, size, error);
+            if (error)
+                ec = error;
         }
 
         total_ = ceilinged_add(total_, parsed);
@@ -96,11 +100,6 @@ size_t CLASS::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
             ec = to_http_code(http_error_t::body_limit);
 
         return parsed;
-    }
-    catch (const boost::system::system_error& e)
-    {
-        // Primary exception type for parsing operations.
-        ec = e.code();
     }
     catch (...)
     {
@@ -129,34 +128,19 @@ void CLASS::reader::finish(boost_code& ec) NOEXCEPT
 {
     using namespace network::error;
 
-    // The internal boost::json parser will always return !done() when parsing
-    // a top-level primitive as a whole document, specifically a number number
-    // value, because it has no way to know if more digits are coming. So this
-    // will return need_more even when a fixed-size buffer is being read. For
-    // this reason this body does not support *reading* for top-level objects.
+    // The parser will always return !done() when parsing a top-level number
+    // as a whole document, because it has no way to know if more digits are
+    // coming. So this will return need_more even when a fixed-size buffer is
+    // being read. For this reason this body does not support *reading* for
+    // top-level numbers.
     if (!done())
     {
         ec = to_http_code(http_error_t::need_more);
         return;
     }
 
-    try
-    {
-        ec.clear();
-        value_.model = parser_.release();
-    }
-    catch (const boost::system::system_error& e)
-    {
-        // Primary exception type for parsing operations.
-        ec = e.code();
-    }
-    catch (...)
-    {
-        // As a catch-all we blame alloc.
-        ec = to_http_code(http_error_t::bad_alloc);
-    }
-
-    parser_.reset();
+    ec.clear();
+    value_.model = parser_.release();
 }
 
 TEMPLATE
@@ -242,11 +226,6 @@ CLASS::writer::get(boost_code& ec) NOEXCEPT
         data[view.size()] = terminator_;
         const auto bytes = add1(view.size());
         return out_buffer{ std::make_pair(boost::asio::buffer(data, bytes), more) };
-    }
-    catch (const boost::system::system_error& e)
-    {
-        // Primary exception type for parsing operations.
-        ec = e.code();
     }
     catch (...)
     {

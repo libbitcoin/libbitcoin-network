@@ -257,7 +257,7 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_write__response__newline_terminated_json, rp
     BOOST_REQUIRE_EQUAL(rpc_await(result), error::success);
     BOOST_REQUIRE_EQUAL(line.back(), '\n');
 
-    const auto object = boost::json::parse(line).as_object();
+    const auto object = system::json::parse(line).as_object();
     BOOST_REQUIRE_EQUAL(object.at("jsonrpc").as_string(), "2.0");
     BOOST_REQUIRE_EQUAL(object.at("id").to_number<int64_t>(), 42);
     BOOST_REQUIRE_EQUAL(object.at("result").as_string(), "hello");
@@ -275,7 +275,7 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__notification__newline_terminated_jso
     BOOST_REQUIRE_EQUAL(rpc_await(result), error::success);
     BOOST_REQUIRE_EQUAL(line.back(), '\n');
 
-    const auto object = boost::json::parse(line).as_object();
+    const auto object = system::json::parse(line).as_object();
     BOOST_REQUIRE_EQUAL(object.at("jsonrpc").as_string(), "2.0");
     BOOST_REQUIRE_EQUAL(object.at("method").as_string(), "note");
     BOOST_REQUIRE_EQUAL(object.at("params").as_array().at(0).as_string(), "x");
@@ -404,7 +404,7 @@ BOOST_FIXTURE_TEST_CASE(channel_rpc__resume__request__dispatched_and_result_sent
 
     send(R"({"jsonrpc":"2.0","id":7,"method":"echo","params":["hello"]})" "\n");
 
-    const auto object = boost::json::parse(receive_line()).as_object();
+    const auto object = system::json::parse(receive_line()).as_object();
     BOOST_REQUIRE_EQUAL(object.at("jsonrpc").as_string(), "2.0");
     BOOST_REQUIRE_EQUAL(object.at("id").to_number<int64_t>(), 7);
     BOOST_REQUIRE_EQUAL(object.at("result").as_string(), "hello");
@@ -419,7 +419,7 @@ BOOST_FIXTURE_TEST_CASE(channel_rpc__send_code__request__error_response, rpc_cha
 
     send(R"({"jsonrpc":"2.0","id":"abc","method":"echo","params":["hello"]})" "\n");
 
-    const auto object = boost::json::parse(receive_line()).as_object();
+    const auto object = system::json::parse(receive_line()).as_object();
     BOOST_REQUIRE_EQUAL(object.at("id").as_string(), "abc");
     BOOST_REQUIRE(!object.contains("result"));
     BOOST_REQUIRE_EQUAL(object.at("error").at("code").to_number<int64_t>(), code{ error::not_found }.value());
@@ -435,7 +435,7 @@ BOOST_FIXTURE_TEST_CASE(channel_rpc__send_notification__request__notification_se
 
     send(R"({"jsonrpc":"2.0","id":1,"method":"echo","params":["hello"]})" "\n");
 
-    const auto object = boost::json::parse(receive_line()).as_object();
+    const auto object = system::json::parse(receive_line()).as_object();
     BOOST_REQUIRE_EQUAL(object.at("method").as_string(), "note");
     BOOST_REQUIRE_EQUAL(object.at("params").as_array().at(0).as_string(), "hello");
     BOOST_REQUIRE(!object.contains("id"));

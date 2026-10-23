@@ -418,7 +418,7 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_write_chunk__batch_parts__chunked_json_array
     BOOST_REQUIRE_EQUAL(received.result_int(), 200u);
     BOOST_REQUIRE(received.chunked());
 
-    const auto array = boost::json::parse(received.body()).as_array();
+    const auto array = system::json::parse(received.body()).as_array();
     BOOST_REQUIRE_EQUAL(array.size(), 1u);
     BOOST_REQUIRE_EQUAL(array.at(0).at("id").to_number<int64_t>(), 1);
     BOOST_REQUIRE_EQUAL(array.at(0).at("result").as_string(), "a");
@@ -875,7 +875,7 @@ static void http_ok(const channel_http::ptr& self, const http::request& request)
     self->send(std::move(out), [](const code&) NOEXCEPT {});
 }
 
-static response json_response(const boost::json::object& model) NOEXCEPT
+static response json_response(const system::json::object& model) NOEXCEPT
 {
     response out{ status::ok, 11 };
     json_value body{};
@@ -1040,7 +1040,7 @@ BOOST_FIXTURE_TEST_CASE(channel_http__resume__upgrade__websocket_message_dispatc
     websocket.read(buffer, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(channel->websocket());
-    BOOST_REQUIRE_EQUAL(boost::json::parse(boost::beast::buffers_to_string(buffer.data())).at("b").to_number<int64_t>(), 2);
+    BOOST_REQUIRE_EQUAL(system::json::parse(boost::beast::buffers_to_string(buffer.data())).at("b").to_number<int64_t>(), 2);
 }
 
 BOOST_FIXTURE_TEST_CASE(channel_http__notify__websocket__message_sent, http_channel_fixture)
@@ -1061,7 +1061,7 @@ BOOST_FIXTURE_TEST_CASE(channel_http__notify__websocket__message_sent, http_chan
     http::flat_buffer buffer{};
     websocket.read(buffer, ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(boost::json::parse(boost::beast::buffers_to_string(buffer.data())).at("n").to_number<int64_t>(), 1);
+    BOOST_REQUIRE_EQUAL(system::json::parse(boost::beast::buffers_to_string(buffer.data())).at("n").to_number<int64_t>(), 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_upgrade__unauthorized, credentialed_channel_fixture)

@@ -29,7 +29,7 @@ using boolean_type = bc::network::rpc::boolean_t;
 
 using namespace network::http;
 using namespace network::rpc;
-using value = boost::json::value;
+using value = system::json::value;
 
 BOOST_AUTO_TEST_CASE(rpc_body_reader__construct1__default__null_model_terminated)
 {
@@ -869,7 +869,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__numeric_method__not_string)
     BOOST_REQUIRE(!ec);
 
     reader.finish(ec);
-    BOOST_REQUIRE(ec == boost::json::error::not_string);
+    BOOST_REQUIRE(ec == error::to_json_code(error::json_error_t::json_not_string));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_reader__finish__v1_boolean_id__jsonrpc_reader_exception)
