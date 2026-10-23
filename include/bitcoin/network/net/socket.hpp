@@ -380,7 +380,7 @@ private:
         typedef std::shared_ptr<read_state> ptr;
 
         read_state(http::request& request, http::flat_buffer& buffer) NOEXCEPT
-          : value{ request }, reader{ value.base(), value.body() },
+          : value{ request }, reader{ value.base(), value.body(), true },
             buffer{ buffer }
         {
         }
