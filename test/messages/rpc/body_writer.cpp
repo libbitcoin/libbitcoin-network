@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_SUITE(rpc_body_writer_tests)
 
 using namespace network::http;
 using namespace network::rpc;
-using value = boost::json::value;
+using value = system::json::value;
 
 bool operator==(const asio::const_buffer& left, const asio::const_buffer& right)
 {

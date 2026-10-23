@@ -21,8 +21,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 
-// boost::json parse/seralize is not exception safe.
-
 namespace libbitcoin {
 namespace network {
 namespace rpc {
@@ -36,7 +34,7 @@ DEFINE_JSON_FROM_TAG(version)
     {
         case version::v1: value = "1.0"; break;
         case version::v2: value = "2.0"; break;
-        default: value = {}; break;
+        default: value = nullptr; break;
     }
 }
 
@@ -60,7 +58,6 @@ BC_PUSH_WARNING(NO_CASTS_FOR_ARITHMETIC_CONVERSION)
 
 DEFINE_JSON_FROM_TAG(value_t)
 {
-    // Boost serializes all numbers as double, but varies precision by type.
     std::visit(overload
     {
         [&](null_t) NOEXCEPT
@@ -217,7 +214,7 @@ DEFINE_JSON_TO_TAG(identity_t)
 
 DEFINE_JSON_FROM_TAG(request_t)
 {
-    boost::json::object object{};
+    system::json::object object{};
 
     if (instance.jsonrpc != version::undefined)
     {
@@ -303,7 +300,7 @@ DEFINE_JSON_TO_TAG(request_t)
 
 DEFINE_JSON_FROM_TAG(response_t)
 {
-    boost::json::object object{};
+    system::json::object object{};
 
     if (instance.jsonrpc != version::undefined)
     {

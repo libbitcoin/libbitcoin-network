@@ -77,11 +77,11 @@ size_t to_size(const json_t& value) NOEXCEPT
 {
     switch (value.kind())
     {
-        case boost::json::kind::string:
+        case system::json::kind::string:
         {
             return value.get_string().size() + element_size;
         }
-        case boost::json::kind::array:
+        case system::json::kind::array:
         {
             const auto& values = value.get_array();
             return std::accumulate(values.begin(), values.end(), element_size,
@@ -90,7 +90,7 @@ size_t to_size(const json_t& value) NOEXCEPT
                     return total + to_size(value);
                 });
         }
-        case boost::json::kind::object:
+        case system::json::kind::object:
         {
             const auto& values = value.get_object();
             return std::accumulate(values.begin(), values.end(), element_size,

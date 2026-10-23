@@ -445,9 +445,9 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
     // Small size_hint relative to the payload forces writer.get() across
     // many passes, i.e. many socket::async_write calls for one logical body.
     json::body<>::value_type content{};
-    content.model = boost::json::object{ { "key", std::string(4000, 'x') } };
+    content.model = system::json::object{ { "key", std::string(4000, 'x') } };
     content.size_hint = 32;
-    const auto expected = boost::json::serialize(content.model);
+    const auto expected = system::json::serialize(content.model);
 
     const auto response = std::make_shared<http::response>();
     response->result(boost::beast::http::status::ok);
@@ -549,8 +549,8 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
 
     // The payload exceeds the write buffer, so the body is write chunked.
     json::body<>::value_type content{};
-    content.model = boost::json::object{ { "key", std::string(100'000, 'x') } };
-    const auto expected = boost::json::serialize(content.model);
+    content.model = system::json::object{ { "key", std::string(100'000, 'x') } };
+    const auto expected = system::json::serialize(content.model);
 
     const auto response = std::make_shared<http::response>();
     response->result(boost::beast::http::status::ok);

@@ -283,46 +283,36 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { bad_close_payload, "bad close payload" },
     { websocket_unknown, "websocket error" },
 
-    // boost json error
+    // json error
     { syntax, "syntax error" },
     { extra_data, "extra data" },
     { incomplete, "incomplete json" },
-    { exponent_overflow, "exponent too large" },
     { too_deep, "too deep" },
-    { illegal_leading_surrogate, "illegal leading surrogate" },
-    { illegal_trailing_surrogate, "illegal trailing surrogate" },
+    { invalid_escape, "invalid escape" },
     { expected_hex_digit, "expected hex digit" },
     { expected_utf16_escape, "expected utf16 escape" },
-    { object_too_large, "object too large" },
-    { array_too_large, "array too large" },
-    { key_too_large, "key too large" },
-    { string_too_large, "string too large" },
+    { illegal_leading_surrogate, "illegal leading surrogate" },
+    { illegal_trailing_surrogate, "illegal trailing surrogate" },
+    { invalid_utf8, "invalid utf8" },
+    { exponent_overflow, "exponent too large" },
     { number_too_large, "number too large" },
-    { input_error, "input error" },
-    { exception, "exception" },
-    { out_of_range, "out of range" },
-    { test_failure, "test failure" },
-    { missing_slash, "missing slash" },
-    { invalid_escape, "invalid escape" },
-    { token_not_number, "token not number" },
-    { value_is_scalar, "value is scalar" },
-    { json_not_found, "json not found" },
-    { token_overflow, "token overflow" },
-    { past_the_end, "past the end" },
-    { not_number, "not number" },
-    { not_exact, "not exact" },
+    { string_too_large, "string too large" },
+    { key_too_large, "key too large" },
+    { array_too_large, "array too large" },
+    { object_too_large, "object too large" },
     { not_null, "not null" },
     { not_bool, "not bool" },
-    { not_array, "not array" },
-    { not_object, "not object" },
-    { not_string, "not string" },
+    { not_number, "not number" },
     { not_int64, "not int64" },
     { not_uint64, "not uint64" },
     { not_double, "not double" },
-    { not_integer, "not integer" },
+    { not_string, "not string" },
+    { not_array, "not array" },
+    { not_object, "not object" },
+    { not_exact, "not exact" },
+    { out_of_range, "out of range" },
     { size_mismatch, "size mismatch" },
     { exhausted_variants, "exhausted variants" },
-    { unknown_name, "unknown name" },
     { json_unknown, "json error" },
 
     // query string parse error
@@ -762,49 +752,40 @@ code json_to_error_code(const boost_code& ec) NOEXCEPT
     if (!ec)
         return error::success;
 
-    if (ec.category() == boost::json::detail::error_code_category)
+    if (const auto value = static_cast<code>(ec);
+        value.category() == system::error::json_error_category::singleton)
     {
-        switch (static_cast<json_error_t>(ec.value()))
+        switch (static_cast<json_error_t>(value.value()))
         {
-            case json_error_t::syntax: return error::syntax;
-            case json_error_t::extra_data: return error::extra_data;
-            case json_error_t::incomplete: return error::incomplete;
-            case json_error_t::exponent_overflow: return error::exponent_overflow;
-            case json_error_t::too_deep: return error::too_deep;
-            case json_error_t::illegal_leading_surrogate: return error::illegal_leading_surrogate;
-            case json_error_t::illegal_trailing_surrogate: return error::illegal_trailing_surrogate;
-            case json_error_t::expected_hex_digit: return error::expected_hex_digit;
-            case json_error_t::expected_utf16_escape: return error::expected_utf16_escape;
-            case json_error_t::object_too_large: return error::object_too_large;
-            case json_error_t::array_too_large: return error::array_too_large;
-            case json_error_t::key_too_large: return error::key_too_large;
-            case json_error_t::string_too_large: return error::string_too_large;
-            case json_error_t::number_too_large: return error::number_too_large;
-            case json_error_t::input_error: return error::input_error;
-            case json_error_t::exception: return error::exception;
-            case json_error_t::out_of_range: return error::out_of_range;
-            case json_error_t::test_failure: return error::test_failure;
-            case json_error_t::missing_slash: return error::missing_slash;
-            case json_error_t::invalid_escape: return error::invalid_escape;
-            case json_error_t::token_not_number: return error::token_not_number;
-            case json_error_t::value_is_scalar: return error::value_is_scalar;
-            case json_error_t::not_found: return error::not_found;
-            case json_error_t::token_overflow: return error::token_overflow;
-            case json_error_t::past_the_end: return error::past_the_end;
-            case json_error_t::not_number: return error::not_number;
-            case json_error_t::not_exact: return error::not_exact;
-            case json_error_t::not_null: return error::not_null;
-            case json_error_t::not_bool: return error::not_bool;
-            case json_error_t::not_array: return error::not_array;
-            case json_error_t::not_object: return error::not_object;
-            case json_error_t::not_string: return error::not_string;
-            case json_error_t::not_int64: return error::not_int64;
-            case json_error_t::not_uint64: return error::not_uint64;
-            case json_error_t::not_double: return error::not_double;
-            case json_error_t::not_integer: return error::not_integer;
-            case json_error_t::size_mismatch: return error::size_mismatch;
-            case json_error_t::exhausted_variants: return error::exhausted_variants;
-            case json_error_t::unknown_name: return error::unknown_name;
+            case json_error_t::json_syntax: return error::syntax;
+            case json_error_t::json_extra_data: return error::extra_data;
+            case json_error_t::json_incomplete: return error::incomplete;
+            case json_error_t::json_too_deep: return error::too_deep;
+            case json_error_t::json_invalid_escape: return error::invalid_escape;
+            case json_error_t::json_expected_hex_digit: return error::expected_hex_digit;
+            case json_error_t::json_expected_utf16_escape: return error::expected_utf16_escape;
+            case json_error_t::json_illegal_leading_surrogate: return error::illegal_leading_surrogate;
+            case json_error_t::json_illegal_trailing_surrogate: return error::illegal_trailing_surrogate;
+            case json_error_t::json_invalid_utf8: return error::invalid_utf8;
+            case json_error_t::json_exponent_overflow: return error::exponent_overflow;
+            case json_error_t::json_number_too_large: return error::number_too_large;
+            case json_error_t::json_string_too_large: return error::string_too_large;
+            case json_error_t::json_key_too_large: return error::key_too_large;
+            case json_error_t::json_array_too_large: return error::array_too_large;
+            case json_error_t::json_object_too_large: return error::object_too_large;
+            case json_error_t::json_not_null: return error::not_null;
+            case json_error_t::json_not_bool: return error::not_bool;
+            case json_error_t::json_not_number: return error::not_number;
+            case json_error_t::json_not_int64: return error::not_int64;
+            case json_error_t::json_not_uint64: return error::not_uint64;
+            case json_error_t::json_not_double: return error::not_double;
+            case json_error_t::json_not_string: return error::not_string;
+            case json_error_t::json_not_array: return error::not_array;
+            case json_error_t::json_not_object: return error::not_object;
+            case json_error_t::json_not_exact: return error::not_exact;
+            case json_error_t::json_out_of_range: return error::out_of_range;
+            case json_error_t::json_size_mismatch: return error::size_mismatch;
+            case json_error_t::json_exhausted_variants: return error::exhausted_variants;
             default: return error::json_unknown;
         }
     }

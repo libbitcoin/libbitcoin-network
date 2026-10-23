@@ -294,46 +294,36 @@ enum error_t : uint8_t
     bad_close_payload,
     websocket_unknown,
 
-    // boost json error
+    // json error
     syntax,
     extra_data,
     incomplete,
-    exponent_overflow,
     too_deep,
-    illegal_leading_surrogate,
-    illegal_trailing_surrogate,
+    invalid_escape,
     expected_hex_digit,
     expected_utf16_escape,
-    object_too_large,
-    array_too_large,
-    key_too_large,
-    string_too_large,
+    illegal_leading_surrogate,
+    illegal_trailing_surrogate,
+    invalid_utf8,
+    exponent_overflow,
     number_too_large,
-    input_error,
-    exception,
-    out_of_range,
-    test_failure,
-    missing_slash,
-    invalid_escape,
-    token_not_number,
-    value_is_scalar,
-    json_not_found,
-    token_overflow,
-    past_the_end,
-    not_number,
-    not_exact,
+    string_too_large,
+    key_too_large,
+    array_too_large,
+    object_too_large,
     not_null,
     not_bool,
-    not_array,
-    not_object,
-    not_string,
+    not_number,
     not_int64,
     not_uint64,
     not_double,
-    not_integer,
+    not_string,
+    not_array,
+    not_object,
+    not_exact,
+    out_of_range,
     size_mismatch,
     exhausted_variants,
-    unknown_name,
     json_unknown,
 
     // query string parse error
@@ -396,7 +386,7 @@ typedef boost::asio::error::misc_errors asio_misc_error_t;
 typedef boost::asio::ssl::error::stream_errors asio_ssl_stream_error_t;
 typedef boost::beast::websocket::error ws_error_t;
 typedef boost::beast::http::error http_error_t;
-typedef boost::json::error json_error_t;
+typedef system::error::json_error_t json_error_t;
 
 inline boost_code to_errc_code(boost_errc_t ec) NOEXCEPT
 {
@@ -437,8 +427,8 @@ inline boost_code to_websocket_code(ws_error_t ec) NOEXCEPT
 
 inline boost_code to_json_code(json_error_t ec) NOEXCEPT
 {
-    // boost::json::detail::error_code_category;
-    return boost::json::make_error_code(ec);
+    // system::error::json_error_category::singleton
+    return code{ ec };
 }
 
 /// Shortcircuit common boost code mapping.
@@ -456,7 +446,7 @@ BCT_API code ssl_to_error_code(const boost_code& ec) NOEXCEPT;
 /// 1:1 mapping of boost::beast::websocket::error to network.
 BCT_API code ws_to_error_code(const boost_code& ec) NOEXCEPT;
 
-/// 1:1 mapping of boost::json::error to network.
+/// Mapping of system::error::json_error_t to network.
 BCT_API code json_to_error_code(const boost_code& ec) NOEXCEPT;
 
 /// 1:1 mapping of wrapped json-rpc codes back to network.

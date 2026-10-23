@@ -76,9 +76,9 @@ static void to_request(rpc::request& value, boost_code& ec) NOEXCEPT
         value.message = value_to<rpc::request_t>(value.model);
         value.model.emplace_null();
     }
-    catch (const boost::system::system_error& e)
+    catch (const system::json::exception& e)
     {
-        // Primary exception type for parsing operations.
+        // Primary exception type for conversion operations.
         ec = e.code();
         return;
     }
@@ -243,7 +243,7 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         if (ec || !base::reader::done())
             return index;
 
-        // boost::json consumes whitespace, and leaves any subsequent chars
+        // The parser consumes whitespace, and leaves any subsequent chars
         // unparsed, so a terminator it consumed must be in the parsed segment.
         if (requires_terminator())
             for (auto scan = index; scan > start; --scan)
@@ -430,11 +430,11 @@ init(boost_code& ec) NOEXCEPT
 
     try
     {
-        boost::json::value_from(value_.message, value_.model);
+        system::json::value_from(value_.message, value_.model);
     }
-    catch (const boost::system::system_error& e)
+    catch (const system::json::exception& e)
     {
-        // Primary exception type for parsing operations.
+        // Primary exception type for conversion operations.
         ec = e.code();
         return;
     }
@@ -520,11 +520,11 @@ init(boost_code& ec) NOEXCEPT
 
     try
     {
-        boost::json::value_from(value_.message, value_.model);
+        system::json::value_from(value_.message, value_.model);
     }
-    catch (const boost::system::system_error& e)
+    catch (const system::json::exception& e)
     {
-        // Primary exception type for parsing operations.
+        // Primary exception type for conversion operations.
         ec = e.code();
         return;
     }

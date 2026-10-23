@@ -444,7 +444,7 @@ static std::string to_post(const std::string& body)
 
 static std::string to_method(const std::string& json)
 {
-    return std::string{ boost::json::parse(json).as_object().at("method").as_string() };
+    return std::string{ system::json::parse(json).as_object().at("method").as_string() };
 }
 
 struct loopback_fixture
@@ -1164,7 +1164,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__write_http__websocket_json_body__client_receives_
 {
     const awaiter<code> written{};
     http::json_value content{};
-    content.model = boost::json::object{ { "key", "value" } };
+    content.model = system::json::object{ { "key", "value" } };
     channel->write_http(to_http(std::move(content)), complete(written));
 
     boost_code ec{};

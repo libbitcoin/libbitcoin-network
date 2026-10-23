@@ -2059,6 +2059,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__illegal_trailing_surrogate__true_expected_me
     BOOST_REQUIRE_EQUAL(ec.message(), "illegal trailing surrogate");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__invalid_utf8__true_expected_message)
+{
+    constexpr auto value = error::invalid_utf8;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "invalid utf8");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__expected_hex_digit__true_expected_message)
 {
     constexpr auto value = error::expected_hex_digit;
@@ -2122,24 +2131,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__number_too_large__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "number too large");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__input_error__true_expected_message)
-{
-    constexpr auto value = error::input_error;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "input error");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__exception__true_expected_message)
-{
-    constexpr auto value = error::exception;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "exception");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__out_of_range__true_expected_message)
 {
     constexpr auto value = error::out_of_range;
@@ -2149,24 +2140,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__out_of_range__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "out of range");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__test_failure__true_expected_message)
-{
-    constexpr auto value = error::test_failure;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "test failure");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__missing_slash__true_expected_message)
-{
-    constexpr auto value = error::missing_slash;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "missing slash");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__invalid_escape__true_expected_message)
 {
     constexpr auto value = error::invalid_escape;
@@ -2174,51 +2147,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__invalid_escape__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "invalid escape");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__token_not_number__true_expected_message)
-{
-    constexpr auto value = error::token_not_number;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "token not number");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__value_is_scalar__true_expected_message)
-{
-    constexpr auto value = error::value_is_scalar;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "value is scalar");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__json_not_found__true_expected_message)
-{
-    constexpr auto value = error::json_not_found;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "json not found");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__token_overflow__true_expected_message)
-{
-    constexpr auto value = error::token_overflow;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "token overflow");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__past_the_end__true_expected_message)
-{
-    constexpr auto value = error::past_the_end;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "past the end");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__not_number__true_expected_message)
@@ -2311,15 +2239,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__not_double__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "not double");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__not_integer__true_expected_message)
-{
-    constexpr auto value = error::not_integer;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "not integer");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__size_mismatch__true_expected_message)
 {
     constexpr auto value = error::size_mismatch;
@@ -2336,15 +2255,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__exhausted_variants__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "exhausted variants");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__unknown_name__true_expected_message)
-{
-    constexpr auto value = error::unknown_name;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "unknown name");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__json_unknown__true_expected_message)
@@ -2620,7 +2530,7 @@ BOOST_AUTO_TEST_CASE(http_to_error_code__unmapped_http_code__http_unknown)
 
 BOOST_AUTO_TEST_CASE(http_to_error_code__json_code__json_mapping)
 {
-    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_json_code(error::json_error_t::syntax)), error::syntax);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(error::to_json_code(error::json_error_t::json_syntax)), error::syntax);
 }
 
 BOOST_AUTO_TEST_CASE(ssl_to_error_code__stream_codes__expected)
@@ -2727,45 +2637,35 @@ BOOST_AUTO_TEST_CASE(ws_to_error_code__http_code__http_mapping)
 
 BOOST_AUTO_TEST_CASE(json_to_error_code__json_codes__expected)
 {
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::syntax)), error::syntax);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::extra_data)), error::extra_data);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::incomplete)), error::incomplete);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::exponent_overflow)), error::exponent_overflow);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::too_deep)), error::too_deep);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::illegal_leading_surrogate)), error::illegal_leading_surrogate);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::illegal_trailing_surrogate)), error::illegal_trailing_surrogate);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::expected_hex_digit)), error::expected_hex_digit);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::expected_utf16_escape)), error::expected_utf16_escape);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::object_too_large)), error::object_too_large);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::array_too_large)), error::array_too_large);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::key_too_large)), error::key_too_large);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::string_too_large)), error::string_too_large);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::number_too_large)), error::number_too_large);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::input_error)), error::input_error);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::exception)), error::exception);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::out_of_range)), error::out_of_range);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::test_failure)), error::test_failure);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::missing_slash)), error::missing_slash);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::invalid_escape)), error::invalid_escape);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::token_not_number)), error::token_not_number);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::value_is_scalar)), error::value_is_scalar);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_found)), error::not_found);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::token_overflow)), error::token_overflow);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::past_the_end)), error::past_the_end);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_number)), error::not_number);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_exact)), error::not_exact);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_null)), error::not_null);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_bool)), error::not_bool);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_array)), error::not_array);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_object)), error::not_object);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_string)), error::not_string);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_int64)), error::not_int64);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_uint64)), error::not_uint64);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_double)), error::not_double);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::not_integer)), error::not_integer);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::size_mismatch)), error::size_mismatch);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::exhausted_variants)), error::exhausted_variants);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::unknown_name)), error::unknown_name);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_syntax)), error::syntax);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_extra_data)), error::extra_data);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_incomplete)), error::incomplete);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_too_deep)), error::too_deep);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_invalid_escape)), error::invalid_escape);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_expected_hex_digit)), error::expected_hex_digit);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_expected_utf16_escape)), error::expected_utf16_escape);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_illegal_leading_surrogate)), error::illegal_leading_surrogate);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_illegal_trailing_surrogate)), error::illegal_trailing_surrogate);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_invalid_utf8)), error::invalid_utf8);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_exponent_overflow)), error::exponent_overflow);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_number_too_large)), error::number_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_string_too_large)), error::string_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_key_too_large)), error::key_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_array_too_large)), error::array_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_object_too_large)), error::object_too_large);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_null)), error::not_null);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_bool)), error::not_bool);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_number)), error::not_number);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_int64)), error::not_int64);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_uint64)), error::not_uint64);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_double)), error::not_double);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_string)), error::not_string);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_array)), error::not_array);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_object)), error::not_object);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_not_exact)), error::not_exact);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_out_of_range)), error::out_of_range);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_size_mismatch)), error::size_mismatch);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_exhausted_variants)), error::exhausted_variants);
 }
 
 BOOST_AUTO_TEST_CASE(json_to_error_code__unmapped_json_code__json_unknown)

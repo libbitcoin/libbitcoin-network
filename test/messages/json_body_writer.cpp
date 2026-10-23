@@ -24,8 +24,8 @@ BOOST_AUTO_TEST_SUITE(json_body_writer_tests)
 
 using namespace network::http;
 using namespace network::json;
-using value = boost::json::value;
-using object = boost::json::object;
+using value = system::json::value;
+using object = system::json::object;
 
 bool operator==(const asio::const_buffer& left, const asio::const_buffer& right)
 {
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__constructor1__default__null_model)
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    BOOST_REQUIRE(boost::get<value>(body.model).is_null());
+    BOOST_REQUIRE(body.model.is_null());
 }
 
 BOOST_AUTO_TEST_CASE(json_body_writer__constructor2__default__null_model)
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__constructor2__default__null_model)
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(header, body);
-    BOOST_REQUIRE(boost::get<value>(body.model).is_null());
+    BOOST_REQUIRE(body.model.is_null());
 }
 
 BOOST_AUTO_TEST_CASE(json_body_writer__init__default__success)
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_m
 // chunking that drives socket::async_write's finish flag (finish = !more)
 // for websocket body writes: the fix relies on every non-final chunk
 // reporting more == true and only the final chunk reporting more == false.
-// boost::json::serializer::read() fills the given buffer to capacity on
+// serializer::read() fills the given buffer to capacity on
 // every pass but the last, so for this size_hint and payload the split is
 // deterministic: four 8-byte-or-fewer chunks.
 BOOST_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four_chunks_reassemble_with_terminal_no_more)
