@@ -34,6 +34,11 @@
 namespace libbitcoin {
 namespace network {
 
+/// beast stores http field name and value sizes as uint16_t and throws
+/// std::length_error above 65533 bytes, which its parser does not catch.
+/// The header limit bounds the whole header, so it must stay below that.
+constexpr size_t maximum_http_header = 16 * 1024;
+
 /// Virtual, thread safe (see comments on accept).
 /// Stop is thread safe and idempotent, may be called multiple times.
 /// All handlers (except accept) are posted to the internal strand.
@@ -652,6 +657,7 @@ protected:
     const bool inbound_;
     const bool proxied_;
     const size_t maximum_;
+    const size_t header_;
     const size_t minimum_buffer_;
     const asio::endpoint bind_;
     const size_t slot_;
