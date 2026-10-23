@@ -294,6 +294,92 @@ static code encode_params(data_stack& parts,
     }, *params);
 }
 
+// A message part is bytes, a shared chunk or a streamable value.
+struct part
+{
+    data_chunk bytes{};
+    chunk_cptr chunk{};
+    rpc::streamable::cptr value{};
+};
+
+using parts_t = std::vector<part>;
+
+static size_t part_size(const part& in) NOEXCEPT
+{
+    if (in.value)
+        return in.value->size();
+
+    return in.chunk ? in.chunk->size() : in.bytes.size();
+}
+
+// A shared value is retained as the part (not copied).
+static code encode_part(part& out, const rpc::value_t& value) NOEXCEPT
+{
+    const auto any = std::get_if<rpc::any_t>(&value.value());
+    if (is_null(any))
+        return encode_value(out.bytes, value);
+
+    out.value = any->get<const rpc::streamable>();
+    out.chunk = any->get<const data_chunk>();
+    return out.value || out.chunk ? error::success :
+        error::zmtp_unserializable;
+}
+
+// Positional params are one part each, a single value is one part.
+static code encode_parts(parts_t& out,
+    const rpc::params_option& params) NOEXCEPT
+{
+    if (!params)
+        return error::success;
+
+    return std::visit(overload
+    {
+        [&](const rpc::value_t& value) NOEXCEPT
+        {
+            return encode_part(out.emplace_back(), value);
+        },
+        [&](const rpc::array_t& values) NOEXCEPT
+        {
+            for (const auto& value: values)
+                if (const auto ec = encode_part(out.emplace_back(), value))
+                    return ec;
+
+            return code{ error::success };
+        },
+        [&](const rpc::object_t&) NOEXCEPT
+        {
+            // Named params have no wire order.
+            return code{ error::zmtp_unserializable };
+        }
+    }, *params);
+}
+
+// The parts are framed into one allocation, values written in place.
+static code frame_parts(data_chunk& packet, const parts_t& message) NOEXCEPT
+{
+    size_t size{};
+    for (const auto& in: message)
+        size += stream::frame_size(part_size(in));
+
+    packet.resize(size);
+    system::stream::out::fast sink{ packet };
+    system::write::bytes::fast writer{ sink };
+    for (auto it = message.cbegin(); it != message.cend(); ++it)
+    {
+        const auto more = std::next(it) != message.cend();
+        stream::write_frame_head(writer, part_size(*it), false, more);
+
+        if (it->value)
+            it->value->write(writer);
+        else if (it->chunk)
+            writer.write_bytes(it->chunk->data(), it->chunk->size());
+        else
+            writer.write_bytes(it->bytes.data(), it->bytes.size());
+    }
+
+    return writer ? error::success : error::zmtp_unserializable;
+}
+
 // A notification is a message (or a control command) written by role.
 static code encode_notification(data_chunk& packet, role role,
     const rpc::request_t& notification) NOEXCEPT
@@ -326,7 +412,7 @@ static code encode_notification(data_chunk& packet, role role,
         return error::success;
     }
 
-    data_stack parts{};
+    parts_t message{};
     switch (role)
     {
         case role::publisher:
@@ -336,7 +422,7 @@ static code encode_notification(data_chunk& packet, role role,
         case role::router:
         {
             // The REQ envelope (peers are expected to use it).
-            parts.emplace_back();
+            message.emplace_back();
             break;
         }
         default:
@@ -346,26 +432,25 @@ static code encode_notification(data_chunk& packet, role role,
         }
     }
 
-    parts.push_back(to_chunk(notification.method));
-    if (const auto ec = encode_params(parts, notification.params))
+    message.emplace_back().bytes = to_chunk(notification.method);
+    if (const auto ec = encode_parts(message, notification.params))
         return ec;
 
-    packet = stream::frame_message(parts);
-    return error::success;
+    return frame_parts(packet, message);
 }
 
 // A response is a delimited result (one part) or error (code and message).
 static code encode_response(data_chunk& packet, role role,
     const rpc::response_t& response) NOEXCEPT
 {
-    data_stack parts{};
+    parts_t message{};
     switch (role)
     {
         case role::replier:
         case role::router:
         {
             // The REQ envelope (router peers are expected to use it).
-            parts.emplace_back();
+            message.emplace_back();
             break;
         }
         default:
@@ -378,21 +463,20 @@ static code encode_response(data_chunk& packet, role role,
     if (response.error)
     {
         const auto& error = *response.error;
-        const auto ec = encode_value(parts.emplace_back(), error.code);
+        const auto ec = encode_part(message.emplace_back(), error.code);
         if (ec)
             return ec;
 
-        parts.push_back(to_chunk(error.message));
+        message.emplace_back().bytes = to_chunk(error.message);
     }
     else
     {
         const auto& result = response.result.value_or(rpc::value_t{});
-        if (const auto ec = encode_value(parts.emplace_back(), result))
+        if (const auto ec = encode_part(message.emplace_back(), result))
             return ec;
     }
 
-    packet = stream::frame_message(parts);
-    return error::success;
+    return frame_parts(packet, message);
 }
 
 // ZMTP (read).

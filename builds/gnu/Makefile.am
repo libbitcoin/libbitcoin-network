@@ -433,6 +433,7 @@ include_bitcoin_network_messages_rpc_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/publish.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/rpc.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/size.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/rpc/streamable.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/types.hpp
 
 include_bitcoin_network_messages_rpc_enumsdir = \

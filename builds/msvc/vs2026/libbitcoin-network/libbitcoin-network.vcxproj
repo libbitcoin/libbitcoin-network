@@ -379,6 +379,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\publish.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\rpc.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\size.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\streamable.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />

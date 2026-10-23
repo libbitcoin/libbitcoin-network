@@ -407,6 +407,27 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__frame_encode__long_command_more__expected)
     BOOST_REQUIRE_EQUAL(frame.size(), 300u + 9u);
 }
 
+BOOST_AUTO_TEST_CASE(zmtp_stream__frame_size__short_and_long__expected)
+{
+    BOOST_REQUIRE_EQUAL(stream::frame_size(0), 2u);
+    BOOST_REQUIRE_EQUAL(stream::frame_size(255), 257u);
+    BOOST_REQUIRE_EQUAL(stream::frame_size(256), 265u);
+}
+
+BOOST_AUTO_TEST_CASE(zmtp_stream__write_frame_head__long_command_more__frame_encode_head)
+{
+    const data_chunk body(300, 0x22);
+    const auto frame = stream::frame_encode(body, true, true);
+    const data_chunk expected(frame.begin(), std::next(frame.begin(), 9));
+
+    data_chunk head(9);
+    system::stream::out::fast sink{ head };
+    system::write::bytes::fast writer{ sink };
+    stream::write_frame_head(writer, body.size(), true, true);
+    BOOST_REQUIRE(writer);
+    BOOST_REQUIRE(head == expected);
+}
+
 BOOST_AUTO_TEST_CASE(zmtp_stream__frame_message__three_parts__more_on_all_but_last)
 {
     const data_stack parts
