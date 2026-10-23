@@ -111,6 +111,7 @@ struct BCT_API settings
         std::string name;
 
         config::authorities binds{};
+        uint16_t bind_port{ 0 };
         uint16_t connections{ 0 };
         uint32_t inactivity_minutes{ 10 };
         uint32_t expiration_minutes{ 60 };
@@ -128,6 +129,9 @@ struct BCT_API settings
 
         /// The outbound binding of the slot, unspecified if no binds.
         virtual asio::endpoint binding(size_t slot) const NOEXCEPT;
+
+        /// Set the default port of bindings that do not specify a port.
+        virtual void default_ports() NOEXCEPT;
     };
 
     struct secure_server
@@ -141,6 +145,10 @@ struct BCT_API settings
 
         /// Secured bindings.
         config::authorities safes{};
+        uint16_t safe_port{ 0 };
+
+        /// Set the default port of bindings that do not specify a port.
+        void default_ports() NOEXCEPT override;
 
         /// The secured bindings are configured (default false).
         virtual bool secure() const NOEXCEPT;

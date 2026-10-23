@@ -32,6 +32,14 @@ using namespace messages::peer;
 // Default (zero) threads is capped at this many hardware threads.
 constexpr auto maximum_default_threads = 32_size;
 
+static void set_default_port(config::authorities& authorities,
+    uint16_t port) NOEXCEPT
+{
+    for (auto& authority: authorities)
+        if (is_zero(authority.port()))
+            authority = { authority.ip(), port, authority.cidr() };
+}
+
 // socks5
 // ----------------------------------------------------------------------------
 
@@ -157,6 +165,11 @@ asio::endpoint settings::tcp_server::binding(size_t slot) const NOEXCEPT
     return binds.at(slot % binds.size()).to_endpoint();
 }
 
+void settings::tcp_server::default_ports() NOEXCEPT
+{
+    set_default_port(binds, bind_port);
+}
+
 // secure_server
 // ----------------------------------------------------------------------------
 
@@ -164,6 +177,12 @@ settings::secure_server::secure_server(
     const std::string_view& logging_name) NOEXCEPT
   : tcp_server(logging_name)
 {
+}
+
+void settings::secure_server::default_ports() NOEXCEPT
+{
+    tcp_server::default_ports();
+    set_default_port(safes, safe_port);
 }
 
 bool settings::secure_server::secure() const NOEXCEPT

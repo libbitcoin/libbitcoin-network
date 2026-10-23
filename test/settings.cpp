@@ -300,6 +300,7 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, name);
     BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.bind_port, 0u);
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
@@ -333,6 +334,43 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server_binding__two_binds__group_modulo_expec
     BOOST_REQUIRE_EQUAL(instance.binding(1).port(), 42u);
     BOOST_REQUIRE(instance.binding(2).address() == asio::ipv4::loopback());
     BOOST_REQUIRE(instance.binding(3).address() == asio::ipv6::loopback());
+}
+
+BOOST_AUTO_TEST_CASE(settings__tcp_server_default_ports__zero_ports__bind_port)
+{
+    settings::tcp_server instance{ "test" };
+    instance.bind_port = 42;
+    instance.binds.emplace_back(asio::ipv4::loopback(), 0_u16);
+    instance.binds.emplace_back(asio::ipv6::loopback(), 0_u16);
+    instance.default_ports();
+
+    BOOST_REQUIRE(instance.binds.at(0).ip() == asio::ipv4::loopback());
+    BOOST_REQUIRE_EQUAL(instance.binds.at(0).port(), 42u);
+    BOOST_REQUIRE(instance.binds.at(1).ip() == asio::ipv6::loopback());
+    BOOST_REQUIRE_EQUAL(instance.binds.at(1).port(), 42u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__tcp_server_default_ports__nonzero_port__unchanged)
+{
+    settings::tcp_server instance{ "test" };
+    instance.bind_port = 42;
+    instance.binds.emplace_back(asio::ipv4::loopback(), 24_u16);
+    instance.default_ports();
+
+    BOOST_REQUIRE_EQUAL(instance.binds.at(0).port(), 24u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__secure_server_default_ports__zero_ports__bind_and_safe_ports)
+{
+    settings::secure_server instance{ "test" };
+    instance.bind_port = 42;
+    instance.safe_port = 43;
+    instance.binds.emplace_back(asio::ipv4::loopback(), 0_u16);
+    instance.safes.emplace_back(asio::ipv4::loopback(), 0_u16);
+    instance.default_ports();
+
+    BOOST_REQUIRE_EQUAL(instance.binds.at(0).port(), 42u);
+    BOOST_REQUIRE_EQUAL(instance.safes.at(0).port(), 43u);
 }
 
 BOOST_AUTO_TEST_CASE(settings__tls_server__defaults__expected)
