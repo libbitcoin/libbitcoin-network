@@ -164,6 +164,42 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
             shared_from_this(), _1, socket, std::move(handler)));
 }
 
+void acceptor::accept(result_handler&& accepted,
+    socket_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (proxied())
+    {
+        accept(std::bind(&acceptor::handle_proxied,
+            shared_from_this(), _1, _2, std::move(accepted),
+                std::move(handler)));
+        return;
+    }
+
+    if (stopped_)
+    {
+        accepted(error::service_stopped);
+        return;
+    }
+
+    if (suspended_.load())
+    {
+        accepted(error::service_suspended);
+        return;
+    }
+
+    // The inbound socket defers its handshake to the acceptor.
+    const auto socket = emplace_shared<network::socket>(log, service_,
+        parameters_, true);
+
+    // Posts handle_connected to the acceptor's strand.
+    socket->accept(acceptor_,
+        std::bind(&acceptor::handle_connected,
+            shared_from_this(), _1, socket, std::move(accepted),
+            std::move(handler)));
+}
+
 // protected
 void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
     const socket_handler& handler) NOEXCEPT
@@ -210,6 +246,59 @@ void acceptor::do_handle_accept(const code& ec, const socket::ptr& socket,
 
     // Successful accept.
     handler(error::success, socket);
+}
+
+// private
+void acceptor::handle_proxied(const code& ec, const socket::ptr& socket,
+    const result_handler& accepted, const socket_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    accepted(ec);
+    if (!ec)
+        handler(ec, socket);
+}
+
+// private
+void acceptor::handle_connected(const code& ec, const socket::ptr& socket,
+    const result_handler& accepted, const socket_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        socket->stop();
+        accepted(ec);
+        return;
+    }
+
+    if (suspended_.load())
+    {
+        socket->stop();
+        accepted(error::service_suspended);
+        return;
+    }
+
+    if (stopped_)
+    {
+        socket->stop();
+        accepted(error::service_stopped);
+        return;
+    }
+
+    accepted(error::success);
+    socket->handshake(
+        std::bind(&acceptor::handle_handshake,
+            shared_from_this(), _1, socket, handler));
+}
+
+// private
+void acceptor::handle_handshake(const code& ec, const socket::ptr& socket,
+    const socket_handler& handler) NOEXCEPT
+{
+    boost::asio::post(strand_,
+        std::bind(&acceptor::do_handle_accept,
+            shared_from_this(), ec, socket, handler));
 }
 
 BC_POP_WARNING()

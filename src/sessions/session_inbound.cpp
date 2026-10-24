@@ -140,20 +140,18 @@ void session_inbound::start_accept(const code&,
     if (stopped())
         return;
 
-    acceptor->accept(BIND(handle_accepted, _1, _2, acceptor));
+    acceptor->accept(BIND(handle_connected, _1, acceptor),
+        BIND(handle_accepted, _1, _2, acceptor));
 }
 
-void session_inbound::handle_accepted(const code& ec,
-    const socket::ptr& socket, const acceptor::ptr& acceptor) NOEXCEPT
+void session_inbound::handle_connected(const code& ec,
+    const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
-    {
-        if (socket) socket->stop();
         return;
-    }
 
     // Suspension is controlled via acceptor construction.
     if (ec == error::service_suspended)
@@ -163,12 +161,45 @@ void session_inbound::handle_accepted(const code& ec,
         return;
     }
 
-    // There was an error accepting the channel, so try again after delay.
+    // There was an error accepting the connection, so try again after delay.
+    if (ec)
+    {
+        LOGF("Failed to accept inbound peer connection, " << ec.message());
+        defer(BIND(start_accept, _1, acceptor));
+        return;
+    }
+
+    // Pending handshakes count against the limit, so listen after delay.
+    ++handshake_count_;
+    const auto pending = ceilinged_add(inbound_channel_count(),
+        handshake_count_);
+    if (!enabled() || pending >= network_settings().inbound.connections)
+    {
+        defer(BIND(start_accept, _1, acceptor));
+        return;
+    }
+
+    // The handshake proceeds independently, so listen again without delay.
+    start_accept(error::success, acceptor);
+}
+
+void session_inbound::handle_accepted(const code& ec,
+    const socket::ptr& socket, const acceptor::ptr& acceptor) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    handshake_count_ = floored_subtract(handshake_count_, one);
+
+    // Guard restartable timer (shutdown delay).
+    if (stopped())
+    {
+        if (socket) socket->stop();
+        return;
+    }
+
     if (ec)
     {
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
-        LOGF("Failed to accept inbound peer connection, " << ec.message());
-        defer(BIND(start_accept, _1, acceptor));
+        LOGS("Failed to handshake inbound peer connection, " << ec.message());
         return;
     }
 
@@ -176,7 +207,6 @@ void session_inbound::handle_accepted(const code& ec,
     {
         LOGS("Dropping inbound peer connection (disabled).");
         socket->stop();
-        defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
@@ -185,7 +215,6 @@ void session_inbound::handle_accepted(const code& ec,
     {
         LOGS("Dropping peer [" << socket->endpoint() << "]. (oversubscribed)");
         socket->stop();
-        defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
@@ -193,7 +222,6 @@ void session_inbound::handle_accepted(const code& ec,
     {
         LOGV("Dropping not whitelisted peer [" << socket->endpoint() << "].");
         socket->stop();
-        start_accept(error::success, acceptor);
         return;
     }
 
@@ -201,7 +229,6 @@ void session_inbound::handle_accepted(const code& ec,
     {
         LOGV("Dropping blacklisted peer [" << socket->endpoint() << "].");
         socket->stop();
-        start_accept(error::success, acceptor);
         return;
     }
 
@@ -209,9 +236,6 @@ void session_inbound::handle_accepted(const code& ec,
 
     LOGS("Accepted peer connection [" << channel->endpoint()
         << "] on binding [" << acceptor->local() << "].");
-
-    // There was no error, so listen again without delay.
-    start_accept(error::success, acceptor);
 
     start_channel(channel,
         BIND(handle_channel_start, _1, channel),

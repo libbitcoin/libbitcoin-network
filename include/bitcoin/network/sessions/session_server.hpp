@@ -90,6 +90,8 @@ private:
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
+    void handle_connected(const code& ec, const acceptor::ptr& acceptor,
+        bool secure) NOEXCEPT;
     void handle_accepted(const code& ec, const socket::ptr& socket,
         const acceptor::ptr& acceptor, bool secure) NOEXCEPT;
 
@@ -106,8 +108,9 @@ private:
     const options_t& options_;
     const std::string& name_;
 
-    // This is protected by strand.
+    // These are protected by strand.
     size_t channel_count_{};
+    size_t handshake_count_{};
 };
 
 } // namespace network

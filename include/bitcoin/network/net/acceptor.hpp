@@ -77,6 +77,10 @@ public:
     /// Accept next connection available until stop.
     virtual void accept(socket_handler&& handler) NOEXCEPT;
 
+    /// Accept next connection available until stop, handshake to handler.
+    virtual void accept(result_handler&& accepted,
+        socket_handler&& handler) NOEXCEPT;
+
 protected:
     /// Start listening on the endpoint.
     virtual code start(const asio::endpoint& point) NOEXCEPT;
@@ -103,6 +107,14 @@ protected:
 
 private:
     void do_handle_accept(const code& ec, const socket::ptr& socket,
+        const socket_handler& handler) NOEXCEPT;
+    void handle_proxied(const code& ec, const socket::ptr& socket,
+        const result_handler& accepted,
+        const socket_handler& handler) NOEXCEPT;
+    void handle_connected(const code& ec, const socket::ptr& socket,
+        const result_handler& accepted,
+        const socket_handler& handler) NOEXCEPT;
+    void handle_handshake(const code& ec, const socket::ptr& socket,
         const socket_handler& handler) NOEXCEPT;
 };
 

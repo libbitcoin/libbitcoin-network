@@ -153,20 +153,18 @@ void session_server::start_accept(const code&,
     if (stopped())
         return;
 
-    acceptor->accept(BIND(handle_accepted, _1, _2, acceptor, secure));
+    acceptor->accept(BIND(handle_connected, _1, acceptor, secure),
+        BIND(handle_accepted, _1, _2, acceptor, secure));
 }
 
-void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
+void session_server::handle_connected(const code& ec,
     const acceptor::ptr& acceptor, bool secure) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
-    {
-        if (socket) socket->stop();
         return;
-    }
 
     // Suspension is controlled via acceptor construction.
     if (ec == error::service_suspended)
@@ -176,14 +174,47 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    // There was an error accepting the channel, so try again.
+    // There was an error accepting the connection, so try again.
     if (ec)
     {
-        BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
         LOGF("Failed to accept " << (secure ? "private " : "clear ")
             << name_ << " connection, " << ec.message());
         ////defer(BIND(start_accept, _1, acceptor, secure));
         start_accept(error::success, acceptor, secure);
+        return;
+    }
+
+    // Pending handshakes count against the limit, so listen after delay.
+    ++handshake_count_;
+    const auto pending = ceilinged_add(channel_count_, handshake_count_);
+    if (!enabled() || pending >= options_.connections)
+    {
+        defer(BIND(start_accept, _1, acceptor, secure));
+        return;
+    }
+
+    // The handshake proceeds independently, so listen again without delay.
+    start_accept(error::success, acceptor, secure);
+}
+
+void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
+    const acceptor::ptr& acceptor, bool secure) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    handshake_count_ = floored_subtract(handshake_count_, one);
+
+    // Guard restartable timer (shutdown delay).
+    if (stopped())
+    {
+        if (socket) socket->stop();
+        return;
+    }
+
+    if (ec)
+    {
+        BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
+        LOGS("Failed to handshake " << (secure ? "private " : "clear ")
+            << name_ << " connection, " << ec.message());
         return;
     }
 
@@ -192,7 +223,6 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
         LOGS("Dropping " << (secure ? "private " : "clear ")
             << name_ << " connection (disabled).");
         socket->stop();
-        defer(BIND(start_accept, _1, acceptor, secure));
         return;
     }
 
@@ -204,7 +234,6 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
             << name_ << " connection [" << socket->endpoint()
             << "] (oversubscribed).");
         socket->stop();
-        defer(BIND(start_accept, _1, acceptor, secure));
         return;
     }
 
@@ -212,7 +241,6 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     {
         LOGV("Dropping not whitelisted client [" << socket->endpoint() << "].");
         socket->stop();
-        start_accept(error::success, acceptor, secure);
         return;
     }
 
@@ -220,19 +248,15 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     {
         LOGV("Dropping blacklisted client [" << socket->endpoint() << "].");
         socket->stop();
-        start_accept(error::success, acceptor, secure);
         return;
     }
 
     // Creates channel_xxxx cast as channel::ptr.
     const auto channel = create_channel(socket);
 
-    LOGS("Accepted " << (secure ? "private " : "clear ") 
+    LOGS("Accepted " << (secure ? "private " : "clear ")
         << name_ << " connection [" << channel->endpoint()
         << "] on binding [" << acceptor->local() << "].");
-
-    // There was no error, so listen again without delay.
-    start_accept(error::success, acceptor, secure);
 
     start_channel(channel,
         BIND(handle_channel_start, _1, channel),

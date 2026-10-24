@@ -91,7 +91,8 @@ public:
     }
 
     // Inject mock channel.
-    void accept(socket_handler&& handler) NOEXCEPT override
+    void accept(result_handler&& accepted,
+        socket_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(log, service_,
             parameters_);
@@ -100,6 +101,7 @@ public:
         // This error code will set the re-listener timer and channel pointer is ignored.
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
+            accepted(error::success);
             handler(error::success, socket);
         });
     }

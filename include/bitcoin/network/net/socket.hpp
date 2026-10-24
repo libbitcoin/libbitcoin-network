@@ -71,7 +71,7 @@ public:
 
     DELETE_COPY_MOVE(socket);
 
-    /// Inbound connections (handshake is deferred to a proxied acceptor).
+    /// Inbound connections (proxied defers the handshake to the acceptor).
     socket(const logger& log, asio::context& service,
         const parameters& params, bool proxied=false) NOEXCEPT;
 

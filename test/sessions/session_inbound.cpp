@@ -70,7 +70,8 @@ public:
     }
 
     // Handle accept.
-    void accept(socket_handler&& handler) NOEXCEPT override
+    void accept(result_handler&& accepted,
+        socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         socket::parameters params{ .maximum_request = 42,
@@ -82,6 +83,7 @@ public:
         // This error code will set the re-listener timer and channel pointer is ignored.
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
+            accepted(error::success);
             handler(error::success, socket);
         });
     }
@@ -102,12 +104,12 @@ public:
         mock_acceptor_start_success_accept_success;
 
     // Handle accept with unknown error.
-    void accept(socket_handler&& handler) NOEXCEPT override
+    void accept(result_handler&& accepted, socket_handler&&) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
-            handler(error::unknown, nullptr);
+            accepted(error::unknown);
         });
     }
 };
@@ -122,12 +124,12 @@ public:
         mock_acceptor_start_success_accept_fail;
 
     // Handle accept with service_stopped error.
-    void accept(socket_handler&& handler) NOEXCEPT override
+    void accept(result_handler&& accepted, socket_handler&&) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
-            handler(error::service_stopped, nullptr);
+            accepted(error::service_stopped);
         });
     }
 };
