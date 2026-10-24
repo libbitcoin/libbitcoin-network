@@ -80,6 +80,16 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.identifier, 3669344250u);
 }
 
+BOOST_AUTO_TEST_CASE(settings__construct__signet__expected)
+{
+    settings instance{ selection::signet };
+    BOOST_REQUIRE_EQUAL(instance.identifier, 1087308554u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.seeds.size(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 38333u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 38333u);
+}
+
 // helpers
 
 BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__between_zero_and_retry_timeout_seconds)
