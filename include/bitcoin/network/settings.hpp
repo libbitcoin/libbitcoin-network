@@ -329,6 +329,14 @@ struct BCT_API settings
                     seeds.emplace_back("testnet4.libbitcoin.net", 18333_u16);
                     break;
                 }
+                case system::chain::selection::signet:
+                {
+                    seeds.reserve(2);
+                    seeds.emplace_back("seed.signet.bitcoin.sprovoost.nl",
+                        38333_u16);
+                    seeds.emplace_back("seed.signet.achownodes.xyz", 38333_u16);
+                    break;
+                }
                 case system::chain::selection::regtest:
                 default: break;
             }
@@ -368,6 +376,11 @@ struct BCT_API settings
                 case system::chain::selection::regtest:
                 {
                     binds.emplace_back(asio::address{}, 18444_u16);
+                    break;
+                }
+                case system::chain::selection::signet:
+                {
+                    binds.emplace_back(asio::address{}, 38333_u16);
                     break;
                 }
                 default: break;
