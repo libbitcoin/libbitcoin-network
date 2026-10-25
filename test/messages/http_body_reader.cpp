@@ -163,7 +163,6 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__complete_rpc__success)
     BOOST_REQUIRE(!ec);
 }
 
-// Beast finishes a complete body, so need_more would read past it.
 BOOST_AUTO_TEST_CASE(http_body_reader__finish__incomplete_rpc__incomplete)
 {
     const std::string_view text{ R"({"id":1)" };
@@ -202,7 +201,6 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__number_rpc__incomplete)
     BOOST_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
 }
 
-// A streamed read may finish before the message is complete.
 BOOST_AUTO_TEST_CASE(http_body_reader__finish__incomplete_rpc_streamed__need_more)
 {
     const std::string_view text{ R"({"id":1)" };
@@ -222,7 +220,6 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__incomplete_rpc_streamed__need_mor
     BOOST_REQUIRE(ec == error::http_error_t::need_more);
 }
 
-// beast calls finish when the content-length body is complete.
 BOOST_AUTO_TEST_CASE(http_body_reader__finish__beast_parsed_content_length_incomplete_rpc__incomplete)
 {
     const std::string_view text
@@ -243,7 +240,6 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__beast_parsed_content_length_incom
     BOOST_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
 }
 
-// beast calls finish when the final chunk is read.
 BOOST_AUTO_TEST_CASE(http_body_reader__finish__beast_parsed_chunked_incomplete_rpc__incomplete)
 {
     const std::string_view text

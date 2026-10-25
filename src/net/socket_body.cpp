@@ -47,7 +47,7 @@ void socket::body_read(http::flat_buffer& buffer, http::request& request,
     count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
-    const auto in = emplace_shared<read_state>(request, buffer);
+    const auto in = emplace_shared<read_state>(request, buffer, !websocket());
     in->reader.init({}, ec);
 
     boost::asio::dispatch(strand_,
@@ -97,14 +97,8 @@ void socket::do_body_read(boost_code ec, size_t total,
             return;
         }
 
-        // A websocket message is complete, a tcp stream may need more.
         if (ec == error::http_error_t::need_more)
-        {
-            if (websocket())
-                ec = error::to_json_code(error::json_error_t::json_incomplete);
-            else
-                ec.clear();
-        }
+            ec.clear();
     }
 
     if (ec)

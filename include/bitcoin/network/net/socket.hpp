@@ -379,8 +379,9 @@ private:
     {
         typedef std::shared_ptr<read_state> ptr;
 
-        read_state(http::request& request, http::flat_buffer& buffer) NOEXCEPT
-          : value{ request }, reader{ value.base(), value.body(), true },
+        read_state(http::request& request, http::flat_buffer& buffer,
+            bool streamed) NOEXCEPT
+          : value{ request }, reader{ value.base(), value.body(), streamed },
             buffer{ buffer }
         {
         }

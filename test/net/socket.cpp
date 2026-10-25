@@ -902,7 +902,6 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_complete_message__success, a
     instance->stop();
 }
 
-// An incomplete message must not continue into the next message.
 BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_incomplete_message__incomplete, acceptor_fixture)
 {
     auto params = clear;
