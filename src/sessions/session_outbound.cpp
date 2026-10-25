@@ -204,6 +204,8 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
+    ++members->drawn;
+
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
@@ -231,8 +233,10 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
     }
     else
     {
-        // Any other outcome attributes unreachable members to their address.
-        members->attributable = true;
+        // A timeout attributes nothing, any other outcome attributes
+        // unreachable members to their address.
+        if (ec != error::operation_timeout)
+            members->attributable = true;
 
         // Without a socket, reclaim below cannot restore the address.
         if (ec == error::service_suspended || (!socket && maybe_reclaim(ec)))
@@ -262,11 +266,12 @@ void session_outbound::handle_connect(const code& ec,
     // Unregister connectors, in case there was no winner.
     notify(key);
 
-    // A batch that failed only as unreachable implies a local outage, so
-    // restore its unreachable members (up to free pool capacity).
-    if (!members->attributable)
+    // Two unattributable failures, one if unbatched, imply a local outage.
+    const auto& outbound = network_settings().outbound;
+    const auto minimum = std::min<size_t>(two, outbound.connect_batch_size);
+    if (members->drawn >= minimum && !members->attributable)
     {
-        const auto pool = network_settings().outbound.host_pool_capacity;
+        const auto pool = outbound.host_pool_capacity;
         const auto room = floored_subtract(pool, address_count());
         const auto count = std::min(room, members->unreachable.size());
         for (size_t index{}; index < count; ++index)
