@@ -47,7 +47,7 @@ void socket::body_read(http::flat_buffer& buffer, http::request& request,
     count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
-    const auto in = emplace_shared<read_state>(request, buffer);
+    const auto in = emplace_shared<read_state>(request, buffer, !websocket());
     in->reader.init({}, ec);
 
     boost::asio::dispatch(strand_,

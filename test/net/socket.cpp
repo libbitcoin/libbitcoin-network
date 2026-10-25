@@ -867,6 +867,76 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read__field_above_beast_field_limit__header
     instance->stop();
 }
 
+BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_complete_message__success, acceptor_fixture)
+{
+    auto params = clear;
+    params.maximum_request = 1'000u;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const auto buffer = std::make_shared<http::flat_buffer>();
+    const auto upgrade = std::make_shared<http::request>();
+    const auto request = std::make_shared<rpc::request>();
+    const awaiter<code> upgraded{};
+    const awaiter<code> read{};
+    instance->http_read(*buffer, *upgrade, [=](const code& upgrade_ec, size_t) NOEXCEPT
+    {
+        upgraded.set(upgrade_ec == error::upgrade ? instance->accept_websocket(*upgrade) : upgrade_ec);
+        instance->rpc_read(*buffer, *request, [=](const code& read_ec, size_t) NOEXCEPT
+        {
+            read.set(read_ec);
+        });
+    });
+
+    boost_code ec{};
+    ws::socket websocket(std::move(client));
+    websocket.handshake("127.0.0.1", "/", ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(upgraded.get(), error::success);
+
+    websocket.text(true);
+    websocket.write(boost::asio::buffer(std::string{ R"({"jsonrpc":"2.0","id":1,"method":"x","params":[]})" }), ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(read.get(), error::success);
+    instance->stop();
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_incomplete_message__incomplete, acceptor_fixture)
+{
+    auto params = clear;
+    params.maximum_request = 1'000u;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const auto buffer = std::make_shared<http::flat_buffer>();
+    const auto upgrade = std::make_shared<http::request>();
+    const auto request = std::make_shared<rpc::request>();
+    const awaiter<code> upgraded{};
+    const awaiter<code> read{};
+    instance->http_read(*buffer, *upgrade, [=](const code& upgrade_ec, size_t) NOEXCEPT
+    {
+        upgraded.set(upgrade_ec == error::upgrade ? instance->accept_websocket(*upgrade) : upgrade_ec);
+        instance->rpc_read(*buffer, *request, [=](const code& read_ec, size_t) NOEXCEPT
+        {
+            read.set(read_ec);
+        });
+    });
+
+    boost_code ec{};
+    ws::socket websocket(std::move(client));
+    websocket.handshake("127.0.0.1", "/", ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(upgraded.get(), error::success);
+
+    websocket.text(true);
+    websocket.write(boost::asio::buffer(std::string{ R"({"id":1)" }), ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE_EQUAL(read.get(), error::incomplete);
+    instance->stop();
+}
+
 BOOST_FIXTURE_TEST_CASE(socket__connect__refused__connection_refused, acceptor_fixture)
 {
     const awaiter<code> connected{};
