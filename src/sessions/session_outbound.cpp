@@ -268,7 +268,7 @@ void session_outbound::handle_connect(const code& ec,
 
     // Two unattributable failures, one if unbatched, imply a local outage.
     const auto& outbound = network_settings().outbound;
-    const auto minimum = std::min(two, size_t{ outbound.connect_batch_size });
+    const auto minimum = std::min<size_t>(two, outbound.connect_batch_size);
     if (members->drawn >= minimum && !members->attributable)
     {
         const auto pool = outbound.host_pool_capacity;
