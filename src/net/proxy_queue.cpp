@@ -55,7 +55,7 @@ bool proxy::charge(pending& write_) NOEXCEPT
     if (!idle && system::ceilinged_add(backlog_, write_.cost) >
         maximum_backlog_)
     {
-        // zeromq messages are seuqenced, so drops are acceptable.
+        // zeromq messages are sequenced, so drops are acceptable.
         if (socket_->zeromq())
         {
             LOGS("Dropped message on congested channel [" << endpoint() << "]");
