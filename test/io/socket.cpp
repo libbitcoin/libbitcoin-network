@@ -18,6 +18,10 @@
  */
 #include "../test.hpp"
 
+#if defined(HAVE_LINUX)
+    #include <sys/socket.h>
+#endif
+
 BC_AUTO_TEST_SUITE(io_socket_tests)
 
 namespace ip = system::ip;
@@ -449,6 +453,24 @@ BC_AUTO_TEST_CASE(io_socket__half_closed__peer_shutdown_with_unread_data__true)
     BC_REQUIRE(is_nonzero(connection.accepted.available(ec)));
     BC_REQUIRE(!ec);
 }
+
+#if defined(HAVE_LINUX)
+BC_AUTO_TEST_CASE(io_socket__half_closed__peer_reset__true)
+{
+    connected_pair connection{};
+    BC_REQUIRE(connection.ok);
+
+    const struct linger reset{ 1, 0 };
+    BC_REQUIRE(is_zero(::setsockopt(connection.connected.native_handle(),
+        SOL_SOCKET, SO_LINGER, &reset, sizeof(reset))));
+
+    code ec{};
+    connection.connected.close(ec);
+    BC_REQUIRE(!ec);
+
+    BC_REQUIRE(half_closed_within(connection.accepted, 1000));
+}
+#endif
 
 BC_AUTO_TEST_CASE(io_socket__half_closed__opened_unconnected__false)
 {

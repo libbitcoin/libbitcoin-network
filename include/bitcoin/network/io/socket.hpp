@@ -114,7 +114,8 @@ public:
     /// The number of received bytes that can be read without blocking.
     size_t available(code& ec) const NOEXCEPT;
 
-    /// The peer has closed its side of the connection (FIN received).
+    /// The peer has closed its side of the connection (FIN received),
+    /// or reset it (RST received, linux only).
     bool half_closed() const NOEXCEPT;
 
     endpoint local_endpoint(code& ec) const NOEXCEPT;
