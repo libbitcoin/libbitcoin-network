@@ -119,6 +119,8 @@ std::string format_http_time(time_t time) NOEXCEPT
 }
 
 // C++20 support is not yet up to snuff.
+// std::format of chrono types streams through std::locale (msvc), which
+// serializes all threads on a global lock.
 #if defined(DISABLED)
 
 #include <chrono>
