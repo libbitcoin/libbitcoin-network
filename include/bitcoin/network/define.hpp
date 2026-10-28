@@ -57,41 +57,4 @@ namespace network {
 } // namespace network
 } // namespace libbitcoin
 
-// define.hpp is the common include for /network (except net and settings).
-// All non-network headers include define.hpp.
-// Network inclusions are chained as follows.
-
-// version        : <generated>
-// have           : version
-// preprocessor   : have
-// boost          : preprocessor
-// asio           : boost
-// beast          : asio
-// error          : beast
-// define         : error
-
-// Root directory singletons.
-
-// memory         : define
-// settings       : define /config /p2ps /zmtp
-// net            : define settings /sessions
-
-// Other directory common includes are not internally chained.
-// Each header includes only its required common headers.
-// protcols are not included in any headers except protocols.
-
-// /ssl           : <nothing>
-// /async         : define
-// /log           : define /async
-// /messages      : define memory /async
-// /interface     : define /messages
-// /p2ps          : define /messages
-// /config        : define /messages
-// /broadcast     : define /config
-// /zmtp          : define
-// /net           : define settings memory /config /log
-// /channels      : define /net /interface
-// /sessions      : define /channels
-// /protocols     : define /sessions
-
 #endif
