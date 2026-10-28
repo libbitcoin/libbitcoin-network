@@ -35,7 +35,7 @@ namespace network {
 /// Abstract, thread safe except some methods requiring strand.
 /// Handles all channel communication, error handling, and logging.
 /// Caller must retain ownership of read/write buffers until handler invoked.
-/// Full duplex writes (non-http) are queued to prevent interleaving.
+/// All writes are queued to prevent interleaving.
 /// Completion handler is invoked once write is complete, at which point the
 /// next queued write is invoked. When a channel stops with pending writes the
 /// write queue is purged without invoke of the purged handlers.

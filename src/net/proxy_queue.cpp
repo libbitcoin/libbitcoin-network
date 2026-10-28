@@ -136,8 +136,7 @@ void proxy::handle_write(const code& ec, size_t bytes) NOEXCEPT
 // Throttle (sent bytes are allocated time at the configured rate).
 // ----------------------------------------------------------------------------
 // private
-// Applied to every send, queued or not, so that the deferral is imposed
-// without imposing the queue (http is half duplex, so it is not queued).
+// Applied to every send, so the deferral delays the next queued write.
 
 // Nanoseconds allocated to the transmission of bytes at the given rate.
 inline steady_clock::duration to_allocation(size_t bytes,
