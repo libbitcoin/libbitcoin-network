@@ -37,6 +37,35 @@ using namespace system;
 using namespace network::http;
 using namespace std::placeholders;
 
+// local
+// The status answering a request that the parser rejects (rfc9112 5.1, 6.3).
+inline status to_status(const code& ec) NOEXCEPT
+{
+    if (ec == error::header_limit)
+        return status::request_header_fields_too_large;
+
+    if (ec == error::body_limit || ec == error::buffer_overflow)
+        return status::payload_too_large;
+
+    if (ec == error::bad_method)
+        return status::not_implemented;
+
+    if (ec == error::bad_line_ending
+        || ec == error::bad_target
+        || ec == error::bad_version
+        || ec == error::bad_field
+        || ec == error::bad_value
+        || ec == error::bad_content_length
+        || ec == error::bad_transfer_encoding
+        || ec == error::bad_chunk
+        || ec == error::bad_chunk_extension
+        || ec == error::bad_obs_fold
+        || ec == error::multiple_content_length)
+        return status::bad_request;
+
+    return status::unknown;
+}
+
 // Shared pointers required in handler parameters so closures control lifetime.
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
@@ -106,8 +135,9 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
         if (!authorized() && !in_band_)
         {
             send({ status::unauthorized, request->version() },
-                std::bind(&channel_http::handle_unauthorized,
-                    shared_from_base<channel_http>(), _1));
+                std::bind(&channel_http::handle_rejected,
+                    shared_from_base<channel_http>(), _1,
+                    error::unauthorized));
             return;
         }
 
@@ -130,6 +160,19 @@ void channel_http::handle_receive(const code& ec, size_t bytes,
         {
             LOGF("Http read failure [" << endpoint() << "] "
                 << ec.message());
+        }
+
+        // A request rejected by the parser is answered before the close.
+        const auto result = to_status(ec);
+        if (result != status::unknown && !websocket() && !downgraded())
+        {
+            response out{ result, 11 };
+            out.keep_alive(false);
+            out.prepare_payload();
+            send(std::move(out),
+                std::bind(&channel_http::handle_rejected,
+                    shared_from_base<channel_http>(), _1, ec));
+            return;
         }
 
         stop(ec);
@@ -160,8 +203,8 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
     if (!websocket() && !downgraded() && !authorized())
     {
         send({ status::unauthorized, request->version() },
-            std::bind(&channel_http::handle_unauthorized,
-                shared_from_base<channel_http>(), _1));
+            std::bind(&channel_http::handle_rejected,
+                shared_from_base<channel_http>(), _1, error::unauthorized));
         return;
     }
 
@@ -395,10 +438,11 @@ const std::string& channel_http::methods() const NOEXCEPT
     return methods_;
 }
 
-void channel_http::handle_unauthorized(const code& ec) NOEXCEPT
+void channel_http::handle_rejected(const code& ec,
+    const code& reason) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    stop(ec ? ec : error::unauthorized);
+    stop(ec ? ec : reason);
 }
 
 // log helpers

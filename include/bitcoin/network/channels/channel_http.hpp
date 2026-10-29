@@ -126,7 +126,7 @@ protected:
 private:
     bool registered(const std::string_view& name) const NOEXCEPT;
     http::request_ptr create_request() const NOEXCEPT;
-    void handle_unauthorized(const code& ec) NOEXCEPT;
+    void handle_rejected(const code& ec, const code& reason) NOEXCEPT;
     std::string log_message(const http::response& response) const NOEXCEPT;
     std::string log_message(const http::request& request,
         size_t bytes) const NOEXCEPT;
