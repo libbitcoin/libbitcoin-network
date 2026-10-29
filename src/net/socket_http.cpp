@@ -58,8 +58,8 @@ constexpr bool is_line_break(char byte) NOEXCEPT
 inline bool detect_json(bool& json, const http::flat_buffer& buffer) NOEXCEPT
 {
     const auto data = buffer.data();
-    const std::string_view bytes{ static_cast<const char*>(data.data()),
-        data.size() };
+    const auto chars = static_cast<const char*>(data.data());
+    const std::string_view bytes{ chars, data.size() };
 
     for (const auto byte: bytes)
     {

@@ -116,8 +116,11 @@ BC_AUTO_TEST_CASE(channel__stopped__default__false)
     threadpool pool{ one };
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, expected, set, set.outbound);
     BC_REQUIRE(!channel_ptr->stopped());

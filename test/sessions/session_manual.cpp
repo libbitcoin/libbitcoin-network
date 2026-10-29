@@ -65,8 +65,11 @@ public:
         if (is_zero(connects_++))
             peer_ = peer;
 
-        socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+        socket::parameters params
+        {
+            .maximum_request = 42,
+            .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+        };
         const auto socket = std::make_shared<network::socket>(log, service_,
             std::move(params));
 

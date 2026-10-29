@@ -79,8 +79,11 @@ public:
             port_ = port;
         }
 
-        socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+        socket::parameters params
+        {
+            .maximum_request = 42,
+            .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+        };
         const auto socket = std::make_shared<network::socket>(log, service_, std::move(params));
 
         // Must be asynchronous or is an infinite recursion.

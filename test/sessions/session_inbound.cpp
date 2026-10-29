@@ -74,8 +74,11 @@ public:
         socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
-        socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+        socket::parameters params
+        {
+            .maximum_request = 42,
+            .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+        };
         const auto socket = std::make_shared<network::socket>(log, service_,
             std::move(params));
 

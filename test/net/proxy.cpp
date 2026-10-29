@@ -102,8 +102,11 @@ static milliseconds get_unconsumed(uint32_t rate_limit, size_t bytes,
 {
     const logger log{};
     threadpool pool(1);
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, rate_limit);
 
@@ -152,8 +155,11 @@ BC_AUTO_TEST_CASE(proxy__unconsumed__stopped__zero)
 {
     const logger log{};
     threadpool pool(1);
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 1000);
     proxy_ptr->stop(error::invalid_magic);
@@ -172,8 +178,11 @@ BC_AUTO_TEST_CASE(proxy__stopped__default__false)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BC_REQUIRE(!proxy_ptr->stopped());
@@ -185,8 +194,11 @@ BC_AUTO_TEST_CASE(proxy__stranded__default__false)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BC_REQUIRE(!proxy_ptr->stranded());
@@ -199,8 +211,11 @@ BC_AUTO_TEST_CASE(proxy__authority__default__expected)
     const logger log{};
     threadpool pool(2);
     const config::endpoint default_endpoint{};
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BC_REQUIRE(proxy_ptr->endpoint() == default_endpoint);
@@ -212,8 +227,11 @@ BC_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
@@ -242,8 +260,11 @@ BC_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
@@ -268,8 +289,11 @@ BC_AUTO_TEST_CASE(proxy__write__within_backlog__not_stopped)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 0, 1'000'000);
 
@@ -297,8 +321,11 @@ BC_AUTO_TEST_CASE(proxy__write__exceeds_backlog__channel_backlog)
 {
     const logger log{};
     threadpool pool(2);
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
 
     // The first message is admitted to the idle queue, the second exceeds.

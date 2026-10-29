@@ -62,8 +62,11 @@ BC_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
     constexpr auto maximum = 42u;
     std::atomic_bool suspended{ false };
     io::strand strand(pool.service().get_executor());
-    acceptor::parameters params{ .maximum_request = maximum,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    acceptor::parameters params
+    {
+        .maximum_request = maximum,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
     BC_REQUIRE(&instance->get_service() == &pool.service());
@@ -80,8 +83,11 @@ BC_AUTO_TEST_CASE(acceptor__start__stop__success)
     threadpool pool(1);
     std::atomic_bool suspended{ false };
     io::strand strand(pool.service().get_executor());
-    acceptor::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    acceptor::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
     // Result codes inconsistent due to context.
@@ -105,8 +111,11 @@ BC_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_stopped_or_suspended
     threadpool pool(2);
     std::atomic_bool suspended{ true };
     io::strand strand(pool.service().get_executor());
-    acceptor::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    acceptor::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
     // Result codes inconsistent due to context.
@@ -139,8 +148,11 @@ BC_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     threadpool pool(2);
     std::atomic_bool suspended{ false };
     io::strand strand(pool.service().get_executor());
-    acceptor::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    acceptor::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
     // Result codes inconsistent due to context.

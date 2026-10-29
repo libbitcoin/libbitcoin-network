@@ -638,8 +638,11 @@ BC_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_service_
     auto session = std::make_shared<mock_session>(net, 1);
     BC_REQUIRE(session->stopped());
 
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel>(net.log, socket, 42, session->network_settings(), options);
 
@@ -695,8 +698,11 @@ BC_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_channel_
 
     BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel>(net.log, socket, 42, session->network_settings(), options);
 
@@ -786,8 +792,11 @@ BC_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel
 
     BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel_no_read>(net.log, socket, 42, session->network_settings(), options);
 
@@ -870,8 +879,11 @@ BC_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expecte
 
     BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel_no_read>(net.log, socket, 42, session->network_settings(), options);
     
@@ -955,8 +967,11 @@ BC_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expected
 
     BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
     const auto channel = std::make_shared<mock_channel_no_read>(net.log, socket, 42, session->network_settings(), options);
     

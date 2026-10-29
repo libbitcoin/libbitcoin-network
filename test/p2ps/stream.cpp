@@ -34,8 +34,7 @@ constexpr uint32_t mainnet = 0xd9b4bef9;
 static void connect_pair(io::context& service,
     peer_socket& server, peer_socket& client)
 {
-    io::acceptor acceptor{ service,
-        test::loopback(0) };
+    io::acceptor acceptor{ service, test::loopback(0) };
 
     bool accepted{};
     bool connected{};
@@ -61,8 +60,9 @@ static data_chunk v1_frame(const std::string& command,
 {
     const auto head = heading::factory(mainnet, command, payload);
     data_chunk frame(heading::size() + payload.size());
-    BC_REQUIRE(head.serialize({ frame.data(),
-        std::next(frame.data(), heading::size()) }));
+    const auto begin = frame.data();
+    const auto end = std::next(begin, heading::size());
+    BC_REQUIRE(head.serialize({ begin, end }));
     std::copy(payload.begin(), payload.end(),
         std::next(frame.begin(), heading::size()));
     return frame;
