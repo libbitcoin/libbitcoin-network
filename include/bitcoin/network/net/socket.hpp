@@ -94,7 +94,7 @@ public:
     /// Block on threadpool.join() to ensure termination of the connection.
     virtual void stop() NOEXCEPT;
 
-    /// Same as stop but provides graceful shutdown for websocket connections.
+    /// Same as stop but closes gracefully, bounded by the connect timeout.
     virtual void lazy_stop() NOEXCEPT;
 
     /// Wait (all).
@@ -466,6 +466,7 @@ private:
 
     // stop
     void do_stop() NOEXCEPT;
+    void do_lazy_stop() NOEXCEPT;
     void do_ws_stop() NOEXCEPT;
     void do_ssl_stop() NOEXCEPT;
 
@@ -557,6 +558,7 @@ private:
     // ------------------------------------------------------------------------
 
     // stop (lazy)
+    void handle_lazy_timer(const code& ec) NOEXCEPT;
     void handle_ws_close(const boost_code& ec) NOEXCEPT;
     void handle_ssl_close(const boost_code& ec) NOEXCEPT;
 

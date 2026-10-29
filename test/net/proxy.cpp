@@ -451,10 +451,12 @@ struct loopback_fixture
 {
     DELETE_COPY_MOVE(loopback_fixture);
 
-    loopback_fixture(uint32_t rate_limit=0)
+    loopback_fixture(uint32_t rate_limit=0,
+        const steady_clock::duration& connect_timeout={})
     {
         const socket::parameters params
         {
+            .connect_timeout = connect_timeout,
             .maximum_request = 1'000'000,
             .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
         };
@@ -586,8 +588,8 @@ struct throttled_fixture
 struct websocket_fixture
   : loopback_fixture
 {
-    websocket_fixture()
-      : stream{ std::move(client) }
+    websocket_fixture(const steady_clock::duration& connect_timeout={})
+      : loopback_fixture(0, connect_timeout), stream{ std::move(client) }
     {
         const awaiter<code> upgraded{};
         const awaiter<code> accepted{};
@@ -610,6 +612,15 @@ struct websocket_fixture
     ws::socket stream;
     code upgrade_result{};
     code accept_result{};
+};
+
+struct bounded_websocket_fixture
+  : websocket_fixture
+{
+    bounded_websocket_fixture()
+      : websocket_fixture(100ms)
+    {
+    }
 };
 
 // properties
@@ -1185,6 +1196,19 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__client_receives_close, we
     stream.read(in, ec);
     BOOST_REQUIRE(ec == boost::beast::websocket::error::closed);
     BOOST_REQUIRE_EQUAL(stopped.get(), error::websocket_closed);
+}
+
+// The client does not answer the close frame.
+BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__websocket_unanswered__client_end_of_file, bounded_websocket_fixture)
+{
+    const auto stopped = subscribe();
+    channel->stop(error::channel_expired);
+    BOOST_REQUIRE_EQUAL(stopped.get(), error::channel_expired);
+
+    boost_code ec{};
+    std::array<char, 64> bytes{};
+    while (!ec) stream.next_layer().read_some(boost::asio::buffer(bytes), ec);
+    BOOST_REQUIRE(ec == boost::asio::error::eof);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

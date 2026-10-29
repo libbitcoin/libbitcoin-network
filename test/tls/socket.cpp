@@ -66,7 +66,8 @@ static system::x509::certificate make_identity(
 // A network::socket accepting on loopback with the tls_server context.
 struct server_fixture
 {
-    server_fixture(bool authenticate)
+    server_fixture(bool authenticate,
+        const steady_clock::duration& connect_timeout={})
       : pool(2), tls("test"),
         strand(pool.service().get_executor()),
         acceptor(strand)
@@ -93,6 +94,7 @@ struct server_fixture
         port = acceptor.local_endpoint().port();
 
         socket::parameters params{};
+        params.connect_timeout = connect_timeout;
         params.maximum_request = 1024;
         params.maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer;
         params.context = tls.secure_context();
@@ -326,6 +328,24 @@ BOOST_AUTO_TEST_CASE(tls_socket__stop__lazy_stop_unanswered__closed)
     BOOST_REQUIRE(!peer.receive(200ms));
 
     server.server->stop();
+    const auto closed = peer.receive(5s);
+    peer.socket.close();
+    BOOST_REQUIRE(closed);
+}
+
+BOOST_AUTO_TEST_CASE(tls_socket__lazy_stop__unanswered_connect_timeout__closed)
+{
+    server_fixture server{ false, 100ms };
+    tls_peer peer{ client_options(server, false), server.port };
+    peer.handshake();
+    BOOST_REQUIRE(peer.client.is_established());
+    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+
+    server.server->lazy_stop();
+    BOOST_REQUIRE(server.server->stopped());
+    BOOST_REQUIRE(!peer.receive(5s, true));
+    BOOST_REQUIRE(peer.client.is_closed());
+
     const auto closed = peer.receive(5s);
     peer.socket.close();
     BOOST_REQUIRE(closed);
