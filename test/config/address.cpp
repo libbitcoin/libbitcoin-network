@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(address__to_ip__default__ipv6_unspecified)
 BOOST_AUTO_TEST_CASE(address__to_ip__value__expected)
 {
     const address host{ test_ipv6_address_item };
-    BOOST_REQUIRE_EQUAL(host.to_ip(), asio::ipv6(test_ipv6_address));
+    BOOST_REQUIRE_EQUAL(host.to_ip(), system::ip::ipv6(test_ipv6_address));
 }
 
 // equality

@@ -252,19 +252,20 @@ struct acceptor_setup_fixture
 
 BOOST_FIXTURE_TEST_CASE(acceptor__start__started__operation_failed, acceptor_setup_fixture)
 {
-    BOOST_REQUIRE_EQUAL(start({ boost::asio::ip::address_v4::loopback(), 0 }), error::success);
-    BOOST_REQUIRE_EQUAL(start({ boost::asio::ip::address_v4::loopback(), 0 }), error::operation_failed);
+    BOOST_REQUIRE_EQUAL(start({ system::ip::ipv4::loopback(), 0 }), error::success);
+    BOOST_REQUIRE_EQUAL(start({ system::ip::ipv4::loopback(), 0 }), error::operation_failed);
 }
 
 BOOST_FIXTURE_TEST_CASE(acceptor__start__unassigned_address__failure_stopped, acceptor_setup_fixture)
 {
-    BOOST_REQUIRE(start({ boost::asio::ip::make_address_v4("1.2.3.4"), 0 }));
+    const system::ip::ipv4 unassigned{ { 1, 2, 3, 4 } };
+    BOOST_REQUIRE(start({ unassigned, 0 }));
     BOOST_REQUIRE(instance->get_stopped());
 }
 
 BOOST_FIXTURE_TEST_CASE(acceptor__accept__connected__success_inbound, acceptor_setup_fixture)
 {
-    BOOST_REQUIRE_EQUAL(start({ boost::asio::ip::address_v4::loopback(), 0 }), error::success);
+    BOOST_REQUIRE_EQUAL(start({ system::ip::ipv4::loopback(), 0 }), error::success);
     auto result = accept();
     connect();
     BOOST_REQUIRE_EQUAL(result.get(), error::success);
@@ -273,7 +274,7 @@ BOOST_FIXTURE_TEST_CASE(acceptor__accept__connected__success_inbound, acceptor_s
 
 BOOST_FIXTURE_TEST_CASE(acceptor__local__started__bound_port, acceptor_setup_fixture)
 {
-    BOOST_REQUIRE_EQUAL(start({ boost::asio::ip::address_v4::loopback(), 0 }), error::success);
+    BOOST_REQUIRE_EQUAL(start({ system::ip::ipv4::loopback(), 0 }), error::success);
     BOOST_REQUIRE_NE(port(), 0u);
 }
 

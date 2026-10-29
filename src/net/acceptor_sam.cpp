@@ -257,7 +257,7 @@ code acceptor_sam::start(const config::authority&) NOEXCEPT
 {
     const config::authority loopback
     {
-        asio::address{ boost::asio::ip::address_v4::loopback() }, 0
+        system::ip::ipv4::loopback(), 0
     };
 
     if (const auto ec = acceptor::start(loopback))

@@ -181,16 +181,16 @@ address::address(const messages::peer::address_item::cptr& message) NOEXCEPT
 }
 
 address::address(const asio::endpoint& uri) NOEXCEPT
-  : address(endpoint{ uri })
+  : address(endpoint{ from_asio(uri) })
 {
 }
 
 // Methods.
 // ----------------------------------------------------------------------------
 
-asio::address address::to_ip() const NOEXCEPT
+system::ip::address address::to_ip() const NOEXCEPT
 {
-    return system::config::denormalize(from_address(ip()));
+    return system::ip::denormalize(from_address(ip()));
 }
 
 std::string address::to_host() const NOEXCEPT
@@ -201,7 +201,7 @@ std::string address::to_host() const NOEXCEPT
     if (const auto value = std::get_if<i2p_t>(&address_->address))
         return to_i2p(*value);
 
-    return system::config::to_host(to_ip());
+    return system::ip::to_host(to_ip());
 }
 
 std::string address::to_string() const NOEXCEPT

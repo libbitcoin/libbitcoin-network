@@ -52,7 +52,7 @@ public:
     // All values are denormalized (IPv6 or IPv4).
 
     /// The IPv4 or IPv6 address.
-    asio::address to_ip() const NOEXCEPT;
+    system::ip::address to_ip() const NOEXCEPT;
 
     /// IPv6|IPv4.
     std::string to_host() const NOEXCEPT;

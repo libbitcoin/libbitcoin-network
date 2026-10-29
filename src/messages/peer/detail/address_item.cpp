@@ -28,7 +28,7 @@ namespace messages {
 namespace peer {
 
 using namespace system;
-using system::config::ip_map_prefix;
+using system::ip::mapped_prefix;
 
 constexpr auto ip_address_size = array_count<ip_address>;
 
@@ -143,7 +143,7 @@ static address_t read_address(size_t size, reader& source) NOEXCEPT
     }
 
     type out{};
-    std::copy_n(ip_map_prefix.begin(), offset, out.value.begin());
+    std::copy_n(mapped_prefix.begin(), offset, out.value.begin());
     source.read_bytes(std::next(out.value.data(), offset), type::wire);
 
     // A documentation address is never assigned, so it is discarded.

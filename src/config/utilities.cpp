@@ -25,52 +25,46 @@
 namespace libbitcoin {
 namespace network {
 namespace config {
-    
-using namespace boost::asio;
+
 using namespace system::config;
 
-static_assert(array_count<messages::peer::ip_address> == ipv6_size);
-static_assert(is_same_type<ip::address_v6::bytes_type, messages::peer::ip_address>);
+static_assert(array_count<messages::peer::ip_address> == system::ip::ipv6::size);
 
-static asio::ipv6 to_v6(const asio::ipv4& ip4) NOEXCEPT
+messages::peer::ip_address to_address(const system::ip::address& ip) NOEXCEPT
 {
-    try
-    {
-        return asio::ipv6{ system::splice(ip_map_prefix, ip4.to_bytes()) };
-    }
-    catch (const std::exception&)
-    {
-        return {};
-    }
+    return system::ip::normalize(ip).to_bytes();
 }
 
-static asio::ipv6 get_ipv6(const asio::address& ip) NOEXCEPT
+system::ip::address from_address(
+    const messages::peer::ip_address& address) NOEXCEPT
 {
-    try
-    {
-        return ip.is_v6() ? ip.to_v6() : to_v6(ip.to_v4());
-    }
-    catch (const std::exception&)
-    {
-        return {};
-    }
+    return { system::ip::ipv6{ address } };
 }
 
-messages::peer::ip_address to_address(const asio::address& ip) NOEXCEPT
+asio::address to_asio(const system::ip::address& ip) NOEXCEPT
 {
-    return get_ipv6(ip).to_bytes();
+    if (ip.is_v4())
+        return { asio::ipv4{ ip.to_v4().to_bytes() } };
+
+    return { asio::ipv6{ ip.to_v6().to_bytes() } };
 }
 
-asio::address from_address(const messages::peer::ip_address& address) NOEXCEPT
+asio::endpoint to_asio(const system::ip::endpoint& endpoint) NOEXCEPT
 {
-    try
-    {
-        return { asio::ipv6{ address } };
-    }
-    catch (const std::exception&)
-    {
-        return { asio::ipv6{} };
-    }
+    return { to_asio(endpoint.address()), endpoint.port() };
+}
+
+system::ip::address from_asio(const asio::address& ip) NOEXCEPT
+{
+    if (ip.is_v4())
+        return { system::ip::ipv4{ ip.to_v4().to_bytes() } };
+
+    return { system::ip::ipv6{ ip.to_v6().to_bytes() } };
+}
+
+system::ip::endpoint from_asio(const asio::endpoint& endpoint) NOEXCEPT
+{
+    return { from_asio(endpoint.address()), endpoint.port() };
 }
 
 std::string to_normal_host(const std::string& host,

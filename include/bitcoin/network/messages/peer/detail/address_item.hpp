@@ -32,8 +32,8 @@ typedef system::data_array<16> ip_address;
 /// True if ip_address starts with the ip map prefix (maps to a v4 address).
 constexpr bool is_v4(const ip_address& ip) NOEXCEPT
 {
-    using namespace system::config;
-    return std::equal(ip_map_prefix.begin(), ip_map_prefix.end(), ip.begin());
+    using namespace system::ip;
+    return std::equal(mapped_prefix.begin(), mapped_prefix.end(), ip.begin());
 }
 
 constexpr bool is_v6(const ip_address& ip) NOEXCEPT
@@ -82,8 +82,8 @@ constexpr system::data_array<3> test_net3_prefix{ 203, 0, 113 };
 /// True if ip_address is within a documentation range (never assigned).
 constexpr bool is_documentation(const ip_address& ip) NOEXCEPT
 {
-    using namespace system::config;
-    const auto net = std::next(ip.begin(), ip_map_prefix.size());
+    using namespace system::ip;
+    const auto net = std::next(ip.begin(), mapped_prefix.size());
     const auto has = [](const auto& prefix, auto it) NOEXCEPT
     {
         return std::equal(prefix.begin(), prefix.end(), it);

@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(endpoint__authority__ipv4__expected)
     const endpoint host{ "42.42.42.42:4242" };
     const authority value = host;
     BOOST_REQUIRE_EQUAL(value.port(), 4242u);
-    BOOST_REQUIRE_EQUAL(value.ip(), asio::address{ boost::asio::ip::make_address_v4("42.42.42.42") });
+    BOOST_REQUIRE_EQUAL(value.ip(), system::config::from_host("42.42.42.42"));
 }
 
 BOOST_AUTO_TEST_CASE(endpoint__authority__host_name__default)

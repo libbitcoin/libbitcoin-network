@@ -392,12 +392,12 @@ struct BCT_API settings
             {
                 case system::chain::selection::mainnet:
                 {
-                    binds.emplace_back(asio::address{}, 8333_u16);
+                    binds.emplace_back(system::ip::address{}, 8333_u16);
                     break;
                 }
                 case system::chain::selection::testnet3:
                 {
-                    binds.emplace_back(asio::address{}, 18333_u16);
+                    binds.emplace_back(system::ip::address{}, 18333_u16);
                     break;
                 }
                 case system::chain::selection::testnet4:
@@ -407,12 +407,12 @@ struct BCT_API settings
                 }
                 case system::chain::selection::regtest:
                 {
-                    binds.emplace_back(asio::address{}, 18444_u16);
+                    binds.emplace_back(system::ip::address{}, 18444_u16);
                     break;
                 }
                 case system::chain::selection::signet:
                 {
-                    binds.emplace_back(asio::address{}, 38333_u16);
+                    binds.emplace_back(system::ip::address{}, 38333_u16);
                     break;
                 }
                 default: break;

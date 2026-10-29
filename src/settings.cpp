@@ -162,7 +162,7 @@ asio::endpoint settings::tcp_server::binding(size_t slot) const NOEXCEPT
     if (binds.empty())
         return {};
 
-    return binds.at(slot % binds.size()).to_endpoint();
+    return config::to_asio(binds.at(slot % binds.size()).to_endpoint());
 }
 
 void settings::tcp_server::default_ports() NOEXCEPT

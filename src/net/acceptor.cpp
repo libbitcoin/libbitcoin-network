@@ -62,7 +62,7 @@ acceptor::~acceptor() NOEXCEPT
 
 code acceptor::start(const config::authority& local) NOEXCEPT
 {
-    return start(local.to_endpoint());
+    return start(config::to_asio(local.to_endpoint()));
 }
 
 // protected
@@ -119,7 +119,8 @@ void acceptor::stop() NOEXCEPT
 config::authority acceptor::local() const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    return { stopped_ ? asio::endpoint{} : acceptor_.local_endpoint() };
+    return { stopped_ ? system::ip::endpoint{} :
+        config::from_asio(acceptor_.local_endpoint()) };
 }
 
 // protected

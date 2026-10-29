@@ -48,7 +48,7 @@ struct sam_setup_fixture
         const config::authority listen{ SAM_BRIDGE_ENDPOINT };
         listener.open(boost::asio::ip::tcp::v4());
         listener.set_option(boost::asio::socket_base::reuse_address(true));
-        listener.bind(listen.to_endpoint());
+        listener.bind(config::to_asio(listen.to_endpoint()));
         listener.listen();
     }
 

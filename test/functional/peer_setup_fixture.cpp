@@ -65,7 +65,7 @@ peer_setup_fixture::peer_setup_fixture(const configurator& configure)
     // Block until the network is running.
     ec = running.get_future().get();
     BOOST_REQUIRE_MESSAGE(!ec, ec.message());
-    socket_.connect(settings_.inbound.binds.back().to_endpoint());
+    socket_.connect(network::config::to_asio(settings_.inbound.binds.back().to_endpoint()));
 }
 
 peer_setup_fixture::~peer_setup_fixture()
@@ -159,7 +159,7 @@ remote_peer::~remote_peer()
 
 void remote_peer::listen(const network::config::authority& endpoint)
 {
-    const auto local = endpoint.to_endpoint();
+    const auto local = network::config::to_asio(endpoint.to_endpoint());
     acceptor_.open(local.protocol());
     acceptor_.set_option(boost::asio::socket_base::reuse_address(true));
     acceptor_.bind(local);
@@ -173,7 +173,7 @@ void remote_peer::accept()
 
 void remote_peer::connect(const network::config::authority& endpoint)
 {
-    socket_.connect(endpoint.to_endpoint());
+    socket_.connect(network::config::to_asio(endpoint.to_endpoint()));
 }
 
 void remote_peer::disconnect()

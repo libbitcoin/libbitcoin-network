@@ -383,8 +383,8 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server_binding__no_binds__unspecified)
 BOOST_AUTO_TEST_CASE(settings__tcp_server_binding__two_binds__group_modulo_expected)
 {
     settings::tcp_server instance{ "test" };
-    instance.binds.emplace_back(asio::ipv4::loopback(), 0_u16);
-    instance.binds.emplace_back(asio::ipv6::loopback(), 42_u16);
+    instance.binds.emplace_back(system::ip::ipv4::loopback(), 0_u16);
+    instance.binds.emplace_back(system::ip::ipv6::loopback(), 42_u16);
     BOOST_REQUIRE(instance.binding(0).address() == asio::ipv4::loopback());
     BOOST_REQUIRE_EQUAL(instance.binding(0).port(), 0u);
     BOOST_REQUIRE(instance.binding(1).address() == asio::ipv6::loopback());
@@ -397,13 +397,13 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server_default_ports__zero_ports__bind_port)
 {
     settings::tcp_server instance{ "test" };
     instance.bind_port = 42;
-    instance.binds.emplace_back(asio::ipv4::loopback(), 0_u16);
-    instance.binds.emplace_back(asio::ipv6::loopback(), 0_u16);
+    instance.binds.emplace_back(system::ip::ipv4::loopback(), 0_u16);
+    instance.binds.emplace_back(system::ip::ipv6::loopback(), 0_u16);
     instance.default_ports();
 
-    BOOST_REQUIRE(instance.binds.at(0).ip() == asio::ipv4::loopback());
+    BOOST_REQUIRE(instance.binds.at(0).ip() == system::ip::ipv4::loopback());
     BOOST_REQUIRE_EQUAL(instance.binds.at(0).port(), 42u);
-    BOOST_REQUIRE(instance.binds.at(1).ip() == asio::ipv6::loopback());
+    BOOST_REQUIRE(instance.binds.at(1).ip() == system::ip::ipv6::loopback());
     BOOST_REQUIRE_EQUAL(instance.binds.at(1).port(), 42u);
 }
 
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server_default_ports__nonzero_port__unchanged
 {
     settings::tcp_server instance{ "test" };
     instance.bind_port = 42;
-    instance.binds.emplace_back(asio::ipv4::loopback(), 24_u16);
+    instance.binds.emplace_back(system::ip::ipv4::loopback(), 24_u16);
     instance.default_ports();
 
     BOOST_REQUIRE_EQUAL(instance.binds.at(0).port(), 24u);
@@ -422,8 +422,8 @@ BOOST_AUTO_TEST_CASE(settings__secure_server_default_ports__zero_ports__bind_and
     settings::secure_server instance{ "test" };
     instance.bind_port = 42;
     instance.safe_port = 43;
-    instance.binds.emplace_back(asio::ipv4::loopback(), 0_u16);
-    instance.safes.emplace_back(asio::ipv4::loopback(), 0_u16);
+    instance.binds.emplace_back(system::ip::ipv4::loopback(), 0_u16);
+    instance.safes.emplace_back(system::ip::ipv4::loopback(), 0_u16);
     instance.default_ports();
 
     BOOST_REQUIRE_EQUAL(instance.binds.at(0).port(), 42u);

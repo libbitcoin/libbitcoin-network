@@ -58,7 +58,7 @@ struct socks_setup_fixture
         const config::authority listen{ SOCKS_PROXY_ENDPOINT };
         acceptor.open(boost::asio::ip::tcp::v4());
         acceptor.set_option(boost::asio::socket_base::reuse_address(true));
-        acceptor.bind(listen.to_endpoint());
+        acceptor.bind(config::to_asio(listen.to_endpoint()));
         acceptor.listen();
     }
 

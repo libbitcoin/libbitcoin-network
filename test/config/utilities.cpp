@@ -20,148 +20,152 @@
 
 using namespace config;
 using namespace system::config;
+using namespace system::ip;
 using namespace boost::program_options;
 
 BOOST_AUTO_TEST_SUITE(utilities_tests)
+
+static system::ip::address make_address(const std::string_view& text)
+{
+    system::ip::address out{};
+    BOOST_REQUIRE(system::ip::address::from_string(out, text));
+    return out;
+}
 
 // is_member
 
 BOOST_AUTO_TEST_CASE(utilities__is_member__defaults_zero__false)
 {
-    BOOST_REQUIRE(!is_member(asio::address{}, asio::address{}, 0));
+    BOOST_REQUIRE(!is_member(system::ip::address{}, system::ip::address{}, 0));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_member__defaults_nonzero__false)
 {
-    BOOST_REQUIRE(!is_member(asio::address{}, asio::address{}, 1));
+    BOOST_REQUIRE(!is_member(system::ip::address{}, system::ip::address{}, 1));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_member__ipv4_defaults_nonzero__false)
 {
-    BOOST_REQUIRE(!is_member(asio::ipv4{}, asio::ipv4{}, 24));
+    BOOST_REQUIRE(!is_member(system::ip::ipv4{}, system::ip::ipv4{}, 24));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_member__ipv6_defaults_nonzero__true)
 {
-    BOOST_REQUIRE(is_member(asio::ipv6{}, asio::ipv6{}, 56));
+    BOOST_REQUIRE(is_member(system::ip::ipv6{}, system::ip::ipv6{}, 56));
 }
-
-using namespace boost::asio::ip;
 
 BOOST_AUTO_TEST_CASE(utilities__is_member__zero_cidr__expected)
 {
     // zero CIDR valid for ipv4, invalid for ipv6
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("99.99.99.99"), 0));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("9999:9999:9999:9999:9999:9999:9999:9999"), 0));
+    BOOST_REQUIRE(is_member(make_address("42.42.42.42"), make_address("99.99.99.99"), 0));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("9999:9999:9999:9999:9999:9999:9999:9999"), 0));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_member__ipv4_member__true)
 {
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.99.99.99"), 8));
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.99.99"), 16));
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.42.99"), 24));
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.42.42"), 32));
+    BOOST_REQUIRE(is_member(make_address("42.42.42.42"), make_address("42.99.99.99"), 8));
+    BOOST_REQUIRE(is_member(make_address("42.42.42.42"), make_address("42.42.99.99"), 16));
+    BOOST_REQUIRE(is_member(make_address("42.42.42.42"), make_address("42.42.42.99"), 24));
+    BOOST_REQUIRE(is_member(make_address("42.42.42.42"), make_address("42.42.42.42"), 32));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_member__not_ipv4_member__false)
 {
-    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("99.99.99.99"), 8));
-    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("42.99.99.99"), 16));
-    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.99.99"), 24));
-    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.42.99"), 32));
+    BOOST_REQUIRE(!is_member(make_address("42.42.42.42"), make_address("99.99.99.99"), 8));
+    BOOST_REQUIRE(!is_member(make_address("42.42.42.42"), make_address("42.99.99.99"), 16));
+    BOOST_REQUIRE(!is_member(make_address("42.42.42.42"), make_address("42.42.99.99"), 24));
+    BOOST_REQUIRE(!is_member(make_address("42.42.42.42"), make_address("42.42.42.99"), 32));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_member__ipv6_non_member__true)
 {
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("ab99:9999:9999:9999:9999:9999:9999:9999"), 8));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:9999:9999:9999:9999:9999:9999:9999"), 16));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:ab99:9999:9999:9999:9999:9999:9999"), 24));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:9999:9999:9999:9999:9999:9999"), 32));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 40));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 48));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 56));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 64));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 72));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 80));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 88));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 96));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 104));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 112));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 120));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), 128));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("ab99:9999:9999:9999:9999:9999:9999:9999"), 8));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:9999:9999:9999:9999:9999:9999:9999"), 16));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:ab99:9999:9999:9999:9999:9999:9999"), 24));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:9999:9999:9999:9999:9999:9999"), 32));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 40));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 48));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 56));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 64));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 72));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 80));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 88));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 96));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 104));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 112));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 120));
+    BOOST_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), 128));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_member__ipv6_non_member__false)
 {
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("ab99:9999:9999:9999:9999:9999:9999:9999"), 16));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:9999:9999:9999:9999:9999:9999:9999"), 24));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:ab99:9999:9999:9999:9999:9999:9999"), 32));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:9999:9999:9999:9999:9999:9999"), 40));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 48));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 56));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 64));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 72));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 80));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 88));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 96));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 104));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 112));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 120));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 128));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("ab99:9999:9999:9999:9999:9999:9999:9999"), 16));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:9999:9999:9999:9999:9999:9999:9999"), 24));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:ab99:9999:9999:9999:9999:9999:9999"), 32));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:9999:9999:9999:9999:9999:9999"), 40));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 48));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 56));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 64));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 72));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 80));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 88));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 96));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 104));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 112));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 120));
+    BOOST_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 128));
 }
 
 // denormalize
 
 BOOST_AUTO_TEST_CASE(utilities__denormalize__defaults__unchanged)
 {
-    BOOST_REQUIRE(denormalize({ asio::ipv4{} }).is_v4());
-    BOOST_REQUIRE(denormalize({ asio::ipv6{} }).is_v6());
+    BOOST_REQUIRE(denormalize({ system::ip::ipv4{} }).is_v4());
+    BOOST_REQUIRE(denormalize({ system::ip::ipv6{} }).is_v6());
 }
 
 BOOST_AUTO_TEST_CASE(utilities__denormalize__mapped__unmapped)
 {
-    constexpr asio::ipv6::bytes_type mapped
+    constexpr system::ip::ipv6::bytes_type mapped
     {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0xff, 0xff, 1, 2, 3, 4
     };
 
-    const asio::address ip{ asio::ipv6{ mapped } };
+    const system::ip::address ip{ system::ip::ipv6{ mapped } };
     BOOST_REQUIRE(denormalize(ip).is_v4());
 }
 
 BOOST_AUTO_TEST_CASE(utilities__denormalize__unmapped__unchanged)
 {
-    constexpr asio::ipv6::bytes_type unmapped
+    constexpr system::ip::ipv6::bytes_type unmapped
     {
         0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0xab, 0xcd, 1, 2, 3, 4
     };
 
-    const asio::address ip{ asio::ipv6{ unmapped } };
+    const system::ip::address ip{ system::ip::ipv6{ unmapped } };
     BOOST_REQUIRE(denormalize(ip) == ip);
 }
 
 // to_host
 
-using namespace boost::asio::ip;
-
 BOOST_AUTO_TEST_CASE(utilities__to_host__default__unspecified_v4)
 {
-    // Default asio address is ipv4.
-    const auto host = to_host(asio::address{});
+    // Default address is ipv4.
+    const auto host = to_host(system::ip::address{});
     BOOST_REQUIRE_EQUAL(host, "0.0.0.0");
 }
 
 BOOST_AUTO_TEST_CASE(utilities__to_host__default_v4__unspecified_v4)
 {
-    const auto host = to_host(asio::ipv4{});
+    const auto host = to_host(system::ip::ipv4{});
     BOOST_REQUIRE_EQUAL(host, "0.0.0.0");
 }
 
 BOOST_AUTO_TEST_CASE(utilities__to_host__default_v6__unspecified_v6)
 {
-    const auto host = to_host(asio::ipv6{});
+    const auto host = to_host(system::ip::ipv6{});
     BOOST_REQUIRE_EQUAL(host, "::");
 }
 
@@ -221,26 +225,26 @@ BOOST_AUTO_TEST_CASE(utilities__from_host__mapped_v6__throws_invalid_option_valu
 
 BOOST_AUTO_TEST_CASE(utilities__from_host__unspecified_v4__expected_v4)
 {
-    BOOST_REQUIRE_EQUAL(from_host("0.0.0.0"), asio::ipv4{});
+    BOOST_REQUIRE_EQUAL(from_host("0.0.0.0"), system::ip::ipv4{});
 }
 
 BOOST_AUTO_TEST_CASE(utilities__from_host__unspecified_v6__expected_v6)
 {
-    const asio::ipv6 expected{};
-    BOOST_REQUIRE_EQUAL(from_host("[::]"), asio::ipv6{});
+    const system::ip::ipv6 expected{};
+    BOOST_REQUIRE_EQUAL(from_host("[::]"), system::ip::ipv6{});
 }
 
 BOOST_AUTO_TEST_CASE(utilities__from_host__v4__expected_v4)
 {
-    const asio::ipv4 expected{ asio::ipv4::bytes_type{ 42, 42, 42, 42 } };
+    const system::ip::ipv4 expected{ system::ip::ipv4::bytes_type{ 42, 42, 42, 42 } };
     BOOST_REQUIRE_EQUAL(from_host("42.42.42.42"), expected);
 }
 
 BOOST_AUTO_TEST_CASE(utilities__from_host__v6__expected_v6)
 {
-    const asio::ipv6 expected
+    const system::ip::ipv6 expected
     {
-        asio::ipv6::bytes_type
+        system::ip::ipv6::bytes_type
         {
             0x42, 0x42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x42, 0x42
         }
@@ -251,34 +255,34 @@ BOOST_AUTO_TEST_CASE(utilities__from_host__v6__expected_v6)
 
 ////BOOST_AUTO_TEST_CASE(utilities__from_host__compatible__expected_v4)
 ////{
-////    const asio::address expected{ asio::ipv4{ asio::ipv4::bytes_type{ 127, 0, 1, 1 } } };
-////    BOOST_REQUIRE_EQUAL(make_address_v6("[::127.0.0.1]:8333"), expected);
+////    const system::ip::address expected{ system::ip::ipv4{ system::ip::ipv4::bytes_type{ 127, 0, 1, 1 } } };
+////    BOOST_REQUIRE_EQUAL(make_address("[::127.0.0.1]:8333"), expected);
 ////}
 ////
 ////BOOST_AUTO_TEST_CASE(utilities__from_host__mapped__expected_v4)
 ////{
-////    const asio::address expected{ asio::ipv4{ asio::ipv4::bytes_type{ 127, 0, 1, 1 } } };
-////    BOOST_REQUIRE_EQUAL(make_address_v6("[::ffff.127.0.0.1]:8333"), expected);
+////    const system::ip::address expected{ system::ip::ipv4{ system::ip::ipv4::bytes_type{ 127, 0, 1, 1 } } };
+////    BOOST_REQUIRE_EQUAL(make_address("[::ffff.127.0.0.1]:8333"), expected);
 ////}
 
 // to_literal
 
 BOOST_AUTO_TEST_CASE(utilities__to_literal__default__unspecified_v4)
 {
-    // Default asio address is ipv4.
-    const auto host = to_literal(asio::address{});
+    // Default address is ipv4.
+    const auto host = to_literal(system::ip::address{});
     BOOST_REQUIRE_EQUAL(host, "0.0.0.0");
 }
 
 BOOST_AUTO_TEST_CASE(utilities__to_literal__default_v4__unspecified_v4)
 {
-    const auto host = to_literal(asio::ipv4{});
+    const auto host = to_literal(system::ip::ipv4{});
     BOOST_REQUIRE_EQUAL(host, "0.0.0.0");
 }
 
 BOOST_AUTO_TEST_CASE(utilities__to_literal__default_v6__unspecified_literal_v6)
 {
-    const auto host = to_literal(asio::ipv6{});
+    const auto host = to_literal(system::ip::ipv6{});
     BOOST_REQUIRE_EQUAL(host, "[::]");
 }
 
@@ -299,24 +303,24 @@ BOOST_AUTO_TEST_CASE(utilities__to_literal__v6__expected_literal_v6)
 BOOST_AUTO_TEST_CASE(utilities__to_address__default__non_default)
 {
     // default address is v4 and ip_address is v6, to_address is not denormalizing.
-    BOOST_REQUIRE_NE(to_address(asio::address{}), messages::peer::ip_address{});
+    BOOST_REQUIRE_NE(to_address(system::ip::address{}), messages::peer::ip_address{});
 }
 
 BOOST_AUTO_TEST_CASE(utilities__to_address__default_v4__not_default)
 {
-    BOOST_REQUIRE_NE(to_address(asio::ipv4{}), messages::peer::ip_address{});
+    BOOST_REQUIRE_NE(to_address(system::ip::ipv4{}), messages::peer::ip_address{});
 }
 
 BOOST_AUTO_TEST_CASE(utilities__to_address__default_v6__default)
 {
-    BOOST_REQUIRE_EQUAL(to_address(asio::ipv6{}), messages::peer::ip_address{});
+    BOOST_REQUIRE_EQUAL(to_address(system::ip::ipv6{}), messages::peer::ip_address{});
 }
 
 // from_address
 
 BOOST_AUTO_TEST_CASE(utilities__from_address__default__default_v6)
 {
-    BOOST_REQUIRE_EQUAL(from_address(messages::peer::ip_address{}), asio::ipv6{});
+    BOOST_REQUIRE_EQUAL(from_address(messages::peer::ip_address{}), system::ip::ipv6{});
 }
 
 BOOST_AUTO_TEST_CASE(utilities__from_address__v6_mapped_loopback__loopback_v4)
@@ -329,17 +333,9 @@ BOOST_AUTO_TEST_CASE(utilities__from_address__v6_mapped_loopback__loopback_v4)
     const auto ip = from_address(loopback_v4);
     BOOST_REQUIRE(ip.is_v6());
 
-    // Does not recognize mapped context.
     BOOST_REQUIRE(!ip.to_v6().is_loopback());
-
-    // Cannot go straight to ip.to_v4(), must extract the ipv6 object first.
-    // address.to_v4() is not the same as ipv6.to_v4(), the former is a getter
-    // while the latter is a convertor.
     BOOST_REQUIRE(ip.to_v6().is_v4_mapped());
-
-    ////BOOST_REQUIRE(ip.to_v6().to_v4().is_loopback());
-    const auto loop = boost::asio::ip::make_address_v4(boost::asio::ip::v4_mapped, ip.to_v6());
-    BOOST_REQUIRE(loop.is_loopback());
+    BOOST_REQUIRE(ip.to_v6().to_v4().is_loopback());
 }
 
 BOOST_AUTO_TEST_CASE(utilities__from_address__loopback_v6__loopback_v6)
@@ -359,7 +355,7 @@ BOOST_AUTO_TEST_CASE(utilities__from_address__loopback_v6__loopback_v6)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__empty__false)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(!parse_authority(ip, port, cidr, ""));
@@ -367,7 +363,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__empty__false)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1"));
@@ -379,7 +375,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4__expected)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_port__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1:65535"));
@@ -391,7 +387,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_port__expected)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_cidr__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1/24"));
@@ -403,7 +399,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_cidr__expected)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_port_cidr__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1:42/24"));
@@ -415,7 +411,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_port_cidr__expected)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_invalids__false)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(!parse_authority(ip, port, cidr, "[127.0.0.1]"));
@@ -426,7 +422,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_invalids__false)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(parse_authority(ip, port, cidr, "[::1]"));
@@ -438,7 +434,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6__expected)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_port__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(parse_authority(ip, port, cidr, "[::1]:65535"));
@@ -450,7 +446,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_port__expected)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_cidr__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(parse_authority(ip, port, cidr, "[::1]/64"));
@@ -462,7 +458,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_cidr__expected)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_port_cidr__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(parse_authority(ip, port, cidr, "[::1]:42/64"));
@@ -474,7 +470,7 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_port_cidr__expected)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_invalids__false)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
     BOOST_REQUIRE(!parse_authority(ip, port, cidr, "::"));

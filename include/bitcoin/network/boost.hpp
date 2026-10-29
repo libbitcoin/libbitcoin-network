@@ -26,6 +26,8 @@
 
 #include <boost/system/error_code.hpp>
 
+#include <boost/asio.hpp>
+
 /// SSL is always defined, must be externally linked if !HAVE_SSL.
 #if defined(HAVE_SSL)
     #include <bitcoin/network/ssl/openssl/ssl.h>

@@ -53,7 +53,7 @@ bool authority::operator==(const messages::peer::address_item& other) const NOEX
     if ((!is_zero(port()) && !is_zero(other.port)) && port() != other.port)
         return false;
 
-    using namespace system::config;
+    using namespace system::ip;
     const auto host = denormalize(from_address(messages::peer::to_ip_address(other.address)));
 
     // if both zero cidr, match hosts, otherwise host membership in subnet.
