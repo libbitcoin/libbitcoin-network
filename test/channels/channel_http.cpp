@@ -85,6 +85,15 @@ static const std::string http_unknown_method_request
     "\r\n"
 };
 
+static const std::string http_conflicting_length_request
+{
+    "POST / HTTP/1.1\r\n"
+    "Host: example.com\r\n"
+    "Content-Length: 1\r\n"
+    "Content-Length: 2\r\n"
+    "\r\n"
+};
+
 static const std::string http_get_request
 {
     "GET /index HTTP/1.1\r\n"
@@ -1005,6 +1014,26 @@ BOOST_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_get__unauthorized, cr
     send(http_get_request);
     BOOST_REQUIRE_EQUAL(receive().result_int(), 401u);
     BOOST_REQUIRE_EQUAL(http_await(stopped), error::unauthorized);
+}
+
+BOOST_FIXTURE_TEST_CASE(channel_http__resume__conflicting_content_length__bad_request_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_conflicting_length_request);
+    const auto response = receive();
+    BOOST_REQUIRE_EQUAL(response.result_int(), 400u);
+    BOOST_REQUIRE(!response.keep_alive());
+    BOOST_REQUIRE_EQUAL(http_await(stopped), error::multiple_content_length);
+}
+
+BOOST_FIXTURE_TEST_CASE(channel_http__resume__unknown_method__not_implemented_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_unknown_method_request);
+    const auto response = receive();
+    BOOST_REQUIRE_EQUAL(response.result_int(), 501u);
+    BOOST_REQUIRE(!response.keep_alive());
+    BOOST_REQUIRE_EQUAL(http_await(stopped), error::bad_method);
 }
 
 BOOST_FIXTURE_TEST_CASE(channel_http__resume__authorized_get__permitted_methods, credentialed_channel_fixture)

@@ -26,7 +26,10 @@ namespace network {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+using namespace system;
 using namespace std::placeholders;
+
+constexpr size_t drain_size = 1024;
 
 // The socket does not (must not) stop itself.
 
@@ -57,6 +60,7 @@ void socket::do_stop() NOEXCEPT
     }
 
     watch_->stop();
+    timer_->stop();
 
     boost_code ignore{};
     auto& layer = get_base();
@@ -78,7 +82,28 @@ void socket::lazy_stop() NOEXCEPT
 
     // Async stop is dispatched to strand to protect the socket.
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_ws_stop, shared_from_this()));
+        std::bind(&socket::do_lazy_stop, shared_from_this()));
+}
+
+// private
+void socket::do_lazy_stop() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // The peer is not required to answer a close, so the wait is bounded.
+    if (!is_zero(timer_->timeout().count()))
+        timer_->start(std::bind(&socket::handle_lazy_timer,
+            shared_from_this(), _1));
+
+    do_ws_stop();
+}
+
+// private
+// Socket stop cancels the pending close, which completes its handler.
+void socket::handle_lazy_timer(const code& ec) NOEXCEPT
+{
+    if (!ec)
+        stop();
 }
 
 // private
@@ -113,7 +138,7 @@ void socket::do_ssl_stop() NOEXCEPT
     BC_ASSERT(stranded());
     if (!secure())
     {
-        do_stop();
+        do_linger();
         return;
     }
 
@@ -129,7 +154,54 @@ void socket::handle_ssl_close(const boost_code& ec) NOEXCEPT
     if (ec && ec != boost::asio::error::eof && !error::asio_is_canceled(ec))
         logx("ssl_stop", ec);
 
-    do_stop();
+    do_linger();
+}
+
+// private
+// Lingering close (rfc9112 9.6): send is closed and receive is drained to the
+// peer's close, so unread bytes do not reset the connection under a response.
+void socket::do_linger() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    boost_code ignore{};
+    auto& layer = get_base();
+    layer.cancel(ignore);
+    layer.shutdown(asio::socket::shutdown_send, ignore);
+    do_drain(emplace_shared<data_chunk>(drain_size));
+}
+
+// private
+void socket::do_drain(const chunk_ptr& sink) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    try
+    {
+        get_base().async_read_some(boost::asio::buffer(*sink),
+            std::bind(&socket::handle_drain,
+                shared_from_this(), _1, sink));
+    }
+    catch (const std::exception& e)
+    {
+        LOGF("Exception @ do_drain: " << e.what());
+        do_stop();
+    }
+}
+
+// private
+void socket::handle_drain(const boost_code& ec,
+    const chunk_ptr& sink) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        do_stop();
+        return;
+    }
+
+    do_drain(sink);
 }
 
 BC_POP_WARNING()

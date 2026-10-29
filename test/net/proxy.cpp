@@ -28,6 +28,7 @@ class mock_proxy
 public:
     using proxy::poll;
     using proxy::read;
+    using proxy::lazy;
     using proxy::accept_websocket;
 
     void write_ws(const asio::const_buffer& in, bool binary, count_handler&& handler) NOEXCEPT
@@ -451,10 +452,12 @@ struct loopback_fixture
 {
     DELETE_COPY_MOVE(loopback_fixture);
 
-    loopback_fixture(uint32_t rate_limit=0)
+    loopback_fixture(uint32_t rate_limit=0,
+        const steady_clock::duration& connect_timeout={})
     {
         const socket::parameters params
         {
+            .connect_timeout = connect_timeout,
             .maximum_request = 1'000'000,
             .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
         };
@@ -586,8 +589,8 @@ struct throttled_fixture
 struct websocket_fixture
   : loopback_fixture
 {
-    websocket_fixture()
-      : stream{ std::move(client) }
+    websocket_fixture(const steady_clock::duration& connect_timeout={})
+      : loopback_fixture(0, connect_timeout), stream{ std::move(client) }
     {
         const awaiter<code> upgraded{};
         const awaiter<code> accepted{};
@@ -610,6 +613,15 @@ struct websocket_fixture
     ws::socket stream;
     code upgrade_result{};
     code accept_result{};
+};
+
+struct bounded_websocket_fixture
+  : websocket_fixture
+{
+    bounded_websocket_fixture()
+      : websocket_fixture(milliseconds(100))
+    {
+    }
 };
 
 // properties
@@ -852,6 +864,43 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_end_of_file, loopba
     boost_code ec{};
     client.read_some(boost::asio::buffer(&byte, 1), ec);
     BOOST_REQUIRE(ec == boost::asio::error::eof);
+}
+
+// The lingering close drains unread bytes, so the client is not reset.
+BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_unread_bytes__client_end_of_file, loopback_fixture)
+{
+    boost_code ec{};
+    const std::string unread{ "unread" };
+    boost::asio::write(client, boost::asio::buffer(unread), ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto stopped = subscribe();
+    channel->stop(error::channel_expired);
+    BOOST_REQUIRE_EQUAL(stopped.get(), error::channel_expired);
+
+    char byte{};
+    client.read_some(boost::asio::buffer(&byte, 1), ec);
+    BOOST_REQUIRE(ec == boost::asio::error::eof);
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__lazy__service_stopped__false, loopback_fixture)
+{
+    BOOST_REQUIRE(!channel->lazy(error::service_stopped));
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__lazy__peer_disconnect__false, loopback_fixture)
+{
+    BOOST_REQUIRE(!channel->lazy(error::peer_disconnect));
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__lazy__channel_expired__true, loopback_fixture)
+{
+    BOOST_REQUIRE(channel->lazy(error::channel_expired));
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__lazy__bad_content_length__true, loopback_fixture)
+{
+    BOOST_REQUIRE(channel->lazy(error::bad_content_length));
 }
 
 // http
@@ -1185,6 +1234,19 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__client_receives_close, we
     stream.read(in, ec);
     BOOST_REQUIRE(ec == boost::beast::websocket::error::closed);
     BOOST_REQUIRE_EQUAL(stopped.get(), error::websocket_closed);
+}
+
+// The client does not answer the close frame.
+BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__websocket_unanswered__client_end_of_file, bounded_websocket_fixture)
+{
+    const auto stopped = subscribe();
+    channel->stop(error::channel_expired);
+    BOOST_REQUIRE_EQUAL(stopped.get(), error::channel_expired);
+
+    boost_code ec{};
+    std::array<char, 64> bytes{};
+    while (!ec) stream.next_layer().read_some(boost::asio::buffer(bytes), ec);
+    BOOST_REQUIRE(ec == boost::asio::error::eof);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
