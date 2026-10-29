@@ -1245,30 +1245,30 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__client_receives_close, bo
     BOOST_REQUIRE_EQUAL(stopped.get(), error::websocket_closed);
 }
 
-// A zero connect timeout closes without waiting on the peer.
+boost_code read_some_until(auto& stream) NOEXCEPT
+{
+    std::array<char, 64> bytes{};
+    boost_code ec{};
+    while (!ec)
+        stream.next_layer().read_some(boost::asio::buffer(bytes), ec);
+
+    return ec;
+}
+
 BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__zero_connect_timeout__client_end_of_file, websocket_fixture)
 {
     const auto stopped = subscribe();
     channel->stop(error::websocket_closed);
     BOOST_REQUIRE_EQUAL(stopped.get(), error::websocket_closed);
-
-    boost_code ec{};
-    std::array<char, 64> bytes{};
-    while (!ec) stream.next_layer().read_some(boost::asio::buffer(bytes), ec);
-    BOOST_REQUIRE(ec == boost::asio::error::eof);
+    BOOST_REQUIRE(read_some_until(stream) == boost::asio::error::eof);
 }
 
-// The client does not answer the close frame.
 BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__websocket_unanswered__client_end_of_file, bounded_websocket_fixture)
 {
     const auto stopped = subscribe();
     channel->stop(error::channel_expired);
     BOOST_REQUIRE_EQUAL(stopped.get(), error::channel_expired);
-
-    boost_code ec{};
-    std::array<char, 64> bytes{};
-    while (!ec) stream.next_layer().read_some(boost::asio::buffer(bytes), ec);
-    BOOST_REQUIRE(ec == boost::asio::error::eof);
+    BOOST_REQUIRE(read_some_until(stream) == boost::asio::error::eof);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
