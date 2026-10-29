@@ -154,13 +154,11 @@ public:
             const auto longer = !is_zero(flags & stream::flag_long);
             const auto length_size = longer ? sizeof(uint64_t) : one;
             read_exactly(length_size,
-                [this, handler, flags, longer](const boost_code& code)
+                [this, handler, flags](const boost_code& code)
             {
                 if (code) { handler(code, flags, {}); return; }
-                const size_t length = longer ?
-                    system::from_big_endian<uint64_t>(
-                        system::unsafe_array_cast<uint8_t, 8>(scratch_.data())) :
-                    scratch_.front();
+                const auto size = system::from_big_endian<uint64_t>(scratch_);
+                const auto length = system::possible_narrow_cast<size_t>(size);
                 read_exactly(length,
                     [this, handler, flags](const boost_code& done)
                 {
