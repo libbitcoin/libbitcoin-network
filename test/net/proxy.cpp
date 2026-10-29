@@ -28,6 +28,7 @@ class mock_proxy
 public:
     using proxy::poll;
     using proxy::read;
+    using proxy::lazy;
     using proxy::accept_websocket;
 
     void write_ws(const asio::const_buffer& in, bool binary, count_handler&& handler) NOEXCEPT
@@ -863,6 +864,43 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_end_of_file, loopba
     boost_code ec{};
     client.read_some(boost::asio::buffer(&byte, 1), ec);
     BOOST_REQUIRE(ec == boost::asio::error::eof);
+}
+
+// The lingering close drains unread bytes, so the client is not reset.
+BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_unread_bytes__client_end_of_file, loopback_fixture)
+{
+    boost_code ec{};
+    const std::string unread{ "unread" };
+    boost::asio::write(client, boost::asio::buffer(unread), ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto stopped = subscribe();
+    channel->stop(error::channel_expired);
+    BOOST_REQUIRE_EQUAL(stopped.get(), error::channel_expired);
+
+    char byte{};
+    client.read_some(boost::asio::buffer(&byte, 1), ec);
+    BOOST_REQUIRE(ec == boost::asio::error::eof);
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__lazy__service_stopped__false, loopback_fixture)
+{
+    BOOST_REQUIRE(!channel->lazy(error::service_stopped));
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__lazy__peer_disconnect__false, loopback_fixture)
+{
+    BOOST_REQUIRE(!channel->lazy(error::peer_disconnect));
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__lazy__channel_expired__true, loopback_fixture)
+{
+    BOOST_REQUIRE(channel->lazy(error::channel_expired));
+}
+
+BOOST_FIXTURE_TEST_CASE(proxy__lazy__bad_content_length__true, loopback_fixture)
+{
+    BOOST_REQUIRE(channel->lazy(error::bad_content_length));
 }
 
 // http

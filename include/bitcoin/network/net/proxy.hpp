@@ -139,6 +139,9 @@ protected:
     /// Stranded handler invoked from stop().
     virtual void stopping(const code& ec) NOEXCEPT;
 
+    /// True if the stop closes the connection gracefully.
+    virtual bool lazy(const code& ec) const NOEXCEPT;
+
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;
 

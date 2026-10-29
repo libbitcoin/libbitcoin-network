@@ -26,6 +26,7 @@ class mock_channel_peer
 public:
     using channel_peer::channel_peer;
     using channel_peer::resume;
+    using channel_peer::lazy;
 
     // Call must be stranded.
     void subscribe_stop1(result_handler handler) NOEXCEPT
@@ -74,6 +75,23 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__default__false)
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
+}
+
+BOOST_AUTO_TEST_CASE(channel_peer__lazy__channel_expired__false)
+{
+    const logger log{};
+    threadpool pool(1);
+    const settings set(bc::system::chain::selection::mainnet);
+    const network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
+
+    const auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), params);
+    const auto channel_ptr = std::make_shared<mock_channel_peer>(log, socket_ptr, 42, set, options);
+    BOOST_REQUIRE(!channel_ptr->lazy(error::channel_expired));
     channel_ptr->stop(error::invalid_magic);
 }
 

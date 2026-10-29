@@ -150,6 +150,9 @@ protected:
     /// Stranded handler invoked from channel::stop().
     void stopping(const code& ec) NOEXCEPT override;
 
+    /// A peer stop never closes gracefully.
+    bool lazy(const code& ec) const NOEXCEPT override;
+
     /// Construct a frame stamped with parse context.
     virtual messages::peer::frame_ptr create_frame() const NOEXCEPT;
 

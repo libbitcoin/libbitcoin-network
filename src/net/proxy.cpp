@@ -108,27 +108,32 @@ void proxy::handle_stop_write(const code&, size_t,
 // Thread safe (called directly from stop or from the strand).
 void proxy::finish_stop(const code& ec) NOEXCEPT
 {
-    // Client websocket or timer initated (when ws) stop is async (graceful).
-    // error::service_stopped will invoke socket stop() below, which will
-    // immediately terminate outstanding lazy_stop().
-    if (ec == error::websocket_closed ||
-        ec == error::channel_expired ||
-        ec == error::channel_inactive)
-    {
-        // Stop the read loop, stop accepting new work, cancel pending work.
-        // Allows for graceful ws/ssl::close, which would hang threadpool if
-        // attempted within socket::stop(), as it issues a follow-on iocontext
-        // job. A subsequent call to socket::stop() will terminate directly.
+    // Stop the read loop, stop accepting new work, cancel pending work.
+    // A graceful close issues follow-on iocontext jobs, so it is not performed
+    // within socket::stop(), and a subsequent socket::stop() terminates it.
+    if (lazy(ec))
         socket_->lazy_stop();
-    }
     else
-    {
-        // Stop the read loop, stop accepting new work, cancel pending work.
         socket_->stop();
-    }
 
     boost::asio::post(strand(),
         std::bind(&proxy::stopping, shared_from_this(), ec));
+}
+
+// A stop for a failed or canceled transport has no peer to close with.
+bool proxy::lazy(const code& ec) const NOEXCEPT
+{
+    return !(ec == error::service_stopped
+        || ec == error::channel_stopped
+        || ec == error::operation_canceled
+        || ec == error::operation_failed
+        || ec == error::operation_timeout
+        || ec == error::peer_disconnect
+        || ec == error::bad_stream
+        || ec == error::end_of_stream
+        || ec == error::partial_message
+        || ec == error::short_read
+        || ec == error::tls_stream_truncated);
 }
 
 // protected

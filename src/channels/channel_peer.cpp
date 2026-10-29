@@ -55,6 +55,11 @@ void channel_peer::stopping(const code& ec) NOEXCEPT
     dispatcher_.stop(ec);
 }
 
+bool channel_peer::lazy(const code&) const NOEXCEPT
+{
+    return false;
+}
+
 void channel_peer::resume() NOEXCEPT
 {
     BC_ASSERT(stranded());
