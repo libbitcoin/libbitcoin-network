@@ -586,6 +586,15 @@ struct throttled_fixture
     }
 };
 
+struct bounded_fixture
+  : loopback_fixture
+{
+    bounded_fixture()
+      : loopback_fixture(0, milliseconds(100))
+    {
+    }
+};
+
 struct websocket_fixture
   : loopback_fixture
 {
@@ -867,7 +876,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_end_of_file, loopba
 }
 
 // The lingering close drains unread bytes, so the client is not reset.
-BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_unread_bytes__client_end_of_file, loopback_fixture)
+BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_unread_bytes__client_end_of_file, bounded_fixture)
 {
     boost_code ec{};
     const std::string unread{ "unread" };
@@ -1224,7 +1233,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__write_http__websocket_json_body__client_receives_
     BOOST_REQUIRE_EQUAL(written.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__client_receives_close, websocket_fixture)
+BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__client_receives_close, bounded_websocket_fixture)
 {
     const auto stopped = subscribe();
     channel->stop(error::websocket_closed);
@@ -1234,6 +1243,19 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__client_receives_close, we
     stream.read(in, ec);
     BOOST_REQUIRE(ec == boost::beast::websocket::error::closed);
     BOOST_REQUIRE_EQUAL(stopped.get(), error::websocket_closed);
+}
+
+// A zero connect timeout closes without waiting on the peer.
+BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__zero_connect_timeout__client_end_of_file, websocket_fixture)
+{
+    const auto stopped = subscribe();
+    channel->stop(error::websocket_closed);
+    BOOST_REQUIRE_EQUAL(stopped.get(), error::websocket_closed);
+
+    boost_code ec{};
+    std::array<char, 64> bytes{};
+    while (!ec) stream.next_layer().read_some(boost::asio::buffer(bytes), ec);
+    BOOST_REQUIRE(ec == boost::asio::error::eof);
 }
 
 // The client does not answer the close frame.
