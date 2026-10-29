@@ -312,8 +312,7 @@ BOOST_AUTO_TEST_CASE(tls_socket__accept__absent_client_certificate__failure)
     BOOST_REQUIRE_EQUAL(server.accept_result(), error::tls_alert_certificate_required);
 }
 
-// A peer is not required to answer close_notify (rfc8446 6.1).
-BOOST_AUTO_TEST_CASE(tls_socket__stop__lazy_stop_unanswered__closed)
+BOOST_AUTO_TEST_CASE(tls_socket__lazy_stop__zero_connect_timeout__closed_without_close_notify)
 {
     server_fixture server{ false };
     tls_peer peer{ client_options(server, false), server.port };
@@ -323,16 +322,14 @@ BOOST_AUTO_TEST_CASE(tls_socket__stop__lazy_stop_unanswered__closed)
 
     server.server->lazy_stop();
     BOOST_REQUIRE(server.server->stopped());
-    BOOST_REQUIRE(!peer.receive(5s, true));
-    BOOST_REQUIRE(peer.client.is_closed());
-    BOOST_REQUIRE(!peer.receive(200ms));
 
-    server.server->stop();
     const auto closed = peer.receive(5s);
     peer.socket.close();
     BOOST_REQUIRE(closed);
+    BOOST_REQUIRE(!peer.client.is_closed());
 }
 
+// A peer is not required to answer close_notify (rfc8446 6.1).
 BOOST_AUTO_TEST_CASE(tls_socket__lazy_stop__unanswered_connect_timeout__closed)
 {
     server_fixture server{ false, 100ms };

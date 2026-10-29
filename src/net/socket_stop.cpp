@@ -91,9 +91,14 @@ void socket::do_lazy_stop() NOEXCEPT
     BC_ASSERT(stranded());
 
     // The peer is not required to answer a close, so the wait is bounded.
-    if (!is_zero(timer_->timeout().count()))
-        timer_->start(std::bind(&socket::handle_lazy_timer,
-            shared_from_this(), _1));
+    if (is_zero(timer_->timeout().count()))
+    {
+        do_stop();
+        return;
+    }
+
+    timer_->start(std::bind(&socket::handle_lazy_timer,
+        shared_from_this(), _1));
 
     do_ws_stop();
 }
@@ -163,13 +168,6 @@ void socket::handle_ssl_close(const boost_code& ec) NOEXCEPT
 void socket::do_linger() NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // The drain is bounded only by the lazy timer, so without it close now.
-    if (is_zero(timer_->timeout().count()))
-    {
-        do_stop();
-        return;
-    }
 
     boost_code ignore{};
     auto& layer = get_base();
