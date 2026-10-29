@@ -619,7 +619,7 @@ struct bounded_websocket_fixture
   : websocket_fixture
 {
     bounded_websocket_fixture()
-      : websocket_fixture(100ms)
+      : websocket_fixture(milliseconds(100))
     {
     }
 };
