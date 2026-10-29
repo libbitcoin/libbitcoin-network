@@ -164,6 +164,13 @@ void socket::do_linger() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
+    // The drain is bounded only by the lazy timer, so without it close now.
+    if (is_zero(timer_->timeout().count()))
+    {
+        do_stop();
+        return;
+    }
+
     boost_code ignore{};
     auto& layer = get_base();
     layer.cancel(ignore);
