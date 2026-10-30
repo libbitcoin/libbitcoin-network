@@ -127,7 +127,7 @@ static_assert(is_same_type<optional<4.2>::tag, optional_tag>);
 static_assert(is_same_type<optional<4.2f>::type, number_t>);
 static_assert(is_same_type<optional<4.2f>::tag, optional_tag>);
 static_assert(is_same_type<decltype(optional<4.2>{}.default_value()), number_t>);
-static_assert(optional<4.2>{}.default_value() == 4.2);
+static_assert(optional<4.5>{}.default_value() == 4.5);
 
 static_assert(!is_optional<array_t>);
 static_assert(!is_optional<object_t>);
@@ -178,7 +178,7 @@ static_assert(is_same_type<nullopt<"default"_t>::tag, nullopt_tag>);
 static_assert(is_same_type<nullopt<true>::tag, nullopt_tag>);
 static_assert(is_same_type<nullopt<4.2>::tag, nullopt_tag>);
 
-static_assert(nullopt<4.2>::default_value() == 4.2);
+static_assert(nullopt<4.5>::default_value() == 4.5);
 static_assert(nullopt<true>::default_value());
 static_assert(nullopt<42_i32>::default_value() == 42);
 
