@@ -21,7 +21,6 @@
 BOOST_AUTO_TEST_SUITE(config_address_tests)
 
 using namespace network::config;
-using namespace boost::program_options;
 
 // tools.ietf.org/html/rfc4291#section-2.2
 #define BC_AUTHORITY_IPV4_ADDRESS "1.2.240.1"
@@ -92,62 +91,62 @@ BOOST_AUTO_TEST_CASE(address__construct__default__false)
 
 BOOST_AUTO_TEST_CASE(address__construct__bogus_ip__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("bogus"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("bogus"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__bogus_port__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("[::]:bogus"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("[::]:bogus"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__invalid_ipv4__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("999.999.999.999"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("999.999.999.999"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__invalid_ipv6__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("[:::]"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("[:::]"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__invalid_port__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("[::]:12345678901"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("[::]:12345678901"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__mapped__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("[::1.2.240.1]"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("[::1.2.240.1]"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__bogus_timestamp__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/test/123"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/test/123"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__bogus_services__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/123/test"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/123/test"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__extra_token__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/123/456/"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/123/456/"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__empty_service__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/123/"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/123/"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__empty_timestamp_service__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242//"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242//"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__no_timestamp_service__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__timestamp_service__valid)
@@ -475,17 +474,17 @@ BOOST_AUTO_TEST_CASE(address__to_string__i2p__round_trips)
 BOOST_AUTO_TEST_CASE(address__construct__onion_bad_checksum__throws_invalid_option)
 {
     // The leading character of the public key is altered.
-    BOOST_REQUIRE_THROW(address host("qg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("qg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__onion_short__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscry.onion"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscry.onion"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__i2p_short__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkd.b32.i2p"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host("ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkd.b32.i2p"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__onion_upper_case__torv3)
@@ -497,12 +496,12 @@ BOOST_AUTO_TEST_CASE(address__construct__onion_upper_case__torv3)
 
 BOOST_AUTO_TEST_CASE(address__construct__onion_invalid_port__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host(BC_ADDRESS_ONION ":bogus"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host(BC_ADDRESS_ONION ":bogus"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(address__construct__i2p_invalid_port__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host(BC_ADDRESS_I2P ":65536"), invalid_option_value);
+    BOOST_REQUIRE_THROW(address host(BC_ADDRESS_I2P ":65536"), istream_exception);
 }
 
 // to_address_item

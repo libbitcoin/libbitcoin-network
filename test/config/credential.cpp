@@ -22,7 +22,6 @@
 BOOST_AUTO_TEST_SUITE(credential_tests)
 
 using namespace config;
-using namespace boost::program_options;
 
 // sha256("Basic " + base64("username:password"))
 constexpr auto test_digest = system::base16_array("4240434cbe9ea94026f98f66517966155d06954b15b2f8912f55948dd70569a1");
@@ -43,12 +42,12 @@ BOOST_AUTO_TEST_CASE(credential__construct__default__empty)
 
 BOOST_AUTO_TEST_CASE(credential__construct__untokenized__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(credential instance("username"), invalid_option_value);
+    BOOST_REQUIRE_THROW(credential instance("username"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(credential__construct__overtokenized__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(credential instance("username:password:getblock:extra"), invalid_option_value);
+    BOOST_REQUIRE_THROW(credential instance("username:password:getblock:extra"), istream_exception);
 }
 
 BOOST_AUTO_TEST_CASE(credential__construct__empty_tokens__expected_digest)
