@@ -551,7 +551,7 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
                 return error::channel_timeout;
         }
 
-#if !defined(HAVE_MSC)
+#if !defined(HAVE_WINDOWS)
     }
     if (ec.category() == boost::asio::error::get_netdb_category())
     {
@@ -568,7 +568,7 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
                 return error::operation_failed;
         }
 
-#if !defined(HAVE_MSC)
+#if !defined(HAVE_WINDOWS)
     }
     if (ec.category() == boost::asio::error::get_addrinfo_category())
     {

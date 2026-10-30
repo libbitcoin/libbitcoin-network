@@ -22,7 +22,7 @@ using namespace network::http;
 
 BOOST_FIXTURE_TEST_SUITE(target_tests, test::directory_setup_fixture)
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     static const std::string root{ "c:\\home\\name" };
     static const std::string norm{ "c:/home/name" };
 #elif defined(HAVE_APPLE)

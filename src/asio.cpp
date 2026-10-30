@@ -24,7 +24,7 @@
     #include <openssl/crypto.h>
 #endif
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     #include <winsock2.h>
     #include <mstcpip.h>
 #elif defined(HAVE_APPLE)
@@ -50,7 +50,7 @@ bool half_closed(socket& sock) NOEXCEPT
     if (!sock.is_open())
         return false;
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     TCP_INFO_v0 info{};
     DWORD version{};
     DWORD size{};

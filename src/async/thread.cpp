@@ -20,7 +20,7 @@
 
 #include <thread>
 
-#ifdef HAVE_MSC
+#ifdef HAVE_WINDOWS
     #include <windows.h>
 #else
     #include <unistd.h>
@@ -34,7 +34,7 @@
     #include <sys/syslimits.h>
 #endif
 
-#ifdef HAVE_MSC
+#ifdef HAVE_WINDOWS
     // A few more extreme values are not mapped.
     // #define THREAD_PRIORITY_LOWEST          -2
     // #define THREAD_PRIORITY_BELOW_NORMAL    -1
@@ -145,7 +145,7 @@ void set_processing_priority(processing_priority priority) NOEXCEPT
     // TODO: handle error conditions.
     const auto prioritization = get_processing_priority(priority);
 
-#if defined(HAVE_MSC)
+#if defined(HAVE_WINDOWS)
     SetThreadPriority(GetCurrentThread(), prioritization);
 
 #elif defined(HAVE_APPLE)
@@ -164,7 +164,7 @@ void set_processing_priority(processing_priority priority) NOEXCEPT
 // Raise the open file descriptor soft limit to the hard limit.
 void raise_descriptor_limit() NOEXCEPT
 {
-#if !defined(HAVE_MSC)
+#if !defined(HAVE_WINDOWS)
     rlimit limit{};
     if (getrlimit(RLIMIT_NOFILE, &limit) != 0)
         return;

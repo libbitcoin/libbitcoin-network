@@ -31,7 +31,7 @@ namespace network {
 inline bool local_time(tm& out_local, time_t time) NOEXCEPT
 {
     // std::localtime not threadsafe due to static buffer, use localtime_s.
-#ifdef HAVE_MSC
+#ifdef HAVE_WINDOWS
     // proprietary msvc implemention, parameters swapped, returns errno_t.
     return is_zero(localtime_s(&out_local, &time));
 #else
@@ -43,7 +43,7 @@ inline bool local_time(tm& out_local, time_t time) NOEXCEPT
 inline bool zulu_time(tm& out_zulu, time_t time) NOEXCEPT
 {
     // std::gmtime is not threadsafe due to static buffer, use gmtime_s.
-#ifdef HAVE_MSC
+#ifdef HAVE_WINDOWS
     // proprietary msvc implemention, parameters swapped, returns errno_t.
     return is_zero(gmtime_s(&out_zulu, &time));
 #else
