@@ -102,14 +102,6 @@ struct value_t
     value_t(const any_t& value) NOEXCEPT : inner_{ value } {}
     value_t(any_t&& value) NOEXCEPT : inner_{ std::move(value) } {}
 
-#if defined (HAVE_XCODE)
-    value_t(size_t value) NOEXCEPT : inner_{
-        system::possible_wide_cast<uint64_t>(value) } {}
-    value_t(signed_size_t value) NOEXCEPT : inner_{
-        system::possible_wide_cast<int64_t>(value) } {
-    }
-#endif
-
     /// Forwarding constructors for in-place variant construction.
     FORWARD_VARIANT_CONSTRUCT(value_t, inner_)
     FORWARD_VARIANT_ASSIGNMENT(value_t, inner_)
@@ -128,19 +120,6 @@ struct value_t
     ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint64_t, inner_)
     ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, json_t, inner_)
     ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, any_t, inner_)
-
-#if defined (HAVE_XCODE)
-    constexpr value_t& operator=(size_t value) NOEXCEPT
-    {
-        inner_ = system::possible_wide_cast<uint64_t>(value);
-        return *this;
-    }
-    constexpr value_t& operator=(signed_size_t value) NOEXCEPT
-    {
-        inner_ = system::possible_wide_cast<int64_t>(value);
-        return *this;
-    }
-#endif
 
     inner_t& value() NOEXCEPT
     {
