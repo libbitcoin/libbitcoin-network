@@ -51,6 +51,7 @@ src_libbitcoin_network_la_LIBADD = \
 
 src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/asio.cpp \
+    ${srcdir}/../../src/define.cpp \
     ${srcdir}/../../src/error.cpp \
     ${srcdir}/../../src/memory.cpp \
     ${srcdir}/../../src/net.cpp \
