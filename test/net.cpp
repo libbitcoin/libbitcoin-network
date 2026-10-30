@@ -152,7 +152,7 @@ private:
 BOOST_AUTO_TEST_CASE(net__network_settings__unstarted__expected)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     BOOST_REQUIRE_EQUAL(set.threads, 0u);
 
     net net(set, log);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(net__network_settings__unstarted__expected)
 BOOST_AUTO_TEST_CASE(net__address_count__unstarted__zero)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     BOOST_REQUIRE_EQUAL(net.address_count(), 0u);
 }
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(net__address_count__unstarted__zero)
 BOOST_AUTO_TEST_CASE(net__address_counts__unstarted__zeros)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     BOOST_REQUIRE(net.address_counts() == config::address_counts{});
 }
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(net__address_counts__unstarted__zeros)
 BOOST_AUTO_TEST_CASE(net__dump_addresses__unstarted__service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
 
     std::promise<std::pair<code, address_cptr>> promise{};
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(net__dump_addresses__unstarted__service_stopped)
 BOOST_AUTO_TEST_CASE(net__channel_count__unstarted__zero)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     BOOST_REQUIRE_EQUAL(net.channel_count(), 0u);
 }
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(net__channel_count__unstarted__zero)
 BOOST_AUTO_TEST_CASE(net__connect__unstarted__service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
 
     std::promise<std::pair<code, channel::ptr>> promise{};
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(net__connect__unstarted__service_stopped)
 BOOST_AUTO_TEST_CASE(net__subscribe_connect__closed___service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     net.close();
 
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(net__subscribe_connect__closed___service_stopped)
 BOOST_AUTO_TEST_CASE(net__subscribe_connect__unclosed___success)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
 
     std::promise<std::pair<code, channel::ptr>> promise_handler{};
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(net__subscribe_connect__unclosed___success)
 BOOST_AUTO_TEST_CASE(net__subscribe_close__closed__service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     net.close();
 
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(net__subscribe_close__closed__service_stopped)
 BOOST_AUTO_TEST_CASE(net__subscribe_close__unclosed___success)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
 
     std::promise<code> promise_handler;
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(net__subscribe_close__unclosed___success)
 BOOST_AUTO_TEST_CASE(net__start__outbound_connections_but_no_peers_no_seeds__seeding_unsuccessful)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.seeds.clear();
     BOOST_REQUIRE(set.manual.peers.empty());
 
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(net__start__outbound_connections_but_no_peers_no_seeds__see
 BOOST_AUTO_TEST_CASE(net__run__closed__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net net(set, log);
     net.close();
 
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(net__run__closed__service_stopped)
 BOOST_AUTO_TEST_CASE(net__run__started_no_outbound_connections__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.connections = 0;
     set.outbound.seeds.clear();
     BOOST_REQUIRE(set.manual.peers.empty());
@@ -414,7 +414,10 @@ class mock_settings final
   : public settings
 {
 public:
-    using settings::settings;
+    mock_settings(const settings& base) NOEXCEPT
+      : settings(base)
+    {
+    }
 
     // Override derivative name, using directory as file.
     std::filesystem::path file() const NOEXCEPT override
@@ -426,7 +429,7 @@ public:
 BOOST_AUTO_TEST_CASE(net__run__started_no_peers_no_seeds_one_connection_one_batch__success)
 {
     const logger log{};
-    mock_settings set(selection::mainnet);
+    mock_settings set(test::network_settings());
     BOOST_REQUIRE(set.manual.peers.empty());
 
     // This implies seeding would be required.
@@ -469,7 +472,7 @@ BOOST_AUTO_TEST_CASE(net__run__started_no_peers_no_seeds_one_connection_one_batc
 BOOST_AUTO_TEST_CASE(net__start__success_success__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_start<error::success, error::success> net(set, log);
 
     std::promise<code> start;
@@ -485,7 +488,7 @@ BOOST_AUTO_TEST_CASE(net__start__success_success__success)
 BOOST_AUTO_TEST_CASE(net__start__unknown_success__unknown)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_start<error::unknown, error::success> net(set, log);
 
     std::promise<code> start;
@@ -501,7 +504,7 @@ BOOST_AUTO_TEST_CASE(net__start__unknown_success__unknown)
 BOOST_AUTO_TEST_CASE(net__start__success_unknown__unknown)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_start<error::success, error::unknown> net(set, log);
 
     std::promise<code> start;
@@ -517,7 +520,7 @@ BOOST_AUTO_TEST_CASE(net__start__success_unknown__unknown)
 BOOST_AUTO_TEST_CASE(net__start__unknown_unknown__unknown)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_start<error::unknown, error::unknown> net(set, log);
 
     std::promise<code> start;
@@ -533,7 +536,7 @@ BOOST_AUTO_TEST_CASE(net__start__unknown_unknown__unknown)
 BOOST_AUTO_TEST_CASE(net__start__file_load_success_success__file_load)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_start<error::success, error::success> net(set, log, error::file_load);
 
     std::promise<code> start;
@@ -549,7 +552,7 @@ BOOST_AUTO_TEST_CASE(net__start__file_load_success_success__file_load)
 BOOST_AUTO_TEST_CASE(net__start__file_load_unknown_success__unknown)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_start<error::unknown, error::success> net(set, log, error::file_load);
 
     std::promise<code> start;
@@ -565,7 +568,7 @@ BOOST_AUTO_TEST_CASE(net__start__file_load_unknown_success__unknown)
 BOOST_AUTO_TEST_CASE(net__start__file_load_success_unknown__file_load)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_start<error::success, error::unknown> net(set, log, error::file_load);
 
     std::promise<code> start;
@@ -581,7 +584,7 @@ BOOST_AUTO_TEST_CASE(net__start__file_load_success_unknown__file_load)
 BOOST_AUTO_TEST_CASE(net__start__file_load_unknown_unknown__unknown)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_start<error::unknown, error::unknown> net(set, log, error::file_load);
 
     std::promise<code> start;
@@ -599,7 +602,7 @@ BOOST_AUTO_TEST_CASE(net__start__file_load_unknown_unknown__unknown)
 BOOST_AUTO_TEST_CASE(net__run__stopped_success_success__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_run<error::success, error::success> net(set, log, false);
 
     std::promise<code> run;
@@ -614,7 +617,7 @@ BOOST_AUTO_TEST_CASE(net__run__stopped_success_success__service_stopped)
 BOOST_AUTO_TEST_CASE(net__run__started_success_success__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_run<error::success, error::success> net(set, log, true);
 
     std::promise<code> run;
@@ -629,7 +632,7 @@ BOOST_AUTO_TEST_CASE(net__run__started_success_success__success)
 BOOST_AUTO_TEST_CASE(net__run__stopped_unknown_success__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_run<error::unknown, error::success> net(set, log, false);
 
     std::promise<code> run;
@@ -644,7 +647,7 @@ BOOST_AUTO_TEST_CASE(net__run__stopped_unknown_success__service_stopped)
 BOOST_AUTO_TEST_CASE(net__run__started_unknown_success__unknown)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_run<error::unknown, error::success> net(set, log, true);
 
     std::promise<code> run;
@@ -659,7 +662,7 @@ BOOST_AUTO_TEST_CASE(net__run__started_unknown_success__unknown)
 BOOST_AUTO_TEST_CASE(net__run__stopped_success_unknown__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_run<error::success, error::unknown> net(set, log, false);
 
     std::promise<code> run;
@@ -674,7 +677,7 @@ BOOST_AUTO_TEST_CASE(net__run__stopped_success_unknown__service_stopped)
 BOOST_AUTO_TEST_CASE(net__run__started_success_unknown__unknown)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_run<error::success, error::unknown> net(set, log, true);
 
     std::promise<code> run;
@@ -689,7 +692,7 @@ BOOST_AUTO_TEST_CASE(net__run__started_success_unknown__unknown)
 BOOST_AUTO_TEST_CASE(net__run__stopped_unknown_unknown__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_run<error::unknown, error::unknown> net(set, log, false);
 
     std::promise<code> run;
@@ -704,7 +707,7 @@ BOOST_AUTO_TEST_CASE(net__run__stopped_unknown_unknown__service_stopped)
 BOOST_AUTO_TEST_CASE(net__run__started_unknown_unknown__unknown)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_session_run<error::unknown, error::unknown> net(set, log, true);
 
     std::promise<code> run;
@@ -806,7 +809,7 @@ static channel_peer::ptr make_outbound(net& instance, const logger& log)
 BOOST_AUTO_TEST_CASE(net__suspend__resume__expected)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     BOOST_REQUIRE(!net.suspended());
 
@@ -820,7 +823,7 @@ BOOST_AUTO_TEST_CASE(net__suspend__resume__expected)
 BOOST_AUTO_TEST_CASE(net__reserved_count__unstarted__zero)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     BOOST_REQUIRE_EQUAL(net.reserved_count(), 0u);
 }
@@ -828,7 +831,7 @@ BOOST_AUTO_TEST_CASE(net__reserved_count__unstarted__zero)
 BOOST_AUTO_TEST_CASE(net__fetch_totals__unstarted__success_empty)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
 
     std::promise<std::pair<code, net::totals>> promise{};
@@ -847,7 +850,7 @@ BOOST_AUTO_TEST_CASE(net__fetch_totals__unstarted__success_empty)
 BOOST_AUTO_TEST_CASE(net__fetch_totals__closed__service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     net.close();
 
@@ -863,7 +866,7 @@ BOOST_AUTO_TEST_CASE(net__fetch_totals__closed__service_stopped)
 BOOST_AUTO_TEST_CASE(net__unsubscribe_connect__subscribed__desubscribed)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
 
     std::promise<code> promise_handler{};
@@ -892,7 +895,7 @@ BOOST_AUTO_TEST_CASE(net__unsubscribe_connect__subscribed__desubscribed)
 BOOST_AUTO_TEST_CASE(net__create_service__always__acceptor)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
     BOOST_REQUIRE(net.create_service({ .maximum_request = 42 }));
 }
@@ -900,7 +903,7 @@ BOOST_AUTO_TEST_CASE(net__create_service__always__acceptor)
 BOOST_AUTO_TEST_CASE(net__create_acceptor_sam__privacy__acceptor_sam)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log, service::node_none, service::node_encrypted_transport);
     BOOST_REQUIRE(net.create_acceptor_sam());
 }
@@ -908,7 +911,7 @@ BOOST_AUTO_TEST_CASE(net__create_acceptor_sam__privacy__acceptor_sam)
 BOOST_AUTO_TEST_CASE(net__to_connector__proxied_privacy__connector_socks)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log, service::node_none, service::node_encrypted_transport);
     settings::socks5 socks{};
     socks.socks = { "127.0.0.1:65140" };
@@ -919,7 +922,7 @@ BOOST_AUTO_TEST_CASE(net__to_connector__proxied_privacy__connector_socks)
 BOOST_AUTO_TEST_CASE(net__to_connector__unproxied__connector)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
     const auto instance = net.to_connector(settings::socks5{}, set.outbound, seconds(1), 0);
     BOOST_REQUIRE(instance);
@@ -929,7 +932,7 @@ BOOST_AUTO_TEST_CASE(net__to_connector__unproxied__connector)
 BOOST_AUTO_TEST_CASE(net__save__unstarted__service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
 
     std::promise<code> promise{};
@@ -944,7 +947,7 @@ BOOST_AUTO_TEST_CASE(net__save__unstarted__service_stopped)
 BOOST_AUTO_TEST_CASE(net__save__closed__service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     closed_net_accessor net(set, log);
 
     std::promise<code> promise{};
@@ -959,7 +962,7 @@ BOOST_AUTO_TEST_CASE(net__save__closed__service_stopped)
 BOOST_AUTO_TEST_CASE(net__fetch__closed__service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     closed_net_accessor net(set, log);
 
     std::promise<code> promise{};
@@ -974,7 +977,7 @@ BOOST_AUTO_TEST_CASE(net__fetch__closed__service_stopped)
 BOOST_AUTO_TEST_CASE(net__do_run__closed__service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     closed_net_accessor net(set, log);
 
     std::promise<code> promise{};
@@ -992,7 +995,7 @@ BOOST_AUTO_TEST_CASE(net__do_run__closed__service_stopped)
 BOOST_AUTO_TEST_CASE(net__store_nonce__outbound__stored_once)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
     const auto channel = make_outbound(net, log);
 
@@ -1008,7 +1011,7 @@ BOOST_AUTO_TEST_CASE(net__store_nonce__outbound__stored_once)
 BOOST_AUTO_TEST_CASE(net__count_channel__outbound_duplicate__address_in_use)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
     const auto channel = make_outbound(net, log);
 
@@ -1027,7 +1030,7 @@ BOOST_AUTO_TEST_CASE(net__count_channel__outbound_duplicate__address_in_use)
 BOOST_AUTO_TEST_CASE(net__count_channel__inbound_own_nonce__accept_failed)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
     const auto outbound = make_outbound(net, log);
     const auto inbound = make_inbound(net, log);
@@ -1052,7 +1055,7 @@ BOOST_AUTO_TEST_CASE(net__count_channel__inbound_own_nonce__accept_failed)
 BOOST_AUTO_TEST_CASE(net__connect_handled__closed__service_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     net.close();
 
@@ -1069,7 +1072,7 @@ BOOST_AUTO_TEST_CASE(net__connect_handled__closed__service_stopped)
 BOOST_AUTO_TEST_CASE(net__stop_services__attached_service__stopped_once)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
 
     const auto session = on_strand(net, [&]() NOEXCEPT { return net.attach_service_stranded<mock_service_session>(); });
@@ -1086,7 +1089,7 @@ BOOST_AUTO_TEST_CASE(net__stop_services__attached_service__stopped_once)
 BOOST_AUTO_TEST_CASE(net__subscribe_close__stranded__subscribed_then_stopped)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
 
     std::promise<code> promise{};
@@ -1109,7 +1112,7 @@ BOOST_AUTO_TEST_CASE(net__subscribe_close__stranded__subscribed_then_stopped)
 BOOST_AUTO_TEST_CASE(net__wire_tx_demanded__unstarted__false)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
     BOOST_REQUIRE(!net.wire_tx_demanded());
     BOOST_REQUIRE(!net.wire_block_demanded());
@@ -1118,7 +1121,7 @@ BOOST_AUTO_TEST_CASE(net__wire_tx_demanded__unstarted__false)
 BOOST_AUTO_TEST_CASE(net__demand_wire_tx__demanded_twice_undemanded_twice__expected)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
 
     net.demand_wire_tx(true);
@@ -1136,7 +1139,7 @@ BOOST_AUTO_TEST_CASE(net__demand_wire_tx__demanded_twice_undemanded_twice__expec
 BOOST_AUTO_TEST_CASE(net__demand_wire_block__demanded_twice_undemanded_twice__expected)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net net(set, log);
 
     net.demand_wire_block(true);
@@ -1154,7 +1157,7 @@ BOOST_AUTO_TEST_CASE(net__demand_wire_block__demanded_twice_undemanded_twice__ex
 BOOST_AUTO_TEST_CASE(net__broadcast__wire_tx_subscribed__expected)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
     const auto session = on_strand(net, [&]() NOEXCEPT { return net.attach_service_stranded<mock_service_session>(); });
 
@@ -1177,7 +1180,7 @@ BOOST_AUTO_TEST_CASE(net__broadcast__wire_tx_subscribed__expected)
 BOOST_AUTO_TEST_CASE(net__broadcast__wire_block_subscribed__expected)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     net_accessor net(set, log);
     const auto session = on_strand(net, [&]() NOEXCEPT { return net.attach_service_stranded<mock_service_session>(); });
 
@@ -1369,7 +1372,7 @@ public:
 BOOST_AUTO_TEST_CASE(net__seed__once__one_session)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_complete> net(set, log);
     BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
@@ -1379,7 +1382,7 @@ BOOST_AUTO_TEST_CASE(net__seed__once__one_session)
 BOOST_AUTO_TEST_CASE(net__seed__startup_running__no_session)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_complete, mock_session_seed_running> net(set, log);
     BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
@@ -1389,7 +1392,7 @@ BOOST_AUTO_TEST_CASE(net__seed__startup_running__no_session)
 BOOST_AUTO_TEST_CASE(net__seed__twice_running__one_session)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_running> net(set, log);
     BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
@@ -1400,7 +1403,7 @@ BOOST_AUTO_TEST_CASE(net__seed__twice_running__one_session)
 BOOST_AUTO_TEST_CASE(net__seed__twice_complete__two_sessions)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_complete> net(set, log);
     BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
@@ -1411,7 +1414,7 @@ BOOST_AUTO_TEST_CASE(net__seed__twice_complete__two_sessions)
 BOOST_AUTO_TEST_CASE(net__seed__no_seeds__no_session)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.seeds.clear();
     mock_net_seed<mock_session_seed_complete> net(set, log);
     BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
@@ -1422,7 +1425,7 @@ BOOST_AUTO_TEST_CASE(net__seed__no_seeds__no_session)
 BOOST_AUTO_TEST_CASE(net__seed__sufficient_addresses__no_session)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     sufficient_mock_net_seed<mock_session_seed_complete> net(set, log);
     BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
@@ -1432,7 +1435,7 @@ BOOST_AUTO_TEST_CASE(net__seed__sufficient_addresses__no_session)
 BOOST_AUTO_TEST_CASE(net__seed__startup_completed_recently__no_session)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_complete, mock_session_seed_completed_recently> net(set, log);
     BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
@@ -1442,7 +1445,7 @@ BOOST_AUTO_TEST_CASE(net__seed__startup_completed_recently__no_session)
 BOOST_AUTO_TEST_CASE(net__seed__twice_completed_recently__one_session)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_completed_recently> net(set, log);
     BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
@@ -1453,7 +1456,7 @@ BOOST_AUTO_TEST_CASE(net__seed__twice_completed_recently__one_session)
 BOOST_AUTO_TEST_CASE(net__seed__twice_completed_long_ago__two_sessions)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_completed_long_ago> net(set, log);
     BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
@@ -1464,7 +1467,7 @@ BOOST_AUTO_TEST_CASE(net__seed__twice_completed_long_ago__two_sessions)
 BOOST_AUTO_TEST_CASE(net__seed__closed__no_session)
 {
     const logger log{};
-    const settings set(selection::mainnet);
+    const settings set(test::network_settings());
     closed_mock_net_seed<mock_session_seed_complete> net(set, log);
     net.seed_and_wait();
     BOOST_REQUIRE_EQUAL(net.seed_sessions(), 0u);

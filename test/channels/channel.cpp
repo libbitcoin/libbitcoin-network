@@ -71,7 +71,7 @@ static const channel::options_t default_options{ "test" };
 
 BOOST_AUTO_TEST_CASE(channel__rate_limited__both_zero__zero)
 {
-    settings set(bc::system::chain::selection::mainnet);
+    settings set(test::network_settings());
     set.rate_limit = 0;
     set.outbound.rate_limit = 0;
     BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 0u);
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(channel__rate_limited__both_zero__zero)
 
 BOOST_AUTO_TEST_CASE(channel__rate_limited__network_zero__service)
 {
-    settings set(bc::system::chain::selection::mainnet);
+    settings set(test::network_settings());
     set.rate_limit = 0;
     set.outbound.rate_limit = 42;
     BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 42u);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(channel__rate_limited__network_zero__service)
 
 BOOST_AUTO_TEST_CASE(channel__rate_limited__service_zero__network)
 {
-    settings set(bc::system::chain::selection::mainnet);
+    settings set(test::network_settings());
     set.rate_limit = 42;
     set.outbound.rate_limit = 0;
     BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 42u);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(channel__rate_limited__service_zero__network)
 
 BOOST_AUTO_TEST_CASE(channel__rate_limited__network_lesser__network)
 {
-    settings set(bc::system::chain::selection::mainnet);
+    settings set(test::network_settings());
     set.rate_limit = 24;
     set.outbound.rate_limit = 42;
     BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 24u);
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(channel__rate_limited__network_lesser__network)
 
 BOOST_AUTO_TEST_CASE(channel__rate_limited__service_lesser__service)
 {
-    settings set(bc::system::chain::selection::mainnet);
+    settings set(test::network_settings());
     set.rate_limit = 42;
     set.outbound.rate_limit = 24;
     BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 24u);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
     const logger log{};
     threadpool pool{ one };
     asio::strand strand(pool.service().get_executor());
-    const settings set(bc::system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(channel__created__default__read_and_write_times_equal)
 {
     const logger log{};
     threadpool pool(2);
-    const settings set(bc::system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = default_options.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, default_options);
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(channel__remaining__zero_inactivity__zero)
 {
     const logger log{};
     threadpool pool(2);
-    const settings set(bc::system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = default_options.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, untimed);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(channel__remaining__default_inactivity__within_inactivity)
 {
     const logger log{};
     threadpool pool(2);
-    const settings set(bc::system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = default_options.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, default_options);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(channel__pause__resume__held_then_released)
 {
     const logger log{};
     threadpool pool(2);
-    const settings set(bc::system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = default_options.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, untimed);
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(channel__stop__paused__released)
 {
     const logger log{};
     threadpool pool(2);
-    const settings set(bc::system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = default_options.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, untimed);
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(channel__pause__stopped__not_held_released)
 {
     const logger log{};
     threadpool pool(2);
-    const settings set(bc::system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = default_options.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, untimed);
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(channel__resume__expiration_elapsed__channel_expired)
 {
     const logger log{};
     threadpool pool(2);
-    const settings set(bc::system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = default_options.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, expiring);
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(channel__resume__inactivity_elapsed__channel_inactive)
 {
     const logger log{};
     threadpool pool(2);
-    const settings set(bc::system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = default_options.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, inactive);

@@ -699,7 +699,7 @@ private:
 BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -735,7 +735,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
 BOOST_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
     mock_session_outbound session(net, 1);
 
@@ -755,7 +755,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
 BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.connections = 0;
     set.outbound.host_pool_capacity = 1;
     mock_net<> net(set, log);
@@ -778,7 +778,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__success)
 BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -799,7 +799,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__success)
 BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 0;
     mock_net<> net(set, log);
@@ -822,7 +822,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__success)
 BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_found)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
@@ -845,7 +845,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_foun
 BOOST_AUTO_TEST_CASE(session_outbound__start__no_address__seeded)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -888,7 +888,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address__seeded)
 BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -935,7 +935,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
 BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 3;
     set.outbound.connections = 3;
@@ -972,7 +972,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
 BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_channel_service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 2;
     set.outbound.connections = 2;
@@ -1005,7 +1005,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
 BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1043,7 +1043,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable__restored)
 BOOST_AUTO_TEST_CASE(session_outbound__start__host_unreachable__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1081,7 +1081,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__host_unreachable__restored)
 BOOST_AUTO_TEST_CASE(session_outbound__start__socks_net_unreachable__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1119,7 +1119,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__socks_net_unreachable__restored)
 BOOST_AUTO_TEST_CASE(session_outbound__start__socks_host_unreachable__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1157,7 +1157,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__socks_host_unreachable__restored)
 BOOST_AUTO_TEST_CASE(session_outbound__start__insufficient_buffer__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1195,7 +1195,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__insufficient_buffer__restored)
 BOOST_AUTO_TEST_CASE(session_outbound__start__batch_all_unreachable__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 2;
     set.outbound.connections = 1;
@@ -1233,7 +1233,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_all_unreachable__restored)
 BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_refused__not_restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 2;
     set.outbound.connections = 1;
@@ -1271,7 +1271,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_refused__not
 BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_connected__not_restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 2;
     set.outbound.connections = 1;
@@ -1314,7 +1314,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_connected__n
 BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 3;
     set.outbound.connections = 1;
@@ -1352,7 +1352,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__
 BOOST_AUTO_TEST_CASE(session_outbound__start__batch_lone_unreachable_and_no_address__not_restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 2;
     set.outbound.connections = 1;
@@ -1390,7 +1390,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_lone_unreachable_and_no_addr
 BOOST_AUTO_TEST_CASE(session_outbound__start__channel_timeout__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1427,7 +1427,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__channel_timeout__restored)
 BOOST_AUTO_TEST_CASE(session_outbound__start__peer_disconnect__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1464,7 +1464,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__peer_disconnect__restored)
 BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 2;
     set.outbound.connections = 1;
@@ -1510,7 +1510,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__res
 BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_near_full_pool__room_restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 2;
     set.outbound.connect_batch_size = 2;
     set.outbound.connections = 1;
@@ -1555,7 +1555,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_near_full_pool__
 BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable_full_host_pool__not_restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1593,7 +1593,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable_full_host_pool__no
 BOOST_AUTO_TEST_CASE(session_outbound__start__connection_refused__not_restored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 10;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1631,7 +1631,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__connection_refused__not_restored)
 BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1677,7 +1677,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
 BOOST_AUTO_TEST_CASE(session_outbound__set_connections__stopped__applied_at_start)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 3;
@@ -1733,7 +1733,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__stopped__applied_at_star
 BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_raised__slots_started)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1793,7 +1793,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_raised__slots_st
 BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_ended_on_retry)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     set.outbound.connect_batch_size = 1;
     set.outbound.connections = 1;
@@ -1905,7 +1905,7 @@ struct outbound_peer
     using configurator = std::function<void(settings&)>;
 
     outbound_peer(const configurator& configure, const code& take_code, uint16_t port)
-      : set_{ selection::mainnet }, net_{ set_, log_, take_code, port }
+      : set_{ test::network_settings() }, net_{ set_, log_, take_code, port }
     {
         test::clear(test::directory);
         set_.path = TEST_DIRECTORY;

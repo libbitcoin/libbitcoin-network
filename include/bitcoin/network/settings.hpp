@@ -305,28 +305,48 @@ struct BCT_API settings
         peer_outbound(system::chain::selection context) NOEXCEPT
           : tcp_server("outbound"), socks5()
         {
-            connections = 10;
+            connections = 100;
 
             // Use emplace_back due to initializer_list bug:
             // stackoverflow.com/a/20168627/1172329
             switch (context)
             {
+                // TODO: from bitcoind, replace with libbitcoin seeds when up.
                 case system::chain::selection::mainnet:
                 {
-                    seeds.reserve(4);
-                    seeds.emplace_back("mainnet1.libbitcoin.net", 8333_u16);
-                    seeds.emplace_back("mainnet2.libbitcoin.net", 8333_u16);
-                    seeds.emplace_back("mainnet3.libbitcoin.net", 8333_u16);
-                    seeds.emplace_back("mainnet4.libbitcoin.net", 8333_u16);
+                    seeds.reserve(8);
+                    seeds.emplace_back("seed.bitcoin.sipa.be", 8333_u16);
+                    seeds.emplace_back("dnsseed.bluematt.me", 8333_u16);
+                    seeds.emplace_back("seed.bitcoin.jonasschnelli.ch",
+                        8333_u16);
+                    seeds.emplace_back("seed.btc.petertodd.net", 8333_u16);
+                    seeds.emplace_back("seed.bitcoin.sprovoost.nl", 8333_u16);
+                    seeds.emplace_back("dnsseed.emzy.de", 8333_u16);
+                    seeds.emplace_back("seed.bitcoin.wiz.biz", 8333_u16);
+                    seeds.emplace_back("seed.mainnet.achownodes.xyz",
+                        8333_u16);
                     break;
                 }
                 case system::chain::selection::testnet3:
                 {
-                    seeds.reserve(4);
-                    seeds.emplace_back("testnet1.libbitcoin.net", 18333_u16);
-                    seeds.emplace_back("testnet2.libbitcoin.net", 18333_u16);
-                    seeds.emplace_back("testnet3.libbitcoin.net", 18333_u16);
-                    seeds.emplace_back("testnet4.libbitcoin.net", 18333_u16);
+                    connections = 50;
+                    connect_batch_size = 10;
+                    seeds.reserve(3);
+                    seeds.emplace_back("testnet-seed.bitcoin.jonasschnelli.ch",
+                        18333_u16);
+                    seeds.emplace_back("seed.tbtc.petertodd.net", 18333_u16);
+                    seeds.emplace_back("seed.testnet.bitcoin.sprovoost.nl",
+                        18333_u16);
+                    break;
+                }
+                case system::chain::selection::testnet4:
+                {
+                    connections = 50;
+                    connect_batch_size = 10;
+                    seeds.reserve(2);
+                    seeds.emplace_back("seed.testnet4.bitcoin.sprovoost.nl",
+                        48333_u16);
+                    seeds.emplace_back("seed.testnet4.wiz.biz", 48333_u16);
                     break;
                 }
                 case system::chain::selection::signet:
@@ -338,13 +358,18 @@ struct BCT_API settings
                     break;
                 }
                 case system::chain::selection::regtest:
+                {
+                    connections = 0;
+                    host_pool_capacity = 0;
+                    break;
+                }
                 default: break;
             }
         }
 
         config::endpoints seeds{};
         uint16_t connect_batch_size{ 5 };
-        uint32_t host_pool_capacity{ 0 };
+        uint32_t host_pool_capacity{ 10000 };
         uint32_t seeding_timeout_seconds{ 30 };
 
         /// Helpers.
@@ -359,6 +384,8 @@ struct BCT_API settings
         peer_inbound(system::chain::selection context) NOEXCEPT
           : tcp_server("inbound"), sam()
         {
+            connections = 100;
+
             // Use emplace_back due to initializer_list bug:
             // stackoverflow.com/a/20168627/1172329
             switch (context)
@@ -371,6 +398,11 @@ struct BCT_API settings
                 case system::chain::selection::testnet3:
                 {
                     binds.emplace_back(asio::address{}, 18333_u16);
+                    break;
+                }
+                case system::chain::selection::testnet4:
+                {
+                    binds.emplace_back(asio::address{}, 48333_u16);
                     break;
                 }
                 case system::chain::selection::regtest:
@@ -402,6 +434,9 @@ struct BCT_API settings
     /// Read files and derive values (once, before use, const thereafter).
     virtual code initialize() NOEXCEPT;
 
+    /// The network of the defaults.
+    system::chain::selection network;
+
     /// Bitcoin p2p sessions.
     network::settings::peer_outbound outbound;
     network::settings::peer_inbound inbound;
@@ -432,17 +467,17 @@ struct BCT_API settings
     uint16_t address_upper{ 10 };
     uint16_t address_lower{ 5 };
     uint32_t protocol_maximum{ messages::peer::level::maximum_protocol };
-    uint32_t protocol_minimum{ messages::peer::level::minimum_protocol };
+    uint32_t protocol_minimum{ messages::peer::level::headers_protocol };
     uint64_t invalid_services{ 0b0001'0000'0000'0000'0000'0000'1011'0000 };
-    bool enable_address{ false };
+    bool enable_address{ true };
     bool enable_address_v2{ true };
     bool enable_witness_tx{ false };
-    bool enable_compact{ false };
+    bool enable_compact{ true };
     bool enable_alert{ false };
     bool enable_reject{ false };
-    bool enable_not_found{ false };
+    bool enable_not_found{ true };
     bool enable_memory_pool{ false };
-    bool enable_relay{ false };
+    bool enable_relay{ true };
     bool validate_checksum{ false };
     bool gossip_ipv4{ true };
     bool gossip_ipv6{ false };

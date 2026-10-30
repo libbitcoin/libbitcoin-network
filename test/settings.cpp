@@ -31,22 +31,23 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     settings instance{ system::chain::selection::mainnet };
 
     // [network]
+    BOOST_REQUIRE(instance.network == selection::mainnet);
     BOOST_REQUIRE_EQUAL(instance.threads, 0u);
     BOOST_REQUIRE_EQUAL(instance.threads_(), std::min<size_t>(cores(), 32));
     BOOST_REQUIRE_EQUAL(instance.address_upper, 10u);
     BOOST_REQUIRE_EQUAL(instance.address_lower, 5u);
     BOOST_REQUIRE_EQUAL(instance.protocol_maximum, level::maximum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
+    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::headers_protocol);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 268'435'632u);
-    BOOST_REQUIRE_EQUAL(instance.enable_address, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_address, true);
     BOOST_REQUIRE_EQUAL(instance.enable_address_v2, true);
     BOOST_REQUIRE_EQUAL(instance.enable_witness_tx, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_compact, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_compact, true);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_not_found, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_not_found, true);
     BOOST_REQUIRE_EQUAL(instance.enable_memory_pool, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_relay, true);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.identifier, 3652501241u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
@@ -65,27 +66,73 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
 BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
 {
     settings instance{ selection::mainnet };
+    BOOST_REQUIRE(instance.network == selection::mainnet);
     BOOST_REQUIRE_EQUAL(instance.identifier, 3652501241u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.seeds.size(), 8u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 8333u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connections, 100u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 5u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 8333u);
 }
 
-BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
+BOOST_AUTO_TEST_CASE(settings__construct__testnet3__expected)
 {
     settings instance{ selection::testnet3 };
+    BOOST_REQUIRE(instance.network == selection::testnet3);
     BOOST_REQUIRE_EQUAL(instance.identifier, 118034699u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.seeds.size(), 3u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 18333u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connections, 50u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 10u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 18333u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__construct__testnet4__expected)
+{
+    settings instance{ selection::testnet4 };
+    BOOST_REQUIRE(instance.network == selection::testnet4);
+    BOOST_REQUIRE_EQUAL(instance.identifier, 675223068u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.seeds.size(), 2u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 48333u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connections, 50u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 10u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 48333u);
 }
 
 BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
 {
     settings instance{ selection::regtest };
+    BOOST_REQUIRE(instance.network == selection::regtest);
     BOOST_REQUIRE_EQUAL(instance.identifier, 3669344250u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.seeds.size(), 0u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 5u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 0u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 18444u);
 }
 
 BOOST_AUTO_TEST_CASE(settings__construct__signet__expected)
 {
     settings instance{ selection::signet };
+    BOOST_REQUIRE(instance.network == selection::signet);
     BOOST_REQUIRE_EQUAL(instance.identifier, 1087308554u);
     BOOST_REQUIRE_EQUAL(instance.outbound.seeds.size(), 2u);
     BOOST_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 38333u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connections, 100u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 5u);
+    BOOST_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
+    BOOST_REQUIRE_EQUAL(instance.inbound.connections, 100u);
     BOOST_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BOOST_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 38333u);
 }
@@ -529,21 +576,21 @@ BOOST_AUTO_TEST_CASE(settings__peer_outbound__mainnet__expected)
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, "outbound");
     BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.connections, 10u);
+    BOOST_REQUIRE_EQUAL(instance.connections, 100u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
     BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BOOST_REQUIRE_EQUAL(instance.minimum_buffer, minimum_buffer);
-    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
 
     // outbound
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
-    BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
+    BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 10000u);
     BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
-    BOOST_REQUIRE_EQUAL(instance.seeds.size(), 4u);
-    BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), 50u);
+    BOOST_REQUIRE_EQUAL(instance.seeds.size(), 8u);
+    BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), 500u);
     BOOST_REQUIRE(instance.seeding_timeout() == seconds(30));
 }
 
@@ -741,12 +788,12 @@ BOOST_AUTO_TEST_CASE(settings__peer_inbound__mainnet__expected)
     // tcp_server
     BOOST_REQUIRE_EQUAL(instance.name, "inbound");
     BOOST_REQUIRE_EQUAL(instance.binds.size(), 1u);
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.connections, 100u);
     BOOST_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
     BOOST_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BOOST_REQUIRE_EQUAL(instance.minimum_buffer, minimum_buffer);
-    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.enabled());
     BOOST_REQUIRE(instance.inactivity() == minutes(10));
     BOOST_REQUIRE(instance.expiration() == minutes(60));
 

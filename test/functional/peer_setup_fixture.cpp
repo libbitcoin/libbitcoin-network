@@ -25,7 +25,7 @@ using namespace bc::network::messages::peer;
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 peer_setup_fixture::peer_setup_fixture(const configurator& configure)
-  : settings_{ chain::selection::mainnet },
+  : settings_{ test::network_settings() },
     net_{ settings_, log_ }
 {
     test::clear(test::directory);

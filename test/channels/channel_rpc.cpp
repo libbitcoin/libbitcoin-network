@@ -344,7 +344,7 @@ using echo_interface = rpc::publish<echo_methods>;
 using echo_channel = channel_rpc<echo_interface>;
 using echo_responder = std::function<void(const echo_channel::ptr&, const std::string&)>;
 
-static const network::settings echo_settings{ system::chain::selection::mainnet };
+static const network::settings echo_settings{ test::network_settings() };
 static const echo_channel::options_t echo_options{ "test" };
 
 struct rpc_channel_fixture

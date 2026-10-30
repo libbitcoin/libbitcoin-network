@@ -622,7 +622,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stopped__default__false)
     const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
-    const settings set(system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
@@ -642,7 +642,7 @@ BOOST_AUTO_TEST_CASE(channel_http__properties__default__expected)
     const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
-    const settings set(system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
@@ -661,7 +661,7 @@ BOOST_AUTO_TEST_CASE(channel_http__subscribe_message__subscribed__expected)
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    const settings set(system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
@@ -701,7 +701,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stop__all_subscribed__expected)
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    const settings set(system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
@@ -762,7 +762,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected__expected)
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    const settings set(system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
@@ -796,7 +796,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected_move__expected)
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    const settings set(system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stopped__resume_after_read_fail__true)
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    const settings set(system::chain::selection::mainnet);
+    const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
@@ -872,7 +872,7 @@ struct credentialed_options
 };
 
 static const credentialed_options credentialed{};
-static const network::settings http_settings{ system::chain::selection::mainnet };
+static const network::settings http_settings{ test::network_settings() };
 static const std::string rfc7617_authorization{ "Basic dGVzdDoxMjPCow==" };
 
 using http_responder = std::function<void(const channel_http::ptr&, const http::request&)>;
