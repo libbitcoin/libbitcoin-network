@@ -123,6 +123,7 @@
     <ClCompile Include="..\..\..\..\src\config\credential.cpp" />
     <ClCompile Include="..\..\..\..\src\config\endpoint.cpp" />
     <ClCompile Include="..\..\..\..\src\config\utilities.cpp" />
+    <ClCompile Include="..\..\..\..\src\define.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />
     <ClCompile Include="..\..\..\..\src\log\capture.cpp" />
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
