@@ -165,15 +165,6 @@ AC_ARG_WITH([tests],
 AC_MSG_RESULT([$with_tests])
 AM_CONDITIONAL([WITH_TESTS], [test "x${with_tests}" != "xno"])
 
-AC_MSG_CHECKING([--with-ssl option])
-AC_ARG_WITH([ssl],
-    AS_HELP_STRING([--with-ssl],
-        [Use embedded ssl library. @<:@default=yes@:>@]),
-    [with_ssl=$withval],
-    [with_ssl=yes])
-AC_MSG_RESULT([$with_ssl])
-AM_CONDITIONAL([WITH_SSL], [test "x${with_ssl}" != "xno"])
-
 # Set flags.
 #==============================================================================
 AX_CHECK_COMPILE_FLAG([-Wall],
@@ -291,16 +282,6 @@ AS_IF([test "x${enable_isystem}" != "xno"],
   [ AC_SUBST([boost_BUILD_CPPFLAGS], [${boost_CPPFLAGS}]) ])
 
 AC_MSG_NOTICE([boost_BUILD_CPPFLAGS : ${boost_BUILD_CPPFLAGS}])
-
-# Set preprocessor defines.
-#==============================================================================
-AS_IF([test "x${with_ssl}" != "xno"], [
-        AC_DEFINE([WITH_SSL])
-        AC_SUBST([ssl], [-DWITH_SSL])
-    ])
-
-AS_IF([test "x${with_ssl}" != "xno"],
-    [ AC_SUBST([ssl_include], [-I${includedir}/bitcoin/network/ssl]) ])
 
 AC_CONFIG_FILES([
     Makefile

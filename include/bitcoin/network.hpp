@@ -192,23 +192,13 @@
 #include <bitcoin/network/sessions/session_seed.hpp>
 #include <bitcoin/network/sessions/session_server.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
-#if WITH_SSL
-#include <bitcoin/network/ssl/openssl/conf.h>
-#include <bitcoin/network/ssl/openssl/dh.h>
-#include <bitcoin/network/ssl/openssl/engine.h>
-#include <bitcoin/network/ssl/openssl/err.h>
-#include <bitcoin/network/ssl/openssl/openssl.h>
-#include <bitcoin/network/ssl/openssl/rsa.h>
-#include <bitcoin/network/ssl/openssl/ssl.h>
-#include <bitcoin/network/ssl/openssl/x509.h>
-#include <bitcoin/network/ssl/openssl/x509v3.h>
-#endif
 #include <bitcoin/network/tls/codec.hpp>
 #include <bitcoin/network/tls/constants.hpp>
 #include <bitcoin/network/tls/context.hpp>
 #include <bitcoin/network/tls/record.hpp>
 #include <bitcoin/network/tls/schedule.hpp>
 #include <bitcoin/network/tls/server.hpp>
+#include <bitcoin/network/tls/stream.hpp>
 #include <bitcoin/network/tls/tls.hpp>
 #include <bitcoin/network/ws/frame.hpp>
 #include <bitcoin/network/ws/handshake.hpp>

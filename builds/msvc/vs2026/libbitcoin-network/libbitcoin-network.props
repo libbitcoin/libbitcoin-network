@@ -7,25 +7,15 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
 
-  <!-- User Interface -->
-
-  <ItemGroup Label="BuildOptionsExtension">
-    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)$(ProjectName).xml" />
-  </ItemGroup>
-
   <!-- Configuration -->
 
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>$(RepoRoot)include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories>$(RepoRoot)build\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-
-      <!-- Prevent boost from seeing ssl includes when ssl is deselected  (requires external headers). -->
-      <AdditionalIncludeDirectories Condition="'$(Option-ssl)' == 'true'">$(RepoRoot)include\bitcoin\network\ssl\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>false</EnablePREfast>
       <PreprocessorDefinitions Condition="'$(ConfigurationType)' == 'DynamicLibrary'">BCT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(ConfigurationType)' == 'StaticLibrary'">BCT_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Option-ssl)' == 'true'">WITH_SSL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
 
@@ -52,17 +42,7 @@
     <Linkage-libbitcoin-system>static</Linkage-libbitcoin-system>
   </PropertyGroup>
   
-  <!-- Options -->
-
-  <PropertyGroup>
-    <Option-ssl Condition="'$(Option-ssl)' == ''">true</Option-ssl>
-  </PropertyGroup>
-  
   <!-- Messages -->
-
-  <Target Name="OptionInfo" BeforeTargets="PrepareForBuild">
-    <Message Text="Option-ssl        : $(Option-ssl)" Importance="high"/>
-  </Target>
 
   <Target Name="LinkageInfo" BeforeTargets="PrepareForBuild">
     <Message Text="Linkage-secp256k1 : $(Linkage-secp256k1)" Importance="high"/>

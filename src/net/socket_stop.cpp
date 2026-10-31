@@ -35,7 +35,7 @@ constexpr size_t drain_size = 1024;
 
 // Stop (async).
 // ----------------------------------------------------------------------------
-// Hard stop (no graceful websocket/ssl closure).
+// Hard stop (no graceful websocket/tls closure).
 
 void socket::stop() NOEXCEPT
 {
@@ -64,7 +64,7 @@ void socket::do_stop() NOEXCEPT
 
 // Stop (lazy).
 // ----------------------------------------------------------------------------
-// Lazy stop (graceful websocket/ssl closure).
+// Lazy stop (graceful websocket/tls closure).
 
 void socket::lazy_stop() NOEXCEPT
 {
@@ -111,14 +111,14 @@ void socket::do_ws_stop() NOEXCEPT
     BC_ASSERT(stranded());
     if (!websocket())
     {
-        do_ssl_stop();
+        do_tls_stop();
         return;
     }
 
     // A close already sent (answering the peer) is not repeated.
     if (ws_closing_)
     {
-        do_ssl_stop();
+        do_tls_stop();
         return;
     }
 
@@ -134,11 +134,11 @@ void socket::handle_ws_close(const code& ec) NOEXCEPT
     if (ec && ec != error::peer_disconnect && ec != error::channel_stopped)
         LOGX("WS close [" << endpoint() << "] " << ec.message());
 
-    do_ssl_stop();
+    do_tls_stop();
 }
 
 // private
-void socket::do_ssl_stop() NOEXCEPT
+void socket::do_tls_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
     if (!secure())
@@ -147,17 +147,17 @@ void socket::do_ssl_stop() NOEXCEPT
         return;
     }
 
-    get_ssl().async_shutdown(
-        std::bind(&socket::handle_ssl_close,
+    get_tls().async_shutdown(
+        std::bind(&socket::handle_tls_close,
             shared_from_this(), _1));
 }
 
 // private
-void socket::handle_ssl_close(const boost_code& ec) NOEXCEPT
+void socket::handle_tls_close(const boost_code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
     if (ec && ec != boost::asio::error::eof && !error::asio_is_canceled(ec))
-        logx("ssl_stop", ec);
+        logx("tls_stop", ec);
 
     do_linger();
 }

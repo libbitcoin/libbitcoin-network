@@ -1217,11 +1217,11 @@ BOOST_AUTO_TEST_CASE(settings_tls_server__initialize_context__safes_without_key_
     BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_private_key);
 }
 
-BOOST_AUTO_TEST_CASE(settings_tls_server__secure_context__initialized__ssl_context)
+BOOST_AUTO_TEST_CASE(settings_tls_server__secure_context__initialized__tls_context)
 {
     settings::tls_server instance{ "test" };
     BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
-    BOOST_REQUIRE(std::holds_alternative<ref<asio::ssl::context>>(instance.secure_context()));
+    BOOST_REQUIRE(std::holds_alternative<cref<tls::context>>(instance.secure_context()));
 }
 
 // zmtp_server

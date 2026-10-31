@@ -39,5 +39,6 @@
 #include <bitcoin/network/tls/record.hpp>
 #include <bitcoin/network/tls/schedule.hpp>
 #include <bitcoin/network/tls/server.hpp>
+#include <bitcoin/network/tls/stream.hpp>
 
 #endif

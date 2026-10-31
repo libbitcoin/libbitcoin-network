@@ -482,6 +482,11 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
     if (!ec)
         return error::success;
 
+    // libbitcoin-category-in-boost codes, for portability via boost_code.
+    if (const auto portable = static_cast<code>(ec);
+        portable.category() == network::error::error_category::singleton)
+        return portable;
+
     // In msvc boost::system::system_category() aliases netdb and addrinfo.
     if (ec.category() == boost::asio::error::get_system_category())
     {
@@ -695,57 +700,28 @@ code http_to_error_code(const boost_code& ec) NOEXCEPT
     return json_to_error_code(ec);
 }
 
-// includes asio codes
-code ssl_to_error_code(const boost_code& ec) NOEXCEPT
+code tls_to_error_code(uint8_t alert) NOEXCEPT
 {
-    if (!ec)
-        return error::success;
-
-    if (ec.category() == boost::asio::ssl::error::get_stream_category())
+    switch (alert)
     {
-        switch (static_cast<asio_ssl_stream_error_t>(ec.value()))
-        {
-            case asio_ssl_stream_error_t::stream_truncated:
-                return error::tls_stream_truncated;
-            case asio_ssl_stream_error_t::unspecified_system_error:
-                return error::tls_unspecified_system_error;
-            case asio_ssl_stream_error_t::unexpected_result:
-                return error::tls_unexpected_result;
-            default: return error::tls_unknown;
-        }
+        case tls::alert::unexpected_message: return error::tls_alert_unexpected_message;
+        case tls::alert::bad_record_mac: return error::tls_alert_bad_record_mac;
+        case tls::alert::record_overflow: return error::tls_alert_record_overflow;
+        case tls::alert::handshake_failure: return error::tls_alert_handshake_failure;
+        case tls::alert::bad_certificate: return error::tls_alert_bad_certificate;
+        case tls::alert::unsupported_certificate: return error::tls_alert_unsupported_certificate;
+        case tls::alert::certificate_expired: return error::tls_alert_certificate_expired;
+        case tls::alert::certificate_unknown: return error::tls_alert_certificate_unknown;
+        case tls::alert::illegal_parameter: return error::tls_alert_illegal_parameter;
+        case tls::alert::unknown_ca: return error::tls_alert_unknown_ca;
+        case tls::alert::decode_error: return error::tls_alert_decode_error;
+        case tls::alert::decrypt_error: return error::tls_alert_decrypt_error;
+        case tls::alert::protocol_version: return error::tls_alert_protocol_version;
+        case tls::alert::internal_error: return error::tls_alert_internal_error;
+        case tls::alert::missing_extension: return error::tls_alert_missing_extension;
+        case tls::alert::certificate_required: return error::tls_alert_certificate_required;
+        default: return error::tls_alert_unknown;
     }
-
-    // Alerts sent or received are reported as ssl reasons offset by 1000.
-    if (ec.category() == boost::asio::error::get_ssl_category())
-    {
-        const auto value = static_cast<unsigned long>(ec.value());
-        const auto reason = ERR_GET_REASON(value);
-        if (ERR_GET_LIB(value) != ERR_LIB_SSL || reason < SSL_AD_REASON_OFFSET)
-            return error::ssl_unknown;
-
-        switch (reason - SSL_AD_REASON_OFFSET)
-        {
-            case tls::alert::unexpected_message: return error::tls_alert_unexpected_message;
-            case tls::alert::bad_record_mac: return error::tls_alert_bad_record_mac;
-            case tls::alert::record_overflow: return error::tls_alert_record_overflow;
-            case tls::alert::handshake_failure: return error::tls_alert_handshake_failure;
-            case tls::alert::bad_certificate: return error::tls_alert_bad_certificate;
-            case tls::alert::unsupported_certificate: return error::tls_alert_unsupported_certificate;
-            case tls::alert::certificate_expired: return error::tls_alert_certificate_expired;
-            case tls::alert::certificate_unknown: return error::tls_alert_certificate_unknown;
-            case tls::alert::illegal_parameter: return error::tls_alert_illegal_parameter;
-            case tls::alert::unknown_ca: return error::tls_alert_unknown_ca;
-            case tls::alert::decode_error: return error::tls_alert_decode_error;
-            case tls::alert::decrypt_error: return error::tls_alert_decrypt_error;
-            case tls::alert::protocol_version: return error::tls_alert_protocol_version;
-            case tls::alert::internal_error: return error::tls_alert_internal_error;
-            case tls::alert::missing_extension: return error::tls_alert_missing_extension;
-            case tls::alert::certificate_required: return error::tls_alert_certificate_required;
-            default: return error::tls_alert_unknown;
-        }
-    }
-
-    return asio_to_error_code(ec);
 }
 
 // includes asio codes

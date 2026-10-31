@@ -262,7 +262,7 @@ public:
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
 
-    /// The socket was upgraded to ssl.
+    /// The socket was upgraded to tls.
     virtual bool secure() const NOEXCEPT;
 
     /// The socket was upgraded to p2ps (the peer is v2).
@@ -302,8 +302,8 @@ public:
     virtual void set_address(const config::address& address) NOEXCEPT;
 
 protected:
-    using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
-    using socket_t = std::variant<asio::socket, asio::ssl::socket,
+    using tcp_t = std::variant<ref<asio::socket>, ref<tls::stream>>;
+    using socket_t = std::variant<asio::socket, tls::stream,
         p2ps::stream, zmtp::stream>;
 
     /// Construct.
@@ -322,7 +322,7 @@ protected:
     /// -----------------------------------------------------------------------
     tcp_t get_tcp() NOEXCEPT;
     asio::socket& get_base() NOEXCEPT;
-    asio::ssl::socket& get_ssl() NOEXCEPT;
+    tls::stream& get_tls() NOEXCEPT;
     p2ps::stream& get_p2ps() NOEXCEPT;
     zmtp::stream& get_zmtp() NOEXCEPT;
 
@@ -495,7 +495,7 @@ private:
     void do_stop() NOEXCEPT;
     void do_lazy_stop() NOEXCEPT;
     void do_ws_stop() NOEXCEPT;
-    void do_ssl_stop() NOEXCEPT;
+    void do_tls_stop() NOEXCEPT;
     void do_linger() NOEXCEPT;
     void do_drain(const system::chunk_ptr& sink) NOEXCEPT;
 
@@ -601,7 +601,7 @@ private:
     // stop (lazy)
     void handle_lazy_timer(const code& ec) NOEXCEPT;
     void handle_ws_close(const code& ec) NOEXCEPT;
-    void handle_ssl_close(const boost_code& ec) NOEXCEPT;
+    void handle_tls_close(const boost_code& ec) NOEXCEPT;
     void handle_drain(const boost_code& ec,
         const system::chunk_ptr& sink) NOEXCEPT;
 

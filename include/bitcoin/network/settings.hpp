@@ -25,6 +25,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/p2ps/p2ps.hpp>
+#include <bitcoin/network/tls/tls.hpp>
 #include <bitcoin/network/zmtp/zmtp.hpp>
 
 #define BC_HTTP_SERVER_NAME "libbitcoin/4"
@@ -44,7 +45,7 @@ struct BCT_API settings
     using transport = std::variant
     <
         std::monostate,
-        ref<asio::ssl::context>,
+        ref<const tls::context>,
         ref<const p2ps::context>,
         ref<const zmtp::context>
     >;
@@ -169,7 +170,7 @@ struct BCT_API settings
         DELETE_COPY(tls_server);
         tls_server(const std::string_view& logging_name) NOEXCEPT;
 
-        /// Initialize the ssl::context (required before use).
+        /// Initialize the tls::context (required before use).
         code initialize_context() NOEXCEPT override;
 
         /// Server private key decryption password (optional).
@@ -184,8 +185,8 @@ struct BCT_API settings
         /// Directory for CA certificates for client authentication (optional).
         system::config::path cert_auth{};
 
-        /// Thread safe socket ssl context (const after initialize).
-        std::unique_ptr<asio::ssl::context> context{};
+        /// Thread safe socket tls context (const after initialize).
+        std::unique_ptr<tls::context> context{};
 
         /// False if safes, certificate_path, or key_path is empty.
         bool secure() const NOEXCEPT override;
@@ -193,7 +194,7 @@ struct BCT_API settings
         /// Requires client authentication (certificate authority specified).
         bool authenticate() const NOEXCEPT override;
 
-        /// The ssl::context (initialized).
+        /// The tls::context (initialized).
         transport secure_context() const NOEXCEPT override;
     };
 
@@ -235,7 +236,7 @@ struct BCT_API settings
     {
         using tls_server::tls_server;
 
-        /// Initialize the ssl::context and normalize hosts/origins.
+        /// Initialize the tls::context and normalize hosts/origins.
         code initialize_context() NOEXCEPT override;
 
         /// Sent via responses if configured.

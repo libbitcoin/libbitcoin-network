@@ -32,6 +32,17 @@ using namespace messages::peer;
 // Default (zero) threads is capped at this many hardware threads.
 constexpr auto maximum_default_threads = 32_size;
 
+static bool read_text(std::string& out,
+    const std::filesystem::path& file) NOEXCEPT
+{
+    system::ifstream stream{ file };
+    if (!stream.good())
+        return false;
+
+    out.assign(std::istreambuf_iterator<char>(stream), {});
+    return true;
+}
+
 static void set_default_port(config::authorities& authorities,
     uint16_t port) NOEXCEPT
 {
@@ -224,7 +235,7 @@ code settings::tls_server::initialize_context() NOEXCEPT
     if (context)
         return error::operation_failed;
 
-    context = std::make_unique<asio::ssl::context>(asio::ssl::version);
+    context = std::make_unique<tls::context>();
     if (safes.empty())
         return error::success;
 
@@ -234,25 +245,33 @@ code settings::tls_server::initialize_context() NOEXCEPT
     if (key_path.empty())
         return error::tls_use_private_key;
 
-    boost_code ec{};
-    context->set_options(asio::ssl::options, ec);
-    if (ec) return error::tls_set_options;
+    std::string text{};
+    if (!read_text(text, cert_path) || !context->set_chain(text))
+        return error::tls_use_certificate;
 
-    context->use_certificate_chain_file(cert_path.string(), ec);
-    if (ec) return error::tls_use_certificate;
+    const auto key = read_text(text, key_path) &&
+        context->set_key(text, key_pass);
 
-    if (!key_pass.empty())
-        context->set_password_callback([&](auto, auto){ return key_pass; });
-
-    constexpr auto pem = asio::ssl::context::pem;
-    context->use_private_key_file(key_path.string(), pem, ec);
-    if (ec) return error::tls_use_private_key;
+    wipe(text.data(), text.size());
+    if (!key)
+        return error::tls_use_private_key;
 
     if (authenticate())
     {
-        context->set_verify_mode(asio::ssl::authenticate);
-        context->add_verify_path(cert_auth.string(), ec);
-        if (ec) return error::tls_set_add_verify;
+        // Each certificate file of the directory is an anchor.
+        context->set_verify(true, true);
+        std::error_code ec{};
+        std::filesystem::directory_iterator it{ cert_auth, ec };
+        for (const std::filesystem::directory_iterator end{};
+            !ec && it != end; it.increment(ec))
+        {
+            std::error_code ignore{};
+            if (it->is_regular_file(ignore) && read_text(text, it->path()))
+                context->add_anchors(text);
+        }
+
+        if (ec)
+            return error::tls_set_add_verify;
     }
 
     return error::success;
@@ -272,7 +291,7 @@ bool settings::tls_server::authenticate() const NOEXCEPT
 settings::transport settings::tls_server::secure_context() const NOEXCEPT
 {
     BC_ASSERT(context);
-    return std::ref(*context);
+    return std::cref(*context);
 }
 
 // zmtp_server

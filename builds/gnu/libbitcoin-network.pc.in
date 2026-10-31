@@ -28,9 +28,7 @@ Requires: \
     @libbitcoin_system_PKG@
 
 Cflags: \
-    -I${includedir} \
-    @ssl_include@ \
-    @ssl@
+    -I${includedir}
 
 Libs: \
     -L${libdir} \

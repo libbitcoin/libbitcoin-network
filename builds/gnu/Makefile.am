@@ -39,8 +39,6 @@ src_libbitcoin_network_la_LIBS = src/libbitcoin-network.la
 src_libbitcoin_network_la_CPPFLAGS = \
     -I${top_builddir}/include \
     -I${srcdir}/../../include \
-    -I${top_builddir}/include/bitcoin/network/ssl \
-    -I${srcdir}/../../include/bitcoin/network/ssl \
     ${libbitcoin_system_BUILD_CPPFLAGS}
 
 src_libbitcoin_network_la_LDFLAGS = \
@@ -182,19 +180,13 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/tls/record.cpp \
     ${srcdir}/../../src/tls/schedule.cpp \
     ${srcdir}/../../src/tls/server.cpp \
+    ${srcdir}/../../src/tls/stream.cpp \
     ${srcdir}/../../src/ws/frame.cpp \
     ${srcdir}/../../src/ws/handshake.cpp \
     ${srcdir}/../../src/ws/reader.cpp \
     ${srcdir}/../../src/zmtp/cipher.cpp \
     ${srcdir}/../../src/zmtp/context.cpp \
     ${srcdir}/../../src/zmtp/stream.cpp
-
-if WITH_SSL
-
-src_libbitcoin_network_la_SOURCES += \
-    ${srcdir}/../../src/ssl/openssl.cpp
-
-endif WITH_SSL
 
 nodist_src_libbitcoin_network_la_SOURCES = \
     src/version.cpp
@@ -346,6 +338,12 @@ include_bitcoin_network_impl_protocolsdir = \
 
 include_bitcoin_network_impl_protocols_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/impl/protocols/protocol_rpc.ipp
+
+include_bitcoin_network_impl_tlsdir = \
+    ${includedir}/bitcoin/network/impl/tls
+
+include_bitcoin_network_impl_tls_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/tls/stream.ipp
 
 include_bitcoin_network_interfacesdir = \
     ${includedir}/bitcoin/network/interfaces
@@ -551,24 +549,6 @@ include_bitcoin_network_sessions_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/sessions/session_server.hpp \
     ${srcdir}/../../include/bitcoin/network/sessions/sessions.hpp
 
-if WITH_SSL
-
-include_bitcoin_network_ssl_openssldir = \
-    ${includedir}/bitcoin/network/ssl/openssl
-
-include_bitcoin_network_ssl_openssl_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/conf.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/dh.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/engine.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/err.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/openssl.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/rsa.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/ssl.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/x509.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/x509v3.h
-
-endif WITH_SSL
-
 include_bitcoin_network_tlsdir = \
     ${includedir}/bitcoin/network/tls
 
@@ -579,6 +559,7 @@ include_bitcoin_network_tls_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/tls/record.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/schedule.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/server.hpp \
+    ${srcdir}/../../include/bitcoin/network/tls/stream.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/tls.hpp
 
 include_bitcoin_network_wsdir = \

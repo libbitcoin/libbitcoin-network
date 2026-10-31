@@ -90,7 +90,6 @@ include(CheckCXXSourceCompiles)
 #------------------------------------------------------------------------------
 # Project options.
 #------------------------------------------------------------------------------
-option( with-ssl "Use embedded ssl library." ON )
 option( with-tests "Compile with unit tests." ON )
 
 #------------------------------------------------------------------------------
@@ -230,40 +229,16 @@ target_compile_options( libbitcoin-network
     $<$<COMPILE_LANGUAGE:CXX>:-Wno-uninitialized>
 )
 
-target_compile_definitions( libbitcoin-network
-  PUBLIC
-    $<$<BOOL:${with-ssl}>:WITH_SSL>
-)
-
 file( GLOB_RECURSE libbitcoin_network_HEADERS CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.ipp"
 )
 
-file( GLOB_RECURSE libbitcoin_network_HEADERS_SSL CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.ipp"
-)
-
-if ( !with-ssl )
-  list( REMOVE_ITEM libbitcoin_network_HEADERS ${libbitcoin_network_HEADERS_SSL} )
-endif()
-
 file( GLOB_RECURSE libbitcoin_network_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.cpp"
 )
-
-file( GLOB_RECURSE libbitcoin_network_SOURCES_SSL CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../src/ssl/*.c"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../src/ssl/*.cpp"
-)
-
-if ( !with-ssl )
-  list( REMOVE_ITEM libbitcoin_network_SOURCES ${libbitcoin_network_SOURCES_SSL} )
-endif()
 
 target_sources( libbitcoin-network
   PUBLIC
@@ -283,8 +258,6 @@ target_include_directories( libbitcoin-network
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
     $<INSTALL_INTERFACE:include>
-    $<$<BOOL:${with-ssl}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl>>
-    $<$<BOOL:${with-ssl}>:$<INSTALL_INTERFACE:include/bitcoin/network/ssl>>
 )
 
 target_link_libraries( libbitcoin-network

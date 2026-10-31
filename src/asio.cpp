@@ -20,10 +20,6 @@
 
 #include <bitcoin/network/define.hpp>
 
-#if !defined(HAVE_SSL)
-    #include <openssl/crypto.h>
-#endif
-
 #if defined(HAVE_WINDOWS)
     #include <winsock2.h>
     #include <mstcpip.h>
@@ -81,7 +77,7 @@ BC_POP_WARNING()
 
 std::string_view tls_library() NOEXCEPT
 {
-    return OpenSSL_version(OPENSSL_VERSION);
+    return "internal tls 1.3";
 }
 
 } // namespace network

@@ -22,11 +22,10 @@
 // All non-network headers include define.hpp.
 // Network inclusions are chained as follows.
 
-// /ssl           : <nothing>
 // version        : <generated>
 // have           : version
 // preprocessor   : have <bitcoin/system>
-// boost          : /ssl preprocessor
+// boost          : preprocessor
 // asio           : boost
 // error          : asio
 // define         : error
@@ -43,7 +42,7 @@
 // /log           : /async
 // /p2ps          : /messages
 // /zmtp          : define
-// settings       : /async /config /p2ps /zmtp
+// settings       : /async /config /p2ps /tls /zmtp
 // /net           : /log settings
 // /channels      : /interfaces /net
 // /sessions      : /channels                      [forward: net]

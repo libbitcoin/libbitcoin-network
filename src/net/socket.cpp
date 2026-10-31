@@ -254,7 +254,7 @@ void socket::set_address(const config::address& address) NOEXCEPT
 bool socket::secure() const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    return std::holds_alternative<asio::ssl::socket>(socket_);
+    return std::holds_alternative<tls::stream>(socket_);
 }
 
 bool socket::encrypted() const NOEXCEPT
@@ -290,7 +290,7 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
         {
             return std::ref(value);
         },
-        [](asio::ssl::socket& value) NOEXCEPT -> socket::tcp_t
+        [](tls::stream& value) NOEXCEPT -> socket::tcp_t
         {
             return std::ref(value);
         },
@@ -313,7 +313,7 @@ asio::socket& socket::get_base() NOEXCEPT
         {
             return value;
         },
-        [](asio::ssl::socket& value) NOEXCEPT -> asio::socket&
+        [](tls::stream& value) NOEXCEPT -> asio::socket&
         {
             return value.next_layer();
         },
@@ -328,26 +328,26 @@ asio::socket& socket::get_base() NOEXCEPT
     }, socket_);
 }
 
-asio::ssl::socket& socket::get_ssl() NOEXCEPT
+tls::stream& socket::get_tls() NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT(secure());
 
     return std::visit(overload
     {
-        [](asio::socket&) NOEXCEPT -> asio::ssl::socket&
+        [](asio::socket&) NOEXCEPT -> tls::stream&
         {
             std::terminate();
         },
-        [](asio::ssl::socket& value) NOEXCEPT -> asio::ssl::socket&
+        [](tls::stream& value) NOEXCEPT -> tls::stream&
         {
             return value;
         },
-        [](p2ps::stream&) NOEXCEPT -> asio::ssl::socket&
+        [](p2ps::stream&) NOEXCEPT -> tls::stream&
         {
             std::terminate();
         },
-        [](zmtp::stream&) NOEXCEPT -> asio::ssl::socket&
+        [](zmtp::stream&) NOEXCEPT -> tls::stream&
         {
             std::terminate();
         }
@@ -365,7 +365,7 @@ p2ps::stream& socket::get_p2ps() NOEXCEPT
         {
             std::terminate();
         },
-        [](asio::ssl::socket&) NOEXCEPT -> p2ps::stream&
+        [](tls::stream&) NOEXCEPT -> p2ps::stream&
         {
             std::terminate();
         },
@@ -391,7 +391,7 @@ zmtp::stream& socket::get_zmtp() NOEXCEPT
         {
             std::terminate();
         },
-        [](asio::ssl::socket&) NOEXCEPT -> zmtp::stream&
+        [](tls::stream&) NOEXCEPT -> zmtp::stream&
         {
             std::terminate();
         },

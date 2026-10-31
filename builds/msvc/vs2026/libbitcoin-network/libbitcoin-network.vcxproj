@@ -252,7 +252,6 @@
     <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_server.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
-    <ClCompile Include="..\..\..\..\src\ssl\openssl.cpp" />
     <ClCompile Include="..\..\..\..\src\tls\codec.cpp" />
     <ClCompile Include="..\..\..\..\src\tls\context.cpp">
       <ObjectFileName>$(IntDir)src_tls_context.obj</ObjectFileName>
@@ -260,6 +259,9 @@
     <ClCompile Include="..\..\..\..\src\tls\record.cpp" />
     <ClCompile Include="..\..\..\..\src\tls\schedule.cpp" />
     <ClCompile Include="..\..\..\..\src\tls\server.cpp" />
+    <ClCompile Include="..\..\..\..\src\tls\stream.cpp">
+      <ObjectFileName>$(IntDir)src_tls_stream.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\ws\frame.cpp" />
     <ClCompile Include="..\..\..\..\src\ws\handshake.cpp" />
     <ClCompile Include="..\..\..\..\src\ws\reader.cpp" />
@@ -451,21 +453,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_server.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\sessions.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\openssl\conf.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\openssl\dh.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\openssl\engine.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\openssl\err.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\openssl\openssl.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\openssl\rsa.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\openssl\ssl.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\openssl\x509.h" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\ssl\openssl\x509v3.h" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\codec.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\constants.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\record.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\schedule.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\server.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\stream.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\tls.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\frame.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\handshake.hpp" />
@@ -495,6 +489,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\broadcaster.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\dispatcher.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\protocols\protocol_rpc.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\tls\stream.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\version.hpp.in" />
     <None Include="packages.config" />
   </ItemGroup>

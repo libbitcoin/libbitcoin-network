@@ -383,7 +383,6 @@ typedef boost::asio::error::basic_errors asio_basic_error_t;
 typedef boost::asio::error::netdb_errors asio_netdb_error_t;
 typedef boost::asio::error::addrinfo_errors asio_addrinfo_error_t;
 typedef boost::asio::error::misc_errors asio_misc_error_t;
-typedef boost::asio::ssl::error::stream_errors asio_ssl_stream_error_t;
 typedef system::error::json_error_t json_error_t;
 
 inline boost_code to_errc_code(boost_errc_t ec) NOEXCEPT
@@ -444,14 +443,6 @@ inline boost_code make_error_code(http_error_t ec) NOEXCEPT
     return to_http_code(ec);
 }
 
-inline boost_code to_ssl_stream_code(asio_ssl_stream_error_t ec) NOEXCEPT
-{
-    // boost::asio::ssl::error::stream::get_stream_category()
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return boost::asio::ssl::error::make_error_code(ec);
-    BC_POP_WARNING()
-}
-
 inline boost_code to_json_code(json_error_t ec) NOEXCEPT
 {
     // system::error::json_error_category::singleton
@@ -467,8 +458,8 @@ BCT_API code asio_to_error_code(const boost_code& ec) NOEXCEPT;
 /// 1:1 mapping of http_error_t to network.
 BCT_API code http_to_error_code(const boost_code& ec) NOEXCEPT;
 
-/// mapping of boost::asio::ssl stream error codes to network.
-BCT_API code ssl_to_error_code(const boost_code& ec) NOEXCEPT;
+/// Mapping of tls alert descriptions to network.
+BCT_API code tls_to_error_code(uint8_t alert) NOEXCEPT;
 
 /// Mapping of system::error::json_error_t to network.
 BCT_API code json_to_error_code(const boost_code& ec) NOEXCEPT;
