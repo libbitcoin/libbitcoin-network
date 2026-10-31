@@ -143,6 +143,7 @@
     <ClCompile Include="..\..\..\..\test\messages\http\parser.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http_body_reader.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\indirect.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\body.cpp" />

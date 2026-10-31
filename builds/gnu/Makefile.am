@@ -372,6 +372,7 @@ include_bitcoin_network_messagesdir = \
 include_bitcoin_network_messages_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/http_body.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http_method.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/indirect.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/json_body.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/messages.hpp
 
@@ -645,6 +646,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/log/tracker.cpp \
     ${srcdir}/../../test/messages/http_body_reader.cpp \
     ${srcdir}/../../test/messages/http_body_writer.cpp \
+    ${srcdir}/../../test/messages/indirect.cpp \
     ${srcdir}/../../test/messages/json_body_reader.cpp \
     ${srcdir}/../../test/messages/json_body_writer.cpp \
     ${srcdir}/../../test/messages/http/fields.cpp \

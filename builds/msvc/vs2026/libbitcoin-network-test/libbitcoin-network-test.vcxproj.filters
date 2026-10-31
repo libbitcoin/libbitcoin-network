@@ -207,6 +207,9 @@
     <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\indirect.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>

@@ -22,6 +22,7 @@
 #include <optional>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/indirect.hpp>
 #include <bitcoin/network/messages/json_body.hpp>
 #include <bitcoin/network/messages/peer/body.hpp>
 #include <bitcoin/network/messages/rpc/rpc.hpp>
@@ -83,18 +84,20 @@ using buffer_value = http::buffer_body::value_type;
 using string_value = http::string_body::value_type;
 using json_value = http::json_body::value_type;
 using peer_value = messages::peer::body::value_type;
+using rpc_request = indirect<rpc::request>;
+using rpc_response = indirect<rpc::response>;
 using body_value = std::variant
 <
-    empty_value,    //  1 byte
-    data_value,     // 40 bytes
-    file_value,     // 32 bytes
-    span_value,     // 16 bytes
-    buffer_value,   // 24 bytes
-    string_value,   // 40 bytes
-    json_value,     // 48 bytes
-    peer_value,     // 96 bytes
-    rpc::request,   // 248 bytes!
-    rpc::response   // 360 bytes!
+    empty_value,    //   1 byte
+    data_value,     //  24 bytes
+    file_value,     //  16 bytes
+    span_value,     //  16 bytes
+    buffer_value,   //  24 bytes
+    string_value,   //  32 bytes
+    json_value,     //  56 bytes
+    peer_value,     // 248 bytes
+    rpc_request,    //   8 bytes (240 indirect)
+    rpc_response    //   8 bytes (328 indirect)
 >;
 
 /// body template for all known message types.
@@ -124,8 +127,19 @@ struct BCT_API body
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, string_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, json_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, peer_value, inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpc::request, inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, rpc::response, inner_)
+
+        /// The rpc kinds derive from json_value, so are emplaced explicitly.
+        inline value_type& operator=(rpc::request&& value) NOEXCEPT
+        {
+            inner_.emplace(std::in_place_type<rpc_request>, std::move(value));
+            return *this;
+        }
+
+        inline value_type& operator=(rpc::response&& value) NOEXCEPT
+        {
+            inner_.emplace(std::in_place_type<rpc_response>, std::move(value));
+            return *this;
+        }
 
         inline bool has_value() const NOEXCEPT
         {
@@ -145,24 +159,39 @@ struct BCT_API body
         template <typename Inner>
         inline bool contains() const NOEXCEPT
         {
-            return has_value() && std::holds_alternative<Inner>(value());
+            return has_value() && std::holds_alternative<stored<Inner>>(value());
         }
 
         template <typename Inner>
         inline const Inner& get() const NOEXCEPT
         {
             BC_ASSERT(contains<Inner>());
-            return std::get<Inner>(value());
+            if constexpr (is_indirect<Inner>)
+                return *std::get<stored<Inner>>(value());
+            else
+                return std::get<Inner>(value());
         }
 
         template <typename Inner>
         inline Inner& get() NOEXCEPT
         {
             BC_ASSERT(contains<Inner>());
-            return std::get<Inner>(inner_.value());
+            if constexpr (is_indirect<Inner>)
+                return *std::get<stored<Inner>>(value());
+            else
+                return std::get<Inner>(value());
         }
 
     private:
+        template <typename Inner>
+        static constexpr bool is_indirect =
+            std::is_same_v<Inner, rpc::request> ||
+            std::is_same_v<Inner, rpc::response>;
+
+        template <typename Inner>
+        using stored = std::conditional_t<is_indirect<Inner>,
+            indirect<Inner>, Inner>;
+
         std::optional<body_value> inner_{};
     };
 
@@ -222,7 +251,7 @@ struct BCT_API body
                 [&](std::monostate&) NOEXCEPT {},
                 [&](span_value&) NOEXCEPT {},
                 [&](buffer_value&) NOEXCEPT {},
-                [&](rpc::response&) NOEXCEPT {},
+                [&](rpc_response&) NOEXCEPT {},
 
                 [&](empty_value& value) NOEXCEPT
                 {
@@ -250,10 +279,10 @@ struct BCT_API body
                     // Selectable only by preselection (non-http reads).
                     reader_.emplace<peer_reader>(header, value);
                 },
-                [&](rpc::request& value) NOEXCEPT
+                [&](rpc_request& value) NOEXCEPT
                 {
                     // json_reader not copy or assignable (by contained parser).
-                    reader_.emplace<rpc::reader>(header, value);
+                    reader_.emplace<rpc::reader>(header, *value);
                 }
             }, value.value());
         }
@@ -346,19 +375,19 @@ struct BCT_API body
                 {
                     return body_writer{ peer_writer{ header, value } };
                 },
-                [&](rpc::response& value) NOEXCEPT
+                [&](rpc_response& value) NOEXCEPT
                 {
                     // rpc::writer is not movable (by contained serializer).
                     // So requires in-place construction for variant populate.
                     return body_writer{ std::in_place_type<rpc::writer>,
-                        header, value };
+                        header, *value };
                 },
-                [&](rpc::request& value) NOEXCEPT
+                [&](rpc_request& value) NOEXCEPT
                 {
                     // rpc::writer is not movable (by contained serializer).
                     // So requires in-place construction for variant populate.
                     return body_writer{ std::in_place_type<rpc::notifier>,
-                        header, value };
+                        header, *value };
                 }
             }, value.value());
         }

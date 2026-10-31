@@ -559,7 +559,7 @@ void proxy::do_downgrade_read(const ref<http::request>& request,
         in.body() = rpc::request{};
 
     // Read as json-rpc, which applies batch normalization.
-    do_rpc_request_read(std::ref(std::get<rpc::request>(in.body().value())),
+    do_rpc_request_read(std::ref(in.body().get<rpc::request>()),
         buffer, handler);
 }
 
@@ -675,7 +675,7 @@ void proxy::handle_http_element(size_t bytes,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    auto& value = std::get<rpc::request>(parser_->get().body().value());
+    auto& value = parser_->get().body().get<rpc::request>();
 
     if (batch_open(value))
         batched_ = true;
@@ -745,14 +745,14 @@ void proxy::write(http::response&& response, count_handler&& handler,
         auto& body = response.body();
         if (body.contains<rpc::response>())
         {
-            write(std::move(std::get<rpc::response>(body.value())),
+            write(std::move(body.get<rpc::response>()),
                 std::move(handler));
             return;
         }
 
         if (body.contains<rpc::request>())
         {
-            notify(std::move(std::get<rpc::request>(body.value())),
+            notify(std::move(body.get<rpc::request>()),
                 std::move(handler));
             return;
         }
@@ -784,7 +784,7 @@ void proxy::do_http_queue(const http::response_ptr& response,
             return;
         }
 
-        auto& part = std::get<rpc::response>(body.value());
+        auto& part = body.get<rpc::response>();
         part.batch = parted_;
         part.changed = !parted_;
         parted_ = true;
@@ -826,7 +826,7 @@ void proxy::do_http_write(const http::response_ptr& response) NOEXCEPT
     auto& body = response->body();
     if (!socket_->websocket() && body.contains<rpc::response>())
     {
-        auto& part = std::get<rpc::response>(body.value());
+        auto& part = body.get<rpc::response>();
         if (part.batch)
         {
             socket_->rpc_write_chunk(std::move(part),

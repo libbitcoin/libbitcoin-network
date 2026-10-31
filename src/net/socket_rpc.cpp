@@ -76,7 +76,7 @@ void socket::handle_rpc_read(const code& ec, size_t bytes,
     if (!ec)
     {
         // Move rpc::request from http body value to caller out param.
-        out.get() = std::move(std::get<rpc::request>(in->body().value()));
+        out.get() = std::move(in->body().get<rpc::request>());
     }
 
     handler(ec, bytes);

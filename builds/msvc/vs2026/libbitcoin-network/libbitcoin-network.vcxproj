@@ -344,6 +344,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\serializer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http_body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http_method.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\indirect.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json_body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\body.hpp" />

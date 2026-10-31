@@ -21,6 +21,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -61,7 +62,7 @@ public:
     void close() NOEXCEPT;
 
 private:
-    std::fstream stream_{};
+    std::unique_ptr<std::fstream> stream_{};
     uint64_t size_{};
 };
 

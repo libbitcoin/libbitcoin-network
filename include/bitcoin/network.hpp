@@ -71,6 +71,7 @@
 #include <bitcoin/network/log/tracker.hpp>
 #include <bitcoin/network/messages/http_body.hpp>
 #include <bitcoin/network/messages/http_method.hpp>
+#include <bitcoin/network/messages/indirect.hpp>
 #include <bitcoin/network/messages/json_body.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/messages/http/bodies.hpp>

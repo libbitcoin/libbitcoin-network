@@ -40,15 +40,17 @@ bool file::open_read(const std::filesystem::path& path) NOEXCEPT
     try
     {
         close();
-        stream_.open(path, std::ios::in | std::ios::binary | std::ios::ate);
-        if (!stream_.is_open())
+        stream_ = std::make_unique<std::fstream>(path,
+            std::ios::in | std::ios::binary | std::ios::ate);
+
+        if (!stream_->is_open())
             return false;
 
         size_ = possible_narrow_sign_cast<uint64_t>(
-            static_cast<std::streamoff>(stream_.tellg()));
+            static_cast<std::streamoff>(stream_->tellg()));
 
-        stream_.seekg(0);
-        return stream_.good();
+        stream_->seekg(0);
+        return stream_->good();
     }
     catch (...)
     {
@@ -61,10 +63,11 @@ bool file::open_write(const std::filesystem::path& path) NOEXCEPT
     try
     {
         close();
-        stream_.open(path, std::ios::out | std::ios::binary |
-            std::ios::trunc);
+        stream_ = std::make_unique<std::fstream>(path,
+            std::ios::out | std::ios::binary | std::ios::trunc);
+
         size_ = zero;
-        return stream_.is_open();
+        return stream_->is_open();
     }
     catch (...)
     {
@@ -74,7 +77,7 @@ bool file::open_write(const std::filesystem::path& path) NOEXCEPT
 
 bool file::is_open() const NOEXCEPT
 {
-    return stream_.is_open();
+    return stream_ && stream_->is_open();
 }
 
 uint64_t file::size() const NOEXCEPT
@@ -84,13 +87,17 @@ uint64_t file::size() const NOEXCEPT
 
 bool file::read(size_t& out, uint8_t* data, size_t size) NOEXCEPT
 {
+    out = zero;
+    if (!stream_)
+        return false;
+
     try
     {
-        stream_.read(pointer_cast<char>(data),
+        stream_->read(pointer_cast<char>(data),
             possible_narrow_sign_cast<std::streamsize>(size));
 
-        out = possible_narrow_sign_cast<size_t>(stream_.gcount());
-        return !stream_.bad();
+        out = possible_narrow_sign_cast<size_t>(stream_->gcount());
+        return !stream_->bad();
     }
     catch (...)
     {
@@ -101,12 +108,15 @@ bool file::read(size_t& out, uint8_t* data, size_t size) NOEXCEPT
 
 bool file::write(const uint8_t* data, size_t size) NOEXCEPT
 {
+    if (!stream_)
+        return false;
+
     try
     {
-        stream_.write(pointer_cast<const char>(data),
+        stream_->write(pointer_cast<const char>(data),
             possible_narrow_sign_cast<std::streamsize>(size));
 
-        return stream_.good();
+        return stream_->good();
     }
     catch (...)
     {
@@ -118,8 +128,10 @@ void file::close() NOEXCEPT
 {
     try
     {
-        if (stream_.is_open())
-            stream_.close();
+        if (stream_ && stream_->is_open())
+            stream_->close();
+
+        stream_.reset();
     }
     catch (...)
     {
