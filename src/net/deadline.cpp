@@ -32,7 +32,7 @@ using namespace std::placeholders;
 
 BC_DEBUG_ONLY(static const steady_clock::time_point epoch{};)
 
-deadline::deadline(const logger& log, asio::strand& strand,
+deadline::deadline(const logger& log, io::strand& strand,
     const duration& timeout) NOEXCEPT
   : duration_(timeout),
     timer_(strand),
@@ -58,7 +58,7 @@ void deadline::start(result_handler&& handle, const duration& timeout) NOEXCEPT
     timer_.cancel();
     timer_.expires_after(timeout);
 
-    // Handler posted, cancel sets asio::error::operation_aborted.
+    // Handler posted, cancel sets error::operation_canceled.
     timer_.async_wait(
         std::bind(&deadline::handle_timer,
             shared_from_this(), _1, std::move(handle)));
@@ -82,13 +82,12 @@ seconds deadline::remaining() const NOEXCEPT
 }
 
 // Callback always (cancel or otherwise) fired with the normalized error code.
-void deadline::handle_timer(const boost_code& ec,
+void deadline::handle_timer(const code& ec,
     const result_handler& handle) NOEXCEPT
 {
     BC_DEBUG_ONLY(timer_.expires_at(epoch);)
 
-    // asio::error::operation_aborted maps to error::operation_canceled.
-    handle(error::asio_to_error_code(ec));
+    handle(ec);
 }
 
 BC_POP_WARNING()

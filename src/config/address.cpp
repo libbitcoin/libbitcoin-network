@@ -180,8 +180,8 @@ address::address(const messages::peer::address_item::cptr& message) NOEXCEPT
 {
 }
 
-address::address(const asio::endpoint& uri) NOEXCEPT
-  : address(endpoint{ from_asio(uri) })
+address::address(const io::endpoint& uri) NOEXCEPT
+  : address(endpoint{ uri })
 {
 }
 

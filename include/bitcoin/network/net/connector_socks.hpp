@@ -44,8 +44,8 @@ public:
     DELETE_COPY_MOVE_DESTRUCT(connector_socks);
 
     /// Resolves socks5 endpoint and stores address as member for each connect.
-    connector_socks(const logger& log, asio::strand& strand,
-        asio::context& service, std::atomic_bool& suspended,
+    connector_socks(const logger& log, io::strand& strand,
+        io::context& service, std::atomic_bool& suspended,
         parameters&& parameters, const settings::socks5& socks) NOEXCEPT;
 
 protected:

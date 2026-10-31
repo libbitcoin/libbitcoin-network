@@ -27,13 +27,13 @@ using namespace network::json;
 using value = system::json::value;
 using object = system::json::object;
 
-bool operator==(const asio::const_buffer& left, const asio::const_buffer& right)
+bool operator==(const io::const_buffer& left, const io::const_buffer& right)
 {
     return left.size() == right.size() &&
         is_zero(std::memcmp(left.data(), right.data(), left.size()));
 }
 
-bool operator!=(const asio::const_buffer& left, const asio::const_buffer& right)
+bool operator!=(const io::const_buffer& left, const io::const_buffer& right)
 {
     return !(left == right);
 }
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__init__default__success)
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 }
@@ -71,12 +71,12 @@ BOOST_AUTO_TEST_CASE(json_body_writer__init__default__success)
 BOOST_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more)
 {
     const std::string_view expected{ "null" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 
@@ -90,13 +90,13 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more
 BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_more)
 {
     const std::string_view expected{ R"({"key":"value"})" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     body.model = object{ { "key", "value" } };
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 
@@ -121,10 +121,10 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four
     const std::string_view expected2{ "xxxxxxxx" };
     const std::string_view expected3{ "xxxxxxxx" };
     const std::string_view expected4{ R"(xxxx"})" };
-    const asio::const_buffer out1{ expected1.data(), expected1.size() };
-    const asio::const_buffer out2{ expected2.data(), expected2.size() };
-    const asio::const_buffer out3{ expected3.data(), expected3.size() };
-    const asio::const_buffer out4{ expected4.data(), expected4.size() };
+    const io::const_buffer out1{ expected1.data(), expected1.size() };
+    const io::const_buffer out2{ expected2.data(), expected2.size() };
+    const io::const_buffer out3{ expected3.data(), expected3.size() };
+    const io::const_buffer out4{ expected4.data(), expected4.size() };
 
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four
     body.model = object{ { "key", std::string(20, 'x') } };
     body.size_hint = 8;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(!writer.done());
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__init__null_buffer__bad_alloc)
 {
     json::body<>::value_type body{};
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
     BOOST_REQUIRE(ec == error::http_error_t::bad_alloc);
 }
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__null_buffer_after_init__bad_alloc)
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__zero_limit_buffer__buffer_overflow)
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__after_done__end_of_stream)
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 

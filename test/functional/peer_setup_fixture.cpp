@@ -65,7 +65,7 @@ peer_setup_fixture::peer_setup_fixture(const configurator& configure)
     // Block until the network is running.
     ec = running.get_future().get();
     BOOST_REQUIRE_MESSAGE(!ec, ec.message());
-    socket_.connect(network::config::to_asio(settings_.inbound.binds.back().to_endpoint()));
+    REQUIRE_SUCCESS(socket_, connect, settings_.inbound.binds.back().to_endpoint());
 }
 
 peer_setup_fixture::~peer_setup_fixture()
@@ -84,19 +84,19 @@ void peer_setup_fixture::send(const std::string& command,
 
     std::copy(payload.begin(), payload.end(),
         std::next(frame.begin(), heading::size()));
-    boost::asio::write(socket_, boost::asio::buffer(frame));
+    test::write(socket_, io::buffer(frame));
 }
 
 std::pair<std::string, data_chunk> peer_setup_fixture::receive()
 {
     data_array<heading::size()> head_data{};
-    boost::asio::read(socket_, boost::asio::buffer(head_data));
+    test::read(socket_, io::buffer(head_data));
     const auto head = heading::deserialize(head_data);
     BOOST_REQUIRE(head);
 
     data_chunk payload(head->payload_size);
     if (!payload.empty())
-        boost::asio::read(socket_, boost::asio::buffer(payload));
+        test::read(socket_, io::buffer(payload));
 
     return { head->command, std::move(payload) };
 }
@@ -159,26 +159,35 @@ remote_peer::~remote_peer()
 
 void remote_peer::listen(const network::config::authority& endpoint)
 {
-    const auto local = network::config::to_asio(endpoint.to_endpoint());
-    acceptor_.open(local.protocol());
-    acceptor_.set_option(boost::asio::socket_base::reuse_address(true));
-    acceptor_.bind(local);
-    acceptor_.listen();
+    const auto local = endpoint.to_endpoint();
+    code ec{};
+    acceptor_.open(io::tcp::of(local), ec);
+    BOOST_REQUIRE(!ec);
+    acceptor_.set_option(io::reuse_address{ true }, ec);
+    BOOST_REQUIRE(!ec);
+    acceptor_.bind(local, ec);
+    BOOST_REQUIRE(!ec);
+    acceptor_.listen(ec);
+    BOOST_REQUIRE(!ec);
 }
 
 void remote_peer::accept()
 {
-    acceptor_.accept(socket_);
+    code ec{};
+    acceptor_.accept(socket_, ec);
+    BOOST_REQUIRE(!ec);
 }
 
 void remote_peer::connect(const network::config::authority& endpoint)
 {
-    socket_.connect(network::config::to_asio(endpoint.to_endpoint()));
+    code ec{};
+    socket_.connect(endpoint.to_endpoint(), ec);
+    BOOST_REQUIRE(!ec);
 }
 
 void remote_peer::disconnect()
 {
-    boost::system::error_code ignore{};
+    code ignore{};
     socket_.close(ignore);
     acceptor_.close(ignore);
 }
@@ -197,19 +206,19 @@ void remote_peer::send(const std::string& command, const data_chunk& payload)
 
     std::copy(payload.begin(), payload.end(),
         std::next(frame.begin(), heading::size()));
-    boost::asio::write(socket_, boost::asio::buffer(frame));
+    test::write(socket_, io::buffer(frame));
 }
 
 std::pair<std::string, data_chunk> remote_peer::receive()
 {
     data_array<heading::size()> head_data{};
-    boost::asio::read(socket_, boost::asio::buffer(head_data));
+    test::read(socket_, io::buffer(head_data));
     const auto head = heading::deserialize(head_data);
     BOOST_REQUIRE(head);
 
     data_chunk payload(head->payload_size);
     if (!payload.empty())
-        boost::asio::read(socket_, boost::asio::buffer(payload));
+        test::read(socket_, io::buffer(payload));
 
     return { head->command, std::move(payload) };
 }
@@ -226,14 +235,13 @@ data_chunk remote_peer::receive(const std::string& command)
 
 bool remote_peer::dropped()
 {
-    boost::system::error_code ec{};
+    code ec{};
     data_chunk buffer(heading::size());
     while (!ec)
-        boost::asio::read(socket_, boost::asio::buffer(buffer), ec);
+        io::read(socket_, io::buffer(buffer), ec);
 
-    return ec == boost::asio::error::eof ||
-        ec == boost::asio::error::connection_reset ||
-        ec == boost::asio::error::connection_aborted;
+    return ec == network::error::peer_disconnect ||
+        ec == network::error::operation_canceled;
 }
 
 void remote_peer::send_version(uint32_t value, uint64_t services,

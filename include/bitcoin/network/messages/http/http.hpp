@@ -31,6 +31,7 @@
 #include <bitcoin/network/messages/http/flat_buffer.hpp>
 #include <bitcoin/network/messages/http/header.hpp>
 #include <bitcoin/network/messages/http/message.hpp>
+#include <bitcoin/network/messages/http/operations.hpp>
 #include <bitcoin/network/messages/http/parser.hpp>
 #include <bitcoin/network/messages/http/serializer.hpp>
 

@@ -309,7 +309,7 @@ BOOST_FIXTURE_TEST_CASE(io_socket__write_read__sync__exchanged, loopback_fixture
     BOOST_REQUIRE_EQUAL(text.substr(0, size), "line one\r\n");
 }
 
-BOOST_FIXTURE_TEST_CASE(io_socket__read_some__non_blocking_no_data__connect_failed, loopback_fixture)
+BOOST_FIXTURE_TEST_CASE(io_socket__read_some__non_blocking_no_data__would_block, loopback_fixture)
 {
     connect();
     code ec{};
@@ -318,7 +318,7 @@ BOOST_FIXTURE_TEST_CASE(io_socket__read_some__non_blocking_no_data__connect_fail
     BOOST_REQUIRE(server.non_blocking());
     data_chunk buffer(10);
     BOOST_REQUIRE_EQUAL(server.read_some(io::buffer(buffer), ec), 0u);
-    BOOST_REQUIRE_EQUAL(ec, error::connect_failed);
+    BOOST_REQUIRE_EQUAL(ec, error::would_block);
 }
 
 BOOST_FIXTURE_TEST_CASE(io_socket__move__open_state_moved, loopback_fixture)
@@ -356,6 +356,110 @@ BOOST_FIXTURE_TEST_CASE(io_socket__strand__completes_in_strand, loopback_fixture
     context.run();
     BOOST_REQUIRE(in_strand);
     BOOST_REQUIRE_EQUAL(received, sent);
+}
+
+// half_closed
+
+struct connected_pair
+{
+    connected_pair() NOEXCEPT
+      : acceptor(service), accepted(service), connected(service)
+    {
+        code ec{};
+        acceptor.open(io::tcp::v4(), ec);
+        acceptor.bind(test::loopback(), ec);
+        acceptor.listen(ec);
+        connected.connect(acceptor.local_endpoint(ec), ec);
+        acceptor.accept(accepted, ec);
+        ok = !ec;
+    }
+
+    io::context service{};
+    io::acceptor acceptor;
+    io::socket accepted;
+    io::socket connected;
+    bool ok{};
+};
+
+// The FIN is delivered by the stack, not the caller.
+static bool half_closed_within(io::socket& sock, size_t milliseconds) NOEXCEPT
+{
+    for (size_t time{}; time < milliseconds; time += 10)
+    {
+        if (sock.half_closed())
+            return true;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    return sock.half_closed();
+}
+
+BOOST_AUTO_TEST_CASE(io_socket__half_closed__unopened__false)
+{
+    io::context service{};
+    io::socket sock(service);
+    BOOST_REQUIRE(!sock.half_closed());
+}
+
+BOOST_AUTO_TEST_CASE(io_socket__half_closed__connected__false)
+{
+    connected_pair connection{};
+    BOOST_REQUIRE(connection.ok);
+    BOOST_REQUIRE(!connection.accepted.half_closed());
+    BOOST_REQUIRE(!connection.connected.half_closed());
+}
+
+BOOST_AUTO_TEST_CASE(io_socket__half_closed__peer_shutdown__true)
+{
+    connected_pair connection{};
+    BOOST_REQUIRE(connection.ok);
+
+    code ec{};
+    connection.connected.shutdown(io::socket::shutdown_type::send, ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE(half_closed_within(connection.accepted, 1000));
+}
+
+BOOST_AUTO_TEST_CASE(io_socket__half_closed__peer_close__true)
+{
+    connected_pair connection{};
+    BOOST_REQUIRE(connection.ok);
+
+    code ec{};
+    connection.connected.close(ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE(half_closed_within(connection.accepted, 1000));
+}
+
+BOOST_AUTO_TEST_CASE(io_socket__half_closed__peer_shutdown_with_unread_data__true)
+{
+    connected_pair connection{};
+    BOOST_REQUIRE(connection.ok);
+
+    code ec{};
+    const std::string text{ "unconsumed" };
+    connection.connected.write_some(io::buffer(text), ec);
+    BOOST_REQUIRE(!ec);
+
+    connection.connected.shutdown(io::socket::shutdown_type::send, ec);
+    BOOST_REQUIRE(!ec);
+
+    BOOST_REQUIRE(half_closed_within(connection.accepted, 1000));
+    BOOST_REQUIRE(is_nonzero(connection.accepted.available(ec)));
+    BOOST_REQUIRE(!ec);
+}
+
+BOOST_AUTO_TEST_CASE(io_socket__half_closed__opened_unconnected__false)
+{
+    io::context service{};
+    io::socket sock(service);
+    code ec{};
+    sock.open(io::tcp::v4(), ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(!sock.half_closed());
 }
 
 // resolver

@@ -187,5 +187,11 @@ bool context::matches() const NOEXCEPT
 }
 
 } // namespace tls
+
+std::string_view tls_library() NOEXCEPT
+{
+    return "internal tls 1.3";
+}
+
 } // namespace network
 } // namespace libbitcoin

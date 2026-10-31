@@ -22,7 +22,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/io/buffer.hpp>
 #include <bitcoin/network/io/context.hpp>
 
@@ -67,7 +67,7 @@ using native_handle = int;
 
 /// Not thread safe. A tcp stream socket. Asynchronous operations complete on
 /// the executor, with operation_canceled if canceled or closed first. One
-/// read and one write may be pending at a time (as other asio streams).
+/// read and one write may be pending at a time.
 class BCT_API socket
 {
 public:
@@ -101,12 +101,21 @@ public:
     void close(code& ec) NOEXCEPT;
     void cancel(code& ec) NOEXCEPT;
     void shutdown(shutdown_type what, code& ec) NOEXCEPT;
+
+    /// Close, ignoring any error (as destruction).
+    void close() NOEXCEPT;
     void set_option(const no_delay& option, code& ec) NOEXCEPT;
     void set_option(const keep_alive& option, code& ec) NOEXCEPT;
 
     /// Synchronous operations fail with would_block if not blocking.
     void non_blocking(bool value, code& ec) NOEXCEPT;
     bool non_blocking() const NOEXCEPT;
+
+    /// The number of received bytes that can be read without blocking.
+    size_t available(code& ec) const NOEXCEPT;
+
+    /// The peer has closed its side of the connection (FIN received).
+    bool half_closed() const NOEXCEPT;
 
     endpoint local_endpoint(code& ec) const NOEXCEPT;
     endpoint remote_endpoint(code& ec) const NOEXCEPT;
@@ -177,6 +186,9 @@ public:
     void listen(code& ec) NOEXCEPT;
     void close(code& ec) NOEXCEPT;
     void cancel(code& ec) NOEXCEPT;
+
+    /// Close, ignoring any error (as destruction).
+    void close() NOEXCEPT;
 
     endpoint local_endpoint(code& ec) const NOEXCEPT;
     endpoint local_endpoint() const NOEXCEPT;

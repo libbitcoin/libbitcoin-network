@@ -26,12 +26,12 @@ class accessor
 public:
     using connector::connector;
 
-    const asio::context& get_service() const NOEXCEPT
+    const io::context& get_service() const NOEXCEPT
     {
         return service_;
     }
 
-    const asio::strand& get_strand() const NOEXCEPT
+    const io::strand& get_strand() const NOEXCEPT
     {
         return strand_;
     }
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
     threadpool pool(1);
     constexpr auto maximum = 42u;
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     connector::parameters params{ .connect_timeout = seconds(10), .maximum_request = maximum };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
@@ -76,12 +76,12 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address_suspended__servic
     log.stop();
     threadpool pool(2);
     std::atomic_bool suspended{ true };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     connector::parameters params{ .connect_timeout = microseconds(1), .maximum_request = 42 };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
-    boost::asio::post(strand, [&]() NOEXCEPT
+    io::post(strand, [&]() NOEXCEPT
     {
         // DNS resolve failure (race), timeout includes a socket.
         instance->connect(config::endpoint{ "42.42.42.42:42" },
@@ -106,12 +106,12 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeou
     log.stop();
     threadpool pool(2);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     connector::parameters params{ .connect_timeout = microseconds(1), .maximum_request = 42 };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
-    boost::asio::post(strand, [&]() NOEXCEPT
+    io::post(strand, [&]() NOEXCEPT
     {
         // DNS resolve failure (race), timeout includes a socket.
         instance->connect(config::endpoint{ "42.42.42.42:42" },
@@ -137,12 +137,12 @@ BOOST_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_ti
     log.stop();
     threadpool pool(2);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     connector::parameters params{ .connect_timeout = microseconds(1), .maximum_request = 42 };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
-    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    io::post(strand, [&, instance]() NOEXCEPT
     {
         // IP address times out (never a resolve failure), timeout includes a socket.
         instance->connect(config::authority{ "42.42.42.42:42" },
@@ -168,12 +168,12 @@ BOOST_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed
     log.stop();
     threadpool pool(2);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     connector::parameters params{ .connect_timeout = microseconds(1), .maximum_request = 42 };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
 
-    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    io::post(strand, [&, instance]() NOEXCEPT
     {
         // DNS resolve failure (race), timeout includes a socket.
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
@@ -197,13 +197,13 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_can
     log.stop();
     threadpool pool(2);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     connector::parameters params{ .connect_timeout = seconds(1000), .maximum_request = 42 };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
     code ec1{};
 
-    boost::asio::post(strand, [&, instance]()NOEXCEPT
+    io::post(strand, [&, instance]()NOEXCEPT
     {
         // DNS resolve failure (race), cancel may include a socket.
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
@@ -249,14 +249,14 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
     log.stop();
     threadpool pool(2);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     connector::parameters params{ .connect_timeout = seconds(1000), .maximum_request = 42 };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     auto result = true;
     code ec1{};
     code ec2{};
 
-    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    io::post(strand, [&, instance]() NOEXCEPT
     {
         // DNS resolve failure (race), cancel may include a socket.
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
@@ -302,13 +302,13 @@ BOOST_AUTO_TEST_CASE(connector__connect__suspended_before_resolve__service_suspe
     log.stop();
     threadpool pool(2);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     connector::parameters params{ .connect_timeout = seconds(100), .maximum_request = 42 };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     std::promise<code> connected{};
     std::promise<bool> null{};
 
-    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    io::post(strand, [&, instance]() NOEXCEPT
     {
         instance->connect(config::endpoint{ "127.0.0.1:65124" }, [&](const code& ec, const socket::ptr& socket) NOEXCEPT
         {
@@ -335,13 +335,13 @@ BOOST_AUTO_TEST_CASE(connector__connect__unresolvable_hostname__resolve_failed)
     log.stop();
     threadpool pool(2);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     connector::parameters params{ .connect_timeout = seconds(100), .maximum_request = 42 };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
     std::promise<code> connected{};
     std::promise<bool> null{};
 
-    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    io::post(strand, [&, instance]() NOEXCEPT
     {
         instance->connect(config::endpoint{ "bogus.invalid", 42 }, [&](const code& ec, const socket::ptr& socket) NOEXCEPT
         {

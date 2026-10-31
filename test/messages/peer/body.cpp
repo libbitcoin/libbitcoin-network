@@ -59,7 +59,7 @@ static frame test_frame()
 
 static code put_fault(frame& value, const data_chunk& framed)
 {
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -77,7 +77,7 @@ static code put_fault(frame& value, const data_chunk& framed)
 BOOST_AUTO_TEST_CASE(peer_body__need__initial__heading_size)
 {
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
     BOOST_REQUIRE(!ec);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(peer_body__need__initial__heading_size)
 BOOST_AUTO_TEST_CASE(peer_body__put__empty_buffer__defers)
 {
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__framed_sequence__message)
     const auto payload = frame_payload(data);
 
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__short_reads__defer)
     const auto payload = frame_payload(data);
 
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__empty_payload__completes_on_heading)
     BOOST_REQUIRE(head.serialize({ data.data(), std::next(data.data(), heading::size()) }));
 
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__unknown_command__invalid_message_fault)
     BOOST_REQUIRE(head.serialize({ data.data(), std::next(data.data(), heading::size()) }));
 
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__checksum_disabled__message)
     auto value = test_frame();
     value.checksum = false;
 
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
     BOOST_REQUIRE_EQUAL(reader.put({ head.data(), head.size() }, ec), heading::size());
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer_sequence__message)
     auto buffer = frame_payload(data);
 
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value, buffer };
     reader.init({}, ec);
 
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer__buffer_retained)
     auto buffer = payload;
 
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value, buffer };
     reader.init({}, ec);
     reader.put({ head.data(), head.size() }, ec);
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer_empty_payload__completes_on_h
     data_chunk buffer(42, 0x42);
 
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value, buffer };
     reader.init({}, ec);
 
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer_invalid_checksum__fault)
     auto buffer = frame_payload(data);
 
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value, buffer };
     reader.init({}, ec);
 
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put__framed_buffer_block__message)
     auto buffer = frame_payload(data);
 
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value, buffer };
     reader.init({}, ec);
 
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__frame__emitted)
     value.message = rpc::any_t{ system::to_shared(ping{ nonce }) };
     value.index = messages::peer::registry::index_of<ping>();
 
-    boost_code ec{};
+    code ec{};
     body::writer writer{ value };
     writer.init(ec);
     BOOST_REQUIRE(!ec);
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__get_twice__empty)
     value.message = rpc::any_t{ system::to_shared(ping{ nonce }) };
     value.index = messages::peer::registry::index_of<ping>();
 
-    boost_code ec{};
+    code ec{};
     body::writer writer{ value };
     writer.init(ec);
 
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(peer_body__writer__get_twice__empty)
 BOOST_AUTO_TEST_CASE(peer_body__writer__no_message__error)
 {
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::writer writer{ value };
     writer.init(ec);
     BOOST_REQUIRE(ec);
@@ -459,7 +459,7 @@ static const auto ping_payload = system::base16_chunk("efcdab8967452301");
 BOOST_AUTO_TEST_CASE(peer_body__put_v2__identifier__message)
 {
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put_v2__identifier__message)
 BOOST_AUTO_TEST_CASE(peer_body__put_v2__command__message)
 {
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put_v2__command__message)
 BOOST_AUTO_TEST_CASE(peer_body__put_v2__unknown_command__unknown_message_fault)
 {
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -513,7 +513,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put_v2__unknown_command__unknown_message_fault)
 BOOST_AUTO_TEST_CASE(peer_body__put_v2__unknown_identifier__unknown_message_fault)
 {
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put_v2__oversized_payload__fault)
 {
     auto value = test_frame();
     value.maximum = sub1(ping_payload.size());
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(peer_body__put_v2__oversized_payload__fault)
 BOOST_AUTO_TEST_CASE(peer_body__put_v2__short_payload__invalid_message_fault)
 {
     auto value = test_frame();
-    boost_code ec{};
+    code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
 

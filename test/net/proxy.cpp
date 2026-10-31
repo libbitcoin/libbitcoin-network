@@ -31,7 +31,7 @@ public:
     using proxy::lazy;
     using proxy::accept_websocket;
 
-    void write_ws(const asio::const_buffer& in, bool binary, count_handler&& handler) NOEXCEPT
+    void write_ws(const io::const_buffer& in, bool binary, count_handler&& handler) NOEXCEPT
     {
         proxy::write(in, binary, std::move(handler));
     }
@@ -70,7 +70,7 @@ public:
     }
 
     // Call must be stranded.
-    void write1(const asio::const_buffer& in,
+    void write1(const io::const_buffer& in,
         count_handler&& handler) NOEXCEPT
     {
         proxy::write(in, std::move(handler));
@@ -108,7 +108,7 @@ static milliseconds get_unconsumed(uint32_t rate_limit, size_t bytes,
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, rate_limit);
 
     std::promise<milliseconds> deferral;
-    boost::asio::post(proxy_ptr->strand(), [=, &deferral]() NOEXCEPT
+    io::post(proxy_ptr->strand(), [=, &deferral]() NOEXCEPT
     {
         deferral.set_value(std::chrono::duration_cast<milliseconds>(
             proxy_ptr->unconsumed1(bytes, steady_clock::now() - elapsed)));
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(proxy__unconsumed__stopped__zero)
     proxy_ptr->stop(error::invalid_magic);
 
     std::promise<steady_clock::duration::rep> deferral;
-    boost::asio::post(proxy_ptr->strand(), [=, &deferral]() NOEXCEPT
+    io::post(proxy_ptr->strand(), [=, &deferral]() NOEXCEPT
     {
         deferral.set_value(
             proxy_ptr->unconsumed1(1000, steady_clock::now()).count());
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
     constexpr auto expected_ec = error::invalid_magic;
 
     std::promise<code> stop1_stopped;
-    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    io::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
         proxy_ptr->subscribe_stop1([=, &stop1_stopped](code ec) NOEXCEPT
         {
@@ -274,11 +274,11 @@ BOOST_AUTO_TEST_CASE(proxy__write__within_backlog__not_stopped)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 0, 1'000'000);
 
     const std::string text(1024, 'x');
-    const asio::const_buffer buffer{ text.data(), text.size() };
+    const io::const_buffer buffer{ text.data(), text.size() };
 
     // Both writes are queued inline, as dispatch to the current strand.
     std::promise<bool> queued;
-    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    io::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
         proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
         proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
@@ -319,10 +319,10 @@ BOOST_AUTO_TEST_CASE(proxy__write__exceeds_backlog__channel_backlog)
     BOOST_REQUIRE_EQUAL(subscribed.get_future().get(), error::success);
 
     const std::string text(1024, 'x');
-    const asio::const_buffer buffer{ text.data(), text.size() };
+    const io::const_buffer buffer{ text.data(), text.size() };
 
     // Both writes are queued inline, so the first cannot complete between.
-    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    io::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
         proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
         proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
@@ -348,11 +348,11 @@ BOOST_AUTO_TEST_CASE(proxy__write__exceeds_backlog_zeromq__message_dropped)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, 0, 512);
 
     const std::string text(1024, 'x');
-    const asio::const_buffer buffer{ text.data(), text.size() };
+    const io::const_buffer buffer{ text.data(), text.size() };
 
     // Both writes are queued inline, so the first cannot complete between.
     std::promise<code> dropped;
-    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    io::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
         proxy_ptr->write1(buffer, [](const code&, size_t) NOEXCEPT {});
         proxy_ptr->write1(buffer, [&](const code& ec, size_t) NOEXCEPT
@@ -465,17 +465,17 @@ struct loopback_fixture
         const auto server = std::make_shared<network::socket>(log, pool.service(), params);
         channel = std::make_shared<mock_proxy>(server, rate_limit, 1'000'000);
 
-        const asio::endpoint endpoint{ asio::ipv4::loopback(), loopback_port };
-        asio::strand strand{ pool.service().get_executor() };
-        asio::acceptor acceptor{ strand };
-        boost_code ec{};
-        acceptor.open(endpoint.protocol(), ec);
+        const io::endpoint endpoint{ test::loopback(loopback_port) };
+        io::strand strand{ pool.service().get_executor() };
+        io::acceptor acceptor{ strand };
+        code ec{};
+        acceptor.open(io::tcp::of(endpoint), ec);
         BOOST_REQUIRE(!ec);
-        acceptor.set_option(asio::reuse_address(true), ec);
+        acceptor.set_option(io::reuse_address(true), ec);
         BOOST_REQUIRE(!ec);
         acceptor.bind(endpoint, ec);
         BOOST_REQUIRE(!ec);
-        acceptor.listen(1, ec);
+        acceptor.listen(ec);
         BOOST_REQUIRE(!ec);
 
         const awaiter<code> accepted{};
@@ -515,7 +515,7 @@ struct loopback_fixture
 
     void read_rpc(const awaiter<code>& done)
     {
-        boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+        io::post(channel->strand(), [=, this]() NOEXCEPT
         {
             channel->read(buffer, rpc_request, complete(done));
         });
@@ -523,7 +523,7 @@ struct loopback_fixture
 
     void read_http(const awaiter<code>& done)
     {
-        boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+        io::post(channel->strand(), [=, this]() NOEXCEPT
         {
             channel->read(buffer, http_request, complete(done));
         });
@@ -531,43 +531,43 @@ struct loopback_fixture
 
     void send(const std::string& text)
     {
-        boost_code ec{};
-        boost::asio::write(client, boost::asio::buffer(text), ec);
+        code ec{};
+        io::write(client, io::buffer(text), ec);
         BOOST_REQUIRE(!ec);
     }
 
     std::string receive(size_t size)
     {
         std::string text(size, '\0');
-        boost_code ec{};
-        boost::asio::read(client, boost::asio::buffer(text), ec);
+        code ec{};
+        io::read(client, io::buffer(text), ec);
         BOOST_REQUIRE(!ec);
         return text;
     }
 
     std::string receive_line()
     {
-        boost_code ec{};
-        const auto size = boost::asio::read_until(client, boost::asio::dynamic_buffer(pending), '\n', ec);
+        code ec{};
+        const auto size = io::read_until(client, pending, "\n", ec);
         BOOST_REQUIRE(!ec);
         const auto line = pending.substr(0, sub1(size));
         pending.erase(0, size);
         return line;
     }
 
-    boost::beast::http::response<boost::beast::http::string_body> receive_http()
+    http::message<false, http::string_body> receive_http()
     {
-        boost_code ec{};
-        boost::beast::http::response<boost::beast::http::string_body> out{};
-        boost::beast::http::read(client, client_buffer, out, ec);
+        code ec{};
+        http::message<false, http::string_body> out{};
+        http::read(client, client_buffer, out, ec);
         BOOST_REQUIRE(!ec);
         return out;
     }
 
     const logger log{};
     threadpool pool{ 2 };
-    asio::context service{};
-    asio::socket client{ service };
+    io::context service{};
+    io::socket client{ service };
     http::flat_buffer client_buffer{};
     std::string pending{};
     http::flat_buffer buffer{ 64 * 1024 };
@@ -599,11 +599,11 @@ struct websocket_fixture
   : loopback_fixture
 {
     websocket_fixture(const steady_clock::duration& connect_timeout={})
-      : loopback_fixture(0, connect_timeout), stream{ std::move(client) }
+      : loopback_fixture(0, connect_timeout), stream{ client }
     {
         const awaiter<code> upgraded{};
         const awaiter<code> accepted{};
-        boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+        io::post(channel->strand(), [=, this]() NOEXCEPT
         {
             channel->read(buffer, http_request, [=, this](const code& ec, size_t) NOEXCEPT
             {
@@ -612,14 +612,14 @@ struct websocket_fixture
             });
         });
 
-        boost_code ec{};
-        stream.handshake("localhost", "/", ec);
+        code ec{};
+        ec = stream.handshake("localhost", "/");
         BOOST_REQUIRE(!ec);
         upgrade_result = upgraded.get();
         accept_result = accepted.get();
     }
 
-    boost::beast::websocket::stream<asio::socket> stream;
+    ws::client<io::socket> stream;
     code upgrade_result{};
     code accept_result{};
 };
@@ -653,7 +653,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__properties__accepted__expected, loopback_fixture)
 BOOST_FIXTURE_TEST_CASE(proxy__poll__connected__success, loopback_fixture)
 {
     const awaiter<code> polled{};
-    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+    io::post(channel->strand(), [=, this]() NOEXCEPT
     {
         channel->poll([=](const code& ec) NOEXCEPT
         {
@@ -668,7 +668,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__poll__stopped__success, loopback_fixture)
 {
     const awaiter<code> polled{};
     channel->stop(error::service_stopped);
-    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+    io::post(channel->strand(), [=, this]() NOEXCEPT
     {
         channel->poll([=](const code& ec) NOEXCEPT
         {
@@ -683,9 +683,11 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_ws__tcp_full_buffer__buffer_overflow, loopba
 {
     static const std::string text{ "abcd" };
     http::flat_buffer full{ text.size() };
-    full.commit(boost::asio::buffer_copy(full.prepare(text.size()), boost::asio::buffer(text)));
+    const auto space = full.prepare(text.size());
+    std::copy(text.begin(), text.end(), system::pointer_cast<char>(space.data()));
+    full.commit(text.size());
     const awaiter<code> read{};
-    boost::asio::post(channel->strand(), [=, this, &full]() NOEXCEPT
+    io::post(channel->strand(), [=, this, &full]() NOEXCEPT
     {
         channel->read(full, complete(read));
     });
@@ -698,9 +700,9 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_ws__tcp_full_buffer__buffer_overflow, loopba
 BOOST_FIXTURE_TEST_CASE(proxy__read_tcp__client_sent__expected_counted, loopback_fixture)
 {
     const awaiter<code> read{};
-    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+    io::post(channel->strand(), [=, this]() NOEXCEPT
     {
-        channel->read(asio::mutable_buffer{ bytes.data(), bytes.size() }, complete(read));
+        channel->read(io::mutable_buffer{ bytes.data(), bytes.size() }, complete(read));
     });
 
     send("abcd");
@@ -712,9 +714,9 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_tcp__client_sent__expected_counted, loopback
 BOOST_FIXTURE_TEST_CASE(proxy__read_tcp__stopped__channel_stopped, loopback_fixture)
 {
     const awaiter<code> read{};
-    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+    io::post(channel->strand(), [=, this]() NOEXCEPT
     {
-        channel->read(asio::mutable_buffer{ bytes.data(), bytes.size() }, complete(read));
+        channel->read(io::mutable_buffer{ bytes.data(), bytes.size() }, complete(read));
     });
 
     channel->stop(error::service_stopped);
@@ -725,7 +727,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_tcp__stopped__channel_stopped, loopback_fixt
 BOOST_FIXTURE_TEST_CASE(proxy__read_ws__tcp_client_sent__prepared_uncommitted, loopback_fixture)
 {
     const awaiter<size_t> read{};
-    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+    io::post(channel->strand(), [=, this]() NOEXCEPT
     {
         channel->read(buffer, [=](const code&, size_t size) NOEXCEPT
         {
@@ -737,7 +739,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_ws__tcp_client_sent__prepared_uncommitted, l
     BOOST_REQUIRE_EQUAL(read.get(), 4u);
     BOOST_REQUIRE_EQUAL(buffer.size(), 0u);
     buffer.commit(4);
-    BOOST_REQUIRE_EQUAL(boost::beast::buffers_to_string(buffer.data()), "abcd");
+    BOOST_REQUIRE_EQUAL(test::to_string(buffer.data()), "abcd");
 }
 
 BOOST_FIXTURE_TEST_CASE(proxy__write_tcp__buffer__client_receives_counted, loopback_fixture)
@@ -852,7 +854,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__batch_parted__close_part_written, loopback_
     channel->write_rpc(to_response(1), complete(written));
     BOOST_REQUIRE_EQUAL(written.get(), error::success);
 
-    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+    io::post(channel->strand(), [=, this]() NOEXCEPT
     {
         channel->stop(error::invalid_magic);
     });
@@ -870,17 +872,17 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_end_of_file, loopba
     BOOST_REQUIRE_EQUAL(stopped.get(), error::channel_expired);
 
     char byte{};
-    boost_code ec{};
-    client.read_some(boost::asio::buffer(&byte, 1), ec);
-    BOOST_REQUIRE(ec == boost::asio::error::eof);
+    code ec{};
+    client.read_some(io::buffer(&byte, 1), ec);
+    BOOST_REQUIRE(ec == error::peer_disconnect);
 }
 
 // The lingering close drains unread bytes, so the client is not reset.
 BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_unread_bytes__client_end_of_file, bounded_fixture)
 {
-    boost_code ec{};
+    code ec{};
     const std::string unread{ "unread" };
-    boost::asio::write(client, boost::asio::buffer(unread), ec);
+    io::write(client, io::buffer(unread), ec);
     BOOST_REQUIRE(!ec);
 
     const auto stopped = subscribe();
@@ -888,8 +890,8 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_unread_bytes__clien
     BOOST_REQUIRE_EQUAL(stopped.get(), error::channel_expired);
 
     char byte{};
-    client.read_some(boost::asio::buffer(&byte, 1), ec);
-    BOOST_REQUIRE(ec == boost::asio::error::eof);
+    client.read_some(io::buffer(&byte, 1), ec);
+    BOOST_REQUIRE(ec == error::peer_disconnect);
 }
 
 BOOST_FIXTURE_TEST_CASE(proxy__lazy__service_stopped__false, loopback_fixture)
@@ -935,8 +937,8 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_http__detect_client_shutdown__peer_disconnec
     http_request.body() = rpc::request{};
     read_http(read);
 
-    boost_code ec{};
-    client.shutdown(asio::socket::shutdown_send, ec);
+    code ec{};
+    client.shutdown(io::socket::shutdown_type::send, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::peer_disconnect);
 }
@@ -949,8 +951,8 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_http__truncated_body__partial_message, loopb
     send(post.substr(0, sub1(post.size())));
     read_http(read);
 
-    boost_code ec{};
-    client.shutdown(asio::socket::shutdown_send, ec);
+    code ec{};
+    client.shutdown(io::socket::shutdown_type::send, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::partial_message);
 }
@@ -1068,7 +1070,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__write_http__stopped_peer_body__handler_not_invoke
         invoked = true;
     });
 
-    boost::asio::post(channel->strand(), [=]() NOEXCEPT
+    io::post(channel->strand(), [=]() NOEXCEPT
     {
         drained.set(true);
     });
@@ -1167,12 +1169,12 @@ BOOST_FIXTURE_TEST_CASE(proxy__write_ws__text__client_receives_text_message, web
     const awaiter<code> written{};
     channel->write_ws({ text.data(), text.size() }, false, complete(written));
 
-    boost_code ec{};
+    code ec{};
     http::flat_buffer in{};
-    stream.read(in, ec);
+    ec = stream.read(in);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(stream.got_text());
-    BOOST_REQUIRE_EQUAL(boost::beast::buffers_to_string(in.data()), text);
+    BOOST_REQUIRE(!stream.binary());
+    BOOST_REQUIRE_EQUAL(test::to_string(in.data()), text);
     BOOST_REQUIRE_EQUAL(written.get(), error::success);
 }
 
@@ -1180,24 +1182,24 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_ws__client_message__expected, websocket_fixt
 {
     static const std::string text{ "hello" };
     const awaiter<code> read{};
-    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+    io::post(channel->strand(), [=, this]() NOEXCEPT
     {
         channel->read(buffer, complete(read));
     });
 
-    boost_code ec{};
-    stream.write(boost::asio::buffer(text), ec);
+    code ec{};
+    ec = stream.write(text);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::success);
-    BOOST_REQUIRE_EQUAL(boost::beast::buffers_to_string(buffer.data()), text);
+    BOOST_REQUIRE_EQUAL(test::to_string(buffer.data()), text);
 }
 
 BOOST_FIXTURE_TEST_CASE(proxy__read_tcp__websocket__operation_failed, websocket_fixture)
 {
     const awaiter<code> read{};
-    boost::asio::post(channel->strand(), [=, this]() NOEXCEPT
+    io::post(channel->strand(), [=, this]() NOEXCEPT
     {
-        channel->read(asio::mutable_buffer{ bytes.data(), bytes.size() }, complete(read));
+        channel->read(io::mutable_buffer{ bytes.data(), bytes.size() }, complete(read));
     });
 
     BOOST_REQUIRE_EQUAL(read.get(), error::operation_failed);
@@ -1210,9 +1212,8 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_http__websocket_rpc_body__expected, websocke
     http_request.body() = rpc::request{};
     read_http(read);
 
-    boost_code ec{};
-    stream.text(true);
-    stream.write(boost::asio::buffer(request1), ec);
+    code ec{};
+    ec = stream.write(request1);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::success);
     BOOST_REQUIRE_EQUAL(http_request.body().get<rpc::request>().message.method, "a");
@@ -1225,11 +1226,11 @@ BOOST_FIXTURE_TEST_CASE(proxy__write_http__websocket_json_body__client_receives_
     content.model = system::json::object{ { "key", "value" } };
     channel->write_http(to_http(std::move(content)), complete(written));
 
-    boost_code ec{};
+    code ec{};
     http::flat_buffer in{};
-    stream.read(in, ec);
+    ec = stream.read(in);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(boost::beast::buffers_to_string(in.data()), R"({"key":"value"})");
+    BOOST_REQUIRE_EQUAL(test::to_string(in.data()), R"({"key":"value"})");
     BOOST_REQUIRE_EQUAL(written.get(), error::success);
 }
 
@@ -1238,19 +1239,19 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__client_receives_close, bo
     const auto stopped = subscribe();
     channel->stop(error::websocket_closed);
 
-    boost_code ec{};
+    code ec{};
     http::flat_buffer in{};
-    stream.read(in, ec);
-    BOOST_REQUIRE(ec == boost::beast::websocket::error::closed);
+    ec = stream.read(in);
+    BOOST_REQUIRE(ec == error::websocket_closed);
     BOOST_REQUIRE_EQUAL(stopped.get(), error::websocket_closed);
 }
 
-boost_code read_some_until(auto& stream) NOEXCEPT
+code read_some_until(io::socket& socket) NOEXCEPT
 {
     std::array<char, 64> bytes{};
-    boost_code ec{};
+    code ec{};
     while (!ec)
-        stream.next_layer().read_some(boost::asio::buffer(bytes), ec);
+        socket.read_some(io::buffer(bytes), ec);
 
     return ec;
 }
@@ -1260,7 +1261,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__websocket_closed__zero_connect_timeout__cli
     const auto stopped = subscribe();
     channel->stop(error::websocket_closed);
     BOOST_REQUIRE_EQUAL(stopped.get(), error::websocket_closed);
-    BOOST_REQUIRE(read_some_until(stream) == boost::asio::error::eof);
+    BOOST_REQUIRE(read_some_until(client) == error::peer_disconnect);
 }
 
 BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__websocket_unanswered__client_end_of_file, bounded_websocket_fixture)
@@ -1268,7 +1269,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__stop__channel_expired__websocket_unanswered__clie
     const auto stopped = subscribe();
     channel->stop(error::channel_expired);
     BOOST_REQUIRE_EQUAL(stopped.get(), error::channel_expired);
-    BOOST_REQUIRE(read_some_until(stream) == boost::asio::error::eof);
+    BOOST_REQUIRE(read_some_until(client) == error::peer_disconnect);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

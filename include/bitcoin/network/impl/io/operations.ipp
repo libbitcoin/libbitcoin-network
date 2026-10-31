@@ -21,7 +21,7 @@
 
 #include <memory>
 #include <vector>
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
 namespace network {

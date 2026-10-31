@@ -30,7 +30,7 @@
 using zmtp_stream = network::zmtp::stream;
 using zmtp_context = network::zmtp::context;
 using zmtp_role = network::zmtp::role;
-using peer_socket = network::asio::socket;
+using peer_socket = network::io::socket;
 
 // The role harness servers bind these ports for their libzmq peers.
 #define ZMTP_PULLER_PORT 65031
@@ -109,9 +109,9 @@ struct socket_setup_fixture
     const zmtp_context configuration{};
     socket::parameters params;
     socket::ptr sock;
-    asio::strand strand;
-    asio::acceptor acceptor;
-    boost::asio::io_context peer_context{};
+    io::strand strand;
+    io::acceptor acceptor;
+    io::context peer_context{};
     peer_socket peer;
     http::flat_buffer buffer{};
     std::string first{};
@@ -209,9 +209,9 @@ struct publisher_setup_fixture
     socket::parameters params;
     socket::ptr sock;
     std::shared_ptr<mock_proxy> prx;
-    asio::strand strand;
-    asio::acceptor acceptor;
-    boost::asio::io_context peer_context{};
+    io::strand strand;
+    io::acceptor acceptor;
+    io::context peer_context{};
     peer_socket peer;
     http::flat_buffer buffer{};
     std::promise<code> armed{};
@@ -240,8 +240,8 @@ struct role_setup_fixture
     const zmtp_context configuration{};
     socket::parameters params;
     socket::ptr sock;
-    asio::strand strand;
-    asio::acceptor acceptor;
+    io::strand strand;
+    io::acceptor acceptor;
     http::flat_buffer buffer{};
 };
 

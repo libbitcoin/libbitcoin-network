@@ -111,7 +111,7 @@ void session_peer::do_attach_protocols(const channel::ptr& channel,
     channel->resume();
 
     // Complete on network strand.
-    boost::asio::post(network_.strand(),
+    io::post(network_.strand(),
         std::bind(started, error::success));
 }
 

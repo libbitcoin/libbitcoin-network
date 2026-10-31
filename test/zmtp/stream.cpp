@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_SUITE(zmtp_stream_tests)
 using stream = network::zmtp::stream;
 using context = network::zmtp::context;
 using role = network::zmtp::role;
-using peer_socket = network::asio::socket;
+using peer_socket = network::io::socket;
 using system::data_chunk;
 using system::data_stack;
 using system::base16_chunk;
@@ -33,20 +33,20 @@ using system::base16_chunk;
 // ----------------------------------------------------------------------------
 
 // Establish a connected local socket pair on the given service.
-static void connect_pair(boost::asio::io_context& service,
+static void connect_pair(io::context& service,
     peer_socket& server, peer_socket& client)
 {
-    boost::asio::ip::tcp::acceptor acceptor{ service,
-        { boost::asio::ip::address_v4::loopback(), 0 } };
+    io::acceptor acceptor{ service,
+        test::loopback(0) };
 
     bool accepted{};
     bool connected{};
-    acceptor.async_accept(server, [&](const boost_code& ec)
+    acceptor.async_accept(server, [&](const code& ec)
     {
         BOOST_REQUIRE(!ec);
         accepted = true;
     });
-    client.async_connect(acceptor.local_endpoint(), [&](const boost_code& ec)
+    client.async_connect(acceptor.local_endpoint(), [&](const code& ec)
     {
         BOOST_REQUIRE(!ec);
         connected = true;
@@ -88,8 +88,8 @@ static data_chunk ready(const std::string& type)
 class raw_peer
 {
 public:
-    using ec_handler = std::function<void(const boost_code&)>;
-    using frame_handler = std::function<void(const boost_code&, uint8_t,
+    using ec_handler = std::function<void(const code&)>;
+    using frame_handler = std::function<void(const code&, uint8_t,
         const data_chunk&)>;
 
     raw_peer(peer_socket& socket, uint8_t minor) NOEXCEPT
@@ -97,18 +97,18 @@ public:
     {
     }
 
-    void handshake(boost_code& out)
+    void handshake(code& out)
     {
         auto greeting = stream::make_greeting(false, false);
         greeting.at(11) = minor_;
         write(greeting);
 
-        read_exactly(stream::greeting_size, [this, &out](const boost_code& ec)
+        read_exactly(stream::greeting_size, [this, &out](const code& ec)
         {
             if (ec) { out = ec; return; }
             write(ready("SUB"));
-            read_frame([&out](const boost_code& code, uint8_t,
-                const data_chunk&) { out = code; });
+            read_frame([&out](const code& result, uint8_t,
+                const data_chunk&) { out = result; });
         });
     }
 
@@ -132,9 +132,9 @@ public:
         write(command("PING", body));
     }
 
-    void read_message(std::vector<data_chunk>& parts, boost_code& out)
+    void read_message(std::vector<data_chunk>& parts, code& out)
     {
-        read_frame([this, &parts, &out](const boost_code& ec, uint8_t flags,
+        read_frame([this, &parts, &out](const code& ec, uint8_t flags,
             const data_chunk& body)
         {
             if (ec) { out = ec; return; }
@@ -147,20 +147,20 @@ public:
 
     void read_frame(const frame_handler& handler)
     {
-        read_exactly(1, [this, handler](const boost_code& ec)
+        read_exactly(1, [this, handler](const code& ec)
         {
             if (ec) { handler(ec, uint8_t{}, {}); return; }
             const auto flags = scratch_.front();
             const auto longer = !is_zero(flags & stream::flag_long);
             const auto length_size = longer ? sizeof(uint64_t) : one;
             read_exactly(length_size,
-                [this, handler, flags](const boost_code& code)
+                [this, handler, flags](const code& result)
             {
-                if (code) { handler(code, flags, {}); return; }
+                if (result) { handler(result, flags, {}); return; }
                 const auto size = system::from_big_endian<uint64_t>(scratch_);
                 const auto length = system::possible_narrow_cast<size_t>(size);
                 read_exactly(length,
-                    [this, handler, flags](const boost_code& done)
+                    [this, handler, flags](const code& done)
                 {
                     handler(done, flags, scratch_);
                 });
@@ -171,19 +171,19 @@ public:
     void read_exactly(size_t size, const ec_handler& handler)
     {
         scratch_.assign(size, 0x00);
-        const boost::asio::mutable_buffer in{ scratch_.data(),
+        const io::mutable_buffer in{ scratch_.data(),
             scratch_.size() };
-        boost::asio::async_read(socket_, in,
-            [handler](const boost_code& ec, size_t) { handler(ec); });
+        io::async_read(socket_, in,
+            [handler](const code& ec, size_t) { handler(ec); });
     }
 
     void write(const data_chunk& data)
     {
         const auto buffer = system::to_shared(data);
-        const boost::asio::const_buffer out{ buffer->data(),
+        const io::const_buffer out{ buffer->data(),
             buffer->size() };
-        boost::asio::async_write(socket_, out,
-            [buffer](const boost_code&, size_t) {});
+        io::async_write(socket_, out,
+            [buffer](const code&, size_t) {});
     }
 
 private:
@@ -205,19 +205,19 @@ public:
     {
     }
 
-    void handshake(boost_code& out)
+    void handshake(code& out)
     {
         write(stream::make_greeting(false, true));
-        read_exactly(stream::greeting_size, [this, &out](const boost_code& ec)
+        read_exactly(stream::greeting_size, [this, &out](const code& ec)
         {
             if (ec) { out = ec; return; }
             data_chunk hello{};
             if (!client_.hello(hello)) { out = failure(); return; }
             write(stream::frame_encode(hello, true, false));
-            read_frame([this, &out](const boost_code& code, uint8_t,
+            read_frame([this, &out](const code& result, uint8_t,
                 const data_chunk& welcome)
             {
-                if (code) { out = code; return; }
+                if (result) { out = result; return; }
                 data_chunk initiate{};
                 const auto metadata = stream::make_property("Socket-Type",
                     type_);
@@ -228,7 +228,7 @@ public:
                 }
 
                 write(stream::frame_encode(initiate, true, false));
-                read_frame([this, &out](const boost_code& done, uint8_t,
+                read_frame([this, &out](const code& done, uint8_t,
                     const data_chunk& ready)
                 {
                     if (done) { out = done; return; }
@@ -262,9 +262,9 @@ public:
     }
 
     // Read and unbox one whole multipart message.
-    void read_message(std::vector<data_chunk>& parts, boost_code& out)
+    void read_message(std::vector<data_chunk>& parts, code& out)
     {
-        read_frame([this, &parts, &out](const boost_code& ec, uint8_t,
+        read_frame([this, &parts, &out](const code& ec, uint8_t,
             const data_chunk& message)
         {
             if (ec) { out = ec; return; }
@@ -284,31 +284,31 @@ public:
     }
 
 private:
-    static boost_code failure()
+    static code failure()
     {
-        return boost::asio::error::no_protocol_option;
+        return error::protocol_violation;
     }
 
     cipher& client_;
     const std::string type_;
 };
 
-static const boost_code protocol_error{ boost::asio::error::no_protocol_option };
-static const boost_code end_of_file{ boost::asio::error::eof };
+static const code protocol_error{ error::protocol_violation };
+static const code end_of_file{ error::peer_disconnect };
 
-static boost_code shake(boost::asio::io_context& service, stream& instance, bool as_server)
+static code shake(io::context& service, stream& instance, bool as_server)
 {
-    boost_code result{ boost::asio::error::would_block };
-    instance.async_handshake(as_server, [&](const boost_code& ec) { result = ec; });
+    code result{ error::would_block };
+    instance.async_handshake(as_server, [&](const code& ec) { result = ec; });
     service.run();
     service.restart();
     return result;
 }
 
-static boost_code read_one(boost::asio::io_context& service, stream& instance, stream::frame& out)
+static code read_one(io::context& service, stream& instance, stream::frame& out)
 {
-    boost_code result{ boost::asio::error::would_block };
-    instance.async_read_frame(out, 1024, [&](const boost_code& ec, size_t) { result = ec; });
+    code result{ error::would_block };
+    instance.async_read_frame(out, 1024, [&](const code& ec, size_t) { result = ec; });
     service.run();
     service.restart();
     return result;
@@ -324,7 +324,7 @@ struct curve_setup
         connect_pair(service, server_socket, client_socket);
     }
 
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server_socket{ service };
     peer_socket client_socket{ service };
     network::zmtp::cipher::key server_secret{};
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__make_pong__echoes_truncated_context)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -491,9 +491,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
     publisher.emplace(std::move(server), configuration, role::publisher);
     raw_peer peer{ client, 1 };
 
-    boost_code shook{ boost::asio::error::would_block };
-    boost_code peer_shook{ boost::asio::error::would_block };
-    publisher->async_handshake(true, [&](const boost_code& ec) { shook = ec; });
+    code shook{ error::would_block };
+    code peer_shook{ error::would_block };
+    publisher->async_handshake(true, [&](const code& ec) { shook = ec; });
     peer.handshake(peer_shook);
     service.run();
     service.restart();
@@ -505,17 +505,17 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
     const data_stack parts{ topic, body, data_chunk{ 0x00, 0x00, 0x00, 0x00 } };
     const auto packet = system::to_shared(stream::frame_message(parts));
 
-    boost_code sent{ boost::asio::error::would_block };
+    code sent{ error::would_block };
     size_t sent_size{};
-    const boost::asio::const_buffer out{ packet->data(), packet->size() };
-    publisher->async_write(out, [&](const boost_code& ec, size_t size)
+    const io::const_buffer out{ packet->data(), packet->size() };
+    publisher->async_write(out, [&](const code& ec, size_t size)
     {
         sent = ec;
         sent_size = size;
     });
 
     std::vector<data_chunk> received{};
-    boost_code got{ boost::asio::error::would_block };
+    code got{ error::would_block };
     peer.read_message(received, got);
     service.run();
     service.restart();
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__handshake__v30_peer__minor_zero)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -543,9 +543,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__handshake__v30_peer__minor_zero)
     publisher.emplace(std::move(server), configuration, role::publisher);
     raw_peer peer{ client, 0 };
 
-    boost_code shook{ boost::asio::error::would_block };
-    boost_code peer_shook{ boost::asio::error::would_block };
-    publisher->async_handshake(true, [&](const boost_code& ec) { shook = ec; });
+    code shook{ error::would_block };
+    code peer_shook{ error::would_block };
+    publisher->async_handshake(true, [&](const code& ec) { shook = ec; });
     peer.handshake(peer_shook);
     service.run();
     service.restart();
@@ -558,7 +558,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__handshake__v30_peer__minor_zero)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -568,9 +568,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
     publisher.emplace(std::move(server), configuration, role::publisher);
     raw_peer peer{ client, 1 };
 
-    boost_code shook{ boost::asio::error::would_block };
-    boost_code peer_shook{ boost::asio::error::would_block };
-    publisher->async_handshake(true, [&](const boost_code& ec) { shook = ec; });
+    code shook{ error::would_block };
+    code peer_shook{ error::would_block };
+    publisher->async_handshake(true, [&](const code& ec) { shook = ec; });
     peer.handshake(peer_shook);
     service.run();
     service.restart();
@@ -580,9 +580,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
     const auto topic = system::to_chunk(std::string{ "hashblock" });
     peer.subscribe(topic);
 
-    boost_code got{ boost::asio::error::would_block };
+    code got{ error::would_block };
     stream::frame frame{};
-    publisher->async_read_frame(frame, 1024, [&](const boost_code& ec, size_t) { got = ec; });
+    publisher->async_read_frame(frame, 1024, [&](const code& ec, size_t) { got = ec; });
     service.run();
     service.restart();
     BOOST_REQUIRE(!got);
@@ -603,7 +603,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_from_context)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -613,9 +613,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_fro
     publisher.emplace(std::move(server), configuration, role::publisher);
     raw_peer peer{ client, 1 };
 
-    boost_code shook{ boost::asio::error::would_block };
-    boost_code peer_shook{ boost::asio::error::would_block };
-    publisher->async_handshake(true, [&](const boost_code& ec) { shook = ec; });
+    code shook{ error::would_block };
+    code peer_shook{ error::would_block };
+    publisher->async_handshake(true, [&](const code& ec) { shook = ec; });
     peer.handshake(peer_shook);
     service.run();
     service.restart();
@@ -625,9 +625,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_fro
     const auto context_bytes = system::base16_chunk("0011223344556677");
     peer.ping(context_bytes);
 
-    boost_code got{ boost::asio::error::would_block };
+    code got{ error::would_block };
     stream::frame frame{};
-    publisher->async_read_frame(frame, 1024, [&](const boost_code& ec, size_t) { got = ec; });
+    publisher->async_read_frame(frame, 1024, [&](const code& ec, size_t) { got = ec; });
     service.run();
     service.restart();
     BOOST_REQUIRE(!got);
@@ -699,7 +699,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__frame_decode__two_frames__expected)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server_socket{ service };
     peer_socket client_socket{ service };
     connect_pair(service, server_socket, client_socket);
@@ -718,9 +718,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
     network::zmtp::cipher client{ client_secret, client_public, server_public };
     curve_peer peer{ client_socket, client };
 
-    boost_code server_result{ boost::asio::error::would_block };
-    boost_code peer_result{ boost::asio::error::would_block };
-    server.async_handshake(true, [&](const boost_code& ec) { server_result = ec; });
+    code server_result{ error::would_block };
+    code peer_result{ error::would_block };
+    server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     service.run();
     BOOST_REQUIRE_MESSAGE(!server_result, server_result.message());
@@ -729,7 +729,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__null_client__error)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server_socket{ service };
     peer_socket client_socket{ service };
     connect_pair(service, server_socket, client_socket);
@@ -742,12 +742,12 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__null_client__error)
     stream server{ std::move(server_socket), curve, role::publisher };
     raw_peer peer{ client_socket, 1 };
 
-    boost_code server_result{ boost::asio::error::would_block };
-    boost_code peer_result{ boost::asio::error::would_block };
-    server.async_handshake(true, [&](const boost_code& ec) { server_result = ec; });
+    code server_result{ error::would_block };
+    code peer_result{ error::would_block };
+    server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     service.run();
-    BOOST_REQUIRE_EQUAL(server_result, boost_code(boost::asio::error::no_protocol_option));
+    BOOST_REQUIRE_EQUAL(server_result, code(error::protocol_violation));
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__context__wrong_size_secret__null_mechanism)
@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__context__wrong_size_secret__null_mechanism)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_ways)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server_socket{ service };
     peer_socket client_socket{ service };
     connect_pair(service, server_socket, client_socket);
@@ -778,9 +778,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
     network::zmtp::cipher client{ client_secret, client_public, server_public };
     curve_peer peer{ client_socket, client };
 
-    boost_code server_result{ boost::asio::error::would_block };
-    boost_code peer_result{ boost::asio::error::would_block };
-    server.async_handshake(true, [&](const boost_code& ec) { server_result = ec; });
+    code server_result{ error::would_block };
+    code peer_result{ error::would_block };
+    server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     service.run();
     service.restart();
@@ -788,8 +788,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
 
     // The boxed SUBSCRIBE surfaces as a plain command frame.
     stream::frame frame{};
-    boost_code read_result{ boost::asio::error::would_block };
-    server.async_read_frame(frame, 1024, [&](const boost_code& ec, size_t) { read_result = ec; });
+    code read_result{ error::would_block };
+    server.async_read_frame(frame, 1024, [&](const code& ec, size_t) { read_result = ec; });
     const data_chunk topic{ 0x68, 0x61, 0x73, 0x68 };
     peer.subscribe(topic);
     service.run();
@@ -802,10 +802,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
     // The framed message is boxed per frame and unboxed by the peer.
     const data_stack parts{ topic, data_chunk(300, 0x42), { 0x01, 0x00, 0x00, 0x00 } };
     const auto packet = stream::frame_message(parts);
-    boost_code write_result{ boost::asio::error::would_block };
-    boost_code message_result{ boost::asio::error::would_block };
+    code write_result{ error::would_block };
+    code message_result{ error::would_block };
     std::vector<data_chunk> received{};
-    server.async_write({ packet.data(), packet.size() }, [&](const boost_code& ec, size_t) { write_result = ec; });
+    server.async_write({ packet.data(), packet.size() }, [&](const code& ec, size_t) { write_result = ec; });
     peer.read_message(received, message_result);
     service.run();
     BOOST_REQUIRE_MESSAGE(!write_result, write_result.message());
@@ -847,7 +847,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__context__clients__authorized_expected)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__authorized_client__completes)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server_socket{ service };
     peer_socket client_socket{ service };
     connect_pair(service, server_socket, client_socket);
@@ -865,9 +865,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__authorized_client__completes)
     network::zmtp::cipher client{ client_secret, client_public, server_public };
     curve_peer peer{ client_socket, client };
 
-    boost_code server_result{ boost::asio::error::would_block };
-    boost_code peer_result{ boost::asio::error::would_block };
-    server.async_handshake(true, [&](const boost_code& ec) { server_result = ec; });
+    code server_result{ error::would_block };
+    code peer_result{ error::would_block };
+    server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     service.run();
     BOOST_REQUIRE_MESSAGE(!server_result, server_result.message());
@@ -876,7 +876,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__authorized_client__completes)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__unauthorized_client__error)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server_socket{ service };
     peer_socket client_socket{ service };
     connect_pair(service, server_socket, client_socket);
@@ -896,13 +896,13 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__unauthorized_client__error)
     network::zmtp::cipher client{ client_secret, client_public, server_public };
     curve_peer peer{ client_socket, client };
 
-    boost_code server_result{ boost::asio::error::would_block };
-    boost_code peer_result{ boost::asio::error::would_block };
-    server.async_handshake(true, [&](const boost_code& ec) { server_result = ec; });
+    code server_result{ error::would_block };
+    code peer_result{ error::would_block };
+    server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     service.run();
-    BOOST_REQUIRE_EQUAL(server_result, boost_code(boost::asio::error::no_protocol_option));
-    BOOST_REQUIRE_EQUAL(peer_result, boost_code(boost::asio::error::no_protocol_option));
+    BOOST_REQUIRE_EQUAL(server_result, code(error::protocol_violation));
+    BOOST_REQUIRE_EQUAL(peer_result, code(error::protocol_violation));
 }
 
 // Codec failures.
@@ -1001,7 +1001,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__ready_property__second_property__expected)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__next_layer__connected__open)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -1019,7 +1019,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__next_layer__connected__open)
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__closed_socket__bad_descriptor)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -1027,25 +1027,25 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__closed_socket__bad_descriptor
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     instance.next_layer().close();
-    BOOST_REQUIRE_EQUAL(shake(service, instance, true), boost_code(boost::asio::error::bad_descriptor));
+    BOOST_REQUIRE_EQUAL(shake(service, instance, true), code(error::bad_stream));
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__peer_shutdown__eof)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
-    client.shutdown(boost::asio::socket_base::shutdown_send);
+    REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
     BOOST_REQUIRE_EQUAL(shake(service, instance, true), end_of_file);
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__bad_signature__protocol_error)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -1054,13 +1054,13 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__bad_signature__protocol_error
     stream instance{ std::move(server), configuration, role::publisher };
     auto greeting = stream::make_greeting(false, false);
     greeting.front() = 0x00;
-    boost::asio::write(client, boost::asio::buffer(greeting));
+    test::write(client, io::buffer(greeting));
     BOOST_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__truncated_greeting__eof)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -1068,14 +1068,14 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__truncated_greeting__eof)
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     const auto greeting = stream::make_greeting(false, false);
-    boost::asio::write(client, boost::asio::buffer(greeting.data(), stream::greeting_stage1));
-    client.shutdown(boost::asio::socket_base::shutdown_send);
+    test::write(client, io::buffer(greeting.data(), stream::greeting_stage1));
+    REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
     BOOST_REQUIRE_EQUAL(shake(service, instance, true), end_of_file);
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__unknown_mechanism__protocol_error)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -1084,27 +1084,27 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__unknown_mechanism__protocol_e
     stream instance{ std::move(server), configuration, role::publisher };
     auto greeting = stream::make_greeting(false, false);
     greeting.at(12) = 'X';
-    boost::asio::write(client, boost::asio::buffer(greeting));
+    test::write(client, io::buffer(greeting));
     BOOST_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__greeting_then_shutdown__eof)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
-    boost::asio::write(client, boost::asio::buffer(stream::make_greeting(false, false)));
-    client.shutdown(boost::asio::socket_base::shutdown_send);
+    test::write(client, io::buffer(stream::make_greeting(false, false)));
+    REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
     BOOST_REQUIRE_EQUAL(shake(service, instance, true), end_of_file);
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__message_before_ready__protocol_error)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
@@ -1112,20 +1112,20 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__message_before_ready__protoco
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     const auto message = stream::frame_encode(data_chunk{ 0x01 }, false, false);
-    boost::asio::write(client, boost::asio::buffer(system::splice(stream::make_greeting(false, false), message)));
+    test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), message)));
     BOOST_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__ping_before_ready__protocol_error)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
-    boost::asio::write(client, boost::asio::buffer(system::splice(stream::make_greeting(false, false), command("PING", {}))));
+    test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), command("PING", {}))));
     BOOST_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
 }
 
@@ -1134,54 +1134,54 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__ping_before_ready__protocol_e
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__peer_shutdown__eof)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
-    boost::asio::write(client, boost::asio::buffer(system::splice(stream::make_greeting(false, false), ready("SUB"))));
+    test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), ready("SUB"))));
     BOOST_REQUIRE(!shake(service, instance, true));
 
-    client.shutdown(boost::asio::socket_base::shutdown_send);
+    REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
     stream::frame frame{};
     BOOST_REQUIRE_EQUAL(read_one(service, instance, frame), end_of_file);
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__flags_then_shutdown__eof)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
-    boost::asio::write(client, boost::asio::buffer(system::splice(stream::make_greeting(false, false), ready("SUB"))));
+    test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), ready("SUB"))));
     BOOST_REQUIRE(!shake(service, instance, true));
 
-    boost::asio::write(client, boost::asio::buffer(data_chunk{ 0x00 }));
-    client.shutdown(boost::asio::socket_base::shutdown_send);
+    test::write(client, io::buffer(data_chunk{ 0x00 }));
+    REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
     stream::frame frame{};
     BOOST_REQUIRE_EQUAL(read_one(service, instance, frame), end_of_file);
 }
 
 BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__above_maximum__message_size)
 {
-    boost::asio::io_context service{};
+    io::context service{};
     peer_socket server{ service };
     peer_socket client{ service };
     connect_pair(service, server, client);
 
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
-    boost::asio::write(client, boost::asio::buffer(system::splice(stream::make_greeting(false, false), ready("SUB"))));
+    test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), ready("SUB"))));
     BOOST_REQUIRE(!shake(service, instance, true));
 
-    boost::asio::write(client, boost::asio::buffer(stream::frame_encode(data_chunk(1025, 0x42), false, false)));
+    test::write(client, io::buffer(stream::frame_encode(data_chunk(1025, 0x42), false, false)));
     stream::frame frame{};
-    BOOST_REQUIRE_EQUAL(read_one(service, instance, frame), boost_code(boost::asio::error::message_size));
+    BOOST_REQUIRE_EQUAL(read_one(service, instance, frame), code(error::oversized_payload));
 }
 
 // CURVE handshake failures.
@@ -1192,8 +1192,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__greeting_then_shutdown__eof)
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
     stream server{ std::move(setup.server_socket), curve, role::publisher };
-    boost::asio::write(setup.client_socket, boost::asio::buffer(stream::make_greeting(false, true)));
-    setup.client_socket.shutdown(boost::asio::socket_base::shutdown_send);
+    test::write(setup.client_socket, io::buffer(stream::make_greeting(false, true)));
+    REQUIRE_SUCCESS(setup.client_socket, shutdown, io::socket::shutdown_type::send);
     BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), end_of_file);
 }
 
@@ -1202,7 +1202,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__ping_before_hello__protocol_e
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
     stream server{ std::move(setup.server_socket), curve, role::publisher };
-    boost::asio::write(setup.client_socket, boost::asio::buffer(system::splice(stream::make_greeting(false, true), command("PING", {}))));
+    test::write(setup.client_socket, io::buffer(system::splice(stream::make_greeting(false, true), command("PING", {}))));
     BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
 }
 
@@ -1211,7 +1211,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__empty_hello__protocol_error)
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
     stream server{ std::move(setup.server_socket), curve, role::publisher };
-    boost::asio::write(setup.client_socket, boost::asio::buffer(system::splice(stream::make_greeting(false, true), command("HELLO", {}))));
+    test::write(setup.client_socket, io::buffer(system::splice(stream::make_greeting(false, true), command("HELLO", {}))));
     BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
 }
 
@@ -1223,8 +1223,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__hello_then_shutdown__eof)
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     data_chunk hello{};
     BOOST_REQUIRE(client.hello(hello));
-    boost::asio::write(setup.client_socket, boost::asio::buffer(system::splice(stream::make_greeting(false, true), stream::frame_encode(hello, true, false))));
-    setup.client_socket.shutdown(boost::asio::socket_base::shutdown_send);
+    test::write(setup.client_socket, io::buffer(system::splice(stream::make_greeting(false, true), stream::frame_encode(hello, true, false))));
+    REQUIRE_SUCCESS(setup.client_socket, shutdown, io::socket::shutdown_type::send);
     BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), end_of_file);
 }
 
@@ -1236,7 +1236,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__ping_before_initiate__protoco
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     data_chunk hello{};
     BOOST_REQUIRE(client.hello(hello));
-    boost::asio::write(setup.client_socket, boost::asio::buffer(system::build_chunk({ stream::make_greeting(false, true), stream::frame_encode(hello, true, false), command("PING", {}) })));
+    test::write(setup.client_socket, io::buffer(system::build_chunk({ stream::make_greeting(false, true), stream::frame_encode(hello, true, false), command("PING", {}) })));
     BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
 }
 
@@ -1248,7 +1248,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__empty_initiate__protocol_erro
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     data_chunk hello{};
     BOOST_REQUIRE(client.hello(hello));
-    boost::asio::write(setup.client_socket, boost::asio::buffer(system::build_chunk({ stream::make_greeting(false, true), stream::frame_encode(hello, true, false), command("INITIATE", {}) })));
+    test::write(setup.client_socket, io::buffer(system::build_chunk({ stream::make_greeting(false, true), stream::frame_encode(hello, true, false), command("INITIATE", {}) })));
     BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
 }
 
@@ -1260,9 +1260,9 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__incompatible_socket_type__pro
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     curve_peer peer{ setup.client_socket, client, "PUB" };
 
-    boost_code server_result{ boost::asio::error::would_block };
-    boost_code peer_result{ boost::asio::error::would_block };
-    server.async_handshake(true, [&](const boost_code& ec) { server_result = ec; });
+    code server_result{ error::would_block };
+    code peer_result{ error::would_block };
+    server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     setup.service.run();
     BOOST_REQUIRE_EQUAL(server_result, protocol_error);
@@ -1279,12 +1279,12 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__empty_frame__protocol_error)
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     curve_peer peer{ setup.client_socket, client };
-    boost_code peer_result{ boost::asio::error::would_block };
+    code peer_result{ error::would_block };
     peer.handshake(peer_result);
     BOOST_REQUIRE(!shake(setup.service, server, true));
     BOOST_REQUIRE(!peer_result);
 
-    boost::asio::write(setup.client_socket, boost::asio::buffer(stream::frame_encode(data_chunk{}, false, false)));
+    test::write(setup.client_socket, io::buffer(stream::frame_encode(data_chunk{}, false, false)));
     stream::frame frame{};
     BOOST_REQUIRE_EQUAL(read_one(setup.service, server, frame), protocol_error);
 }
@@ -1296,12 +1296,12 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__plain_error_command__surface
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     curve_peer peer{ setup.client_socket, client };
-    boost_code peer_result{ boost::asio::error::would_block };
+    code peer_result{ error::would_block };
     peer.handshake(peer_result);
     BOOST_REQUIRE(!shake(setup.service, server, true));
     BOOST_REQUIRE(!peer_result);
 
-    boost::asio::write(setup.client_socket, boost::asio::buffer(stream::make_error("abc")));
+    test::write(setup.client_socket, io::buffer(stream::make_error("abc")));
     stream::frame frame{};
     BOOST_REQUIRE(!read_one(setup.service, server, frame));
     BOOST_REQUIRE(frame.command());
@@ -1321,12 +1321,12 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__plain_ping_command__protocol
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     curve_peer peer{ setup.client_socket, client };
-    boost_code peer_result{ boost::asio::error::would_block };
+    code peer_result{ error::would_block };
     peer.handshake(peer_result);
     BOOST_REQUIRE(!shake(setup.service, server, true));
     BOOST_REQUIRE(!peer_result);
 
-    boost::asio::write(setup.client_socket, boost::asio::buffer(command("PING", { 0x00, 0x00 })));
+    test::write(setup.client_socket, io::buffer(command("PING", { 0x00, 0x00 })));
     stream::frame frame{};
     BOOST_REQUIRE_EQUAL(read_one(setup.service, server, frame), protocol_error);
 }
@@ -1338,7 +1338,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__boxed_more__more_flag)
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     curve_peer peer{ setup.client_socket, client };
-    boost_code peer_result{ boost::asio::error::would_block };
+    code peer_result{ error::would_block };
     peer.handshake(peer_result);
     BOOST_REQUIRE(!shake(setup.service, server, true));
     BOOST_REQUIRE(!peer_result);
@@ -1359,14 +1359,14 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_async_write__truncated_frame__protocol_e
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     curve_peer peer{ setup.client_socket, client };
-    boost_code peer_result{ boost::asio::error::would_block };
+    code peer_result{ error::would_block };
     peer.handshake(peer_result);
     BOOST_REQUIRE(!shake(setup.service, server, true));
     BOOST_REQUIRE(!peer_result);
 
     const data_chunk packet{ 0x00 };
-    boost_code result{ boost::asio::error::would_block };
-    server.async_write({ packet.data(), packet.size() }, [&](const boost_code& ec, size_t) { result = ec; });
+    code result{ error::would_block };
+    server.async_write({ packet.data(), packet.size() }, [&](const code& ec, size_t) { result = ec; });
     setup.service.run();
     BOOST_REQUIRE_EQUAL(result, protocol_error);
 }
@@ -1378,18 +1378,18 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_async_write__command_frame__boxed_comman
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     curve_peer peer{ setup.client_socket, client };
-    boost_code peer_result{ boost::asio::error::would_block };
+    code peer_result{ error::would_block };
     peer.handshake(peer_result);
     BOOST_REQUIRE(!shake(setup.service, server, true));
     BOOST_REQUIRE(!peer_result);
 
     const auto pong = stream::make_pong(data_chunk{ 0x2a });
-    boost_code result{ boost::asio::error::would_block };
-    server.async_write({ pong.data(), pong.size() }, [&](const boost_code& ec, size_t) { result = ec; });
+    code result{ error::would_block };
+    server.async_write({ pong.data(), pong.size() }, [&](const code& ec, size_t) { result = ec; });
 
-    boost_code received{ boost::asio::error::would_block };
+    code received{ error::would_block };
     data_chunk boxed{};
-    peer.read_frame([&](const boost_code& ec, uint8_t, const data_chunk& message)
+    peer.read_frame([&](const code& ec, uint8_t, const data_chunk& message)
     {
         received = ec;
         boxed = message;

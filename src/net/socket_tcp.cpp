@@ -32,16 +32,16 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // ----------------------------------------------------------------------------
 // Fixed-size read that completes only when the mutable_buffer is filled.
 
-void socket::tcp_read(const asio::mutable_buffer& out,
+void socket::tcp_read(const io::mutable_buffer& out,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_tcp_read,
             shared_from_this(), out, std::move(handler)));
 }
 
 // private
-void socket::do_tcp_read(const asio::mutable_buffer& out,
+void socket::do_tcp_read(const io::mutable_buffer& out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -52,7 +52,7 @@ void socket::do_tcp_read(const asio::mutable_buffer& out,
 // ----------------------------------------------------------------------------
 // Buffer is fully allocated before write, identical to ws_write.
 
-void socket::tcp_write(const asio::const_buffer& in,
+void socket::tcp_write(const io::const_buffer& in,
     count_handler&& handler) NOEXCEPT
 {
     ws_write(in, true, std::move(handler));

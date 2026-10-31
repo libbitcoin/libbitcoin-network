@@ -165,4 +165,9 @@ BOOST_AUTO_TEST_CASE(tls_context__set_time__fixed__fixed)
     BOOST_REQUIRE_EQUAL(context.time(), 42u);
 }
 
+BOOST_AUTO_TEST_CASE(tls_library__always__internal_tls)
+{
+    BOOST_REQUIRE_EQUAL(tls_library(), "internal tls 1.3");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

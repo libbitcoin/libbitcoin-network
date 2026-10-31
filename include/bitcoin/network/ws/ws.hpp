@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_WS_WS_HPP
 #define LIBBITCOIN_NETWORK_WS_WS_HPP
 
+#include <bitcoin/network/ws/client.hpp>
 #include <bitcoin/network/ws/frame.hpp>
 #include <bitcoin/network/ws/handshake.hpp>
 #include <bitcoin/network/ws/reader.hpp>

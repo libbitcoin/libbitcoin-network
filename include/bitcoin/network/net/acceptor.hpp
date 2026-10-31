@@ -47,7 +47,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Construct an instance.
-    acceptor(const logger& log, asio::strand& strand, asio::context& service,
+    acceptor(const logger& log, io::strand& strand, io::context& service,
         std::atomic_bool& suspended, parameters&& parameters) NOEXCEPT;
 
     /// Asserts/logs stopped.
@@ -83,7 +83,7 @@ public:
 
 protected:
     /// Start listening on the endpoint.
-    virtual code start(const asio::endpoint& point) NOEXCEPT;
+    virtual code start(const io::endpoint& point) NOEXCEPT;
 
     /// Override to inform socket construction.
     virtual bool proxied() const NOEXCEPT;
@@ -92,8 +92,8 @@ protected:
     bool stranded() const NOEXCEPT;
 
     // These are thread safe.
-    asio::strand& strand_;
-    asio::context& service_;
+    io::strand& strand_;
+    io::context& service_;
     std::atomic_bool& suspended_;
     const parameters parameters_;
 
@@ -102,7 +102,7 @@ protected:
         const socket_handler& handler) NOEXCEPT;
 
     // These are protected by strand.
-    asio::acceptor acceptor_;
+    io::acceptor acceptor_;
     bool stopped_{ true };
 
 private:

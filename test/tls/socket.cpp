@@ -99,11 +99,11 @@ struct server_fixture
 
         BOOST_REQUIRE_EQUAL(tls.initialize_context(), error::success);
 
-        boost_code ec{};
-        const asio::endpoint bind(asio::ipv4::loopback(), 0);
-        acceptor.open(bind.protocol(), ec);
+        code ec{};
+        const auto bind = test::loopback();
+        acceptor.open(io::tcp::of(bind), ec);
         acceptor.bind(bind, ec);
-        acceptor.listen(1, ec);
+        acceptor.listen(ec);
         port = acceptor.local_endpoint().port();
 
         socket::parameters params{};
@@ -137,8 +137,8 @@ struct server_fixture
     const logger log{};
     threadpool pool;
     settings::tls_server tls;
-    asio::strand strand;
-    asio::acceptor acceptor;
+    io::strand strand;
+    io::acceptor acceptor;
     uint16_t port{};
     system::x509::certificate certificate{};
     system::x509::certificate client{};
@@ -152,13 +152,13 @@ struct tls_peer
     tls_peer(const test::tls_client::options& options, uint16_t port)
       : socket(io), client(options)
     {
-        socket.connect({ boost::asio::ip::make_address("127.0.0.1"), port });
+        REQUIRE_SUCCESS(socket, connect, test::loopback(port));
         client.start();
     }
 
     void flush()
     {
-        boost::asio::write(socket, boost::asio::buffer(client.output()));
+        test::write(socket, io::buffer(client.output()));
         client.output().clear();
     }
 
@@ -169,8 +169,8 @@ struct tls_peer
         while (!client.is_established() && !client.is_failed())
         {
             flush();
-            boost::system::error_code ec{};
-            const auto size = socket.read_some(boost::asio::buffer(buffer), ec);
+            code ec{};
+            const auto size = socket.read_some(io::buffer(buffer), ec);
             if (ec)
                 return;
 
@@ -186,7 +186,9 @@ struct tls_peer
         std::array<uint8_t, 4096> buffer{};
         while (out.size() < size)
         {
-            const auto count = socket.read_some(boost::asio::buffer(buffer));
+            code ec{};
+            const auto count = socket.read_some(io::buffer(buffer), ec);
+            BOOST_REQUIRE(!ec);
             client.receive({ buffer.data(), count });
             const auto data = client.read();
             out.insert(out.end(), data.begin(), data.end());
@@ -201,14 +203,13 @@ struct tls_peer
     {
         std::array<uint8_t, 4096> buffer{};
         const auto deadline = std::chrono::steady_clock::now() + timeout;
-        socket.non_blocking(true);
+        REQUIRE_SUCCESS(socket, non_blocking, true);
         while ((std::chrono::steady_clock::now() < deadline) &&
             !(closing && client.is_closed()))
         {
-            boost::system::error_code ec{};
-            const auto size = socket.read_some(boost::asio::buffer(buffer), ec);
-            if (ec == boost::asio::error::would_block ||
-                ec == boost::asio::error::try_again)
+            code ec{};
+            const auto size = socket.read_some(io::buffer(buffer), ec);
+            if (ec == error::would_block)
                 std::this_thread::sleep_for(10ms);
             else if (ec)
                 return true;
@@ -219,8 +220,8 @@ struct tls_peer
         return false;
     }
 
-    boost::asio::io_context io{};
-    boost::asio::ip::tcp::socket socket;
+    io::context io{};
+    io::socket socket;
     test::tls_client client;
 };
 
@@ -505,7 +506,7 @@ BOOST_AUTO_TEST_CASE(tls_socket__read__transport_closed__tls_stream_truncated)
     peer.handshake();
     BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
 
-    peer.socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send);
+    REQUIRE_SUCCESS(peer.socket, shutdown, io::socket::shutdown_type::send);
     BOOST_REQUIRE_EQUAL(tcp_read_result(server.server), error::tls_stream_truncated);
 }
 

@@ -113,7 +113,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\asio.cpp" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
@@ -291,7 +290,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\asio.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
@@ -308,7 +306,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\diagnostics.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\terminator.hpp" />
@@ -361,6 +358,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\header.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\message.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\operations.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\parser.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\serializer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http_body.hpp" />
@@ -483,6 +481,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\server.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\stream.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\tls.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\client.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\frame.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\handshake.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\reader.hpp" />
@@ -510,6 +509,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\channels\channel_rpc.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\io\operations.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\io\socket.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\operations.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\parser.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\serializer.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json_body.ipp" />
@@ -517,6 +517,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\dispatcher.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\protocols\protocol_rpc.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\tls\stream.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\ws\client.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\version.hpp.in" />
     <None Include="packages.config" />
   </ItemGroup>

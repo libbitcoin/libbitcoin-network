@@ -38,17 +38,17 @@ BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 // ----------------------------------------------------------------------------
 // The reader parses at most one message per read, deferring (consuming
 // nothing) until the complete frame is buffered by the caller. The fault
-// member carries parse failure detail (the boost code is generic).
+// member carries parse failure detail (the returned code is generic).
 
 static size_t set_fault(frame& value, const code& fault,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     value.fault = fault;
     ec = error::to_http_code(error::http_error_t::bad_value);
     return zero;
 }
 
-void body::reader::init(const http::length_type&, boost_code& ec) NOEXCEPT
+void body::reader::init(const http::length_type&, code& ec) NOEXCEPT
 {
     need_ = heading::size();
     headed_ = false;
@@ -64,7 +64,7 @@ size_t body::reader::need() const NOEXCEPT
 
 // private
 bool body::reader::accept(const std::span<const uint8_t>& payload,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     if (value_.checksum && value_.head.checksum !=
         network_checksum(bitcoin_hash(payload.size(), payload.data())))
@@ -87,7 +87,7 @@ bool body::reader::accept(const std::span<const uint8_t>& payload,
     return true;
 }
 
-size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
+size_t body::reader::put(const buffer_type& buffer, code& ec) NOEXCEPT
 {
     const auto data = pointer_cast<const uint8_t>(buffer.data());
     const auto size = buffer.size();
@@ -135,7 +135,7 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 }
 
 void body::reader::put(uint8_t identifier, const std::string& command,
-    const std::span<const uint8_t>& payload, boost_code& ec) NOEXCEPT
+    const std::span<const uint8_t>& payload, code& ec) NOEXCEPT
 {
     using registry = messages::peer::registry;
     ec = {};
@@ -177,9 +177,9 @@ void body::reader::put(uint8_t identifier, const std::string& command,
     done_ = true;
 }
 
-void body::reader::finish(boost_code& ec) NOEXCEPT
+void body::reader::finish(code& ec) NOEXCEPT
 {
-    ec = done_ ? boost_code{} :
+    ec = done_ ? code{ error::success } :
         error::to_http_code(error::http_error_t::need_more);
 }
 
@@ -192,17 +192,17 @@ bool body::reader::done() const NOEXCEPT
 // ----------------------------------------------------------------------------
 // The writer translates the typed message to its serialized v1 frame.
 
-void body::writer::init(boost_code& ec) NOEXCEPT
+void body::writer::init(code& ec) NOEXCEPT
 {
     done_ = false;
     value_.data = messages::peer::registry::to_frame(value_.index, value_.message,
         value_.magic, value_.version);
 
-    ec = value_.data ? boost_code{} :
+    ec = value_.data ? code{ error::success } :
         error::to_http_code(error::http_error_t::bad_value);
 }
 
-body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
+body::writer::out_buffer body::writer::get(code& ec) NOEXCEPT
 {
     ec = {};
 

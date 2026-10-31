@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(threadpool__join__from_pool_thread__false)
 {
     threadpool pool{ 1 };
     std::promise<bool> promise{};
-    boost::asio::post(pool.service(), [&]() NOEXCEPT
+    io::post(pool.service(), [&]() NOEXCEPT
     {
         promise.set_value(pool.join());
     });

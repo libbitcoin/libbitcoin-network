@@ -23,9 +23,6 @@
 
 #include <filesystem>
 #include <bitcoin/network.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/websocket.hpp>
 
 // copied from libbitcoin-system-test
 
@@ -135,6 +132,58 @@ private:
     std::error_code error_;
     std::filesystem::path previous_;
 };
+
+// Require success of a synchronous io call (the code is appended).
+#define REQUIRE_SUCCESS(object, method, ...) \
+{ \
+    code require_ec{}; \
+    (object).method(__VA_ARGS__ __VA_OPT__(,) require_ec); \
+    BOOST_REQUIRE_EQUAL(require_ec, ::libbitcoin::network::error::success); \
+}
+
+// Blocking transfers of test peers (required to succeed).
+template <typename Stream, typename Buffers>
+inline size_t write(Stream& stream, const Buffers& buffers) NOEXCEPT
+{
+    code ec{};
+    const auto size = io::write(stream, buffers, ec);
+    BOOST_REQUIRE_EQUAL(ec, error::success);
+    return size;
+}
+
+template <typename Stream, typename Buffers>
+inline size_t read(Stream& stream, const Buffers& buffers) NOEXCEPT
+{
+    code ec{};
+    const auto size = io::read(stream, buffers, ec);
+    BOOST_REQUIRE_EQUAL(ec, error::success);
+    return size;
+}
+
+// The bytes of a buffer as text.
+inline std::string to_string(const io::const_buffer& buffer) NOEXCEPT
+{
+    return { system::pointer_cast<const char>(buffer.data()), buffer.size() };
+}
+
+// The address of text (required to parse).
+inline system::ip::address address(const std::string_view& text) NOEXCEPT
+{
+    system::ip::address out{};
+    BOOST_REQUIRE(system::ip::address::from_string(out, text));
+    return out;
+}
+
+// Loopback endpoints (an ephemeral port by default).
+inline io::endpoint loopback(uint16_t port=0) NOEXCEPT
+{
+    return { system::ip::address{ system::ip::ipv4{ { 127, 0, 0, 1 } } }, port };
+}
+
+inline io::endpoint loopback_v6(uint16_t port=0) NOEXCEPT
+{
+    return { system::ip::address{ system::ip::ipv6{ { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 } } }, port };
+}
 
 } // namespace test
 

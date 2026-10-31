@@ -37,35 +37,26 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // socket internals. This makes concurrent calls unsafe, however only the
 // acceptor (a socket factory) requires access to the socket at this time.
 // network::acceptor both invokes this call in the network strand and
-// initializes the asio::acceptor with the network strand. So the call to
+// initializes the io::acceptor with the network strand. So the call to
 // acceptor.async_accept invokes its handler on that strand as well.
 
-void socket::accept(asio::acceptor& acceptor,
+void socket::accept(io::acceptor& acceptor,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(!get_base().is_open(), "accept on open socket");
-    try
-    {
-        // Dispatches on the acceptor's strand (which should be network).
-        // Cannot move handler due to catch block invocation.
-        acceptor.async_accept(get_base(),
-            std::bind(&socket::handle_accept,
-                shared_from_this(), _1, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ accept: " << e.what());
-        handler(error::accept_failed);
-    }
+    // Dispatches on the acceptor's strand (which should be network).
+    acceptor.async_accept(get_base(),
+        std::bind(&socket::handle_accept,
+            shared_from_this(), _1, handler));
 }
 
-void socket::handle_accept(boost_code ec,
+void socket::handle_accept(code ec,
     const result_handler& handler) NOEXCEPT
 {
     // This is running in the acceptor (not socket) execution context.
     // socket_ and endpoint_ are not guarded here, see comments on accept.
 
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         handler(error::operation_canceled);
         return;
@@ -73,9 +64,8 @@ void socket::handle_accept(boost_code ec,
 
     if (ec)
     {
-        const auto code = error::asio_to_error_code(ec);
-        if (code == error::unknown) logx("accept", ec);
-        handler(code);
+        if (ec == error::unknown) logx("accept", ec);
+        handler(ec);
         return;
     }
 
@@ -84,13 +74,12 @@ void socket::handle_accept(boost_code ec,
 
     if (ec)
     {
-        const auto code = error::asio_to_error_code(ec);
-        if (code == error::unknown) logx("remote", ec);
-        handler(code);
+        if (ec == error::unknown) logx("remote", ec);
+        handler(ec);
         return;
     }
 
-    boost_code ignore{};
+    code ignore{};
     binding_ = { get_base().local_endpoint(ignore) };
 
     // Defer handshake to the acceptor when connection is proxied.
@@ -107,15 +96,15 @@ void socket::handle_accept(boost_code ec,
 // Connect.
 // ----------------------------------------------------------------------------
 
-void socket::connect(const asio::endpoints& range,
+void socket::connect(const io::endpoints& range,
     result_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&socket::do_connect,
             shared_from_this(), range, std::move(handler)));
 }
 
-void socket::do_connect(const asio::endpoints& range,
+void socket::do_connect(const io::endpoints& range,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -128,23 +117,15 @@ void socket::do_connect(const asio::endpoints& range,
         return;
     }
 
-    try
-    {
-        // Establishes a socket connection by trying each endpoint in sequence.
-        boost::asio::async_connect(get_base(), range,
-            std::bind(&socket::handle_connect,
-                shared_from_this(), _1, _2, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ do_connect: " << e.what());
-        handler(error::connect_failed);
-    }
+    // Establishes a socket connection by trying each endpoint in sequence.
+    io::async_connect(get_base(), range,
+        std::bind(&socket::handle_connect,
+            shared_from_this(), _1, _2, handler));
 }
 
 // The range connect closes the socket before each attempt, discarding the
 // binding, so bound endpoints (of the bound family) are attempted singly.
-void socket::do_connect_bound(const asio::endpoints& range, size_t index,
+void socket::do_connect_bound(const io::endpoints& range, size_t index,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -156,43 +137,34 @@ void socket::do_connect_bound(const asio::endpoints& range, size_t index,
         return;
     }
 
-    const auto peer = std::next(range.begin(), index)->endpoint();
+    const auto peer = *std::next(range.begin(), index);
     auto& base = get_base();
-    boost_code ec{};
+    code ec{};
     base.close(ec);
-    base.open(peer.protocol(), ec);
+    base.open(io::tcp::of(peer), ec);
 
     if (!ec)
         base.bind(bind_, ec);
 
     if (ec)
     {
-        const auto code = error::asio_to_error_code(ec);
-        if (code == error::unknown) logx("bind", ec);
-        handler(code);
+        if (ec == error::unknown) logx("bind", ec);
+        handler(ec);
         return;
     }
 
-    try
-    {
-        base.async_connect(peer,
-            std::bind(&socket::handle_connect_bound,
-                shared_from_this(), _1, range, add1(index), peer, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ do_connect_bound: " << e.what());
-        handler(error::connect_failed);
-    }
+    base.async_connect(peer,
+        std::bind(&socket::handle_connect_bound,
+            shared_from_this(), _1, range, add1(index), peer, handler));
 }
 
-void socket::handle_connect_bound(const boost_code& ec,
-    const asio::endpoints& range, size_t next, const asio::endpoint& peer,
+void socket::handle_connect_bound(const code& ec,
+    const io::endpoints& range, size_t next, const io::endpoint& peer,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (ec && !error::asio_is_canceled(ec) && !stopped_.load() &&
+    if (ec && ec != error::operation_canceled && !stopped_.load() &&
         next_bound(range, next) != range.size())
     {
         do_connect_bound(range, next, handler);
@@ -203,19 +175,19 @@ void socket::handle_connect_bound(const boost_code& ec,
 }
 
 // private
-size_t socket::next_bound(const asio::endpoints& range,
+size_t socket::next_bound(const io::endpoints& range,
     size_t index) const NOEXCEPT
 {
     const auto v4 = bind_.address().is_v4();
     for (auto it = std::next(range.begin(), index); it != range.end();
         ++it, ++index)
-        if (it->endpoint().address().is_v4() == v4)
+        if (it->address().is_v4() == v4)
             break;
 
     return index;
 }
 
-void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
+void socket::handle_connect(const code& ec, const io::endpoint& peer,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -226,7 +198,7 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
     if (!proxied_ && !address_)
         address_ = { peer };
 
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         handler(error::operation_canceled);
         return;
@@ -234,13 +206,12 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
 
     if (ec)
     {
-        const auto code = error::asio_to_error_code(ec);
-        if (code == error::unknown) logx("connect", ec);
-        handler(code);
+        if (ec == error::unknown) logx("connect", ec);
+        handler(ec);
         return;
     }
 
-    boost_code ignore{};
+    code ignore{};
     binding_ = { get_base().local_endpoint(ignore) };
 
     // Defer handshake to the connector when connection is proxied.
@@ -259,7 +230,7 @@ void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
 
 void socket::handshake(result_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_handshake,
             shared_from_this(), std::move(handler)));
 }
@@ -306,7 +277,7 @@ void socket::do_upgrade(const result_handler& handler) NOEXCEPT
         // The accepted peer is detected as v1 or v2 before upgrade.
         if (inbound_)
         {
-            boost::asio::async_read(get_base(),
+            io::async_read(get_base(),
                 detection_.prepare(p2ps::stream::detection_size),
                 std::bind(&socket::handle_detection,
                     shared_from_this(), _1, handler));
@@ -369,17 +340,16 @@ void socket::do_upgrade(const result_handler& handler) NOEXCEPT
     handler(error::success);
 }
 
-// Invoked on the socket strand (asio handler).
-void socket::handle_detection(const boost_code& ec,
+// Invoked on the socket strand.
+void socket::handle_detection(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     if (ec)
     {
-        const auto code = error::asio_to_error_code(ec);
-        if (code == error::unknown) logx("detection", ec);
-        handler(code);
+        if (ec == error::unknown) logx("detection", ec);
+        handler(ec);
         return;
     }
 
@@ -414,52 +384,49 @@ void socket::handle_detection(const boost_code& ec,
             shared_from_this(), _1, handler));
 }
 
-void socket::handle_encrypted_handshake(const boost_code& ec,
+void socket::handle_encrypted_handshake(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         handler(error::operation_canceled);
         return;
     }
 
-    const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown) logx("encrypted handshake", ec);
-    handler(code);
+    if (ec == error::unknown) logx("encrypted handshake", ec);
+    handler(ec);
 }
 
-void socket::handle_publisher_handshake(const boost_code& ec,
+void socket::handle_publisher_handshake(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         handler(error::operation_canceled);
         return;
     }
 
-    const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown) logx("publisher handshake", ec);
-    handler(code);
+    if (ec == error::unknown) logx("publisher handshake", ec);
+    handler(ec);
 }
 
-void socket::handle_handshake(const boost_code& ec,
+void socket::handle_handshake(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         handler(error::operation_canceled);
         return;
     }
 
-    const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown) logx("handshake", ec);
-    handler(code);
+    if (ec == error::unknown) logx("handshake", ec);
+    handler(ec);
 }
 
 BC_POP_WARNING()

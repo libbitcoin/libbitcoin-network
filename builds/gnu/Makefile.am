@@ -48,7 +48,6 @@ src_libbitcoin_network_la_LIBADD = \
     ${libbitcoin_system_LIBS}
 
 src_libbitcoin_network_la_SOURCES = \
-    ${srcdir}/../../src/asio.cpp \
     ${srcdir}/../../src/define.cpp \
     ${srcdir}/../../src/error.cpp \
     ${srcdir}/../../src/memory.cpp \
@@ -226,8 +225,6 @@ include_bitcoin_networkdir = \
     ${includedir}/bitcoin/network
 
 include_bitcoin_network_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/asio.hpp \
-    ${srcdir}/../../include/bitcoin/network/boost.hpp \
     ${srcdir}/../../include/bitcoin/network/define.hpp \
     ${srcdir}/../../include/bitcoin/network/error.hpp \
     ${srcdir}/../../include/bitcoin/network/have.hpp \
@@ -338,6 +335,7 @@ include_bitcoin_network_impl_messages_httpdir = \
     ${includedir}/bitcoin/network/impl/messages/http
 
 include_bitcoin_network_impl_messages_http_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/messages/http/operations.ipp \
     ${srcdir}/../../include/bitcoin/network/impl/messages/http/parser.ipp \
     ${srcdir}/../../include/bitcoin/network/impl/messages/http/serializer.ipp
 
@@ -359,6 +357,12 @@ include_bitcoin_network_impl_tlsdir = \
 
 include_bitcoin_network_impl_tls_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/impl/tls/stream.ipp
+
+include_bitcoin_network_impl_wsdir = \
+    ${includedir}/bitcoin/network/impl/ws
+
+include_bitcoin_network_impl_ws_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/ws/client.ipp
 
 include_bitcoin_network_interfacesdir = \
     ${includedir}/bitcoin/network/interfaces
@@ -414,6 +418,7 @@ include_bitcoin_network_messages_http_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/http/header.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/http.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/message.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/operations.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/parser.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/serializer.hpp
 
@@ -594,6 +599,7 @@ include_bitcoin_network_wsdir = \
     ${includedir}/bitcoin/network/ws
 
 include_bitcoin_network_ws_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/ws/client.hpp \
     ${srcdir}/../../include/bitcoin/network/ws/frame.hpp \
     ${srcdir}/../../include/bitcoin/network/ws/handshake.hpp \
     ${srcdir}/../../include/bitcoin/network/ws/reader.hpp \
@@ -634,7 +640,6 @@ test_libbitcoin_network_test_LDADD = \
     ${src_libbitcoin_network_la_LIBADD}
 
 test_libbitcoin_network_test_SOURCES = \
-    ${srcdir}/../../test/asio.cpp \
     ${srcdir}/../../test/error.cpp \
     ${srcdir}/../../test/main.cpp \
     ${srcdir}/../../test/memory.cpp \

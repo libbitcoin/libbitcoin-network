@@ -810,54 +810,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__sam_unassigned_failure__true_expected_messag
     BOOST_REQUIRE_EQUAL(ec.message(), "sam unassigned failure");
 }
 
-// boost
-
-BOOST_AUTO_TEST_CASE(error_t__code__system_unknown__true_expected_message)
-{
-    constexpr auto value = error::system_unknown;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "system error");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__misc_unknown__true_expected_message)
-{
-    constexpr auto value = error::misc_unknown;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "misc error");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__errc_unknown__true_expected_message)
-{
-    constexpr auto value = error::errc_unknown;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "errc error");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__ssl_unknown__true_expected_message)
-{
-    constexpr auto value = error::ssl_unknown;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "ssl error");
-}
-
-// boost tls
-
-BOOST_AUTO_TEST_CASE(error_t__code__tls_set_options__true_expected_message)
-{
-    constexpr auto value = error::tls_set_options;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls options");
-}
+// tls
 
 BOOST_AUTO_TEST_CASE(error_t__code__tls_use_certificate__true_expected_message)
 {
@@ -877,24 +830,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__tls_use_private_key__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls private key");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__tls_set_password__true_expected_message)
-{
-    constexpr auto value = error::tls_set_password;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls private key password");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__tls_set_default_verify__true_expected_message)
-{
-    constexpr auto value = error::tls_set_default_verify;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "failed to set tls default certificate authority");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__tls_set_add_verify__true_expected_message)
 {
     constexpr auto value = error::tls_set_add_verify;
@@ -911,33 +846,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__tls_stream_truncated__true_expected_message)
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
     BOOST_REQUIRE_EQUAL(ec.message(), "tls stream truncated");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__tls_unspecified_system_error__true_expected_message)
-{
-    constexpr auto value = error::tls_unspecified_system_error;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tls unspecified system error");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__tls_unexpected_result__true_expected_message)
-{
-    constexpr auto value = error::tls_unexpected_result;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tls handshake failure");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__tls_unknown__true_expected_message)
-{
-    constexpr auto value = error::tls_unknown;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "tls error");
 }
 
 // tls alerts
@@ -1985,15 +1893,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__bad_close_payload__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "bad close payload");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__websocket_unknown__true_expected_message)
-{
-    constexpr auto value = error::websocket_unknown;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "websocket error");
-}
-
 // boost json error
 
 BOOST_AUTO_TEST_CASE(error_t__code__syntax__true_expected_message)
@@ -2423,72 +2322,23 @@ BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_writer_exception__true_expected_mess
     BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc writer exception");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__would_block__true_expected_message)
+{
+    constexpr auto value = error::would_block;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "would block");
+}
+
 // mapping
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(asio_is_canceled__canceled_codes__true)
-{
-    BOOST_REQUIRE(error::asio_is_canceled(error::to_asio_basic_code(error::asio_basic_error_t::operation_aborted)));
-    BOOST_REQUIRE(error::asio_is_canceled(error::to_errc_code(error::boost_errc_t::operation_canceled)));
-}
-
-BOOST_AUTO_TEST_CASE(asio_is_canceled__other_codes__false)
-{
-    BOOST_REQUIRE(!error::asio_is_canceled(error::to_asio_basic_code(error::asio_basic_error_t::connection_refused)));
-    BOOST_REQUIRE(!error::asio_is_canceled(boost_code{}));
-}
-
 BOOST_AUTO_TEST_CASE(to_error_code__default_code__success)
 {
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(boost_code{}), error::success);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(boost_code{}), error::success);
-    BOOST_REQUIRE_EQUAL(error::http_to_error_code(boost_code{}), error::success);
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(boost_code{}), error::success);
-    BOOST_REQUIRE_EQUAL(error::rpc_to_error_code(boost_code{}), error::success);
-}
-
-BOOST_AUTO_TEST_CASE(errc_to_error_code__generic_conditions__expected)
-{
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::operation_canceled)), error::operation_canceled);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::connection_reset)), error::peer_disconnect);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::no_buffer_space)), error::insufficient_buffer);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::permission_denied)), error::not_allowed);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::bad_address)), error::resolve_failed);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::connection_refused)), error::connection_refused);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::network_unreachable)), error::net_unreachable);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::network_down)), error::net_unreachable);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::address_not_available)), error::net_unreachable);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::no_link)), error::net_unreachable);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::host_unreachable)), error::host_unreachable);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::broken_pipe)), error::connect_failed);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::address_in_use)), error::address_in_use);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::io_error)), error::bad_stream);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::timed_out)), error::channel_timeout);
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::file_exists)), error::file_system);
-}
-
-BOOST_AUTO_TEST_CASE(errc_to_error_code__unmapped_generic__errc_unknown)
-{
-    BOOST_REQUIRE_EQUAL(error::errc_to_error_code(error::to_errc_code(error::boost_errc_t::argument_out_of_domain)), error::errc_unknown);
-}
-
-BOOST_AUTO_TEST_CASE(asio_to_error_code__basic_codes__expected)
-{
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::operation_aborted)), error::operation_canceled);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::address_family_not_supported)), error::resolve_failed);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::address_in_use)), error::address_in_use);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::connection_refused)), error::connection_refused);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::network_unreachable)), error::net_unreachable);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::network_down)), error::net_unreachable);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::host_unreachable)), error::host_unreachable);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::shut_down)), error::connect_failed);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::connection_reset)), error::peer_disconnect);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::message_size)), error::bad_stream);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::invalid_argument)), error::invalid_configuration);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::no_buffer_space)), error::insufficient_buffer);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::no_such_device)), error::file_system);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::access_denied)), error::not_allowed);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::timed_out)), error::channel_timeout);
+    BOOST_REQUIRE_EQUAL(error::http_to_error_code(code{}), error::success);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(code{}), error::success);
+    BOOST_REQUIRE_EQUAL(error::rpc_to_error_code(code{}), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(http_to_error_code__beast_codes__expected)
@@ -2557,12 +2407,6 @@ BOOST_AUTO_TEST_CASE(tls_to_error_code__unmapped_alert__tls_alert_unknown)
     BOOST_REQUIRE_EQUAL(error::tls_to_error_code(network::tls::alert::close_notify), error::tls_alert_unknown);
 }
 
-BOOST_AUTO_TEST_CASE(asio_to_error_code__network_code__passed_through)
-{
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(boost_code{ code{ error::tls_stream_truncated } }), error::tls_stream_truncated);
-    BOOST_REQUIRE_EQUAL(error::asio_to_error_code(boost_code{ code{ error::tls_alert_bad_record_mac } }), error::tls_alert_bad_record_mac);
-}
-
 BOOST_AUTO_TEST_CASE(json_to_error_code__json_codes__expected)
 {
     BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(error::json_error_t::json_syntax)), error::syntax);
@@ -2601,9 +2445,14 @@ BOOST_AUTO_TEST_CASE(json_to_error_code__unmapped_json_code__json_unknown)
     BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_json_code(static_cast<error::json_error_t>(0xff))), error::json_unknown);
 }
 
-BOOST_AUTO_TEST_CASE(json_to_error_code__asio_code__asio_mapping)
+BOOST_AUTO_TEST_CASE(json_to_error_code__network_code__same_code)
 {
-    BOOST_REQUIRE_EQUAL(error::json_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::timed_out)), error::channel_timeout);
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(code(error::channel_timeout)), error::channel_timeout);
+}
+
+BOOST_AUTO_TEST_CASE(json_to_error_code__other_category__unknown)
+{
+    BOOST_REQUIRE_EQUAL(error::json_to_error_code(std::make_error_code(std::errc::timed_out)), error::unknown);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_to_error_code__network_code__same_code)

@@ -22,7 +22,7 @@
 #include <functional>
 #include <string>
 #include <string_view>
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/io/buffer.hpp>
 
 namespace libbitcoin {

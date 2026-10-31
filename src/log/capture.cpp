@@ -59,7 +59,7 @@ bool capture::stranded() const NOEXCEPT
 void capture::start() NOEXCEPT
 {
     // Threadpool is started on construct, can only be stopped.
-    boost::asio::post(pool_.service(),
+    io::post(pool_.service(),
         std::bind(&capture::do_start, this));
 }
 
@@ -95,7 +95,7 @@ void capture::stop() NOEXCEPT
     // This buffers the handler if getline is still blocking and there is only
     // one thread in the pool. Providing a second thread allows stop to proceed
     // and the buffer to clear immediately, despite shutdown remaining blocked.
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&capture::do_stop, this));
 }
 
@@ -117,7 +117,7 @@ void capture::do_stop() NOEXCEPT
 // protected
 void capture::notify(const code& ec, const std::string& line) const NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&capture::do_notify, this, ec, line));
 }
 
@@ -138,7 +138,7 @@ void capture::subscribe(notifier&& handler, result_handler&& complete) NOEXCEPT
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&capture::do_subscribe,
             this, std::move(handler), std::move(complete)));
 }

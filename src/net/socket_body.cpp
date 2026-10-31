@@ -46,17 +46,17 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 void socket::body_read(http::flat_buffer& buffer, http::request& request,
     count_handler&& handler) NOEXCEPT
 {
-    boost_code ec{};
+    code ec{};
     const auto in = emplace_shared<read_state>(request, buffer, !websocket());
     in->reader.init({}, ec);
 
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_body_read,
             shared_from_this(), ec, zero, in, std::move(handler)));
 }
 
 // private
-void socket::do_body_read(boost_code ec, size_t total,
+void socket::do_body_read(code ec, size_t total,
     const read_state::ptr& in, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -98,7 +98,7 @@ void socket::do_body_read(boost_code ec, size_t total,
         }
 
         if (ec == error::http_error_t::need_more)
-            ec.clear();
+            ec = error::success;
     }
 
     if (ec)
@@ -193,17 +193,17 @@ void socket::body_write(http::response&& response,
     count_handler&& handler) NOEXCEPT
 {
     assign_buffer(response.body());
-    boost_code ec{};
+    code ec{};
     const auto out = emplace_shared<write_state>(std::move(response));
     out->writer.init(ec);
 
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_body_write,
             shared_from_this(), ec, zero, out, std::move(handler)));
 }
 
 // private
-void socket::do_body_write(boost_code ec, size_t total,
+void socket::do_body_write(code ec, size_t total,
     const write_state::ptr& out, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -219,7 +219,7 @@ void socket::do_body_write(boost_code ec, size_t total,
 
     out->more = buffer.has_value() && buffer.value().second;
     const auto data = buffer.has_value() ?
-        buffer.value().first : asio::const_buffer{};
+        buffer.value().first : io::const_buffer{};
 
     // A ws message closes on the final chunk (finish = !more), so a body
     // that spans multiple get() passes is delivered as one multi-frame
@@ -269,17 +269,17 @@ void socket::body_notify(http::request&& notification,
     count_handler&& handler) NOEXCEPT
 {
     assign_buffer(notification.body());
-    boost_code ec{};
+    code ec{};
     const auto out = emplace_shared<notify_state>(std::move(notification));
     out->writer.init(ec);
 
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_body_notify,
             shared_from_this(), ec, zero, out, std::move(handler)));
 }
 
 // private
-void socket::do_body_notify(boost_code ec, size_t total,
+void socket::do_body_notify(code ec, size_t total,
     const notify_state::ptr& out, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -295,7 +295,7 @@ void socket::do_body_notify(boost_code ec, size_t total,
 
     out->more = buffer.has_value() && buffer.value().second;
     const auto data = buffer.has_value() ?
-        buffer.value().first : asio::const_buffer{};
+        buffer.value().first : io::const_buffer{};
 
     // TODO: derive websocket binary/text from body type mapping.
     async_write(data, false, !out->more,

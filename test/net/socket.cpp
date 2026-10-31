@@ -28,7 +28,7 @@ class socket_accessor
 public:
     using socket::socket;
 
-    const asio::strand& get_strand() const NOEXCEPT
+    const io::strand& get_strand() const NOEXCEPT
     {
         return strand_;
     }
@@ -55,7 +55,7 @@ public:
     }
 
     // Call must be stranded.
-    void async_read_some1(const asio::mutable_buffer& buffer, const count_handler& handler) NOEXCEPT
+    void async_read_some1(const io::mutable_buffer& buffer, const count_handler& handler) NOEXCEPT
     {
         async_read_some(buffer, handler);
     }
@@ -97,16 +97,16 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     };
 
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
-    asio::strand strand(pool.service().get_executor());
-    asio::acceptor acceptor(strand);
+    io::strand strand(pool.service().get_executor());
+    io::acceptor acceptor(strand);
 
-    boost_code ec;
-    const asio::endpoint endpoint(asio::tcp::v6(), 42);
+    code ec;
+    const io::endpoint endpoint{ system::ip::ipv6{}, 42 };
 
-    acceptor.open(endpoint.protocol(), ec);
+    acceptor.open(io::tcp::of(endpoint), ec);
     BOOST_REQUIRE(!ec);
 
-    acceptor.set_option(asio::acceptor::reuse_address(true), ec);
+    acceptor.set_option(io::reuse_address{ true }, ec);
     BOOST_REQUIRE(!ec);
 
     // Result codes inconsistent due to context.
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     ////BOOST_REQUIRE(!ec);
 
     // Result codes inconsistent due to context.
-    acceptor.listen(1, ec);
+    acceptor.listen(ec);
     ////BOOST_REQUIRE(!ec);
 
     instance->accept(acceptor, [instance](const code& ec)
@@ -129,9 +129,9 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 
     // Acceptor must be canceled to release/invoke the accept handler.
     // This has the same effect as network::acceptor::stop.
-    boost::asio::post(strand, [&]() NOEXCEPT
+    io::post(strand, [&]() NOEXCEPT
     {
-        boost_code ignore;
+        code ignore;
         acceptor.cancel(ignore);
     });
 
@@ -151,10 +151,10 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////    };
 ////
 ////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
-////    asio::strand strand(pool.service().get_executor());
+////    io::strand strand(pool.service().get_executor());
 ////
-////    const asio::endpoint endpoint(asio::tcp::v6(), 42);
-////    asio::endpoints endpoints;
+////    const io::endpoint endpoint{ system::ip::ipv6{}, 42 };
+////    io::endpoints endpoints;
 ////    endpoints.create(endpoint, "bogus.xxx", "service");
 ////
 ////    instance->connect(endpoints, [instance](const code& ec)
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 ////
 ////    system::data_array<42> data{};
-////    instance->read_some(asio::mutable_buffer{ data.data(), data.size() },
+////    instance->read_some(io::mutable_buffer{ data.data(), data.size() },
 ////        [instance](const code& ec, size_t size)
 ////        {
 ////            // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
@@ -290,16 +290,16 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_loopback__binding_expected)
     };
 
     // Bind a loopback acceptor on an ephemeral port.
-    asio::strand accept_strand(pool.service().get_executor());
-    asio::acceptor acceptor(accept_strand);
-    boost_code ec{};
-    const asio::endpoint bind_endpoint(asio::ipv4::loopback(), 0);
+    io::strand accept_strand(pool.service().get_executor());
+    io::acceptor acceptor(accept_strand);
+    code ec{};
+    const auto bind_endpoint = test::loopback();
 
-    acceptor.open(bind_endpoint.protocol(), ec);
+    acceptor.open(io::tcp::of(bind_endpoint), ec);
     BOOST_REQUIRE(!ec);
     acceptor.bind(bind_endpoint, ec);
     BOOST_REQUIRE(!ec);
-    acceptor.listen(1, ec);
+    acceptor.listen(ec);
     BOOST_REQUIRE(!ec);
     const auto port = acceptor.local_endpoint().port();
 
@@ -311,10 +311,10 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_loopback__binding_expected)
         accept_result->set_value(accept_ec);
     });
 
-    params.bind = { asio::ipv4::loopback(), 0 };
+    params.bind = test::loopback(0);
     const auto client = std::make_shared<socket_accessor>(log, pool.service(), params, config::address{}, config::endpoint{}, false);
-    const asio::endpoint peer(asio::ipv4::loopback(), port);
-    const auto range = asio::endpoints::create(peer, "127.0.0.1", std::to_string(port));
+    const auto peer = test::loopback(port);
+    const io::endpoints range{ peer };
 
     const auto connect_result = std::make_shared<std::promise<code>>();
     auto connect_future = connect_result->get_future();
@@ -347,12 +347,12 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_family_mismatch__resolve_failed)
     {
         .maximum_request = 42u,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer,
-        .bind = { asio::ipv4::loopback(), 0 }
+        .bind = test::loopback(0)
     };
 
     const auto client = std::make_shared<socket_accessor>(log, pool.service(), params, config::address{}, config::endpoint{}, false);
-    const asio::endpoint peer(asio::ipv6::loopback(), 42);
-    const auto range = asio::endpoints::create(peer, "::1", "42");
+    const auto peer = test::loopback_v6(42);
+    const io::endpoints range{ peer };
 
     const auto connect_result = std::make_shared<std::promise<code>>();
     auto connect_future = connect_result->get_future();
@@ -379,12 +379,12 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_unavailable__net_unreachable)
     {
         .maximum_request = 42u,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer,
-        .bind = { boost::asio::ip::make_address_v4("192.0.2.1"), 0 }
+        .bind = { test::address("192.0.2.1"), 0 }
     };
 
     const auto client = std::make_shared<socket_accessor>(log, pool.service(), params, config::address{}, config::endpoint{}, false);
-    const asio::endpoint peer(asio::ipv4::loopback(), 42);
-    const auto range = asio::endpoints::create(peer, "127.0.0.1", "42");
+    const auto peer = test::loopback(42);
+    const io::endpoints range{ peer };
 
     const auto connect_result = std::make_shared<std::promise<code>>();
     auto connect_future = connect_result->get_future();
@@ -405,8 +405,8 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_unavailable__net_unreachable)
 // body_write() chunk as its own whole websocket message (finish always
 // true), splitting one logical response into N independent messages. The
 // fix passes finish = !out->more, so only the final chunk closes the
-// message. A real (non-library) websocket client is used as ground truth:
-// beast's blocking read() returns only once a full message (finish) is
+// message. A blocking websocket client is used as ground truth: its
+// read() returns only once a full message (finish) is
 // received, so a single read() call assembling the entire multi-chunk body
 // proves the chunks were sent as one multi-frame message rather than as
 // several.
@@ -423,18 +423,18 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
     };
 
     // Bind a loopback acceptor on an ephemeral port.
-    asio::strand accept_strand(pool.service().get_executor());
-    asio::acceptor acceptor(accept_strand);
-    boost_code ec{};
-    const asio::endpoint bind_endpoint(asio::ipv4::loopback(), 0);
+    io::strand accept_strand(pool.service().get_executor());
+    io::acceptor acceptor(accept_strand);
+    code ec{};
+    const auto bind_endpoint = test::loopback();
 
-    acceptor.open(bind_endpoint.protocol(), ec);
+    acceptor.open(io::tcp::of(bind_endpoint), ec);
     BOOST_REQUIRE(!ec);
-    acceptor.set_option(asio::reuse_address(true), ec);
+    acceptor.set_option(io::reuse_address(true), ec);
     BOOST_REQUIRE(!ec);
     acceptor.bind(bind_endpoint, ec);
     BOOST_REQUIRE(!ec);
-    acceptor.listen(1, ec);
+    acceptor.listen(ec);
     BOOST_REQUIRE(!ec);
     const auto port = acceptor.local_endpoint().port();
 
@@ -482,23 +482,23 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
         });
 
     // Real (blocking) websocket client, independent of the code under test.
-    asio::context client_service;
-    asio::socket raw(client_service);
-    boost_code client_ec{};
-    raw.connect({ asio::ipv4::loopback(), port }, client_ec);
+    io::context client_service;
+    io::socket raw(client_service);
+    code client_ec{};
+    raw.connect(test::loopback(port), client_ec);
     BOOST_REQUIRE(!client_ec);
 
-    boost::beast::websocket::stream<asio::socket> client(std::move(raw));
-    client.handshake("127.0.0.1", "/", client_ec);
+    ws::client<io::socket> client{ raw };
+    client_ec = client.handshake("127.0.0.1", "/");
     BOOST_REQUIRE(!client_ec);
 
     // One blocking read of a "complete message" must assemble every chunk.
     http::flat_buffer read_buffer{};
-    client.read(read_buffer, client_ec);
+    client_ec = client.read(read_buffer);
     BOOST_REQUIRE(!client_ec);
-    BOOST_REQUIRE(client.got_text());
+    BOOST_REQUIRE(!client.binary());
 
-    const auto received = boost::beast::buffers_to_string(read_buffer.data());
+    const auto received = test::to_string(read_buffer.data());
     BOOST_REQUIRE_EQUAL(received, expected);
 
     BOOST_REQUIRE(accept_future.wait_for(2s) == std::future_status::ready);
@@ -528,18 +528,18 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
     };
 
     // Bind a loopback acceptor on an ephemeral port.
-    asio::strand accept_strand(pool.service().get_executor());
-    asio::acceptor acceptor(accept_strand);
-    boost_code ec{};
-    const asio::endpoint bind_endpoint(asio::ipv4::loopback(), 0);
+    io::strand accept_strand(pool.service().get_executor());
+    io::acceptor acceptor(accept_strand);
+    code ec{};
+    const auto bind_endpoint = test::loopback();
 
-    acceptor.open(bind_endpoint.protocol(), ec);
+    acceptor.open(io::tcp::of(bind_endpoint), ec);
     BOOST_REQUIRE(!ec);
-    acceptor.set_option(asio::reuse_address(true), ec);
+    acceptor.set_option(io::reuse_address(true), ec);
     BOOST_REQUIRE(!ec);
     acceptor.bind(bind_endpoint, ec);
     BOOST_REQUIRE(!ec);
-    acceptor.listen(1, ec);
+    acceptor.listen(ec);
     BOOST_REQUIRE(!ec);
     const auto port = acceptor.local_endpoint().port();
 
@@ -582,22 +582,21 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
         });
 
     // Real (blocking) http client, independent of the code under test.
-    asio::context client_service;
-    asio::socket client(client_service);
-    boost_code client_ec{};
-    client.connect({ asio::ipv4::loopback(), port }, client_ec);
+    io::context client_service;
+    io::socket client(client_service);
+    code client_ec{};
+    client.connect(test::loopback(port), client_ec);
     BOOST_REQUIRE(!client_ec);
 
-    boost::beast::http::request<boost::beast::http::empty_body> get{ boost::beast::http::verb::get, "/", 11 };
-    get.set(boost::beast::http::field::host, "127.0.0.1");
-    get.prepare_payload();
-    boost::beast::http::write(client, get, client_ec);
+    http::message<true, http::empty_body> get{ http::verb::get, "/", http::version_1_1 };
+    get.set(http::field::host, "127.0.0.1");
+    http::write(client, get, client_ec);
     BOOST_REQUIRE(!client_ec);
 
     // One blocking read must assemble every chunk of the json body.
     http::flat_buffer read_buffer{};
-    boost::beast::http::response<boost::beast::http::string_body> received{};
-    boost::beast::http::read(client, read_buffer, received, client_ec);
+    http::message<false, http::string_body> received{};
+    http::read(client, read_buffer, received, client_ec);
     BOOST_REQUIRE(!client_ec);
     BOOST_REQUIRE_EQUAL(received.result_int(), 200u);
     BOOST_REQUIRE_EQUAL(received.body(), expected);
@@ -617,9 +616,9 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
 // loopback
 // ----------------------------------------------------------------------------
 
-static const asio::endpoint open_endpoint{ asio::ipv4::loopback(), 65121 };
-static const asio::endpoint closed_endpoint{ asio::ipv4::loopback(), 65122 };
-static const asio::endpoint raw_endpoint{ asio::ipv4::loopback(), 65123 };
+static const io::endpoint open_endpoint{ test::loopback(65121) };
+static const io::endpoint closed_endpoint{ test::loopback(65122) };
+static const io::endpoint raw_endpoint{ test::loopback(65123) };
 static const p2ps::context mainnet_context{ 0xd9b4bef9 };
 
 template <typename Type>
@@ -649,14 +648,14 @@ struct acceptor_fixture
 
     acceptor_fixture()
     {
-        boost_code ec{};
-        acceptor.open(open_endpoint.protocol(), ec);
+        code ec{};
+        acceptor.open(io::tcp::of(open_endpoint), ec);
         BOOST_REQUIRE(!ec);
-        acceptor.set_option(asio::reuse_address(true), ec);
+        acceptor.set_option(io::reuse_address(true), ec);
         BOOST_REQUIRE(!ec);
         acceptor.bind(open_endpoint, ec);
         BOOST_REQUIRE(!ec);
-        acceptor.listen(1, ec);
+        acceptor.listen(ec);
         BOOST_REQUIRE(!ec);
     }
 
@@ -674,16 +673,16 @@ struct acceptor_fixture
             accepted.set(ec);
         });
 
-        boost_code ec{};
+        code ec{};
         client.connect(open_endpoint, ec);
         BOOST_REQUIRE(!ec);
         return instance;
     }
 
-    std::shared_ptr<socket_accessor> connect(const socket::parameters& params, const std::vector<asio::endpoint>& peers, const awaiter<code>& connected)
+    std::shared_ptr<socket_accessor> connect(const socket::parameters& params, const std::vector<io::endpoint>& peers, const awaiter<code>& connected)
     {
         const auto instance = std::make_shared<socket_accessor>(log, pool.service(), params, config::address{}, config::endpoint{}, false);
-        const auto range = asio::endpoints::create(peers.begin(), peers.end(), "127.0.0.1", "0");
+        const io::endpoints range{ peers };
         instance->connect(range, [=](const code& ec) NOEXCEPT
         {
             connected.set(ec);
@@ -694,10 +693,10 @@ struct acceptor_fixture
 
     const logger log{};
     threadpool pool{ 2 };
-    asio::strand strand{ pool.service().get_executor() };
-    asio::acceptor acceptor{ strand };
-    asio::context service{};
-    asio::socket client{ service };
+    io::strand strand{ pool.service().get_executor() };
+    io::acceptor acceptor{ strand };
+    io::context service{};
+    io::socket client{ service };
     const socket::parameters clear
     {
         .maximum_request = 42u,
@@ -715,9 +714,9 @@ BOOST_FIXTURE_TEST_CASE(socket__service__default__expected, acceptor_fixture)
 BOOST_FIXTURE_TEST_CASE(socket__set_address__stranded__address_and_endpoint_set, acceptor_fixture)
 {
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), clear);
-    const config::address expected{ asio::endpoint{ boost::asio::ip::make_address_v4("1.2.3.4"), 42 } };
+    const config::address expected{ io::endpoint{ test::address("1.2.3.4"), 42 } };
     const awaiter<bool> set{};
-    boost::asio::post(instance->strand(), [=]() NOEXCEPT
+    io::post(instance->strand(), [=]() NOEXCEPT
     {
         instance->set_address(expected);
         set.set(true);
@@ -743,9 +742,9 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__proxied__success_endpoint_set, acceptor_
 
 BOOST_FIXTURE_TEST_CASE(socket__accept__not_listening__invalid_configuration, acceptor_fixture)
 {
-    asio::acceptor unlistened{ strand };
-    boost_code ec{};
-    unlistened.open(raw_endpoint.protocol(), ec);
+    io::acceptor unlistened{ strand };
+    code ec{};
+    unlistened.open(io::tcp::of(raw_endpoint), ec);
     BOOST_REQUIRE(!ec);
     unlistened.bind(raw_endpoint, ec);
     BOOST_REQUIRE(!ec);
@@ -770,7 +769,7 @@ BOOST_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, acc
     char byte{};
     const awaiter<bool> base{};
     const awaiter<code> read{};
-    boost::asio::post(instance->strand(), [=, &byte]() NOEXCEPT
+    io::post(instance->strand(), [=, &byte]() NOEXCEPT
     {
         base.set(instance->is_base1());
         instance->async_read_some1({ &byte, 1 }, [=](const code& ec, size_t) NOEXCEPT
@@ -779,8 +778,8 @@ BOOST_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, acc
         });
     });
 
-    boost_code ec{};
-    boost::asio::write(client, boost::asio::buffer("x", 1), ec);
+    code ec{};
+    io::write(client, io::buffer("x", 1), ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(base.get());
     BOOST_REQUIRE_EQUAL(read.get(), error::success);
@@ -812,8 +811,8 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read__field_below_header_limit__success, ac
         read.set(ec);
     });
 
-    boost_code ec{};
-    boost::asio::write(client, boost::asio::buffer(request_with_field(1'000)), ec);
+    code ec{};
+    io::write(client, io::buffer(request_with_field(1'000)), ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::success);
     instance->stop();
@@ -835,16 +834,15 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read__header_above_header_limit__header_lim
         read.set(ec);
     });
 
-    boost_code ec{};
-    boost::asio::write(client, boost::asio::buffer(request_with_field(maximum_http_header)), ec);
+    code ec{};
+    io::write(client, io::buffer(request_with_field(maximum_http_header)), ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::header_limit);
     instance->stop();
 }
 
-// beast throws std::length_error for a field above 65533 bytes, which would
-// terminate the process if the header limit admitted it.
-BOOST_FIXTURE_TEST_CASE(socket__http_read__field_above_beast_field_limit__header_limit, acceptor_fixture)
+// A field above 65533 bytes is rejected by the header limit.
+BOOST_FIXTURE_TEST_CASE(socket__http_read__field_above_field_limit__header_limit, acceptor_fixture)
 {
     auto params = clear;
     params.maximum_request = 4'000'000u;
@@ -860,8 +858,8 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read__field_above_beast_field_limit__header
         read.set(ec);
     });
 
-    boost_code ec{};
-    boost::asio::write(client, boost::asio::buffer(request_with_field(200'000)), ec);
+    code ec{};
+    io::write(client, io::buffer(request_with_field(200'000)), ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::header_limit);
     instance->stop();
@@ -889,14 +887,12 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_complete_message__success, a
         });
     });
 
-    boost_code ec{};
-    boost::beast::websocket::stream<asio::socket> websocket(std::move(client));
-    websocket.handshake("127.0.0.1", "/", ec);
+    code ec{};
+    ws::client<io::socket> websocket{ client };
+    ec = websocket.handshake("127.0.0.1", "/");
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(upgraded.get(), error::success);
-
-    websocket.text(true);
-    websocket.write(boost::asio::buffer(std::string{ R"({"jsonrpc":"2.0","id":1,"method":"x","params":[]})" }), ec);
+    ec = websocket.write(R"({"jsonrpc":"2.0","id":1,"method":"x","params":[]})");
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::success);
     instance->stop();
@@ -924,14 +920,12 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_incomplete_message__incomple
         });
     });
 
-    boost_code ec{};
-    boost::beast::websocket::stream<asio::socket> websocket(std::move(client));
-    websocket.handshake("127.0.0.1", "/", ec);
+    code ec{};
+    ws::client<io::socket> websocket{ client };
+    ec = websocket.handshake("127.0.0.1", "/");
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(upgraded.get(), error::success);
-
-    websocket.text(true);
-    websocket.write(boost::asio::buffer(std::string{ R"({"id":1)" }), ec);
+    ec = websocket.write(R"({"id":1)");
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(read.get(), error::incomplete);
     instance->stop();
@@ -949,7 +943,7 @@ BOOST_FIXTURE_TEST_CASE(socket__connect__refused__connection_refused, acceptor_f
 BOOST_FIXTURE_TEST_CASE(socket__connect__bound_first_refused__second_connected, acceptor_fixture)
 {
     auto params = clear;
-    params.bind = { asio::ipv4::loopback(), 0 };
+    params.bind = test::loopback(0);
     const awaiter<code> connected{};
     const auto instance = connect(params, { closed_endpoint, open_endpoint }, connected);
 
@@ -967,13 +961,13 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v1_prefix__success_unencrypted, acc
     const awaiter<code> accepted{};
     const auto instance = accept(params, accepted);
 
-    boost_code ec{};
-    boost::asio::write(client, boost::asio::buffer(prefix), ec);
+    code ec{};
+    io::write(client, io::buffer(prefix), ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
 
     const awaiter<bool> encrypted{};
-    boost::asio::post(instance->strand(), [=]() NOEXCEPT
+    io::post(instance->strand(), [=]() NOEXCEPT
     {
         encrypted.set(instance->encrypted());
     });
@@ -990,10 +984,10 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v2_prefix_disconnected__peer_discon
     const awaiter<code> accepted{};
     const auto instance = accept(params, accepted);
 
-    boost_code ec{};
-    boost::asio::write(client, boost::asio::buffer(prefix), ec);
+    code ec{};
+    io::write(client, io::buffer(prefix), ec);
     BOOST_REQUIRE(!ec);
-    client.shutdown(asio::socket::shutdown_send, ec);
+    client.shutdown(io::socket::shutdown_type::send, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(accepted.get(), error::peer_disconnect);
     instance->stop();
@@ -1015,15 +1009,15 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_handshake_timeout__stopped, accepto
 
 BOOST_FIXTURE_TEST_CASE(socket__connect__p2ps_responder_disconnected__peer_disconnect, acceptor_fixture)
 {
-    asio::acceptor raw{ service };
-    boost_code ec{};
-    raw.open(raw_endpoint.protocol(), ec);
+    io::acceptor raw{ service };
+    code ec{};
+    raw.open(io::tcp::of(raw_endpoint), ec);
     BOOST_REQUIRE(!ec);
-    raw.set_option(asio::reuse_address(true), ec);
+    raw.set_option(io::reuse_address(true), ec);
     BOOST_REQUIRE(!ec);
     raw.bind(raw_endpoint, ec);
     BOOST_REQUIRE(!ec);
-    raw.listen(1, ec);
+    raw.listen(ec);
     BOOST_REQUIRE(!ec);
 
     auto params = clear;
@@ -1031,14 +1025,14 @@ BOOST_FIXTURE_TEST_CASE(socket__connect__p2ps_responder_disconnected__peer_disco
     const awaiter<code> connected{};
     const auto instance = connect(params, { raw_endpoint }, connected);
 
-    asio::socket responder{ service };
+    io::socket responder{ service };
     raw.accept(responder, ec);
     BOOST_REQUIRE(!ec);
 
     system::data_array<64> key{};
-    boost::asio::read(responder, boost::asio::buffer(key), ec);
+    io::read(responder, io::buffer(key), ec);
     BOOST_REQUIRE(!ec);
-    responder.shutdown(asio::socket::shutdown_send, ec);
+    responder.shutdown(io::socket::shutdown_type::send, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(connected.get(), error::peer_disconnect);
     instance->stop();
@@ -1054,9 +1048,9 @@ BOOST_FIXTURE_TEST_CASE(socket__lazy_stop__clear__stopped_client_end_of_file, ac
     BOOST_REQUIRE(instance->stopped());
 
     char byte{};
-    boost_code ec{};
-    client.read_some(boost::asio::buffer(&byte, 1), ec);
-    BOOST_REQUIRE(ec == boost::asio::error::eof);
+    code ec{};
+    client.read_some(io::buffer(&byte, 1), ec);
+    BOOST_REQUIRE(ec == error::peer_disconnect);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

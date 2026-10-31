@@ -96,7 +96,7 @@ public:
     void subscribe(Handler&& handler, channel_id id) NOEXCEPT
     {
         using signature = interface::signature<Message>;
-        boost::asio::post(strand(),
+        io::post(strand(),
             BIND(do_subscribe<signature>,
                 std::forward<signature>(handler), id));
     }
@@ -105,13 +105,13 @@ public:
     void broadcast(const typename Message::cptr& message,
         channel_id sender) NOEXCEPT
     {
-        boost::asio::post(strand(),
+        io::post(strand(),
             BIND(do_broadcast<Message>, message, sender));
     }
 
     virtual void unsubscribe(channel_id subscriber) NOEXCEPT
     {
-        boost::asio::post(strand(),
+        io::post(strand(),
             BIND(do_unsubscribe, subscriber));
     }
 
@@ -223,7 +223,7 @@ protected:
     virtual bool stranded() const NOEXCEPT;
 
     /// The network strand.
-    asio::strand& strand() NOEXCEPT;
+    io::strand& strand() NOEXCEPT;
 
 protected:
     virtual void handle_channel_starting(const code& ec,

@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_IO_STRAND_HPP
 
 #include <memory>
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/io/context.hpp>
 
 namespace libbitcoin {

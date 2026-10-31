@@ -29,16 +29,16 @@ using string_parser = parser<IsRequest, string_body>;
 // Feed the text in one put per size step, returning the code and setting the
 // unconsumed remainder.
 template <bool IsRequest>
-static boost_code feed(string_parser<IsRequest>& instance, std::string text, std::string& rest, size_t step=max_size_t)
+static code feed(string_parser<IsRequest>& instance, std::string text, std::string& rest, size_t step=max_size_t)
 {
-    boost_code ec{};
+    code ec{};
     std::string buffer{};
     while (!text.empty() || !buffer.empty())
     {
         const auto size = std::min(step, text.size());
         buffer += text.substr(0, size);
         text.erase(0, size);
-        const auto used = instance.put(asio::const_buffer{ buffer.data(), buffer.size() }, ec);
+        const auto used = instance.put(io::const_buffer{ buffer.data(), buffer.size() }, ec);
         buffer.erase(0, used);
         if (instance.is_done() || (ec && ec != http_error_t::need_more))
             break;
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(http_parser__put__header__pauses)
 {
     string_parser<true> instance{};
     const std::string text{ "POST / HTTP/1.1\r\nContent-Length: 2\r\n\r\nab" };
-    boost_code ec{};
-    const auto used = instance.put(asio::const_buffer{ text.data(), text.size() }, ec);
+    code ec{};
+    const auto used = instance.put(io::const_buffer{ text.data(), text.size() }, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(instance.is_header_done());
     BOOST_REQUIRE(!instance.is_done());
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(http_parser__put__body_limit__exceeded)
 BOOST_AUTO_TEST_CASE(http_parser__put_eof__incomplete__expected)
 {
     string_parser<true> empty{};
-    boost_code ec{};
+    code ec{};
     empty.put_eof(ec);
     BOOST_REQUIRE(ec == http_error_t::end_of_stream);
 
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(http_parser__put__response_to_eof__body_on_eof)
     BOOST_REQUIRE(!instance.is_done());
     BOOST_REQUIRE_EQUAL(instance.get().reason(), "Fine");
 
-    boost_code ec{};
+    code ec{};
     instance.put_eof(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(instance.is_done());
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(http_parser__serializer__chunked__round_trip)
 
     serializer<false, string_body> instance{ out };
     std::string wire{};
-    boost_code ec{};
+    code ec{};
     while (!instance.is_done())
         for (const auto& buffer: instance.next(ec))
             wire.append(static_cast<const char*>(buffer.data()), buffer.size());
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(http_parser__serializer__content_length__raw_body)
 
     serializer<true, string_body> instance{ out };
     std::string wire{};
-    boost_code ec{};
+    code ec{};
     while (!instance.is_done())
         for (const auto& buffer: instance.next(ec))
             wire.append(static_cast<const char*>(buffer.data()), buffer.size());

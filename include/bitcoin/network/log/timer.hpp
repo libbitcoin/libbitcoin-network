@@ -28,7 +28,6 @@ namespace libbitcoin {
 namespace network {
 
 // Based on: github.com/picanumber/bureaucrat/blob/master/time_lapse.h
-// boost::timer::auto_cpu_timer requires the boost timer lib dependency.
 
 /// Thread safe, non-virtual.
 /// Class to measure the execution time of a callable.

@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_SERIALIZER_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_SERIALIZER_HPP
 
-#include <bitcoin/network/asio.hpp>
+#include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/header.hpp>
 #include <bitcoin/network/messages/http/message.hpp>
@@ -42,7 +42,7 @@ constexpr std::string_view chunk_end{ "\r\n" };
 constexpr std::string_view last_chunk{ "0\r\n\r\n" };
 
 /// Buffers to write in sequence.
-using const_buffers = std::vector<asio::const_buffer>;
+using const_buffers = std::vector<io::const_buffer>;
 
 /// Not thread safe, non-virtual.
 /// Incrementally serialize a message, driving the body writer of the message
@@ -59,7 +59,7 @@ public:
     serializer(message_type& message) NOEXCEPT;
 
     /// The next buffers to write, empty once done.
-    const_buffers next(boost_code& ec) NOEXCEPT;
+    const_buffers next(code& ec) NOEXCEPT;
 
     /// The header has been yielded.
     bool is_header_done() const NOEXCEPT;

@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_FLAT_BUFFER_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_FLAT_BUFFER_HPP
 
-#include <bitcoin/network/asio.hpp>
+#include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -32,8 +32,8 @@ namespace http {
 class BCT_API flat_buffer
 {
 public:
-    using const_buffers_type = asio::const_buffer;
-    using mutable_buffers_type = asio::mutable_buffer;
+    using const_buffers_type = io::const_buffer;
+    using mutable_buffers_type = io::mutable_buffer;
 
     DEFAULT_COPY_MOVE_DESTRUCT(flat_buffer);
 

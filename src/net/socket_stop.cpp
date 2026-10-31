@@ -44,7 +44,7 @@ void socket::stop() NOEXCEPT
         return;
 
     // Stop is posted to strand to protect the socket.
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&socket::do_stop, shared_from_this()));
 }
 
@@ -56,9 +56,9 @@ void socket::do_stop() NOEXCEPT
     watch_->stop();
     timer_->stop();
 
-    boost_code ignore{};
+    code ignore{};
     auto& layer = get_base();
-    layer.shutdown(asio::socket::shutdown_both, ignore);
+    layer.shutdown(io::socket::shutdown_type::both, ignore);
     layer.close(ignore);
 }
 
@@ -75,7 +75,7 @@ void socket::lazy_stop() NOEXCEPT
     lazy_.store(true);
 
     // Async stop is dispatched to strand to protect the socket.
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_lazy_stop, shared_from_this()));
 }
 
@@ -153,10 +153,10 @@ void socket::do_tls_stop() NOEXCEPT
 }
 
 // private
-void socket::handle_tls_close(const boost_code& ec) NOEXCEPT
+void socket::handle_tls_close(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (ec && ec != boost::asio::error::eof && !error::asio_is_canceled(ec))
+    if (ec && ec != error::peer_disconnect && ec != error::operation_canceled)
         logx("tls_stop", ec);
 
     do_linger();
@@ -169,10 +169,10 @@ void socket::do_linger() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    boost_code ignore{};
+    code ignore{};
     auto& layer = get_base();
     layer.cancel(ignore);
-    layer.shutdown(asio::socket::shutdown_send, ignore);
+    layer.shutdown(io::socket::shutdown_type::send, ignore);
     do_drain(emplace_shared<data_chunk>(drain_size));
 }
 
@@ -181,21 +181,13 @@ void socket::do_drain(const chunk_ptr& sink) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    try
-    {
-        get_base().async_read_some(boost::asio::buffer(*sink),
-            std::bind(&socket::handle_drain,
-                shared_from_this(), _1, sink));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ do_drain: " << e.what());
-        do_stop();
-    }
+    get_base().async_read_some(io::buffer(*sink),
+        std::bind(&socket::handle_drain,
+            shared_from_this(), _1, sink));
 }
 
 // private
-void socket::handle_drain(const boost_code& ec,
+void socket::handle_drain(const code& ec,
     const chunk_ptr& sink) NOEXCEPT
 {
     BC_ASSERT(stranded());

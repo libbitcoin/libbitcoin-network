@@ -41,32 +41,6 @@ system::ip::address from_address(
     return { system::ip::ipv6{ address } };
 }
 
-asio::address to_asio(const system::ip::address& ip) NOEXCEPT
-{
-    if (ip.is_v4())
-        return { asio::ipv4{ ip.to_v4().to_bytes() } };
-
-    return { asio::ipv6{ ip.to_v6().to_bytes() } };
-}
-
-asio::endpoint to_asio(const system::ip::endpoint& endpoint) NOEXCEPT
-{
-    return { to_asio(endpoint.address()), endpoint.port() };
-}
-
-system::ip::address from_asio(const asio::address& ip) NOEXCEPT
-{
-    if (ip.is_v4())
-        return { system::ip::ipv4{ ip.to_v4().to_bytes() } };
-
-    return { system::ip::ipv6{ ip.to_v6().to_bytes() } };
-}
-
-system::ip::endpoint from_asio(const asio::endpoint& endpoint) NOEXCEPT
-{
-    return { from_asio(endpoint.address()), endpoint.port() };
-}
-
 std::string to_normal_host(const std::string& host,
     uint16_t default_port) NOEXCEPT
 {

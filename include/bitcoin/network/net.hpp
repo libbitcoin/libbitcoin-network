@@ -95,7 +95,7 @@ public:
     void broadcast(const typename Message::cptr& message,
         object_key sender) NOEXCEPT
     {
-        boost::asio::post(strand_,
+        io::post(strand_,
             std::bind(&net::do_broadcast<Message>, this, message, sender));
     }
 
@@ -146,10 +146,10 @@ public:
     const settings& network_settings() const NOEXCEPT;
 
     /// Return a reference to the network io_context (thread safe).
-    asio::context& service() NOEXCEPT;
+    io::context& service() NOEXCEPT;
 
     /// Return a reference to the network strand (thread safe).
-    asio::strand& strand() NOEXCEPT;
+    io::strand& strand() NOEXCEPT;
 
     /// The strand is running in this thread.
     bool stranded() const NOEXCEPT;
@@ -432,7 +432,7 @@ private:
     threadpool threadpool_;
 
     // This is thread safe.
-    asio::strand strand_;
+    io::strand strand_;
 
     // These are protected by strand.
     hosts hosts_;

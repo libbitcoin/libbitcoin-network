@@ -62,7 +62,7 @@ struct body
     class reader
     {
     public:
-        using buffer_type = asio::const_buffer;
+        using buffer_type = io::const_buffer;
 
         inline explicit reader(value_type& value) NOEXCEPT
           : value_{ value }
@@ -77,9 +77,9 @@ struct body
         }
 
         virtual ~reader() = default;
-        virtual void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
-        virtual size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
-        virtual void finish(boost_code& ec) NOEXCEPT;
+        virtual void init(const http::length_type& length, code& ec) NOEXCEPT;
+        virtual size_t put(const buffer_type& buffer, code& ec) NOEXCEPT;
+        virtual void finish(code& ec) NOEXCEPT;
         virtual bool done() const NOEXCEPT;
 
     protected:
@@ -94,7 +94,7 @@ struct body
     class writer
     {
     public:
-        using const_buffers_type = asio::const_buffer;
+        using const_buffers_type = io::const_buffer;
         using out_buffer = http::get_buffer<const_buffers_type>;
 
         inline explicit writer(value_type& value) NOEXCEPT
@@ -110,8 +110,8 @@ struct body
         }
 
         virtual ~writer() = default;
-        virtual void init(boost_code& ec) NOEXCEPT;
-        virtual out_buffer get(boost_code& ec) NOEXCEPT;
+        virtual void init(code& ec) NOEXCEPT;
+        virtual out_buffer get(code& ec) NOEXCEPT;
         virtual bool done() const NOEXCEPT;
         
     protected:

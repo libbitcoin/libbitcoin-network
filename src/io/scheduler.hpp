@@ -66,6 +66,10 @@ public:
     scheduler() NOEXCEPT;
     ~scheduler() NOEXCEPT;
 
+    /// Stop the resolver and destroy queued handlers and timer waiters, whose
+    /// destruction may use this scheduler (so it precedes member destruction).
+    void shutdown() NOEXCEPT;
+
     size_t run() NOEXCEPT;
     void stop() NOEXCEPT;
     bool stopped() const NOEXCEPT;

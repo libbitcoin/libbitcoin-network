@@ -30,7 +30,7 @@ namespace json {
 
 TEMPLATE
 void CLASS::reader::init(const http::length_type& length,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto value = length.value_or(max_size_t);
@@ -54,7 +54,7 @@ void CLASS::reader::init(const http::length_type& length,
 }
 
 TEMPLATE
-size_t CLASS::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
+size_t CLASS::reader::put(const buffer_type& buffer, code& ec) NOEXCEPT
 {
     using namespace system;
     using namespace network::error;
@@ -124,7 +124,7 @@ size_t CLASS::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 // returning a failure code. In no case is the underlying parser_.finish(ec)
 // ever called, as that would preclude use in the unbounded scenario.
 TEMPLATE
-void CLASS::reader::finish(boost_code& ec) NOEXCEPT
+void CLASS::reader::finish(code& ec) NOEXCEPT
 {
     using namespace network::error;
 
@@ -153,7 +153,7 @@ bool CLASS::reader::done() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-void CLASS::writer::init(boost_code& ec) NOEXCEPT
+void CLASS::writer::init(code& ec) NOEXCEPT
 {
     using namespace system;
     using namespace network::error;
@@ -179,7 +179,7 @@ void CLASS::writer::init(boost_code& ec) NOEXCEPT
 
 TEMPLATE
 CLASS::writer::out_buffer
-CLASS::writer::get(boost_code& ec) NOEXCEPT
+CLASS::writer::get(code& ec) NOEXCEPT
 {
     using namespace network::error;
     if (done())
@@ -221,11 +221,11 @@ CLASS::writer::get(boost_code& ec) NOEXCEPT
         value_.buffer->consume(scratch.size());
         const auto more = !serializer_.done();
         if (more || is_zero(terminator_))
-            return out_buffer{ std::make_pair(boost::asio::buffer(view), more) };
+            return out_buffer{ std::make_pair(io::buffer(view), more) };
 
         data[view.size()] = terminator_;
         const auto bytes = add1(view.size());
-        return out_buffer{ std::make_pair(boost::asio::buffer(data, bytes), more) };
+        return out_buffer{ std::make_pair(io::buffer(data, bytes), more) };
     }
     catch (...)
     {

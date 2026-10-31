@@ -45,7 +45,7 @@ public:
     address(const messages::peer::address_item::cptr& message) NOEXCEPT;
 
     /// If endpoint is a DNS name (not numeric) default address is returned.
-    address(const asio::endpoint& uri) NOEXCEPT;
+    address(const io::endpoint& uri) NOEXCEPT;
 
     // Methods.
     // ------------------------------------------------------------------------

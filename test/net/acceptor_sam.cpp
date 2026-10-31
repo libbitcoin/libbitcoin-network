@@ -46,10 +46,10 @@ struct sam_setup_fixture
         log.stop();
         sam_settings.bridge = { SAM_BRIDGE_ENDPOINT };
         const config::authority listen{ SAM_BRIDGE_ENDPOINT };
-        listener.open(boost::asio::ip::tcp::v4());
-        listener.set_option(boost::asio::socket_base::reuse_address(true));
-        listener.bind(config::to_asio(listen.to_endpoint()));
-        listener.listen();
+        REQUIRE_SUCCESS(listener, open, io::tcp::v4());
+        REQUIRE_SUCCESS(listener, set_option, io::reuse_address{ true });
+        REQUIRE_SUCCESS(listener, bind, listen.to_endpoint());
+        REQUIRE_SUCCESS(listener, listen);
     }
 
     ~sam_setup_fixture()
@@ -57,7 +57,7 @@ struct sam_setup_fixture
         if (instance)
         {
             std::promise<bool> stopped{};
-            boost::asio::post(strand, [this, &stopped]() NOEXCEPT
+            io::post(strand, [this, &stopped]() NOEXCEPT
             {
                 instance->stop();
                 stopped.set_value(true);
@@ -86,7 +86,7 @@ struct sam_setup_fixture
             pool.service(), suspended, std::move(params), sam_settings);
 
         std::promise<code> started{};
-        boost::asio::post(strand, [this, &started]() NOEXCEPT
+        io::post(strand, [this, &started]() NOEXCEPT
         {
             started.set_value(instance->start({ "127.0.0.1:65022" }));
         });
@@ -97,7 +97,7 @@ struct sam_setup_fixture
     // Start an accept, returns the future accept result.
     std::future<code> accept()
     {
-        boost::asio::post(strand, [this]() NOEXCEPT
+        io::post(strand, [this]() NOEXCEPT
         {
             instance->accept(
                 [this](const code& ec, const socket::ptr& socket) NOEXCEPT
@@ -116,7 +116,7 @@ struct sam_setup_fixture
     uint16_t local_port()
     {
         std::promise<uint16_t> port{};
-        boost::asio::post(strand, [this, &port]() NOEXCEPT
+        io::post(strand, [this, &port]() NOEXCEPT
         {
             port.set_value(instance->local().port());
         });
@@ -127,7 +127,7 @@ struct sam_setup_fixture
     // Accept the acceptor's connection to the bridge.
     void connect()
     {
-        listener.accept(bridge);
+        REQUIRE_SUCCESS(listener, accept, bridge);
     }
 
     // Read one newline-terminated line from the bridge socket.
@@ -141,29 +141,30 @@ struct sam_setup_fixture
         write_line(bridge, line);
     }
 
-    static std::string read_line(boost::asio::ip::tcp::socket& socket)
+    // Bytes are read singly so that none beyond the line are consumed.
+    static std::string read_line(io::socket& socket)
     {
-        boost::asio::streambuf buffer{};
-        boost::asio::read_until(socket, buffer, '\n');
-        std::istream stream{ &buffer };
         std::string line{};
-        std::getline(stream, line);
+        char byte{};
+        while (is_one(test::read(socket, io::buffer(&byte, one))) && byte != '\n')
+            line.push_back(byte);
+
         return line;
     }
 
-    static void write_line(boost::asio::ip::tcp::socket& socket, const std::string& line)
+    static void write_line(io::socket& socket, const std::string& line)
     {
         const auto text = line + "\n";
-        boost::asio::write(socket, boost::asio::buffer(text));
+        test::write(socket, io::buffer(text));
     }
 
     // True if the socket is closed by the remote.
-    static bool closed(boost::asio::ip::tcp::socket& socket)
+    static bool closed(io::socket& socket)
     {
-        boost::system::error_code ec{};
+        code ec{};
         std::array<char, 1> byte{};
-        boost::asio::read(socket, boost::asio::buffer(byte), ec);
-        return ec == boost::asio::error::eof || ec == boost::asio::error::connection_reset;
+        io::read(socket, io::buffer(byte), ec);
+        return ec == error::peer_disconnect;
     }
 
     // Complete the session, returning the session create request.
@@ -180,7 +181,7 @@ struct sam_setup_fixture
     // Accept the forward control connection and complete its hello.
     void forward_hello()
     {
-        listener.accept(forward);
+        REQUIRE_SUCCESS(listener, accept, forward);
         read_line(forward);
         write_line(forward, "HELLO REPLY RESULT=OK VERSION=3.1");
     }
@@ -198,7 +199,7 @@ struct sam_setup_fixture
     // Connect the peer stream to the forwarding listener.
     void connect_peer()
     {
-        peer.connect({ boost::asio::ip::address_v4::loopback(), local_port() });
+        REQUIRE_SUCCESS(peer, connect, test::loopback(local_port()));
     }
 
     // An ed25519 destination with an empty certificate (387 bytes).
@@ -207,14 +208,14 @@ struct sam_setup_fixture
     logger log{};
     threadpool pool;
     std::atomic_bool suspended{ false };
-    asio::strand strand;
+    io::strand strand;
     settings::sam sam_settings{};
     acceptor_sam::ptr instance{};
-    boost::asio::io_context context{};
-    boost::asio::ip::tcp::acceptor listener;
-    boost::asio::ip::tcp::socket bridge;
-    boost::asio::ip::tcp::socket forward;
-    boost::asio::ip::tcp::socket peer;
+    io::context context{};
+    io::acceptor listener;
+    io::socket bridge;
+    io::socket forward;
+    io::socket peer;
     std::promise<code> accepted{};
 };
 
@@ -250,7 +251,7 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__stopped__service_stopped, sam_setu
     BOOST_REQUIRE_EQUAL(create(), error::success);
 
     std::promise<bool> stopped{};
-    boost::asio::post(strand, [this, &stopped]() NOEXCEPT
+    io::post(strand, [this, &stopped]() NOEXCEPT
     {
         instance->stop();
         stopped.set_value(true);
@@ -356,7 +357,7 @@ BOOST_AUTO_TEST_CASE(acceptor_sam__proxied__always__true)
     const logger log{};
     threadpool pool(1);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings::sam sam{};
     const auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, acceptor::parameters{}, sam);
     BOOST_REQUIRE(instance->proxied());
@@ -369,7 +370,7 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__start__started__operation_failed, sam_setu
     BOOST_REQUIRE_EQUAL(create(), error::success);
 
     std::promise<code> restarted{};
-    boost::asio::post(strand, [this, &restarted]() NOEXCEPT
+    io::post(strand, [this, &restarted]() NOEXCEPT
     {
         restarted.set_value(instance->start({ "127.0.0.1:65022" }));
     });
@@ -415,7 +416,7 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__line_overflow__sam_response_invali
     connect();
 
     read_line();
-    boost::asio::write(bridge, boost::asio::buffer(std::string(65'537, 'x')));
+    test::write(bridge, io::buffer(std::string(65'537, 'x')));
 
     BOOST_REQUIRE_EQUAL(result.get(), error::sam_response_invalid);
 }
@@ -498,7 +499,7 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_hello__expected_request, s
     BOOST_REQUIRE_EQUAL(create(), error::success);
     auto result = accept();
     create_session(destination);
-    listener.accept(forward);
+    REQUIRE_SUCCESS(listener, accept, forward);
 
     BOOST_REQUIRE_EQUAL(read_line(forward), "HELLO VERSION MIN=3.1 MAX=3.1");
     write_line(forward, "HELLO REPLY RESULT=NOVERSION");
@@ -511,7 +512,7 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_hello_closed__peer_disconn
     BOOST_REQUIRE_EQUAL(create(), error::success);
     auto result = accept();
     create_session(destination);
-    listener.accept(forward);
+    REQUIRE_SUCCESS(listener, accept, forward);
 
     read_line(forward);
     forward.close();
@@ -524,7 +525,7 @@ BOOST_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_hello_not_a_reply__sam_res
     BOOST_REQUIRE_EQUAL(create(), error::success);
     auto result = accept();
     create_session(destination);
-    listener.accept(forward);
+    REQUIRE_SUCCESS(listener, accept, forward);
 
     read_line(forward);
     write_line(forward, "SESSION STATUS RESULT=OK");

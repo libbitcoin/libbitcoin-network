@@ -26,6 +26,11 @@
     #include <winsock2.h>
     #include <ws2tcpip.h>
     #include <mswsock.h>
+    #include <mstcpip.h>
+    #if defined(HAVE_WINDOWS_LIBS)
+        #pragma comment(lib, "ws2_32.lib")
+        #pragma comment(lib, "mswsock.lib")
+    #endif
 #else
     #include <cerrno>
     #include <fcntl.h>
@@ -33,10 +38,15 @@
     #include <netinet/in.h>
     #include <netinet/tcp.h>
     #include <poll.h>
+    #include <sys/ioctl.h>
     #include <sys/socket.h>
     #include <sys/types.h>
     #include <sys/uio.h>
     #include <unistd.h>
+#endif
+
+#if defined(HAVE_APPLE)
+    #include <netinet/tcp_fsm.h>
 #endif
 
 namespace libbitcoin {

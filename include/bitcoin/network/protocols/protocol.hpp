@@ -62,7 +62,7 @@ private:
             return false;
 
         // Invoke subscriber on channel strand with given parameters.
-        boost::asio::post(channel_->strand(),
+        io::post(channel_->strand(),
             std::bind(handler, ec, message, sender));
 
         return true;
@@ -83,7 +83,7 @@ protected:
     template <class Derived, typename Method, typename... Args>
     inline auto post(Method&& method, Args&&... args) NOEXCEPT
     {
-        return boost::asio::post(channel_->strand(),
+        return io::post(channel_->strand(),
             BIND_SAFE(BIND_SHARED(method, args)));
     }
 
@@ -91,7 +91,7 @@ protected:
     template <class Derived, typename Method, typename... Args>
     inline auto parallel(Method&& method, Args&&... args) NOEXCEPT
     {
-        return boost::asio::post(channel_->service(),
+        return io::post(channel_->service(),
             BIND_SAFE(BIND_SHARED(method, args)));
     }
 

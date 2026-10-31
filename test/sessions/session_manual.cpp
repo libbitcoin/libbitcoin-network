@@ -71,7 +71,7 @@ public:
             std::move(params));
 
         // Must be asynchronous or is an infinite recursion.
-        boost::asio::post(strand_, [=]() NOEXCEPT
+        io::post(strand_, [=]() NOEXCEPT
         {
             // Connect result code is independent of channel stop code.
             // Error code would set re-listener timer, channel pointer ignored.
@@ -100,7 +100,7 @@ public:
         if (is_zero(connects_++))
             peer_ = peer;
 
-        boost::asio::post(strand_, [=]() NOEXCEPT
+        io::post(strand_, [=]() NOEXCEPT
         {
             // This error is eaten by handle_connect, due to retry logic.
             // invalid_magic is a non-terminal code (timer retry).
@@ -175,7 +175,7 @@ public:
 
         // The handshake protocol pauses the channel upon completion, which is
         // after the session resumes it to start the read loop, so this posts.
-        boost::asio::post(channel->strand(),
+        io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
                 channel->pause();
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set (only).
         session->start([&](const code& ec) NOEXCEPT
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
     mock_session_manual session(net, 1);
 
     std::promise<bool> promise;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         promise.set_value(true);
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<code> restart;
-    boost::asio::post(net.strand(), [=, &restart]() NOEXCEPT
+    io::post(net.strand(), [=, &restart]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped
 
     const endpoint peer{ "42.42.42.42", 42 };
 
-    boost::asio::post(net.strand(), [=]() NOEXCEPT
+    io::post(net.strand(), [=]() NOEXCEPT
     {
         // This synchronous overload has no handler, so cannot capture values.
         session->connect(peer);
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped
     BOOST_REQUIRE(net.get_connector());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
     const endpoint peer{ "42.42.42.42", 42 };
 
     std::promise<std::pair<code, channel::ptr>> connected;
-    boost::asio::post(net.strand(), [=, &connected]() NOEXCEPT
+    io::post(net.strand(), [=, &connected]() NOEXCEPT
     {
         session->connect(peer, [&](const code& ec, const channel::ptr& channel)
         {
@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
     BOOST_REQUIRE(net.get_connector());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
     const endpoint peer{ "42.42.42.42", 42 };
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
     auto first = true;
     std::promise<bool> started_connect;
     std::promise<std::pair<code, channel::ptr>> connected;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session->connect(peer, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
         {
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
     BOOST_REQUIRE(started_connect.get_future().get());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
     const endpoint expected{ "42.42.42.42", 42 };
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
 
     std::promise<bool> stopped;
     std::promise<std::pair<code, channel::ptr>> connected;
-    boost::asio::post(net.strand(), [=, &stopped, &connected]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped, &connected]() NOEXCEPT
     {
         session->connect(expected, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
         {
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
     const endpoint expected{ "42.42.42.42", 42 };
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -617,7 +617,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
 
     auto first = true;
     std::promise<std::pair<code, channel::ptr>> connected;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session->connect(expected, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
         {
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
     BOOST_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -953,7 +953,7 @@ struct manual_peer
 
     void accept()
     {
-        acceptor_.accept(socket_);
+        REQUIRE_SUCCESS(acceptor_, accept, socket_);
     }
 
     template <class Message>
@@ -965,7 +965,7 @@ struct manual_peer
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
         BOOST_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
-        boost::asio::write(socket_, boost::asio::buffer(system::splice(frame, payload)));
+        test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
     // Read framed messages until the command matches.
@@ -975,12 +975,12 @@ struct manual_peer
         while (true)
         {
             system::data_array<heading::size()> head_data{};
-            boost::asio::read(socket_, boost::asio::buffer(head_data));
+            test::read(socket_, io::buffer(head_data));
             const auto head = heading::deserialize(head_data);
             BOOST_REQUIRE(head);
 
             system::data_chunk payload(head->payload_size);
-            boost::asio::read(socket_, boost::asio::buffer(payload));
+            test::read(socket_, io::buffer(payload));
             if (head->command == command)
                 return payload;
         }
@@ -1012,12 +1012,12 @@ struct manual_peer
     }
 
     // Read until the node disconnects, returning the terminal read code.
-    boost_code disconnected()
+    code disconnected()
     {
-        boost_code ec{};
+        code ec{};
         uint8_t byte{};
         while (!ec)
-            boost::asio::read(socket_, boost::asio::buffer(&byte, one), ec);
+            io::read(socket_, io::buffer(&byte, one), ec);
 
         return ec;
     }
@@ -1028,9 +1028,9 @@ private:
     mock_net<> net_;
     std::atomic_bool notified_{ false };
     std::promise<code> connected_{};
-    boost::asio::io_context io_{};
-    boost::asio::ip::tcp::acceptor acceptor_{ io_, { boost::asio::ip::address_v4::loopback(), manual_peer_port } };
-    boost::asio::ip::tcp::socket socket_{ io_ };
+    io::context io_{};
+    io::acceptor acceptor_{ io_, test::loopback(manual_peer_port) };
+    io::socket socket_{ io_ };
 };
 
 BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__started_address_requested)
@@ -1127,7 +1127,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect__notifier_drops_started__disconnect
     peer.handshake(level::bip155, false);
     BOOST_REQUIRE_EQUAL(connected.get(), error::success);
     const auto ec = peer.disconnected();
-    BOOST_REQUIRE(ec == boost::asio::error::eof || ec == boost::asio::error::connection_reset);
+    BOOST_REQUIRE(ec == error::peer_disconnect || ec == error::peer_disconnect);
 }
 
 BOOST_AUTO_TEST_CASE(session_manual__connect__notifier_drops_connect_failure__failure)

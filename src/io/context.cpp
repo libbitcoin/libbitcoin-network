@@ -97,6 +97,7 @@ context::context() NOEXCEPT
 
 context::~context() NOEXCEPT
 {
+    scheduler_->shutdown();
 }
 
 size_t context::run() NOEXCEPT

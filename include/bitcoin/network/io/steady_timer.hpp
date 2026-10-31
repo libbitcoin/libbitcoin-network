@@ -22,7 +22,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/io/context.hpp>
 
 namespace libbitcoin {

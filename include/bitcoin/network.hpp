@@ -15,8 +15,6 @@
  */
 
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/asio.hpp>
-#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/have.hpp>
@@ -88,6 +86,7 @@
 #include <bitcoin/network/messages/http/header.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/messages/http/message.hpp>
+#include <bitcoin/network/messages/http/operations.hpp>
 #include <bitcoin/network/messages/http/parser.hpp>
 #include <bitcoin/network/messages/http/serializer.hpp>
 #include <bitcoin/network/messages/http/enums/field.hpp>
@@ -208,6 +207,7 @@
 #include <bitcoin/network/tls/server.hpp>
 #include <bitcoin/network/tls/stream.hpp>
 #include <bitcoin/network/tls/tls.hpp>
+#include <bitcoin/network/ws/client.hpp>
 #include <bitcoin/network/ws/frame.hpp>
 #include <bitcoin/network/ws/handshake.hpp>
 #include <bitcoin/network/ws/reader.hpp>

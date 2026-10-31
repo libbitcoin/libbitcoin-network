@@ -191,7 +191,7 @@ connectors_ptr net::create_connectors(size_t count, size_t slot) NOEXCEPT
 void net::start(result_handler&& handler) NOEXCEPT
 {
     // Threadpool is started on construct, stopped only by work starvation.
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_start, this, std::move(handler)));
 }
 
@@ -237,7 +237,7 @@ void net::run(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_run, this, std::move(handler)));
 }
 
@@ -280,7 +280,7 @@ void net::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 void net::close() NOEXCEPT
 {
     closed_.store(true);
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_close, this));
 
     // Blocks on join of all threadpool threads.
@@ -353,7 +353,7 @@ bool net::resume() NOEXCEPT
 
 void net::stop_services(const code& ec) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_stop_services, this, ec));
 }
 
@@ -397,12 +397,12 @@ const settings& net::network_settings() const NOEXCEPT
     return settings_;
 }
 
-asio::context& net::service() NOEXCEPT
+io::context& net::service() NOEXCEPT
 {
     return threadpool_.service();
 }
 
-asio::strand& net::strand() NOEXCEPT
+io::strand& net::strand() NOEXCEPT
 {
     return strand_;
 }
@@ -433,7 +433,7 @@ void net::subscribe_connect(channel_notifier&& handler,
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_subscribe_connect,
             this, std::move(handler), std::move(complete)));
 }
@@ -450,7 +450,7 @@ void net::do_subscribe_connect(const channel_notifier& handler,
 // protected
 void net::notify_connect(const channel::ptr& channel) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_notify_connect, this, channel));
 }
 
@@ -462,7 +462,7 @@ void net::do_notify_connect(const channel::ptr& channel) NOEXCEPT
 
 void net::unsubscribe_connect(object_key key) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_unsubscribe_connect, this, key));
 }
 
@@ -504,7 +504,7 @@ void net::subscribe_close(stop_handler&& handler,
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_subscribe_close,
             this, std::move(handler), std::move(complete)));
 }
@@ -520,7 +520,7 @@ void net::do_subscribe_close(const stop_handler& handler,
 
 void net::unsubscribe_close(object_key key) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_unsubscribe_close, this, key));
 }
 
@@ -578,7 +578,7 @@ net::object_key net::create_key() NOEXCEPT
 
 void net::connect(const config::endpoint& endpoint) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_connect, this, endpoint));
 }
 
@@ -598,7 +598,7 @@ void net::connect(const config::endpoint& endpoint,
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_connect_handled, this, endpoint,
             std::move(handler)));
 }
@@ -648,7 +648,7 @@ void net::fetch_totals(totals_handler&& handler) NOEXCEPT
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_fetch_totals, this, std::move(handler)));
 }
 
@@ -692,7 +692,7 @@ code net::stop_hosts() NOEXCEPT
 
 void net::take(hosts::family family, address_item_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_take, this, family, std::move(handler)));
 }
 
@@ -706,7 +706,7 @@ void net::do_take(hosts::family family,
 void net::restore(const address_item_cptr& address,
     result_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_restore, this, address, std::move(handler)));
 }
 
@@ -719,7 +719,7 @@ void net::do_restore(const address_item_cptr& address,
 
 void net::fetch(address_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_fetch, this, std::move(handler)));
 }
 
@@ -739,7 +739,7 @@ void net::do_fetch(const address_handler& handler) NOEXCEPT
 
 void net::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_save, this, message, std::move(handler)));
 }
 
@@ -760,7 +760,7 @@ void net::do_save(const address_cptr& message,
 
 void net::seed() NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&net::do_seed, this));
 }
 

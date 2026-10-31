@@ -19,9 +19,11 @@
 #ifndef LIBBITCOIN_NETWORK_IO_CONTEXT_HPP
 #define LIBBITCOIN_NETWORK_IO_CONTEXT_HPP
 
+#include <cstddef>
 #include <functional>
 #include <memory>
-#include <bitcoin/network/define.hpp>
+#include <type_traits>
+#include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -29,8 +31,72 @@ namespace io {
 
 namespace detail { class scheduler; class strand_state; }
 
-/// A completion handler.
-using handler = std::function<void()>;
+/// A completion handler (move-only, so it may own move-only captures).
+class handler
+{
+public:
+    DELETE_COPY(handler);
+
+    handler() NOEXCEPT = default;
+    handler(std::nullptr_t) NOEXCEPT
+    {
+    }
+
+    template <typename Function, typename = std::enable_if_t<
+        !std::is_same_v<std::decay_t<Function>, handler>>>
+    handler(Function&& function) NOEXCEPT
+      : function_(std::make_unique<model<std::decay_t<Function>>>(
+          std::forward<Function>(function)))
+    {
+    }
+
+    handler(handler&&) NOEXCEPT = default;
+    handler& operator=(handler&&) NOEXCEPT = default;
+    ~handler() NOEXCEPT = default;
+
+    handler& operator=(std::nullptr_t) NOEXCEPT
+    {
+        function_.reset();
+        return *this;
+    }
+
+    void operator()() NOEXCEPT
+    {
+        function_->invoke();
+    }
+
+    explicit operator bool() const NOEXCEPT
+    {
+        return static_cast<bool>(function_);
+    }
+
+private:
+    struct callable
+    {
+        virtual ~callable() NOEXCEPT = default;
+        virtual void invoke() NOEXCEPT = 0;
+    };
+
+    template <typename Function>
+    struct model final
+      : callable
+    {
+        template <typename Argument>
+        model(Argument&& argument) NOEXCEPT
+          : function(std::forward<Argument>(argument))
+        {
+        }
+
+        void invoke() NOEXCEPT override
+        {
+            function();
+        }
+
+        Function function;
+    };
+
+    std::unique_ptr<callable> function_{};
+};
 
 class context;
 

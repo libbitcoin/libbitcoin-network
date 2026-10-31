@@ -30,7 +30,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 template <typename Buffers, typename Handler>
 void stream::async_read_some(const Buffers& buffers, Handler&& handler) NOEXCEPT
 {
-    const auto buffer = first<asio::mutable_buffer>(buffers);
+    const auto buffer = first<io::mutable_buffer>(buffers);
     do_read_some({ system::pointer_cast<uint8_t>(buffer.data()),
         buffer.size() }, erase(std::forward<Handler>(handler)));
 }
@@ -39,15 +39,15 @@ template <typename Buffers, typename Handler>
 void stream::async_write_some(const Buffers& buffers,
     Handler&& handler) NOEXCEPT
 {
-    const auto buffer = first<asio::const_buffer>(buffers);
+    const auto buffer = first<io::const_buffer>(buffers);
     do_write_some({ system::pointer_cast<const uint8_t>(buffer.data()),
         buffer.size() }, erase(std::forward<Handler>(handler)));
 }
 
 template <typename Buffers>
-size_t stream::write_some(const Buffers& buffers, boost_code& ec) NOEXCEPT
+size_t stream::write_some(const Buffers& buffers, code& ec) NOEXCEPT
 {
-    const auto buffer = first<asio::const_buffer>(buffers);
+    const auto buffer = first<io::const_buffer>(buffers);
     return do_write({ system::pointer_cast<const uint8_t>(buffer.data()),
         buffer.size() }, ec);
 }
@@ -56,8 +56,8 @@ size_t stream::write_some(const Buffers& buffers, boost_code& ec) NOEXCEPT
 template <typename Buffer, typename Buffers>
 Buffer stream::first(const Buffers& buffers) NOEXCEPT
 {
-    const auto end = boost::asio::buffer_sequence_end(buffers);
-    for (auto it = boost::asio::buffer_sequence_begin(buffers); it != end;
+    const auto end = io::buffer_sequence_end(buffers);
+    for (auto it = io::buffer_sequence_begin(buffers); it != end;
         ++it)
     {
         const Buffer buffer{ *it };
@@ -69,14 +69,13 @@ Buffer stream::first(const Buffers& buffers) NOEXCEPT
 }
 
 // private
-// Completion handlers of asio composed operations may be move-only.
 template <typename Handler>
 stream::io_handler stream::erase(Handler&& handler) NOEXCEPT
 {
     const auto shared = system::emplace_shared<std::decay_t<Handler>>(
         std::forward<Handler>(handler));
 
-    return [shared](const boost_code& ec, size_t size) NOEXCEPT
+    return [shared](const code& ec, size_t size) NOEXCEPT
     {
         std::move(*shared)(ec, size);
     };

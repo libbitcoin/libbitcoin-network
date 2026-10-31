@@ -385,12 +385,12 @@ BOOST_AUTO_TEST_CASE(settings__tcp_server_binding__two_binds__group_modulo_expec
     settings::tcp_server instance{ "test" };
     instance.binds.emplace_back(system::ip::ipv4::loopback(), 0_u16);
     instance.binds.emplace_back(system::ip::ipv6::loopback(), 42_u16);
-    BOOST_REQUIRE(instance.binding(0).address() == asio::ipv4::loopback());
+    BOOST_REQUIRE(instance.binding(0).address() == system::ip::ipv4::loopback());
     BOOST_REQUIRE_EQUAL(instance.binding(0).port(), 0u);
-    BOOST_REQUIRE(instance.binding(1).address() == asio::ipv6::loopback());
+    BOOST_REQUIRE(instance.binding(1).address() == system::ip::ipv6::loopback());
     BOOST_REQUIRE_EQUAL(instance.binding(1).port(), 42u);
-    BOOST_REQUIRE(instance.binding(2).address() == asio::ipv4::loopback());
-    BOOST_REQUIRE(instance.binding(3).address() == asio::ipv6::loopback());
+    BOOST_REQUIRE(instance.binding(2).address() == system::ip::ipv4::loopback());
+    BOOST_REQUIRE(instance.binding(3).address() == system::ip::ipv6::loopback());
 }
 
 BOOST_AUTO_TEST_CASE(settings__tcp_server_default_ports__zero_ports__bind_port)

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_DEFINE_HPP
 
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/io/io.hpp>
 
 namespace libbitcoin {
 namespace network {

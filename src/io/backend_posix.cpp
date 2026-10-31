@@ -303,7 +303,7 @@ void backend::start(operation* op) NOEXCEPT
     op->cancels = op->owner->cancels.load();
     auto& owner = *op->owner;
 
-    // Reads and writes of no bytes complete immediately (as asio streams).
+    // Reads and writes of no bytes complete immediately.
     const auto transfer = op->type == operation::kind::read ||
         op->type == operation::kind::write;
 
@@ -337,9 +337,11 @@ void backend::start(operation* op) NOEXCEPT
         op->type == operation::kind::accept;
 
     // An operation that can complete now (with no queued predecessor) does.
+    // Under the descriptor lock, an edge reported before the operation is
+    // queued is observed here, and one reported after finds it queued.
     std::unique_lock lock{ owner.mutex };
     auto& queue = read ? owner.reads : owner.writes;
-    if (queue.empty() && op->type != operation::kind::connect && perform(op))
+    if (queue.empty() && perform(op))
     {
         lock.unlock();
         scheduler_.complete(to_completion(op));
@@ -424,7 +426,7 @@ bool backend::perform(operation* op) NOEXCEPT
                     return true;
                 }
 
-                // An aborted connection is skipped (as asio acceptors).
+                // An aborted connection is skipped.
                 if (last_error() == ECONNABORTED)
                     continue;
 
@@ -432,6 +434,15 @@ bool backend::perform(operation* op) NOEXCEPT
             }
             case operation::kind::connect:
             {
+                // A connect in progress is not yet writable.
+                pollfd writable{ owner.handle, POLLOUT, 0 };
+                const auto polled = ::poll(&writable, 1, 0);
+                if (polled < 0)
+                    break;
+
+                if (is_zero(polled))
+                    return false;
+
                 int result{};
                 socklen_t size = sizeof(result);
                 if (::getsockopt(owner.handle, SOL_SOCKET, SO_ERROR, &result,

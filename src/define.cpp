@@ -25,10 +25,9 @@
 // version        : <generated>
 // have           : version
 // preprocessor   : have <bitcoin/system>
-// boost          : preprocessor
-// asio           : boost
-// error          : asio
-// define         : error
+// error          : preprocessor
+// /io            : error
+// define         : error /io
 
 // Other directory common includes are not internally chained.
 // Each header includes only its required common headers.

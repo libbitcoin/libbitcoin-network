@@ -100,8 +100,8 @@ struct BCT_API body
         {
         }
 
-        size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT override;
-        void finish(boost_code& ec) NOEXCEPT override;
+        size_t put(const buffer_type& buffer, code& ec) NOEXCEPT override;
+        void finish(code& ec) NOEXCEPT override;
         bool done() const NOEXCEPT override;
 
     private:
@@ -134,8 +134,8 @@ struct BCT_API body
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT override;
-        out_buffer get(boost_code& ec) NOEXCEPT override;
+        void init(code& ec) NOEXCEPT override;
+        out_buffer get(code& ec) NOEXCEPT override;
         bool done() const NOEXCEPT override;
 
     private:

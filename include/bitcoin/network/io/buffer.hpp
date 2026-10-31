@@ -24,7 +24,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
 namespace network {

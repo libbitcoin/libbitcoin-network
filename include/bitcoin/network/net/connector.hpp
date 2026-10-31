@@ -48,8 +48,8 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Construct an instance.
-    connector(const logger& log, asio::strand& strand,
-        asio::context& service, std::atomic_bool& suspended,
+    connector(const logger& log, io::strand& strand,
+        io::context& service, std::atomic_bool& suspended,
         parameters&& parameters) NOEXCEPT;
 
     /// Asserts/logs stopped.
@@ -96,19 +96,19 @@ protected:
     bool stranded() NOEXCEPT;
 
     // These are thread safe
-    asio::strand& strand_;
-    asio::context& service_;
+    io::strand& strand_;
+    io::context& service_;
     std::atomic_bool& suspended_;
     const parameters parameters_;
 
     // These are protected by strand.
-    asio::resolver resolver_;
+    io::resolver resolver_;
     deadline::ptr timer_;
     racer racer_{};
 
 private:
-    void handle_resolve(const boost_code& ec,
-        const asio::endpoints& range, const finish_ptr& finish,
+    void handle_resolve(const code& ec,
+        const io::endpoints& range, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;
     void do_handle_connect(const code& ec, const finish_ptr& finish,
         const socket::ptr& socket) NOEXCEPT;

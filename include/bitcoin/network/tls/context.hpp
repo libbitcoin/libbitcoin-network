@@ -86,6 +86,10 @@ private:
 };
 
 } // namespace tls
+
+/// Name and version of the tls library.
+BCT_API std::string_view tls_library() NOEXCEPT;
+
 } // namespace network
 } // namespace libbitcoin
 

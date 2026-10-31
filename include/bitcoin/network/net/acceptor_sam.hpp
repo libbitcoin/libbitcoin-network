@@ -46,8 +46,8 @@ public:
     DELETE_COPY_MOVE_DESTRUCT(acceptor_sam);
 
     /// The bridge forwards each stream to a loopback listener.
-    acceptor_sam(const logger& log, asio::strand& strand,
-        asio::context& service, std::atomic_bool& suspended,
+    acceptor_sam(const logger& log, io::strand& strand,
+        io::context& service, std::atomic_bool& suspended,
         parameters&& parameters, const settings::sam& sam) NOEXCEPT;
 
     /// Acceptor overrides (the local binding is ignored).

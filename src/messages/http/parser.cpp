@@ -90,7 +90,7 @@ constexpr int8_t to_nibble(char character) NOEXCEPT
     return -1;
 }
 
-static void set_need_more(boost_code& ec) NOEXCEPT
+static void set_need_more(code& ec) NOEXCEPT
 {
     ec = to_http_code(http_error_t::need_more);
 }
@@ -100,7 +100,7 @@ static void set_need_more(boost_code& ec) NOEXCEPT
 // clear on a control character, false with ec set if the line is incomplete or
 // a CR does not precede an LF.
 static bool find_line(size_t& text, size_t& end, const std::string_view& in,
-    size_t start, boost_code& ec) NOEXCEPT
+    size_t start, code& ec) NOEXCEPT
 {
     for (auto index = start; index < in.size(); ++index)
     {
@@ -147,7 +147,7 @@ static size_t trim_back(const std::string_view& in, size_t first,
 
 // HTTP-version = "HTTP/" DIGIT "." DIGIT, limited to 1.0 and 1.1.
 static bool parse_version(uint32_t& version, const std::string_view& in,
-    size_t& index, boost_code& ec) NOEXCEPT
+    size_t& index, code& ec) NOEXCEPT
 {
     constexpr auto size = 8u;
     if (in.size() - index < size)
@@ -180,7 +180,7 @@ static bool parse_version(uint32_t& version, const std::string_view& in,
 
 // request-line = method SP request-target SP HTTP-version CRLF
 size_t parse_start_line(request_header& out, const std::string_view& in,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     size_t index{};
     while (index < in.size() && is_tchar(in[index]))
@@ -241,7 +241,7 @@ size_t parse_start_line(request_header& out, const std::string_view& in,
 
 // status-line = HTTP-version SP status-code SP reason-phrase CRLF
 size_t parse_start_line(response_header& out, const std::string_view& in,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     size_t index{};
     uint32_t version{};
@@ -350,7 +350,7 @@ static string_list token_list(const std::string_view& value,
 // Transfer-Encoding conflicts with Content-Length and may not follow chunked.
 // Chunked framing requires that the first chunked coding be the last coding.
 static void frame_field(framing& frame, field name,
-    const std::string_view& value, boost_code& ec) NOEXCEPT
+    const std::string_view& value, code& ec) NOEXCEPT
 {
     ec.clear();
     if (name == field::connection)
@@ -430,7 +430,7 @@ static void frame_field(framing& frame, field name,
 // header-field = field-name ":" OWS field-value OWS, where folded lines
 // (obs-fold) are joined by a space.
 size_t parse_field(fields* out, framing& frame, bool& end,
-    const std::string_view& in, boost_code& ec) NOEXCEPT
+    const std::string_view& in, code& ec) NOEXCEPT
 {
     end = false;
     if (in.size() < two)
@@ -548,7 +548,7 @@ size_t parse_field(fields* out, framing& frame, bool& end,
 // ----------------------------------------------------------------------------
 
 size_t parse_chunk_size(uint64_t& size, const std::string_view& line,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     size = zero;
     size_t index{};
@@ -662,7 +662,7 @@ bool valid_chunk_extensions(const std::string_view& line,
 // The line end (CRLF) of a chunk line, which may contain any characters but
 // a CR that does not precede an LF.
 size_t find_chunk_line(size_t& text, const std::string_view& in,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     for (size_t index{}; index < in.size(); ++index)
     {

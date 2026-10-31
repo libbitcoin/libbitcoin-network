@@ -40,7 +40,7 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 void socket::ws_read(http::flat_buffer& out,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_ws_read,
             shared_from_this(), std::ref(out), std::move(handler)));
 }
@@ -56,16 +56,16 @@ void socket::do_ws_read(ref<http::flat_buffer> out,
 // WS (write).
 // ----------------------------------------------------------------------------
 
-void socket::ws_write(const asio::const_buffer& in, bool binary,
+void socket::ws_write(const io::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_ws_write,
             shared_from_this(), in, binary, std::move(handler)));
 }
 
 // private
-void socket::do_ws_write(const asio::const_buffer& in, bool binary,
+void socket::do_ws_write(const io::const_buffer& in, bool binary,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -87,23 +87,15 @@ code socket::accept_websocket(const http::request& request) NOEXCEPT
 
     http::serializer<false, http::string_body> serializer{ response };
     data_chunk bytes{};
-    boost_code error{};
+    code error{};
     while (!serializer.is_done() && !error)
         for (const auto& buffer: serializer.next(error))
             bytes.insert(bytes.end(), pointer_cast<const uint8_t>(
                 buffer.data()), std::next(pointer_cast<const uint8_t>(
                     buffer.data()), buffer.size()));
 
-    try
-    {
-        VARIANT_DISPATCH_FUNCTION(boost::asio::write, get_tcp(),
-            boost::asio::buffer(bytes), error);
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ accept_websocket: " << e.what());
-        return error::operation_failed;
-    }
+    VARIANT_DISPATCH_FUNCTION(io::write, get_tcp(),
+        io::buffer(bytes), error);
 
     if (error || ec)
         return error::operation_failed;
@@ -206,12 +198,12 @@ void socket::do_ws_read_message(const ref<http::flat_buffer>& out,
 }
 
 // private
-void socket::handle_ws_read_message(const boost_code& ec, size_t size,
+void socket::handle_ws_read_message(const code& ec, size_t size,
     const ref<http::flat_buffer>& out, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         handler(error::channel_stopped, out.get().size());
         return;
@@ -219,9 +211,8 @@ void socket::handle_ws_read_message(const boost_code& ec, size_t size,
 
     if (ec)
     {
-        const auto code = error::asio_to_error_code(ec);
-        if (code == error::unknown) logx("ws-read", ec);
-        handler(code, out.get().size());
+        if (ec == error::unknown) logx("ws-read", ec);
+        handler(ec, out.get().size());
         return;
     }
 
@@ -236,14 +227,14 @@ void socket::handle_ws_echo(const code&, size_t,
 {
     BC_ASSERT(stranded());
 
-    boost_code ignore{};
-    get_base().shutdown(asio::socket::shutdown_send, ignore);
+    code ignore{};
+    get_base().shutdown(io::socket::shutdown_type::send, ignore);
     handler(error::websocket_closed, out.get().size());
 }
 
 // private
 // A data frame continues the message of a preceding unfinished frame.
-void socket::ws_send_data(const asio::const_buffer& data, bool binary,
+void socket::ws_send_data(const io::const_buffer& data, bool binary,
     bool finish, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -310,37 +301,29 @@ void socket::ws_write_next() NOEXCEPT
     if (frame == ws_pong_)
         ws_pong_.reset();
     const auto payload = frame->payload.empty() ? frame->data :
-        asio::const_buffer{ frame->payload.data(), frame->payload.size() };
+        io::const_buffer{ frame->payload.data(), frame->payload.size() };
 
     frame->buffers =
     {
-        asio::const_buffer{ frame->header.data(), frame->header.size() },
+        io::const_buffer{ frame->header.data(), frame->header.size() },
         payload
     };
 
-    try
-    {
-        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
-            frame->buffers, std::bind(&socket::handle_ws_frame,
-                shared_from_this(), _1, _2, frame));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ ws_write: " << e.what());
-        handle_ws_frame(boost::asio::error::fault, zero, frame);
-    }
+    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
+        frame->buffers, std::bind(&socket::handle_ws_frame,
+            shared_from_this(), _1, _2, frame));
 }
 
 // private
-void socket::handle_ws_frame(const boost_code& ec, size_t,
+void socket::handle_ws_frame(const code& ec, size_t,
     const ws_frame::ptr& frame) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     ws_writing_ = false;
     ws_queue_.pop_front();
-    const auto code = error::asio_is_canceled(ec) ? error::channel_stopped :
-        error::asio_to_error_code(ec);
+    const auto code = (ec == error::operation_canceled) ? error::channel_stopped :
+        ec;
 
     if (code == error::unknown)
         logx("ws-write", ec);

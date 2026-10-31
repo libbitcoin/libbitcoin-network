@@ -56,16 +56,16 @@ struct socks_setup_fixture
         log.stop();
         socks_settings.socks = { SOCKS_PROXY_ENDPOINT };
         const config::authority listen{ SOCKS_PROXY_ENDPOINT };
-        acceptor.open(boost::asio::ip::tcp::v4());
-        acceptor.set_option(boost::asio::socket_base::reuse_address(true));
-        acceptor.bind(config::to_asio(listen.to_endpoint()));
-        acceptor.listen();
+        REQUIRE_SUCCESS(acceptor, open, io::tcp::v4());
+        REQUIRE_SUCCESS(acceptor, set_option, io::reuse_address{ true });
+        REQUIRE_SUCCESS(acceptor, bind, listen.to_endpoint());
+        REQUIRE_SUCCESS(acceptor, listen);
     }
 
     ~socks_setup_fixture()
     {
         if (instance)
-            boost::asio::post(strand, [this]() NOEXCEPT { instance->stop(); });
+            io::post(strand, [this]() NOEXCEPT { instance->stop(); });
 
         proxy.close();
         acceptor.close();
@@ -88,7 +88,7 @@ struct socks_setup_fixture
     // Start a connect to the target, returns the future connect result.
     std::future<code> connect(const config::endpoint& target)
     {
-        boost::asio::post(strand, [this, target]() NOEXCEPT
+        io::post(strand, [this, target]() NOEXCEPT
         {
             instance->connect(target,
                 [this](const code& ec, const socket::ptr& socket) NOEXCEPT
@@ -106,7 +106,7 @@ struct socks_setup_fixture
     // Start a connect to the address, returns the future connect result.
     std::future<code> connect(const config::address& target)
     {
-        boost::asio::post(strand, [this, target]() NOEXCEPT
+        io::post(strand, [this, target]() NOEXCEPT
         {
             instance->connect(target,
                 [this](const code& ec, const socket::ptr& socket) NOEXCEPT
@@ -124,19 +124,19 @@ struct socks_setup_fixture
     // Accept the connector's connection to the proxy.
     void accept()
     {
-        acceptor.accept(proxy);
+        REQUIRE_SUCCESS(acceptor, accept, proxy);
     }
 
     system::data_chunk read(size_t size)
     {
         system::data_chunk buffer(size);
-        boost::asio::read(proxy, boost::asio::buffer(buffer));
+        test::read(proxy, io::buffer(buffer));
         return buffer;
     }
 
     void write(const system::data_chunk& data)
     {
-        boost::asio::write(proxy, boost::asio::buffer(data));
+        test::write(proxy, io::buffer(data));
     }
 
     // Read the greeting and answer with the given method.
@@ -150,12 +150,12 @@ struct socks_setup_fixture
     logger log{};
     threadpool pool;
     std::atomic_bool suspended{ false };
-    asio::strand strand;
+    io::strand strand;
     settings::socks5 socks_settings{};
     connector_socks::ptr instance{};
-    boost::asio::io_context context{};
-    boost::asio::ip::tcp::acceptor acceptor;
-    boost::asio::ip::tcp::socket proxy;
+    io::context context{};
+    io::acceptor acceptor;
+    io::socket proxy;
     std::promise<code> connected{};
 };
 
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(connector_socks__construct__unproxied__expected)
     log.stop();
     threadpool pool(1);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings::socks5 socks{};
     connector::parameters params
     {
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(connector_socks__construct__unproxied__expected)
     auto instance = std::make_shared<connector_socks>(log, strand, pool.service(), suspended, std::move(params), socks);
     BOOST_REQUIRE(!socks.proxied());
 
-    boost::asio::post(strand, [&]() NOEXCEPT { instance->stop(); });
+    io::post(strand, [&]() NOEXCEPT { instance->stop(); });
     pool.stop();
     BOOST_REQUIRE(pool.join());
 }

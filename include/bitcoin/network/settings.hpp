@@ -129,7 +129,7 @@ struct BCT_API settings
         virtual steady_clock::duration expiration() const NOEXCEPT;
 
         /// The outbound binding of the slot, unspecified if no binds.
-        virtual asio::endpoint binding(size_t slot) const NOEXCEPT;
+        virtual io::endpoint binding(size_t slot) const NOEXCEPT;
 
         /// Set the default port of bindings that do not specify a port.
         virtual void default_ports() NOEXCEPT;
@@ -403,7 +403,7 @@ struct BCT_API settings
                 }
                 case system::chain::selection::testnet4:
                 {
-                    binds.emplace_back(asio::address{}, 48333_u16);
+                    binds.emplace_back(system::ip::address{}, 48333_u16);
                     break;
                 }
                 case system::chain::selection::regtest:

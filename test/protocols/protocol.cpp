@@ -58,8 +58,8 @@ class mock_acceptor
   : public acceptor
 {
 public:
-    mock_acceptor(const logger& log, asio::strand& strand,
-        asio::context& service, acceptor::parameters&& params) NOEXCEPT
+    mock_acceptor(const logger& log, io::strand& strand,
+        io::context& service, acceptor::parameters&& params) NOEXCEPT
       : acceptor(log, strand, service, suspended_, std::move(params)),
         stopped_(false), port_(0)
     {
@@ -99,7 +99,7 @@ public:
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
-        boost::asio::post(strand_, [=]() NOEXCEPT
+        io::post(strand_, [=]() NOEXCEPT
         {
             accepted(error::success);
             handler(error::success, socket);
@@ -117,8 +117,8 @@ class mock_connector
   : public connector
 {
 public:
-    mock_connector(const logger& log, asio::strand& strand,
-        asio::context& service, connector::parameters&& params) NOEXCEPT
+    mock_connector(const logger& log, io::strand& strand,
+        io::context& service, connector::parameters&& params) NOEXCEPT
       : connector(log, strand, service, suspended_, std::move(params)),
         stopped_(false)
     {

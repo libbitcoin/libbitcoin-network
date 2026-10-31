@@ -21,7 +21,7 @@
 
 #include <optional>
 #include <utility>
-#include <bitcoin/network/asio.hpp>
+#include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/header.hpp>
 
@@ -31,12 +31,12 @@ namespace http {
 
 /// A body is a type with value_type, and reader and writer classes:
 ///   reader(header<IsRequest>&, value_type&)
-///     void init(const length_type& length, boost_code& ec)
-///     size_t put(const asio::const_buffer& buffer, boost_code& ec)
-///     void finish(boost_code& ec)
+///     void init(const length_type& length, code& ec)
+///     size_t put(const io::const_buffer& buffer, code& ec)
+///     void finish(code& ec)
 ///   writer(header<IsRequest>&, value_type&)
-///     void init(boost_code& ec)
-///     get_buffer<asio::const_buffer> get(boost_code& ec)
+///     void init(code& ec)
+///     get_buffer<io::const_buffer> get(code& ec)
 /// A reader may consume less than given (need_buffer, retains the rest).
 /// A writer returns no buffer when done, or a buffer and whether more follow.
 using length_type = std::optional<uint64_t>;

@@ -27,17 +27,17 @@ class accessor
 public:
     using acceptor::acceptor;
 
-    const asio::context& get_service() const NOEXCEPT
+    const io::context& get_service() const NOEXCEPT
     {
         return service_;
     }
 
-    const asio::strand& get_strand() const NOEXCEPT
+    const io::strand& get_strand() const NOEXCEPT
     {
         return strand_;
     }
 
-    const asio::acceptor& get_acceptor() const NOEXCEPT
+    const io::acceptor& get_acceptor() const NOEXCEPT
     {
         return acceptor_;
     }
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
     threadpool pool(1);
     constexpr auto maximum = 42u;
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     acceptor::parameters params{ .maximum_request = maximum,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     const logger log{};
     threadpool pool(1);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     acceptor::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     // Result codes inconsistent due to context.
     instance->start(messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{}, 42 });
 
-    boost::asio::post(strand, [instance]() NOEXCEPT
+    io::post(strand, [instance]() NOEXCEPT
     {
         instance->stop();
     });
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_stopped_or_suspen
     const logger log{};
     threadpool pool(2);
     std::atomic_bool suspended{ true };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     acceptor::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_stopped_or_suspen
     instance->start(messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{}, 42 });
 
     std::pair<code, socket::ptr>  result{};
-    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    io::post(strand, [&, instance]() NOEXCEPT
     {
         instance->accept([&](const code& ec, const socket::ptr& socket) NOEXCEPT
         {
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     const logger log{};
     threadpool pool(2);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     acceptor::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     instance->start(messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{}, 42 });
 
     std::pair<code, socket::ptr>  result{};
-    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    io::post(strand, [&, instance]() NOEXCEPT
     {
         instance->accept([&](const code& ec, const socket::ptr& socket) NOEXCEPT
         {
@@ -181,7 +181,7 @@ struct acceptor_setup_fixture
     ~acceptor_setup_fixture()
     {
         std::promise<bool> stopped{};
-        boost::asio::post(strand, [this, &stopped]() NOEXCEPT
+        io::post(strand, [this, &stopped]() NOEXCEPT
         {
             instance->stop();
             stopped.set_value(true);
@@ -196,7 +196,7 @@ struct acceptor_setup_fixture
     code start(const config::authority& local)
     {
         std::promise<code> started{};
-        boost::asio::post(strand, [this, &local, &started]() NOEXCEPT
+        io::post(strand, [this, &local, &started]() NOEXCEPT
         {
             started.set_value(instance->start(local));
         });
@@ -207,7 +207,7 @@ struct acceptor_setup_fixture
     uint16_t port()
     {
         std::promise<uint16_t> promise{};
-        boost::asio::post(strand, [this, &promise]() NOEXCEPT
+        io::post(strand, [this, &promise]() NOEXCEPT
         {
             promise.set_value(instance->local().port());
         });
@@ -217,7 +217,7 @@ struct acceptor_setup_fixture
 
     std::future<code> accept()
     {
-        boost::asio::post(strand, [this]() NOEXCEPT
+        io::post(strand, [this]() NOEXCEPT
         {
             instance->accept([this](const code& ec, const socket::ptr& socket) NOEXCEPT
             {
@@ -236,16 +236,16 @@ struct acceptor_setup_fixture
 
     void connect()
     {
-        client.connect({ boost::asio::ip::address_v4::loopback(), port() });
+        REQUIRE_SUCCESS(client, connect, test::loopback(port()));
     }
 
     logger log{};
     threadpool pool;
     std::atomic_bool suspended{ false };
-    asio::strand strand;
+    io::strand strand;
     std::shared_ptr<accessor> instance{};
-    boost::asio::io_context context{};
-    boost::asio::ip::tcp::socket client;
+    io::context context{};
+    io::socket client;
     std::promise<code> accepted{};
     bool inbound{};
 };

@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_IMPL_IO_SOCKET_IPP
 #define LIBBITCOIN_NETWORK_IMPL_IO_SOCKET_IPP
 
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
 namespace network {

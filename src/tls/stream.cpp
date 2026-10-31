@@ -33,7 +33,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // Constructor.
 // ----------------------------------------------------------------------------
 
-stream::stream(asio::socket&& socket, const context& context) NOEXCEPT
+stream::stream(io::socket&& socket, const context& context) NOEXCEPT
   : socket_(std::move(socket)),
     context_(context),
     server_(context),
@@ -49,12 +49,12 @@ stream::executor_type stream::get_executor() NOEXCEPT
     return socket_.get_executor();
 }
 
-asio::socket& stream::next_layer() NOEXCEPT
+io::socket& stream::next_layer() NOEXCEPT
 {
     return socket_;
 }
 
-const asio::socket& stream::next_layer() const NOEXCEPT
+const io::socket& stream::next_layer() const NOEXCEPT
 {
     return socket_;
 }
@@ -66,8 +66,8 @@ void stream::async_handshake(result_handler&& handler) NOEXCEPT
 {
     if (!context_.is_ready())
     {
-        const boost_code ec{ code{ error::tls_alert_internal_error } };
-        boost::asio::post(get_executor(), std::bind(std::move(handler), ec));
+        const code ec{ code{ error::tls_alert_internal_error } };
+        io::post(get_executor(), std::bind(std::move(handler), ec));
         return;
     }
 
@@ -75,7 +75,7 @@ void stream::async_handshake(result_handler&& handler) NOEXCEPT
         this, _1, std::move(handler)));
 }
 
-void stream::handle_handshake(const boost_code& ec,
+void stream::handle_handshake(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -92,7 +92,7 @@ void stream::handle_handshake(const boost_code& ec,
 
     if (server_.is_established())
     {
-        handler({});
+        handler(error::success);
         return;
     }
 
@@ -106,11 +106,11 @@ void stream::handle_handshake(const boost_code& ec,
 void stream::do_read_some(const byte_span& out,
     const io_handler& handler) NOEXCEPT
 {
-    boost_code ec{};
+    code ec{};
     size_t size{};
     if (try_read(ec, size, out))
     {
-        boost::asio::post(get_executor(), std::bind(handler, ec, size));
+        io::post(get_executor(), std::bind(handler, ec, size));
         return;
     }
 
@@ -119,10 +119,10 @@ void stream::do_read_some(const byte_span& out,
 }
 
 // True if the read is complete without receiving.
-bool stream::try_read(boost_code& ec, size_t& size,
+bool stream::try_read(code& ec, size_t& size,
     const byte_span& out) NOEXCEPT
 {
-    ec = {};
+    ec = error::success;
     size = zero;
     if (out.empty())
         return true;
@@ -135,7 +135,7 @@ bool stream::try_read(boost_code& ec, size_t& size,
 
     if (server_.is_closed())
     {
-        ec = boost::asio::error::eof;
+        ec = error::peer_disconnect;
         return true;
     }
 
@@ -148,7 +148,7 @@ bool stream::try_read(boost_code& ec, size_t& size,
     return false;
 }
 
-void stream::handle_read_some(const boost_code& ec, const byte_span& out,
+void stream::handle_read_some(const code& ec, const byte_span& out,
     const io_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -157,7 +157,7 @@ void stream::handle_read_some(const boost_code& ec, const byte_span& out,
         return;
     }
 
-    boost_code result{};
+    code result{};
     size_t size{};
     if (try_read(result, size, out))
     {
@@ -177,8 +177,8 @@ void stream::do_write_some(const const_byte_span& data,
 {
     if (data.empty())
     {
-        boost::asio::post(get_executor(),
-            std::bind(handler, boost_code{}, zero));
+        io::post(get_executor(),
+            std::bind(handler, code{ error::success }, zero));
         return;
     }
 
@@ -186,24 +186,24 @@ void stream::do_write_some(const const_byte_span& data,
     if (!server_.write(data.first(size)))
     {
         const auto ec = server_.is_failed() ? failure() :
-            boost::asio::error::shut_down;
+            code{ error::connect_failed };
 
-        boost::asio::post(get_executor(), std::bind(handler, ec, zero));
+        io::post(get_executor(), std::bind(handler, ec, zero));
         return;
     }
 
-    flush([handler, size](const boost_code& ec) NOEXCEPT
+    flush([handler, size](const code& ec) NOEXCEPT
     {
         handler(ec, ec ? zero : size);
     });
 }
 
-size_t stream::do_write(const const_byte_span& data, boost_code& ec) NOEXCEPT
+size_t stream::do_write(const const_byte_span& data, code& ec) NOEXCEPT
 {
-    ec = {};
+    ec = error::success;
     if (writing_)
     {
-        ec = boost::asio::error::in_progress;
+        ec = error::operation_failed;
         return zero;
     }
 
@@ -213,12 +213,12 @@ size_t stream::do_write(const const_byte_span& data, boost_code& ec) NOEXCEPT
     const auto size = std::min(data.size(), maximum_plaintext);
     if (!server_.write(data.first(size)))
     {
-        ec = server_.is_failed() ? failure() : boost::asio::error::shut_down;
+        ec = server_.is_failed() ? failure() : code{ error::connect_failed };
         return zero;
     }
 
     auto& output = server_.output();
-    boost::asio::write(socket_, boost::asio::buffer(output), ec);
+    io::write(socket_, io::buffer(output), ec);
     output.clear();
     return ec ? zero : size;
 }
@@ -230,8 +230,8 @@ void stream::async_shutdown(result_handler&& handler) NOEXCEPT
 {
     if (server_.is_failed())
     {
-        boost::asio::post(get_executor(),
-            std::bind(std::move(handler), boost_code{}));
+        io::post(get_executor(),
+            std::bind(std::move(handler), code{ error::success }));
         return;
     }
 
@@ -240,7 +240,7 @@ void stream::async_shutdown(result_handler&& handler) NOEXCEPT
         this, _1, std::move(handler)));
 }
 
-void stream::handle_close_sent(const boost_code& ec,
+void stream::handle_close_sent(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -252,7 +252,7 @@ void stream::handle_close_sent(const boost_code& ec,
     handle_close_received(ec, handler);
 }
 
-void stream::handle_close_received(const boost_code& ec,
+void stream::handle_close_received(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -269,7 +269,7 @@ void stream::handle_close_received(const boost_code& ec,
 
     if (server_.is_closed())
     {
-        handler({});
+        handler(error::success);
         return;
     }
 
@@ -280,15 +280,15 @@ void stream::handle_close_received(const boost_code& ec,
 // Transport.
 // ----------------------------------------------------------------------------
 
-boost_code stream::failure() const NOEXCEPT
+code stream::failure() const NOEXCEPT
 {
     return code{ error::tls_to_error_code(server_.failure()) };
 }
 
 // Closure of the transport without close_notify truncates the stream.
-boost_code stream::transport(const boost_code& ec) const NOEXCEPT
+code stream::transport(const code& ec) const NOEXCEPT
 {
-    if (ec == boost::asio::error::eof && !server_.is_closed())
+    if (ec == error::peer_disconnect && !server_.is_closed())
         return code{ error::tls_stream_truncated };
 
     return ec;
@@ -302,13 +302,13 @@ void stream::receive(result_handler&& handler) NOEXCEPT
         return;
 
     receiving_ = true;
-    socket_.async_read_some(boost::asio::buffer(input_),
+    socket_.async_read_some(io::buffer(input_),
         std::bind(&stream::handle_receive,
             this, _1, _2));
 }
 
 // Records produced by receipt (alerts and key updates) are sent first.
-void stream::handle_receive(const boost_code& ec, size_t size) NOEXCEPT
+void stream::handle_receive(const code& ec, size_t size) NOEXCEPT
 {
     receiving_ = false;
     std::vector<result_handler> handlers{};
@@ -327,7 +327,7 @@ void stream::handle_receive(const boost_code& ec, size_t size) NOEXCEPT
     if (server_.output().empty())
     {
         for (const auto& handler: handlers)
-            handler({});
+            handler(error::success);
 
         return;
     }
@@ -353,8 +353,8 @@ void stream::write_next() NOEXCEPT
     if (output.empty())
     {
         for (auto& handler: handlers)
-            boost::asio::post(get_executor(),
-                std::bind(std::move(handler), boost_code{}));
+            io::post(get_executor(),
+                std::bind(std::move(handler), code{ error::success }));
 
         return;
     }
@@ -362,12 +362,12 @@ void stream::write_next() NOEXCEPT
     writing_ = true;
     sending_.swap(output);
     output.clear();
-    boost::asio::async_write(socket_, boost::asio::buffer(sending_),
+    io::async_write(socket_, io::buffer(sending_),
         std::bind(&stream::handle_write,
             this, _1, std::move(handlers)));
 }
 
-void stream::handle_write(const boost_code& ec,
+void stream::handle_write(const code& ec,
     const std::vector<result_handler>& handlers) NOEXCEPT
 {
     writing_ = false;

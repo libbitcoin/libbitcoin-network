@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
     constexpr auto expected = 42u;
     const logger log{};
     threadpool pool{ one };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(channel__created__default__read_and_write_times_equal)
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, default_options);
 
     std::promise<bool> equal{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         equal.set_value(channel_ptr->created() == channel_ptr->last_read() && channel_ptr->created() == channel_ptr->last_write());
     });
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(channel__remaining__zero_inactivity__zero)
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, untimed);
 
     std::promise<size_t> remaining{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         remaining.set_value(channel_ptr->remaining());
     });
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(channel__remaining__default_inactivity__within_inactivity)
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, default_options);
 
     std::promise<size_t> remaining{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         remaining.set_value(channel_ptr->remaining());
     });
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(channel__pause__resume__held_then_released)
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, 42, set, untimed);
 
     std::promise<std::string> states{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         const auto initial = channel_ptr->held();
         channel_ptr->pause();
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(channel__stop__paused__released)
     const std::weak_ptr<accessor> weak{ channel_ptr };
 
     std::promise<bool> paused{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->pause();
         const auto held = channel_ptr->held();
@@ -255,10 +255,10 @@ BOOST_AUTO_TEST_CASE(channel__pause__stopped__not_held_released)
     const std::weak_ptr<accessor> weak{ channel_ptr };
 
     std::promise<bool> paused{};
-    boost::asio::post(channel_ptr->strand(), [&, channel = channel_ptr]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&, channel = channel_ptr]() NOEXCEPT
     {
         channel->stop(error::invalid_magic);
-        boost::asio::post(channel->strand(), [&, channel]() NOEXCEPT
+        io::post(channel->strand(), [&, channel]() NOEXCEPT
         {
             channel->pause();
             paused.set_value(channel->held());
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(channel__resume__expiration_elapsed__channel_expired)
         stopped.set_value(ec);
     }, [](const code&) NOEXCEPT {});
 
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->resume();
     });
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(channel__resume__inactivity_elapsed__channel_inactive)
         stopped.set_value(ec);
     }, [](const code&) NOEXCEPT {});
 
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->resume();
     });

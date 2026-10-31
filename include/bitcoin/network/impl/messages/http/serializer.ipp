@@ -39,7 +39,7 @@ CLASS::serializer(message_type& message) NOEXCEPT
 }
 
 TEMPLATE
-const_buffers CLASS::next(boost_code& ec) NOEXCEPT
+const_buffers CLASS::next(code& ec) NOEXCEPT
 {
     ec.clear();
     switch (state_)
@@ -52,7 +52,7 @@ const_buffers CLASS::next(boost_code& ec) NOEXCEPT
                 return {};
 
             state_ = state::body;
-            return { asio::const_buffer{ header_.data(), header_.size() } };
+            return { io::const_buffer{ header_.data(), header_.size() } };
         }
         case state::body:
         {
@@ -62,7 +62,7 @@ const_buffers CLASS::next(boost_code& ec) NOEXCEPT
 
             const auto more = out.has_value() && out.value().second;
             const auto data = out.has_value() ? out.value().first :
-                asio::const_buffer{};
+                io::const_buffer{};
 
             if (!more)
                 state_ = state::done;

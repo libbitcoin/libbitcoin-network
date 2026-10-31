@@ -76,7 +76,7 @@ inline bool detect_json(bool& json, const http::flat_buffer& buffer) NOEXCEPT
 void socket::detect(http::flat_buffer& buffer,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_detect, shared_from_this(),
             std::ref(buffer), std::move(handler)));
 }
@@ -126,7 +126,7 @@ void socket::handle_detect(const code& ec, size_t size,
 void socket::http_read(http::flat_buffer& buffer,
     http::request& request, count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_http_read, shared_from_this(),
             std::ref(buffer), std::ref(request), std::move(handler)));
 }
@@ -174,7 +174,7 @@ void socket::http_write(http::response&& response,
     count_handler&& handler) NOEXCEPT
 {
     const auto out = move_shared(std::move(response));
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_http_write, shared_from_this(),
             out, std::move(handler)));
 }
@@ -213,7 +213,7 @@ void socket::do_parse(const ref<http::flat_buffer>& buffer,
 
     while (true)
     {
-        boost_code ec{};
+        code ec{};
         const auto used = parser->put(in.data(), ec);
         in.consume(used);
         total = ceilinged_add(total, used);
@@ -268,7 +268,7 @@ void socket::handle_parse(const code& ec, size_t size,
     // The end of the stream completes a body so delimited, or is premature.
     if (ec == error::peer_disconnect)
     {
-        boost_code eof{};
+        code eof{};
         parser->put_eof(eof);
         handler(error::http_to_error_code(eof), total);
         return;
@@ -296,7 +296,7 @@ void socket::do_serialize(const serialize_state::ptr& out, size_t total,
 
     while (true)
     {
-        boost_code ec{};
+        code ec{};
         out->buffers = out->serializer.next(ec);
         if (ec)
         {
@@ -316,28 +316,20 @@ void socket::do_serialize(const serialize_state::ptr& out, size_t total,
         }
     }
 
-    try
-    {
-        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
-            out->buffers, std::bind(&socket::handle_serialize,
-                shared_from_this(), _1, _2, out, total, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ http_serialize: " << e.what());
-        handler(error::operation_failed, total);
-    }
+    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
+        out->buffers, std::bind(&socket::handle_serialize,
+            shared_from_this(), _1, _2, out, total, handler));
 }
 
 // private
-void socket::handle_serialize(const boost_code& ec, size_t size,
+void socket::handle_serialize(const code& ec, size_t size,
     const serialize_state::ptr& out, size_t total,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     total = ceilinged_add(total, size);
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         handler(error::channel_stopped, total);
         return;
@@ -345,9 +337,8 @@ void socket::handle_serialize(const boost_code& ec, size_t size,
 
     if (ec)
     {
-        const auto code = error::asio_to_error_code(ec);
-        if (code == error::unknown) logx("http-write", ec);
-        handler(code, total);
+        if (ec == error::unknown) logx("http-write", ec);
+        handler(ec, total);
         return;
     }
 
@@ -363,7 +354,7 @@ void socket::handle_serialize(const boost_code& ec, size_t size,
 void socket::http_read_header(http::flat_buffer& buffer,
     const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_http_read_header, shared_from_this(),
             std::ref(buffer), parser, std::move(handler)));
 }
@@ -413,7 +404,7 @@ void socket::handle_http_read_header(const code& ec, size_t size,
 void socket::http_read_some(http::flat_buffer& buffer,
     const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_http_read_body, shared_from_this(),
             std::ref(buffer), parser, parse_mode::some,
             std::move(handler)));
@@ -422,7 +413,7 @@ void socket::http_read_some(http::flat_buffer& buffer,
 void socket::http_read_body(http::flat_buffer& buffer,
     const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_http_read_body, shared_from_this(),
             std::ref(buffer), parser, parse_mode::all, std::move(handler)));
 }
@@ -456,7 +447,7 @@ void socket::http_write_header(http::response&& response,
     const auto out = emplace_shared<header_state>(
         http::serialize_header(response.base()));
 
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_http_write_header, shared_from_this(),
             out, std::move(handler)));
 }
@@ -474,37 +465,28 @@ void socket::do_http_write_header(const header_state::ptr& out,
         return;
     }
 
-    try
-    {
-        const asio::const_buffer data{ out->header.data(),
-            out->header.size() };
+    const io::const_buffer data{ out->header.data(),
+        out->header.size() };
 
-        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
-            data, std::bind(&socket::handle_http_write_header,
-                shared_from_this(), _1, _2, out, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ http_write_header: " << e.what());
-        handler(error::operation_failed, {});
-    }
+    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
+        data, std::bind(&socket::handle_http_write_header,
+            shared_from_this(), _1, _2, out, handler));
 }
 
 // private
-void socket::handle_http_write_header(const boost_code& ec, size_t size,
+void socket::handle_http_write_header(const code& ec, size_t size,
     const header_state::ptr&, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         handler(error::channel_stopped, size);
         return;
     }
 
-    const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown) logx("http-write-header", ec);
-    handler(code, size);
+    if (ec == error::unknown) logx("http-write-header", ec);
+    handler(ec, size);
 }
 
 void socket::rpc_write_chunk(rpc::response&& response,
@@ -514,17 +496,17 @@ void socket::rpc_write_chunk(rpc::response&& response,
     wrapper.body() = std::move(response);
     assign_buffer(wrapper.body());
 
-    boost_code ec{};
+    code ec{};
     const auto out = emplace_shared<chunk_state>(std::move(wrapper));
     out->writer.init(ec);
 
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_chunk_write,
             shared_from_this(), ec, zero, out, std::move(handler)));
 }
 
 // private
-void socket::do_chunk_write(boost_code ec, size_t total,
+void socket::do_chunk_write(code ec, size_t total,
     const chunk_state::ptr& out, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -559,33 +541,25 @@ void socket::do_chunk_write(boost_code ec, size_t total,
     out->prefix = http::chunk_header(data.size());
     out->buffers =
     {
-        asio::const_buffer{ out->prefix.data(), out->prefix.size() },
+        io::const_buffer{ out->prefix.data(), out->prefix.size() },
         data,
-        asio::const_buffer{ http::chunk_end.data(), http::chunk_end.size() }
+        io::const_buffer{ http::chunk_end.data(), http::chunk_end.size() }
     };
 
-    try
-    {
-        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
-            out->buffers, std::bind(&socket::handle_chunk_write,
-                shared_from_this(), _1, _2, total, out, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ chunk_write: " << e.what());
-        handler(error::operation_failed, total);
-    }
+    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
+        out->buffers, std::bind(&socket::handle_chunk_write,
+            shared_from_this(), _1, _2, total, out, handler));
 }
 
 // private
-void socket::handle_chunk_write(const boost_code& ec, size_t size,
+void socket::handle_chunk_write(const code& ec, size_t size,
     size_t total, const chunk_state::ptr& out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     total = ceilinged_add(total, size);
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         reclaim_buffer();
         handler(error::channel_stopped, total);
@@ -595,9 +569,8 @@ void socket::handle_chunk_write(const boost_code& ec, size_t size,
     if (ec)
     {
         reclaim_buffer();
-        const auto code = error::asio_to_error_code(ec);
-        if (code == error::unknown) logx("chunk-write", ec);
-        handler(code, total);
+        if (ec == error::unknown) logx("chunk-write", ec);
+        handler(ec, total);
         return;
     }
 
@@ -616,38 +589,29 @@ void socket::handle_chunk_write(const boost_code& ec, size_t size,
         return;
     }
 
-    try
-    {
-        const asio::const_buffer last{ http::last_chunk.data(),
-            http::last_chunk.size() };
+    const io::const_buffer last{ http::last_chunk.data(),
+        http::last_chunk.size() };
 
-        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
-            last, std::bind(&socket::handle_chunk_last,
-                shared_from_this(), _1, _2, total, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ chunk_last: " << e.what());
-        handler(error::operation_failed, total);
-    }
+    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
+        last, std::bind(&socket::handle_chunk_last,
+            shared_from_this(), _1, _2, total, handler));
 }
 
 // private
-void socket::handle_chunk_last(const boost_code& ec, size_t size,
+void socket::handle_chunk_last(const code& ec, size_t size,
     size_t total, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     total = ceilinged_add(total, size);
-    if (error::asio_is_canceled(ec))
+    if (ec == error::operation_canceled)
     {
         handler(error::channel_stopped, total);
         return;
     }
 
-    const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown) logx("chunk-last", ec);
-    handler(code, total);
+    if (ec == error::unknown) logx("chunk-last", ec);
+    handler(ec, total);
 }
 
 BC_POP_WARNING()

@@ -110,7 +110,7 @@ static const std::string http_authorized_get_request
     "\r\n"
 };
 
-using client_response = boost::beast::http::response<boost::beast::http::string_body>;
+using client_response = http::message<false, http::string_body>;
 
 struct http_loopback_fixture
 {
@@ -122,15 +122,15 @@ struct http_loopback_fixture
       : pool_(2), strand_(pool_.service().get_executor()), acceptor_(strand_),
         client(client_service_)
     {
-        const asio::endpoint local(asio::ipv4::loopback(), port);
-        boost_code ec{};
-        acceptor_.open(local.protocol(), ec);
+        const auto local = test::loopback(port);
+        code ec{};
+        acceptor_.open(io::tcp::of(local), ec);
         BOOST_REQUIRE(!ec);
-        acceptor_.set_option(asio::reuse_address(true), ec);
+        acceptor_.set_option(io::reuse_address(true), ec);
         BOOST_REQUIRE(!ec);
         acceptor_.bind(local, ec);
         BOOST_REQUIRE(!ec);
-        acceptor_.listen(1, ec);
+        acceptor_.listen(ec);
         BOOST_REQUIRE(!ec);
 
         network::socket::parameters params
@@ -154,7 +154,7 @@ struct http_loopback_fixture
 
     ~http_loopback_fixture() NOEXCEPT
     {
-        boost_code ignore{};
+        code ignore{};
         client.close(ignore);
         server->stop();
         pool_.stop();
@@ -163,22 +163,22 @@ struct http_loopback_fixture
 
     void send(const std::string& text) NOEXCEPT
     {
-        boost_code ec{};
-        boost::asio::write(client, boost::asio::buffer(text), ec);
+        code ec{};
+        io::write(client, io::buffer(text), ec);
         BOOST_REQUIRE(!ec);
     }
 
     client_response receive() NOEXCEPT
     {
-        boost_code ec{};
+        code ec{};
         http::flat_buffer buffer{};
         client_response response{};
-        boost::beast::http::read(client, buffer, response, ec);
+        http::read(client, buffer, response, ec);
         BOOST_REQUIRE(!ec);
         return response;
     }
 
-    boost::beast::websocket::stream<asio::socket> upgrade() NOEXCEPT
+    ws::client<io::socket>& upgrade() NOEXCEPT
     {
         const auto socket = server;
         const auto buffer = std::make_shared<http::flat_buffer>();
@@ -189,25 +189,26 @@ struct http_loopback_fixture
             accepted->set_value(socket->accept_websocket(*request));
         });
 
-        boost_code ec{};
-        boost::beast::websocket::stream<asio::socket> websocket{ std::move(client) };
-        websocket.handshake("127.0.0.1", "/", ec);
-        BOOST_REQUIRE(!ec);
+        websocket_ = std::make_unique<ws::client<io::socket>>(client);
+        BOOST_REQUIRE_EQUAL(websocket_->handshake("127.0.0.1", "/"), error::success);
         BOOST_REQUIRE_EQUAL(http_await(accepted), error::success);
-        return websocket;
+        return *websocket_;
     }
 
     const logger log{};
 
 private:
     threadpool pool_;
-    asio::strand strand_;
-    asio::acceptor acceptor_;
-    asio::context client_service_{};
+    io::strand strand_;
+    io::acceptor acceptor_;
+    io::context client_service_{};
 
 public:
-    asio::socket client;
+    io::socket client;
     network::socket::ptr server{};
+
+private:
+    std::unique_ptr<ws::client<io::socket>> websocket_{};
 };
 
 BOOST_AUTO_TEST_SUITE(socket_http_tests)
@@ -256,8 +257,8 @@ BOOST_FIXTURE_TEST_CASE(socket__detect__peer_close__peer_disconnect, http_loopba
     const auto result = http_make_promise();
     server->detect(buffer, http_complete(result));
 
-    boost_code ignore{};
-    client.shutdown(asio::socket::shutdown_send, ignore);
+    code ignore{};
+    client.shutdown(io::socket::shutdown_type::send, ignore);
     BOOST_REQUIRE_EQUAL(http_await(result), error::peer_disconnect);
     BOOST_REQUIRE(!server->detected());
 }
@@ -455,7 +456,7 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_write_chunk__peer_closed__failure, http_loop
     server->http_write_header(std::move(response), http_complete(header));
     BOOST_REQUIRE_EQUAL(http_await(header), error::success);
 
-    boost_code ignore{};
+    code ignore{};
     client.close(ignore);
 
     rpc::response part{};
@@ -470,40 +471,40 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_write_chunk__peer_closed__failure, http_loop
 
 BOOST_FIXTURE_TEST_CASE(socket__ws_read__text_after_control_frames__expected, http_loopback_fixture)
 {
-    auto websocket = upgrade();
+    auto& websocket = upgrade();
     BOOST_REQUIRE(server->websocket());
 
     http::flat_buffer buffer{ 4096 };
     const auto result = http_make_promise();
     server->ws_read(buffer, http_complete(result));
 
-    boost_code ec{};
-    websocket.ping("ping", ec);
+    code ec{};
+    ec = websocket.ping("ping");
     BOOST_REQUIRE(!ec);
-    websocket.pong("pong", ec);
+    ec = websocket.pong("pong");
     BOOST_REQUIRE(!ec);
-    websocket.write(boost::asio::buffer(std::string{ "hello" }), ec);
+    ec = websocket.write("hello");
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(http_await(result), error::success);
-    BOOST_REQUIRE_EQUAL(boost::beast::buffers_to_string(buffer.data()), "hello");
+    BOOST_REQUIRE_EQUAL(test::to_string(buffer.data()), "hello");
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__ws_read__close_frame__websocket_closed, http_loopback_fixture)
 {
-    auto websocket = upgrade();
+    auto& websocket = upgrade();
     http::flat_buffer buffer{ 4096 };
     const auto result = http_make_promise();
     server->ws_read(buffer, http_complete(result));
 
-    boost_code ec{};
-    websocket.close(boost::beast::websocket::close_code::normal, ec);
+    code ec{};
+    ec = websocket.close(ws::close_code::normal);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(http_await(result), error::websocket_closed);
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__http_read_header__websocket__operation_failed, http_loopback_fixture)
 {
-    auto websocket = upgrade();
+    upgrade();
     http::flat_buffer buffer{ 4096 };
     const auto parser = system::to_shared<network::socket::http_parser>();
     const auto result = http_make_promise();
@@ -513,7 +514,7 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_header__websocket__operation_failed, h
 
 BOOST_FIXTURE_TEST_CASE(socket__http_read_body__websocket__operation_failed, http_loopback_fixture)
 {
-    auto websocket = upgrade();
+    upgrade();
     http::flat_buffer buffer{ 4096 };
     const auto parser = system::to_shared<network::socket::http_parser>();
     const auto result = http_make_promise();
@@ -523,7 +524,7 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_body__websocket__operation_failed, htt
 
 BOOST_FIXTURE_TEST_CASE(socket__http_read_some__websocket__operation_failed, http_loopback_fixture)
 {
-    auto websocket = upgrade();
+    upgrade();
     http::flat_buffer buffer{ 4096 };
     const auto parser = system::to_shared<network::socket::http_parser>();
     const auto result = http_make_promise();
@@ -533,7 +534,7 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_some__websocket__operation_failed, htt
 
 BOOST_FIXTURE_TEST_CASE(socket__http_write_header__websocket__operation_failed, http_loopback_fixture)
 {
-    auto websocket = upgrade();
+    upgrade();
     const auto result = http_make_promise();
     server->http_write_header(http::response{ http::status::ok, 11 }, http_complete(result));
     BOOST_REQUIRE_EQUAL(http_await(result), error::operation_failed);
@@ -541,7 +542,7 @@ BOOST_FIXTURE_TEST_CASE(socket__http_write_header__websocket__operation_failed, 
 
 BOOST_FIXTURE_TEST_CASE(socket__rpc_write_chunk__websocket__operation_failed, http_loopback_fixture)
 {
-    auto websocket = upgrade();
+    upgrade();
     const auto result = http_make_promise();
     server->rpc_write_chunk(rpc::response{}, http_complete(result));
     BOOST_REQUIRE_EQUAL(http_await(result), error::operation_failed);
@@ -634,7 +635,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stopped__default__false)
     constexpr auto expected = 42u;
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -654,7 +655,7 @@ BOOST_AUTO_TEST_CASE(channel_http__properties__default__expected)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -673,7 +674,7 @@ BOOST_AUTO_TEST_CASE(channel_http__subscribe_message__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -684,7 +685,7 @@ BOOST_AUTO_TEST_CASE(channel_http__subscribe_message__subscribed__expected)
     auto result = true;
     std::promise<bool> subscribed{};
     std::promise<code> message_stopped{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->subscribe<method::get>(
             [&](code ec, method::get::cptr request) NOEXCEPT
@@ -713,7 +714,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stop__all_subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -737,7 +738,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stop__all_subscribed__expected)
     auto result = true;
     std::promise<code> stop1_stopped;
     std::promise<code> message_stopped;
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->subscribe_stop1([=, &stop1_stopped](code ec) NOEXCEPT
         {
@@ -774,7 +775,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected__expected)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -790,7 +791,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected__expected)
     };
 
     BOOST_REQUIRE(!channel_ptr->stopped());
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->send({}, handler);
     });
@@ -808,7 +809,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected_move__expected)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -819,7 +820,7 @@ BOOST_AUTO_TEST_CASE(channel_http__send__not_connected_move__expected)
     std::promise<code> promise;
 
     BOOST_REQUIRE(!channel_ptr->stopped());
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->send(http::response{}, [&](code ec)
         {
@@ -841,7 +842,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stopped__resume_after_read_fail__true)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -849,7 +850,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stopped__resume_after_read_fail__true)
     auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, 42, set, options);
 
     std::promise<bool> stopped_after_resume;
-    boost::asio::post(channel_ptr->strand(), [=, &stopped_after_resume]() NOEXCEPT
+    io::post(channel_ptr->strand(), [=, &stopped_after_resume]() NOEXCEPT
     {
         // Resume queues up a (failing) read that will invoke stopped.
         channel_ptr->resume();
@@ -860,7 +861,7 @@ BOOST_AUTO_TEST_CASE(channel_http__stopped__resume_after_read_fail__true)
     BOOST_REQUIRE(channel_ptr->require_stopped());
 
     std::promise<bool> stopped_after_read_fail;
-    boost::asio::post(channel_ptr->strand(), [=, &stopped_after_read_fail]() NOEXCEPT
+    io::post(channel_ptr->strand(), [=, &stopped_after_read_fail]() NOEXCEPT
     {
         stopped_after_read_fail.set_value(channel_ptr->stopped());
     });
@@ -928,7 +929,7 @@ struct http_channel_fixture
     {
         const auto self = channel;
         const auto started = http_make_promise();
-        boost::asio::post(channel->strand(), [=]() NOEXCEPT
+        io::post(channel->strand(), [=]() NOEXCEPT
         {
             self->subscribe<method::get>([=](const code& ec, const method::get::cptr& request) NOEXCEPT
             {
@@ -990,7 +991,7 @@ BOOST_FIXTURE_TEST_CASE(channel_http__resume__reading__one_response, http_channe
 
     const auto self = channel;
     const auto resumed = http_make_promise();
-    boost::asio::post(channel->strand(), [=]() NOEXCEPT
+    io::post(channel->strand(), [=]() NOEXCEPT
     {
         self->resume();
         resumed->set_value(error::success);
@@ -1075,19 +1076,19 @@ BOOST_FIXTURE_TEST_CASE(channel_http__resume__upgrade__websocket_message_dispatc
         self->send(json_response({ { "b", 2 } }), [](const code&) NOEXCEPT {});
     });
 
-    boost_code ec{};
-    boost::beast::websocket::stream<asio::socket> websocket{ std::move(client) };
-    websocket.handshake("127.0.0.1", "/", ec);
+    code ec{};
+    ws::client<io::socket> websocket{ client };
+    ec = websocket.handshake("127.0.0.1", "/");
     BOOST_REQUIRE(!ec);
 
-    websocket.write(boost::asio::buffer(std::string{ R"({"a":1})" }), ec);
+    ec = websocket.write(R"({"a":1})");
     BOOST_REQUIRE(!ec);
 
     http::flat_buffer buffer{};
-    websocket.read(buffer, ec);
+    ec = websocket.read(buffer);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(channel->websocket());
-    BOOST_REQUIRE_EQUAL(system::json::parse(boost::beast::buffers_to_string(buffer.data())).at("b").to_number<int64_t>(), 2);
+    BOOST_REQUIRE_EQUAL(system::json::parse(test::to_string(buffer.data())).at("b").to_number<int64_t>(), 2);
 }
 
 BOOST_FIXTURE_TEST_CASE(channel_http__notify__websocket__message_sent, http_channel_fixture)
@@ -1097,28 +1098,28 @@ BOOST_FIXTURE_TEST_CASE(channel_http__notify__websocket__message_sent, http_chan
         self->notify(json_response({ { "n", 1 } }), [](const code&) NOEXCEPT {});
     });
 
-    boost_code ec{};
-    boost::beast::websocket::stream<asio::socket> websocket{ std::move(client) };
-    websocket.handshake("127.0.0.1", "/", ec);
+    code ec{};
+    ws::client<io::socket> websocket{ client };
+    ec = websocket.handshake("127.0.0.1", "/");
     BOOST_REQUIRE(!ec);
 
-    websocket.write(boost::asio::buffer(std::string{ "{}" }), ec);
+    ec = websocket.write("{}");
     BOOST_REQUIRE(!ec);
 
     http::flat_buffer buffer{};
-    websocket.read(buffer, ec);
+    ec = websocket.read(buffer);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(system::json::parse(boost::beast::buffers_to_string(buffer.data())).at("n").to_number<int64_t>(), 1);
+    BOOST_REQUIRE_EQUAL(system::json::parse(test::to_string(buffer.data())).at("n").to_number<int64_t>(), 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_upgrade__unauthorized, credentialed_channel_fixture)
 {
     start(http_ok);
 
-    boost_code ec{};
-    boost::beast::websocket::response_type response{};
-    boost::beast::websocket::stream<asio::socket> websocket{ std::move(client) };
-    websocket.handshake(response, "127.0.0.1", "/", ec);
+    code ec{};
+    ws::response response{};
+    ws::client<io::socket> websocket{ client };
+    ec = websocket.handshake(response, "127.0.0.1", "/");
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE_EQUAL(response.result_int(), 401u);
     BOOST_REQUIRE_EQUAL(http_await(stopped), error::unauthorized);
@@ -1143,7 +1144,7 @@ BOOST_AUTO_TEST_CASE(channel_http__register_methods__tokens__accumulated_once)
     auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, http_settings, options);
 
     std::promise<std::string> methods{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->register_methods("abc a");
         channel_ptr->register_methods(" b  a abc ");
@@ -1163,7 +1164,7 @@ BOOST_AUTO_TEST_CASE(channel_http__set_claimed__default__latched)
     auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, http_settings, options);
 
     std::promise<std::string> claims{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         const auto before = channel_ptr->claimed();
         channel_ptr->set_claimed();
@@ -1196,7 +1197,7 @@ BOOST_AUTO_TEST_CASE(channel_http__set_authorized__rfc7617_digest__authorized_fo
     auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, 42, http_settings, credentialed);
 
     std::promise<std::string> states{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         const auto initial = channel_ptr->authorized();
         channel_ptr->set_authorized(system::sha256_hash(std::string{ "Basic wrong" }));

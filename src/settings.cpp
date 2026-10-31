@@ -168,12 +168,12 @@ steady_clock::duration settings::tcp_server::expiration() const NOEXCEPT
     return minutes{ expiration_minutes };
 }
 
-asio::endpoint settings::tcp_server::binding(size_t slot) const NOEXCEPT
+io::endpoint settings::tcp_server::binding(size_t slot) const NOEXCEPT
 {
     if (binds.empty())
         return {};
 
-    return config::to_asio(binds.at(slot % binds.size()).to_endpoint());
+    return binds.at(slot % binds.size()).to_endpoint();
 }
 
 void settings::tcp_server::default_ports() NOEXCEPT

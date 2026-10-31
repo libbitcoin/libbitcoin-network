@@ -243,7 +243,7 @@ void backend::fail(operation* op, int native) NOEXCEPT
 }
 
 // private
-// A read of no bytes completes immediately (as asio streams).
+// A read of no bytes completes immediately.
 void backend::start_read(operation* op) NOEXCEPT
 {
     if (is_zero(op->requested))

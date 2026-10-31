@@ -63,6 +63,11 @@ scheduler::scheduler() NOEXCEPT
 
 scheduler::~scheduler() NOEXCEPT
 {
+    shutdown();
+}
+
+void scheduler::shutdown() NOEXCEPT
+{
     {
         std::unique_lock lock{ resolve_mutex_ };
         resolve_stop_ = true;
@@ -71,6 +76,30 @@ scheduler::~scheduler() NOEXCEPT
     resolve_condition_.notify_all();
     if (resolver_.joinable())
         resolver_.join();
+
+    // Destroyed handlers may queue more (e.g. a timer canceled on destruct).
+    while (true)
+    {
+        std::deque<handler> handlers{};
+        std::vector<timer_state::waiter> waiters{};
+        {
+            std::unique_lock lock{ mutex_ };
+            handlers.swap(queue_);
+            for (auto& entry: timers_)
+            {
+                auto& timer = *entry.second;
+                std::move(timer.waiters.begin(), timer.waiters.end(),
+                    std::back_inserter(waiters));
+                timer.waiters.clear();
+                timer.queued = false;
+            }
+
+            timers_.clear();
+        }
+
+        if (handlers.empty() && waiters.empty())
+            return;
+    }
 }
 
 size_t scheduler::run() NOEXCEPT
@@ -103,8 +132,11 @@ size_t scheduler::run() NOEXCEPT
             if (!queue_.empty() && is_nonzero(waiting_))
                 condition_.notify_one();
 
+            // The handler (and its captures) is released before relocking,
+            // as its destruction may reenter the scheduler.
             lock.unlock();
             next();
+            next = nullptr;
             ++count;
             lock.lock();
 

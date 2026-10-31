@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODIES_HPP
 
 #include <span>
-#include <bitcoin/network/asio.hpp>
+#include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/file.hpp>
 #include <bitcoin/network/messages/http/header.hpp>
@@ -44,12 +44,12 @@ struct empty_body
         {
         }
 
-        void init(const length_type&, boost_code& ec) NOEXCEPT
+        void init(const length_type&, code& ec) NOEXCEPT
         {
             ec.clear();
         }
 
-        size_t put(const asio::const_buffer& buffer, boost_code& ec) NOEXCEPT
+        size_t put(const io::const_buffer& buffer, code& ec) NOEXCEPT
         {
             using namespace network::error;
             if (is_zero(buffer.size()))
@@ -60,7 +60,7 @@ struct empty_body
             return {};
         }
 
-        void finish(boost_code& ec) NOEXCEPT
+        void finish(code& ec) NOEXCEPT
         {
             ec.clear();
         }
@@ -68,7 +68,7 @@ struct empty_body
 
     struct writer
     {
-        using const_buffers_type = asio::const_buffer;
+        using const_buffers_type = io::const_buffer;
         using out_buffer = get_buffer<const_buffers_type>;
 
         template <bool IsRequest>
@@ -76,12 +76,12 @@ struct empty_body
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT
+        void init(code& ec) NOEXCEPT
         {
             ec.clear();
         }
 
-        out_buffer get(boost_code& ec) NOEXCEPT
+        out_buffer get(code& ec) NOEXCEPT
         {
             ec.clear();
             return {};
@@ -103,7 +103,7 @@ struct contiguous_body
         {
         }
 
-        void init(const length_type& length, boost_code& ec) NOEXCEPT
+        void init(const length_type& length, code& ec) NOEXCEPT
         {
             using namespace network::error;
             BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -122,7 +122,7 @@ struct contiguous_body
             ec.clear();
         }
 
-        size_t put(const asio::const_buffer& buffer, boost_code& ec) NOEXCEPT
+        size_t put(const io::const_buffer& buffer, code& ec) NOEXCEPT
         {
             using namespace system;
             using namespace network::error;
@@ -143,7 +143,7 @@ struct contiguous_body
             return buffer.size();
         }
 
-        void finish(boost_code& ec) NOEXCEPT
+        void finish(code& ec) NOEXCEPT
         {
             ec.clear();
         }
@@ -154,7 +154,7 @@ struct contiguous_body
 
     struct writer
     {
-        using const_buffers_type = asio::const_buffer;
+        using const_buffers_type = io::const_buffer;
         using out_buffer = get_buffer<const_buffers_type>;
 
         template <bool IsRequest>
@@ -163,12 +163,12 @@ struct contiguous_body
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT
+        void init(code& ec) NOEXCEPT
         {
             ec.clear();
         }
 
-        out_buffer get(boost_code& ec) NOEXCEPT
+        out_buffer get(code& ec) NOEXCEPT
         {
             ec.clear();
             return out_buffer{ std::make_pair(const_buffers_type{
@@ -200,7 +200,7 @@ struct span_body
         {
         }
 
-        void init(const length_type& length, boost_code& ec) NOEXCEPT
+        void init(const length_type& length, code& ec) NOEXCEPT
         {
             using namespace network::error;
             if (length.has_value() && length.value() > value_.size())
@@ -209,7 +209,7 @@ struct span_body
                 ec.clear();
         }
 
-        size_t put(const asio::const_buffer& buffer, boost_code& ec) NOEXCEPT
+        size_t put(const io::const_buffer& buffer, code& ec) NOEXCEPT
         {
             using namespace system;
             using namespace network::error;
@@ -226,7 +226,7 @@ struct span_body
             return buffer.size();
         }
 
-        void finish(boost_code& ec) NOEXCEPT
+        void finish(code& ec) NOEXCEPT
         {
             ec.clear();
         }
@@ -237,7 +237,7 @@ struct span_body
 
     struct writer
     {
-        using const_buffers_type = asio::const_buffer;
+        using const_buffers_type = io::const_buffer;
         using out_buffer = get_buffer<const_buffers_type>;
 
         template <bool IsRequest>
@@ -246,12 +246,12 @@ struct span_body
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT
+        void init(code& ec) NOEXCEPT
         {
             ec.clear();
         }
 
-        out_buffer get(boost_code& ec) NOEXCEPT
+        out_buffer get(code& ec) NOEXCEPT
         {
             ec.clear();
             return out_buffer{ std::make_pair(const_buffers_type{
@@ -287,12 +287,12 @@ struct buffer_body
         {
         }
 
-        void init(const length_type&, boost_code& ec) NOEXCEPT
+        void init(const length_type&, code& ec) NOEXCEPT
         {
             ec.clear();
         }
 
-        size_t put(const asio::const_buffer& buffer, boost_code& ec) NOEXCEPT
+        size_t put(const io::const_buffer& buffer, code& ec) NOEXCEPT
         {
             using namespace system;
             using namespace network::error;
@@ -316,7 +316,7 @@ struct buffer_body
             return size;
         }
 
-        void finish(boost_code& ec) NOEXCEPT
+        void finish(code& ec) NOEXCEPT
         {
             ec.clear();
         }
@@ -327,7 +327,7 @@ struct buffer_body
 
     struct writer
     {
-        using const_buffers_type = asio::const_buffer;
+        using const_buffers_type = io::const_buffer;
         using out_buffer = get_buffer<const_buffers_type>;
 
         template <bool IsRequest>
@@ -336,12 +336,12 @@ struct buffer_body
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT
+        void init(code& ec) NOEXCEPT
         {
             ec.clear();
         }
 
-        out_buffer get(boost_code& ec) NOEXCEPT
+        out_buffer get(code& ec) NOEXCEPT
         {
             using namespace system;
             using namespace network::error;
@@ -394,23 +394,23 @@ struct file_body
         {
         }
 
-        void init(const length_type&, boost_code& ec) NOEXCEPT
+        void init(const length_type&, code& ec) NOEXCEPT
         {
             using namespace network::error;
             if (value_.is_open())
                 ec.clear();
             else
-                ec = to_errc_code(boost_errc_t::bad_file_descriptor);
+                ec = error::bad_stream;
         }
 
-        size_t put(const asio::const_buffer& buffer, boost_code& ec) NOEXCEPT
+        size_t put(const io::const_buffer& buffer, code& ec) NOEXCEPT
         {
             using namespace system;
             using namespace network::error;
             if (!value_.write(pointer_cast<const uint8_t>(buffer.data()),
                 buffer.size()))
             {
-                ec = to_errc_code(boost_errc_t::io_error);
+                ec = error::bad_stream;
                 return {};
             }
 
@@ -418,7 +418,7 @@ struct file_body
             return buffer.size();
         }
 
-        void finish(boost_code& ec) NOEXCEPT
+        void finish(code& ec) NOEXCEPT
         {
             ec.clear();
         }
@@ -429,7 +429,7 @@ struct file_body
 
     struct writer
     {
-        using const_buffers_type = asio::const_buffer;
+        using const_buffers_type = io::const_buffer;
         using out_buffer = get_buffer<const_buffers_type>;
 
         template <bool IsRequest>
@@ -438,12 +438,12 @@ struct file_body
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT
+        void init(code& ec) NOEXCEPT
         {
             using namespace network::error;
             if (!value_.is_open())
             {
-                ec = to_errc_code(boost_errc_t::bad_file_descriptor);
+                ec = error::bad_stream;
                 return;
             }
 
@@ -454,7 +454,7 @@ struct file_body
             ec.clear();
         }
 
-        out_buffer get(boost_code& ec) NOEXCEPT
+        out_buffer get(code& ec) NOEXCEPT
         {
             using namespace system;
             using namespace network::error;
@@ -464,7 +464,7 @@ struct file_body
             size_t read{};
             if (!value_.read(read, buffer_.data(), size) || read != size)
             {
-                ec = to_errc_code(boost_errc_t::io_error);
+                ec = error::bad_stream;
                 return {};
             }
 

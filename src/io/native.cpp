@@ -61,8 +61,6 @@ bool is_in_progress(int native) NOEXCEPT
 #endif
 }
 
-// The mapping of native errors follows that of asio errors (asio_to_error_code)
-// so that codes are unchanged by the replacement of asio.
 code to_code(int native) NOEXCEPT
 {
     switch (native)
@@ -95,6 +93,7 @@ code to_code(int native) NOEXCEPT
             return error::operation_canceled;
 
         case NATIVE(WSAEAFNOSUPPORT, EAFNOSUPPORT):
+        case NATIVE(WSAEDESTADDRREQ, EDESTADDRREQ):
             return error::resolve_failed;
 
         case NATIVE(WSAEADDRINUSE, EADDRINUSE):
@@ -103,6 +102,7 @@ code to_code(int native) NOEXCEPT
         case NATIVE(WSAEINPROGRESS, EINPROGRESS):
             return error::address_in_use;
 
+        case NATIVE(WSAEADDRNOTAVAIL, EADDRNOTAVAIL):
         case NATIVE(WSAENETDOWN, ENETDOWN):
         case NATIVE(WSAENETUNREACH, ENETUNREACH):
             return error::net_unreachable;
@@ -113,17 +113,21 @@ code to_code(int native) NOEXCEPT
         case NATIVE(WSAECONNREFUSED, ECONNREFUSED):
             return error::connection_refused;
 
-        case NATIVE(WSAESHUTDOWN, ESHUTDOWN):
         case NATIVE(WSAEWOULDBLOCK, EWOULDBLOCK):
+#if !defined(HAVE_WINDOWS) && (EAGAIN != EWOULDBLOCK)
+        case EAGAIN:
+#endif
+            return error::would_block;
+
+        case NATIVE(WSAESHUTDOWN, ESHUTDOWN):
         case NATIVE(WSAENETRESET, ENETRESET):
         case NATIVE(WSAENOPROTOOPT, ENOPROTOOPT):
         case NATIVE(WSAENOTCONN, ENOTCONN):
         case NATIVE(WSAENOTSOCK, ENOTSOCK):
+        case NATIVE(WSAEPROTONOSUPPORT, EPROTONOSUPPORT):
+        case NATIVE(WSAEPROTOTYPE, EPROTOTYPE):
 #if !defined(HAVE_WINDOWS)
         case EPIPE:
-#if EAGAIN != EWOULDBLOCK
-        case EAGAIN:
-#endif
 #endif
             return error::connect_failed;
 

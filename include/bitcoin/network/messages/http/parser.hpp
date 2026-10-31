@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_PARSER_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_PARSER_HPP
 
-#include <bitcoin/network/asio.hpp>
+#include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
 #include <bitcoin/network/messages/http/header.hpp>
@@ -48,21 +48,21 @@ struct framing
 
 /// Parse a request line (including its line end).
 BCT_API size_t parse_start_line(request_header& out,
-    const std::string_view& in, boost_code& ec) NOEXCEPT;
+    const std::string_view& in, code& ec) NOEXCEPT;
 
 /// Parse a status line (including its line end).
 BCT_API size_t parse_start_line(response_header& out,
-    const std::string_view& in, boost_code& ec) NOEXCEPT;
+    const std::string_view& in, code& ec) NOEXCEPT;
 
 /// Parse a field line (including its line end and any folded lines), adding
 /// it to out (if not null), or the empty line that ends the fields (end).
 /// Framing fields update the frame.
 BCT_API size_t parse_field(fields* out, framing& frame, bool& end,
-    const std::string_view& in, boost_code& ec) NOEXCEPT;
+    const std::string_view& in, code& ec) NOEXCEPT;
 
 /// Parse the chunk size digits of a chunk line.
 BCT_API size_t parse_chunk_size(uint64_t& size, const std::string_view& line,
-    boost_code& ec) NOEXCEPT;
+    code& ec) NOEXCEPT;
 
 /// The chunk extensions of the line, from index, are valid.
 BCT_API bool valid_chunk_extensions(const std::string_view& line,
@@ -70,7 +70,7 @@ BCT_API bool valid_chunk_extensions(const std::string_view& line,
 
 /// Find the end of a chunk line, setting text to its line end (CR).
 BCT_API size_t find_chunk_line(size_t& text, const std::string_view& in,
-    boost_code& ec) NOEXCEPT;
+    code& ec) NOEXCEPT;
 
 /// Not thread safe, non-virtual.
 /// Incrementally parse a message (owned) from received bytes, driving the body
@@ -97,10 +97,10 @@ public:
 
     /// Consume received bytes, returning the number consumed. Sets need_more
     /// if not done and the remaining bytes are insufficient to proceed.
-    size_t put(const asio::const_buffer& buffer, boost_code& ec) NOEXCEPT;
+    size_t put(const io::const_buffer& buffer, code& ec) NOEXCEPT;
 
     /// The stream ended, which completes a body delimited by it.
-    void put_eof(boost_code& ec) NOEXCEPT;
+    void put_eof(code& ec) NOEXCEPT;
 
     /// The header has been parsed.
     bool is_header_done() const NOEXCEPT;
@@ -131,18 +131,18 @@ private:
     };
 
     size_t put_start_line(const std::string_view& data,
-        boost_code& ec) NOEXCEPT;
-    size_t put_fields(const std::string_view& data, boost_code& ec) NOEXCEPT;
-    size_t put_body(const std::string_view& data, boost_code& ec) NOEXCEPT;
+        code& ec) NOEXCEPT;
+    size_t put_fields(const std::string_view& data, code& ec) NOEXCEPT;
+    size_t put_body(const std::string_view& data, code& ec) NOEXCEPT;
     size_t put_chunk_header(const std::string_view& data,
-        boost_code& ec) NOEXCEPT;
-    size_t put_trailer(const std::string_view& data, boost_code& ec) NOEXCEPT;
-    void finish_header(boost_code& ec) NOEXCEPT;
-    void complete_body(boost_code& ec) NOEXCEPT;
-    void finish(boost_code& ec) NOEXCEPT;
+        code& ec) NOEXCEPT;
+    size_t put_trailer(const std::string_view& data, code& ec) NOEXCEPT;
+    void finish_header(code& ec) NOEXCEPT;
+    void complete_body(code& ec) NOEXCEPT;
+    void finish(code& ec) NOEXCEPT;
     std::string_view header_window(const std::string_view& data) const NOEXCEPT;
     void header_limited(const std::string_view& data,
-        boost_code& ec) const NOEXCEPT;
+        code& ec) const NOEXCEPT;
 
     message_type message_;
     reader_type reader_;

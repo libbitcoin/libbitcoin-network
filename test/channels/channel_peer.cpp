@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__default__false)
     constexpr auto expected = 42u;
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_compact_blocks__high_bandwidth__expected)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params
     {
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_wants_witness_tx__default_false__expected
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params
     {
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_wants_address_v2__always__latched)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_minimum_fee__always__expected)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_pong__unpinged__unchanged)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_ping__unponged__pending_only)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_pong__pinged__timed_not_pending)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
 
     auto result = true;
     std::promise<code> message_stopped;
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         using namespace messages::peer;
         channel_ptr->subscribe<ping>([&](code ec, ping::cptr ping) NOEXCEPT
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
     auto result = true;
     std::promise<code> stop1_stopped;
     std::promise<code> message_stopped;
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->subscribe_stop1([=, &stop1_stopped](code ec) NOEXCEPT
         {
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
     };
 
     BOOST_REQUIRE(!channel_ptr->stopped());
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         using namespace messages::peer;
         channel_ptr->send<ping>(ping{ 42 }, handler);
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
     std::promise<code> promise;
 
     BOOST_REQUIRE(!channel_ptr->stopped());
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         using namespace messages::peer;
         channel_ptr->send<ping>(ping{ 42 }, [&](code ec)
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__resume_after_read_fail__true)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
     network::socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__resume_after_read_fail__true)
     auto channel_ptr = std::make_shared<mock_channel_peer>(log, socket_ptr, 42, set, options);
 
     std::promise<bool> stopped_after_resume;
-    boost::asio::post(channel_ptr->strand(), [=, &stopped_after_resume]() NOEXCEPT
+    io::post(channel_ptr->strand(), [=, &stopped_after_resume]() NOEXCEPT
     {
         // Resume queues up a (failing) read that will invoke stopped.
         channel_ptr->resume();
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__resume_after_read_fail__true)
     BOOST_REQUIRE(channel_ptr->require_stopped());
 
     std::promise<bool> stopped_after_read_fail;
-    boost::asio::post(channel_ptr->strand(), [=, &stopped_after_read_fail]() NOEXCEPT
+    io::post(channel_ptr->strand(), [=, &stopped_after_read_fail]() NOEXCEPT
     {
         stopped_after_read_fail.set_value(channel_ptr->stopped());
     });
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_peer_version__services__peer_services_and
     constexpr auto services = service::node_network | service::node_witness;
     const auto peer = system::to_shared(version{ .value = level::maximum_protocol, .services = services });
     std::promise<std::string> states{};
-    boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
+    io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->set_peer_version(peer);
         channel_ptr->set_current(true);
@@ -572,15 +572,15 @@ struct peer_loopback_fixture
       : pool_(2), strand_(pool_.service().get_executor()), acceptor_(strand_),
         client(client_service_)
     {
-        const asio::endpoint local(asio::ipv4::loopback(), port);
-        boost_code ec{};
-        acceptor_.open(local.protocol(), ec);
+        const auto local = test::loopback(port);
+        code ec{};
+        acceptor_.open(io::tcp::of(local), ec);
         BOOST_REQUIRE(!ec);
-        acceptor_.set_option(asio::reuse_address(true), ec);
+        acceptor_.set_option(io::reuse_address(true), ec);
         BOOST_REQUIRE(!ec);
         acceptor_.bind(local, ec);
         BOOST_REQUIRE(!ec);
-        acceptor_.listen(1, ec);
+        acceptor_.listen(ec);
         BOOST_REQUIRE(!ec);
 
         network::socket::parameters params
@@ -611,7 +611,7 @@ struct peer_loopback_fixture
 
     ~peer_loopback_fixture() NOEXCEPT
     {
-        boost_code ignore{};
+        code ignore{};
         client.close(ignore);
         channel->stop(error::service_stopped);
         pool_.stop();
@@ -622,7 +622,7 @@ struct peer_loopback_fixture
     {
         const auto self = channel;
         const auto started = peer_make_promise();
-        boost::asio::post(channel->strand(), [=]() NOEXCEPT
+        io::post(channel->strand(), [=]() NOEXCEPT
         {
             using namespace messages::peer;
             self->subscribe<ping>([=](const code& ec, const ping::cptr& message) NOEXCEPT
@@ -640,8 +640,8 @@ struct peer_loopback_fixture
 
     void send(const system::data_chunk& data) NOEXCEPT
     {
-        boost_code ec{};
-        boost::asio::write(client, boost::asio::buffer(data), ec);
+        code ec{};
+        io::write(client, io::buffer(data), ec);
         BOOST_REQUIRE(!ec);
     }
 
@@ -649,12 +649,12 @@ struct peer_loopback_fixture
 
 private:
     threadpool pool_;
-    asio::strand strand_;
-    asio::acceptor acceptor_;
-    asio::context client_service_{};
+    io::strand strand_;
+    io::acceptor acceptor_;
+    io::context client_service_{};
 
 public:
-    asio::socket client;
+    io::socket client;
     const peer_promise stopped{ peer_make_promise() };
     std::shared_ptr<resumable_channel_peer> channel{};
 };
@@ -739,8 +739,8 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__gate__retained_peer_close__peer_disconnect
 
     send(peer_frame("ping", system::base16_chunk("0100000000000000")));
 
-    boost_code ignore{};
-    client.shutdown(asio::socket::shutdown_send, ignore);
+    code ignore{};
+    client.shutdown(io::socket::shutdown_type::send, ignore);
     BOOST_REQUIRE_EQUAL(peer_await(stopped), error::peer_disconnect);
 }
 
@@ -760,15 +760,15 @@ struct p2ps_loopback_fixture
       : pool_(2), strand_(pool_.service().get_executor()), acceptor_(strand_),
         client(client_service)
     {
-        const asio::endpoint local(asio::ipv4::loopback(), port);
-        boost_code ec{};
-        acceptor_.open(local.protocol(), ec);
+        const auto local = test::loopback(port);
+        code ec{};
+        acceptor_.open(io::tcp::of(local), ec);
         BOOST_REQUIRE(!ec);
-        acceptor_.set_option(asio::reuse_address(true), ec);
+        acceptor_.set_option(io::reuse_address(true), ec);
         BOOST_REQUIRE(!ec);
         acceptor_.bind(local, ec);
         BOOST_REQUIRE(!ec);
-        acceptor_.listen(1, ec);
+        acceptor_.listen(ec);
         BOOST_REQUIRE(!ec);
 
         network::socket::parameters params
@@ -792,12 +792,12 @@ struct p2ps_loopback_fixture
 
     ~p2ps_loopback_fixture() NOEXCEPT
     {
-        boost_code ignore{};
+        code ignore{};
         client.close(ignore);
         channel ? channel->stop(error::service_stopped) : server_->stop();
-        boost::asio::post(strand_, [this]() NOEXCEPT
+        io::post(strand_, [this]() NOEXCEPT
         {
-            boost_code cancel{};
+            code cancel{};
             acceptor_.cancel(cancel);
         });
 
@@ -820,7 +820,7 @@ struct p2ps_loopback_fixture
     {
         const auto self = channel;
         const auto result = std::make_shared<std::promise<bool>>();
-        boost::asio::post(channel->strand(), [=]() NOEXCEPT
+        io::post(channel->strand(), [=]() NOEXCEPT
         {
             result->set_value(self->encrypted());
         });
@@ -832,7 +832,7 @@ struct p2ps_loopback_fixture
     {
         const auto self = channel;
         const auto started = peer_make_promise();
-        boost::asio::post(channel->strand(), [=]() NOEXCEPT
+        io::post(channel->strand(), [=]() NOEXCEPT
         {
             using namespace messages::peer;
             self->subscribe<ping>([=](const code& ec, const ping::cptr& message) NOEXCEPT
@@ -851,22 +851,22 @@ struct p2ps_loopback_fixture
 
 private:
     threadpool pool_;
-    asio::strand strand_;
-    asio::acceptor acceptor_;
+    io::strand strand_;
+    io::acceptor acceptor_;
     const peer_promise accepted_{ peer_make_promise() };
     network::socket::ptr server_{};
 
 public:
-    asio::context client_service{};
-    asio::socket client;
+    io::context client_service{};
+    io::socket client;
     const peer_promise stopped{ peer_make_promise() };
     std::shared_ptr<resumable_channel_peer> channel{};
 };
 
 BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v1_version_prefix__v1_served, p2ps_loopback_fixture)
 {
-    boost_code ec{};
-    boost::asio::write(client, boost::asio::buffer(system::base16_chunk("f9beb4d9" "76657273696f6e0000000000" "00000000" "5df6e0e2")), ec);
+    code ec{};
+    io::write(client, io::buffer(system::base16_chunk("f9beb4d9" "76657273696f6e0000000000" "00000000" "5df6e0e2")), ec);
     BOOST_REQUIRE(!ec);
 
     accept();
@@ -878,14 +878,14 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v1_version_prefix__v1_served,
 BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_exchange, p2ps_loopback_fixture)
 {
     using namespace messages::peer;
-    boost_code handshake{ boost::asio::error::would_block };
+    code handshake{ error::would_block };
     network::p2ps::stream initiator{ std::move(client), p2ps_configuration };
-    initiator.async_handshake([&](const boost_code& shake_ec) NOEXCEPT
+    initiator.async_handshake([&](const code& shake_ec) NOEXCEPT
     {
         handshake = shake_ec;
     });
 
-    client_service.run_for(5s);
+    client_service.run();
     client_service.restart();
     BOOST_REQUIRE(!handshake);
 
@@ -900,13 +900,13 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_
         return false;
     });
 
-    boost_code sent{ boost::asio::error::would_block };
-    initiator.async_write_message(identifiers::ping, "", system::to_shared(system::base16_chunk("0100000000000000")), [&](const boost_code& write_ec, size_t) NOEXCEPT
+    code sent{ error::would_block };
+    initiator.async_write_message(identifiers::ping, "", system::to_shared(system::base16_chunk("0100000000000000")), [&](const code& write_ec, size_t) NOEXCEPT
     {
         sent = write_ec;
     });
 
-    client_service.run_for(5s);
+    client_service.run();
     client_service.restart();
     BOOST_REQUIRE(!sent);
     BOOST_REQUIRE_EQUAL(nonce->get_future().get(), 1u);
@@ -914,15 +914,15 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_
     uint8_t identifier{};
     system::data_chunk payload{};
     system::data_chunk buffer{};
-    boost_code received{ boost::asio::error::would_block };
-    initiator.async_read_message(buffer, network::p2ps::cipher::maximum_content, [&](const boost_code& read_ec, uint8_t id, const std::string&, const network::p2ps::stream::payload_t& data) NOEXCEPT
+    code received{ error::would_block };
+    initiator.async_read_message(buffer, network::p2ps::cipher::maximum_content, [&](const code& read_ec, uint8_t id, const std::string&, const network::p2ps::stream::payload_t& data) NOEXCEPT
     {
         received = read_ec;
         identifier = id;
         payload.assign(data.begin(), data.end());
     });
 
-    client_service.run_for(5s);
+    client_service.run();
     client_service.restart();
     BOOST_REQUIRE(!received);
     BOOST_REQUIRE_EQUAL(identifier, identifiers::ping);
@@ -931,14 +931,14 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_
 
 BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator_closed__peer_disconnect, p2ps_loopback_fixture)
 {
-    boost_code handshake{ boost::asio::error::would_block };
+    code handshake{ error::would_block };
     auto initiator = std::make_unique<network::p2ps::stream>(std::move(client), p2ps_configuration);
-    initiator->async_handshake([&](const boost_code& shake_ec) NOEXCEPT
+    initiator->async_handshake([&](const code& shake_ec) NOEXCEPT
     {
         handshake = shake_ec;
     });
 
-    client_service.run_for(5s);
+    client_service.run();
     client_service.restart();
     BOOST_REQUIRE(!handshake);
 

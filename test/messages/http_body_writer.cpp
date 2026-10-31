@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__file__constructs_file_writer)
 {
     // In dubug builds boost asserts that the file is open.
     // BOOST_ASSERT(body_.file_.is_open());
-    boost_code ec{};
+    code ec{};
     file_body::value_type file{};
     BOOST_REQUIRE(file.open_write(TEST_PATH));
 
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__get__file__expected_content_no_more)
     const std::string expected{ "abc" };
     std::ofstream{ TEST_PATH } << expected;
 
-    boost_code ec{};
+    code ec{};
     file_body::value_type file{};
     BOOST_REQUIRE(file.open_read(TEST_PATH));
 

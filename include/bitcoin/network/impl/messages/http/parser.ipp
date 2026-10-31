@@ -57,7 +57,7 @@ void CLASS::body_limit(size_t value) NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::put(const asio::const_buffer& buffer, boost_code& ec) NOEXCEPT
+size_t CLASS::put(const io::const_buffer& buffer, code& ec) NOEXCEPT
 {
     using namespace system;
     using namespace network::error;
@@ -109,7 +109,7 @@ size_t CLASS::put(const asio::const_buffer& buffer, boost_code& ec) NOEXCEPT
 }
 
 TEMPLATE
-void CLASS::put_eof(boost_code& ec) NOEXCEPT
+void CLASS::put_eof(code& ec) NOEXCEPT
 {
     using namespace network::error;
     if (state_ == state::body_to_eof)
@@ -175,7 +175,7 @@ std::string_view CLASS::header_window(
 // An incomplete header element that fills the window exceeds the limit.
 TEMPLATE
 void CLASS::header_limited(const std::string_view& data,
-    boost_code& ec) const NOEXCEPT
+    code& ec) const NOEXCEPT
 {
     using namespace network::error;
     if (ec == http_error_t::need_more && !is_zero(header_limit_) &&
@@ -185,7 +185,7 @@ void CLASS::header_limited(const std::string_view& data,
 
 TEMPLATE
 size_t CLASS::put_start_line(const std::string_view& data,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     if (data.empty())
         return {};
@@ -204,7 +204,7 @@ size_t CLASS::put_start_line(const std::string_view& data,
 
 TEMPLATE
 size_t CLASS::put_fields(const std::string_view& data,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     size_t used{};
     bool end{};
@@ -227,7 +227,7 @@ size_t CLASS::put_fields(const std::string_view& data,
 }
 
 TEMPLATE
-void CLASS::finish_header(boost_code& ec) NOEXCEPT
+void CLASS::finish_header(code& ec) NOEXCEPT
 {
     using namespace network::error;
     bool bodiless{ skip_ };
@@ -296,7 +296,7 @@ void CLASS::finish_header(boost_code& ec) NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::put_body(const std::string_view& data, boost_code& ec) NOEXCEPT
+size_t CLASS::put_body(const std::string_view& data, code& ec) NOEXCEPT
 {
     using namespace system;
     using namespace network::error;
@@ -334,7 +334,7 @@ size_t CLASS::put_body(const std::string_view& data, boost_code& ec) NOEXCEPT
 }
 
 TEMPLATE
-void CLASS::complete_body(boost_code& ec) NOEXCEPT
+void CLASS::complete_body(code& ec) NOEXCEPT
 {
     if (state_ == state::chunk_body)
         state_ = state::chunk_header;
@@ -346,7 +346,7 @@ void CLASS::complete_body(boost_code& ec) NOEXCEPT
 // chunk line is bounded by the header limit.
 TEMPLATE
 size_t CLASS::put_chunk_header(const std::string_view& data,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     using namespace network::error;
     if (data.size() < line_end.size())
@@ -412,7 +412,7 @@ size_t CLASS::put_chunk_header(const std::string_view& data,
 // Trailer fields frame like header fields, but are not retained.
 TEMPLATE
 size_t CLASS::put_trailer(const std::string_view& data,
-    boost_code& ec) NOEXCEPT
+    code& ec) NOEXCEPT
 {
     size_t used{};
     bool end{};
@@ -435,7 +435,7 @@ size_t CLASS::put_trailer(const std::string_view& data,
 }
 
 TEMPLATE
-void CLASS::finish(boost_code& ec) NOEXCEPT
+void CLASS::finish(code& ec) NOEXCEPT
 {
     reader_.finish(ec);
     state_ = state::done;

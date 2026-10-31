@@ -239,6 +239,12 @@ void socket::close(code& ec) NOEXCEPT
     ec = error::success;
 }
 
+void socket::close() NOEXCEPT
+{
+    code ignore{};
+    close(ignore);
+}
+
 void socket::cancel(code& ec) NOEXCEPT
 {
     if (!is_open())
@@ -293,6 +299,28 @@ bool socket::non_blocking() const NOEXCEPT
     return descriptor_->non_blocking;
 }
 
+size_t socket::available(code& ec) const NOEXCEPT
+{
+#if defined(HAVE_WINDOWS)
+    u_long count{};
+    if (::ioctlsocket(descriptor_->handle, FIONREAD, &count) != 0)
+#else
+    int count{};
+    if (::ioctl(descriptor_->handle, FIONREAD, &count) != 0)
+#endif
+    {
+        ec = native_code();
+        return zero;
+    }
+
+    ec = error::success;
+#if defined(HAVE_WINDOWS)
+    return possible_wide_cast<size_t>(count);
+#else
+    return possible_wide_cast<size_t>(sign_cast<unsigned int>(count));
+#endif
+}
+
 endpoint socket::local_endpoint(code& ec) const NOEXCEPT
 {
     socket_address address{};
@@ -331,6 +359,36 @@ endpoint socket::remote_endpoint() const NOEXCEPT
 {
     code ignore{};
     return remote_endpoint(ignore);
+}
+
+bool socket::half_closed() const NOEXCEPT
+{
+    if (!is_open())
+        return false;
+
+#if defined(HAVE_WINDOWS)
+    TCP_INFO_v0 info{};
+    DWORD version{};
+    DWORD size{};
+    if (is_zero(::WSAIoctl(descriptor_->handle, SIO_TCP_INFO, &version,
+        sizeof(version), &info, sizeof(info), &size, nullptr, nullptr)))
+        return info.State == TCPSTATE_CLOSE_WAIT;
+
+#elif defined(HAVE_APPLE)
+    struct tcp_connection_info info{};
+    socklen_t size = sizeof(info);
+    if (is_zero(::getsockopt(descriptor_->handle, IPPROTO_TCP,
+        TCP_CONNECTION_INFO, &info, &size)))
+        return info.tcpi_state == TCPS_CLOSE_WAIT;
+
+#elif defined(HAVE_LINUX)
+    struct tcp_info info{};
+    socklen_t size = sizeof(info);
+    if (is_zero(::getsockopt(descriptor_->handle, IPPROTO_TCP, TCP_INFO,
+        &info, &size)))
+        return info.tcpi_state == TCP_CLOSE_WAIT;
+#endif
+    return false;
 }
 
 void socket::async_connect(const endpoint& point,
@@ -636,6 +694,12 @@ void acceptor::close(code& ec) NOEXCEPT
         backend_of(executor_).close(*descriptor_);
 
     ec = error::success;
+}
+
+void acceptor::close() NOEXCEPT
+{
+    code ignore{};
+    close(ignore);
 }
 
 void acceptor::cancel(code& ec) NOEXCEPT

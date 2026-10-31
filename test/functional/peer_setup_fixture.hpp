@@ -66,8 +66,8 @@ protected:
     network::net net_;
 
 private:
-    boost::asio::io_context io_{};
-    boost::asio::ip::tcp::socket socket_{ io_ };
+    io::context io_{};
+    io::socket socket_{ io_ };
 };
 
 #define PEER_LISTEN_ENDPOINT "127.0.0.1:65031"
@@ -140,9 +140,9 @@ public:
 
 private:
     const uint32_t identifier_;
-    boost::asio::io_context io_{};
-    boost::asio::ip::tcp::acceptor acceptor_{ io_ };
-    boost::asio::ip::tcp::socket socket_{ io_ };
+    io::context io_{};
+    io::acceptor acceptor_{ io_ };
+    io::socket socket_{ io_ };
 };
 
 // Runs a net instance (created upon start, so settings_ may be modified until

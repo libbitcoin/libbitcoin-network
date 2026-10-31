@@ -38,7 +38,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_rpc_read,
             shared_from_this(), std::ref(buffer), std::ref(request),
             std::move(handler)));
@@ -85,7 +85,7 @@ void socket::handle_rpc_read(const code& ec, size_t bytes,
 void socket::rpc_write(rpc::response&& response,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_rpc_write,
             shared_from_this(), move_shared(std::move(response)),
             std::move(handler)));
@@ -114,7 +114,7 @@ void socket::do_rpc_write(const rpc::response_ptr& response,
 void socket::rpc_notify(rpc::request&& notification,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_rpc_notify,
             shared_from_this(), move_shared(std::move(notification)),
             std::move(handler)));

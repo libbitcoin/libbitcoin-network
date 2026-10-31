@@ -76,10 +76,10 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Get the network threadpool iocontext.
-    asio::context& service() const NOEXCEPT;
+    io::context& service() const NOEXCEPT;
 
     /// The channel strand.
-    asio::strand& strand() NOEXCEPT;
+    io::strand& strand() NOEXCEPT;
 
     /// The strand is running in this thread.
     bool stranded() const NOEXCEPT;
@@ -165,18 +165,18 @@ protected:
 
     /// Binary or text mode applies to websockets (no-op for tcp).
     /// Write the provided buffer to socket, handler posted to socket strand.
-    void write(const asio::const_buffer& in, bool binary,
+    void write(const io::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
     /// TCP (generic, fixed size).
     /// -----------------------------------------------------------------------
 
     /// Read fixed-size TCP message from the remote endpoint into buffer.
-    void read(const asio::mutable_buffer& buffer,
+    void read(const io::mutable_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
     /// Write the provided buffer to socket, handler posted to socket strand.
-    void write(const asio::const_buffer& buffer,
+    void write(const io::const_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
     /// RPC (TCP: electrum/stratum_v1, WS: btcd).
@@ -260,9 +260,9 @@ private:
 
     // For write buffering.
     void do_http_write(const http::response_ptr& response) NOEXCEPT;
-    void do_ws_write(const asio::const_buffer& payload,
+    void do_ws_write(const io::const_buffer& payload,
         bool binary) NOEXCEPT;
-    void do_tcp_write(const asio::const_buffer& payload) NOEXCEPT;
+    void do_tcp_write(const io::const_buffer& payload) NOEXCEPT;
     void do_peer_write(const messages::peer::frame_ptr& message) NOEXCEPT;
     void do_response_write(const rpc::response_ptr& response) NOEXCEPT;
     void do_notification_write(

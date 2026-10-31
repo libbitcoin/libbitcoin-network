@@ -198,7 +198,7 @@ struct BCT_API body
     class reader
     {
     public:
-        using buffer_type = asio::const_buffer;
+        using buffer_type = io::const_buffer;
 
         /// Streamed reads may finish before the message is complete.
         template <bool IsRequest>
@@ -209,9 +209,9 @@ struct BCT_API body
         {
         }
 
-        void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
-        size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
-        void finish(boost_code& ec) NOEXCEPT;
+        void init(const http::length_type& length, code& ec) NOEXCEPT;
+        size_t put(const buffer_type& buffer, code& ec) NOEXCEPT;
+        void finish(code& ec) NOEXCEPT;
 
     protected:
         // The reader only reads requests, and http::fields are required.
@@ -297,7 +297,7 @@ struct BCT_API body
     class writer
     {
     public:
-        using const_buffers_type = asio::const_buffer;
+        using const_buffers_type = io::const_buffer;
         using out_buffer = http::get_buffer<const_buffers_type>;
 
         template <bool IsRequest>
@@ -325,8 +325,8 @@ struct BCT_API body
             }, writer_);
         }
 
-        void init(boost_code& ec) NOEXCEPT;
-        out_buffer get(boost_code& ec) NOEXCEPT;
+        void init(code& ec) NOEXCEPT;
+        out_buffer get(code& ec) NOEXCEPT;
 
     protected:
         /// Create writer matching the caller-defined body inner variant type.

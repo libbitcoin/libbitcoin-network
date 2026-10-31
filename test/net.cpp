@@ -781,7 +781,7 @@ template <typename Function>
 static auto on_strand(net& instance, Function&& function)
 {
     std::promise<decltype(function())> promise{};
-    boost::asio::post(instance.strand(), [&]() NOEXCEPT
+    io::post(instance.strand(), [&]() NOEXCEPT
     {
         promise.set_value(function());
     });
@@ -981,7 +981,7 @@ BOOST_AUTO_TEST_CASE(net__do_run__closed__service_stopped)
     closed_net_accessor net(set, log);
 
     std::promise<code> promise{};
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         net.do_run([&](const code& ec) NOEXCEPT
         {
@@ -1038,7 +1038,7 @@ BOOST_AUTO_TEST_CASE(net__count_channel__inbound_own_nonce__accept_failed)
     const auto version = std::make_shared<messages::peer::version>();
     version->nonce = outbound->nonce();
     std::promise<bool> promise{};
-    boost::asio::post(inbound->strand(), [&]() NOEXCEPT
+    io::post(inbound->strand(), [&]() NOEXCEPT
     {
         inbound->set_peer_version(version);
         promise.set_value(true);

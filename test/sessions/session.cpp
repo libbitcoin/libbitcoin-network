@@ -173,7 +173,7 @@ public:
 
         // The handshake protocol pauses the channel upon completion, which is
         // after the session resumes it to start the read loop, so this posts.
-        boost::asio::post(channel->strand(),
+        io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
                 channel->pause();
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
     BOOST_REQUIRE(session.stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         stopped.set_value(true);
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
     mock_session session(net, 1);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.start([&](const code& ec)
         {
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     std::promise<code> restarted;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.start([&](const code& ec) NOEXCEPT
         {
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
     BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         stopped.set_value(true);
@@ -605,7 +605,7 @@ BOOST_AUTO_TEST_CASE(session__start__stop__success)
     mock_session session(net, 1);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.start([&](const code& ec) NOEXCEPT
         {
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE(session__start__stop__success)
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         stopped.set_value(true);
@@ -645,7 +645,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
+    io::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
             [&](const code& ec) NOEXCEPT
@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     auto session = std::make_shared<mock_session>(net, 1);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -702,7 +702,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 
     // Stop the channel (started by default).
     std::promise<bool> unstarted_channel;
-    boost::asio::post(channel->strand(), [=, &unstarted_channel]() NOEXCEPT
+    io::post(channel->strand(), [=, &unstarted_channel]() NOEXCEPT
     {
         channel->stopper(error::invalid_magic);
         unstarted_channel.set_value(true);
@@ -713,7 +713,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
+    io::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
             [&](const code& ec) NOEXCEPT
@@ -741,7 +741,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     BOOST_REQUIRE(is_zero(net.counted_channel()));
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -765,7 +765,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     auto session = std::make_shared<mock_session>(net, 1);
 
     std::promise<code> started_net;
-    boost::asio::post(net.strand(), [&net, &started_net]() NOEXCEPT
+    io::post(net.strand(), [&net, &started_net]() NOEXCEPT
     {
         net.start([&](const code& ec) NOEXCEPT
         {
@@ -776,7 +776,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -793,7 +793,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
+    io::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
             [&](const code& ec) NOEXCEPT
@@ -820,7 +820,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -849,7 +849,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     auto session = std::make_shared<mock_session>(net, 1);
 
     std::promise<code> started_net;
-    boost::asio::post(net.strand(), [&net, &started_net]() NOEXCEPT
+    io::post(net.strand(), [&net, &started_net]() NOEXCEPT
     {
         net.start([&](const code& ec) NOEXCEPT
         {
@@ -860,7 +860,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
+    io::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
             [&](const code& ec) NOEXCEPT
@@ -903,7 +903,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -934,7 +934,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     auto session = std::make_shared<mock_session>(net, 1);
 
     std::promise<code> started_net;
-    boost::asio::post(net.strand(), [&net, &started_net]() NOEXCEPT
+    io::post(net.strand(), [&net, &started_net]() NOEXCEPT
     {
         net.start([&](const code& ec) NOEXCEPT
         {
@@ -945,7 +945,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -962,7 +962,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
+    io::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
             [&](const code& ec) NOEXCEPT
@@ -988,7 +988,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -1017,7 +1017,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_co
     auto session = std::make_shared<mock_session>(net, 1);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -1033,7 +1033,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_co
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
+    io::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
             [&](const code& ec) NOEXCEPT
@@ -1052,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_co
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::channel_conflict);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);

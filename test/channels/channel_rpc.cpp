@@ -55,15 +55,15 @@ struct rpc_loopback_fixture
       : pool_(2), strand_(pool_.service().get_executor()), acceptor_(strand_),
         client(client_service_)
     {
-        const asio::endpoint local(asio::ipv4::loopback(), port);
-        boost_code ec{};
-        acceptor_.open(local.protocol(), ec);
+        const auto local = test::loopback(port);
+        code ec{};
+        acceptor_.open(io::tcp::of(local), ec);
         BOOST_REQUIRE(!ec);
-        acceptor_.set_option(asio::reuse_address(true), ec);
+        acceptor_.set_option(io::reuse_address(true), ec);
         BOOST_REQUIRE(!ec);
         acceptor_.bind(local, ec);
         BOOST_REQUIRE(!ec);
-        acceptor_.listen(1, ec);
+        acceptor_.listen(ec);
         BOOST_REQUIRE(!ec);
 
         network::socket::parameters params
@@ -87,7 +87,7 @@ struct rpc_loopback_fixture
 
     ~rpc_loopback_fixture() NOEXCEPT
     {
-        boost_code ignore{};
+        code ignore{};
         client.close(ignore);
         server->stop();
         pool_.stop();
@@ -96,16 +96,16 @@ struct rpc_loopback_fixture
 
     void send(const std::string& text) NOEXCEPT
     {
-        boost_code ec{};
-        boost::asio::write(client, boost::asio::buffer(text), ec);
+        code ec{};
+        io::write(client, io::buffer(text), ec);
         BOOST_REQUIRE(!ec);
     }
 
     std::string receive_line() NOEXCEPT
     {
-        boost_code ec{};
+        code ec{};
         std::string line{};
-        boost::asio::read_until(client, boost::asio::dynamic_buffer(line), '\n', ec);
+        io::read_until(client, line, "\n", ec);
         BOOST_REQUIRE(!ec);
         return line;
     }
@@ -114,12 +114,12 @@ struct rpc_loopback_fixture
 
 private:
     threadpool pool_;
-    asio::strand strand_;
-    asio::acceptor acceptor_;
-    asio::context client_service_{};
+    io::strand strand_;
+    io::acceptor acceptor_;
+    io::context client_service_{};
 
 public:
-    asio::socket client;
+    io::socket client;
     network::socket::ptr server{};
 };
 
@@ -229,8 +229,8 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__peer_close__peer_disconnect, rpc_loopb
     const auto result = rpc_make_promise();
     server->rpc_read(buffer, request, rpc_complete(result));
 
-    boost_code ignore{};
-    client.shutdown(asio::socket::shutdown_send, ignore);
+    code ignore{};
+    client.shutdown(io::socket::shutdown_type::send, ignore);
     BOOST_REQUIRE_EQUAL(rpc_await(result), error::peer_disconnect);
 }
 
@@ -284,7 +284,7 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__notification__newline_terminated_jso
 
 BOOST_FIXTURE_TEST_CASE(socket__rpc_notify__peer_closed__failure, rpc_loopback_fixture)
 {
-    boost_code ignore{};
+    code ignore{};
     client.close(ignore);
 
     rpc::request notification{};
@@ -298,7 +298,7 @@ BOOST_FIXTURE_TEST_CASE(socket__body_write__empty_file__success, rpc_directory_f
 {
     BOOST_REQUIRE(test::create(TEST_PATH));
 
-    boost_code ec{};
+    code ec{};
     http::file_value file{};
     BOOST_REQUIRE(file.open_read(TEST_PATH));
 
@@ -368,7 +368,7 @@ struct rpc_channel_fixture
     {
         const auto self = channel;
         const auto started = rpc_make_promise();
-        boost::asio::post(channel->strand(), [=]() NOEXCEPT
+        io::post(channel->strand(), [=]() NOEXCEPT
         {
             self->subscribe<echo_interface::echo>([=](const code& ec, echo_interface::echo, std::string text) NOEXCEPT
             {
@@ -458,8 +458,8 @@ BOOST_FIXTURE_TEST_CASE(channel_rpc__receive__peer_close__peer_disconnect, rpc_c
 {
     start(ignore_echo);
 
-    boost_code ignore{};
-    client.shutdown(asio::socket::shutdown_send, ignore);
+    code ignore{};
+    client.shutdown(io::socket::shutdown_type::send, ignore);
     BOOST_REQUIRE_EQUAL(rpc_await(stopped), error::peer_disconnect);
 }
 
@@ -496,8 +496,8 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__zmtp_command_within_message__unexpecte
 
 BOOST_FIXTURE_TEST_CASE(socket__rpc_read__zmtp_peer_closed__peer_disconnect, puller_fixture)
 {
-    boost_code ignore{};
-    peer.shutdown(peer_socket::shutdown_send, ignore);
+    code ignore{};
+    peer.shutdown(peer_socket::shutdown_type::send, ignore);
 
     rpc::request request{};
     BOOST_REQUIRE_EQUAL(read(request), error::peer_disconnect);
