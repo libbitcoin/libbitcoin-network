@@ -1893,7 +1893,7 @@ BC_AUTO_TEST_CASE(error_t__code__bad_close_payload__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "bad close payload");
 }
 
-// boost json error
+// json error
 
 BC_AUTO_TEST_CASE(error_t__code__syntax__true_expected_message)
 {

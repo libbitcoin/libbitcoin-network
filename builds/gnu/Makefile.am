@@ -626,16 +626,13 @@ check_PROGRAMS = test/libbitcoin-network-test
 test_libbitcoin_network_test_CPPFLAGS = \
     -I${top_builddir}/test \
     -I${srcdir}/../../test \
-    ${boost_BUILD_CPPFLAGS} \
     ${src_libbitcoin_network_la_CPPFLAGS}
 
 test_libbitcoin_network_test_LDFLAGS = \
     ${mingw_program_LDFLAGS} \
-    ${boost_LDFLAGS} \
     ${src_libbitcoin_network_la_LDFLAGS}
 
 test_libbitcoin_network_test_LDADD = \
-    ${boost_LIBS} \
     ${src_libbitcoin_network_la_LIBS} \
     ${src_libbitcoin_network_la_LIBADD}
 

@@ -358,7 +358,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
     const auto ec5 = instance.notify(
     {
         // success � duplicate keys are allowed (real JSON input)
-        // Boost.JSON parser resolves duplicates using last-writer-wins,
+        // The json parser resolves duplicates using last-writer-wins,
         // before object_t conversion occurs, so map never sees duplicates.
         // Test construction uses initializer_list -> first-writer-wins.
         .method = "all_required",

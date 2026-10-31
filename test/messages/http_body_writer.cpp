@@ -129,8 +129,6 @@ BC_FIXTURE_TEST_SUITE(variant_body_writer_file_body_tests, test::directory_setup
 
 BC_AUTO_TEST_CASE(http_body_writer__to_writer__file__constructs_file_writer)
 {
-    // In dubug builds boost asserts that the file is open.
-    // BC_ASSERT(body_.file_.is_open());
     code ec{};
     file_body::value_type file{};
     BC_REQUIRE(file.open_write(TEST_PATH));
