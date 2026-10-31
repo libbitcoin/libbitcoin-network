@@ -248,6 +248,7 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
         CASE_REQUEST_TO_MODEL(options, request, model);
         CASE_REQUEST_TO_MODEL(connect, request, model);
         CASE_REQUEST_TO_MODEL(websocket, request, model);
+        CASE_REQUEST_TO_MODEL(stream, request, model);
 
         default:
         CASE_REQUEST_TO_MODEL(unknown, request, model);
@@ -454,6 +455,13 @@ std::string channel_http::log_message(const request& request,
         const std::string size = serialize(bytes);
         return scheme + " (" + size + ") [" + endpoint().to_string() + "] " +
             std::string(request.target());
+    }
+
+    if (downgraded())
+    {
+        const std::string scheme = secure() ? "tls" : "tcp";
+        const std::string size = serialize(bytes);
+        return scheme + " (" + size + ") [" + endpoint().to_string() + "]";
     }
 
     const std::string scheme = secure() ? "https" : "http";

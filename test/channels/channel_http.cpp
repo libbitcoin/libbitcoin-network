@@ -951,6 +951,11 @@ struct http_channel_fixture
                 if (!ec) respond(self, *request);
             });
 
+            self->subscribe<method::stream>([=](const code& ec, const method::stream::cptr& request) NOEXCEPT
+            {
+                if (!ec) respond(self, *request);
+            });
+
             self->resume();
             started->set_value(error::success);
         });

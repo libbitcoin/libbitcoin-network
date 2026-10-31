@@ -1091,7 +1091,7 @@ BC_FIXTURE_TEST_CASE(proxy__read_http__json_rpc_stream__downgraded, loopback_fix
     BC_REQUIRE_EQUAL(read.get(), error::success);
     BC_REQUIRE(channel->detected());
     BC_REQUIRE(channel->downgraded());
-    BC_REQUIRE_EQUAL(std::string{ http_request.method_string() }, "stream");
+    BC_REQUIRE(http_request.method() == http::verb::stream);
     BC_REQUIRE_EQUAL(http_request.body().get<rpc::request>().message.method, "a");
 }
 
@@ -1108,7 +1108,7 @@ BC_FIXTURE_TEST_CASE(proxy__read_http__downgraded_empty_body__rpc_request, loopb
 
     read_http(read2);
     BC_REQUIRE_EQUAL(read2.get(), error::success);
-    BC_REQUIRE_EQUAL(std::string{ http_request.method_string() }, "stream");
+    BC_REQUIRE(http_request.method() == http::verb::stream);
     BC_REQUIRE_EQUAL(http_request.body().get<rpc::request>().message.method, "b");
 }
 

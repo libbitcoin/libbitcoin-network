@@ -34,6 +34,7 @@ BC_AUTO_TEST_CASE(method__static_method__always__equals_verb)
     BC_REQUIRE(connect::method == http::verb::connect);
     BC_REQUIRE(unknown::method == http::verb::unknown);
     BC_REQUIRE(websocket::method == http::verb::websocket);
+    BC_REQUIRE(stream::method == http::verb::stream);
 }
 
 BC_AUTO_TEST_SUITE_END()

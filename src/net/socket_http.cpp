@@ -391,7 +391,6 @@ void socket::handle_http_read_header(const code& ec, size_t size,
         return;
     }
 
-    // Dispatch of the unknown verb is reserved for websocket.
     if (!ec && parser->get().method() == http::verb::unknown)
     {
         handler(error::bad_method, size);

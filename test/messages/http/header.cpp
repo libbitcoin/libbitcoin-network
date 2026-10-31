@@ -34,6 +34,7 @@ BC_AUTO_TEST_CASE(header__to_verb__tokens__expected)
     BC_REQUIRE_EQUAL(to_string(verb::post), "POST");
     BC_REQUIRE(to_string(verb::unknown).empty());
     BC_REQUIRE(to_string(verb::websocket).empty());
+    BC_REQUIRE(to_string(verb::stream).empty());
 }
 
 BC_AUTO_TEST_CASE(header__to_status__codes__expected)

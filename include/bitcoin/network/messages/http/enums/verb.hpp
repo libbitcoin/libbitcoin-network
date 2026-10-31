@@ -25,8 +25,9 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
-/// Request methods (rfc9110 and registered extensions), and websocket, which
-/// tags a message received over an upgraded connection.
+/// Request methods (rfc9110 and registered extensions), and websocket and
+/// stream, which tag a message received over an upgraded or downgraded
+/// connection.
 enum class verb : uint8_t
 {
     unknown,
@@ -63,13 +64,14 @@ enum class verb : uint8_t
     mkcalendar,
     link,
     unlink,
-    websocket
+    websocket,
+    stream
 };
 
 /// The verb of the method token (case sensitive), or unknown.
 BCT_API verb to_verb(const std::string_view& method) NOEXCEPT;
 
-/// The method token of the verb, empty for unknown and websocket.
+/// The method token of the verb, empty for unknown, websocket and stream.
 BCT_API std::string_view to_string(verb method) NOEXCEPT;
 
 } // namespace http
