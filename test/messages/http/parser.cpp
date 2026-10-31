@@ -223,6 +223,66 @@ BC_AUTO_TEST_CASE(http_parser__put__bad_status__expected)
     BC_REQUIRE(feed(instance, "HTTP/1.1 20 OK\r\n\r\n", rest) == http_error_t::bad_status);
 }
 
+// body_parser
+
+BC_AUTO_TEST_CASE(http_parser__body_parser__streamed_split_rpc__need_more_then_done)
+{
+    const std::string_view first{ R"({"jsonrpc":"2.0","id":1,)" };
+    const std::string_view second{ R"("method":"x","params":[]})" };
+    request value{};
+    value.body() = network::rpc::request{};
+    body_parser<true, body> instance{ value, true };
+    BC_REQUIRE(instance.is_header_done());
+
+    code ec{};
+    BC_REQUIRE_EQUAL(instance.put(io::const_buffer{ first.data(), first.size() }, ec), first.size());
+    BC_REQUIRE(ec == http_error_t::need_more);
+    BC_REQUIRE(!instance.is_done());
+    BC_REQUIRE_EQUAL(instance.put(io::const_buffer{ second.data(), second.size() }, ec), second.size());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE_EQUAL(value.body().get<network::rpc::request>().message.method, "x");
+}
+
+BC_AUTO_TEST_CASE(http_parser__body_parser__framed_incomplete_rpc__json_incomplete)
+{
+    const std::string_view text{ R"({"id":1)" };
+    request value{};
+    value.body() = network::rpc::request{};
+    body_parser<true, body> instance{ value, false };
+
+    code ec{};
+    BC_REQUIRE_EQUAL(instance.put(io::const_buffer{ text.data(), text.size() }, ec), text.size());
+    BC_REQUIRE(ec == to_json_code(json_error_t::json_incomplete));
+    BC_REQUIRE(!instance.is_done());
+}
+
+BC_AUTO_TEST_CASE(http_parser__body_parser__over_limit__body_limit)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":1,"method":"x","params":[]})" };
+    request value{};
+    value.body() = network::rpc::request{};
+    body_parser<true, body> instance{ value, true };
+    instance.body_limit(4);
+
+    code ec{};
+    instance.put(io::const_buffer{ text.data(), text.size() }, ec);
+    BC_REQUIRE(ec == http_error_t::body_limit);
+    BC_REQUIRE(!instance.is_done());
+}
+
+BC_AUTO_TEST_CASE(http_parser__body_parser__put_eof__success_not_done)
+{
+    request value{};
+    value.body() = network::rpc::request{};
+    body_parser<true, body> instance{ value, true };
+
+    auto ec = to_http_code(http_error_t::end_of_stream);
+    instance.put_eof(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!instance.is_done());
+}
+
 // serializer
 
 BC_AUTO_TEST_CASE(http_parser__serializer__chunked__round_trip)
@@ -262,6 +322,42 @@ BC_AUTO_TEST_CASE(http_parser__serializer__content_length__raw_body)
             wire.append(static_cast<const char*>(buffer.data()), buffer.size());
 
     BC_REQUIRE_EQUAL(wire, "PUT /a HTTP/1.1\r\nContent-Length: 3\r\n\r\nabc");
+}
+
+// body_serializer
+
+BC_AUTO_TEST_CASE(http_parser__body_serializer__string__body_only)
+{
+    message<false, string_body> out{ status::ok, version_1_1 };
+    out.set(field::server, "test");
+    out.body() = "payload";
+
+    body_serializer<false, string_body> instance{ out };
+    std::string wire{};
+    code ec{};
+    while (!instance.is_done())
+        for (const auto& buffer: instance.next(ec))
+            wire.append(static_cast<const char*>(buffer.data()), buffer.size());
+
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(wire, "payload");
+    BC_REQUIRE(instance.next(ec).empty());
+}
+
+BC_AUTO_TEST_CASE(http_parser__body_serializer__data__binary)
+{
+    response out{};
+    out.body() = chunk_body::value_type{};
+    const body_serializer<false, body> instance{ out };
+    BC_REQUIRE(instance.binary());
+}
+
+BC_AUTO_TEST_CASE(http_parser__body_serializer__string__text)
+{
+    response out{};
+    out.body() = string_body::value_type{};
+    const body_serializer<false, body> instance{ out };
+    BC_REQUIRE(!instance.binary());
 }
 
 BC_AUTO_TEST_CASE(http_parser__chunk_header__sizes__lower_hex)

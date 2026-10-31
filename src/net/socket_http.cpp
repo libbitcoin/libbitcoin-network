@@ -196,16 +196,18 @@ void socket::handle_http_write(const code& ec, size_t size,
     handler(ec, size);
 }
 
-// HTTP (parse).
+// Codec (parse).
 // ----------------------------------------------------------------------------
 // The buffered bytes are parsed before reading more. The header parse returns
 // once the header is complete, the some parse once it progresses, and the
 // full parse once the message is complete. A body reader may pause any parse
-// (need_buffer), which is returned to the caller.
+// (need_buffer), which is returned to the caller. A websocket reads each
+// message whole, and other transports read the bytes available.
 
 // private
+template <class Parser>
 void socket::do_parse(const ref<http::flat_buffer>& buffer,
-    const http_parser_ptr& parser, parse_mode mode, size_t total,
+    const std::shared_ptr<Parser>& parser, parse_mode mode, size_t total,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -223,8 +225,8 @@ void socket::do_parse(const ref<http::flat_buffer>& buffer,
 
         if (ec)
         {
-            const auto code = error::http_to_error_code(ec);
-            if (code == error::unknown) logx("http-parse", ec);
+            const auto code = error::rpc_to_error_code(ec);
+            if (code == error::unknown) logx("parse", ec);
             handler(code, total);
             return;
         }
@@ -241,6 +243,15 @@ void socket::do_parse(const ref<http::flat_buffer>& buffer,
             break;
     }
 
+    if (websocket())
+    {
+        async_read(in,
+            std::bind(&socket::handle_parse<Parser>,
+                shared_from_this(), _1, _2, buffer, parser, mode, total,
+                handler));
+        return;
+    }
+
     // Read into available capacity, growing by up to the header limit.
     const auto limit = floored_subtract(in.max_size(), in.size());
     const auto size = std::min(limit, std::max(in.capacity() - in.size(),
@@ -253,15 +264,17 @@ void socket::do_parse(const ref<http::flat_buffer>& buffer,
     }
 
     async_read_some(in.prepare(size),
-        std::bind(&socket::handle_parse,
+        std::bind(&socket::handle_parse<Parser>,
             shared_from_this(), _1, _2, buffer, parser, mode, total,
             handler));
 }
 
 // private
+template <class Parser>
 void socket::handle_parse(const code& ec, size_t size,
-    const ref<http::flat_buffer>& buffer, const http_parser_ptr& parser,
-    parse_mode mode, size_t total, const count_handler& handler) NOEXCEPT
+    const ref<http::flat_buffer>& buffer,
+    const std::shared_ptr<Parser>& parser, parse_mode mode, size_t total,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -270,7 +283,11 @@ void socket::handle_parse(const code& ec, size_t size,
     {
         code eof{};
         parser->put_eof(eof);
-        handler(error::http_to_error_code(eof), total);
+        if (eof)
+            handler(error::http_to_error_code(eof), total);
+        else
+            handler(parser->is_done() ? error::success : ec, total);
+
         return;
     }
 
@@ -280,16 +297,21 @@ void socket::handle_parse(const code& ec, size_t size,
         return;
     }
 
-    buffer.get().commit(size);
+    if (!websocket())
+        buffer.get().commit(size);
+
     do_parse(buffer, parser, mode, total, handler);
 }
 
-// HTTP (serialize).
+// Codec (serialize).
 // ----------------------------------------------------------------------------
-// Each set of buffers is written in turn.
+// Each set of buffers is written in turn. A websocket writes each buffer as a
+// frame of one message, which the last buffer closes.
 
 // private
-void socket::do_serialize(const serialize_state::ptr& out, size_t total,
+template <class Serializer>
+void socket::do_serialize(
+    const std::shared_ptr<serialize_state<Serializer>>& out, size_t total,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -301,7 +323,7 @@ void socket::do_serialize(const serialize_state::ptr& out, size_t total,
         if (ec)
         {
             const auto code = error::http_to_error_code(ec);
-            if (code == error::unknown) logx("http-serialize", ec);
+            if (code == error::unknown) logx("serialize", ec);
             handler(code, total);
             return;
         }
@@ -316,14 +338,25 @@ void socket::do_serialize(const serialize_state::ptr& out, size_t total,
         }
     }
 
+    if (websocket())
+    {
+        BC_ASSERT(is_one(out->buffers.size()));
+        ws_send_data(out->buffers.front(), out->serializer.binary(),
+            out->serializer.is_done(),
+            std::bind(&socket::handle_serialize<Serializer>,
+                shared_from_this(), _1, _2, out, total, handler));
+        return;
+    }
+
     VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
-        out->buffers, std::bind(&socket::handle_serialize,
+        out->buffers, std::bind(&socket::handle_serialize<Serializer>,
             shared_from_this(), _1, _2, out, total, handler));
 }
 
 // private
+template <class Serializer>
 void socket::handle_serialize(const code& ec, size_t size,
-    const serialize_state::ptr& out, size_t total,
+    const std::shared_ptr<serialize_state<Serializer>>& out, size_t total,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -337,13 +370,29 @@ void socket::handle_serialize(const code& ec, size_t size,
 
     if (ec)
     {
-        if (ec == error::unknown) logx("http-write", ec);
+        if (ec == error::unknown) logx("write", ec);
         handler(ec, total);
         return;
     }
 
     do_serialize(out, total, handler);
 }
+
+template void socket::do_parse<socket::http_parser>(
+    const ref<http::flat_buffer>&, const http_parser_ptr&, parse_mode, size_t,
+    const count_handler&) NOEXCEPT;
+template void socket::do_parse<socket::body_parser>(
+    const ref<http::flat_buffer>&, const body_parser_ptr&, parse_mode, size_t,
+    const count_handler&) NOEXCEPT;
+template void socket::do_serialize<socket::http_serializer>(
+    const std::shared_ptr<serialize_state<http_serializer>>&, size_t,
+    const count_handler&) NOEXCEPT;
+template void socket::do_serialize<socket::body_serializer>(
+    const std::shared_ptr<serialize_state<body_serializer>>&, size_t,
+    const count_handler&) NOEXCEPT;
+template void socket::do_serialize<socket::notify_serializer>(
+    const std::shared_ptr<serialize_state<notify_serializer>>&, size_t,
+    const count_handler&) NOEXCEPT;
 
 // HTTP (progressive read).
 // ----------------------------------------------------------------------------

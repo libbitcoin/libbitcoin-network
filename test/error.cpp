@@ -2167,15 +2167,6 @@ BC_AUTO_TEST_CASE(error_t__code__json_unknown__true_expected_message)
 
 // query string parse error
 
-BC_AUTO_TEST_CASE(error_t__code__message_overflow__true_expected_message)
-{
-    constexpr auto value = error::message_overflow;
-    const auto ec = code(value);
-    BC_REQUIRE(ec);
-    BC_REQUIRE(ec == value);
-    BC_REQUIRE_EQUAL(ec.message(), "message overflow");
-}
-
 BC_AUTO_TEST_CASE(error_t__code__undefined_type__true_expected_message)
 {
     constexpr auto value = error::undefined_type;

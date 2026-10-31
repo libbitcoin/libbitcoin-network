@@ -103,9 +103,62 @@ bool CLASS::is_done() const NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::binary() const NOEXCEPT
+{
+    return writer_.binary();
+}
+
+TEMPLATE
 typename CLASS::message_type& CLASS::get() NOEXCEPT
 {
     return message_;
+}
+
+#undef CLASS
+#undef TEMPLATE
+
+#define TEMPLATE template <bool IsRequest, class Body>
+#define CLASS body_serializer<IsRequest, Body>
+
+TEMPLATE
+CLASS::body_serializer(message_type& message) NOEXCEPT
+  : writer_(message.base(), message.body())
+{
+}
+
+TEMPLATE
+const_buffers CLASS::next(code& ec) NOEXCEPT
+{
+    ec.clear();
+    if (done_)
+        return {};
+
+    if (!initialized_)
+    {
+        initialized_ = true;
+        writer_.init(ec);
+        if (ec)
+            return {};
+    }
+
+    const auto out = writer_.get(ec);
+    if (ec)
+        return {};
+
+    done_ = !out.has_value() || !out.value().second;
+    return { out.has_value() ? out.value().first : io::const_buffer{} };
+}
+
+TEMPLATE
+bool CLASS::is_done() const NOEXCEPT
+{
+    return done_;
+}
+
+TEMPLATE
+bool CLASS::binary() const NOEXCEPT
+{
+    return writer_.binary();
 }
 
 BC_POP_WARNING()

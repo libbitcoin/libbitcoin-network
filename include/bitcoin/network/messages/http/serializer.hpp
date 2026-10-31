@@ -67,6 +67,9 @@ public:
     /// The message has been yielded.
     bool is_done() const NOEXCEPT;
 
+    /// The body is binary (not text).
+    bool binary() const NOEXCEPT;
+
     /// The serialized message.
     message_type& get() NOEXCEPT;
 
@@ -84,6 +87,36 @@ private:
     state state_{ state::header };
     std::string header_{};
     std::string prefix_{};
+};
+
+/// Not thread safe, non-virtual.
+/// Incrementally serialize a headerless message body, driving the body writer
+/// of the message body. Each next() yields a buffer valid until the following
+/// next() call.
+template <bool IsRequest, class Body>
+class body_serializer
+{
+public:
+    using message_type = message<IsRequest, Body>;
+    using writer_type = typename Body::writer;
+
+    DELETE_COPY_MOVE(body_serializer);
+
+    body_serializer(message_type& message) NOEXCEPT;
+
+    /// The next buffers to write, empty once done.
+    const_buffers next(code& ec) NOEXCEPT;
+
+    /// The body has been yielded.
+    bool is_done() const NOEXCEPT;
+
+    /// The body is binary (not text).
+    bool binary() const NOEXCEPT;
+
+private:
+    writer_type writer_;
+    bool initialized_{};
+    bool done_{};
 };
 
 } // namespace http

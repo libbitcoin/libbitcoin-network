@@ -444,6 +444,82 @@ void CLASS::finish(code& ec) NOEXCEPT
 #undef CLASS
 #undef TEMPLATE
 
+#define TEMPLATE template <bool IsRequest, class Body>
+#define CLASS body_parser<IsRequest, Body>
+
+TEMPLATE
+CLASS::body_parser(message_type& message, bool streamed) NOEXCEPT
+  : reader_(message.base(), message.body(), streamed)
+{
+}
+
+TEMPLATE
+void CLASS::body_limit(size_t value) NOEXCEPT
+{
+    body_limit_ = value;
+}
+
+TEMPLATE
+size_t CLASS::put(const io::const_buffer& buffer, code& ec) NOEXCEPT
+{
+    using namespace system;
+    using namespace network::error;
+
+    ec.clear();
+    if (done_)
+        return {};
+
+    if (!initialized_)
+    {
+        initialized_ = true;
+        reader_.init({}, ec);
+        if (ec)
+            return {};
+    }
+
+    const auto used = reader_.put(buffer, ec);
+    total_ = ceilinged_add(total_, used);
+    if (!is_zero(body_limit_) && total_ > body_limit_)
+    {
+        ec = to_http_code(http_error_t::body_limit);
+        return used;
+    }
+
+    if (ec)
+        return used;
+
+    if (is_zero(used))
+    {
+        ec = to_http_code(http_error_t::need_more);
+        return {};
+    }
+
+    reader_.finish(ec);
+    done_ = !ec;
+    return used;
+}
+
+TEMPLATE
+void CLASS::put_eof(code& ec) NOEXCEPT
+{
+    ec.clear();
+}
+
+TEMPLATE
+bool CLASS::is_header_done() const NOEXCEPT
+{
+    return true;
+}
+
+TEMPLATE
+bool CLASS::is_done() const NOEXCEPT
+{
+    return done_;
+}
+
+#undef CLASS
+#undef TEMPLATE
+
 } // namespace http
 } // namespace network
 } // namespace libbitcoin

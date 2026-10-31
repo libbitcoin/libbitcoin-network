@@ -310,7 +310,6 @@ enum error_t : uint8_t
     json_unknown,
 
     // query string parse error
-    message_overflow,
     undefined_type,
     unexpected_method,
     unexpected_type,

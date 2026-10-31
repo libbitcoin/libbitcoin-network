@@ -158,6 +158,46 @@ private:
     bool received_{};
 };
 
+/// Not thread safe, non-virtual.
+/// Incrementally parse a headerless message body (referenced) from received
+/// bytes, driving the body reader of the message body. A streamed body is done
+/// once its reader finishes, otherwise the received bytes are the whole body.
+template <bool IsRequest, class Body>
+class body_parser
+{
+public:
+    using message_type = message<IsRequest, Body>;
+    using reader_type = typename Body::reader;
+
+    DELETE_COPY_MOVE(body_parser);
+
+    /// The body value may be preselected on the message before parsing.
+    body_parser(message_type& message, bool streamed) NOEXCEPT;
+
+    /// A limit of zero is unlimited (the default).
+    void body_limit(size_t value) NOEXCEPT;
+
+    /// Consume received bytes, returning the number consumed. Sets need_more
+    /// if not done and the remaining bytes are insufficient to proceed.
+    size_t put(const io::const_buffer& buffer, code& ec) NOEXCEPT;
+
+    /// The stream ended, which does not complete a headerless body.
+    void put_eof(code& ec) NOEXCEPT;
+
+    /// There is no header.
+    bool is_header_done() const NOEXCEPT;
+
+    /// The body has been parsed.
+    bool is_done() const NOEXCEPT;
+
+private:
+    reader_type reader_;
+    size_t body_limit_{};
+    size_t total_{};
+    bool initialized_{};
+    bool done_{};
+};
+
 } // namespace http
 } // namespace network
 } // namespace libbitcoin

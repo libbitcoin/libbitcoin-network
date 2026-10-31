@@ -540,7 +540,7 @@ void socket::async_write_http(http::response&& response,
     }
     else
     {
-        const auto out = emplace_shared<serialize_state>(
+        const auto out = emplace_shared<serialize_state<http_serializer>>(
             std::move(response));
 
         do_serialize(out, zero,

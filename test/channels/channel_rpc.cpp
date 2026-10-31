@@ -211,7 +211,7 @@ BC_FIXTURE_TEST_CASE(socket__rpc_read__buffer_smaller_than_request__expected, rp
     BC_REQUIRE_EQUAL(request.message.method, "echo");
 }
 
-BC_FIXTURE_TEST_CASE(socket__rpc_read__exceeds_maximum__message_overflow, rpc_small_fixture)
+BC_FIXTURE_TEST_CASE(socket__rpc_read__exceeds_maximum__body_limit, rpc_small_fixture)
 {
     http::flat_buffer buffer{ 4096 };
     rpc::request request{};
@@ -219,7 +219,7 @@ BC_FIXTURE_TEST_CASE(socket__rpc_read__exceeds_maximum__message_overflow, rpc_sm
     server->rpc_read(buffer, request, rpc_complete(result));
 
     send(R"({"jsonrpc":"2.0","id":1,"method":"echo","params":["0123456789abcdef)");
-    BC_REQUIRE_EQUAL(rpc_await(result), error::message_overflow);
+    BC_REQUIRE_EQUAL(rpc_await(result), error::body_limit);
 }
 
 BC_FIXTURE_TEST_CASE(socket__rpc_read__peer_close__peer_disconnect, rpc_loopback_fixture)

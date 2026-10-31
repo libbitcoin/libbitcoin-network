@@ -303,7 +303,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { json_unknown, "json error" },
 
     // query string parse error
-    { message_overflow, "message overflow" },
     { undefined_type, "undefined type" },
     { unexpected_method, "unexpected method" },
     { unexpected_type, "unexpected type" },

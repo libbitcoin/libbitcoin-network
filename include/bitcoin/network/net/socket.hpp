@@ -373,63 +373,25 @@ private:
         size_t total{};
     };
 
-    struct read_state
-    {
-        typedef std::shared_ptr<read_state> ptr;
+    using body_parser = http::body_parser<true, http::body>;
+    using body_parser_ptr = std::shared_ptr<body_parser>;
+    using http_serializer = http::serializer<false, http::body>;
+    using body_serializer = http::body_serializer<false, http::body>;
+    using notify_serializer = http::body_serializer<true, http::body>;
 
-        read_state(http::request& request, http::flat_buffer& buffer,
-            bool streamed) NOEXCEPT
-          : value{ request }, reader{ value.base(), value.body(), streamed },
-            buffer{ buffer }
-        {
-        }
-
-        http::request& value;
-        http::body::reader reader;
-        http::flat_buffer& buffer;
-    };
-
-    struct write_state
-    {
-        typedef std::shared_ptr<write_state> ptr;
-        using out_buffer = http::body::writer::out_buffer;
-
-        write_state(http::response&& response) NOEXCEPT
-          : value{ std::move(response) }, writer{ value.base(), value.body() }
-        {
-        }
-
-        bool more{ true };
-        http::response value;
-        http::body::writer writer;
-    };
-
-    struct notify_state
-    {
-        typedef std::shared_ptr<notify_state> ptr;
-        using out_buffer = http::body::writer::out_buffer;
-
-        notify_state(http::request&& request) NOEXCEPT
-          : value{ std::move(request) }, writer{ value.base(), value.body() }
-        {
-        }
-
-        bool more{ true };
-        http::request value;
-        http::body::writer writer;
-    };
-
+    template <class Serializer>
     struct serialize_state
     {
         typedef std::shared_ptr<serialize_state> ptr;
+        using message_type = typename Serializer::message_type;
 
-        serialize_state(http::response&& response) NOEXCEPT
-          : value{ std::move(response) }, serializer{ value }
+        serialize_state(message_type&& message) NOEXCEPT
+          : value{ std::move(message) }, serializer{ value }
         {
         }
 
-        http::response value;
-        http::serializer<false, http::body> serializer;
+        message_type value;
+        Serializer serializer;
         http::const_buffers buffers{};
     };
 
@@ -559,12 +521,9 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // body
-    void do_body_read(code ec, size_t total,
-        const read_state::ptr& in, const count_handler& handler) NOEXCEPT;
-    void do_body_write(code ec, size_t total,
-        const write_state::ptr& out, const count_handler& handler) NOEXCEPT;
-    void do_body_notify(code ec, size_t total,
-        const notify_state::ptr& out, const count_handler& handler) NOEXCEPT;
+    template <class Serializer>
+    void body_send(typename Serializer::message_type&& message,
+        count_handler&& handler) NOEXCEPT;
 
     // detect (first read)
     void do_detect(const ref<http::flat_buffer>& buffer,
@@ -577,12 +536,14 @@ private:
     void do_http_write(const http::response_ptr& response,
         const count_handler& handler) NOEXCEPT;
 
-    // http (codec)
+    // codec
+    template <class Parser>
     void do_parse(const ref<http::flat_buffer>& buffer,
-        const http_parser_ptr& parser, parse_mode mode, size_t total,
+        const std::shared_ptr<Parser>& parser, parse_mode mode, size_t total,
         const count_handler& handler) NOEXCEPT;
-    void do_serialize(const serialize_state::ptr& out, size_t total,
-        const count_handler& handler) NOEXCEPT;
+    template <class Serializer>
+    void do_serialize(const std::shared_ptr<serialize_state<Serializer>>& out,
+        size_t total, const count_handler& handler) NOEXCEPT;
 
     // http (progressive)
     void do_http_read_header(ref<http::flat_buffer> buffer,
@@ -665,12 +626,8 @@ private:
         const zmtp_read_state::ptr& in, const count_handler& handler) NOEXCEPT;
 
     // body
-    void handle_body_read(const code& ec, size_t size, size_t total,
-        const read_state::ptr& in, const count_handler& handler) NOEXCEPT;
-    void handle_body_write(const code& ec, size_t size, size_t total,
-        const write_state::ptr& out, const count_handler& handler) NOEXCEPT;
-    void handle_body_notify(const code& ec, size_t size, size_t total,
-        const notify_state::ptr& out, const count_handler& handler) NOEXCEPT;
+    void handle_body_read(const code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
 
     // detect
     void handle_detect(const code& ec, size_t size,
@@ -684,12 +641,15 @@ private:
     void handle_http_write(const code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
-    // http (codec)
+    // codec
+    template <class Parser>
     void handle_parse(const code& ec, size_t size,
-        const ref<http::flat_buffer>& buffer, const http_parser_ptr& parser,
-        parse_mode mode, size_t total, const count_handler& handler) NOEXCEPT;
+        const ref<http::flat_buffer>& buffer,
+        const std::shared_ptr<Parser>& parser, parse_mode mode, size_t total,
+        const count_handler& handler) NOEXCEPT;
+    template <class Serializer>
     void handle_serialize(const code& ec, size_t size,
-        const serialize_state::ptr& out, size_t total,
+        const std::shared_ptr<serialize_state<Serializer>>& out, size_t total,
         const count_handler& handler) NOEXCEPT;
 
     // http (progressive)
