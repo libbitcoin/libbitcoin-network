@@ -377,7 +377,6 @@ void protocol_http::add_common_headers(fields& fields,
         fields.set(field::server, options_.server);
 
     // http 1.1 assumes keep-alive if not specified, http 1.0 does not.
-    // Beast parser defaults keep-alive to true in http 1.1 requests.
     if (closing || !request.keep_alive())
     {
         fields.set(field::connection, "close");

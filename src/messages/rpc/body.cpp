@@ -59,10 +59,10 @@ constexpr bool is_electrum_terminator(char character) NOEXCEPT
 // Delivery is self-selecting on observed framing. A batched read delivers
 // each message from put by pausing the parse (need_buffer) at the element
 // boundary and re-arming for the next element, uniformly across framings: a
-// beast (http) parse pauses natively, a stream read completes on the pause
+// http parse pauses natively, a stream read completes on the pause
 // with buffer residue carried to the next read; for batched reads finish
 // only validates message-end state. A singleton delivers classically from
-// finish, compatible with one-shot (beast) body reads.
+// finish, compatible with one-shot body reads.
 
 // Convert the parsed model to a request message and validate. Tolerated
 // jrpc violations are reported as lax flags (the channel validates policy).
@@ -142,7 +142,7 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         return terminated_ && (closed_ || (!value_.batch && !opened_));
     };
 
-    // A completed element is re-fed (beast) only with its trailer.
+    // A completed element is re-fed (http parser) only with its trailer.
     const auto completed = started_ && base::reader::done();
 
     // Prologue: consume whitespace and batch delimiters until element start,

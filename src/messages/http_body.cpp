@@ -101,7 +101,7 @@ void body::reader::finish(boost_code& ec) NOEXCEPT
     {
         [&](std::monostate&) NOEXCEPT
         {
-            // Called at beast finish_header and must succeed.
+            // Called at parser finish (without a body) and must succeed.
             ec = {};
         },
         [&](auto& read) NOEXCEPT

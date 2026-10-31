@@ -28,8 +28,7 @@
 // preprocessor   : have <bitcoin/system>
 // boost          : /ssl preprocessor
 // asio           : boost
-// beast          : asio
-// error          : beast
+// error          : asio
 // define         : error
 
 // Other directory common includes are not internally chained.

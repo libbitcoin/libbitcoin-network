@@ -178,7 +178,7 @@ struct http_loopback_fixture
         return response;
     }
 
-    ws::socket upgrade() NOEXCEPT
+    boost::beast::websocket::stream<asio::socket> upgrade() NOEXCEPT
     {
         const auto socket = server;
         const auto buffer = std::make_shared<http::flat_buffer>();
@@ -190,7 +190,7 @@ struct http_loopback_fixture
         });
 
         boost_code ec{};
-        ws::socket websocket{ std::move(client) };
+        boost::beast::websocket::stream<asio::socket> websocket{ std::move(client) };
         websocket.handshake("127.0.0.1", "/", ec);
         BOOST_REQUIRE(!ec);
         BOOST_REQUIRE_EQUAL(http_await(accepted), error::success);
@@ -1071,7 +1071,7 @@ BOOST_FIXTURE_TEST_CASE(channel_http__resume__upgrade__websocket_message_dispatc
     });
 
     boost_code ec{};
-    ws::socket websocket{ std::move(client) };
+    boost::beast::websocket::stream<asio::socket> websocket{ std::move(client) };
     websocket.handshake("127.0.0.1", "/", ec);
     BOOST_REQUIRE(!ec);
 
@@ -1093,7 +1093,7 @@ BOOST_FIXTURE_TEST_CASE(channel_http__notify__websocket__message_sent, http_chan
     });
 
     boost_code ec{};
-    ws::socket websocket{ std::move(client) };
+    boost::beast::websocket::stream<asio::socket> websocket{ std::move(client) };
     websocket.handshake("127.0.0.1", "/", ec);
     BOOST_REQUIRE(!ec);
 
@@ -1112,7 +1112,7 @@ BOOST_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_upgrade__unauthorized
 
     boost_code ec{};
     boost::beast::websocket::response_type response{};
-    ws::socket websocket{ std::move(client) };
+    boost::beast::websocket::stream<asio::socket> websocket{ std::move(client) };
     websocket.handshake(response, "127.0.0.1", "/", ec);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE_EQUAL(response.result_int(), 401u);

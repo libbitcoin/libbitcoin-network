@@ -264,6 +264,9 @@
     <ClCompile Include="..\..\..\..\test\tls\socket.cpp">
       <ObjectFileName>$(IntDir)test_tls_socket.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ws\frame.cpp" />
+    <ClCompile Include="..\..\..\..\test\ws\handshake.cpp" />
+    <ClCompile Include="..\..\..\..\test\ws\reader.cpp" />
     <ClCompile Include="..\..\..\..\test\zmtp\cipher.cpp">
       <ObjectFileName>$(IntDir)test_zmtp_cipher.obj</ObjectFileName>
     </ClCompile>

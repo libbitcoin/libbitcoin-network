@@ -1459,7 +1459,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__not_implemented__true_expected_message)
 ////    BOOST_REQUIRE_EQUAL(ec.message(), "network authentication required");
 ////}
 
-// boost beast error
+// http error
 
 BOOST_AUTO_TEST_CASE(error_t__code__end_of_stream__true_expected_message)
 {
@@ -1704,7 +1704,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__http_unknown__true_expected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "http error");
 }
 
-// boost beast websocket error
+// websocket error
 
 BOOST_AUTO_TEST_CASE(error_t__code__websocket_closed__true_expected_message)
 {
@@ -2444,7 +2444,6 @@ BOOST_AUTO_TEST_CASE(to_error_code__default_code__success)
     BOOST_REQUIRE_EQUAL(error::asio_to_error_code(boost_code{}), error::success);
     BOOST_REQUIRE_EQUAL(error::http_to_error_code(boost_code{}), error::success);
     BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(boost_code{}), error::success);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(boost_code{}), error::success);
     BOOST_REQUIRE_EQUAL(error::json_to_error_code(boost_code{}), error::success);
     BOOST_REQUIRE_EQUAL(error::rpc_to_error_code(boost_code{}), error::success);
 }
@@ -2588,51 +2587,6 @@ BOOST_AUTO_TEST_CASE(ssl_to_error_code__unmapped_alert__tls_alert_unknown)
 BOOST_AUTO_TEST_CASE(ssl_to_error_code__asio_code__asio_mapping)
 {
     BOOST_REQUIRE_EQUAL(error::ssl_to_error_code(error::to_asio_basic_code(error::asio_basic_error_t::connection_reset)), error::peer_disconnect);
-}
-
-BOOST_AUTO_TEST_CASE(ws_to_error_code__beast_codes__expected)
-{
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::closed)), error::websocket_closed);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::buffer_overflow)), error::websocket_buffer_overflow);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::partial_deflate_block)), error::partial_deflate_block);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::message_too_big)), error::message_too_big);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_http_version)), error::bad_http_version);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_method)), error::websocket_bad_method);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_host)), error::no_host);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_connection)), error::no_connection);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_connection_upgrade)), error::no_connection_upgrade);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_upgrade)), error::no_upgrade);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_upgrade_websocket)), error::no_upgrade_websocket);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_sec_key)), error::no_sec_key);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_sec_key)), error::bad_sec_key);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_sec_version)), error::no_sec_version);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_sec_version)), error::bad_sec_version);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::no_sec_accept)), error::no_sec_accept);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_sec_accept)), error::bad_sec_accept);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::upgrade_declined)), error::upgrade_declined);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_opcode)), error::bad_opcode);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_data_frame)), error::bad_data_frame);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_continuation)), error::bad_continuation);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_reserved_bits)), error::bad_reserved_bits);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_control_fragment)), error::bad_control_fragment);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_control_size)), error::bad_control_size);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_unmasked_frame)), error::bad_unmasked_frame);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_masked_frame)), error::bad_masked_frame);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_size)), error::bad_size);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_frame_payload)), error::bad_frame_payload);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_close_code)), error::bad_close_code);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_close_size)), error::bad_close_size);
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(error::ws_error_t::bad_close_payload)), error::bad_close_payload);
-}
-
-BOOST_AUTO_TEST_CASE(ws_to_error_code__unmapped_websocket_code__websocket_unknown)
-{
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_websocket_code(static_cast<error::ws_error_t>(0xff))), error::websocket_unknown);
-}
-
-BOOST_AUTO_TEST_CASE(ws_to_error_code__http_code__http_mapping)
-{
-    BOOST_REQUIRE_EQUAL(error::ws_to_error_code(error::to_http_code(error::http_error_t::bad_target)), error::bad_target);
 }
 
 BOOST_AUTO_TEST_CASE(json_to_error_code__json_codes__expected)

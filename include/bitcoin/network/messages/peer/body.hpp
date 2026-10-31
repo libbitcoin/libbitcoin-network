@@ -31,7 +31,7 @@ namespace network {
 namespace messages {
 namespace peer {
 
-/// boost::beast::http body for bitcoin p2p messages.
+/// http body for bitcoin p2p messages.
 struct BCT_API body
 {
     /// Content passed to/from the reader/writer via request/response.

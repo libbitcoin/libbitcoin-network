@@ -254,8 +254,7 @@ void socket::set_address(const config::address& address) NOEXCEPT
 bool socket::secure() const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    return std::holds_alternative<asio::ssl::socket>(socket_) ||
-        std::holds_alternative<ws::ssl::socket>(socket_);
+    return std::holds_alternative<asio::ssl::socket>(socket_);
 }
 
 bool socket::encrypted() const NOEXCEPT
@@ -281,44 +280,9 @@ bool socket::is_base() const NOEXCEPT
 // ----------------------------------------------------------------------------
 // protected
 
-socket::ws_t socket::get_ws() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    BC_ASSERT(websocket());
-
-    return std::visit(overload
-    {
-        [](asio::socket&) NOEXCEPT -> socket::ws_t
-        {
-            std::terminate();
-        },
-        [](asio::ssl::socket&) NOEXCEPT -> socket::ws_t
-        {
-            std::terminate();
-        },
-        [](ws::socket& value) NOEXCEPT -> socket::ws_t
-        {
-            return std::ref(value);
-        },
-        [](ws::ssl::socket& value) NOEXCEPT -> socket::ws_t
-        {
-            return std::ref(value);
-        },
-        [](p2ps::stream&) NOEXCEPT -> socket::ws_t
-        {
-            std::terminate();
-        },
-        [](zmtp::stream&) NOEXCEPT -> socket::ws_t
-        {
-            std::terminate();
-        }
-    }, socket_);
-}
-
 socket::tcp_t socket::get_tcp() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(!websocket());
 
     return std::visit(overload
     {
@@ -329,14 +293,6 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
         [](asio::ssl::socket& value) NOEXCEPT -> socket::tcp_t
         {
             return std::ref(value);
-        },
-        [](ws::socket&) NOEXCEPT -> socket::tcp_t
-        {
-            std::terminate();
-        },
-        [](ws::ssl::socket&) NOEXCEPT -> socket::tcp_t
-        {
-            std::terminate();
         },
         [](p2ps::stream&) NOEXCEPT -> socket::tcp_t
         {
@@ -359,23 +315,15 @@ asio::socket& socket::get_base() NOEXCEPT
         },
         [](asio::ssl::socket& value) NOEXCEPT -> asio::socket&
         {
-            return boost::beast::get_lowest_layer(value);
-        },
-        [](ws::socket& value) NOEXCEPT -> asio::socket&
-        {
-            return boost::beast::get_lowest_layer(value);
-        },
-        [](ws::ssl::socket& value) NOEXCEPT -> asio::socket&
-        {
-            return boost::beast::get_lowest_layer(value);
+            return value.next_layer();
         },
         [](p2ps::stream& value) NOEXCEPT -> asio::socket&
         {
-            return boost::beast::get_lowest_layer(value);
+            return value.next_layer();
         },
         [](zmtp::stream& value) NOEXCEPT -> asio::socket&
         {
-            return boost::beast::get_lowest_layer(value);
+            return value.next_layer();
         }
     }, socket_);
 }
@@ -394,14 +342,6 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
         [](asio::ssl::socket& value) NOEXCEPT -> asio::ssl::socket&
         {
             return value;
-        },
-        [](ws::socket&) NOEXCEPT -> asio::ssl::socket&
-        {
-            std::terminate();
-        },
-        [](ws::ssl::socket& value) NOEXCEPT -> asio::ssl::socket&
-        {
-            return value.next_layer();
         },
         [](p2ps::stream&) NOEXCEPT -> asio::ssl::socket&
         {
@@ -426,14 +366,6 @@ p2ps::stream& socket::get_p2ps() NOEXCEPT
             std::terminate();
         },
         [](asio::ssl::socket&) NOEXCEPT -> p2ps::stream&
-        {
-            std::terminate();
-        },
-        [](ws::socket&) NOEXCEPT -> p2ps::stream&
-        {
-            std::terminate();
-        },
-        [](ws::ssl::socket&) NOEXCEPT -> p2ps::stream&
         {
             std::terminate();
         },
@@ -463,14 +395,6 @@ zmtp::stream& socket::get_zmtp() NOEXCEPT
         {
             std::terminate();
         },
-        [](ws::socket&) NOEXCEPT -> zmtp::stream&
-        {
-            std::terminate();
-        },
-        [](ws::ssl::socket&) NOEXCEPT -> zmtp::stream&
-        {
-            std::terminate();
-        },
         [](p2ps::stream&) NOEXCEPT -> zmtp::stream&
         {
             std::terminate();
@@ -487,9 +411,8 @@ zmtp::stream& socket::get_zmtp() NOEXCEPT
 // protected
 
 // write message frame (ws, finish closes the message) or unframed fixed
-// size bytes (tcp). Beast applies the binary/text setting only at the start
-// of a message, so it is harmless to pass it on every frame of a
-// multi-frame message (see boost::beast::websocket::stream::binary).
+// size bytes (tcp). The binary/text setting applies only at the start of a
+// message, so it is harmless to pass it on every frame of the message.
 void socket::async_write(const asio::const_buffer& buffer, bool binary,
     bool finish, const count_handler& handler) NOEXCEPT
 {
@@ -499,10 +422,7 @@ void socket::async_write(const asio::const_buffer& buffer, bool binary,
     {
         if (websocket())
         {
-            VARIANT_DISPATCH_METHOD(get_ws(), binary(binary));
-            VARIANT_DISPATCH_METHOD(get_ws(),
-                async_write_some(finish, buffer, std::bind(&socket::handle_async,
-                    shared_from_this(), _1, _2, handler, "async_write")));
+            ws_send_data(buffer, binary, finish, handler);
         }
         else
         {
@@ -518,7 +438,7 @@ void socket::async_write(const asio::const_buffer& buffer, bool binary,
     }
 }
 
-// read ws frame or arbitrary tcp bytes, iterate (up to buffer capacity).
+// read arbitrary tcp bytes, iterate (up to buffer capacity).
 void socket::async_read_some(const asio::mutable_buffer& buffer,
     const count_handler& handler) NOEXCEPT
 {
@@ -528,9 +448,8 @@ void socket::async_read_some(const asio::mutable_buffer& buffer,
     {
         if (websocket())
         {
-            VARIANT_DISPATCH_METHOD(get_ws(),
-                async_read_some(buffer, std::bind(&socket::handle_async,
-                    shared_from_this(), _1, _2, handler, "async_read_some")));
+            // Websockets read messages, use async_read(flat_buffer).
+            handler(error::operation_failed, {});
         }
         else
         {
@@ -558,9 +477,7 @@ void socket::async_read(http::flat_buffer& buffer,
         if (websocket())
         {
             buffer.consume(buffer.size());
-            VARIANT_DISPATCH_METHOD(get_ws(),
-                async_read(buffer, std::bind(&socket::handle_async,
-                    shared_from_this(), _1, _2, handler, "async_read")));
+            do_ws_read_message(std::ref(buffer), handler);
         }
         else
         {
@@ -691,8 +608,7 @@ void socket::handle_async(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = websocket() ? error::ws_to_error_code(ec) :
-        error::asio_to_error_code(ec);
+    const auto code = error::asio_to_error_code(ec);
 
     if (code == error::unknown)
         logx(operation, ec);

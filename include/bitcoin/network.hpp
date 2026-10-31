@@ -16,7 +16,6 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/asio.hpp>
-#include <bitcoin/network/beast.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
@@ -211,6 +210,10 @@
 #include <bitcoin/network/tls/schedule.hpp>
 #include <bitcoin/network/tls/server.hpp>
 #include <bitcoin/network/tls/tls.hpp>
+#include <bitcoin/network/ws/frame.hpp>
+#include <bitcoin/network/ws/handshake.hpp>
+#include <bitcoin/network/ws/reader.hpp>
+#include <bitcoin/network/ws/ws.hpp>
 #include <bitcoin/network/zmtp/cipher.hpp>
 #include <bitcoin/network/zmtp/context.hpp>
 #include <bitcoin/network/zmtp/role.hpp>

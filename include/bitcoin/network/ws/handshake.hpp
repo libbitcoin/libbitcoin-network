@@ -16,37 +16,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_BEAST_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_BEAST_HPP
+#ifndef LIBBITCOIN_NETWORK_WS_HANDSHAKE_HPP
+#define LIBBITCOIN_NETWORK_WS_HANDSHAKE_HPP
 
-#include <bitcoin/network/asio.hpp>
-
-#include <optional>
-
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/ssl.hpp>
-
-/// Convenience namespace for commonly used boost beast aliases.
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/http/bodies.hpp>
+#include <bitcoin/network/messages/http/header.hpp>
+#include <bitcoin/network/messages/http/message.hpp>
 
 namespace libbitcoin {
 namespace network {
+namespace ws {
 
-/// ws::socket
-namespace ws
-{
-    using socket = boost::beast::websocket::stream<asio::tcp::socket>;
-    using decorator = boost::beast::websocket::stream_base::decorator;
-    using frame_type = boost::beast::websocket::frame_type;
+/// A handshake response.
+using response = http::message<false, http::string_body>;
 
-    /// ws::ssl::socket
-    namespace ssl
-    {
-        using socket = boost::beast::websocket::stream<asio::ssl::socket>;
-    }
-}
+/// Validate a websocket upgrade request (rfc6455, version 13) and set the
+/// response: switching protocols on success, otherwise an error status (with
+/// the reason as body, or the supported version).
+BCT_API code accept(response& out, const http::request_header& request) NOEXCEPT;
 
+} // namespace ws
 } // namespace network
 } // namespace libbitcoin
 

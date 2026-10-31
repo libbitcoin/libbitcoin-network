@@ -619,7 +619,7 @@ struct websocket_fixture
         accept_result = accepted.get();
     }
 
-    ws::socket stream;
+    boost::beast::websocket::stream<asio::socket> stream;
     code upgrade_result{};
     code accept_result{};
 };

@@ -176,7 +176,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tls_alert_certificate_required, "tls alert certificate required" },
     { tls_alert_unknown, "tls alert" },
 
-    // boost beast http 4xx client error
+    // http 4xx client error
     { bad_request, "bad request" },
     { unauthorized, "unauthorized" },
     ////{ payment_required, "payment required" },
@@ -207,7 +207,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     ////{ request_header_fields_too_large, "request header fields too large" },
     ////{ unavailable_for_legal_reasons, "unavailable for legal reasons" },
 
-    // boost beast http 5xx server error
+    // http 5xx server error
     { internal_server_error, "internal server error" },
     { not_implemented, "not implemented" },
     ////{ bad_gateway, "bad gateway" },
@@ -220,7 +220,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     ////{ not_extended, "not extended" },
     ////{ network_authentication_required, "network authentication required" },
 
-    // boost beast http error
+    // http error
     { end_of_stream, "end of stream" },
     { partial_message, "partial message" },
     { need_more, "need more" },
@@ -249,7 +249,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { short_read, "short read" },
     { http_unknown, "http error" },
 
-    // boost beast websocket error
+    // websocket error
     { websocket_closed, "websocket closed" },
     { websocket_buffer_overflow, "websocket buffer overflow" },
     { partial_deflate_block, "partial deflate block" },
@@ -746,54 +746,6 @@ code ssl_to_error_code(const boost_code& ec) NOEXCEPT
     }
 
     return asio_to_error_code(ec);
-}
-
-// includes json codes
-code ws_to_error_code(const boost_code& ec) NOEXCEPT
-{
-    if (!ec)
-        return error::success;
-
-    if (ec.category() == to_websocket_code(ws_error_t::closed).category())
-    {
-        switch (static_cast<ws_error_t>(ec.value()))
-        {
-            case ws_error_t::closed: return error::websocket_closed;
-            case ws_error_t::buffer_overflow: return error::websocket_buffer_overflow;
-            case ws_error_t::partial_deflate_block: return error::partial_deflate_block;
-            case ws_error_t::message_too_big: return error::message_too_big;
-            case ws_error_t::bad_http_version: return error::bad_http_version;
-            case ws_error_t::bad_method: return error::websocket_bad_method;
-            case ws_error_t::no_host: return error::no_host;
-            case ws_error_t::no_connection: return error::no_connection;
-            case ws_error_t::no_connection_upgrade: return error::no_connection_upgrade;
-            case ws_error_t::no_upgrade: return error::no_upgrade;
-            case ws_error_t::no_upgrade_websocket: return error::no_upgrade_websocket;
-            case ws_error_t::no_sec_key: return error::no_sec_key;
-            case ws_error_t::bad_sec_key: return error::bad_sec_key;
-            case ws_error_t::no_sec_version: return error::no_sec_version;
-            case ws_error_t::bad_sec_version: return error::bad_sec_version;
-            case ws_error_t::no_sec_accept: return error::no_sec_accept;
-            case ws_error_t::bad_sec_accept: return error::bad_sec_accept;
-            case ws_error_t::upgrade_declined: return error::upgrade_declined;
-            case ws_error_t::bad_opcode: return error::bad_opcode;
-            case ws_error_t::bad_data_frame: return error::bad_data_frame;
-            case ws_error_t::bad_continuation: return error::bad_continuation;
-            case ws_error_t::bad_reserved_bits: return error::bad_reserved_bits;
-            case ws_error_t::bad_control_fragment: return error::bad_control_fragment;
-            case ws_error_t::bad_control_size: return error::bad_control_size;
-            case ws_error_t::bad_unmasked_frame: return error::bad_unmasked_frame;
-            case ws_error_t::bad_masked_frame: return error::bad_masked_frame;
-            case ws_error_t::bad_size: return error::bad_size;
-            case ws_error_t::bad_frame_payload: return error::bad_frame_payload;
-            case ws_error_t::bad_close_code: return error::bad_close_code;
-            case ws_error_t::bad_close_size: return error::bad_close_size;
-            case ws_error_t::bad_close_payload: return error::bad_close_payload;
-            default: return error::websocket_unknown;
-        }
-    }
-
-    return http_to_error_code(ec);
 }
 
 // includes asio codes

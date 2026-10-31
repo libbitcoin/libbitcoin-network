@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_ERROR_HPP
 
 #include <system_error>
-#include <bitcoin/network/beast.hpp>
+#include <bitcoin/network/asio.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -187,7 +187,7 @@ enum error_t : uint8_t
     tls_alert_certificate_required,
     tls_alert_unknown,
 
-    // boost beast http 4xx client error
+    // http 4xx client error
     bad_request,
     unauthorized,
     ////payment_required,
@@ -218,7 +218,7 @@ enum error_t : uint8_t
     ////request_header_fields_too_large,
     ////unavailable_for_legal_reasons,
 
-    // boost beast http 5xx server error
+    // http 5xx server error
     internal_server_error,
     not_implemented,
     ////bad_gateway,
@@ -231,7 +231,7 @@ enum error_t : uint8_t
     ////not_extended,
     ////network_authentication_required,
 
-    // boost beast http error
+    // http error
     end_of_stream,
     partial_message,
     need_more,
@@ -260,7 +260,7 @@ enum error_t : uint8_t
     short_read,
     http_unknown,
 
-    // boost beast websocket error
+    // websocket error
     websocket_closed,
     websocket_buffer_overflow,
     partial_deflate_block,
@@ -384,7 +384,6 @@ typedef boost::asio::error::netdb_errors asio_netdb_error_t;
 typedef boost::asio::error::addrinfo_errors asio_addrinfo_error_t;
 typedef boost::asio::error::misc_errors asio_misc_error_t;
 typedef boost::asio::ssl::error::stream_errors asio_ssl_stream_error_t;
-typedef boost::beast::websocket::error ws_error_t;
 typedef system::error::json_error_t json_error_t;
 
 inline boost_code to_errc_code(boost_errc_t ec) NOEXCEPT
@@ -453,14 +452,6 @@ inline boost_code to_ssl_stream_code(asio_ssl_stream_error_t ec) NOEXCEPT
     BC_POP_WARNING()
 }
 
-inline boost_code to_websocket_code(ws_error_t ec) NOEXCEPT
-{
-    // no public category.
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return boost::beast::websocket::make_error_code(ec);
-    BC_POP_WARNING()
-}
-
 inline boost_code to_json_code(json_error_t ec) NOEXCEPT
 {
     // system::error::json_error_category::singleton
@@ -473,14 +464,11 @@ BCT_API bool asio_is_canceled(const boost_code& ec) NOEXCEPT;
 /// mapping of boost::asio error codes to network.
 BCT_API code asio_to_error_code(const boost_code& ec) NOEXCEPT;
 
-/// 1:1 mapping of boost::beast:http::error to network.
+/// 1:1 mapping of http_error_t to network.
 BCT_API code http_to_error_code(const boost_code& ec) NOEXCEPT;
 
 /// mapping of boost::asio::ssl stream error codes to network.
 BCT_API code ssl_to_error_code(const boost_code& ec) NOEXCEPT;
-
-/// 1:1 mapping of boost::beast::websocket::error to network.
-BCT_API code ws_to_error_code(const boost_code& ec) NOEXCEPT;
 
 /// Mapping of system::error::json_error_t to network.
 BCT_API code json_to_error_code(const boost_code& ec) NOEXCEPT;

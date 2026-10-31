@@ -53,12 +53,6 @@ void socket::do_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (websocket())
-    {
-        // Release ws control callback handler.
-        VARIANT_DISPATCH_METHOD(get_ws(), control_callback());
-    }
-
     watch_->stop();
     timer_->stop();
 
@@ -121,18 +115,24 @@ void socket::do_ws_stop() NOEXCEPT
         return;
     }
 
-    VARIANT_DISPATCH_METHOD(get_ws(),
-        async_close(boost::beast::websocket::close_code::normal,
-            std::bind(&socket::handle_ws_close,
-                shared_from_this(), _1)));
+    // A close already sent (answering the peer) is not repeated.
+    if (ws_closing_)
+    {
+        do_ssl_stop();
+        return;
+    }
+
+    ws_closing_ = true;
+    ws_send(ws::opcode::close, ws::close_payload(ws::close_code::normal),
+        std::bind(&socket::handle_ws_close, shared_from_this(), _1));
 }
 
 // private
-void socket::handle_ws_close(const boost_code& ec) NOEXCEPT
+void socket::handle_ws_close(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (ec && ec != boost::asio::error::eof && !error::asio_is_canceled(ec))
-        logx("ws_close", ec);
+    if (ec && ec != error::peer_disconnect && ec != error::channel_stopped)
+        LOGX("WS close [" << endpoint() << "] " << ec.message());
 
     do_ssl_stop();
 }

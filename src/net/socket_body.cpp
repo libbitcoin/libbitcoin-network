@@ -35,7 +35,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // BODY (read).
 // ----------------------------------------------------------------------------
-// The body_ methods accept any boost::beast-compliant body to read/write a tcp
+// The body_ methods accept any http body (reader/writer) to read/write a tcp
 // socket. For http read/write use the http_ methods. The rpc_ methods are just
 // a specialization of these methods, passing the rpc::body<> types. For simple
 // fixed-size tcp use the tcp_ methods, and for simple framed ws use the ws_
@@ -115,7 +115,7 @@ void socket::do_body_read(boost_code ec, size_t total,
         return;
     }
 
-    // This reader is designed to accept native beast bodies, which require the
+    // This reader is designed to accept http bodies, which require the
     // buffer size to be known so that finish() is called only after all data
     // is passed. For websockets this reads a full logical message into the
     // flat buffer. For tcp the reader will iterate over the buffer using
@@ -151,7 +151,7 @@ void socket::handle_body_read(const code& ec, size_t size, size_t total,
         return;
     }
 
-    // Beast websocket read commits framed message.
+    // A websocket read commits the framed message.
     if (!websocket())
         in->buffer.commit(size);
 

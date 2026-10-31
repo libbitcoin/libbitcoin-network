@@ -78,7 +78,7 @@ size_t CLASS::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         size_t parsed{};
         ec.clear();
 
-        // The parser stops after the document, beast re-feeds the remainder.
+        // The parser stops after the document, the remainder is re-fed.
         if (parser_.done())
         {
             while (parsed < size && is_json_whitespace(data[parsed]))
@@ -113,7 +113,7 @@ size_t CLASS::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
 // Finishing can be very confusing. The derived rpc body calls this base
 // method, and then the virtual done() is tested to determine whether the
 // logical object is fully read (including optionally required terminator).
-// Any error code here signals the beast reader (and any reader that terminates
+// Any error code here signals the http parser (and any reader that terminates
 // based on the end of the framed data, such as websockets) that the parse has
 // failed (terminal error). However for custom stream readers that may not be
 // aware of byte termination, the `need_more` implies that the parse has not

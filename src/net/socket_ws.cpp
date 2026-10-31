@@ -21,14 +21,16 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/ws/ws.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-using namespace network::rpc;
+using namespace system;
 using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 // WS (read).
 // ----------------------------------------------------------------------------
@@ -53,7 +55,6 @@ void socket::do_ws_read(ref<http::flat_buffer> out,
 
 // WS (write).
 // ----------------------------------------------------------------------------
-// Buffer is fully allocated before write, identical to tcp_write.
 
 void socket::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
@@ -68,173 +69,339 @@ void socket::do_ws_write(const asio::const_buffer& in, bool binary,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
-    // Single-shot write of an already-whole buffer, always closes the
-    // message (finish = true).
     async_write(in, binary, true, handler);
 }
 
-// WS (event).
+// WS (upgrade).
 // ----------------------------------------------------------------------------
-// This is a unique/internal aspect of websockets.
 
-// private
-void socket::do_ws_event(ws::frame_type kind,
-    const std::string& data) NOEXCEPT
-{
-    // Must not post to the iocontext once closed, and this is under control of
-    // the websocket, so must be guarded here. Otherwise the socket will leak.
-    if (stopped())
-        return;
-
-    // Takes ownership of the string.
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::handle_ws_event,
-            shared_from_this(), kind, std::string{ data }));
-}
-
-// private
-void socket::handle_ws_event(ws::frame_type kind,
-    const std::string& data) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    // Beast sends the necessary responses during our read.
-    // Close will be picked up in our async read/write handlers.
-    switch (kind)
-    {
-        case ws::frame_type::ping:
-            LOGX("WS ping [" << endpoint() << "] size: " << data.size());
-            break;
-        case ws::frame_type::pong:
-            LOGX("WS pong [" << endpoint() << "] size: " << data.size());
-            break;
-        case ws::frame_type::close:
-            std::visit([&](auto&& value) NOEXCEPT
-            {
-                LOGX("WS close [" << endpoint() << "] "
-                    << value.get().reason());
-            }, get_ws());
-            break;
-    }
-}
-
-//  WS (http upgrade).
-// ----------------------------------------------------------------------------
-// This is a unique aspect of websockets. Encodng is set to text by default.
-// This allows full generalization between tcp and websockets for json-rpc.
-
-// TODO: inject server name from config.
+// The response is written before the upgrade (or refusal) is returned.
 code socket::accept_websocket(const http::request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT(!websocket());
 
+    ws::response response{};
+    const auto ec = ws::accept(response, request.base());
+    response.set(http::field::server, BC_HTTP_SERVER_NAME);
+
+    http::serializer<false, http::string_body> serializer{ response };
+    data_chunk bytes{};
+    boost_code error{};
+    while (!serializer.is_done() && !error)
+        for (const auto& buffer: serializer.next(error))
+            bytes.insert(bytes.end(), pointer_cast<const uint8_t>(
+                buffer.data()), std::next(pointer_cast<const uint8_t>(
+                    buffer.data()), buffer.size()));
+
     try
     {
-        if (secure())
-            accept_secure_websocket(request);
-        else
-            accept_clear_websocket(request);
-
-        websocket_.store(true);
-        return error::success;
+        VARIANT_DISPATCH_FUNCTION(boost::asio::write, get_tcp(),
+            boost::asio::buffer(bytes), error);
     }
     catch (const std::exception& e)
     {
         LOGF("Exception @ accept_websocket: " << e.what());
+        return error::operation_failed;
     }
 
-    revert_websocket();
-    return error::operation_failed;
+    if (error || ec)
+        return error::operation_failed;
+
+    ws_reader_.emplace(maximum_, true);
+    ws_input_.clear();
+    ws_continuing_ = false;
+    ws_closing_ = false;
+    websocket_.store(true);
+    return error::success;
 }
 
+// WS (framing).
+// ----------------------------------------------------------------------------
+// A read assembles one data message, answering pings and the peer's close.
+// Frames are written in order, so control frames queue behind data frames.
+
 // private
-void socket::accept_secure_websocket(const http::request& request) THROWS
+void socket::do_ws_read_message(const ref<http::flat_buffer>& out,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Extract before emplacing back to same variant.
-    auto ws = std::move(std::get<asio::ssl::socket>(socket_));
-    socket_.emplace<ws::ssl::socket>(std::move(ws));
-
-    auto& sock = std::get<ws::ssl::socket>(socket_);
-    sock.read_message_max(maximum_);
-    sock.auto_fragment(false);
-    sock.set_option(ws::decorator
+    while (true)
     {
-        [](boost::beast::websocket::response_type& response) NOEXCEPT
+        ws::reader::event event{};
+        code ec{};
+        const auto data = ws_input_.data();
+        const std::span<const uint8_t> bytes{ pointer_cast<const uint8_t>(
+            data.data()), data.size() };
+
+        const auto used = ws_reader_->put(bytes, out.get(), event, ec);
+        ws_input_.consume(used);
+
+        if (ec == error::need_more)
+            break;
+
+        if (ec)
         {
-            response.set(boost::beast::http::field::server,
-                BC_HTTP_SERVER_NAME);
+            handler(ec, out.get().size());
+            return;
         }
-    });
 
-    sock.control_callback(
-        std::bind(&socket::do_ws_event,
-            shared_from_this(), _1, _2));
-
-    sock.text(true);
-    const auto header = http::serialize_header(request.base());
-    sock.accept(boost::asio::buffer(header));
-}
-
-// private
-void socket::accept_clear_websocket(const http::request& request) THROWS
-{
-    BC_ASSERT(stranded());
-
-    // Extract before emplacing back to same variant.
-    auto ws = std::move(get_base());
-    socket_.emplace<ws::socket>(std::move(ws));
-
-    auto& sock = std::get<ws::socket>(socket_);
-    sock.read_message_max(maximum_);
-    sock.auto_fragment(false);
-    sock.set_option(ws::decorator
-    {
-        [](boost::beast::websocket::response_type& response) NOEXCEPT
+        const auto& payload = ws_reader_->control();
+        switch (event)
         {
-            response.set(boost::beast::http::field::server,
-                BC_HTTP_SERVER_NAME);
+            case ws::reader::event::message:
+                handler(error::success, out.get().size());
+                return;
+            case ws::reader::event::ping:
+                do_ws_event(ws::opcode::ping, payload);
+                ws_pong(payload);
+                continue;
+            case ws::reader::event::pong:
+                do_ws_event(ws::opcode::pong, payload);
+                continue;
+            case ws::reader::event::close:
+            {
+                do_ws_event(ws::opcode::close, payload);
+                if (ws_closing_)
+                {
+                    handler(error::websocket_closed, out.get().size());
+                    return;
+                }
+
+                // The close is answered with the peer's close code.
+                ws_closing_ = true;
+                const auto echo = payload.size() < two ? data_chunk{} :
+                    data_chunk{ payload.begin(), std::next(payload.begin(),
+                        two) };
+
+                ws_send(ws::opcode::close, echo,
+                    std::bind(&socket::handle_ws_echo,
+                        shared_from_this(), _1, _2, out, handler));
+                return;
+            }
+            case ws::reader::event::none:
+            default:
+                continue;
         }
-    });
+    }
 
-    sock.control_callback(
-        std::bind(&socket::do_ws_event,
-            shared_from_this(), _1, _2));
-
-    sock.text(true);
-    const auto header = http::serialize_header(request.base());
-    sock.accept(boost::asio::buffer(header));
-}
-
-// private
-void socket::revert_websocket() NOEXCEPT
-{
-    BC_ASSERT(stranded());
+    const auto limit = floored_subtract(ws_input_.max_size(),
+        ws_input_.size());
+    const auto size = std::min(limit, std::max(ws_input_.capacity() -
+        ws_input_.size(), header_));
 
     try
     {
-        if (std::holds_alternative<ws::ssl::socket>(socket_))
-        {
-            auto& stream = std::get<ws::ssl::socket>(socket_);
-            auto ssl = std::move(stream.next_layer());
-            socket_.emplace<asio::ssl::socket>(std::move(ssl));
-        }
-        else if (std::holds_alternative<ws::socket>(socket_))
-        {
-            auto& stream = std::get<ws::socket>(socket_);
-            auto tcp = std::move(stream.next_layer());
-            socket_.emplace<asio::socket>(std::move(tcp));
-        }
+        VARIANT_DISPATCH_METHOD(get_tcp(),
+            async_read_some(ws_input_.prepare(size),
+                std::bind(&socket::handle_ws_read_message,
+                    shared_from_this(), _1, _2, out, handler)));
     }
     catch (const std::exception& e)
     {
-        LOGF("Exception @ revert_websocket: " << e.what());
+        LOGF("Exception @ ws_read: " << e.what());
+        handler(error::operation_failed, {});
     }
 }
 
+// private
+void socket::handle_ws_read_message(const boost_code& ec, size_t size,
+    const ref<http::flat_buffer>& out, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, out.get().size());
+        return;
+    }
+
+    if (ec)
+    {
+        const auto code = error::asio_to_error_code(ec);
+        if (code == error::unknown) logx("ws-read", ec);
+        handler(code, out.get().size());
+        return;
+    }
+
+    ws_input_.commit(size);
+    do_ws_read_message(out, handler);
+}
+
+// private
+// The server closes the connection once the closing handshake is complete.
+void socket::handle_ws_echo(const code&, size_t,
+    const ref<http::flat_buffer>& out, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    boost_code ignore{};
+    get_base().shutdown(asio::socket::shutdown_send, ignore);
+    handler(error::websocket_closed, out.get().size());
+}
+
+// private
+// A data frame continues the message of a preceding unfinished frame.
+void socket::ws_send_data(const asio::const_buffer& data, bool binary,
+    bool finish, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    const auto code = ws_continuing_ ? ws::opcode::continuation :
+        (binary ? ws::opcode::binary : ws::opcode::text);
+
+    ws_continuing_ = !finish;
+    const auto frame = emplace_shared<ws_frame>();
+    frame->header = ws::serialize_header(code, finish,
+        possible_wide_cast<uint64_t>(data.size()));
+    frame->data = data;
+    frame->handler = handler;
+    ws_queue_.push_back(frame);
+    ws_write_next();
+}
+
+// private
+void socket::ws_send(ws::opcode code, const data_chunk& payload,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    const auto frame = emplace_shared<ws_frame>();
+    frame->header = ws::serialize_header(code, true,
+        possible_wide_cast<uint64_t>(payload.size()));
+    frame->payload = payload;
+    frame->handler = handler;
+    ws_queue_.push_back(frame);
+    ws_write_next();
+}
+
+// private
+// An unsent pong answers only the most recent ping (rfc6455 5.5.3).
+void socket::ws_pong(const data_chunk& payload) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    const auto queued = !is_null(ws_pong_);
+    if (!queued)
+        ws_pong_ = emplace_shared<ws_frame>();
+
+    ws_pong_->header = ws::serialize_header(ws::opcode::pong, true,
+        possible_wide_cast<uint64_t>(payload.size()));
+    ws_pong_->payload = payload;
+
+    if (!queued)
+    {
+        ws_queue_.push_back(ws_pong_);
+        ws_write_next();
+    }
+}
+
+// private
+void socket::ws_write_next() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ws_writing_ || ws_queue_.empty())
+        return;
+
+    ws_writing_ = true;
+    const auto frame = ws_queue_.front();
+    if (frame == ws_pong_)
+        ws_pong_.reset();
+    const auto payload = frame->payload.empty() ? frame->data :
+        asio::const_buffer{ frame->payload.data(), frame->payload.size() };
+
+    frame->buffers =
+    {
+        asio::const_buffer{ frame->header.data(), frame->header.size() },
+        payload
+    };
+
+    try
+    {
+        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
+            frame->buffers, std::bind(&socket::handle_ws_frame,
+                shared_from_this(), _1, _2, frame));
+    }
+    catch (const std::exception& e)
+    {
+        LOGF("Exception @ ws_write: " << e.what());
+        handle_ws_frame(boost::asio::error::fault, zero, frame);
+    }
+}
+
+// private
+void socket::handle_ws_frame(const boost_code& ec, size_t,
+    const ws_frame::ptr& frame) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    ws_writing_ = false;
+    ws_queue_.pop_front();
+    const auto code = error::asio_is_canceled(ec) ? error::channel_stopped :
+        error::asio_to_error_code(ec);
+
+    if (code == error::unknown)
+        logx("ws-write", ec);
+
+    // The payload size is reported (as with stream writes).
+    const auto size = frame->payload.empty() ? frame->data.size() :
+        frame->payload.size();
+
+    if (frame->handler)
+        frame->handler(code, size);
+
+    // A failed write fails the frames that follow it.
+    if (code)
+    {
+        ws_pong_.reset();
+        while (!ws_queue_.empty())
+        {
+            const auto next = ws_queue_.front();
+            ws_queue_.pop_front();
+            if (next->handler)
+                next->handler(code, zero);
+        }
+
+        return;
+    }
+
+    ws_write_next();
+}
+
+// WS (events).
+// ----------------------------------------------------------------------------
+
+// private
+void socket::do_ws_event(ws::opcode kind, const data_chunk& data) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    switch (kind)
+    {
+        case ws::opcode::ping:
+            LOGX("WS ping [" << endpoint() << "] size: " << data.size());
+            break;
+        case ws::opcode::pong:
+            LOGX("WS pong [" << endpoint() << "] size: " << data.size());
+            break;
+        case ws::opcode::close:
+        {
+            uint16_t value{};
+            std::string reason{};
+            code ignore{};
+            ws::parse_close(value, reason, data, ignore);
+            LOGX("WS close [" << endpoint() << "] " << value << " "
+                << reason);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

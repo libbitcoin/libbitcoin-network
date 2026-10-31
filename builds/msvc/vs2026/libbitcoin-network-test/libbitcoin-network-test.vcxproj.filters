@@ -70,8 +70,11 @@
     <Filter Include="src\tls">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\zmtp">
+    <Filter Include="src\ws">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\zmtp">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -518,6 +521,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tls\socket.cpp">
       <Filter>src\tls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ws\frame.cpp">
+      <Filter>src\ws</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ws\handshake.cpp">
+      <Filter>src\ws</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ws\reader.cpp">
+      <Filter>src\ws</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\zmtp\cipher.cpp">
       <Filter>src\zmtp</Filter>

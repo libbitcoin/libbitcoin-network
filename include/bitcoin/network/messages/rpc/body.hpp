@@ -71,7 +71,7 @@ struct message_type
     bool terminate{};
 };
 
-/// Derived boost::beast::http body for JSON-RPC messages.
+/// Derived http body for JSON-RPC messages.
 /// Extends json::body with JSON-RPC validation.
 template <typename Message>
 struct BCT_API body

@@ -37,10 +37,8 @@ constexpr bool is_json_whitespace(char character) NOEXCEPT
 }
 
 /// Content passed to/from reader/writer via request/response.
-/// `static uint64_t size(const value_type&)` must be defined for beast to 
-/// produce `content_length`, otherwise the response is chunked. Predeter-
-/// mining size would have the effect of eliminating the benefit of
-/// streaming serialize.
+/// The body has no size, so the response is chunked. Predetermining size
+/// would have the effect of eliminating the benefit of streaming serialize.
 struct json_value
 {
     /// JSON document object model to parse/serialize.
@@ -53,7 +51,7 @@ struct json_value
     mutable http::flat_buffer* buffer{};
 };
 
-/// boost::beast::http body for JSON messages.
+/// http body for JSON messages.
 /// Because of the parser and serializer members, neither the reader nor writer
 /// is movable and as such must be in-place contructed (e.g. variant contruct).
 template <typename Value = json_value>

@@ -182,6 +182,9 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/tls/record.cpp \
     ${srcdir}/../../src/tls/schedule.cpp \
     ${srcdir}/../../src/tls/server.cpp \
+    ${srcdir}/../../src/ws/frame.cpp \
+    ${srcdir}/../../src/ws/handshake.cpp \
+    ${srcdir}/../../src/ws/reader.cpp \
     ${srcdir}/../../src/zmtp/cipher.cpp \
     ${srcdir}/../../src/zmtp/context.cpp \
     ${srcdir}/../../src/zmtp/stream.cpp
@@ -224,7 +227,6 @@ include_bitcoin_networkdir = \
 
 include_bitcoin_network_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/asio.hpp \
-    ${srcdir}/../../include/bitcoin/network/beast.hpp \
     ${srcdir}/../../include/bitcoin/network/boost.hpp \
     ${srcdir}/../../include/bitcoin/network/define.hpp \
     ${srcdir}/../../include/bitcoin/network/error.hpp \
@@ -579,6 +581,15 @@ include_bitcoin_network_tls_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/tls/server.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/tls.hpp
 
+include_bitcoin_network_wsdir = \
+    ${includedir}/bitcoin/network/ws
+
+include_bitcoin_network_ws_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/ws/frame.hpp \
+    ${srcdir}/../../include/bitcoin/network/ws/handshake.hpp \
+    ${srcdir}/../../include/bitcoin/network/ws/reader.hpp \
+    ${srcdir}/../../include/bitcoin/network/ws/ws.hpp
+
 include_bitcoin_network_zmtpdir = \
     ${includedir}/bitcoin/network/zmtp
 
@@ -762,6 +773,9 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/tls/server.cpp \
     ${srcdir}/../../test/tls/server_hello.cpp \
     ${srcdir}/../../test/tls/socket.cpp \
+    ${srcdir}/../../test/ws/frame.cpp \
+    ${srcdir}/../../test/ws/handshake.cpp \
+    ${srcdir}/../../test/ws/reader.cpp \
     ${srcdir}/../../test/zmtp/cipher.cpp \
     ${srcdir}/../../test/zmtp/proxy.cpp \
     ${srcdir}/../../test/zmtp/role.cpp \

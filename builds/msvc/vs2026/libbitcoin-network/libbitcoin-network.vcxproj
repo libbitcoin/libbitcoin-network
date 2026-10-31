@@ -260,6 +260,9 @@
     <ClCompile Include="..\..\..\..\src\tls\record.cpp" />
     <ClCompile Include="..\..\..\..\src\tls\schedule.cpp" />
     <ClCompile Include="..\..\..\..\src\tls\server.cpp" />
+    <ClCompile Include="..\..\..\..\src\ws\frame.cpp" />
+    <ClCompile Include="..\..\..\..\src\ws\handshake.cpp" />
+    <ClCompile Include="..\..\..\..\src\ws\reader.cpp" />
     <ClCompile Include="..\..\..\..\src\zmtp\cipher.cpp">
       <ObjectFileName>$(IntDir)src_zmtp_cipher.obj</ObjectFileName>
     </ClCompile>
@@ -289,7 +292,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\beast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\broadcast\diagnostics.hpp" />
@@ -465,6 +467,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\schedule.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\server.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\tls.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\frame.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\handshake.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\reader.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\ws.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\cipher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\role.hpp" />

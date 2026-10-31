@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
     raw.connect({ asio::ipv4::loopback(), port }, client_ec);
     BOOST_REQUIRE(!client_ec);
 
-    ws::socket client(std::move(raw));
+    boost::beast::websocket::stream<asio::socket> client(std::move(raw));
     client.handshake("127.0.0.1", "/", client_ec);
     BOOST_REQUIRE(!client_ec);
 
@@ -890,7 +890,7 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_complete_message__success, a
     });
 
     boost_code ec{};
-    ws::socket websocket(std::move(client));
+    boost::beast::websocket::stream<asio::socket> websocket(std::move(client));
     websocket.handshake("127.0.0.1", "/", ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(upgraded.get(), error::success);
@@ -925,7 +925,7 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_incomplete_message__incomple
     });
 
     boost_code ec{};
-    ws::socket websocket(std::move(client));
+    boost::beast::websocket::stream<asio::socket> websocket(std::move(client));
     websocket.handshake("127.0.0.1", "/", ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(upgraded.get(), error::success);

@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_NET_SOCKET_HPP
 
 #include <atomic>
+#include <deque>
 #include <optional>
 #include <span>
 #include <bitcoin/network/async/async.hpp>
@@ -29,14 +30,13 @@
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/p2ps/p2ps.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/ws/ws.hpp>
 #include <bitcoin/network/zmtp/zmtp.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// beast stores http field name and value sizes as uint16_t and throws
-/// std::length_error above 65533 bytes, which its parser does not catch.
-/// The header limit bounds the whole header, so it must stay below that.
+/// The header limit bounds the whole http header.
 constexpr size_t maximum_http_header = 16 * 1024;
 
 /// Virtual, thread safe (see comments on accept).
@@ -302,10 +302,9 @@ public:
     virtual void set_address(const config::address& address) NOEXCEPT;
 
 protected:
-    using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;
     using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
-    using socket_t = std::variant<asio::socket, asio::ssl::socket, ws::socket,
-        ws::ssl::socket, p2ps::stream, zmtp::stream>;
+    using socket_t = std::variant<asio::socket, asio::ssl::socket,
+        p2ps::stream, zmtp::stream>;
 
     /// Construct.
     /// -----------------------------------------------------------------------
@@ -321,7 +320,6 @@ protected:
 
     /// Variant accessors (protected by strand).
     /// -----------------------------------------------------------------------
-    ws_t get_ws() NOEXCEPT;
     tcp_t get_tcp() NOEXCEPT;
     asio::socket& get_base() NOEXCEPT;
     asio::ssl::socket& get_ssl() NOEXCEPT;
@@ -472,6 +470,17 @@ private:
         http::const_buffers buffers{};
     };
 
+    struct ws_frame
+    {
+        typedef std::shared_ptr<ws_frame> ptr;
+
+        system::data_chunk header{};
+        system::data_chunk payload{};
+        asio::const_buffer data{};
+        count_handler handler{};
+        std::array<asio::const_buffer, 2> buffers{};
+    };
+
     enum class parse_mode
     {
         header,
@@ -491,10 +500,8 @@ private:
     void do_drain(const system::chunk_ptr& sink) NOEXCEPT;
 
     // config
-    void do_ws_event(ws::frame_type kind, const std::string& data) NOEXCEPT;
-    void accept_secure_websocket(const http::request& request) THROWS;
-    void accept_clear_websocket(const http::request& request) THROWS;
-    void revert_websocket() NOEXCEPT;
+    void do_ws_event(ws::opcode kind,
+        const system::data_chunk& data) NOEXCEPT;
 
     // wait
     void do_watch(const result_handler& handler) NOEXCEPT;
@@ -513,6 +520,14 @@ private:
         const count_handler& handler) NOEXCEPT;
     void do_ws_write(const asio::const_buffer& in, bool binary,
         const count_handler& handler) NOEXCEPT;
+    void do_ws_read_message(const ref<http::flat_buffer>& out,
+        const count_handler& handler) NOEXCEPT;
+    void ws_send_data(const asio::const_buffer& data, bool binary,
+        bool finish, const count_handler& handler) NOEXCEPT;
+    void ws_send(ws::opcode code, const system::data_chunk& payload,
+        const count_handler& handler) NOEXCEPT;
+    void ws_pong(const system::data_chunk& payload) NOEXCEPT;
+    void ws_write_next() NOEXCEPT;
 
     // tcp (fixed)
     void do_tcp_read(const asio::mutable_buffer& out,
@@ -585,14 +600,20 @@ private:
 
     // stop (lazy)
     void handle_lazy_timer(const code& ec) NOEXCEPT;
-    void handle_ws_close(const boost_code& ec) NOEXCEPT;
+    void handle_ws_close(const code& ec) NOEXCEPT;
     void handle_ssl_close(const boost_code& ec) NOEXCEPT;
     void handle_drain(const boost_code& ec,
         const system::chunk_ptr& sink) NOEXCEPT;
 
-    // config
-    void handle_ws_event(ws::frame_type kind,
-        const std::string& data) NOEXCEPT;
+    // ws (framed)
+    void handle_ws_read_message(const boost_code& ec, size_t size,
+        const ref<http::flat_buffer>& out,
+        const count_handler& handler) NOEXCEPT;
+    void handle_ws_frame(const boost_code& ec, size_t size,
+        const ws_frame::ptr& frame) NOEXCEPT;
+    void handle_ws_echo(const code& ec, size_t size,
+        const ref<http::flat_buffer>& out,
+        const count_handler& handler) NOEXCEPT;
 
     // wait
     void handle_watch(const code& ec,
@@ -720,6 +741,15 @@ protected:
 
     // Retains the json serialization buffer (allocated on first write).
     http::flat_buffer response_;
+
+    // Websocket framing (once upgraded).
+    std::optional<ws::reader> ws_reader_{};
+    http::flat_buffer ws_input_{};
+    std::deque<ws_frame::ptr> ws_queue_{};
+    ws_frame::ptr ws_pong_{};
+    bool ws_writing_{};
+    bool ws_continuing_{};
+    bool ws_closing_{};
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;

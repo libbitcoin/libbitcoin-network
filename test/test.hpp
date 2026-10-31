@@ -23,6 +23,9 @@
 
 #include <filesystem>
 #include <bitcoin/network.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/websocket.hpp>
 
 // copied from libbitcoin-system-test
 
