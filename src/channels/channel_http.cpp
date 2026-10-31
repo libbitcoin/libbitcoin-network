@@ -247,6 +247,7 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
         CASE_REQUEST_TO_MODEL(trace, request, model);
         CASE_REQUEST_TO_MODEL(options, request, model);
         CASE_REQUEST_TO_MODEL(connect, request, model);
+        CASE_REQUEST_TO_MODEL(websocket, request, model);
 
         default:
         CASE_REQUEST_TO_MODEL(unknown, request, model);
@@ -293,11 +294,7 @@ request_ptr channel_http::create_request() const NOEXCEPT
     out->body() = default_body();
 
     if (websocket())
-    {
-        // out->method() will return verb::unknown (mapped in dispatch).
-        // socket will not produce verb::unknown for http requests (blocked).
-        out->method_string("websocket");
-    }
+        out->method(verb::websocket);
 
     return out;
 }

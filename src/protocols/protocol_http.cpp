@@ -72,6 +72,7 @@ void protocol_http::start() NOEXCEPT
     SUBSCRIBE_CHANNEL(method::options, handle_receive_options, _1, _2);
     SUBSCRIBE_CHANNEL(method::connect, handle_receive_connect, _1, _2);
     SUBSCRIBE_CHANNEL(method::unknown, handle_receive_unknown, _1, _2);
+    SUBSCRIBE_CHANNEL(method::websocket, handle_receive_websocket, _1, _2);
     protocol::start();
 }
 
@@ -148,6 +149,14 @@ void protocol_http::handle_receive_unknown(const code& ec,
     BC_ASSERT(stranded());
     if (stopped(ec)) return;
     send_method_not_allowed(*unknown);
+}
+
+void protocol_http::handle_receive_websocket(const code& ec,
+    const method::websocket::cptr& websocket) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*websocket);
 }
 
 // Senders.

@@ -79,6 +79,8 @@ protected:
         const http::method::connect::cptr& connect) NOEXCEPT;
     virtual void handle_receive_unknown(const code& ec,
         const http::method::unknown::cptr& unknown) NOEXCEPT;
+    virtual void handle_receive_websocket(const code& ec,
+        const http::method::websocket::cptr& websocket) NOEXCEPT;
 
     /// Senders.
     virtual void send_ok(const http::request& request={}) NOEXCEPT;

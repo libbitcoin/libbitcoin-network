@@ -46,6 +46,7 @@ using options = tagged_request<verb::options>;
 using trace   = tagged_request<verb::trace>;
 using connect = tagged_request<verb::connect>;
 using unknown = tagged_request<verb::unknown>;
+using websocket = tagged_request<verb::websocket>;
 
 template <verb Verb>
 inline auto tag_request(const http::request_cptr& request) NOEXCEPT

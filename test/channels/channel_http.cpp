@@ -945,6 +945,11 @@ struct http_channel_fixture
                 if (!ec) respond(self, *request);
             });
 
+            self->subscribe<method::websocket>([=](const code& ec, const method::websocket::cptr& request) NOEXCEPT
+            {
+                if (!ec) respond(self, *request);
+            });
+
             self->resume();
             started->set_value(error::success);
         });

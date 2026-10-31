@@ -33,6 +33,7 @@ BOOST_AUTO_TEST_CASE(method__static_method__always__equals_verb)
     BOOST_REQUIRE(options::method == http::verb::options);
     BOOST_REQUIRE(connect::method == http::verb::connect);
     BOOST_REQUIRE(unknown::method == http::verb::unknown);
+    BOOST_REQUIRE(websocket::method == http::verb::websocket);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

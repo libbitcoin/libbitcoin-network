@@ -552,7 +552,7 @@ void proxy::do_downgrade_read(const ref<http::request>& request,
     BC_ASSERT(stranded());
 
     // A downgraded message carries no request line, so synthesize an unknown
-    // method for dispatch, as does the websocket upgrade.
+    // method for dispatch.
     auto& in = request.get();
     in.method_string("stream");
     if (!in.body().contains<rpc::request>())
