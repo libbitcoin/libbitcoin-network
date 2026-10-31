@@ -18,54 +18,54 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_bloom_filter_clear_tests)
+BC_AUTO_TEST_SUITE(p2p_bloom_filter_clear_tests)
 
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(bloom_filter_clear__properties__always__expected)
+BC_AUTO_TEST_CASE(bloom_filter_clear__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(bloom_filter_clear::command, "filterclear");
+    BC_REQUIRE_EQUAL(bloom_filter_clear::command, "filterclear");
     constexpr auto index = messages::peer::registry::index_of<bloom_filter_clear>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), bloom_filter_clear::command);
-    BOOST_REQUIRE_EQUAL(bloom_filter_clear::version_minimum, level::bip37);
-    BOOST_REQUIRE_EQUAL(bloom_filter_clear::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), bloom_filter_clear::command);
+    BC_REQUIRE_EQUAL(bloom_filter_clear::version_minimum, level::bip37);
+    BC_REQUIRE_EQUAL(bloom_filter_clear::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(bloom_filter_clear__size__always__zero)
+BC_AUTO_TEST_CASE(bloom_filter_clear__size__always__zero)
 {
-    BOOST_REQUIRE_EQUAL(bloom_filter_clear::size(level::canonical), zero);
+    BC_REQUIRE_EQUAL(bloom_filter_clear::size(level::canonical), zero);
 }
 
 static const uint32_t excess_version = add1<uint32_t>(level::maximum_protocol);
 
-BOOST_AUTO_TEST_CASE(bloom_filter_clear__deserialize1__empty__expected)
+BC_AUTO_TEST_CASE(bloom_filter_clear__deserialize1__empty__expected)
 {
-    BOOST_REQUIRE(bloom_filter_clear::deserialize(level::bip37, system::data_chunk{}));
+    BC_REQUIRE(bloom_filter_clear::deserialize(level::bip37, system::data_chunk{}));
 }
 
-BOOST_AUTO_TEST_CASE(bloom_filter_clear__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(bloom_filter_clear__deserialize1__insufficient_version__nullptr)
 {
-    BOOST_REQUIRE(!bloom_filter_clear::deserialize(level::bip35, system::data_chunk{}));
+    BC_REQUIRE(!bloom_filter_clear::deserialize(level::bip35, system::data_chunk{}));
 }
 
-BOOST_AUTO_TEST_CASE(bloom_filter_clear__deserialize1__excess_version__nullptr)
+BC_AUTO_TEST_CASE(bloom_filter_clear__deserialize1__excess_version__nullptr)
 {
-    BOOST_REQUIRE(!bloom_filter_clear::deserialize(excess_version, system::data_chunk{}));
+    BC_REQUIRE(!bloom_filter_clear::deserialize(excess_version, system::data_chunk{}));
 }
 
-BOOST_AUTO_TEST_CASE(bloom_filter_clear__deserialize2__empty__source_true)
+BC_AUTO_TEST_CASE(bloom_filter_clear__deserialize2__empty__source_true)
 {
     const system::data_chunk data{};
     system::read::bytes::copy source(data);
     bloom_filter_clear::deserialize(level::maximum_protocol, source);
-    BOOST_REQUIRE(source);
+    BC_REQUIRE(source);
 }
 
-BOOST_AUTO_TEST_CASE(bloom_filter_clear__serialize1__empty__true)
+BC_AUTO_TEST_CASE(bloom_filter_clear__serialize1__empty__true)
 {
     system::data_chunk data{};
-    BOOST_REQUIRE(bloom_filter_clear{}.serialize(level::bip37, data));
-    BOOST_REQUIRE(data.empty());
+    BC_REQUIRE(bloom_filter_clear{}.serialize(level::bip37, data));
+    BC_REQUIRE(data.empty());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

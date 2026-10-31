@@ -18,44 +18,44 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_pong_tests)
+BC_AUTO_TEST_SUITE(p2p_pong_tests)
 
 using namespace bc::system;
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(pong__properties__always__expected)
+BC_AUTO_TEST_CASE(pong__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(pong::command, "pong");
+    BC_REQUIRE_EQUAL(pong::command, "pong");
     constexpr auto index = messages::peer::registry::index_of<pong>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), pong::command);
-    BOOST_REQUIRE_EQUAL(pong::version_minimum, level::bip31);
-    BOOST_REQUIRE_EQUAL(pong::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), pong::command);
+    BC_REQUIRE_EQUAL(pong::version_minimum, level::bip31);
+    BC_REQUIRE_EQUAL(pong::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(pong__size__always__expected)
+BC_AUTO_TEST_CASE(pong__size__always__expected)
 {
     constexpr auto expected = sizeof(uint64_t);
-    BOOST_REQUIRE_EQUAL(pong::size(level::canonical), expected);
+    BC_REQUIRE_EQUAL(pong::size(level::canonical), expected);
 }
 
-BOOST_AUTO_TEST_CASE(pong__deserialize1__bip31__expected)
+BC_AUTO_TEST_CASE(pong__deserialize1__bip31__expected)
 {
     const auto data = system::base16_chunk("efcdab8967452301");
     const auto message = pong::deserialize(level::bip31, data);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->nonce, 0x0123456789abcdef_u64);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->nonce, 0x0123456789abcdef_u64);
 }
 
-BOOST_AUTO_TEST_CASE(pong__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(pong__deserialize1__insufficient_version__nullptr)
 {
     const auto data = system::base16_chunk("efcdab8967452301");
-    BOOST_REQUIRE(!pong::deserialize(level::bip31 - 1u, data));
+    BC_REQUIRE(!pong::deserialize(level::bip31 - 1u, data));
 }
 
-BOOST_AUTO_TEST_CASE(pong__deserialize1__underflow__nullptr)
+BC_AUTO_TEST_CASE(pong__deserialize1__underflow__nullptr)
 {
     const auto data = system::base16_chunk("efcdab89674523");
-    BOOST_REQUIRE(!pong::deserialize(level::bip31, data));
+    BC_REQUIRE(!pong::deserialize(level::bip31, data));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

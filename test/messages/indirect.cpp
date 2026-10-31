@@ -18,54 +18,54 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(indirect_tests)
+BC_AUTO_TEST_SUITE(indirect_tests)
 
-BOOST_AUTO_TEST_CASE(indirect__construct__value__expected)
+BC_AUTO_TEST_CASE(indirect__construct__value__expected)
 {
     const indirect<std::string> instance{ std::string{ "value" } };
-    BOOST_REQUIRE_EQUAL(*instance, "value");
-    BOOST_REQUIRE_EQUAL(instance->size(), 5u);
+    BC_REQUIRE_EQUAL(*instance, "value");
+    BC_REQUIRE_EQUAL(instance->size(), 5u);
 }
 
-BOOST_AUTO_TEST_CASE(indirect__copy__distinct_values)
+BC_AUTO_TEST_CASE(indirect__copy__distinct_values)
 {
     indirect<std::string> instance{ std::string{ "value" } };
     const auto copy = instance;
     *instance = "changed";
-    BOOST_REQUIRE_EQUAL(*copy, "value");
-    BOOST_REQUIRE_EQUAL(*instance, "changed");
+    BC_REQUIRE_EQUAL(*copy, "value");
+    BC_REQUIRE_EQUAL(*instance, "changed");
 }
 
-BOOST_AUTO_TEST_CASE(indirect__copy_assign__distinct_values)
+BC_AUTO_TEST_CASE(indirect__copy_assign__distinct_values)
 {
     indirect<std::string> instance{ std::string{ "value" } };
     indirect<std::string> other{ std::string{ "other" } };
     other = instance;
     *instance = "changed";
-    BOOST_REQUIRE_EQUAL(*other, "value");
+    BC_REQUIRE_EQUAL(*other, "value");
 }
 
-BOOST_AUTO_TEST_CASE(indirect__move__same_storage)
+BC_AUTO_TEST_CASE(indirect__move__same_storage)
 {
     indirect<std::string> instance{ std::string{ "value" } };
     const auto address = &*instance;
     const auto moved = std::move(instance);
-    BOOST_REQUIRE_EQUAL(&*moved, address);
-    BOOST_REQUIRE_EQUAL(*moved, "value");
+    BC_REQUIRE_EQUAL(&*moved, address);
+    BC_REQUIRE_EQUAL(*moved, "value");
 }
 
-BOOST_AUTO_TEST_CASE(indirect__body_value__largest_inline_kind)
+BC_AUTO_TEST_CASE(indirect__body_value__largest_inline_kind)
 {
-    BOOST_REQUIRE_EQUAL(sizeof(http::body_value), sizeof(std::variant<http::peer_value>));
+    BC_REQUIRE_EQUAL(sizeof(http::body_value), sizeof(std::variant<http::peer_value>));
 }
 
-BOOST_AUTO_TEST_CASE(indirect__body__rpc_request__contained)
+BC_AUTO_TEST_CASE(indirect__body__rpc_request__contained)
 {
     http::body::value_type body{};
     body = rpc::request{ .batch = true };
-    BOOST_REQUIRE(body.contains<rpc::request>());
-    BOOST_REQUIRE(!body.contains<rpc::response>());
-    BOOST_REQUIRE(body.get<rpc::request>().batch);
+    BC_REQUIRE(body.contains<rpc::request>());
+    BC_REQUIRE(!body.contains<rpc::response>());
+    BC_REQUIRE(body.get<rpc::request>().batch);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

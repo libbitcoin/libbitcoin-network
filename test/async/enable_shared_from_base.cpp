@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(enable_shared_from_base_tests)
+BC_AUTO_TEST_SUITE(enable_shared_from_base_tests)
 
 class base_class
   : public enable_shared_from_base<base_class>
@@ -95,112 +95,112 @@ public:
 
 // shared_from_base
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__nop__nop)
+BC_AUTO_TEST_CASE(enable_shared_from_base__nop__nop)
 {
     std::make_shared<base_class>()->shared_from_this()->nop();
-    BOOST_REQUIRE(true);
+    BC_REQUIRE(true);
 }
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_this__from_base__base)
+BC_AUTO_TEST_CASE(enable_shared_from_base__shared_from_this__from_base__base)
 {
     const auto base = std::make_shared<base_class>();
     const auto self = base->shared_from_this();
-    BOOST_REQUIRE(!base->base_method());
-    BOOST_REQUIRE(!self->base_method());
+    BC_REQUIRE(!base->base_method());
+    BC_REQUIRE(!self->base_method());
 }
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_base__from_base__base)
+BC_AUTO_TEST_CASE(enable_shared_from_base__shared_from_base__from_base__base)
 {
     const auto base = std::make_shared<base_class>();
     const auto self = base->self<base_class>();
-    BOOST_REQUIRE(!base->base_method());
-    BOOST_REQUIRE(!self->base_method());
+    BC_REQUIRE(!base->base_method());
+    BC_REQUIRE(!self->base_method());
 }
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_this__from_derived__polymorphic)
+BC_AUTO_TEST_CASE(enable_shared_from_base__shared_from_this__from_derived__polymorphic)
 {
     const auto left = std::make_shared<derived_left>();
     const auto base = left->shared_from_this();
 
     // Picks up the left override.
-    BOOST_REQUIRE(left->base_method());
-    BOOST_REQUIRE(base->base_method());
+    BC_REQUIRE(left->base_method());
+    BC_REQUIRE(base->base_method());
 
     // But left is not directly accessible (why we need shared_from_base<>).
-    ////BOOST_REQUIRE(left->left_method());
+    ////BC_REQUIRE(left->left_method());
 }
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_base__from_base__derived_and_polymorphic)
+BC_AUTO_TEST_CASE(enable_shared_from_base__shared_from_base__from_base__derived_and_polymorphic)
 {
     const auto base = std::static_pointer_cast<base_class>(std::make_shared<derived_left>());
     const auto left = base->self<derived_left>();
 
     // This is overridden, even in the upcast instance.
-    BOOST_REQUIRE(base->base_method());
+    BC_REQUIRE(base->base_method());
 
     // Picks up the left override.
-    BOOST_REQUIRE(left->base_method());
+    BC_REQUIRE(left->base_method());
 
     // Derived left is now directly accessible.
-    BOOST_REQUIRE(left->left_method());
+    BC_REQUIRE(left->left_method());
 }
 
 // weak_from_base
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__weak_from_base__from_base__locks_base)
+BC_AUTO_TEST_CASE(enable_shared_from_base__weak_from_base__from_base__locks_base)
 {
     const auto base = std::make_shared<base_class>();
     const auto weak = base->weak<base_class>();
     const auto self = weak.lock();
-    BOOST_REQUIRE(self);
-    BOOST_REQUIRE(!self->base_method());
+    BC_REQUIRE(self);
+    BC_REQUIRE(!self->base_method());
 }
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__weak_from_base__from_base__derived_and_polymorphic)
+BC_AUTO_TEST_CASE(enable_shared_from_base__weak_from_base__from_base__derived_and_polymorphic)
 {
     const auto base = std::static_pointer_cast<base_class>(std::make_shared<derived_left>());
     const auto weak = base->weak<derived_left>();
     const auto left = weak.lock();
-    BOOST_REQUIRE(left);
+    BC_REQUIRE(left);
 
     // Picks up the left override.
-    BOOST_REQUIRE(left->base_method());
+    BC_REQUIRE(left->base_method());
 
     // Derived left is directly accessible from the locked weak pointer.
-    BOOST_REQUIRE(left->left_method());
+    BC_REQUIRE(left->left_method());
 }
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__weak_from_base__released__expired)
+BC_AUTO_TEST_CASE(enable_shared_from_base__weak_from_base__released__expired)
 {
     auto base = std::make_shared<derived_left>();
     const auto weak = base->weak<derived_left>();
 
     // The weak pointer does not retain the instance.
-    BOOST_REQUIRE(!weak.expired());
+    BC_REQUIRE(!weak.expired());
     base.reset();
-    BOOST_REQUIRE(weak.expired());
-    BOOST_REQUIRE(!weak.lock());
+    BC_REQUIRE(weak.expired());
+    BC_REQUIRE(!weak.lock());
 }
 
 // shared_from_sibling
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_sibling__multiple_derived__expected)
+BC_AUTO_TEST_CASE(enable_shared_from_base__shared_from_sibling__multiple_derived__expected)
 {
     const auto base = std::make_shared<multiple>();
     const auto left = base->sibling<derived_left, base_class>();
 
     // Works like shared_from_base (but less guarded/performant).
-    BOOST_REQUIRE(left->base_method());
-    BOOST_REQUIRE(left->left_method());
+    BC_REQUIRE(left->base_method());
+    BC_REQUIRE(left->left_method());
 }
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_sibling__multiple_sibling__expected)
+BC_AUTO_TEST_CASE(enable_shared_from_base__shared_from_sibling__multiple_sibling__expected)
 {
     const auto base = std::make_shared<multiple>();
     const auto right = base->sibling<underived_right, base_class>();
 
     // right is now directly accessible from left, yet right does not implement shared_from_base.
-    BOOST_REQUIRE(right->right_method());
+    BC_REQUIRE(right->right_method());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

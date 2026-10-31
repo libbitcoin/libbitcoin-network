@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(connector_tests)
+BC_AUTO_TEST_SUITE(connector_tests)
 
 class accessor
   : public connector
@@ -52,7 +52,7 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
+BC_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
 {
     logger log{};
     log.stop();
@@ -63,14 +63,14 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
     connector::parameters params{ .connect_timeout = seconds(10), .maximum_request = maximum };
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
 
-    BOOST_REQUIRE(&instance->get_service() == &pool.service());
-    BOOST_REQUIRE(&instance->get_strand() == &strand);
-    BOOST_REQUIRE(instance->get_timer());
-    BOOST_REQUIRE(instance->get_stopped());
-    BOOST_REQUIRE_EQUAL(instance->get_maximum_request(), maximum);
+    BC_REQUIRE(&instance->get_service() == &pool.service());
+    BC_REQUIRE(&instance->get_strand() == &strand);
+    BC_REQUIRE(instance->get_timer());
+    BC_REQUIRE(instance->get_stopped());
+    BC_REQUIRE_EQUAL(instance->get_maximum_request(), maximum);
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address_suspended__service_suspended)
+BC_AUTO_TEST_CASE(connector__connect_address__bogus_address_suspended__service_suspended)
 {
     logger log{};
     log.stop();
@@ -95,12 +95,12 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address_suspended__servic
     });
 
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(instance->get_stopped());
-    BOOST_REQUIRE(result);
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(instance->get_stopped());
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeout)
+BC_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeout)
 {
     logger log{};
     log.stop();
@@ -126,12 +126,12 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeou
     });
 
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(instance->get_stopped());
-    BOOST_REQUIRE(result);
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(instance->get_stopped());
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_timeout)
+BC_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_timeout)
 {
     logger log{};
     log.stop();
@@ -157,12 +157,12 @@ BOOST_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_ti
     });
 
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(instance->get_stopped());
-    BOOST_REQUIRE(result);
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(instance->get_stopped());
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed_race_operation_timeout)
+BC_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed_race_operation_timeout)
 {
     logger log{};
     log.stop();
@@ -186,12 +186,12 @@ BOOST_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed
     });
 
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(instance->get_stopped());
-    BOOST_REQUIRE(result);
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(instance->get_stopped());
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_canceled)
+BC_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_canceled)
 {
     logger log{};
     log.stop();
@@ -229,21 +229,21 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_can
     });
 
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(instance->get_stopped());
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(instance->get_stopped());
 
     // BUGBUG: macOS:
     // Error codes have changed and the resulting race failure test is not matching expected code.
     if (!result)
     {
-        BOOST_CHECK_EQUAL(ec1, error::resolve_failed);
-        BOOST_CHECK_EQUAL(ec1, error::operation_canceled);
+        BC_CHECK_EQUAL(ec1, error::resolve_failed);
+        BC_CHECK_EQUAL(ec1, error::operation_canceled);
     }
 
-    BOOST_REQUIRE(result);
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
+BC_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
 {
     logger log{};
     log.stop();
@@ -280,22 +280,22 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
     });
 
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(instance->get_stopped());
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(instance->get_stopped());
 
     // BUGBUG: macOS:
     // Error codes have changed and the resulting race failure test is not matching expected code.
     if (!result)
     {
-        BOOST_CHECK_EQUAL(ec1, error::resolve_failed);
-        BOOST_CHECK_EQUAL(ec1, error::operation_canceled);
-        BOOST_CHECK_EQUAL(ec2, error::operation_failed);
+        BC_CHECK_EQUAL(ec1, error::resolve_failed);
+        BC_CHECK_EQUAL(ec1, error::operation_canceled);
+        BC_CHECK_EQUAL(ec2, error::operation_failed);
     }
 
-    BOOST_REQUIRE(result);
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect__suspended_before_resolve__service_suspended)
+BC_AUTO_TEST_CASE(connector__connect__suspended_before_resolve__service_suspended)
 {
     using namespace std::chrono_literals;
     logger log{};
@@ -320,15 +320,15 @@ BOOST_AUTO_TEST_CASE(connector__connect__suspended_before_resolve__service_suspe
     });
 
     auto future = connected.get_future();
-    BOOST_REQUIRE(future.wait_for(10s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(future.get(), error::service_suspended);
-    BOOST_REQUIRE(null.get_future().get());
+    BC_REQUIRE(future.wait_for(10s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(future.get(), error::service_suspended);
+    BC_REQUIRE(null.get_future().get());
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(instance->get_stopped());
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(instance->get_stopped());
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect__unresolvable_hostname__resolve_failed)
+BC_AUTO_TEST_CASE(connector__connect__unresolvable_hostname__resolve_failed)
 {
     using namespace std::chrono_literals;
     logger log{};
@@ -351,13 +351,13 @@ BOOST_AUTO_TEST_CASE(connector__connect__unresolvable_hostname__resolve_failed)
     });
 
     auto future = connected.get_future();
-    BOOST_REQUIRE(future.wait_for(60s) == std::future_status::ready);
+    BC_REQUIRE(future.wait_for(60s) == std::future_status::ready);
     const auto ec = future.get();
-    BOOST_REQUIRE(ec == error::resolve_failed || ec == error::operation_failed);
-    BOOST_REQUIRE(null.get_future().get());
+    BC_REQUIRE(ec == error::resolve_failed || ec == error::operation_failed);
+    BC_REQUIRE(null.get_future().get());
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(instance->get_stopped());
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(instance->get_stopped());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

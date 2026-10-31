@@ -43,7 +43,7 @@ struct peer_setup_fixture
     void send(const Message& message, uint32_t version)
     {
         system::data_chunk payload(message.size(version));
-        BOOST_REQUIRE(message.serialize(version, payload));
+        BC_REQUIRE(message.serialize(version, payload));
         send(Message::command, payload);
     }
 
@@ -105,7 +105,7 @@ public:
     void send(const Message& message, uint32_t version)
     {
         system::data_chunk payload(message.size(version));
-        BOOST_REQUIRE(message.serialize(version, payload));
+        BC_REQUIRE(message.serialize(version, payload));
         send(Message::command, payload);
     }
 
@@ -242,7 +242,7 @@ struct peer_net_setup_fixture
             promise.set_value(ec);
         });
 
-        BOOST_REQUIRE(!promise.get_future().get());
+        BC_REQUIRE(!promise.get_future().get());
     }
 
     /// Write the address pool file (loaded upon start).

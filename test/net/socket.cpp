@@ -20,7 +20,7 @@
 
 #include <future>
 
-BOOST_AUTO_TEST_SUITE(socket_tests)
+BC_AUTO_TEST_SUITE(socket_tests)
 
 class socket_accessor
   : public network::socket
@@ -61,7 +61,7 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
+BC_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
 {
     const logger log{};
     threadpool pool(1);
@@ -74,19 +74,19 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
 
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
 
-    BOOST_REQUIRE(!instance->stranded());
-    BOOST_REQUIRE(&instance->get_strand() == &instance->strand());
-    BOOST_REQUIRE(instance->get_endpoint() == instance->endpoint());
-    BOOST_REQUIRE(!instance->get_endpoint().is_address());
-    BOOST_REQUIRE(instance->get_address() == instance->address());
-    BOOST_REQUIRE(instance->get_address() == config::address{});
-    BOOST_REQUIRE_EQUAL(instance->get_maximum_request(), maximum);
-    BOOST_REQUIRE(instance->binding() == config::endpoint{});
-    BOOST_REQUIRE_EQUAL(instance->slot(), max_size_t);
+    BC_REQUIRE(!instance->stranded());
+    BC_REQUIRE(&instance->get_strand() == &instance->strand());
+    BC_REQUIRE(instance->get_endpoint() == instance->endpoint());
+    BC_REQUIRE(!instance->get_endpoint().is_address());
+    BC_REQUIRE(instance->get_address() == instance->address());
+    BC_REQUIRE(instance->get_address() == config::address{});
+    BC_REQUIRE_EQUAL(instance->get_maximum_request(), maximum);
+    BC_REQUIRE(instance->binding() == config::endpoint{});
+    BC_REQUIRE_EQUAL(instance->slot(), max_size_t);
     instance->stop();
 }
 
-BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
+BC_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 {
     const logger log{};
     threadpool pool(2);
@@ -104,24 +104,24 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     const io::endpoint endpoint{ system::ip::ipv6{}, 42 };
 
     acceptor.open(io::tcp::of(endpoint), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     acceptor.set_option(io::reuse_address{ true }, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     // Result codes inconsistent due to context.
     acceptor.bind(endpoint, ec);
-    ////BOOST_REQUIRE(!ec);
+    ////BC_REQUIRE(!ec);
 
     // Result codes inconsistent due to context.
     acceptor.listen(ec);
-    ////BOOST_REQUIRE(!ec);
+    ////BC_REQUIRE(!ec);
 
     instance->accept(acceptor, [instance](const code& ec)
     {
         // Acceptor cancellation sets channel_stopped and unspecified address.
-        BOOST_REQUIRE_EQUAL(ec, error::operation_canceled);
-        BOOST_REQUIRE(!instance->get_endpoint().is_address());
+        BC_REQUIRE_EQUAL(ec, error::operation_canceled);
+        BC_REQUIRE(!instance->get_endpoint().is_address());
     });
 
     // Stopping the socket does not cancel the acceptor but precludes assertion.
@@ -136,11 +136,11 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     });
 
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
 ////// Test is a race condition, periodically fails.
-////BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
+////BC_AUTO_TEST_CASE(socket__connect__invalid__error)
 ////{
 ////    const logger log{};
 ////    threadpool pool(2);
@@ -161,16 +161,16 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////    {
 ////        // Socket cancellation sets channel_stopped and default ipv6 authority.
 ////        // TODO: 3 (ERROR_PATH_NOT_FOUND) code gets mapped to unknown.
-////        ////BOOST_REQUIRE(ec == error::unknown || ec == error::channel_stopped);
+////        ////BC_REQUIRE(ec == error::unknown || ec == error::channel_stopped);
 ////
 ////        // gcc/ubuntu (one time in CI):
 ////        // fatal error: in "socket_tests/socket__connect__invalid__error":
 ////        // std::length_error: basic_string::_M_create
-////        BOOST_REQUIRE(ec);
+////        BC_REQUIRE(ec);
 ////
 ////        // Default authority string inconsistent due to context.
-////        ////BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::ffff:0:0]");
-////        ////BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "0.0.0.0");
+////        ////BC_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::ffff:0:0]");
+////        ////BC_REQUIRE_EQUAL(instance->get_authority().to_string(), "0.0.0.0");
 ////    });
 ////
 ////    // Test race.
@@ -181,10 +181,10 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////    instance->stop();
 ////
 ////    pool.stop();
-////    BOOST_REQUIRE(pool.join());
+////    BC_REQUIRE(pool.join());
 ////}
 ////
-////BOOST_AUTO_TEST_CASE(socket__read_some__disconnected__error)
+////BC_AUTO_TEST_CASE(socket__read_some__disconnected__error)
 ////{
 ////    const logger log{};
 ////    threadpool pool(2);
@@ -201,8 +201,8 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////        [instance](const code& ec, size_t size)
 ////        {
 ////            // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
-////            BOOST_REQUIRE_EQUAL(ec, error::bad_stream);
-////            BOOST_REQUIRE_EQUAL(size, zero);
+////            BC_REQUIRE_EQUAL(ec, error::bad_stream);
+////            BC_REQUIRE_EQUAL(size, zero);
 ////        });
 ////
 ////    // Test race.
@@ -212,10 +212,10 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 ////    instance->stop();
 ////
 ////    pool.stop();
-////    BOOST_REQUIRE(pool.join());
+////    BC_REQUIRE(pool.join());
 ////}
 
-BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
+BC_AUTO_TEST_CASE(socket__read__disconnected__error)
 {
     const logger log{};
     threadpool pool(2);
@@ -232,8 +232,8 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
         [instance](const code& ec, size_t size)
         {
             // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
-            BOOST_REQUIRE_EQUAL(ec, error::bad_stream);
-            BOOST_REQUIRE_EQUAL(size, zero);
+            BC_REQUIRE_EQUAL(ec, error::bad_stream);
+            BC_REQUIRE_EQUAL(size, zero);
         });
 
     // Test race.
@@ -243,10 +243,10 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
     instance->stop();
 
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
+BC_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
 {
     const logger log{};
     threadpool pool(2);
@@ -263,8 +263,8 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
         [instance](const code& ec, size_t size)
         {
             // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
-            BOOST_REQUIRE_EQUAL(ec, error::bad_stream);
-            BOOST_REQUIRE_EQUAL(size, zero);
+            BC_REQUIRE_EQUAL(ec, error::bad_stream);
+            BC_REQUIRE_EQUAL(size, zero);
         });
 
     // Test race.
@@ -274,10 +274,10 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
     instance->stop();
 
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(socket__connect__bound_loopback__binding_expected)
+BC_AUTO_TEST_CASE(socket__connect__bound_loopback__binding_expected)
 {
     using namespace std::chrono_literals;
 
@@ -296,11 +296,11 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_loopback__binding_expected)
     const auto bind_endpoint = test::loopback();
 
     acceptor.open(io::tcp::of(bind_endpoint), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor.bind(bind_endpoint, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor.listen(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     const auto port = acceptor.local_endpoint().port();
 
     const auto server = std::make_shared<socket_accessor>(log, pool.service(), params);
@@ -323,21 +323,21 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_loopback__binding_expected)
         connect_result->set_value(connect_ec);
     });
 
-    BOOST_REQUIRE(connect_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(connect_future.get(), error::success);
-    BOOST_REQUIRE(accept_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(accept_future.get(), error::success);
-    BOOST_REQUIRE_EQUAL(client->binding().host(), "127.0.0.1");
-    BOOST_REQUIRE_NE(client->binding().port(), 0u);
-    BOOST_REQUIRE_EQUAL(client->get_address().to_host(), "127.0.0.1");
+    BC_REQUIRE(connect_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(connect_future.get(), error::success);
+    BC_REQUIRE(accept_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(accept_future.get(), error::success);
+    BC_REQUIRE_EQUAL(client->binding().host(), "127.0.0.1");
+    BC_REQUIRE_NE(client->binding().port(), 0u);
+    BC_REQUIRE_EQUAL(client->get_address().to_host(), "127.0.0.1");
 
     client->stop();
     server->stop();
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(socket__connect__bound_family_mismatch__resolve_failed)
+BC_AUTO_TEST_CASE(socket__connect__bound_family_mismatch__resolve_failed)
 {
     using namespace std::chrono_literals;
 
@@ -361,15 +361,15 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_family_mismatch__resolve_failed)
         connect_result->set_value(connect_ec);
     });
 
-    BOOST_REQUIRE(connect_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(connect_future.get(), error::resolve_failed);
+    BC_REQUIRE(connect_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(connect_future.get(), error::resolve_failed);
 
     client->stop();
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(socket__connect__bound_unavailable__net_unreachable)
+BC_AUTO_TEST_CASE(socket__connect__bound_unavailable__net_unreachable)
 {
     using namespace std::chrono_literals;
 
@@ -393,12 +393,12 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_unavailable__net_unreachable)
         connect_result->set_value(connect_ec);
     });
 
-    BOOST_REQUIRE(connect_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(connect_future.get(), error::net_unreachable);
+    BC_REQUIRE(connect_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(connect_future.get(), error::net_unreachable);
 
     client->stop();
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
 // Regression test for a fix to socket::async_write: it used to write every
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(socket__connect__bound_unavailable__net_unreachable)
 // received, so a single read() call assembling the entire multi-chunk body
 // proves the chunks were sent as one multi-frame message rather than as
 // several.
-BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_message)
+BC_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_message)
 {
     using namespace std::chrono_literals;
 
@@ -429,13 +429,13 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
     const auto bind_endpoint = test::loopback();
 
     acceptor.open(io::tcp::of(bind_endpoint), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor.set_option(io::reuse_address(true), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor.bind(bind_endpoint, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor.listen(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     const auto port = acceptor.local_endpoint().port();
 
     const auto server = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
@@ -486,36 +486,36 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
     io::socket raw(client_service);
     code client_ec{};
     raw.connect(test::loopback(port), client_ec);
-    BOOST_REQUIRE(!client_ec);
+    BC_REQUIRE(!client_ec);
 
     ws::client<io::socket> client{ raw };
     client_ec = client.handshake("127.0.0.1", "/");
-    BOOST_REQUIRE(!client_ec);
+    BC_REQUIRE(!client_ec);
 
     // One blocking read of a "complete message" must assemble every chunk.
     http::flat_buffer read_buffer{};
     client_ec = client.read(read_buffer);
-    BOOST_REQUIRE(!client_ec);
-    BOOST_REQUIRE(!client.binary());
+    BC_REQUIRE(!client_ec);
+    BC_REQUIRE(!client.binary());
 
     const auto received = test::to_string(read_buffer.data());
-    BOOST_REQUIRE_EQUAL(received, expected);
+    BC_REQUIRE_EQUAL(received, expected);
 
-    BOOST_REQUIRE(accept_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(accept_future.get(), error::success);
-    BOOST_REQUIRE(upgrade_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(upgrade_future.get(), error::upgrade);
-    BOOST_REQUIRE(switch_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(switch_future.get(), error::success);
-    BOOST_REQUIRE(write_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(write_future.get(), error::success);
+    BC_REQUIRE(accept_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(accept_future.get(), error::success);
+    BC_REQUIRE(upgrade_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(upgrade_future.get(), error::upgrade);
+    BC_REQUIRE(switch_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(switch_future.get(), error::success);
+    BC_REQUIRE(write_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(write_future.get(), error::success);
 
     server->stop();
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
+BC_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
 {
     using namespace std::chrono_literals;
 
@@ -534,13 +534,13 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
     const auto bind_endpoint = test::loopback();
 
     acceptor.open(io::tcp::of(bind_endpoint), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor.set_option(io::reuse_address(true), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor.bind(bind_endpoint, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor.listen(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     const auto port = acceptor.local_endpoint().port();
 
     const auto server = std::make_shared<socket_accessor>(log, pool.service(), std::move(params));
@@ -586,31 +586,31 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
     io::socket client(client_service);
     code client_ec{};
     client.connect(test::loopback(port), client_ec);
-    BOOST_REQUIRE(!client_ec);
+    BC_REQUIRE(!client_ec);
 
     http::message<true, http::empty_body> get{ http::verb::get, "/", http::version_1_1 };
     get.set(http::field::host, "127.0.0.1");
     http::write(client, get, client_ec);
-    BOOST_REQUIRE(!client_ec);
+    BC_REQUIRE(!client_ec);
 
     // One blocking read must assemble every chunk of the json body.
     http::flat_buffer read_buffer{};
     http::message<false, http::string_body> received{};
     http::read(client, read_buffer, received, client_ec);
-    BOOST_REQUIRE(!client_ec);
-    BOOST_REQUIRE_EQUAL(received.result_int(), 200u);
-    BOOST_REQUIRE_EQUAL(received.body(), expected);
+    BC_REQUIRE(!client_ec);
+    BC_REQUIRE_EQUAL(received.result_int(), 200u);
+    BC_REQUIRE_EQUAL(received.body(), expected);
 
-    BOOST_REQUIRE(accept_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(accept_future.get(), error::success);
-    BOOST_REQUIRE(read_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(read_future.get(), error::success);
-    BOOST_REQUIRE(write_future.wait_for(2s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(write_future.get(), error::success);
+    BC_REQUIRE(accept_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(accept_future.get(), error::success);
+    BC_REQUIRE(read_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(read_future.get(), error::success);
+    BC_REQUIRE(write_future.wait_for(2s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(write_future.get(), error::success);
 
     server->stop();
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
 // loopback
@@ -633,7 +633,7 @@ public:
     Type get() const
     {
         using namespace std::chrono_literals;
-        BOOST_REQUIRE(future_.wait_for(10s) == std::future_status::ready);
+        BC_REQUIRE(future_.wait_for(10s) == std::future_status::ready);
         return future_.get();
     }
 
@@ -650,19 +650,19 @@ struct acceptor_fixture
     {
         code ec{};
         acceptor.open(io::tcp::of(open_endpoint), ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         acceptor.set_option(io::reuse_address(true), ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         acceptor.bind(open_endpoint, ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         acceptor.listen(ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
     }
 
     ~acceptor_fixture()
     {
         pool.stop();
-        BOOST_REQUIRE(pool.join());
+        BC_REQUIRE(pool.join());
     }
 
     std::shared_ptr<socket_accessor> accept(const socket::parameters& params, const awaiter<code>& accepted, bool proxied=false)
@@ -675,7 +675,7 @@ struct acceptor_fixture
 
         code ec{};
         client.connect(open_endpoint, ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         return instance;
     }
 
@@ -704,14 +704,14 @@ struct acceptor_fixture
     };
 };
 
-BOOST_FIXTURE_TEST_CASE(socket__service__default__expected, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__service__default__expected, acceptor_fixture)
 {
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), clear);
-    BOOST_REQUIRE(&instance->service() == &pool.service());
+    BC_REQUIRE(&instance->service() == &pool.service());
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__set_address__stranded__address_and_endpoint_set, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__set_address__stranded__address_and_endpoint_set, acceptor_fixture)
 {
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), clear);
     const config::address expected{ io::endpoint{ test::address("1.2.3.4"), 42 } };
@@ -722,32 +722,32 @@ BOOST_FIXTURE_TEST_CASE(socket__set_address__stranded__address_and_endpoint_set,
         set.set(true);
     });
 
-    BOOST_REQUIRE(set.get());
-    BOOST_REQUIRE(instance->address() == expected);
-    BOOST_REQUIRE_EQUAL(instance->endpoint().port(), 42u);
-    BOOST_REQUIRE_EQUAL(instance->endpoint().host(), "1.2.3.4");
+    BC_REQUIRE(set.get());
+    BC_REQUIRE(instance->address() == expected);
+    BC_REQUIRE_EQUAL(instance->endpoint().port(), 42u);
+    BC_REQUIRE_EQUAL(instance->endpoint().host(), "1.2.3.4");
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__accept__proxied__success_endpoint_set, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__accept__proxied__success_endpoint_set, acceptor_fixture)
 {
     const awaiter<code> accepted{};
     const auto instance = accept(clear, accepted, true);
 
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
-    BOOST_REQUIRE_EQUAL(instance->endpoint().port(), client.local_endpoint().port());
-    BOOST_REQUIRE_EQUAL(instance->binding().port(), open_endpoint.port());
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
+    BC_REQUIRE_EQUAL(instance->endpoint().port(), client.local_endpoint().port());
+    BC_REQUIRE_EQUAL(instance->binding().port(), open_endpoint.port());
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__accept__not_listening__invalid_configuration, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__accept__not_listening__invalid_configuration, acceptor_fixture)
 {
     io::acceptor unlistened{ strand };
     code ec{};
     unlistened.open(io::tcp::of(raw_endpoint), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     unlistened.bind(raw_endpoint, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const awaiter<code> accepted{};
     const auto instance = std::make_shared<socket_accessor>(log, pool.service(), clear);
@@ -756,15 +756,15 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__not_listening__invalid_configuration, ac
         accepted.set(accept_ec);
     });
 
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::invalid_configuration);
+    BC_REQUIRE_EQUAL(accepted.get(), error::invalid_configuration);
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, acceptor_fixture)
 {
     const awaiter<code> accepted{};
     const auto instance = accept(clear, accepted);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
 
     char byte{};
     const awaiter<bool> base{};
@@ -780,10 +780,10 @@ BOOST_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, acc
 
     code ec{};
     io::write(client, io::buffer("x", 1), ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(base.get());
-    BOOST_REQUIRE_EQUAL(read.get(), error::success);
-    BOOST_REQUIRE_EQUAL(byte, 'x');
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(base.get());
+    BC_REQUIRE_EQUAL(read.get(), error::success);
+    BC_REQUIRE_EQUAL(byte, 'x');
     instance->stop();
 }
 
@@ -795,13 +795,13 @@ static std::string request_with_field(size_t size)
         std::string(size, 'a') + "\r\n\r\n";
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__http_read__field_below_header_limit__success, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__http_read__field_below_header_limit__success, acceptor_fixture)
 {
     auto params = clear;
     params.maximum_request = 4'000'000u;
     const awaiter<code> accepted{};
     const auto instance = accept(params, accepted);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
 
     const auto buffer = std::make_shared<http::flat_buffer>();
     const auto request = std::make_shared<http::request>();
@@ -813,18 +813,18 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read__field_below_header_limit__success, ac
 
     code ec{};
     io::write(client, io::buffer(request_with_field(1'000)), ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(read.get(), error::success);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(read.get(), error::success);
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__http_read__header_above_header_limit__header_limit, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__http_read__header_above_header_limit__header_limit, acceptor_fixture)
 {
     auto params = clear;
     params.maximum_request = 4'000'000u;
     const awaiter<code> accepted{};
     const auto instance = accept(params, accepted);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
 
     const auto buffer = std::make_shared<http::flat_buffer>();
     const auto request = std::make_shared<http::request>();
@@ -836,19 +836,19 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read__header_above_header_limit__header_lim
 
     code ec{};
     io::write(client, io::buffer(request_with_field(maximum_http_header)), ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(read.get(), error::header_limit);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(read.get(), error::header_limit);
     instance->stop();
 }
 
 // A field above 65533 bytes is rejected by the header limit.
-BOOST_FIXTURE_TEST_CASE(socket__http_read__field_above_field_limit__header_limit, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__http_read__field_above_field_limit__header_limit, acceptor_fixture)
 {
     auto params = clear;
     params.maximum_request = 4'000'000u;
     const awaiter<code> accepted{};
     const auto instance = accept(params, accepted);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
 
     const auto buffer = std::make_shared<http::flat_buffer>();
     const auto request = std::make_shared<http::request>();
@@ -860,18 +860,18 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read__field_above_field_limit__header_limit
 
     code ec{};
     io::write(client, io::buffer(request_with_field(200'000)), ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(read.get(), error::header_limit);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(read.get(), error::header_limit);
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_complete_message__success, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__rpc_read__websocket_complete_message__success, acceptor_fixture)
 {
     auto params = clear;
     params.maximum_request = 1'000u;
     const awaiter<code> accepted{};
     const auto instance = accept(params, accepted);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
 
     const auto buffer = std::make_shared<http::flat_buffer>();
     const auto upgrade = std::make_shared<http::request>();
@@ -890,21 +890,21 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_complete_message__success, a
     code ec{};
     ws::client<io::socket> websocket{ client };
     ec = websocket.handshake("127.0.0.1", "/");
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(upgraded.get(), error::success);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(upgraded.get(), error::success);
     ec = websocket.write(R"({"jsonrpc":"2.0","id":1,"method":"x","params":[]})");
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(read.get(), error::success);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(read.get(), error::success);
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_incomplete_message__incomplete, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__rpc_read__websocket_incomplete_message__incomplete, acceptor_fixture)
 {
     auto params = clear;
     params.maximum_request = 1'000u;
     const awaiter<code> accepted{};
     const auto instance = accept(params, accepted);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
 
     const auto buffer = std::make_shared<http::flat_buffer>();
     const auto upgrade = std::make_shared<http::request>();
@@ -923,37 +923,37 @@ BOOST_FIXTURE_TEST_CASE(socket__rpc_read__websocket_incomplete_message__incomple
     code ec{};
     ws::client<io::socket> websocket{ client };
     ec = websocket.handshake("127.0.0.1", "/");
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(upgraded.get(), error::success);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(upgraded.get(), error::success);
     ec = websocket.write(R"({"id":1)");
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(read.get(), error::incomplete);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(read.get(), error::incomplete);
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__connect__refused__connection_refused, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__connect__refused__connection_refused, acceptor_fixture)
 {
     const awaiter<code> connected{};
     const auto instance = connect(clear, { closed_endpoint }, connected);
 
-    BOOST_REQUIRE_EQUAL(connected.get(), error::connection_refused);
+    BC_REQUIRE_EQUAL(connected.get(), error::connection_refused);
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__connect__bound_first_refused__second_connected, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__connect__bound_first_refused__second_connected, acceptor_fixture)
 {
     auto params = clear;
     params.bind = test::loopback(0);
     const awaiter<code> connected{};
     const auto instance = connect(params, { closed_endpoint, open_endpoint }, connected);
 
-    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
-    BOOST_REQUIRE_EQUAL(instance->binding().host(), "127.0.0.1");
-    BOOST_REQUIRE_EQUAL(instance->address().port(), open_endpoint.port());
+    BC_REQUIRE_EQUAL(connected.get(), error::success);
+    BC_REQUIRE_EQUAL(instance->binding().host(), "127.0.0.1");
+    BC_REQUIRE_EQUAL(instance->address().port(), open_endpoint.port());
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v1_prefix__success_unencrypted, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__accept__p2ps_v1_prefix__success_unencrypted, acceptor_fixture)
 {
     static const system::data_chunk prefix{ 0xf9, 0xbe, 0xb4, 0xd9, 'v', 'e', 'r', 's', 'i', 'o', 'n', 0x00, 0x00, 0x00, 0x00, 0x00 };
     auto params = clear;
@@ -963,8 +963,8 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v1_prefix__success_unencrypted, acc
 
     code ec{};
     io::write(client, io::buffer(prefix), ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
 
     const awaiter<bool> encrypted{};
     io::post(instance->strand(), [=]() NOEXCEPT
@@ -972,11 +972,11 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v1_prefix__success_unencrypted, acc
         encrypted.set(instance->encrypted());
     });
 
-    BOOST_REQUIRE(!encrypted.get());
+    BC_REQUIRE(!encrypted.get());
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v2_prefix_disconnected__peer_disconnect, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__accept__p2ps_v2_prefix_disconnected__peer_disconnect, acceptor_fixture)
 {
     static const system::data_chunk prefix(p2ps::stream::detection_size, 0x42);
     auto params = clear;
@@ -986,14 +986,14 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_v2_prefix_disconnected__peer_discon
 
     code ec{};
     io::write(client, io::buffer(prefix), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     client.shutdown(io::socket::shutdown_type::send, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::peer_disconnect);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(accepted.get(), error::peer_disconnect);
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_handshake_timeout__stopped, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__accept__p2ps_handshake_timeout__stopped, acceptor_fixture)
 {
     auto params = clear;
     params.context = std::cref(mainnet_context);
@@ -1003,22 +1003,22 @@ BOOST_FIXTURE_TEST_CASE(socket__accept__p2ps_handshake_timeout__stopped, accepto
 
     // The stop's shutdown may complete the pending read with end of file.
     const auto ec = accepted.get();
-    BOOST_REQUIRE(ec == error::operation_canceled || ec == error::peer_disconnect);
-    BOOST_REQUIRE(instance->stopped());
+    BC_REQUIRE(ec == error::operation_canceled || ec == error::peer_disconnect);
+    BC_REQUIRE(instance->stopped());
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__connect__p2ps_responder_disconnected__peer_disconnect, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__connect__p2ps_responder_disconnected__peer_disconnect, acceptor_fixture)
 {
     io::acceptor raw{ service };
     code ec{};
     raw.open(io::tcp::of(raw_endpoint), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     raw.set_option(io::reuse_address(true), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     raw.bind(raw_endpoint, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     raw.listen(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     auto params = clear;
     params.context = std::cref(mainnet_context);
@@ -1027,30 +1027,30 @@ BOOST_FIXTURE_TEST_CASE(socket__connect__p2ps_responder_disconnected__peer_disco
 
     io::socket responder{ service };
     raw.accept(responder, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     system::data_array<64> key{};
     io::read(responder, io::buffer(key), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     responder.shutdown(io::socket::shutdown_type::send, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(connected.get(), error::peer_disconnect);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(connected.get(), error::peer_disconnect);
     instance->stop();
 }
 
-BOOST_FIXTURE_TEST_CASE(socket__lazy_stop__clear__stopped_client_end_of_file, acceptor_fixture)
+BC_FIXTURE_TEST_CASE(socket__lazy_stop__clear__stopped_client_end_of_file, acceptor_fixture)
 {
     const awaiter<code> accepted{};
     const auto instance = accept(clear, accepted);
-    BOOST_REQUIRE_EQUAL(accepted.get(), error::success);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
 
     instance->lazy_stop();
-    BOOST_REQUIRE(instance->stopped());
+    BC_REQUIRE(instance->stopped());
 
     char byte{};
     code ec{};
     client.read_some(io::buffer(&byte, 1), ec);
-    BOOST_REQUIRE(ec == error::peer_disconnect);
+    BC_REQUIRE(ec == error::peer_disconnect);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

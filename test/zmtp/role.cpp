@@ -26,148 +26,148 @@
 // socket_type/compatible.
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_SUITE(zmtp_role_tests)
+BC_AUTO_TEST_SUITE(zmtp_role_tests)
 
-BOOST_AUTO_TEST_CASE(zmtp_role__socket_type__each_role__expected)
+BC_AUTO_TEST_CASE(zmtp_role__socket_type__each_role__expected)
 {
-    BOOST_REQUIRE_EQUAL(socket_type(zmtp_role::publisher), "PUB");
-    BOOST_REQUIRE_EQUAL(socket_type(zmtp_role::puller), "PULL");
-    BOOST_REQUIRE_EQUAL(socket_type(zmtp_role::replier), "REP");
-    BOOST_REQUIRE_EQUAL(socket_type(zmtp_role::router), "ROUTER");
-    BOOST_REQUIRE(socket_type(zmtp_role::undefined).empty());
+    BC_REQUIRE_EQUAL(socket_type(zmtp_role::publisher), "PUB");
+    BC_REQUIRE_EQUAL(socket_type(zmtp_role::puller), "PULL");
+    BC_REQUIRE_EQUAL(socket_type(zmtp_role::replier), "REP");
+    BC_REQUIRE_EQUAL(socket_type(zmtp_role::router), "ROUTER");
+    BC_REQUIRE(socket_type(zmtp_role::undefined).empty());
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_role__compatible__peer_socket_types__expected)
+BC_AUTO_TEST_CASE(zmtp_role__compatible__peer_socket_types__expected)
 {
-    BOOST_REQUIRE(compatible(zmtp_role::publisher, "SUB"));
-    BOOST_REQUIRE(compatible(zmtp_role::publisher, "XSUB"));
-    BOOST_REQUIRE(!compatible(zmtp_role::publisher, "PUSH"));
+    BC_REQUIRE(compatible(zmtp_role::publisher, "SUB"));
+    BC_REQUIRE(compatible(zmtp_role::publisher, "XSUB"));
+    BC_REQUIRE(!compatible(zmtp_role::publisher, "PUSH"));
 
-    BOOST_REQUIRE(compatible(zmtp_role::puller, "PUSH"));
-    BOOST_REQUIRE(!compatible(zmtp_role::puller, "SUB"));
+    BC_REQUIRE(compatible(zmtp_role::puller, "PUSH"));
+    BC_REQUIRE(!compatible(zmtp_role::puller, "SUB"));
 
-    BOOST_REQUIRE(compatible(zmtp_role::replier, "REQ"));
-    BOOST_REQUIRE(compatible(zmtp_role::replier, "DEALER"));
-    BOOST_REQUIRE(!compatible(zmtp_role::replier, "ROUTER"));
+    BC_REQUIRE(compatible(zmtp_role::replier, "REQ"));
+    BC_REQUIRE(compatible(zmtp_role::replier, "DEALER"));
+    BC_REQUIRE(!compatible(zmtp_role::replier, "ROUTER"));
 
-    BOOST_REQUIRE(compatible(zmtp_role::router, "REQ"));
-    BOOST_REQUIRE(compatible(zmtp_role::router, "DEALER"));
-    BOOST_REQUIRE(compatible(zmtp_role::router, "ROUTER"));
+    BC_REQUIRE(compatible(zmtp_role::router, "REQ"));
+    BC_REQUIRE(compatible(zmtp_role::router, "DEALER"));
+    BC_REQUIRE(compatible(zmtp_role::router, "ROUTER"));
 
-    BOOST_REQUIRE(!compatible(zmtp_role::undefined, "SUB"));
+    BC_REQUIRE(!compatible(zmtp_role::undefined, "SUB"));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 
 // PUSH peer sends three [push][one][two] messages.
 // ----------------------------------------------------------------------------
 
-BOOST_FIXTURE_TEST_SUITE(zmtp_role_puller_tests, role_puller_fixture)
+BC_FIXTURE_TEST_SUITE(zmtp_role_puller_tests, role_puller_fixture)
 
-BOOST_AUTO_TEST_CASE(zmtp_role__puller__push_peer__expected)
+BC_AUTO_TEST_CASE(zmtp_role__puller__push_peer__expected)
 {
     if (!enabled)
         return;
 
     rpc::request first{};
-    BOOST_REQUIRE_EQUAL(read(first), error::success);
-    BOOST_REQUIRE_EQUAL(first.message.method, "push");
-    BOOST_REQUIRE_EQUAL(params_of(first), 2u);
-    BOOST_REQUIRE_EQUAL(param_of(first, 0), chunk("one"));
-    BOOST_REQUIRE_EQUAL(param_of(first, 1), chunk("two"));
+    BC_REQUIRE_EQUAL(read(first), error::success);
+    BC_REQUIRE_EQUAL(first.message.method, "push");
+    BC_REQUIRE_EQUAL(params_of(first), 2u);
+    BC_REQUIRE_EQUAL(param_of(first, 0), chunk("one"));
+    BC_REQUIRE_EQUAL(param_of(first, 1), chunk("two"));
 
     rpc::request second{};
-    BOOST_REQUIRE_EQUAL(read(second), error::success);
-    BOOST_REQUIRE_EQUAL(second.message.method, "push");
-    BOOST_REQUIRE_EQUAL(params_of(second), 2u);
-    BOOST_REQUIRE_EQUAL(param_of(second, 0), chunk("one"));
-    BOOST_REQUIRE_EQUAL(param_of(second, 1), chunk("two"));
+    BC_REQUIRE_EQUAL(read(second), error::success);
+    BC_REQUIRE_EQUAL(second.message.method, "push");
+    BC_REQUIRE_EQUAL(params_of(second), 2u);
+    BC_REQUIRE_EQUAL(param_of(second, 0), chunk("one"));
+    BC_REQUIRE_EQUAL(param_of(second, 1), chunk("two"));
 
     rpc::request third{};
-    BOOST_REQUIRE_EQUAL(read(third), error::success);
-    BOOST_REQUIRE_EQUAL(third.message.method, "push");
-    BOOST_REQUIRE_EQUAL(params_of(third), 2u);
-    BOOST_REQUIRE_EQUAL(param_of(third, 0), chunk("one"));
-    BOOST_REQUIRE_EQUAL(param_of(third, 1), chunk("two"));
+    BC_REQUIRE_EQUAL(read(third), error::success);
+    BC_REQUIRE_EQUAL(third.message.method, "push");
+    BC_REQUIRE_EQUAL(params_of(third), 2u);
+    BC_REQUIRE_EQUAL(param_of(third, 0), chunk("one"));
+    BC_REQUIRE_EQUAL(param_of(third, 1), chunk("two"));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 
 // REQ peer sends [echo][text] twice (answered with [text]) then [fail]
 // (answered with an error, code and message).
 // ----------------------------------------------------------------------------
 
-BOOST_FIXTURE_TEST_SUITE(zmtp_role_replier_tests, role_replier_fixture)
+BC_FIXTURE_TEST_SUITE(zmtp_role_replier_tests, role_replier_fixture)
 
-BOOST_AUTO_TEST_CASE(zmtp_role__replier__req_peer__expected)
+BC_AUTO_TEST_CASE(zmtp_role__replier__req_peer__expected)
 {
     if (!enabled)
         return;
 
     rpc::request first{};
-    BOOST_REQUIRE_EQUAL(read(first), error::success);
-    BOOST_REQUIRE_EQUAL(first.message.method, "echo");
-    BOOST_REQUIRE_EQUAL(params_of(first), 1u);
+    BC_REQUIRE_EQUAL(read(first), error::success);
+    BC_REQUIRE_EQUAL(first.message.method, "echo");
+    BC_REQUIRE_EQUAL(params_of(first), 1u);
 
     rpc::response first_reply{};
     first_reply.message.result = rpc::value_t{ rpc::any_t{ system::to_shared(param_of(first, 0)) } };
-    BOOST_REQUIRE_EQUAL(respond(std::move(first_reply)), error::success);
+    BC_REQUIRE_EQUAL(respond(std::move(first_reply)), error::success);
 
     rpc::request second{};
-    BOOST_REQUIRE_EQUAL(read(second), error::success);
-    BOOST_REQUIRE_EQUAL(second.message.method, "echo");
-    BOOST_REQUIRE_EQUAL(params_of(second), 1u);
+    BC_REQUIRE_EQUAL(read(second), error::success);
+    BC_REQUIRE_EQUAL(second.message.method, "echo");
+    BC_REQUIRE_EQUAL(params_of(second), 1u);
 
     rpc::response second_reply{};
     second_reply.message.result = rpc::value_t{ rpc::any_t{ system::to_shared(param_of(second, 0)) } };
-    BOOST_REQUIRE_EQUAL(respond(std::move(second_reply)), error::success);
+    BC_REQUIRE_EQUAL(respond(std::move(second_reply)), error::success);
 
     rpc::request third{};
-    BOOST_REQUIRE_EQUAL(read(third), error::success);
-    BOOST_REQUIRE_EQUAL(third.message.method, "fail");
+    BC_REQUIRE_EQUAL(read(third), error::success);
+    BC_REQUIRE_EQUAL(third.message.method, "fail");
 
     rpc::response error_reply{};
     error_reply.message.error = rpc::result_t{ .code = -1, .message = "nope" };
-    BOOST_REQUIRE_EQUAL(respond(std::move(error_reply)), error::success);
+    BC_REQUIRE_EQUAL(respond(std::move(error_reply)), error::success);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 
 // DEALER peer (routing id "peer1", REQ envelope) sends [][echo][text],
 // answered with [][text] and then notified with [][topic][note], then sends
 // [][done].
 // ----------------------------------------------------------------------------
 
-BOOST_FIXTURE_TEST_SUITE(zmtp_role_router_tests, role_router_fixture)
+BC_FIXTURE_TEST_SUITE(zmtp_role_router_tests, role_router_fixture)
 
-BOOST_AUTO_TEST_CASE(zmtp_role__router__dealer_peer__expected)
+BC_AUTO_TEST_CASE(zmtp_role__router__dealer_peer__expected)
 {
     if (!enabled)
         return;
 
     rpc::request request{};
-    BOOST_REQUIRE_EQUAL(read(request), error::success);
-    BOOST_REQUIRE(request.message.id);
-    BOOST_REQUIRE_EQUAL(std::get<rpc::string_t>(*request.message.id), "peer1");
-    BOOST_REQUIRE_EQUAL(request.message.method, "echo");
-    BOOST_REQUIRE_EQUAL(params_of(request), 1u);
+    BC_REQUIRE_EQUAL(read(request), error::success);
+    BC_REQUIRE(request.message.id);
+    BC_REQUIRE_EQUAL(std::get<rpc::string_t>(*request.message.id), "peer1");
+    BC_REQUIRE_EQUAL(request.message.method, "echo");
+    BC_REQUIRE_EQUAL(params_of(request), 1u);
     const auto identity = std::get<rpc::string_t>(*request.message.id);
 
     rpc::response response{};
     response.message.id = identity;
     response.message.result = rpc::value_t{ rpc::any_t{ system::to_shared(param_of(request, 0)) } };
-    BOOST_REQUIRE_EQUAL(respond(std::move(response)), error::success);
+    BC_REQUIRE_EQUAL(respond(std::move(response)), error::success);
 
     rpc::request notification{};
     notification.message.id = identity;
     notification.message.method = "topic";
     notification.message.params = rpc::array_t{ rpc::any_t{ system::to_shared(chunk("note")) } };
-    BOOST_REQUIRE_EQUAL(notify(std::move(notification)), error::success);
+    BC_REQUIRE_EQUAL(notify(std::move(notification)), error::success);
 
     rpc::request last{};
-    BOOST_REQUIRE_EQUAL(read(last), error::success);
-    BOOST_REQUIRE_EQUAL(std::get<rpc::string_t>(*last.message.id), identity);
-    BOOST_REQUIRE_EQUAL(last.message.method, "done");
+    BC_REQUIRE_EQUAL(read(last), error::success);
+    BC_REQUIRE_EQUAL(std::get<rpc::string_t>(*last.message.id), identity);
+    BC_REQUIRE_EQUAL(last.message.method, "done");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -18,55 +18,55 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_version_acknowledge_tests)
+BC_AUTO_TEST_SUITE(p2p_version_acknowledge_tests)
 
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(version_acknowledge__properties__always__expected)
+BC_AUTO_TEST_CASE(version_acknowledge__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(version_acknowledge::command, "verack");
+    BC_REQUIRE_EQUAL(version_acknowledge::command, "verack");
     constexpr auto index = messages::peer::registry::index_of<version_acknowledge>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), version_acknowledge::command);
-    BOOST_REQUIRE_EQUAL(version_acknowledge::version_minimum, level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(version_acknowledge::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), version_acknowledge::command);
+    BC_REQUIRE_EQUAL(version_acknowledge::version_minimum, level::minimum_protocol);
+    BC_REQUIRE_EQUAL(version_acknowledge::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(version_acknowledge__size__always__zero)
+BC_AUTO_TEST_CASE(version_acknowledge__size__always__zero)
 {
-    BOOST_REQUIRE_EQUAL(version_acknowledge::size(level::canonical), zero);
+    BC_REQUIRE_EQUAL(version_acknowledge::size(level::canonical), zero);
 }
 
-BOOST_AUTO_TEST_CASE(version_acknowledge__deserialize1__empty__expected)
-{
-    const system::data_chunk data{};
-    BOOST_REQUIRE(version_acknowledge::deserialize(level::minimum_protocol, data));
-}
-
-BOOST_AUTO_TEST_CASE(version_acknowledge__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(version_acknowledge__deserialize1__empty__expected)
 {
     const system::data_chunk data{};
-    BOOST_REQUIRE(!version_acknowledge::deserialize(level::minimum_protocol - 1u, data));
+    BC_REQUIRE(version_acknowledge::deserialize(level::minimum_protocol, data));
 }
 
-BOOST_AUTO_TEST_CASE(version_acknowledge__deserialize1__excessive_version__nullptr)
+BC_AUTO_TEST_CASE(version_acknowledge__deserialize1__insufficient_version__nullptr)
 {
     const system::data_chunk data{};
-    BOOST_REQUIRE(!version_acknowledge::deserialize(level::maximum_protocol + 1u, data));
+    BC_REQUIRE(!version_acknowledge::deserialize(level::minimum_protocol - 1u, data));
 }
 
-BOOST_AUTO_TEST_CASE(version_acknowledge__deserialize2__insufficient_version__source_false)
+BC_AUTO_TEST_CASE(version_acknowledge__deserialize1__excessive_version__nullptr)
+{
+    const system::data_chunk data{};
+    BC_REQUIRE(!version_acknowledge::deserialize(level::maximum_protocol + 1u, data));
+}
+
+BC_AUTO_TEST_CASE(version_acknowledge__deserialize2__insufficient_version__source_false)
 {
     const system::data_chunk data{};
     system::read::bytes::copy source(data);
     version_acknowledge::deserialize(level::minimum_protocol - 1u, source);
-    BOOST_REQUIRE(!source);
+    BC_REQUIRE(!source);
 }
 
-BOOST_AUTO_TEST_CASE(version_acknowledge__serialize1__default__empty)
+BC_AUTO_TEST_CASE(version_acknowledge__serialize1__default__empty)
 {
     system::data_chunk data{};
-    BOOST_REQUIRE(version_acknowledge{}.serialize(level::minimum_protocol, data));
-    BOOST_REQUIRE(data.empty());
+    BC_REQUIRE(version_acknowledge{}.serialize(level::minimum_protocol, data));
+    BC_REQUIRE(data.empty());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

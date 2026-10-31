@@ -18,11 +18,11 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(subscriber_tests)
+BC_AUTO_TEST_SUITE(subscriber_tests)
 
 typedef subscriber<size_t> test_subscriber;
 
-BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
+BC_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
 {
     test_subscriber instance{};
     const auto ec = error::address_not_found;
@@ -51,14 +51,14 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
     }) == error::subscriber_stopped);
 
     result &= is_zero(instance.size());
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(stop_result.first, ec);
-    BOOST_REQUIRE_EQUAL(stop_result.second, expected);
-    BOOST_REQUIRE_EQUAL(retry_result.first, error::subscriber_stopped);
-    BOOST_REQUIRE_EQUAL(retry_result.second, size_t{});
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_result.first, ec);
+    BC_REQUIRE_EQUAL(stop_result.second, expected);
+    BC_REQUIRE_EQUAL(retry_result.first, error::subscriber_stopped);
+    BC_REQUIRE_EQUAL(retry_result.second, size_t{});
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
+BC_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
 {
     test_subscriber instance{};
     const auto ec = error::address_not_found;
@@ -73,12 +73,12 @@ BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
     });
 
     instance.stop_default(ec);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(stop_result.first, ec);
-    BOOST_REQUIRE_EQUAL(stop_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_result.first, ec);
+    BC_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
+BC_AUTO_TEST_CASE(subscriber__stop__once__expected)
 {
     test_subscriber instance{};
     const auto ec = error::address_not_found;
@@ -93,12 +93,12 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
     });
 
     instance.stop(ec, expected);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(stop_result.first, ec);
-    BOOST_REQUIRE_EQUAL(stop_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_result.first, ec);
+    BC_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
+BC_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
 {
     test_subscriber instance{};
     const auto ec = error::address_not_found;
@@ -116,12 +116,12 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
     instance.stop(error::address_blocked, {});
 
     // Handler is not invoked on stop after stop (handlers cleared).
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(stop_result.first, ec);
-    BOOST_REQUIRE_EQUAL(stop_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_result.first, ec);
+    BC_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
+BC_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
 {
     test_subscriber instance{};
     const auto ec = error::address_not_found;
@@ -140,12 +140,12 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
     instance.notify(ec, expected);
     instance.stop_default(error::address_blocked);
     instance.notify(error::address_blocked, {});
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(notify_result.first, ec);
-    BOOST_REQUIRE_EQUAL(notify_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(notify_result.first, ec);
+    BC_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
+BC_AUTO_TEST_CASE(subscriber__notify__once__expected)
 {
     test_subscriber instance{};
     const auto ec = error::address_not_found;
@@ -161,13 +161,13 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
     });
 
     instance.notify(ec, expected);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(notify_result.first, ec);
-    BOOST_REQUIRE_EQUAL(notify_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(notify_result.first, ec);
+    BC_REQUIRE_EQUAL(notify_result.second, expected);
     instance.stop_default(error::address_blocked);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
+BC_AUTO_TEST_CASE(subscriber__notify__twice__expected)
 {
     test_subscriber instance{};
     constexpr auto expected = 42u;
@@ -184,10 +184,10 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
 
     instance.notify({}, {});
     instance.notify(ec, expected);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(notify_result.first, ec);
-    BOOST_REQUIRE_EQUAL(notify_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(notify_result.first, ec);
+    BC_REQUIRE_EQUAL(notify_result.second, expected);
     instance.stop_default(error::address_blocked);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

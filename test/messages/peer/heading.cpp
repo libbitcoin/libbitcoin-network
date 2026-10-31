@@ -18,7 +18,7 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_heading_tests)
+BC_AUTO_TEST_SUITE(p2p_heading_tests)
 
 using namespace network::messages::peer;
 
@@ -31,110 +31,110 @@ static_assert(heading::maximum_payload(false) == 1'800'003_size);
 constexpr auto empty_hash = system::sha256::double_hash(system::sha256::ablocks_t<zero>{});
 constexpr auto empty_checksum = system::from_little_endian<uint32_t>(empty_hash);
 
-BOOST_AUTO_TEST_CASE(rpc_heading__size__always__expected)
+BC_AUTO_TEST_CASE(rpc_heading__size__always__expected)
 {
     constexpr auto expected = sizeof(uint32_t)
         + heading::command_size
         + sizeof(uint32_t)
         + sizeof(uint32_t);
 
-    BOOST_REQUIRE_EQUAL(heading::size(), expected);
+    BC_REQUIRE_EQUAL(heading::size(), expected);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__index__registered_commands__own_index)
+BC_AUTO_TEST_CASE(rpc_heading__index__registered_commands__own_index)
 {
     for (size_t expected{}; expected < messages::peer::registry::size; ++expected)
     {
         const std::string command{ messages::peer::registry::commands().at(expected) };
         const auto instance = heading{ 0u, command, 0u, 0u };
-        BOOST_REQUIRE_EQUAL(instance.index(), expected);
+        BC_REQUIRE_EQUAL(instance.index(), expected);
     }
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__index__unregistered_command__unknown)
+BC_AUTO_TEST_CASE(rpc_heading__index__unregistered_command__unknown)
 {
     const auto instance = heading{ 0u, "bogus", 0u, 0u };
-    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::unknown);
+    BC_REQUIRE_EQUAL(instance.index(), messages::peer::registry::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__index__empty_command__unknown)
+BC_AUTO_TEST_CASE(rpc_heading__index__empty_command__unknown)
 {
     const auto instance = heading{ 0u, "", 0u, 0u };
-    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::unknown);
+    BC_REQUIRE_EQUAL(instance.index(), messages::peer::registry::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__get_command__empty_payload__unknown)
+BC_AUTO_TEST_CASE(rpc_heading__get_command__empty_payload__unknown)
 {
     const system::data_chunk payload{};
-    BOOST_REQUIRE_EQUAL(heading::get_command(payload), "<unknown>");
+    BC_REQUIRE_EQUAL(heading::get_command(payload), "<unknown>");
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__get_command__short_payload__unknown)
+BC_AUTO_TEST_CASE(rpc_heading__get_command__short_payload__unknown)
 {
     constexpr auto minimum = sizeof(uint32_t) + messages::peer::heading::command_size;
     const system::data_chunk payload(sub1(minimum), 'a');
-    BOOST_REQUIRE_EQUAL(heading::get_command(payload), "<unknown>");
+    BC_REQUIRE_EQUAL(heading::get_command(payload), "<unknown>");
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__get_command__minimal_payload__expected)
+BC_AUTO_TEST_CASE(rpc_heading__get_command__minimal_payload__expected)
 {
     const system::data_chunk payload(
     {
         'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z'
     });
 
-    BOOST_REQUIRE_EQUAL(heading::get_command(payload), "wxyzwxyzwxyz");
+    BC_REQUIRE_EQUAL(heading::get_command(payload), "wxyzwxyzwxyz");
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__get_command__extra_payload__expected)
+BC_AUTO_TEST_CASE(rpc_heading__get_command__extra_payload__expected)
 {
     const system::data_chunk payload(
     {
         'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'A', 'B', 'C'
     });
 
-    BOOST_REQUIRE_EQUAL(heading::get_command(payload), "wxyzwxyzwxyz");
+    BC_REQUIRE_EQUAL(heading::get_command(payload), "wxyzwxyzwxyz");
 }
 
 // factory
 
-BOOST_AUTO_TEST_CASE(rpc_heading__factory1__empty__expected)
+BC_AUTO_TEST_CASE(rpc_heading__factory1__empty__expected)
 {
     constexpr uint32_t magic = 42;
     constexpr auto command = "ping";
     const system::data_chunk payload{};
     const auto instance = heading::factory(magic, command, payload);
 
-    BOOST_REQUIRE_EQUAL(instance.magic, magic);
-    BOOST_REQUIRE_EQUAL(instance.command, command);
-    BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
-    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::index("ping"));
+    BC_REQUIRE_EQUAL(instance.magic, magic);
+    BC_REQUIRE_EQUAL(instance.command, command);
+    BC_REQUIRE_EQUAL(instance.checksum, empty_checksum);
+    BC_REQUIRE_EQUAL(instance.index(), messages::peer::registry::index("ping"));
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__factory2__default_hash__expected)
+BC_AUTO_TEST_CASE(rpc_heading__factory2__default_hash__expected)
 {
     constexpr uint32_t magic = 42;
     constexpr auto command = "pong";
     const system::data_chunk payload{};
     const auto instance = heading::factory(magic, command, payload);
 
-    BOOST_REQUIRE_EQUAL(instance.magic, magic);
-    BOOST_REQUIRE_EQUAL(instance.command, command);
-    BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
-    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::index("pong"));
+    BC_REQUIRE_EQUAL(instance.magic, magic);
+    BC_REQUIRE_EQUAL(instance.command, command);
+    BC_REQUIRE_EQUAL(instance.checksum, empty_checksum);
+    BC_REQUIRE_EQUAL(instance.index(), messages::peer::registry::index("pong"));
 }
 
-BOOST_AUTO_TEST_CASE(rpc_heading__factory2__empty_hash__expected)
+BC_AUTO_TEST_CASE(rpc_heading__factory2__empty_hash__expected)
 {
     constexpr uint32_t magic = 42;
     constexpr auto command = "pong";
     const system::data_chunk payload{};
     const auto instance = heading::factory(magic, command, payload.size(), empty_hash);
 
-    BOOST_REQUIRE_EQUAL(instance.magic, magic);
-    BOOST_REQUIRE_EQUAL(instance.command, command);
-    BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
-    BOOST_REQUIRE_EQUAL(instance.index(), messages::peer::registry::index("pong"));
+    BC_REQUIRE_EQUAL(instance.magic, magic);
+    BC_REQUIRE_EQUAL(instance.command, command);
+    BC_REQUIRE_EQUAL(instance.checksum, empty_checksum);
+    BC_REQUIRE_EQUAL(instance.index(), messages::peer::registry::index("pong"));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

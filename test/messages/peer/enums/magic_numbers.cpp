@@ -18,13 +18,13 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_magic_numbers_tests)
+BC_AUTO_TEST_SUITE(p2p_magic_numbers_tests)
 
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(p2p_magic_numbers_test)
+BC_AUTO_TEST_CASE(p2p_magic_numbers_test)
 {
-    BOOST_REQUIRE(true);
+    BC_REQUIRE(true);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

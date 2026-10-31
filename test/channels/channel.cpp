@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(channel_tests)
+BC_AUTO_TEST_SUITE(channel_tests)
 
 // channel is abstract non-virtual base class.
 struct accessor
@@ -69,47 +69,47 @@ static const channel::options_t default_options{ "test" };
 
 // rate_limited
 
-BOOST_AUTO_TEST_CASE(channel__rate_limited__both_zero__zero)
+BC_AUTO_TEST_CASE(channel__rate_limited__both_zero__zero)
 {
     settings set(test::network_settings());
     set.rate_limit = 0;
     set.outbound.rate_limit = 0;
-    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 0u);
+    BC_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(channel__rate_limited__network_zero__service)
+BC_AUTO_TEST_CASE(channel__rate_limited__network_zero__service)
 {
     settings set(test::network_settings());
     set.rate_limit = 0;
     set.outbound.rate_limit = 42;
-    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 42u);
+    BC_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 42u);
 }
 
-BOOST_AUTO_TEST_CASE(channel__rate_limited__service_zero__network)
+BC_AUTO_TEST_CASE(channel__rate_limited__service_zero__network)
 {
     settings set(test::network_settings());
     set.rate_limit = 42;
     set.outbound.rate_limit = 0;
-    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 42u);
+    BC_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 42u);
 }
 
-BOOST_AUTO_TEST_CASE(channel__rate_limited__network_lesser__network)
+BC_AUTO_TEST_CASE(channel__rate_limited__network_lesser__network)
 {
     settings set(test::network_settings());
     set.rate_limit = 24;
     set.outbound.rate_limit = 42;
-    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 24u);
+    BC_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 24u);
 }
 
-BOOST_AUTO_TEST_CASE(channel__rate_limited__service_lesser__service)
+BC_AUTO_TEST_CASE(channel__rate_limited__service_lesser__service)
 {
     settings set(test::network_settings());
     set.rate_limit = 42;
     set.outbound.rate_limit = 24;
-    BOOST_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 24u);
+    BC_REQUIRE_EQUAL(accessor::rate_limited1(set, set.outbound), 24u);
 }
 
-BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
+BC_AUTO_TEST_CASE(channel__stopped__default__false)
 {
     constexpr auto expected = 42u;
     const logger log{};
@@ -120,16 +120,16 @@ BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, expected, set, set.outbound);
-    BOOST_REQUIRE(!channel_ptr->stopped());
-    BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);
-    BOOST_REQUIRE_EQUAL(channel_ptr->identifier(), expected);
+    BC_REQUIRE(!channel_ptr->stopped());
+    BC_REQUIRE_NE(channel_ptr->nonce(), zero);
+    BC_REQUIRE_EQUAL(channel_ptr->identifier(), expected);
 
     // Stop completion is asynchronous.
     channel_ptr->stop(error::invalid_magic);
     channel_ptr.reset();
 }
 
-BOOST_AUTO_TEST_CASE(channel__created__default__read_and_write_times_equal)
+BC_AUTO_TEST_CASE(channel__created__default__read_and_write_times_equal)
 {
     const logger log{};
     threadpool pool(2);
@@ -144,11 +144,11 @@ BOOST_AUTO_TEST_CASE(channel__created__default__read_and_write_times_equal)
         equal.set_value(channel_ptr->created() == channel_ptr->last_read() && channel_ptr->created() == channel_ptr->last_write());
     });
 
-    BOOST_REQUIRE(equal.get_future().get());
+    BC_REQUIRE(equal.get_future().get());
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel__remaining__zero_inactivity__zero)
+BC_AUTO_TEST_CASE(channel__remaining__zero_inactivity__zero)
 {
     const logger log{};
     threadpool pool(2);
@@ -163,11 +163,11 @@ BOOST_AUTO_TEST_CASE(channel__remaining__zero_inactivity__zero)
         remaining.set_value(channel_ptr->remaining());
     });
 
-    BOOST_REQUIRE(is_zero(remaining.get_future().get()));
+    BC_REQUIRE(is_zero(remaining.get_future().get()));
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel__remaining__default_inactivity__within_inactivity)
+BC_AUTO_TEST_CASE(channel__remaining__default_inactivity__within_inactivity)
 {
     const logger log{};
     threadpool pool(2);
@@ -183,12 +183,12 @@ BOOST_AUTO_TEST_CASE(channel__remaining__default_inactivity__within_inactivity)
     });
 
     const auto seconds = remaining.get_future().get();
-    BOOST_REQUIRE(!is_zero(seconds));
-    BOOST_REQUIRE_LE(seconds, default_options.inactivity_minutes * 60u);
+    BC_REQUIRE(!is_zero(seconds));
+    BC_REQUIRE_LE(seconds, default_options.inactivity_minutes * 60u);
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel__pause__resume__held_then_released)
+BC_AUTO_TEST_CASE(channel__pause__resume__held_then_released)
 {
     const logger log{};
     threadpool pool(2);
@@ -209,12 +209,12 @@ BOOST_AUTO_TEST_CASE(channel__pause__resume__held_then_released)
         states.set_value(std::to_string(initial) + std::to_string(paused) + std::to_string(resumed) + std::to_string(channel_ptr->held()) + std::to_string(!channel_ptr->gate()));
     });
 
-    BOOST_REQUIRE_EQUAL(states.get_future().get(), "01001");
-    BOOST_REQUIRE(!channel_ptr->stopped());
+    BC_REQUIRE_EQUAL(states.get_future().get(), "01001");
+    BC_REQUIRE(!channel_ptr->stopped());
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel__stop__paused__released)
+BC_AUTO_TEST_CASE(channel__stop__paused__released)
 {
     const logger log{};
     threadpool pool(2);
@@ -234,17 +234,17 @@ BOOST_AUTO_TEST_CASE(channel__stop__paused__released)
     });
 
     auto future = paused.get_future();
-    BOOST_REQUIRE(future.wait_for(std::chrono::seconds(10)) == std::future_status::ready);
-    BOOST_REQUIRE(future.get());
+    BC_REQUIRE(future.wait_for(std::chrono::seconds(10)) == std::future_status::ready);
+    BC_REQUIRE(future.get());
 
     channel_ptr.reset();
     socket_ptr.reset();
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(weak.expired());
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(weak.expired());
 }
 
-BOOST_AUTO_TEST_CASE(channel__pause__stopped__not_held_released)
+BC_AUTO_TEST_CASE(channel__pause__stopped__not_held_released)
 {
     const logger log{};
     threadpool pool(2);
@@ -266,17 +266,17 @@ BOOST_AUTO_TEST_CASE(channel__pause__stopped__not_held_released)
     });
 
     auto future = paused.get_future();
-    BOOST_REQUIRE(future.wait_for(std::chrono::seconds(10)) == std::future_status::ready);
-    BOOST_REQUIRE(!future.get());
+    BC_REQUIRE(future.wait_for(std::chrono::seconds(10)) == std::future_status::ready);
+    BC_REQUIRE(!future.get());
 
     channel_ptr.reset();
     socket_ptr.reset();
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(weak.expired());
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(weak.expired());
 }
 
-BOOST_AUTO_TEST_CASE(channel__resume__expiration_elapsed__channel_expired)
+BC_AUTO_TEST_CASE(channel__resume__expiration_elapsed__channel_expired)
 {
     const logger log{};
     threadpool pool(2);
@@ -296,10 +296,10 @@ BOOST_AUTO_TEST_CASE(channel__resume__expiration_elapsed__channel_expired)
         channel_ptr->resume();
     });
 
-    BOOST_REQUIRE_EQUAL(stopped.get_future().get(), error::channel_expired);
+    BC_REQUIRE_EQUAL(stopped.get_future().get(), error::channel_expired);
 }
 
-BOOST_AUTO_TEST_CASE(channel__resume__inactivity_elapsed__channel_inactive)
+BC_AUTO_TEST_CASE(channel__resume__inactivity_elapsed__channel_inactive)
 {
     const logger log{};
     threadpool pool(2);
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(channel__resume__inactivity_elapsed__channel_inactive)
         channel_ptr->resume();
     });
 
-    BOOST_REQUIRE_EQUAL(stopped.get_future().get(), error::channel_inactive);
+    BC_REQUIRE_EQUAL(stopped.get_future().get(), error::channel_inactive);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

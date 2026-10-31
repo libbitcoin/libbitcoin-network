@@ -18,55 +18,55 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_send_address_v2_tests)
+BC_AUTO_TEST_SUITE(p2p_send_address_v2_tests)
 
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(send_address_v2__properties__always__expected)
+BC_AUTO_TEST_CASE(send_address_v2__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(send_address_v2::command, "sendaddrv2");
+    BC_REQUIRE_EQUAL(send_address_v2::command, "sendaddrv2");
     constexpr auto index = messages::peer::registry::index_of<send_address_v2>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), send_address_v2::command);
-    BOOST_REQUIRE_EQUAL(send_address_v2::version_minimum, level::bip155);
-    BOOST_REQUIRE_EQUAL(send_address_v2::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), send_address_v2::command);
+    BC_REQUIRE_EQUAL(send_address_v2::version_minimum, level::bip155);
+    BC_REQUIRE_EQUAL(send_address_v2::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(send_address_v2__size__always__expected)
+BC_AUTO_TEST_CASE(send_address_v2__size__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(send_address_v2::size(level::canonical), zero);
+    BC_REQUIRE_EQUAL(send_address_v2::size(level::canonical), zero);
 }
 
-BOOST_AUTO_TEST_CASE(send_address_v2__deserialize1__empty__expected)
-{
-    const system::data_chunk data{};
-    BOOST_REQUIRE(send_address_v2::deserialize(level::bip155, data));
-}
-
-BOOST_AUTO_TEST_CASE(send_address_v2__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(send_address_v2__deserialize1__empty__expected)
 {
     const system::data_chunk data{};
-    BOOST_REQUIRE(!send_address_v2::deserialize(level::bip155 - 1u, data));
+    BC_REQUIRE(send_address_v2::deserialize(level::bip155, data));
 }
 
-BOOST_AUTO_TEST_CASE(send_address_v2__deserialize1__excessive_version__nullptr)
+BC_AUTO_TEST_CASE(send_address_v2__deserialize1__insufficient_version__nullptr)
 {
     const system::data_chunk data{};
-    BOOST_REQUIRE(!send_address_v2::deserialize(level::maximum_protocol + 1u, data));
+    BC_REQUIRE(!send_address_v2::deserialize(level::bip155 - 1u, data));
 }
 
-BOOST_AUTO_TEST_CASE(send_address_v2__deserialize2__insufficient_version__source_false)
+BC_AUTO_TEST_CASE(send_address_v2__deserialize1__excessive_version__nullptr)
+{
+    const system::data_chunk data{};
+    BC_REQUIRE(!send_address_v2::deserialize(level::maximum_protocol + 1u, data));
+}
+
+BC_AUTO_TEST_CASE(send_address_v2__deserialize2__insufficient_version__source_false)
 {
     const system::data_chunk data{};
     system::read::bytes::copy source(data);
     send_address_v2::deserialize(level::bip155 - 1u, source);
-    BOOST_REQUIRE(!source);
+    BC_REQUIRE(!source);
 }
 
-BOOST_AUTO_TEST_CASE(send_address_v2__serialize1__default__empty)
+BC_AUTO_TEST_CASE(send_address_v2__serialize1__default__empty)
 {
     system::data_chunk data{};
-    BOOST_REQUIRE(send_address_v2{}.serialize(level::bip155, data));
-    BOOST_REQUIRE(data.empty());
+    BC_REQUIRE(send_address_v2{}.serialize(level::bip155, data));
+    BC_REQUIRE(data.empty());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

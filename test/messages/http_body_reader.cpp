@@ -38,9 +38,9 @@ struct accessor
     using base::reader_;
 };
 
-BOOST_AUTO_TEST_SUITE(http_body_reader_tests)
+BC_AUTO_TEST_SUITE(http_body_reader_tests)
 
-BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_bogus__empty_reader)
+BC_AUTO_TEST_CASE(http_body_reader__init__default_body_bogus__empty_reader)
 {
     request_header header{};
     header.set(http::field::content_type, "bogus");
@@ -49,10 +49,10 @@ BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_bogus__empty_reader)
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(std::holds_alternative<empty_reader>(reader.reader_));
+    BC_REQUIRE(std::holds_alternative<empty_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__init__string_body_bogus__string_reader)
+BC_AUTO_TEST_CASE(http_body_reader__init__string_body_bogus__string_reader)
 {
     request_header header{};
     header.set(http::field::content_type, "bogus");
@@ -62,10 +62,10 @@ BOOST_AUTO_TEST_CASE(http_body_reader__init__string_body_bogus__string_reader)
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(std::holds_alternative<string_reader>(reader.reader_));
+    BC_REQUIRE(std::holds_alternative<string_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_plain_application_json__constructs_json_reader)
+BC_AUTO_TEST_CASE(http_body_reader__init__default_body_plain_application_json__constructs_json_reader)
 {
     request_header header{};
     header.set(http::field::content_type, "application/json");
@@ -75,10 +75,10 @@ BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_plain_application_json
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(std::holds_alternative<json_reader>(reader.reader_));
+    BC_REQUIRE(std::holds_alternative<json_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_not_plain_application_json__constructs_rpc_reader)
+BC_AUTO_TEST_CASE(http_body_reader__init__default_body_not_plain_application_json__constructs_rpc_reader)
 {
     request_header header{};
     header.set(http::field::content_type, "application/json");
@@ -88,10 +88,10 @@ BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_not_plain_application_
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(std::holds_alternative<rpc::reader>(reader.reader_));
+    BC_REQUIRE(std::holds_alternative<rpc::reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream__constructs_data_reader)
+BC_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream__constructs_data_reader)
 {
     request_header header{};
     header.set(http::field::content_type, "application/octet-stream");
@@ -101,10 +101,10 @@ BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stre
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(std::holds_alternative<data_reader>(reader.reader_));
+    BC_REQUIRE(std::holds_alternative<data_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream_with_attachment__file_reader_bad_file_descriptor)
+BC_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream_with_attachment__file_reader_bad_file_descriptor)
 {
     request_header header{};
     header.set(http::field::content_type, "application/octet-stream");
@@ -114,11 +114,11 @@ BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stre
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
-    BOOST_REQUIRE(ec == error::bad_stream);
+    BC_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
+    BC_REQUIRE(ec == error::bad_stream);
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream_with_dirty_attachment__file_reader_bad_file_descriptor)
+BC_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream_with_dirty_attachment__file_reader_bad_file_descriptor)
 {
     request_header header{};
     header.set(http::field::content_type, "application/octet-stream");
@@ -128,11 +128,11 @@ BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stre
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
-    BOOST_REQUIRE(ec == error::bad_stream);
+    BC_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
+    BC_REQUIRE(ec == error::bad_stream);
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_text_plain__constructs_string_reader)
+BC_AUTO_TEST_CASE(http_body_reader__init__default_body_text_plain__constructs_string_reader)
 {
     request_header header{};
     header.set(http::field::content_type, "text/plain");
@@ -141,10 +141,10 @@ BOOST_AUTO_TEST_CASE(http_body_reader__init__default_body_text_plain__constructs
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(std::holds_alternative<string_reader>(reader.reader_));
+    BC_REQUIRE(std::holds_alternative<string_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__finish__complete_rpc__success)
+BC_AUTO_TEST_CASE(http_body_reader__finish__complete_rpc__success)
 {
     const std::string_view text{ R"({"jsonrpc":"2.0","id":1,"method":"x","params":[]})" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -155,15 +155,15 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__complete_rpc__success)
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BC_REQUIRE(!ec);
 
     reader.finish(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__finish__incomplete_rpc__incomplete)
+BC_AUTO_TEST_CASE(http_body_reader__finish__incomplete_rpc__incomplete)
 {
     const std::string_view text{ R"({"id":1)" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -174,15 +174,15 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__incomplete_rpc__incomplete)
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BC_REQUIRE(!ec);
 
     reader.finish(ec);
-    BOOST_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
+    BC_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__finish__number_rpc__incomplete)
+BC_AUTO_TEST_CASE(http_body_reader__finish__number_rpc__incomplete)
 {
     const std::string_view text{ "1" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -193,15 +193,15 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__number_rpc__incomplete)
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BC_REQUIRE(!ec);
 
     reader.finish(ec);
-    BOOST_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
+    BC_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__finish__incomplete_rpc_streamed__need_more)
+BC_AUTO_TEST_CASE(http_body_reader__finish__incomplete_rpc_streamed__need_more)
 {
     const std::string_view text{ R"({"id":1)" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -212,15 +212,15 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__incomplete_rpc_streamed__need_mor
     length_type length{ max_size_t };
     code ec{};
     reader.init(length, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BC_REQUIRE(!ec);
 
     reader.finish(ec);
-    BOOST_REQUIRE(ec == error::http_error_t::need_more);
+    BC_REQUIRE(ec == error::http_error_t::need_more);
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__finish__parsed_content_length_incomplete_rpc__incomplete)
+BC_AUTO_TEST_CASE(http_body_reader__finish__parsed_content_length_incomplete_rpc__incomplete)
 {
     const std::string_view text
     {
@@ -238,10 +238,10 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__parsed_content_length_incomplete_
     const auto rest = text.substr(header);
     parser.put(io::const_buffer{ rest.data(), rest.size() }, ec);
 
-    BOOST_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
+    BC_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__finish__parsed_chunked_incomplete_rpc__incomplete)
+BC_AUTO_TEST_CASE(http_body_reader__finish__parsed_chunked_incomplete_rpc__incomplete)
 {
     const std::string_view text
     {
@@ -262,9 +262,9 @@ BOOST_AUTO_TEST_CASE(http_body_reader__finish__parsed_chunked_incomplete_rpc__in
     const auto rest = text.substr(header);
     parser.put(io::const_buffer{ rest.data(), rest.size() }, ec);
 
-    BOOST_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
+    BC_REQUIRE(ec == error::to_json_code(error::json_error_t::json_incomplete));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 
 ///#endif // HAVE_SLOW_TESTS

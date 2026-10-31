@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(tracker_tests)
+BC_AUTO_TEST_SUITE(tracker_tests)
 
 // Started log with tracker is unsafe unless blocked on write completion.
 // As the object is destroyed a job is created on an independent thread.
@@ -39,7 +39,7 @@ public:
 };
 
 #if defined(HAVE_LOGO) && !defined(NDEBUG)
-BOOST_AUTO_TEST_CASE(tracker__construct__guarded__safe_expected_messages)
+BC_AUTO_TEST_CASE(tracker__construct__guarded__safe_expected_messages)
 {
     logger log{};
     std::promise<code> log_stopped{};
@@ -65,29 +65,29 @@ BOOST_AUTO_TEST_CASE(tracker__construct__guarded__safe_expected_messages)
         });
 
     auto instance = system::to_shared<tracked>(log);
-    BOOST_REQUIRE(instance->method());
+    BC_REQUIRE(instance->method());
 
     instance.reset();
-    BOOST_REQUIRE_EQUAL(log_stopped.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(log_stopped.get_future().get(), error::success);
 
     log.stop();
-    BOOST_REQUIRE(result);
+    BC_REQUIRE(result);
 }
 #endif
 
-BOOST_AUTO_TEST_CASE(tracker__construct__stopped_log__safe)
+BC_AUTO_TEST_CASE(tracker__construct__stopped_log__safe)
 {
     logger log{};
     log.stop();
     tracked instance{ log };
-    BOOST_REQUIRE(instance.method());
+    BC_REQUIRE(instance.method());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE(logger_tests)
+BC_AUTO_TEST_SUITE(logger_tests)
 
-BOOST_AUTO_TEST_CASE(logger__subscribe_messages__stopped__service_stopped)
+BC_AUTO_TEST_CASE(logger__subscribe_messages__stopped__service_stopped)
 {
     logger log{};
     log.stop();
@@ -99,10 +99,10 @@ BOOST_AUTO_TEST_CASE(logger__subscribe_messages__stopped__service_stopped)
         return false;
     });
 
-    BOOST_REQUIRE_EQUAL(result, error::service_stopped);
+    BC_REQUIRE_EQUAL(result, error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(logger__subscribe_events__stopped__service_stopped)
+BC_AUTO_TEST_CASE(logger__subscribe_events__stopped__service_stopped)
 {
     logger log{};
     log.stop();
@@ -114,10 +114,10 @@ BOOST_AUTO_TEST_CASE(logger__subscribe_events__stopped__service_stopped)
         return false;
     });
 
-    BOOST_REQUIRE_EQUAL(result, error::service_stopped);
+    BC_REQUIRE_EQUAL(result, error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(logger__fire__subscribed__notified_then_stopped)
+BC_AUTO_TEST_CASE(logger__fire__subscribed__notified_then_stopped)
 {
     std::vector<std::tuple<code, uint8_t, uint64_t>> events{};
 
@@ -133,11 +133,11 @@ BOOST_AUTO_TEST_CASE(logger__fire__subscribed__notified_then_stopped)
         log.stop();
     }
 
-    BOOST_REQUIRE_EQUAL(events.size(), 2u);
-    BOOST_REQUIRE_EQUAL(std::get<0>(events.at(0)), error::success);
-    BOOST_REQUIRE_EQUAL(std::get<1>(events.at(0)), 42u);
-    BOOST_REQUIRE_EQUAL(std::get<2>(events.at(0)), 7u);
-    BOOST_REQUIRE_EQUAL(std::get<0>(events.at(1)), error::service_stopped);
+    BC_REQUIRE_EQUAL(events.size(), 2u);
+    BC_REQUIRE_EQUAL(std::get<0>(events.at(0)), error::success);
+    BC_REQUIRE_EQUAL(std::get<1>(events.at(0)), 42u);
+    BC_REQUIRE_EQUAL(std::get<2>(events.at(0)), 7u);
+    BC_REQUIRE_EQUAL(std::get<0>(events.at(1)), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

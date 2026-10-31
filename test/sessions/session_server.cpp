@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(session_server_tests)
+BC_AUTO_TEST_SUITE(session_server_tests)
 
 using namespace bc::system::chain;
 
@@ -110,7 +110,7 @@ static void start(net& instance, const std::shared_ptr<Session>& session)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 }
 
 template <class Session>
@@ -123,7 +123,7 @@ static void stop(net& instance, const std::shared_ptr<Session>& session)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(stopped.get_future().get());
 }
 
 static std::shared_ptr<mock_channel> make_channel(net& instance)
@@ -133,17 +133,17 @@ static std::shared_ptr<mock_channel> make_channel(net& instance)
     return std::make_shared<mock_channel>(instance.log, socket, 42, instance.network_settings(), server_options);
 }
 
-BOOST_AUTO_TEST_CASE(session_server__identifier__constructed__expected)
+BC_AUTO_TEST_CASE(session_server__identifier__constructed__expected)
 {
     const logger log{};
     settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session>(instance, 42);
-    BOOST_REQUIRE_EQUAL(session->identifier(), 42u);
+    BC_REQUIRE_EQUAL(session->identifier(), 42u);
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_server__start__disabled__success_stopped)
+BC_AUTO_TEST_CASE(session_server__start__disabled__success_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -159,23 +159,23 @@ BOOST_AUTO_TEST_CASE(session_server__start__disabled__success_stopped)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->stopped());
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_server__create_service__always__acceptor)
+BC_AUTO_TEST_CASE(session_server__create_service__always__acceptor)
 {
     const logger log{};
     settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session>(instance, 1);
-    BOOST_REQUIRE(session->create_service({ .maximum_request = 42, .maximum_buffer = server_options.maximum_buffer }));
-    BOOST_REQUIRE(session->create_acceptor_sam());
+    BC_REQUIRE(session->create_service({ .maximum_request = 42, .maximum_buffer = server_options.maximum_buffer }));
+    BC_REQUIRE(session->create_acceptor_sam());
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_server__defer__stopped__service_stopped)
+BC_AUTO_TEST_CASE(session_server__defer__stopped__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -191,11 +191,11 @@ BOOST_AUTO_TEST_CASE(session_server__defer__stopped__service_stopped)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(deferred.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(deferred.get_future().get(), error::service_stopped);
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_server__start_channel__started__protocols_attached_stopped_by_session)
+BC_AUTO_TEST_CASE(session_server__start_channel__started__protocols_attached_stopped_by_session)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -219,18 +219,18 @@ BOOST_AUTO_TEST_CASE(session_server__start_channel__started__protocols_attached_
             });
     });
 
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
-    BOOST_REQUIRE(session->attached_protocols());
-    BOOST_REQUIRE(channel->resumed());
-    BOOST_REQUIRE(!channel->stopped());
+    BC_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
+    BC_REQUIRE(session->attached_protocols());
+    BC_REQUIRE(channel->resumed());
+    BC_REQUIRE(!channel->stopped());
 
     stop(instance, session);
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE(channel->stopped());
+    BC_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
+    BC_REQUIRE(channel->stopped());
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_server__start_channel__handshake_failure__handlers_failure_channel_stopped)
+BC_AUTO_TEST_CASE(session_server__start_channel__handshake_failure__handlers_failure_channel_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -254,10 +254,10 @@ BOOST_AUTO_TEST_CASE(session_server__start_channel__handshake_failure__handlers_
             });
     });
 
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::invalid_magic);
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::invalid_magic);
-    BOOST_REQUIRE(!session->attached_protocols());
-    BOOST_REQUIRE(channel->stopped());
+    BC_REQUIRE_EQUAL(started_channel.get_future().get(), error::invalid_magic);
+    BC_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::invalid_magic);
+    BC_REQUIRE(!session->attached_protocols());
+    BC_REQUIRE(channel->stopped());
 
     stop(instance, session);
     instance.close();
@@ -354,96 +354,96 @@ static bool dropped(io::socket& client)
     return ec == error::peer_disconnect || ec == error::peer_disconnect;
 }
 
-BOOST_AUTO_TEST_CASE(session_server__accept__client__protocols_attached)
+BC_AUTO_TEST_CASE(session_server__accept__client__protocols_attached)
 {
     const logger log{};
     settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
-    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+    BC_REQUIRE_EQUAL(start_server(instance, session), error::success);
 
     io::context io{};
     io::socket client{ io };
     REQUIRE_SUCCESS(client, connect, test::loopback(server_port));
-    BOOST_REQUIRE(session->require_attached());
+    BC_REQUIRE(session->require_attached());
 
     stop(instance, session);
-    BOOST_REQUIRE(dropped(client));
+    BC_REQUIRE(dropped(client));
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_server__accept__oversubscribed__second_client_dropped)
+BC_AUTO_TEST_CASE(session_server__accept__oversubscribed__second_client_dropped)
 {
     const logger log{};
     settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
-    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+    BC_REQUIRE_EQUAL(start_server(instance, session), error::success);
 
     io::context io{};
     io::socket first{ io };
     REQUIRE_SUCCESS(first, connect, test::loopback(server_port));
-    BOOST_REQUIRE(session->require_attached());
+    BC_REQUIRE(session->require_attached());
 
     io::socket second{ io };
     REQUIRE_SUCCESS(second, connect, test::loopback(server_port));
-    BOOST_REQUIRE(dropped(second));
+    BC_REQUIRE(dropped(second));
 
     stop(instance, session);
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_server__accept__disabled__client_dropped)
+BC_AUTO_TEST_CASE(session_server__accept__disabled__client_dropped)
 {
     const logger log{};
     settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_server_disabled>(instance, 1, one_connection);
-    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+    BC_REQUIRE_EQUAL(start_server(instance, session), error::success);
 
     io::context io{};
     io::socket client{ io };
     REQUIRE_SUCCESS(client, connect, test::loopback(server_port));
-    BOOST_REQUIRE(dropped(client));
+    BC_REQUIRE(dropped(client));
 
     stop(instance, session);
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_server__accept__blacklisted__client_dropped)
+BC_AUTO_TEST_CASE(session_server__accept__blacklisted__client_dropped)
 {
     const logger log{};
     settings set(test::network_settings());
     set.blacklists.emplace_back("127.0.0.1");
     net instance(set, log);
     const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
-    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+    BC_REQUIRE_EQUAL(start_server(instance, session), error::success);
 
     io::context io{};
     io::socket client{ io };
     REQUIRE_SUCCESS(client, connect, test::loopback(server_port));
-    BOOST_REQUIRE(dropped(client));
+    BC_REQUIRE(dropped(client));
 
     stop(instance, session);
     instance.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_server__accept__not_whitelisted__client_dropped)
+BC_AUTO_TEST_CASE(session_server__accept__not_whitelisted__client_dropped)
 {
     const logger log{};
     settings set(test::network_settings());
     set.whitelists.emplace_back("1.2.3.4");
     net instance(set, log);
     const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
-    BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
+    BC_REQUIRE_EQUAL(start_server(instance, session), error::success);
 
     io::context io{};
     io::socket client{ io };
     REQUIRE_SUCCESS(client, connect, test::loopback(server_port));
-    BOOST_REQUIRE(dropped(client));
+    BC_REQUIRE(dropped(client));
 
     stop(instance, session);
     instance.close();
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

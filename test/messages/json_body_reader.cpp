@@ -20,28 +20,28 @@
 
 ////#if defined(HAVE_SLOW_TESTS)
 
-BOOST_AUTO_TEST_SUITE(json_body_reader_tests)
+BC_AUTO_TEST_SUITE(json_body_reader_tests)
 
 using namespace network::http;
 using namespace network::json;
 using value = system::json::value;
 
-BOOST_AUTO_TEST_CASE(json_body_reader__construct1__default__null_model)
+BC_AUTO_TEST_CASE(json_body_reader__construct1__default__null_model)
 {
     json::body<>::value_type body{};
     json::body<>::reader reader(body);
-    BOOST_REQUIRE(body.model.is_null());
+    BC_REQUIRE(body.model.is_null());
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__construct2__default__null_model)
+BC_AUTO_TEST_CASE(json_body_reader__construct2__default__null_model)
 {
     request_header header{};
     json::body<>::value_type body{};
     json::body<>::reader reader(header, body);
-    BOOST_REQUIRE(body.model.is_null());
+    BC_REQUIRE(body.model.is_null());
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__init__simple_object__success)
+BC_AUTO_TEST_CASE(json_body_reader__init__simple_object__success)
 {
     const std::string_view text{ R"({"key":"value"})" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -49,10 +49,10 @@ BOOST_AUTO_TEST_CASE(json_body_reader__init__simple_object__success)
     json::body<>::reader reader(body);
     code ec{};
     reader.init(text.size(), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__put__simple_object__success_expected_consumed)
+BC_AUTO_TEST_CASE(json_body_reader__put__simple_object__success_expected_consumed)
 {
     const std::string_view text{ R"({"key":"value"})" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -60,13 +60,13 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__simple_object__success_expected_cons
     json::body<>::reader reader(body);
     code ec{};
     reader.init(text.size(), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
-    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BC_REQUIRE(!ec);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__put__split_whitespace_after_object__consumed)
+BC_AUTO_TEST_CASE(json_body_reader__put__split_whitespace_after_object__consumed)
 {
     const std::string_view document{ R"({"key":"value"})" };
     const std::string_view whitespace{ "\r\n" };
@@ -76,22 +76,22 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__split_whitespace_after_object__consu
     json::body<>::reader reader(body);
     code ec{};
     reader.init(document.size() + whitespace.size(), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
-    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), document.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader.done());
+    BC_REQUIRE_EQUAL(reader.put(buffer1, ec), document.size());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(reader.done());
 
-    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), whitespace.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(reader.done());
+    BC_REQUIRE_EQUAL(reader.put(buffer2, ec), whitespace.size());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(reader.done());
 
     reader.finish(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(body.model.at("key").as_string(), "value");
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(body.model.at("key").as_string(), "value");
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__put__split_garbage_after_object__extra_data)
+BC_AUTO_TEST_CASE(json_body_reader__put__split_garbage_after_object__extra_data)
 {
     const std::string_view document{ R"({"key":"value"})" };
     const std::string_view garbage{ " x" };
@@ -101,16 +101,16 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__split_garbage_after_object__extra_da
     json::body<>::reader reader(body);
     code ec{};
     reader.init(document.size() + garbage.size(), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
-    BOOST_REQUIRE_EQUAL(reader.put(buffer1, ec), document.size());
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(buffer1, ec), document.size());
+    BC_REQUIRE(!ec);
 
-    BOOST_REQUIRE_EQUAL(reader.put(buffer2, ec), 1u);
-    BOOST_REQUIRE(ec == error::to_json_code(error::json_error_t::json_extra_data));
+    BC_REQUIRE_EQUAL(reader.put(buffer2, ec), 1u);
+    BC_REQUIRE(ec == error::to_json_code(error::json_error_t::json_extra_data));
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__finish__simple_object__success_expected_model)
+BC_AUTO_TEST_CASE(json_body_reader__finish__simple_object__success_expected_model)
 {
     const std::string_view text{ R"({"key":"value"})" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -119,19 +119,19 @@ BOOST_AUTO_TEST_CASE(json_body_reader__finish__simple_object__success_expected_m
     json::body<>::reader reader(body);
     code ec{};
     reader.init(text.size(), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     reader.put(buffer, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     reader.finish(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(body.model.is_object());
-    BOOST_REQUIRE(body.model.as_object().contains("key"));
-    BOOST_REQUIRE_EQUAL(body.model.as_object()["key"].as_string(), "value");
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(body.model.is_object());
+    BC_REQUIRE(body.model.as_object().contains("key"));
+    BC_REQUIRE_EQUAL(body.model.as_object()["key"].as_string(), "value");
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__put__over_length__protocol_error)
+BC_AUTO_TEST_CASE(json_body_reader__put__over_length__protocol_error)
 {
     const std::string_view text{ R"({"key":"value"})" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -139,34 +139,34 @@ BOOST_AUTO_TEST_CASE(json_body_reader__put__over_length__protocol_error)
     json::body<>::reader reader(body);
     code ec{};
     reader.init(10, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(ec == error::http_error_t::body_limit);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BC_REQUIRE(ec == error::http_error_t::body_limit);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__put__empty_buffer__success_none_consumed)
+BC_AUTO_TEST_CASE(json_body_reader__put__empty_buffer__success_none_consumed)
 {
     json::body<>::value_type body{};
     json::body<>::reader reader(body);
     code ec{};
     reader.init({}, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(reader.put(io::const_buffer{}, ec), zero);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(io::const_buffer{}, ec), zero);
+    BC_REQUIRE(!ec);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__put__null_data__bad_alloc)
+BC_AUTO_TEST_CASE(json_body_reader__put__null_data__bad_alloc)
 {
     json::body<>::value_type body{};
     json::body<>::reader reader(body);
     code ec{};
     reader.init({}, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(reader.put(io::const_buffer{ nullptr, 5 }, ec), zero);
-    BOOST_REQUIRE(ec == error::http_error_t::bad_alloc);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(io::const_buffer{ nullptr, 5 }, ec), zero);
+    BC_REQUIRE(ec == error::http_error_t::bad_alloc);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_reader__finish__incomplete__need_more)
+BC_AUTO_TEST_CASE(json_body_reader__finish__incomplete__need_more)
 {
     const std::string_view text{ R"({"key":)" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -174,15 +174,15 @@ BOOST_AUTO_TEST_CASE(json_body_reader__finish__incomplete__need_more)
     json::body<>::reader reader(body);
     code ec{};
     reader.init({}, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!reader.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(reader.put(buffer, ec), text.size());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!reader.done());
 
     reader.finish(ec);
-    BOOST_REQUIRE(ec == error::http_error_t::need_more);
+    BC_REQUIRE(ec == error::http_error_t::need_more);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 
 ////#endif // HAVE_SLOW_TESTS

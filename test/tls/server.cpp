@@ -20,7 +20,7 @@
 #include "client.hpp"
 #include "rfc8448.hpp"
 
-BOOST_AUTO_TEST_SUITE(tls_server_tests)
+BC_AUTO_TEST_SUITE(tls_server_tests)
 
 using namespace bc::system;
 using namespace tls;
@@ -152,22 +152,22 @@ static data_chunk read_all(tls::server& server)
 
 // handshake
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__default__established_aes)
+BC_AUTO_TEST_CASE(tls_server__handshake__default__established_aes)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
     tls_client client{ client_options() };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(client.is_established());
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.suite(), aes_128_gcm_sha256);
-    BOOST_REQUIRE_EQUAL(client.suite(), aes_128_gcm_sha256);
-    BOOST_REQUIRE(!client.is_retried());
-    BOOST_REQUIRE(server.peer().empty());
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.suite(), aes_128_gcm_sha256);
+    BC_REQUIRE_EQUAL(client.suite(), aes_128_gcm_sha256);
+    BC_REQUIRE(!client.is_retried());
+    BC_REQUIRE(server.peer().empty());
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__chacha_only__established_chacha)
+BC_AUTO_TEST_CASE(tls_server__handshake__chacha_only__established_chacha)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -176,11 +176,11 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__chacha_only__established_chacha)
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.suite(), chacha20_poly1305_sha256);
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.suite(), chacha20_poly1305_sha256);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__no_key_share__retried_established)
+BC_AUTO_TEST_CASE(tls_server__handshake__no_key_share__retried_established)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -189,12 +189,12 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__no_key_share__retried_established)
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(client.is_retried());
-    BOOST_REQUIRE(client.is_established());
-    BOOST_REQUIRE(server.is_established());
+    BC_REQUIRE(client.is_retried());
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE(server.is_established());
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__compatibility_session__established)
+BC_AUTO_TEST_CASE(tls_server__handshake__compatibility_session__established)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -204,11 +204,11 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__compatibility_session__established)
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(client.is_established());
-    BOOST_REQUIRE(server.is_established());
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE(server.is_established());
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__no_common_suite__handshake_failure)
+BC_AUTO_TEST_CASE(tls_server__handshake__no_common_suite__handshake_failure)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -217,16 +217,16 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__no_common_suite__handshake_failure)
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(server.is_failed());
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::handshake_failure);
-    BOOST_REQUIRE(!server.is_failure_received());
-    BOOST_REQUIRE(client.is_failed());
-    BOOST_REQUIRE_EQUAL(client.failure(), alert::handshake_failure);
+    BC_REQUIRE(server.is_failed());
+    BC_REQUIRE_EQUAL(server.failure(), alert::handshake_failure);
+    BC_REQUIRE(!server.is_failure_received());
+    BC_REQUIRE(client.is_failed());
+    BC_REQUIRE_EQUAL(client.failure(), alert::handshake_failure);
 }
 
 // suites, groups and signature schemes
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__aes256_only__established_aes256)
+BC_AUTO_TEST_CASE(tls_server__handshake__aes256_only__established_aes256)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -235,21 +235,21 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__aes256_only__established_aes256)
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
 
     const auto request = to_chunk("request");
-    BOOST_REQUIRE(client.write(request));
+    BC_REQUIRE(client.write(request));
     exchange(client, server);
-    BOOST_REQUIRE_EQUAL(read_all(server), request);
+    BC_REQUIRE_EQUAL(read_all(server), request);
 
     const data_chunk response(40000, 0x42);
-    BOOST_REQUIRE(server.write(response));
+    BC_REQUIRE(server.write(response));
     exchange(client, server);
-    BOOST_REQUIRE_EQUAL(client.read(), response);
+    BC_REQUIRE_EQUAL(client.read(), response);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__aes256_retried__established_aes256)
+BC_AUTO_TEST_CASE(tls_server__handshake__aes256_retried__established_aes256)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -259,12 +259,12 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__aes256_retried__established_aes256)
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(client.is_retried());
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
+    BC_REQUIRE(client.is_retried());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__secp256r1_share__established_secp256r1)
+BC_AUTO_TEST_CASE(tls_server__handshake__secp256r1_share__established_secp256r1)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -274,12 +274,12 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__secp256r1_share__established_secp256
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(!client.is_retried());
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.group(), secp256r1_group);
+    BC_REQUIRE(!client.is_retried());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.group(), secp256r1_group);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__secp384r1_share__established_secp384r1)
+BC_AUTO_TEST_CASE(tls_server__handshake__secp384r1_share__established_secp384r1)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -289,12 +289,12 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__secp384r1_share__established_secp384
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(!client.is_retried());
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.group(), secp384r1_group);
+    BC_REQUIRE(!client.is_retried());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.group(), secp384r1_group);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__nist_groups_no_share__retried_secp256r1)
+BC_AUTO_TEST_CASE(tls_server__handshake__nist_groups_no_share__retried_secp256r1)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -304,12 +304,12 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__nist_groups_no_share__retried_secp25
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(client.is_retried());
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.group(), secp256r1_group);
+    BC_REQUIRE(client.is_retried());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.group(), secp256r1_group);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__share_of_less_preferred_group__not_retried)
+BC_AUTO_TEST_CASE(tls_server__handshake__share_of_less_preferred_group__not_retried)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -319,12 +319,12 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__share_of_less_preferred_group__not_r
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(!client.is_retried());
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.group(), secp384r1_group);
+    BC_REQUIRE(!client.is_retried());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.group(), secp384r1_group);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__secp384r1_server__established)
+BC_AUTO_TEST_CASE(tls_server__handshake__secp384r1_server__established)
 {
     const server384_setup setup{};
     tls::server server{ setup.context };
@@ -333,11 +333,11 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__secp384r1_server__established)
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(client.is_established());
-    BOOST_REQUIRE(server.is_established());
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE(server.is_established());
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp384r1_server__established)
+BC_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp384r1_server__established)
 {
     const server384_setup setup{};
     tls::server server{ setup.context };
@@ -350,18 +350,18 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp384r1_server__establ
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(client.is_established());
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
-    BOOST_REQUIRE_EQUAL(server.group(), secp384r1_group);
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
+    BC_REQUIRE_EQUAL(server.group(), secp384r1_group);
 
     const auto request = to_chunk("request");
-    BOOST_REQUIRE(client.write(request));
+    BC_REQUIRE(client.write(request));
     exchange(client, server);
-    BOOST_REQUIRE_EQUAL(read_all(server), request);
+    BC_REQUIRE_EQUAL(read_all(server), request);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp256r1_server__handshake_failure)
+BC_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp256r1_server__handshake_failure)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -370,11 +370,11 @@ BOOST_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp256r1_server__handsh
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(server.is_failed());
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::handshake_failure);
+    BC_REQUIRE(server.is_failed());
+    BC_REQUIRE_EQUAL(server.failure(), alert::handshake_failure);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__key_update__aes256__both_keys_updated)
+BC_AUTO_TEST_CASE(tls_server__key_update__aes256__both_keys_updated)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -388,18 +388,18 @@ BOOST_AUTO_TEST_CASE(tls_server__key_update__aes256__both_keys_updated)
     exchange(client, server);
 
     const auto request = to_chunk("after update");
-    BOOST_REQUIRE(client.write(request));
+    BC_REQUIRE(client.write(request));
     exchange(client, server);
-    BOOST_REQUIRE_EQUAL(read_all(server), request);
+    BC_REQUIRE_EQUAL(read_all(server), request);
 
-    BOOST_REQUIRE(server.write(request));
+    BC_REQUIRE(server.write(request));
     exchange(client, server);
-    BOOST_REQUIRE_EQUAL(client.read(), request);
+    BC_REQUIRE_EQUAL(client.read(), request);
 }
 
 // application data, key update, close
 
-BOOST_AUTO_TEST_CASE(tls_server__application_data__both_directions__expected)
+BC_AUTO_TEST_CASE(tls_server__application_data__both_directions__expected)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -408,17 +408,17 @@ BOOST_AUTO_TEST_CASE(tls_server__application_data__both_directions__expected)
     exchange(client, server);
 
     const auto request = to_chunk("GET / HTTP/1.1\r\n\r\n");
-    BOOST_REQUIRE(client.write(request));
+    BC_REQUIRE(client.write(request));
     exchange(client, server);
-    BOOST_REQUIRE_EQUAL(read_all(server), request);
+    BC_REQUIRE_EQUAL(read_all(server), request);
 
     const data_chunk response(40000, 0x42);
-    BOOST_REQUIRE(server.write(response));
+    BC_REQUIRE(server.write(response));
     exchange(client, server);
-    BOOST_REQUIRE_EQUAL(client.read(), response);
+    BC_REQUIRE_EQUAL(client.read(), response);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__key_update__requested__both_keys_updated)
+BC_AUTO_TEST_CASE(tls_server__key_update__requested__both_keys_updated)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -430,16 +430,16 @@ BOOST_AUTO_TEST_CASE(tls_server__key_update__requested__both_keys_updated)
     exchange(client, server);
 
     const auto request = to_chunk("after update");
-    BOOST_REQUIRE(client.write(request));
+    BC_REQUIRE(client.write(request));
     exchange(client, server);
-    BOOST_REQUIRE_EQUAL(read_all(server), request);
+    BC_REQUIRE_EQUAL(read_all(server), request);
 
-    BOOST_REQUIRE(server.write(request));
+    BC_REQUIRE(server.write(request));
     exchange(client, server);
-    BOOST_REQUIRE_EQUAL(client.read(), request);
+    BC_REQUIRE_EQUAL(client.read(), request);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__close__both_sides__closed)
+BC_AUTO_TEST_CASE(tls_server__close__both_sides__closed)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -449,45 +449,45 @@ BOOST_AUTO_TEST_CASE(tls_server__close__both_sides__closed)
 
     client.close();
     exchange(client, server);
-    BOOST_REQUIRE(server.is_closed());
+    BC_REQUIRE(server.is_closed());
 
     server.close();
     exchange(client, server);
-    BOOST_REQUIRE(server.is_close_sent());
-    BOOST_REQUIRE(client.is_closed());
-    BOOST_REQUIRE(!server.write(to_chunk("late")));
+    BC_REQUIRE(server.is_close_sent());
+    BC_REQUIRE(client.is_closed());
+    BC_REQUIRE(!server.write(to_chunk("late")));
 }
 
 // failures
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__application_data_before_handshake__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server__receive__application_data_before_handshake__unexpected_message)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    BOOST_REQUIRE(!server.receive(base16_chunk("170303000100")));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
-    BOOST_REQUIRE_EQUAL(server.output(), base16_chunk("1503030002020a"));
+    BC_REQUIRE(!server.receive(base16_chunk("170303000100")));
+    BC_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
+    BC_REQUIRE_EQUAL(server.output(), base16_chunk("1503030002020a"));
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__oversized_record__record_overflow)
+BC_AUTO_TEST_CASE(tls_server__receive__oversized_record__record_overflow)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    BOOST_REQUIRE(!server.receive(base16_chunk("1603034101")));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::record_overflow);
+    BC_REQUIRE(!server.receive(base16_chunk("1603034101")));
+    BC_REQUIRE_EQUAL(server.failure(), alert::record_overflow);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__hello_without_extensions__protocol_version)
+BC_AUTO_TEST_CASE(tls_server__receive__hello_without_extensions__protocol_version)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
     const auto hello = base16_chunk("010000290303" "0000000000000000000000000000000000000000000000000000000000000000" "00" "0002c02f" "0100");
     const auto record = splice(base16_chunk("16030300" "2d"), hello);
-    BOOST_REQUIRE(!server.receive(record));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::protocol_version);
+    BC_REQUIRE(!server.receive(record));
+    BC_REQUIRE_EQUAL(server.failure(), alert::protocol_version);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__tampered_record__bad_record_mac)
+BC_AUTO_TEST_CASE(tls_server__receive__tampered_record__bad_record_mac)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -495,25 +495,25 @@ BOOST_AUTO_TEST_CASE(tls_server__receive__tampered_record__bad_record_mac)
     client.start();
     exchange(client, server);
 
-    BOOST_REQUIRE(client.write(to_chunk("data")));
+    BC_REQUIRE(client.write(to_chunk("data")));
     auto record = std::move(client.output());
     record.back() ^= 0x01;
-    BOOST_REQUIRE(!server.receive(record));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::bad_record_mac);
+    BC_REQUIRE(!server.receive(record));
+    BC_REQUIRE_EQUAL(server.failure(), alert::bad_record_mac);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__peer_alert__failure_received)
+BC_AUTO_TEST_CASE(tls_server__receive__peer_alert__failure_received)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    BOOST_REQUIRE(!server.receive(base16_chunk("15030300020228")));
-    BOOST_REQUIRE(server.is_failed());
-    BOOST_REQUIRE(server.is_failure_received());
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::handshake_failure);
-    BOOST_REQUIRE(server.output().empty());
+    BC_REQUIRE(!server.receive(base16_chunk("15030300020228")));
+    BC_REQUIRE(server.is_failed());
+    BC_REQUIRE(server.is_failure_received());
+    BC_REQUIRE_EQUAL(server.failure(), alert::handshake_failure);
+    BC_REQUIRE(server.output().empty());
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__split_records__established)
+BC_AUTO_TEST_CASE(tls_server__receive__split_records__established)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
@@ -523,28 +523,28 @@ BOOST_AUTO_TEST_CASE(tls_server__receive__split_records__established)
     const auto hello = std::move(client.output());
     client.output().clear();
     const auto half = hello.size() / 2u;
-    BOOST_REQUIRE(server.receive({ hello.data(), half }));
-    BOOST_REQUIRE(server.output().empty());
-    BOOST_REQUIRE(server.receive({ std::next(hello.data(), half), hello.size() - half }));
-    BOOST_REQUIRE(!server.output().empty());
+    BC_REQUIRE(server.receive({ hello.data(), half }));
+    BC_REQUIRE(server.output().empty());
+    BC_REQUIRE(server.receive({ std::next(hello.data(), half), hello.size() - half }));
+    BC_REQUIRE(!server.output().empty());
 
     exchange(client, server);
-    BOOST_REQUIRE(server.is_established());
+    BC_REQUIRE(server.is_established());
 }
 
 // client authentication
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__user_canceled__not_failed)
+BC_AUTO_TEST_CASE(tls_server__receive__user_canceled__not_failed)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    BOOST_REQUIRE(server.receive(base16_chunk("1503030002015a")));
-    BOOST_REQUIRE(!server.is_failed());
-    BOOST_REQUIRE(!server.is_closed());
-    BOOST_REQUIRE(server.output().empty());
+    BC_REQUIRE(server.receive(base16_chunk("1503030002015a")));
+    BC_REQUIRE(!server.is_failed());
+    BC_REQUIRE(!server.is_closed());
+    BC_REQUIRE(server.output().empty());
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__trusted__peer_verified)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__trusted__peer_verified)
 {
     const auto client_identity = make_identity(client_key, "client");
     server_setup setup{ true, true };
@@ -557,18 +557,18 @@ BOOST_AUTO_TEST_CASE(tls_server__client_certificate__trusted__peer_verified)
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(client.is_requested());
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.peer().size(), 1u);
-    BOOST_REQUIRE_EQUAL(server.peer().front().encoding, client_identity.certificate.encoding);
+    BC_REQUIRE(client.is_requested());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.peer().size(), 1u);
+    BC_REQUIRE_EQUAL(server.peer().front().encoding, client_identity.certificate.encoding);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__secp384r1_trusted__peer_verified)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__secp384r1_trusted__peer_verified)
 {
     x509::certificates chain{};
-    BOOST_REQUIRE(x509::parse(chain, client384_chain));
+    BC_REQUIRE(x509::parse(chain, client384_chain));
     server_setup setup{ true, true };
-    BOOST_REQUIRE(setup.context.add_anchors(client384_chain));
+    BC_REQUIRE(setup.context.add_anchors(client384_chain));
     tls::server server{ setup.context };
 
     auto options = client_options();
@@ -577,35 +577,35 @@ BOOST_AUTO_TEST_CASE(tls_server__client_certificate__secp384r1_trusted__peer_ver
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(client.is_requested());
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE_EQUAL(server.peer().size(), 1u);
-    BOOST_REQUIRE(server.peer().front().curve == x509::curve::secp384r1);
+    BC_REQUIRE(client.is_requested());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE_EQUAL(server.peer().size(), 1u);
+    BC_REQUIRE(server.peer().front().curve == x509::curve::secp384r1);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__required_absent__certificate_required)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__required_absent__certificate_required)
 {
     server_setup setup{ true, true };
     tls::server server{ setup.context };
     tls_client client{ client_options() };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(server.is_failed());
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::certificate_required);
+    BC_REQUIRE(server.is_failed());
+    BC_REQUIRE_EQUAL(server.failure(), alert::certificate_required);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__optional_absent__established)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__optional_absent__established)
 {
     server_setup setup{ true, false };
     tls::server server{ setup.context };
     tls_client client{ client_options() };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(server.is_established());
-    BOOST_REQUIRE(server.peer().empty());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE(server.peer().empty());
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__untrusted__unknown_ca)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__untrusted__unknown_ca)
 {
     const auto client_identity = make_identity(client_key, "client");
     const auto other_identity = make_identity(other_key, "other");
@@ -619,23 +619,23 @@ BOOST_AUTO_TEST_CASE(tls_server__client_certificate__untrusted__unknown_ca)
     tls_client client{ options };
     client.start();
     exchange(client, server);
-    BOOST_REQUIRE(server.is_failed());
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::unknown_ca);
+    BC_REQUIRE(server.is_failed());
+    BC_REQUIRE_EQUAL(server.failure(), alert::unknown_ca);
 }
 
 // rfc8448
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__rfc8448_client_hello__rfc8448_server_hello_and_keys)
+BC_AUTO_TEST_CASE(tls_server__receive__rfc8448_client_hello__rfc8448_server_hello_and_keys)
 {
     const server_setup setup{};
     const auto random = rfc8448::array<32>(data_chunk(std::next(rfc8448::server_hello.begin(), 6), std::next(rfc8448::server_hello.begin(), 38)));
     const auto ephemeral = rfc8448::array<x25519::key_size>(rfc8448::server_private);
     tls::server server{ setup.context, random, ephemeral };
-    BOOST_REQUIRE(server.receive(rfc8448::client_hello_record));
+    BC_REQUIRE(server.receive(rfc8448::client_hello_record));
 
     const auto& output = server.output();
     const auto size = rfc8448::server_hello_record.size();
-    BOOST_REQUIRE_EQUAL(data_chunk(output.begin(), std::next(output.begin(), size)), rfc8448::server_hello_record);
+    BC_REQUIRE_EQUAL(data_chunk(output.begin(), std::next(output.begin(), size)), rfc8448::server_hello_record);
 
     // The rest is the flight under the rfc8448 server handshake traffic key.
     const data_chunk flight(std::next(output.begin(), size), output.end());
@@ -647,9 +647,9 @@ BOOST_AUTO_TEST_CASE(tls_server__receive__rfc8448_client_hello__rfc8448_server_h
 
     uint8_t type{};
     data_chunk content{};
-    BOOST_REQUIRE(receiver.open(type, content, head, tail));
-    BOOST_REQUIRE_EQUAL(type, content::handshake);
-    BOOST_REQUIRE_EQUAL(content.front(), handshake::encrypted_extensions);
+    BC_REQUIRE(receiver.open(type, content, head, tail));
+    BC_REQUIRE_EQUAL(type, content::handshake);
+    BC_REQUIRE_EQUAL(content.front(), handshake::encrypted_extensions);
 }
 
 // protected client messages
@@ -695,7 +695,7 @@ struct rfc8448_setup
     rfc8448_setup(bool request=false)
       : setup(request, request), server(setup.context, rfc8448::array<32>(data_chunk(std::next(rfc8448::server_hello.begin(), 6), std::next(rfc8448::server_hello.begin(), 38))), rfc8448::array<x25519::key_size>(rfc8448::server_private))
     {
-        BOOST_REQUIRE(server.receive(rfc8448::client_hello_record));
+        BC_REQUIRE(server.receive(rfc8448::client_hello_record));
         const auto& output = server.output();
         const auto start = rfc8448::server_hello_record.size();
         const data_chunk head(std::next(output.begin(), start), std::next(output.begin(), start + record_header_size));
@@ -705,7 +705,7 @@ struct rfc8448_setup
         receiver.set_secret(aes_128_gcm_sha256, rfc8448::server_handshake_traffic);
         uint8_t type{};
         data_chunk flight{};
-        BOOST_REQUIRE(receiver.open(type, flight, head, tail));
+        BC_REQUIRE(receiver.open(type, flight, head, tail));
         server.output().clear();
 
         transcript = to_chunk(sha256_hash(splice(splice(rfc8448::client_hello, rfc8448::server_hello), flight)));
@@ -740,116 +740,116 @@ struct rfc8448_setup
     schedule::secret transcript{};
 };
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__protected_finished__established_application_data)
+BC_AUTO_TEST_CASE(tls_server__receive__protected_finished__established_application_data)
 {
     rfc8448_setup instance{};
-    BOOST_REQUIRE(instance.finish());
-    BOOST_REQUIRE(instance.server.is_established());
-    BOOST_REQUIRE(instance.send(content::application_data, to_chunk("data")));
-    BOOST_REQUIRE_EQUAL(read_all(instance.server), to_chunk("data"));
+    BC_REQUIRE(instance.finish());
+    BC_REQUIRE(instance.server.is_established());
+    BC_REQUIRE(instance.send(content::application_data, to_chunk("data")));
+    BC_REQUIRE_EQUAL(read_all(instance.server), to_chunk("data"));
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__protected_bad_finished__decrypt_error)
+BC_AUTO_TEST_CASE(tls_server__receive__protected_bad_finished__decrypt_error)
 {
     rfc8448_setup instance{};
-    BOOST_REQUIRE(!instance.send_message(handshake::finished, data_chunk(32, 0x00)));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decrypt_error);
+    BC_REQUIRE(!instance.send_message(handshake::finished, data_chunk(32, 0x00)));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::decrypt_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__protected_short_finished__decrypt_error)
+BC_AUTO_TEST_CASE(tls_server__receive__protected_short_finished__decrypt_error)
 {
     rfc8448_setup instance{};
-    BOOST_REQUIRE(!instance.send_message(handshake::finished, data_chunk(31, 0x00)));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decrypt_error);
+    BC_REQUIRE(!instance.send_message(handshake::finished, data_chunk(31, 0x00)));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::decrypt_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__protected_certificate_unrequested__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server__receive__protected_certificate_unrequested__unexpected_message)
 {
     rfc8448_setup instance{};
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, {})));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+    BC_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, {})));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__protected_application_data_before_finished__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server__receive__protected_application_data_before_finished__unexpected_message)
 {
     rfc8448_setup instance{};
-    BOOST_REQUIRE(!instance.send(content::application_data, to_chunk("data")));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+    BC_REQUIRE(!instance.send(content::application_data, to_chunk("data")));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__plaintext_handshake_after_keys__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server__receive__plaintext_handshake_after_keys__unexpected_message)
 {
     rfc8448_setup instance{};
-    BOOST_REQUIRE(!instance.server.receive(base16_chunk("160303000414000000")));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+    BC_REQUIRE(!instance.server.receive(base16_chunk("160303000414000000")));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__key_update_long__decode_error)
+BC_AUTO_TEST_CASE(tls_server__receive__key_update_long__decode_error)
 {
     rfc8448_setup instance{};
-    BOOST_REQUIRE(instance.finish());
-    BOOST_REQUIRE(!instance.send_message(handshake::key_update, base16_chunk("0000")));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
+    BC_REQUIRE(instance.finish());
+    BC_REQUIRE(!instance.send_message(handshake::key_update, base16_chunk("0000")));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__receive__key_update_invalid_request__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server__receive__key_update_invalid_request__illegal_parameter)
 {
     rfc8448_setup instance{};
-    BOOST_REQUIRE(instance.finish());
-    BOOST_REQUIRE(!instance.send_message(handshake::key_update, base16_chunk("02")));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::illegal_parameter);
+    BC_REQUIRE(instance.finish());
+    BC_REQUIRE(!instance.send_message(handshake::key_update, base16_chunk("02")));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__finished_instead__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__finished_instead__unexpected_message)
 {
     rfc8448_setup instance{ true };
-    BOOST_REQUIRE(!instance.send_message(handshake::finished, data_chunk(32, 0x00)));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+    BC_REQUIRE(!instance.send_message(handshake::finished, data_chunk(32, 0x00)));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__request_context__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__request_context__illegal_parameter)
 {
     rfc8448_setup instance{ true };
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of(base16_chunk("01"), {})));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::illegal_parameter);
+    BC_REQUIRE(!instance.send_message(handshake::certificate, certificate_of(base16_chunk("01"), {})));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__trailing_byte__decode_error)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__trailing_byte__decode_error)
 {
     rfc8448_setup instance{ true };
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate, splice(certificate_of({}, {}), base16_chunk("00"))));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
+    BC_REQUIRE(!instance.send_message(handshake::certificate, splice(certificate_of({}, {}), base16_chunk("00"))));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__entry_without_extensions__decode_error)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__entry_without_extensions__decode_error)
 {
     const auto client_identity = make_identity(client_key, "client");
     rfc8448_setup instance{ true };
     writer entry{};
     entry.write_vector_24(client_identity.certificate.encoding);
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entry.data())));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
+    BC_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entry.data())));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__unparsable__bad_certificate)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__unparsable__bad_certificate)
 {
     rfc8448_setup instance{ true };
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entry_of(base16_chunk("3000")))));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::bad_certificate);
+    BC_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entry_of(base16_chunk("3000")))));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::bad_certificate);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__issuer_mismatch__bad_certificate)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__issuer_mismatch__bad_certificate)
 {
     const auto client_identity = make_identity(client_key, "client");
     const auto other_identity = make_identity(other_key, "other");
     rfc8448_setup instance{ true };
     instance.setup.context.add_anchors(other_identity.chain);
     const auto entries = splice(entry_of(client_identity.certificate.encoding), entry_of(server_identity().certificate.encoding));
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entries)));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::bad_certificate);
+    BC_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entries)));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::bad_certificate);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate__expired__certificate_expired)
+BC_AUTO_TEST_CASE(tls_server__client_certificate__expired__certificate_expired)
 {
     x509::subject subject{};
     subject.common_name = "expired";
@@ -860,61 +860,61 @@ BOOST_AUTO_TEST_CASE(tls_server__client_certificate__expired__certificate_expire
 
     rfc8448_setup instance{ true };
     instance.setup.context.add_anchors(x509::encode_certificate(der));
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entry_of(der))));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::certificate_expired);
+    BC_REQUIRE(!instance.send_message(handshake::certificate, certificate_of({}, entry_of(der))));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::certificate_expired);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate_verify__finished_instead__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server__client_certificate_verify__finished_instead__unexpected_message)
 {
     const auto client_identity = make_identity(client_key, "client");
     rfc8448_setup instance{ true };
     instance.setup.context.add_anchors(client_identity.chain);
-    BOOST_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
-    BOOST_REQUIRE(!instance.send_message(handshake::finished, data_chunk(32, 0x00)));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
+    BC_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
+    BC_REQUIRE(!instance.send_message(handshake::finished, data_chunk(32, 0x00)));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate_verify__trailing_byte__decode_error)
+BC_AUTO_TEST_CASE(tls_server__client_certificate_verify__trailing_byte__decode_error)
 {
     const auto client_identity = make_identity(client_key, "client");
     rfc8448_setup instance{ true };
     instance.setup.context.add_anchors(client_identity.chain);
-    BOOST_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate_verify, splice(verify_of(ecdsa_secp256r1_sha256, data_chunk(8, 0x01)), base16_chunk("00"))));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
+    BC_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
+    BC_REQUIRE(!instance.send_message(handshake::certificate_verify, splice(verify_of(ecdsa_secp256r1_sha256, data_chunk(8, 0x01)), base16_chunk("00"))));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate_verify__scheme_mismatch__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server__client_certificate_verify__scheme_mismatch__illegal_parameter)
 {
     const auto client_identity = make_identity(client_key, "client");
     rfc8448_setup instance{ true };
     instance.setup.context.add_anchors(client_identity.chain);
-    BOOST_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate_verify, verify_of(ecdsa_secp384r1_sha384, data_chunk(8, 0x01))));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::illegal_parameter);
+    BC_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
+    BC_REQUIRE(!instance.send_message(handshake::certificate_verify, verify_of(ecdsa_secp384r1_sha384, data_chunk(8, 0x01))));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server__client_certificate_verify__invalid_signature__decrypt_error)
+BC_AUTO_TEST_CASE(tls_server__client_certificate_verify__invalid_signature__decrypt_error)
 {
     const auto client_identity = make_identity(client_key, "client");
     rfc8448_setup instance{ true };
     instance.setup.context.add_anchors(client_identity.chain);
-    BOOST_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
-    BOOST_REQUIRE(!instance.send_message(handshake::certificate_verify, verify_of(ecdsa_secp256r1_sha256, data_chunk(8, 0x01))));
-    BOOST_REQUIRE_EQUAL(instance.server.failure(), alert::decrypt_error);
+    BC_REQUIRE(instance.send_message(handshake::certificate, certificate_of({}, entry_of(client_identity.certificate.encoding))));
+    BC_REQUIRE(!instance.send_message(handshake::certificate_verify, verify_of(ecdsa_secp256r1_sha256, data_chunk(8, 0x01))));
+    BC_REQUIRE_EQUAL(instance.server.failure(), alert::decrypt_error);
 }
 
 // close
 
-BOOST_AUTO_TEST_CASE(tls_server__close__failed__no_close_notify)
+BC_AUTO_TEST_CASE(tls_server__close__failed__no_close_notify)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    BOOST_REQUIRE(!server.receive(base16_chunk("170303000100")));
+    BC_REQUIRE(!server.receive(base16_chunk("170303000100")));
     const auto output = server.output();
     server.close();
-    BOOST_REQUIRE(!server.is_close_sent());
-    BOOST_REQUIRE_EQUAL(server.output(), output);
+    BC_REQUIRE(!server.is_close_sent());
+    BC_REQUIRE_EQUAL(server.output(), output);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

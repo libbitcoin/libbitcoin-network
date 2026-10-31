@@ -18,90 +18,90 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_send_transaction_reconciliation_tests)
+BC_AUTO_TEST_SUITE(p2p_send_transaction_reconciliation_tests)
 
 using namespace bc::system;
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__properties__always__expected)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(send_transaction_reconciliation::command, "sendtxrcncl");
+    BC_REQUIRE_EQUAL(send_transaction_reconciliation::command, "sendtxrcncl");
     constexpr auto index = messages::peer::registry::index_of<send_transaction_reconciliation>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), send_transaction_reconciliation::command);
-    BOOST_REQUIRE_EQUAL(send_transaction_reconciliation::version_minimum, level::bip330);
-    BOOST_REQUIRE_EQUAL(send_transaction_reconciliation::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), send_transaction_reconciliation::command);
+    BC_REQUIRE_EQUAL(send_transaction_reconciliation::version_minimum, level::bip330);
+    BC_REQUIRE_EQUAL(send_transaction_reconciliation::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__size__always__expected)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__size__always__expected)
 {
     constexpr auto expected = sizeof(uint32_t) + sizeof(uint64_t);
-    BOOST_REQUIRE_EQUAL(send_transaction_reconciliation::size(level::bip330), expected);
+    BC_REQUIRE_EQUAL(send_transaction_reconciliation::size(level::bip330), expected);
 }
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize__bip330__expected)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize__bip330__expected)
 {
     constexpr auto payload = base16_array("01000000efcdab8967452301");
     system::read::bytes::copy source(payload);
     const auto message = send_transaction_reconciliation::deserialize(level::bip330, source);
-    BOOST_REQUIRE(source);
-    BOOST_REQUIRE(source.is_exhausted());
-    BOOST_REQUIRE_EQUAL(message.value, 1u);
-    BOOST_REQUIRE_EQUAL(message.salt, 0x0123456789abcdef_u64);
+    BC_REQUIRE(source);
+    BC_REQUIRE(source.is_exhausted());
+    BC_REQUIRE_EQUAL(message.value, 1u);
+    BC_REQUIRE_EQUAL(message.salt, 0x0123456789abcdef_u64);
 }
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize__insufficient_version__invalid)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize__insufficient_version__invalid)
 {
     constexpr auto payload = base16_array("01000000efcdab8967452301");
     system::read::bytes::copy source(payload);
     send_transaction_reconciliation::deserialize(level::bip330 - 1u, source);
-    BOOST_REQUIRE(!source);
+    BC_REQUIRE(!source);
 }
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__serialize__always__round_trips)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__serialize__always__round_trips)
 {
     const send_transaction_reconciliation message{ 1u, 0x0123456789abcdef_u64 };
     data_chunk data{};
     system::write::bytes::data sink(data);
     message.serialize(level::bip330, sink);
     sink.flush();
-    BOOST_REQUIRE(sink);
-    BOOST_REQUIRE_EQUAL(data, base16_chunk("01000000efcdab8967452301"));
+    BC_REQUIRE(sink);
+    BC_REQUIRE_EQUAL(data, base16_chunk("01000000efcdab8967452301"));
 }
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize1__bip330__expected)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize1__bip330__expected)
 {
     const auto data = base16_chunk("01000000efcdab8967452301");
     const auto message = send_transaction_reconciliation::deserialize(level::bip330, data);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->value, 1u);
-    BOOST_REQUIRE_EQUAL(message->salt, 0x0123456789abcdef_u64);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->value, 1u);
+    BC_REQUIRE_EQUAL(message->salt, 0x0123456789abcdef_u64);
 }
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize1__insufficient_version__nullptr)
 {
     const auto data = base16_chunk("01000000efcdab8967452301");
-    BOOST_REQUIRE(!send_transaction_reconciliation::deserialize(level::bip330 - 1u, data));
+    BC_REQUIRE(!send_transaction_reconciliation::deserialize(level::bip330 - 1u, data));
 }
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize1__underflow__nullptr)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__deserialize1__underflow__nullptr)
 {
     const auto data = base16_chunk("01000000efcdab89674523");
-    BOOST_REQUIRE(!send_transaction_reconciliation::deserialize(level::bip330, data));
+    BC_REQUIRE(!send_transaction_reconciliation::deserialize(level::bip330, data));
 }
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__serialize1__always__expected)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__serialize1__always__expected)
 {
     const send_transaction_reconciliation message{ 1u, 0x0123456789abcdef_u64 };
     data_chunk data(send_transaction_reconciliation::size(level::bip330));
-    BOOST_REQUIRE(message.serialize(level::bip330, data));
-    BOOST_REQUIRE_EQUAL(data, base16_chunk("01000000efcdab8967452301"));
+    BC_REQUIRE(message.serialize(level::bip330, data));
+    BC_REQUIRE_EQUAL(data, base16_chunk("01000000efcdab8967452301"));
 }
 
-BOOST_AUTO_TEST_CASE(send_transaction_reconciliation__serialize1__overflow__false)
+BC_AUTO_TEST_CASE(send_transaction_reconciliation__serialize1__overflow__false)
 {
     const send_transaction_reconciliation message{ 1u, 0x0123456789abcdef_u64 };
     data_chunk data(sub1(send_transaction_reconciliation::size(level::bip330)));
-    BOOST_REQUIRE(!message.serialize(level::bip330, data));
+    BC_REQUIRE(!message.serialize(level::bip330, data));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

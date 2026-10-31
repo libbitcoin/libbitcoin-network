@@ -54,7 +54,7 @@ peer_setup_fixture::peer_setup_fixture(const configurator& configure)
 
     // Block until the network is started.
     auto ec = started.get_future().get();
-    BOOST_REQUIRE_MESSAGE(!ec, ec.message());
+    BC_REQUIRE_MESSAGE(!ec, ec.message());
 
     std::promise<code> running{};
     net_.run([&](const code& ec) NOEXCEPT
@@ -64,7 +64,7 @@ peer_setup_fixture::peer_setup_fixture(const configurator& configure)
 
     // Block until the network is running.
     ec = running.get_future().get();
-    BOOST_REQUIRE_MESSAGE(!ec, ec.message());
+    BC_REQUIRE_MESSAGE(!ec, ec.message());
     REQUIRE_SUCCESS(socket_, connect, settings_.inbound.binds.back().to_endpoint());
 }
 
@@ -79,7 +79,7 @@ void peer_setup_fixture::send(const std::string& command,
 {
     const auto head = heading::factory(settings_.identifier, command, payload);
     data_chunk frame(heading::size() + payload.size());
-    BOOST_REQUIRE(head.serialize({ frame.data(),
+    BC_REQUIRE(head.serialize({ frame.data(),
         std::next(frame.data(), heading::size()) }));
 
     std::copy(payload.begin(), payload.end(),
@@ -92,7 +92,7 @@ std::pair<std::string, data_chunk> peer_setup_fixture::receive()
     data_array<heading::size()> head_data{};
     test::read(socket_, io::buffer(head_data));
     const auto head = heading::deserialize(head_data);
-    BOOST_REQUIRE(head);
+    BC_REQUIRE(head);
 
     data_chunk payload(head->payload_size);
     if (!payload.empty())
@@ -162,27 +162,27 @@ void remote_peer::listen(const network::config::authority& endpoint)
     const auto local = endpoint.to_endpoint();
     code ec{};
     acceptor_.open(io::tcp::of(local), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor_.set_option(io::reuse_address{ true }, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor_.bind(local, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
     acceptor_.listen(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 }
 
 void remote_peer::accept()
 {
     code ec{};
     acceptor_.accept(socket_, ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 }
 
 void remote_peer::connect(const network::config::authority& endpoint)
 {
     code ec{};
     socket_.connect(endpoint.to_endpoint(), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 }
 
 void remote_peer::disconnect()
@@ -201,7 +201,7 @@ void remote_peer::send(const std::string& command, const data_chunk& payload)
 {
     const auto head = heading::factory(identifier_, command, payload);
     data_chunk frame(heading::size() + payload.size());
-    BOOST_REQUIRE(head.serialize({ frame.data(),
+    BC_REQUIRE(head.serialize({ frame.data(),
         std::next(frame.data(), heading::size()) }));
 
     std::copy(payload.begin(), payload.end(),
@@ -214,7 +214,7 @@ std::pair<std::string, data_chunk> remote_peer::receive()
     data_array<heading::size()> head_data{};
     test::read(socket_, io::buffer(head_data));
     const auto head = heading::deserialize(head_data);
-    BOOST_REQUIRE(head);
+    BC_REQUIRE(head);
 
     data_chunk payload(head->payload_size);
     if (!payload.empty())

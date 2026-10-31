@@ -18,53 +18,53 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_ping_tests)
+BC_AUTO_TEST_SUITE(p2p_ping_tests)
 
 using namespace bc::system;
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(ping__properties__always__expected)
+BC_AUTO_TEST_CASE(ping__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(ping::command, "ping");
+    BC_REQUIRE_EQUAL(ping::command, "ping");
     constexpr auto index = messages::peer::registry::index_of<ping>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), ping::command);
-    BOOST_REQUIRE_EQUAL(ping::version_minimum, level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(ping::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), ping::command);
+    BC_REQUIRE_EQUAL(ping::version_minimum, level::minimum_protocol);
+    BC_REQUIRE_EQUAL(ping::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(ping__size__always__expected)
+BC_AUTO_TEST_CASE(ping__size__always__expected)
 {
     // bip31 added nonce field
-    BOOST_REQUIRE_EQUAL(ping::size(level::canonical), zero);
-    BOOST_REQUIRE_EQUAL(ping::size(level::bip31), sizeof(uint64_t));
+    BC_REQUIRE_EQUAL(ping::size(level::canonical), zero);
+    BC_REQUIRE_EQUAL(ping::size(level::bip31), sizeof(uint64_t));
 }
 
-BOOST_AUTO_TEST_CASE(ping__deserialize1__bip31__expected)
+BC_AUTO_TEST_CASE(ping__deserialize1__bip31__expected)
 {
     const auto data = system::base16_chunk("efcdab8967452301");
     const auto message = ping::deserialize(level::bip31, data);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->nonce, 0x0123456789abcdef_u64);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->nonce, 0x0123456789abcdef_u64);
 }
 
-BOOST_AUTO_TEST_CASE(ping__deserialize1__pre_bip31_empty__zero_nonce)
+BC_AUTO_TEST_CASE(ping__deserialize1__pre_bip31_empty__zero_nonce)
 {
     const system::data_chunk data{};
     const auto message = ping::deserialize(level::minimum_protocol, data);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->nonce, 0u);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->nonce, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(ping__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(ping__deserialize1__insufficient_version__nullptr)
 {
     const system::data_chunk data{};
-    BOOST_REQUIRE(!ping::deserialize(level::minimum_protocol - 1u, data));
+    BC_REQUIRE(!ping::deserialize(level::minimum_protocol - 1u, data));
 }
 
-BOOST_AUTO_TEST_CASE(ping__deserialize1__excessive_version__nullptr)
+BC_AUTO_TEST_CASE(ping__deserialize1__excessive_version__nullptr)
 {
     const auto data = system::base16_chunk("efcdab8967452301");
-    BOOST_REQUIRE(!ping::deserialize(level::maximum_protocol + 1u, data));
+    BC_REQUIRE(!ping::deserialize(level::maximum_protocol + 1u, data));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

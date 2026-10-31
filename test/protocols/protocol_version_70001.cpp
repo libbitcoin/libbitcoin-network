@@ -28,35 +28,35 @@ struct protocol_version_70001_setup_fixture
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(protocol_version_70001_tests, protocol_version_70001_setup_fixture)
+BC_FIXTURE_TEST_SUITE(protocol_version_70001_tests, protocol_version_70001_setup_fixture)
 
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(protocol_version_70001__handshake__bip37_maximum__bip37_node_version_no_relay)
+BC_AUTO_TEST_CASE(protocol_version_70001__handshake__bip37_maximum__bip37_node_version_no_relay)
 {
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::bip37));
-    BOOST_REQUIRE_EQUAL(node_version->value, level::bip37);
-    BOOST_REQUIRE(!node_version->relay);
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::bip37));
+    BC_REQUIRE_EQUAL(node_version->value, level::bip37);
+    BC_REQUIRE(!node_version->relay);
 }
 
-BOOST_AUTO_TEST_CASE(protocol_version_70001__handshake__relay_enabled__relay_node_version)
+BC_AUTO_TEST_CASE(protocol_version_70001__handshake__relay_enabled__relay_node_version)
 {
     settings_.enable_relay = true;
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::bip37));
-    BOOST_REQUIRE(node_version->relay);
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::bip37));
+    BC_REQUIRE(node_version->relay);
 }
 
-BOOST_AUTO_TEST_CASE(protocol_version_70001__handshake__reject_disabled_bip61_maximum__bip61_node_version)
+BC_AUTO_TEST_CASE(protocol_version_70001__handshake__reject_disabled_bip61_maximum__bip61_node_version)
 {
     settings_.protocol_maximum = level::bip61;
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::bip61));
-    BOOST_REQUIRE_EQUAL(node_version->value, level::bip61);
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::bip61));
+    BC_REQUIRE_EQUAL(node_version->value, level::bip61);
 
     send(ping{ 42 }, level::bip61);
-    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip61)->nonce, 42_u64);
+    BC_REQUIRE_EQUAL(receive<pong>(level::bip61)->nonce, 42_u64);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

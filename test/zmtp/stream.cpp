@@ -19,7 +19,7 @@
 #include <optional>
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(zmtp_stream_tests)
+BC_AUTO_TEST_SUITE(zmtp_stream_tests)
 
 using stream = network::zmtp::stream;
 using context = network::zmtp::context;
@@ -43,18 +43,18 @@ static void connect_pair(io::context& service,
     bool connected{};
     acceptor.async_accept(server, [&](const code& ec)
     {
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         accepted = true;
     });
     client.async_connect(acceptor.local_endpoint(), [&](const code& ec)
     {
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         connected = true;
     });
 
     service.run();
     service.restart();
-    BOOST_REQUIRE(accepted && connected);
+    BC_REQUIRE(accepted && connected);
 }
 
 // Build a command frame with the given name and trailing content.
@@ -247,7 +247,7 @@ public:
     void send(uint8_t payload, const data_chunk& body)
     {
         data_chunk message{};
-        BOOST_REQUIRE(client_.encode(message, payload, body));
+        BC_REQUIRE(client_.encode(message, payload, body));
         write(stream::frame_encode(message, false, false));
     }
 
@@ -336,23 +336,23 @@ struct curve_setup
 // Codec (static).
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__make_greeting__round_trip__minor_one)
+BC_AUTO_TEST_CASE(zmtp_stream__make_greeting__round_trip__minor_one)
 {
     const auto greeting = stream::make_greeting(false, false);
-    BOOST_REQUIRE_EQUAL(greeting.size(), stream::greeting_size);
-    BOOST_REQUIRE_EQUAL(greeting.front(), 0xffu);
-    BOOST_REQUIRE_EQUAL(greeting.at(9), 0x7fu);
-    BOOST_REQUIRE_EQUAL(greeting.at(10), 3u);
-    BOOST_REQUIRE_EQUAL(greeting.at(11), 1u);
+    BC_REQUIRE_EQUAL(greeting.size(), stream::greeting_size);
+    BC_REQUIRE_EQUAL(greeting.front(), 0xffu);
+    BC_REQUIRE_EQUAL(greeting.at(9), 0x7fu);
+    BC_REQUIRE_EQUAL(greeting.at(10), 3u);
+    BC_REQUIRE_EQUAL(greeting.at(11), 1u);
 
     uint8_t minor{ 0xff };
     bool curve{};
     bool as_server{};
-    BOOST_REQUIRE(stream::parse_greeting(greeting, minor, curve, as_server));
-    BOOST_REQUIRE_EQUAL(minor, 1u);
+    BC_REQUIRE(stream::parse_greeting(greeting, minor, curve, as_server));
+    BC_REQUIRE_EQUAL(minor, 1u);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__parse_greeting__bad_signature__false)
+BC_AUTO_TEST_CASE(zmtp_stream__parse_greeting__bad_signature__false)
 {
     auto greeting = stream::make_greeting(false, false);
     greeting.front() = 0x00;
@@ -360,10 +360,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__parse_greeting__bad_signature__false)
     uint8_t minor{};
     bool curve{};
     bool as_server{};
-    BOOST_REQUIRE(!stream::parse_greeting(greeting, minor, curve, as_server));
+    BC_REQUIRE(!stream::parse_greeting(greeting, minor, curve, as_server));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__parse_greeting__low_major__false)
+BC_AUTO_TEST_CASE(zmtp_stream__parse_greeting__low_major__false)
 {
     auto greeting = stream::make_greeting(false, false);
     greeting.at(10) = 2u;
@@ -371,10 +371,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__parse_greeting__low_major__false)
     uint8_t minor{};
     bool curve{};
     bool as_server{};
-    BOOST_REQUIRE(!stream::parse_greeting(greeting, minor, curve, as_server));
+    BC_REQUIRE(!stream::parse_greeting(greeting, minor, curve, as_server));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__parse_greeting__wrong_mechanism__false)
+BC_AUTO_TEST_CASE(zmtp_stream__parse_greeting__wrong_mechanism__false)
 {
     auto greeting = stream::make_greeting(false, false);
     greeting.at(12) = 'C';
@@ -382,37 +382,37 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__parse_greeting__wrong_mechanism__false)
     uint8_t minor{};
     bool curve{};
     bool as_server{};
-    BOOST_REQUIRE(!stream::parse_greeting(greeting, minor, curve, as_server));
+    BC_REQUIRE(!stream::parse_greeting(greeting, minor, curve, as_server));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__frame_encode__short__expected)
+BC_AUTO_TEST_CASE(zmtp_stream__frame_encode__short__expected)
 {
     const data_chunk body(3, 0x11);
     const auto frame = stream::frame_encode(body, false, false);
-    BOOST_REQUIRE_EQUAL(frame.at(0), 0x00u);
-    BOOST_REQUIRE_EQUAL(frame.at(1), 3u);
-    BOOST_REQUIRE_EQUAL(frame.size(), 5u);
+    BC_REQUIRE_EQUAL(frame.at(0), 0x00u);
+    BC_REQUIRE_EQUAL(frame.at(1), 3u);
+    BC_REQUIRE_EQUAL(frame.size(), 5u);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__frame_encode__long_command_more__expected)
+BC_AUTO_TEST_CASE(zmtp_stream__frame_encode__long_command_more__expected)
 {
     const data_chunk body(300, 0x22);
     const auto frame = stream::frame_encode(body, true, true);
     const uint8_t expected_flags = stream::flag_long | stream::flag_command | stream::flag_more;
-    BOOST_REQUIRE_EQUAL(frame.at(0), expected_flags);
-    BOOST_REQUIRE_EQUAL(frame.at(7), 300u / 256u);
-    BOOST_REQUIRE_EQUAL(frame.at(8), 300u % 256u);
-    BOOST_REQUIRE_EQUAL(frame.size(), 300u + 9u);
+    BC_REQUIRE_EQUAL(frame.at(0), expected_flags);
+    BC_REQUIRE_EQUAL(frame.at(7), 300u / 256u);
+    BC_REQUIRE_EQUAL(frame.at(8), 300u % 256u);
+    BC_REQUIRE_EQUAL(frame.size(), 300u + 9u);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__frame_size__short_and_long__expected)
+BC_AUTO_TEST_CASE(zmtp_stream__frame_size__short_and_long__expected)
 {
-    BOOST_REQUIRE_EQUAL(stream::frame_size(0), 2u);
-    BOOST_REQUIRE_EQUAL(stream::frame_size(255), 257u);
-    BOOST_REQUIRE_EQUAL(stream::frame_size(256), 265u);
+    BC_REQUIRE_EQUAL(stream::frame_size(0), 2u);
+    BC_REQUIRE_EQUAL(stream::frame_size(255), 257u);
+    BC_REQUIRE_EQUAL(stream::frame_size(256), 265u);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__write_frame_head__long_command_more__frame_encode_head)
+BC_AUTO_TEST_CASE(zmtp_stream__write_frame_head__long_command_more__frame_encode_head)
 {
     const data_chunk body(300, 0x22);
     const auto frame = stream::frame_encode(body, true, true);
@@ -422,11 +422,11 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__write_frame_head__long_command_more__frame_enc
     system::stream::out::fast sink{ head };
     system::write::bytes::fast writer{ sink };
     stream::write_frame_head(writer, body.size(), true, true);
-    BOOST_REQUIRE(writer);
-    BOOST_REQUIRE(head == expected);
+    BC_REQUIRE(writer);
+    BC_REQUIRE(head == expected);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__frame_message__three_parts__more_on_all_but_last)
+BC_AUTO_TEST_CASE(zmtp_stream__frame_message__three_parts__more_on_all_but_last)
 {
     const data_stack parts
     {
@@ -438,32 +438,32 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__frame_message__three_parts__more_on_all_but_la
     const auto packet = stream::frame_message(parts);
 
     // topic: flags(MORE) len(5) 5 bytes; body: flags(MORE) len(4) 4 bytes; seq: flags(0) len(4) 4 bytes.
-    BOOST_REQUIRE_EQUAL(packet.size(), 7u + 6u + 6u);
-    BOOST_REQUIRE_EQUAL(packet.at(0), stream::flag_more);
-    BOOST_REQUIRE_EQUAL(packet.at(1), 5u);
-    BOOST_REQUIRE_EQUAL(packet.at(7), stream::flag_more);
-    BOOST_REQUIRE_EQUAL(packet.at(8), 4u);
-    BOOST_REQUIRE_EQUAL(packet.at(13), 0x00u);
-    BOOST_REQUIRE_EQUAL(packet.at(14), 4u);
+    BC_REQUIRE_EQUAL(packet.size(), 7u + 6u + 6u);
+    BC_REQUIRE_EQUAL(packet.at(0), stream::flag_more);
+    BC_REQUIRE_EQUAL(packet.at(1), 5u);
+    BC_REQUIRE_EQUAL(packet.at(7), stream::flag_more);
+    BC_REQUIRE_EQUAL(packet.at(8), 4u);
+    BC_REQUIRE_EQUAL(packet.at(13), 0x00u);
+    BC_REQUIRE_EQUAL(packet.at(14), 4u);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__make_ready__publisher__socket_type_pub)
+BC_AUTO_TEST_CASE(zmtp_stream__make_ready__publisher__socket_type_pub)
 {
     const auto frame = stream::make_ready(role::publisher);
-    BOOST_REQUIRE(!is_zero(frame.at(0) & stream::flag_command));
+    BC_REQUIRE(!is_zero(frame.at(0) & stream::flag_command));
 
     const std::span<const uint8_t> body{ std::next(frame.data(), 2u), frame.size() - 2u };
     std::string name{};
     std::span<const uint8_t> meta{};
-    BOOST_REQUIRE(stream::command_name(name, meta, body));
-    BOOST_REQUIRE_EQUAL(name, "READY");
+    BC_REQUIRE(stream::command_name(name, meta, body));
+    BC_REQUIRE_EQUAL(name, "READY");
 
     std::string type{};
-    BOOST_REQUIRE(stream::ready_socket_type(type, meta));
-    BOOST_REQUIRE_EQUAL(type, "PUB");
+    BC_REQUIRE(stream::ready_socket_type(type, meta));
+    BC_REQUIRE_EQUAL(type, "PUB");
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__make_pong__echoes_truncated_context)
+BC_AUTO_TEST_CASE(zmtp_stream__make_pong__echoes_truncated_context)
 {
     const data_chunk context_bytes(20, 0xab);
     const auto frame = stream::make_pong(context_bytes);
@@ -471,15 +471,15 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__make_pong__echoes_truncated_context)
     const std::span<const uint8_t> body{ std::next(frame.data(), 2u), frame.size() - 2u };
     std::string name{};
     std::span<const uint8_t> echo{};
-    BOOST_REQUIRE(stream::command_name(name, echo, body));
-    BOOST_REQUIRE_EQUAL(name, "PONG");
-    BOOST_REQUIRE_EQUAL(echo.size(), stream::maximum_ping_context);
+    BC_REQUIRE(stream::command_name(name, echo, body));
+    BC_REQUIRE_EQUAL(name, "PONG");
+    BC_REQUIRE_EQUAL(echo.size(), stream::maximum_ping_context);
 }
 
 // Handshake and framing (loopback against a raw SUB peer).
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
+BC_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
 {
     io::context service{};
     peer_socket server{ service };
@@ -497,8 +497,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
     peer.handshake(peer_shook);
     service.run();
     service.restart();
-    BOOST_REQUIRE(!shook);
-    BOOST_REQUIRE(!peer_shook);
+    BC_REQUIRE(!shook);
+    BC_REQUIRE(!peer_shook);
 
     const auto topic = system::to_chunk(std::string{ "hashblock" });
     const auto body = system::to_chunk(std::string{ "body" });
@@ -520,18 +520,18 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_write__v31_peer__three_frames_received)
     service.run();
     service.restart();
 
-    BOOST_REQUIRE(!sent);
-    BOOST_REQUIRE_EQUAL(sent_size, packet->size());
-    BOOST_REQUIRE(!got);
-    BOOST_REQUIRE_EQUAL(received.size(), 3u);
-    BOOST_REQUIRE_EQUAL(received.at(0), topic);
-    BOOST_REQUIRE_EQUAL(received.at(1), body);
+    BC_REQUIRE(!sent);
+    BC_REQUIRE_EQUAL(sent_size, packet->size());
+    BC_REQUIRE(!got);
+    BC_REQUIRE_EQUAL(received.size(), 3u);
+    BC_REQUIRE_EQUAL(received.at(0), topic);
+    BC_REQUIRE_EQUAL(received.at(1), body);
 
     publisher->next_layer().close();
     client.close();
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__handshake__v30_peer__minor_zero)
+BC_AUTO_TEST_CASE(zmtp_stream__handshake__v30_peer__minor_zero)
 {
     io::context service{};
     peer_socket server{ service };
@@ -549,14 +549,14 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__handshake__v30_peer__minor_zero)
     peer.handshake(peer_shook);
     service.run();
     service.restart();
-    BOOST_REQUIRE(!shook);
-    BOOST_REQUIRE(!peer_shook);
+    BC_REQUIRE(!shook);
+    BC_REQUIRE(!peer_shook);
 
     publisher->next_layer().close();
     client.close();
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
+BC_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
 {
     io::context service{};
     peer_socket server{ service };
@@ -574,8 +574,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
     peer.handshake(peer_shook);
     service.run();
     service.restart();
-    BOOST_REQUIRE(!shook);
-    BOOST_REQUIRE(!peer_shook);
+    BC_REQUIRE(!shook);
+    BC_REQUIRE(!peer_shook);
 
     const auto topic = system::to_chunk(std::string{ "hashblock" });
     peer.subscribe(topic);
@@ -585,23 +585,23 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__subscribe_command__surfaced)
     publisher->async_read_frame(frame, 1024, [&](const code& ec, size_t) { got = ec; });
     service.run();
     service.restart();
-    BOOST_REQUIRE(!got);
-    BOOST_REQUIRE(frame.command());
-    BOOST_REQUIRE(!frame.more());
+    BC_REQUIRE(!got);
+    BC_REQUIRE(frame.command());
+    BC_REQUIRE(!frame.more());
 
     std::string name{};
     std::span<const uint8_t> content{};
     const std::span<const uint8_t> body{ frame.body };
-    BOOST_REQUIRE(stream::command_name(name, content, body));
-    BOOST_REQUIRE_EQUAL(name, "SUBSCRIBE");
+    BC_REQUIRE(stream::command_name(name, content, body));
+    BC_REQUIRE_EQUAL(name, "SUBSCRIBE");
     const data_chunk subscribed{ content.begin(), content.end() };
-    BOOST_REQUIRE_EQUAL(subscribed, topic);
+    BC_REQUIRE_EQUAL(subscribed, topic);
 
     publisher->next_layer().close();
     client.close();
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_from_context)
+BC_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_from_context)
 {
     io::context service{};
     peer_socket server{ service };
@@ -619,8 +619,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_fro
     peer.handshake(peer_shook);
     service.run();
     service.restart();
-    BOOST_REQUIRE(!shook);
-    BOOST_REQUIRE(!peer_shook);
+    BC_REQUIRE(!shook);
+    BC_REQUIRE(!peer_shook);
 
     const auto context_bytes = system::base16_chunk("0011223344556677");
     peer.ping(context_bytes);
@@ -630,25 +630,25 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_fro
     publisher->async_read_frame(frame, 1024, [&](const code& ec, size_t) { got = ec; });
     service.run();
     service.restart();
-    BOOST_REQUIRE(!got);
-    BOOST_REQUIRE(frame.command());
+    BC_REQUIRE(!got);
+    BC_REQUIRE(frame.command());
 
     // The tier above intercepts PING: parse it and build the PONG to queue.
     std::string name{};
     std::span<const uint8_t> content{};
     const std::span<const uint8_t> body{ frame.body };
-    BOOST_REQUIRE(stream::command_name(name, content, body));
-    BOOST_REQUIRE_EQUAL(name, "PING");
+    BC_REQUIRE(stream::command_name(name, content, body));
+    BC_REQUIRE_EQUAL(name, "PING");
     const auto ping_context = content.subspan(sizeof(uint16_t));
     const auto pong = stream::make_pong(ping_context);
 
     std::string pong_name{};
     std::span<const uint8_t> echo{};
     const std::span<const uint8_t> pong_body{ std::next(pong.data(), 2u), pong.size() - 2u };
-    BOOST_REQUIRE(stream::command_name(pong_name, echo, pong_body));
-    BOOST_REQUIRE_EQUAL(pong_name, "PONG");
+    BC_REQUIRE(stream::command_name(pong_name, echo, pong_body));
+    BC_REQUIRE_EQUAL(pong_name, "PONG");
     const data_chunk echoed{ echo.begin(), echo.end() };
-    BOOST_REQUIRE_EQUAL(echoed, context_bytes);
+    BC_REQUIRE_EQUAL(echoed, context_bytes);
 
     publisher->next_layer().close();
     client.close();
@@ -657,29 +657,29 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__ping_command__pong_built_fro
 // CURVE mechanism (server).
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__make_greeting__curve_server__mechanism_and_as_server)
+BC_AUTO_TEST_CASE(zmtp_stream__make_greeting__curve_server__mechanism_and_as_server)
 {
     const auto greeting = stream::make_greeting(true, true);
-    BOOST_REQUIRE_EQUAL(greeting.size(), stream::greeting_size);
-    BOOST_REQUIRE_EQUAL(std::string(std::next(greeting.begin(), 12), std::next(greeting.begin(), 17)), "CURVE");
-    BOOST_REQUIRE_EQUAL(greeting.at(32), 0x01u);
+    BC_REQUIRE_EQUAL(greeting.size(), stream::greeting_size);
+    BC_REQUIRE_EQUAL(std::string(std::next(greeting.begin(), 12), std::next(greeting.begin(), 17)), "CURVE");
+    BC_REQUIRE_EQUAL(greeting.at(32), 0x01u);
 
     uint8_t minor{};
     bool curve{};
     bool as_server{};
-    BOOST_REQUIRE(stream::parse_greeting(greeting, minor, curve, as_server));
-    BOOST_REQUIRE_EQUAL(minor, 1u);
-    BOOST_REQUIRE(curve);
-    BOOST_REQUIRE(as_server);
+    BC_REQUIRE(stream::parse_greeting(greeting, minor, curve, as_server));
+    BC_REQUIRE_EQUAL(minor, 1u);
+    BC_REQUIRE(curve);
+    BC_REQUIRE(as_server);
 
     const auto client = stream::make_greeting(false, true);
-    BOOST_REQUIRE_EQUAL(client.at(32), 0x00u);
-    BOOST_REQUIRE(stream::parse_greeting(client, minor, curve, as_server));
-    BOOST_REQUIRE(curve);
-    BOOST_REQUIRE(!as_server);
+    BC_REQUIRE_EQUAL(client.at(32), 0x00u);
+    BC_REQUIRE(stream::parse_greeting(client, minor, curve, as_server));
+    BC_REQUIRE(curve);
+    BC_REQUIRE(!as_server);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__frame_decode__two_frames__expected)
+BC_AUTO_TEST_CASE(zmtp_stream__frame_decode__two_frames__expected)
 {
     const data_stack parts{ { 0x01, 0x02 }, data_chunk(300, 0x42) };
     const auto packet = stream::frame_message(parts);
@@ -687,17 +687,17 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__frame_decode__two_frames__expected)
 
     uint8_t flags{};
     std::span<const uint8_t> body{};
-    BOOST_REQUIRE(stream::frame_decode(flags, body, buffer));
-    BOOST_REQUIRE_EQUAL(flags, stream::flag_more);
-    BOOST_REQUIRE_EQUAL(body.size(), 2u);
-    BOOST_REQUIRE(stream::frame_decode(flags, body, buffer));
-    BOOST_REQUIRE_EQUAL(flags, stream::flag_long);
-    BOOST_REQUIRE_EQUAL(body.size(), 300u);
-    BOOST_REQUIRE(buffer.empty());
-    BOOST_REQUIRE(!stream::frame_decode(flags, body, buffer));
+    BC_REQUIRE(stream::frame_decode(flags, body, buffer));
+    BC_REQUIRE_EQUAL(flags, stream::flag_more);
+    BC_REQUIRE_EQUAL(body.size(), 2u);
+    BC_REQUIRE(stream::frame_decode(flags, body, buffer));
+    BC_REQUIRE_EQUAL(flags, stream::flag_long);
+    BC_REQUIRE_EQUAL(body.size(), 300u);
+    BC_REQUIRE(buffer.empty());
+    BC_REQUIRE(!stream::frame_decode(flags, body, buffer));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
 {
     io::context service{};
     peer_socket server_socket{ service };
@@ -711,8 +711,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
     system::x25519::generate(server_secret, server_public);
     system::x25519::generate(client_secret, client_public);
     const context curve{ system::to_chunk(server_secret) };
-    BOOST_REQUIRE(curve.curve());
-    BOOST_REQUIRE_EQUAL(curve.public_key(), server_public);
+    BC_REQUIRE(curve.curve());
+    BC_REQUIRE_EQUAL(curve.public_key(), server_public);
 
     stream server{ std::move(server_socket), curve, role::publisher };
     network::zmtp::cipher client{ client_secret, client_public, server_public };
@@ -723,11 +723,11 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__valid_client__completes)
     server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     service.run();
-    BOOST_REQUIRE_MESSAGE(!server_result, server_result.message());
-    BOOST_REQUIRE_MESSAGE(!peer_result, peer_result.message());
+    BC_REQUIRE_MESSAGE(!server_result, server_result.message());
+    BC_REQUIRE_MESSAGE(!peer_result, peer_result.message());
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__null_client__error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__null_client__error)
 {
     io::context service{};
     peer_socket server_socket{ service };
@@ -747,19 +747,19 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__null_client__error)
     server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     service.run();
-    BOOST_REQUIRE_EQUAL(server_result, code(error::protocol_violation));
+    BC_REQUIRE_EQUAL(server_result, code(error::protocol_violation));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__context__wrong_size_secret__null_mechanism)
+BC_AUTO_TEST_CASE(zmtp_stream__context__wrong_size_secret__null_mechanism)
 {
     const context short_secret{ data_chunk(31, 0x01) };
-    BOOST_REQUIRE(!short_secret.curve());
+    BC_REQUIRE(!short_secret.curve());
 
     const context none{};
-    BOOST_REQUIRE(!none.curve());
+    BC_REQUIRE(!none.curve());
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_ways)
+BC_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_ways)
 {
     io::context service{};
     peer_socket server_socket{ service };
@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
     peer.handshake(peer_result);
     service.run();
     service.restart();
-    BOOST_REQUIRE(!server_result && !peer_result);
+    BC_REQUIRE(!server_result && !peer_result);
 
     // The boxed SUBSCRIBE surfaces as a plain command frame.
     stream::frame frame{};
@@ -794,10 +794,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
     peer.subscribe(topic);
     service.run();
     service.restart();
-    BOOST_REQUIRE_MESSAGE(!read_result, read_result.message());
-    BOOST_REQUIRE(frame.command());
-    BOOST_REQUIRE(!frame.more());
-    BOOST_REQUIRE_EQUAL(frame.body, base16_chunk("0953554253435249424568617368"));
+    BC_REQUIRE_MESSAGE(!read_result, read_result.message());
+    BC_REQUIRE(frame.command());
+    BC_REQUIRE(!frame.more());
+    BC_REQUIRE_EQUAL(frame.body, base16_chunk("0953554253435249424568617368"));
 
     // The framed message is boxed per frame and unboxed by the peer.
     const data_stack parts{ topic, data_chunk(300, 0x42), { 0x01, 0x00, 0x00, 0x00 } };
@@ -808,18 +808,18 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve__subscribe_and_publish__unboxed_both_way
     server.async_write({ packet.data(), packet.size() }, [&](const code& ec, size_t) { write_result = ec; });
     peer.read_message(received, message_result);
     service.run();
-    BOOST_REQUIRE_MESSAGE(!write_result, write_result.message());
-    BOOST_REQUIRE_MESSAGE(!message_result, message_result.message());
-    BOOST_REQUIRE_EQUAL(received.size(), 3u);
-    BOOST_REQUIRE_EQUAL(received.at(0), parts.at(0));
-    BOOST_REQUIRE_EQUAL(received.at(1), parts.at(1));
-    BOOST_REQUIRE_EQUAL(received.at(2), parts.at(2));
+    BC_REQUIRE_MESSAGE(!write_result, write_result.message());
+    BC_REQUIRE_MESSAGE(!message_result, message_result.message());
+    BC_REQUIRE_EQUAL(received.size(), 3u);
+    BC_REQUIRE_EQUAL(received.at(0), parts.at(0));
+    BC_REQUIRE_EQUAL(received.at(1), parts.at(1));
+    BC_REQUIRE_EQUAL(received.at(2), parts.at(2));
 }
 
 // CURVE client authorization.
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__context__clients__authorized_expected)
+BC_AUTO_TEST_CASE(zmtp_stream__context__clients__authorized_expected)
 {
     network::zmtp::cipher::key server_secret{};
     network::zmtp::cipher::key server_public{};
@@ -832,20 +832,20 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__context__clients__authorized_expected)
     system::x25519::generate(other_secret, other_public);
 
     const context any{ system::to_chunk(server_secret) };
-    BOOST_REQUIRE(any.curve());
-    BOOST_REQUIRE(any.authorized(listed_public));
-    BOOST_REQUIRE(any.authorized(other_public));
+    BC_REQUIRE(any.curve());
+    BC_REQUIRE(any.authorized(listed_public));
+    BC_REQUIRE(any.authorized(other_public));
 
     const context listed{ system::to_chunk(server_secret), { system::to_chunk(listed_public) } };
-    BOOST_REQUIRE(listed.curve());
-    BOOST_REQUIRE(listed.authorized(listed_public));
-    BOOST_REQUIRE(!listed.authorized(other_public));
+    BC_REQUIRE(listed.curve());
+    BC_REQUIRE(listed.authorized(listed_public));
+    BC_REQUIRE(!listed.authorized(other_public));
 
     const context malformed{ system::to_chunk(server_secret), { data_chunk(31, 0x01) } };
-    BOOST_REQUIRE(!malformed.curve());
+    BC_REQUIRE(!malformed.curve());
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__authorized_client__completes)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__authorized_client__completes)
 {
     io::context service{};
     peer_socket server_socket{ service };
@@ -859,7 +859,7 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__authorized_client__completes)
     system::x25519::generate(server_secret, server_public);
     system::x25519::generate(client_secret, client_public);
     const context curve{ system::to_chunk(server_secret), { system::to_chunk(client_public) } };
-    BOOST_REQUIRE(curve.curve());
+    BC_REQUIRE(curve.curve());
 
     stream server{ std::move(server_socket), curve, role::publisher };
     network::zmtp::cipher client{ client_secret, client_public, server_public };
@@ -870,11 +870,11 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__authorized_client__completes)
     server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     service.run();
-    BOOST_REQUIRE_MESSAGE(!server_result, server_result.message());
-    BOOST_REQUIRE_MESSAGE(!peer_result, peer_result.message());
+    BC_REQUIRE_MESSAGE(!server_result, server_result.message());
+    BC_REQUIRE_MESSAGE(!peer_result, peer_result.message());
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__unauthorized_client__error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__unauthorized_client__error)
 {
     io::context service{};
     peer_socket server_socket{ service };
@@ -901,19 +901,19 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__unauthorized_client__error)
     server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     service.run();
-    BOOST_REQUIRE_EQUAL(server_result, code(error::protocol_violation));
-    BOOST_REQUIRE_EQUAL(peer_result, code(error::protocol_violation));
+    BC_REQUIRE_EQUAL(server_result, code(error::protocol_violation));
+    BC_REQUIRE_EQUAL(peer_result, code(error::protocol_violation));
 }
 
 // Codec failures.
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__frame_message__empty__empty)
+BC_AUTO_TEST_CASE(zmtp_stream__frame_message__empty__empty)
 {
-    BOOST_REQUIRE(stream::frame_message({}).empty());
+    BC_REQUIRE(stream::frame_message({}).empty());
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__parse_greeting__short__false)
+BC_AUTO_TEST_CASE(zmtp_stream__parse_greeting__short__false)
 {
     auto greeting = stream::make_greeting(false, false);
     greeting.pop_back();
@@ -921,85 +921,85 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__parse_greeting__short__false)
     uint8_t minor{};
     bool curve{};
     bool as_server{};
-    BOOST_REQUIRE(!stream::parse_greeting(greeting, minor, curve, as_server));
+    BC_REQUIRE(!stream::parse_greeting(greeting, minor, curve, as_server));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__frame_decode__truncated_long_length__false)
+BC_AUTO_TEST_CASE(zmtp_stream__frame_decode__truncated_long_length__false)
 {
     const data_chunk packet{ stream::flag_long, 0x00, 0x00, 0x00 };
     std::span<const uint8_t> buffer{ packet };
     uint8_t flags{};
     std::span<const uint8_t> body{};
-    BOOST_REQUIRE(!stream::frame_decode(flags, body, buffer));
+    BC_REQUIRE(!stream::frame_decode(flags, body, buffer));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__frame_decode__missing_short_length__false)
+BC_AUTO_TEST_CASE(zmtp_stream__frame_decode__missing_short_length__false)
 {
     const data_chunk packet{ 0x00 };
     std::span<const uint8_t> buffer{ packet };
     uint8_t flags{};
     std::span<const uint8_t> body{};
-    BOOST_REQUIRE(!stream::frame_decode(flags, body, buffer));
+    BC_REQUIRE(!stream::frame_decode(flags, body, buffer));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__frame_decode__truncated_body__false)
+BC_AUTO_TEST_CASE(zmtp_stream__frame_decode__truncated_body__false)
 {
     const data_chunk packet{ 0x00, 0x05, 0x01 };
     std::span<const uint8_t> buffer{ packet };
     uint8_t flags{};
     std::span<const uint8_t> body{};
-    BOOST_REQUIRE(!stream::frame_decode(flags, body, buffer));
+    BC_REQUIRE(!stream::frame_decode(flags, body, buffer));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__command_name__empty__false)
+BC_AUTO_TEST_CASE(zmtp_stream__command_name__empty__false)
 {
     const data_chunk frame{};
     std::string name{};
     std::span<const uint8_t> body{};
-    BOOST_REQUIRE(!stream::command_name(name, body, frame));
+    BC_REQUIRE(!stream::command_name(name, body, frame));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__command_name__truncated_name__false)
+BC_AUTO_TEST_CASE(zmtp_stream__command_name__truncated_name__false)
 {
     const data_chunk frame{ 0x05, 'R', 'E' };
     std::string name{};
     std::span<const uint8_t> body{};
-    BOOST_REQUIRE(!stream::command_name(name, body, frame));
+    BC_REQUIRE(!stream::command_name(name, body, frame));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__ready_property__truncated_name__false)
+BC_AUTO_TEST_CASE(zmtp_stream__ready_property__truncated_name__false)
 {
     const data_chunk metadata{ 0x0b, 'S', 'o', 'c' };
     std::string value{};
-    BOOST_REQUIRE(!stream::ready_property("Socket-Type", value, metadata));
+    BC_REQUIRE(!stream::ready_property("Socket-Type", value, metadata));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__ready_property__truncated_value_length__false)
+BC_AUTO_TEST_CASE(zmtp_stream__ready_property__truncated_value_length__false)
 {
     const data_chunk metadata{ 0x01, 'a', 0x00, 0x00 };
     std::string value{};
-    BOOST_REQUIRE(!stream::ready_property("a", value, metadata));
+    BC_REQUIRE(!stream::ready_property("a", value, metadata));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__ready_property__truncated_value__false)
+BC_AUTO_TEST_CASE(zmtp_stream__ready_property__truncated_value__false)
 {
     const data_chunk metadata{ 0x01, 'a', 0x00, 0x00, 0x00, 0x05, 'x' };
     std::string value{};
-    BOOST_REQUIRE(!stream::ready_property("a", value, metadata));
+    BC_REQUIRE(!stream::ready_property("a", value, metadata));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__ready_property__second_property__expected)
+BC_AUTO_TEST_CASE(zmtp_stream__ready_property__second_property__expected)
 {
     const auto metadata = system::splice(stream::make_property("Socket-Type", "SUB"), stream::make_property("Identity", "abc"));
     std::string value{};
-    BOOST_REQUIRE(stream::ready_property("Identity", value, metadata));
-    BOOST_REQUIRE_EQUAL(value, "abc");
+    BC_REQUIRE(stream::ready_property("Identity", value, metadata));
+    BC_REQUIRE_EQUAL(value, "abc");
 }
 
 // Properties.
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__next_layer__connected__open)
+BC_AUTO_TEST_CASE(zmtp_stream__next_layer__connected__open)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1009,15 +1009,15 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__next_layer__connected__open)
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     const auto& constant = instance;
-    BOOST_REQUIRE(instance.next_layer().is_open());
-    BOOST_REQUIRE(constant.next_layer().is_open());
-    BOOST_REQUIRE(instance.get_executor() == instance.next_layer().get_executor());
+    BC_REQUIRE(instance.next_layer().is_open());
+    BC_REQUIRE(constant.next_layer().is_open());
+    BC_REQUIRE(instance.get_executor() == instance.next_layer().get_executor());
 }
 
 // NULL handshake failures.
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__closed_socket__bad_descriptor)
+BC_AUTO_TEST_CASE(zmtp_stream__async_handshake__closed_socket__bad_descriptor)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1027,10 +1027,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__closed_socket__bad_descriptor
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     instance.next_layer().close();
-    BOOST_REQUIRE_EQUAL(shake(service, instance, true), code(error::bad_stream));
+    BC_REQUIRE_EQUAL(shake(service, instance, true), code(error::bad_stream));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__peer_shutdown__eof)
+BC_AUTO_TEST_CASE(zmtp_stream__async_handshake__peer_shutdown__eof)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1040,10 +1040,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__peer_shutdown__eof)
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
-    BOOST_REQUIRE_EQUAL(shake(service, instance, true), end_of_file);
+    BC_REQUIRE_EQUAL(shake(service, instance, true), end_of_file);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__bad_signature__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__async_handshake__bad_signature__protocol_error)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1055,10 +1055,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__bad_signature__protocol_error
     auto greeting = stream::make_greeting(false, false);
     greeting.front() = 0x00;
     test::write(client, io::buffer(greeting));
-    BOOST_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
+    BC_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__truncated_greeting__eof)
+BC_AUTO_TEST_CASE(zmtp_stream__async_handshake__truncated_greeting__eof)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1070,10 +1070,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__truncated_greeting__eof)
     const auto greeting = stream::make_greeting(false, false);
     test::write(client, io::buffer(greeting.data(), stream::greeting_stage1));
     REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
-    BOOST_REQUIRE_EQUAL(shake(service, instance, true), end_of_file);
+    BC_REQUIRE_EQUAL(shake(service, instance, true), end_of_file);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__unknown_mechanism__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__async_handshake__unknown_mechanism__protocol_error)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1085,10 +1085,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__unknown_mechanism__protocol_e
     auto greeting = stream::make_greeting(false, false);
     greeting.at(12) = 'X';
     test::write(client, io::buffer(greeting));
-    BOOST_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
+    BC_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__greeting_then_shutdown__eof)
+BC_AUTO_TEST_CASE(zmtp_stream__async_handshake__greeting_then_shutdown__eof)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1099,10 +1099,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__greeting_then_shutdown__eof)
     stream instance{ std::move(server), configuration, role::publisher };
     test::write(client, io::buffer(stream::make_greeting(false, false)));
     REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
-    BOOST_REQUIRE_EQUAL(shake(service, instance, true), end_of_file);
+    BC_REQUIRE_EQUAL(shake(service, instance, true), end_of_file);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__message_before_ready__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__async_handshake__message_before_ready__protocol_error)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1113,10 +1113,10 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__message_before_ready__protoco
     stream instance{ std::move(server), configuration, role::publisher };
     const auto message = stream::frame_encode(data_chunk{ 0x01 }, false, false);
     test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), message)));
-    BOOST_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
+    BC_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__ping_before_ready__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__async_handshake__ping_before_ready__protocol_error)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1126,13 +1126,13 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_handshake__ping_before_ready__protocol_e
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), command("PING", {}))));
-    BOOST_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
+    BC_REQUIRE_EQUAL(shake(service, instance, true), protocol_error);
 }
 
 // NULL frame read failures.
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__peer_shutdown__eof)
+BC_AUTO_TEST_CASE(zmtp_stream__async_read_frame__peer_shutdown__eof)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1142,14 +1142,14 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__peer_shutdown__eof)
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), ready("SUB"))));
-    BOOST_REQUIRE(!shake(service, instance, true));
+    BC_REQUIRE(!shake(service, instance, true));
 
     REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
     stream::frame frame{};
-    BOOST_REQUIRE_EQUAL(read_one(service, instance, frame), end_of_file);
+    BC_REQUIRE_EQUAL(read_one(service, instance, frame), end_of_file);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__flags_then_shutdown__eof)
+BC_AUTO_TEST_CASE(zmtp_stream__async_read_frame__flags_then_shutdown__eof)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1159,15 +1159,15 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__flags_then_shutdown__eof)
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), ready("SUB"))));
-    BOOST_REQUIRE(!shake(service, instance, true));
+    BC_REQUIRE(!shake(service, instance, true));
 
     test::write(client, io::buffer(data_chunk{ 0x00 }));
     REQUIRE_SUCCESS(client, shutdown, io::socket::shutdown_type::send);
     stream::frame frame{};
-    BOOST_REQUIRE_EQUAL(read_one(service, instance, frame), end_of_file);
+    BC_REQUIRE_EQUAL(read_one(service, instance, frame), end_of_file);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__above_maximum__message_size)
+BC_AUTO_TEST_CASE(zmtp_stream__async_read_frame__above_maximum__message_size)
 {
     io::context service{};
     peer_socket server{ service };
@@ -1177,82 +1177,82 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__async_read_frame__above_maximum__message_size)
     const context configuration{};
     stream instance{ std::move(server), configuration, role::publisher };
     test::write(client, io::buffer(system::splice(stream::make_greeting(false, false), ready("SUB"))));
-    BOOST_REQUIRE(!shake(service, instance, true));
+    BC_REQUIRE(!shake(service, instance, true));
 
     test::write(client, io::buffer(stream::frame_encode(data_chunk(1025, 0x42), false, false)));
     stream::frame frame{};
-    BOOST_REQUIRE_EQUAL(read_one(service, instance, frame), code(error::oversized_payload));
+    BC_REQUIRE_EQUAL(read_one(service, instance, frame), code(error::oversized_payload));
 }
 
 // CURVE handshake failures.
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__greeting_then_shutdown__eof)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__greeting_then_shutdown__eof)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     test::write(setup.client_socket, io::buffer(stream::make_greeting(false, true)));
     REQUIRE_SUCCESS(setup.client_socket, shutdown, io::socket::shutdown_type::send);
-    BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), end_of_file);
+    BC_REQUIRE_EQUAL(shake(setup.service, server, true), end_of_file);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__ping_before_hello__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__ping_before_hello__protocol_error)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     test::write(setup.client_socket, io::buffer(system::splice(stream::make_greeting(false, true), command("PING", {}))));
-    BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
+    BC_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__empty_hello__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__empty_hello__protocol_error)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     test::write(setup.client_socket, io::buffer(system::splice(stream::make_greeting(false, true), command("HELLO", {}))));
-    BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
+    BC_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__hello_then_shutdown__eof)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__hello_then_shutdown__eof)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     data_chunk hello{};
-    BOOST_REQUIRE(client.hello(hello));
+    BC_REQUIRE(client.hello(hello));
     test::write(setup.client_socket, io::buffer(system::splice(stream::make_greeting(false, true), stream::frame_encode(hello, true, false))));
     REQUIRE_SUCCESS(setup.client_socket, shutdown, io::socket::shutdown_type::send);
-    BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), end_of_file);
+    BC_REQUIRE_EQUAL(shake(setup.service, server, true), end_of_file);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__ping_before_initiate__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__ping_before_initiate__protocol_error)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     data_chunk hello{};
-    BOOST_REQUIRE(client.hello(hello));
+    BC_REQUIRE(client.hello(hello));
     test::write(setup.client_socket, io::buffer(system::build_chunk({ stream::make_greeting(false, true), stream::frame_encode(hello, true, false), command("PING", {}) })));
-    BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
+    BC_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__empty_initiate__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__empty_initiate__protocol_error)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
     stream server{ std::move(setup.server_socket), curve, role::publisher };
     network::zmtp::cipher client{ setup.client_secret, setup.client_public, setup.server_public };
     data_chunk hello{};
-    BOOST_REQUIRE(client.hello(hello));
+    BC_REQUIRE(client.hello(hello));
     test::write(setup.client_socket, io::buffer(system::build_chunk({ stream::make_greeting(false, true), stream::frame_encode(hello, true, false), command("INITIATE", {}) })));
-    BOOST_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
+    BC_REQUIRE_EQUAL(shake(setup.service, server, true), protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__incompatible_socket_type__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_handshake__incompatible_socket_type__protocol_error)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
@@ -1265,14 +1265,14 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_handshake__incompatible_socket_type__pro
     server.async_handshake(true, [&](const code& ec) { server_result = ec; });
     peer.handshake(peer_result);
     setup.service.run();
-    BOOST_REQUIRE_EQUAL(server_result, protocol_error);
-    BOOST_REQUIRE_EQUAL(peer_result, protocol_error);
+    BC_REQUIRE_EQUAL(server_result, protocol_error);
+    BC_REQUIRE_EQUAL(peer_result, protocol_error);
 }
 
 // CURVE frames.
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__empty_frame__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__empty_frame__protocol_error)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
@@ -1281,15 +1281,15 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__empty_frame__protocol_error)
     curve_peer peer{ setup.client_socket, client };
     code peer_result{ error::would_block };
     peer.handshake(peer_result);
-    BOOST_REQUIRE(!shake(setup.service, server, true));
-    BOOST_REQUIRE(!peer_result);
+    BC_REQUIRE(!shake(setup.service, server, true));
+    BC_REQUIRE(!peer_result);
 
     test::write(setup.client_socket, io::buffer(stream::frame_encode(data_chunk{}, false, false)));
     stream::frame frame{};
-    BOOST_REQUIRE_EQUAL(read_one(setup.service, server, frame), protocol_error);
+    BC_REQUIRE_EQUAL(read_one(setup.service, server, frame), protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__plain_error_command__surfaced)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__plain_error_command__surfaced)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
@@ -1298,23 +1298,23 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__plain_error_command__surface
     curve_peer peer{ setup.client_socket, client };
     code peer_result{ error::would_block };
     peer.handshake(peer_result);
-    BOOST_REQUIRE(!shake(setup.service, server, true));
-    BOOST_REQUIRE(!peer_result);
+    BC_REQUIRE(!shake(setup.service, server, true));
+    BC_REQUIRE(!peer_result);
 
     test::write(setup.client_socket, io::buffer(stream::make_error("abc")));
     stream::frame frame{};
-    BOOST_REQUIRE(!read_one(setup.service, server, frame));
-    BOOST_REQUIRE(frame.command());
+    BC_REQUIRE(!read_one(setup.service, server, frame));
+    BC_REQUIRE(frame.command());
 
     std::string name{};
     std::span<const uint8_t> content{};
     const std::span<const uint8_t> body{ frame.body };
-    BOOST_REQUIRE(stream::command_name(name, content, body));
-    BOOST_REQUIRE_EQUAL(name, "ERROR");
-    BOOST_REQUIRE_EQUAL(data_chunk(content.begin(), content.end()), base16_chunk("03616263"));
+    BC_REQUIRE(stream::command_name(name, content, body));
+    BC_REQUIRE_EQUAL(name, "ERROR");
+    BC_REQUIRE_EQUAL(data_chunk(content.begin(), content.end()), base16_chunk("03616263"));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__plain_ping_command__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__plain_ping_command__protocol_error)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
@@ -1323,15 +1323,15 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__plain_ping_command__protocol
     curve_peer peer{ setup.client_socket, client };
     code peer_result{ error::would_block };
     peer.handshake(peer_result);
-    BOOST_REQUIRE(!shake(setup.service, server, true));
-    BOOST_REQUIRE(!peer_result);
+    BC_REQUIRE(!shake(setup.service, server, true));
+    BC_REQUIRE(!peer_result);
 
     test::write(setup.client_socket, io::buffer(command("PING", { 0x00, 0x00 })));
     stream::frame frame{};
-    BOOST_REQUIRE_EQUAL(read_one(setup.service, server, frame), protocol_error);
+    BC_REQUIRE_EQUAL(read_one(setup.service, server, frame), protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__boxed_more__more_flag)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__boxed_more__more_flag)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
@@ -1340,19 +1340,19 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_read_frame__boxed_more__more_flag)
     curve_peer peer{ setup.client_socket, client };
     code peer_result{ error::would_block };
     peer.handshake(peer_result);
-    BOOST_REQUIRE(!shake(setup.service, server, true));
-    BOOST_REQUIRE(!peer_result);
+    BC_REQUIRE(!shake(setup.service, server, true));
+    BC_REQUIRE(!peer_result);
 
     const data_chunk part{ 0x01, 0x02 };
     peer.send(network::zmtp::cipher::payload_more, part);
     stream::frame frame{};
-    BOOST_REQUIRE(!read_one(setup.service, server, frame));
-    BOOST_REQUIRE(frame.more());
-    BOOST_REQUIRE(!frame.command());
-    BOOST_REQUIRE_EQUAL(frame.body, part);
+    BC_REQUIRE(!read_one(setup.service, server, frame));
+    BC_REQUIRE(frame.more());
+    BC_REQUIRE(!frame.command());
+    BC_REQUIRE_EQUAL(frame.body, part);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_async_write__truncated_frame__protocol_error)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_async_write__truncated_frame__protocol_error)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
@@ -1361,17 +1361,17 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_async_write__truncated_frame__protocol_e
     curve_peer peer{ setup.client_socket, client };
     code peer_result{ error::would_block };
     peer.handshake(peer_result);
-    BOOST_REQUIRE(!shake(setup.service, server, true));
-    BOOST_REQUIRE(!peer_result);
+    BC_REQUIRE(!shake(setup.service, server, true));
+    BC_REQUIRE(!peer_result);
 
     const data_chunk packet{ 0x00 };
     code result{ error::would_block };
     server.async_write({ packet.data(), packet.size() }, [&](const code& ec, size_t) { result = ec; });
     setup.service.run();
-    BOOST_REQUIRE_EQUAL(result, protocol_error);
+    BC_REQUIRE_EQUAL(result, protocol_error);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_stream__curve_async_write__command_frame__boxed_command_payload)
+BC_AUTO_TEST_CASE(zmtp_stream__curve_async_write__command_frame__boxed_command_payload)
 {
     curve_setup setup{};
     const context curve{ system::to_chunk(setup.server_secret) };
@@ -1380,8 +1380,8 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_async_write__command_frame__boxed_comman
     curve_peer peer{ setup.client_socket, client };
     code peer_result{ error::would_block };
     peer.handshake(peer_result);
-    BOOST_REQUIRE(!shake(setup.service, server, true));
-    BOOST_REQUIRE(!peer_result);
+    BC_REQUIRE(!shake(setup.service, server, true));
+    BC_REQUIRE(!peer_result);
 
     const auto pong = stream::make_pong(data_chunk{ 0x2a });
     code result{ error::would_block };
@@ -1396,14 +1396,14 @@ BOOST_AUTO_TEST_CASE(zmtp_stream__curve_async_write__command_frame__boxed_comman
     });
 
     setup.service.run();
-    BOOST_REQUIRE(!result);
-    BOOST_REQUIRE(!received);
+    BC_REQUIRE(!result);
+    BC_REQUIRE(!received);
 
     uint8_t payload{};
     data_chunk body{};
-    BOOST_REQUIRE(client.decode(payload, body, boxed));
-    BOOST_REQUIRE_EQUAL(payload, network::zmtp::cipher::payload_command);
-    BOOST_REQUIRE_EQUAL(body, base16_chunk("04504f4e472a"));
+    BC_REQUIRE(client.decode(payload, body, boxed));
+    BC_REQUIRE_EQUAL(payload, network::zmtp::cipher::payload_command);
+    BC_REQUIRE_EQUAL(body, base16_chunk("04504f4e472a"));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

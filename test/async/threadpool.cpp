@@ -19,52 +19,52 @@
 #include <future>
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(threadpool_tests)
+BC_AUTO_TEST_SUITE(threadpool_tests)
 
-BOOST_AUTO_TEST_CASE(threadpool__construct__default__unstopped)
+BC_AUTO_TEST_CASE(threadpool__construct__default__unstopped)
 {
     threadpool pool{};
-    BOOST_REQUIRE(!pool.service().stopped());
+    BC_REQUIRE(!pool.service().stopped());
 }
 
-BOOST_AUTO_TEST_CASE(threadpool__construct__empty__joins)
+BC_AUTO_TEST_CASE(threadpool__construct__empty__joins)
 {
     threadpool pool{ 0, processing_priority::low };
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(!pool.service().stopped());
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(!pool.service().stopped());
 }
 
-BOOST_AUTO_TEST_CASE(threadpool__service__always__defined)
+BC_AUTO_TEST_CASE(threadpool__service__always__defined)
 {
     threadpool pool{ 2, processing_priority::lowest };
     pool.stop();
-    BOOST_REQUIRE(pool.service().stopped());
+    BC_REQUIRE(pool.service().stopped());
 }
 
-BOOST_AUTO_TEST_CASE(threadpool__stop__always__stopped)
+BC_AUTO_TEST_CASE(threadpool__stop__always__stopped)
 {
     threadpool pool{};
     pool.stop();
-    BOOST_REQUIRE(pool.service().stopped());
+    BC_REQUIRE(pool.service().stopped());
 }
 
-BOOST_AUTO_TEST_CASE(threadpool__join__stopped__stopped)
+BC_AUTO_TEST_CASE(threadpool__join__stopped__stopped)
 {
     threadpool pool{};
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(pool.service().stopped());
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(pool.service().stopped());
 }
 
-BOOST_AUTO_TEST_CASE(threadpool__join__joined__true)
+BC_AUTO_TEST_CASE(threadpool__join__joined__true)
 {
     threadpool pool{ 1 };
     pool.stop();
-    BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(threadpool__join__from_pool_thread__false)
+BC_AUTO_TEST_CASE(threadpool__join__from_pool_thread__false)
 {
     threadpool pool{ 1 };
     std::promise<bool> promise{};
@@ -73,9 +73,9 @@ BOOST_AUTO_TEST_CASE(threadpool__join__from_pool_thread__false)
         promise.set_value(pool.join());
     });
 
-    BOOST_REQUIRE(!promise.get_future().get());
+    BC_REQUIRE(!promise.get_future().get());
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

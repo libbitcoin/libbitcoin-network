@@ -31,7 +31,7 @@ struct session_outbound_tests_setup_fixture
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(session_outbound_tests, session_outbound_tests_setup_fixture)
+BC_FIXTURE_TEST_SUITE(session_outbound_tests, session_outbound_tests_setup_fixture)
 
 using namespace network::messages::peer;
 using namespace bc::system::chain;
@@ -696,7 +696,7 @@ private:
 
 // stop
 
-BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
+BC_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -705,7 +705,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
     set.outbound.connections = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -718,8 +718,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
 
     // This indicates successful start, not connection(s) status.
     // Because net is not started, connections will fail until stop.
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -728,11 +728,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
+BC_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -746,13 +746,13 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
         promise.set_value(true);
     });
 
-    BOOST_REQUIRE(promise.get_future().get());
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE(promise.get_future().get());
+    BC_REQUIRE(session.stopped());
 }
 
 // start
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__success)
+BC_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__success)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -760,7 +760,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__success)
     set.outbound.host_pool_capacity = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -771,17 +771,17 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__success)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__success)
+BC_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__success)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -792,11 +792,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__success)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__success)
+BC_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__success)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__success)
     set.outbound.connect_batch_size = 0;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -815,18 +815,18 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__success)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_found)
+BC_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_found)
 {
     const logger log{};
     settings set(test::network_settings());
     set.outbound.host_pool_capacity = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -838,11 +838,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_foun
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::address_not_found);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::address_not_found);
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__no_address__seeded)
+BC_AUTO_TEST_CASE(session_outbound__start__no_address__seeded)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -852,7 +852,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address__seeded)
     set.outbound.connect_timeout_seconds = 10000;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_no_address>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -863,7 +863,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address__seeded)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     std::promise<bool> seed;
     io::post(net.strand(), [=, &seed]() NOEXCEPT
@@ -880,12 +880,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address__seeded)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(seeded);
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(seeded);
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
+BC_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -894,7 +894,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
     set.outbound.connections = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -905,8 +905,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<code> restarted;
     io::post(net.strand(), [=, &restarted]() NOEXCEPT
@@ -917,8 +917,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -927,12 +927,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
 // Connection errors get eaten with all connect failure codes (logging only).
-BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__success)
+BC_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__success)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -942,7 +942,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
     set.outbound.connect_timeout_seconds = 10000;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
     
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -953,8 +953,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -963,13 +963,13 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
 // Socket termination (sockets have no stop codes).
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_channel_service_stopped)
+BC_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_channel_service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -986,7 +986,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
     mock_net_stop_connect net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net, 1);
     net.set_session(session);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     // Started session calls session.stop upon first connect.
     std::promise<code> started;
@@ -998,11 +998,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__net_unreachable__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1013,7 +1013,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable__restored)
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_code<error::net_unreachable>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1024,8 +1024,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable__restored)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1035,12 +1035,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable__restored)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(!is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(!is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__host_unreachable__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__host_unreachable__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1051,7 +1051,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__host_unreachable__restored)
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_code<error::host_unreachable>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1062,8 +1062,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__host_unreachable__restored)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1073,12 +1073,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__host_unreachable__restored)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(!is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(!is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__socks_net_unreachable__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__socks_net_unreachable__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1089,7 +1089,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__socks_net_unreachable__restored)
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_code<error::socks_net_unreachable>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1100,8 +1100,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__socks_net_unreachable__restored)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1111,12 +1111,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__socks_net_unreachable__restored)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(!is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(!is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__socks_host_unreachable__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__socks_host_unreachable__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1127,7 +1127,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__socks_host_unreachable__restored)
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_code<error::socks_host_unreachable>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1138,8 +1138,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__socks_host_unreachable__restored)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1149,12 +1149,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__socks_host_unreachable__restored)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(!is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(!is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__insufficient_buffer__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__insufficient_buffer__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1165,7 +1165,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__insufficient_buffer__restored)
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_code<error::insufficient_buffer>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1176,8 +1176,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__insufficient_buffer__restored)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1187,12 +1187,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__insufficient_buffer__restored)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(!is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(!is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__batch_all_unreachable__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__batch_all_unreachable__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1203,7 +1203,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_all_unreachable__restored)
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_codes<error::net_unreachable, error::host_unreachable>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1214,8 +1214,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_all_unreachable__restored)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1225,12 +1225,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_all_unreachable__restored)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(!is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(!is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_refused__not_restored)
+BC_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_refused__not_restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1241,7 +1241,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_refused__not
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_codes<error::net_unreachable, error::connection_refused>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1252,8 +1252,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_refused__not
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1263,12 +1263,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_refused__not
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_connected__not_restored)
+BC_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_connected__not_restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1279,7 +1279,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_connected__n
     set.retry_timeout_seconds = 0;
     mock_net_restore_keyed<mock_connector_success_or_unreachable> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1290,8 +1290,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_connected__n
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_attached_handshake());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_attached_handshake());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1300,18 +1300,18 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_connected__n
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_GE(net.takes(), 2u);
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_GE(net.takes(), 2u);
 
     const auto restored = net.restored();
-    BOOST_REQUIRE(std::none_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
+    BC_REQUIRE(std::none_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
     {
         return is_odd(port);
     }));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1322,7 +1322,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__
     set.retry_timeout_seconds = 0;
     mock_net_restore_sparse<mock_connector_connect_code<error::net_unreachable>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1333,8 +1333,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1344,12 +1344,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_no_address__
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(!is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(!is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__batch_lone_unreachable_and_no_address__not_restored)
+BC_AUTO_TEST_CASE(session_outbound__start__batch_lone_unreachable_and_no_address__not_restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1360,7 +1360,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_lone_unreachable_and_no_addr
     set.retry_timeout_seconds = 0;
     mock_net_restore_sparse<mock_connector_connect_code<error::net_unreachable>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1371,8 +1371,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_lone_unreachable_and_no_addr
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1382,12 +1382,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_lone_unreachable_and_no_addr
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__channel_timeout__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__channel_timeout__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1398,7 +1398,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__channel_timeout__restored)
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_code<error::channel_timeout>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1409,8 +1409,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__channel_timeout__restored)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1419,12 +1419,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__channel_timeout__restored)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(!is_zero(net.restores()));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(!is_zero(net.restores()));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__peer_disconnect__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__peer_disconnect__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1435,7 +1435,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__peer_disconnect__restored)
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_code<error::peer_disconnect>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1446,8 +1446,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__peer_disconnect__restored)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1456,12 +1456,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__peer_disconnect__restored)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(!is_zero(net.restores()));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(!is_zero(net.restores()));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__restored)
+BC_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1472,7 +1472,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__res
     set.retry_timeout_seconds = 0;
     mock_net_restore_keyed<mock_connector_connect_parity<error::net_unreachable, error::operation_timeout>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1483,8 +1483,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__res
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1493,21 +1493,21 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_and_timeout__res
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 
     const auto restored = net.restored();
-    BOOST_REQUIRE(std::any_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
+    BC_REQUIRE(std::any_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
     {
         return is_even(port);
     }));
-    BOOST_REQUIRE(std::any_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
+    BC_REQUIRE(std::any_of(restored.begin(), restored.end(), [](uint16_t port) NOEXCEPT
     {
         return is_odd(port);
     }));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_near_full_pool__room_restored)
+BC_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_near_full_pool__room_restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1518,7 +1518,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_near_full_pool__
     set.retry_timeout_seconds = 0;
     mock_net_restore_keyed<mock_connector_connect_parity<error::net_unreachable, error::host_unreachable>> net(set, log, 1);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1529,8 +1529,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_near_full_pool__
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1539,20 +1539,20 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_near_full_pool__
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 
     // Each batch draws a port pair (2n, 2n+1), with room to restore only one.
     const auto restored = net.restored();
-    BOOST_REQUIRE(!restored.empty());
-    BOOST_REQUIRE(std::none_of(restored.begin(), restored.end(), [&](uint16_t port) NOEXCEPT
+    BC_REQUIRE(!restored.empty());
+    BC_REQUIRE(std::none_of(restored.begin(), restored.end(), [&](uint16_t port) NOEXCEPT
     {
         const auto pair = static_cast<uint16_t>(port ^ 1u);
         return std::find(restored.begin(), restored.end(), pair) != restored.end();
     }));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable_full_host_pool__not_restored)
+BC_AUTO_TEST_CASE(session_outbound__start__net_unreachable_full_host_pool__not_restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1563,7 +1563,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable_full_host_pool__no
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_code<error::net_unreachable>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1574,8 +1574,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable_full_host_pool__no
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1585,12 +1585,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__net_unreachable_full_host_pool__no
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__connection_refused__not_restored)
+BC_AUTO_TEST_CASE(session_outbound__start__connection_refused__not_restored)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1601,7 +1601,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__connection_refused__not_restored)
     set.retry_timeout_seconds = 0;
     mock_net_restore<mock_connector_connect_code<error::connection_refused>> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1612,8 +1612,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__connection_refused__not_restored)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session->require_reconnect());
     const auto restores = net.restores();
 
     std::promise<bool> stopped;
@@ -1623,12 +1623,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__connection_refused__not_restored)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(is_zero(restores));
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(is_zero(restores));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
+BC_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1643,7 +1643,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
     // Started channel results in read failure.
     mock_net<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1654,12 +1654,12 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     // Block until connected.
-    BOOST_REQUIRE(session->require_connected());
-    BOOST_REQUIRE(session->require_attached_handshake());
+    BC_REQUIRE(session->require_connected());
+    BC_REQUIRE(session->require_attached_handshake());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1668,13 +1668,13 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
 // set_connections
 
-BOOST_AUTO_TEST_CASE(session_outbound__set_connections__stopped__applied_at_start)
+BC_AUTO_TEST_CASE(session_outbound__set_connections__stopped__applied_at_start)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1686,7 +1686,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__stopped__applied_at_star
     set.gossip_ipv6 = true;
     mock_net<mock_connector_connect_fail> net(set, log);
     auto session = std::make_shared<mock_session_outbound_groups>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<size_t> configured;
     io::post(net.strand(), [=, &configured]() NOEXCEPT
@@ -1694,7 +1694,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__stopped__applied_at_star
         configured.set_value(session->connections());
     });
 
-    BOOST_REQUIRE_EQUAL(configured.get_future().get(), 3u);
+    BC_REQUIRE_EQUAL(configured.get_future().get(), 3u);
 
     std::promise<size_t> reduced;
     io::post(net.strand(), [=, &reduced]() NOEXCEPT
@@ -1703,8 +1703,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__stopped__applied_at_star
         reduced.set_value(session->connections());
     });
 
-    BOOST_REQUIRE_EQUAL(reduced.get_future().get(), 1u);
-    BOOST_REQUIRE(session->slots().empty());
+    BC_REQUIRE_EQUAL(reduced.get_future().get(), 1u);
+    BC_REQUIRE(session->slots().empty());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1715,9 +1715,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__stopped__applied_at_star
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(session->slots().size(), 1u);
-    BOOST_REQUIRE_EQUAL(session->slots().at(0), 0u);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(session->slots().size(), 1u);
+    BC_REQUIRE_EQUAL(session->slots().at(0), 0u);
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1726,11 +1726,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__stopped__applied_at_star
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_raised__slots_started)
+BC_AUTO_TEST_CASE(session_outbound__set_connections__started_raised__slots_started)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1742,7 +1742,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_raised__slots_st
     set.gossip_ipv6 = true;
     mock_net<mock_connector_connect_fail> net(set, log);
     auto session = std::make_shared<mock_session_outbound_groups>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1753,8 +1753,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_raised__slots_st
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(session->slots().size(), 1u);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(session->slots().size(), 1u);
 
     std::promise<size_t> raised;
     io::post(net.strand(), [=, &raised]() NOEXCEPT
@@ -1763,11 +1763,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_raised__slots_st
         raised.set_value(session->connections());
     });
 
-    BOOST_REQUIRE_EQUAL(raised.get_future().get(), 3u);
-    BOOST_REQUIRE_EQUAL(session->slots().size(), 3u);
-    BOOST_REQUIRE_EQUAL(session->slots().at(0), 0u);
-    BOOST_REQUIRE_EQUAL(session->slots().at(1), 1u);
-    BOOST_REQUIRE_EQUAL(session->slots().at(2), 2u);
+    BC_REQUIRE_EQUAL(raised.get_future().get(), 3u);
+    BC_REQUIRE_EQUAL(session->slots().size(), 3u);
+    BC_REQUIRE_EQUAL(session->slots().at(0), 0u);
+    BC_REQUIRE_EQUAL(session->slots().at(1), 1u);
+    BC_REQUIRE_EQUAL(session->slots().at(2), 2u);
 
     std::promise<size_t> unchanged;
     io::post(net.strand(), [=, &unchanged]() NOEXCEPT
@@ -1776,8 +1776,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_raised__slots_st
         unchanged.set_value(session->connections());
     });
 
-    BOOST_REQUIRE_EQUAL(unchanged.get_future().get(), 3u);
-    BOOST_REQUIRE_EQUAL(session->slots().size(), 3u);
+    BC_REQUIRE_EQUAL(unchanged.get_future().get(), 3u);
+    BC_REQUIRE_EQUAL(session->slots().size(), 3u);
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1786,11 +1786,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_raised__slots_st
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_ended_on_retry)
+BC_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_ended_on_retry)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1802,7 +1802,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_en
     set.gossip_ipv6 = true;
     mock_net<mock_connector_connect_fail> net(set, log);
     auto session = std::make_shared<mock_session_outbound_groups>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -1813,8 +1813,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_en
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(session->slots().size(), 1u);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(session->slots().size(), 1u);
 
     std::promise<size_t> lowered;
     io::post(net.strand(), [=, &lowered]() NOEXCEPT
@@ -1824,10 +1824,10 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_en
     });
 
     // The connect failure retry reenters start_connect, which ends the slot.
-    BOOST_REQUIRE_EQUAL(lowered.get_future().get(), 0u);
-    BOOST_REQUIRE(session->require_reconnect());
-    BOOST_REQUIRE_EQUAL(session->slots().size(), 2u);
-    BOOST_REQUIRE_EQUAL(session->slots().at(1), 0u);
+    BC_REQUIRE_EQUAL(lowered.get_future().get(), 0u);
+    BC_REQUIRE(session->require_reconnect());
+    BC_REQUIRE_EQUAL(session->slots().size(), 2u);
+    BC_REQUIRE_EQUAL(session->slots().at(1), 0u);
 
     std::promise<size_t> raised;
     io::post(net.strand(), [=, &raised]() NOEXCEPT
@@ -1837,9 +1837,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_en
     });
 
     // The slot is restarted.
-    BOOST_REQUIRE_EQUAL(raised.get_future().get(), 1u);
-    BOOST_REQUIRE_EQUAL(session->slots().size(), 3u);
-    BOOST_REQUIRE_EQUAL(session->slots().at(2), 0u);
+    BC_REQUIRE_EQUAL(raised.get_future().get(), 1u);
+    BC_REQUIRE_EQUAL(session->slots().size(), 3u);
+    BC_REQUIRE_EQUAL(session->slots().at(2), 0u);
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1848,8 +1848,8 @@ BOOST_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_en
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
 // Outbound connection to the test acting as a raw peer on loopback.
@@ -1922,7 +1922,7 @@ struct outbound_peer
             started.set_value(ec);
         });
 
-        BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+        BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
     }
 
     ~outbound_peer()
@@ -1939,7 +1939,7 @@ struct outbound_peer
             running.set_value(ec);
         });
 
-        BOOST_REQUIRE_EQUAL(running.get_future().get(), error::success);
+        BC_REQUIRE_EQUAL(running.get_future().get(), error::success);
     }
 
     void suspend()
@@ -1966,10 +1966,10 @@ struct outbound_peer
     void send(const Message& message, uint32_t version)
     {
         system::data_chunk payload(message.size(version));
-        BOOST_REQUIRE(message.serialize(version, payload));
+        BC_REQUIRE(message.serialize(version, payload));
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
-        BOOST_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        BC_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
         test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
@@ -1981,7 +1981,7 @@ struct outbound_peer
             system::data_array<heading::size()> head_data{};
             test::read(socket_, io::buffer(head_data));
             const auto head = heading::deserialize(head_data);
-            BOOST_REQUIRE(head);
+            BC_REQUIRE(head);
 
             system::data_chunk payload(head->payload_size);
             test::read(socket_, io::buffer(payload));
@@ -1994,7 +1994,7 @@ struct outbound_peer
     version::cptr handshake(uint32_t value)
     {
         const auto node = version::deserialize(value, receive(version::command));
-        BOOST_REQUIRE(node);
+        BC_REQUIRE(node);
 
         version out{};
         out.value = value;
@@ -2020,7 +2020,7 @@ private:
     io::socket socket_{ io_ };
 };
 
-BOOST_AUTO_TEST_CASE(session_outbound__attach_protocols__loopback_peer__address_requested_then_reconnected)
+BC_AUTO_TEST_CASE(session_outbound__attach_protocols__loopback_peer__address_requested_then_reconnected)
 {
     outbound_peer peer{ [](settings& set)
     {
@@ -2030,15 +2030,15 @@ BOOST_AUTO_TEST_CASE(session_outbound__attach_protocols__loopback_peer__address_
     peer.run();
     peer.accept();
     const auto node = peer.handshake(level::bip155);
-    BOOST_REQUIRE_EQUAL(node->value, level::bip155);
-    BOOST_REQUIRE(get_address::deserialize(level::bip155, peer.receive(get_address::command)));
+    BC_REQUIRE_EQUAL(node->value, level::bip155);
+    BC_REQUIRE(get_address::deserialize(level::bip155, peer.receive(get_address::command)));
 
     peer.close();
     peer.accept();
-    BOOST_REQUIRE(version::deserialize(level::bip155, peer.receive(version::command)));
+    BC_REQUIRE(version::deserialize(level::bip155, peer.receive(version::command)));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__handle_connect__address_not_found__retaken)
+BC_AUTO_TEST_CASE(session_outbound__handle_connect__address_not_found__retaken)
 {
     outbound_peer peer{ [](settings& set)
     {
@@ -2046,10 +2046,10 @@ BOOST_AUTO_TEST_CASE(session_outbound__handle_connect__address_not_found__retake
     }, error::address_not_found, outbound_peer_port };
 
     peer.run();
-    BOOST_REQUIRE(peer.retaken());
+    BC_REQUIRE(peer.retaken());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__handle_connect__connect_refused__retaken)
+BC_AUTO_TEST_CASE(session_outbound__handle_connect__connect_refused__retaken)
 {
     outbound_peer peer{ [](settings& set)
     {
@@ -2057,10 +2057,10 @@ BOOST_AUTO_TEST_CASE(session_outbound__handle_connect__connect_refused__retaken)
     }, error::success, outbound_closed_port };
 
     peer.run();
-    BOOST_REQUIRE(peer.retaken());
+    BC_REQUIRE(peer.retaken());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__handle_channel_stop__full_host_pool__reconnected)
+BC_AUTO_TEST_CASE(session_outbound__handle_channel_stop__full_host_pool__reconnected)
 {
     outbound_peer peer{ [](settings& set)
     {
@@ -2072,19 +2072,19 @@ BOOST_AUTO_TEST_CASE(session_outbound__handle_channel_stop__full_host_pool__reco
     peer.handshake(level::bip155);
     peer.close();
     peer.accept();
-    BOOST_REQUIRE(version::deserialize(level::bip155, peer.receive(version::command)));
+    BC_REQUIRE(version::deserialize(level::bip155, peer.receive(version::command)));
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__handle_one__suspended__retaken)
+BC_AUTO_TEST_CASE(session_outbound__handle_one__suspended__retaken)
 {
     outbound_peer peer{ [](settings&) {}, error::success, outbound_peer_port };
 
     peer.suspend();
     peer.run();
-    BOOST_REQUIRE(peer.retaken());
+    BC_REQUIRE(peer.retaken());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start_connect__proxied_unreachable__retaken)
+BC_AUTO_TEST_CASE(session_outbound__start_connect__proxied_unreachable__retaken)
 {
     outbound_peer peer{ [](settings& set)
     {
@@ -2093,7 +2093,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start_connect__proxied_unreachable__retak
     }, error::success, outbound_peer_port };
 
     peer.run();
-    BOOST_REQUIRE(peer.retaken());
+    BC_REQUIRE(peer.retaken());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

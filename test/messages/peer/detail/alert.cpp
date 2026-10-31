@@ -18,29 +18,29 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_alert_tests)
+BC_AUTO_TEST_SUITE(p2p_alert_tests)
 
 // Avoid namespace conflict with ::alert (wolfssl).
 using alert = network::messages::peer::alert;
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(alert__properties__always__expected)
+BC_AUTO_TEST_CASE(alert__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(alert::command, "alert");
+    BC_REQUIRE_EQUAL(alert::command, "alert");
     constexpr auto index = messages::peer::registry::index_of<alert>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), alert::command);
-    BOOST_REQUIRE_EQUAL(alert::version_minimum, level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(alert::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), alert::command);
+    BC_REQUIRE_EQUAL(alert::version_minimum, level::minimum_protocol);
+    BC_REQUIRE_EQUAL(alert::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(alert__size__default__expected)
+BC_AUTO_TEST_CASE(alert__size__default__expected)
 {
     const auto item = alert_item{}.size(level::canonical);
     const auto expected = variable_size(item) + item + variable_size(zero);
-    BOOST_REQUIRE_EQUAL(expected, alert{}.size(level::canonical));
+    BC_REQUIRE_EQUAL(expected, alert{}.size(level::canonical));
 }
 
-BOOST_AUTO_TEST_CASE(alert__deserialize__bitcoin_wiki_sample__expected)
+BC_AUTO_TEST_CASE(alert__deserialize__bitcoin_wiki_sample__expected)
 {
     // en.bitcoin.it/wiki/Protocol_documentation#alert
     constexpr auto payload = system::base16_array(
@@ -61,23 +61,23 @@ BOOST_AUTO_TEST_CASE(alert__deserialize__bitcoin_wiki_sample__expected)
 
     system::read::bytes::copy source(payload);
     const auto message = alert::deserialize(level::minimum_protocol, source);
-    BOOST_REQUIRE(source);
+    BC_REQUIRE(source);
 
-    BOOST_REQUIRE_EQUAL(message.payload.version, 1u);
-    BOOST_REQUIRE_EQUAL(message.payload.relay_until, 1329620535u);
-    BOOST_REQUIRE_EQUAL(message.payload.expiration, 1329792435u);
-    BOOST_REQUIRE_EQUAL(message.payload.id, 1010u);
-    BOOST_REQUIRE_EQUAL(message.payload.cancel, 1009u);
-    BOOST_REQUIRE(message.payload.cancels.empty());
-    BOOST_REQUIRE_EQUAL(message.payload.min_version, 10000u);
-    BOOST_REQUIRE_EQUAL(message.payload.max_version, 61000u);
-    BOOST_REQUIRE(message.payload.sub_versions.empty());
-    BOOST_REQUIRE_EQUAL(message.payload.priority, 100u);
-    BOOST_REQUIRE(message.payload.comment.empty());
-    BOOST_REQUIRE_EQUAL(message.payload.status_bar, expected_status_bar);
-    BOOST_REQUIRE(message.payload.reserved.empty());
+    BC_REQUIRE_EQUAL(message.payload.version, 1u);
+    BC_REQUIRE_EQUAL(message.payload.relay_until, 1329620535u);
+    BC_REQUIRE_EQUAL(message.payload.expiration, 1329792435u);
+    BC_REQUIRE_EQUAL(message.payload.id, 1010u);
+    BC_REQUIRE_EQUAL(message.payload.cancel, 1009u);
+    BC_REQUIRE(message.payload.cancels.empty());
+    BC_REQUIRE_EQUAL(message.payload.min_version, 10000u);
+    BC_REQUIRE_EQUAL(message.payload.max_version, 61000u);
+    BC_REQUIRE(message.payload.sub_versions.empty());
+    BC_REQUIRE_EQUAL(message.payload.priority, 100u);
+    BC_REQUIRE(message.payload.comment.empty());
+    BC_REQUIRE_EQUAL(message.payload.status_bar, expected_status_bar);
+    BC_REQUIRE(message.payload.reserved.empty());
 
-    BOOST_REQUIRE_EQUAL(message.signature, expected_signature);
+    BC_REQUIRE_EQUAL(message.signature, expected_signature);
 }
 
 static const auto sample = system::base16_chunk(
@@ -93,45 +93,45 @@ static const auto sample = system::base16_chunk(
 
 static const uint32_t excess_version = add1<uint32_t>(level::maximum_protocol);
 
-BOOST_AUTO_TEST_CASE(alert__deserialize1__bitcoin_wiki_sample__expected_size)
+BC_AUTO_TEST_CASE(alert__deserialize1__bitcoin_wiki_sample__expected_size)
 {
     const auto message = alert::deserialize(level::minimum_protocol, sample);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->payload.id, 1010u);
-    BOOST_REQUIRE_EQUAL(message->signature.size(), 0x47u);
-    BOOST_REQUIRE_EQUAL(message->size(level::minimum_protocol), sample.size());
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->payload.id, 1010u);
+    BC_REQUIRE_EQUAL(message->signature.size(), 0x47u);
+    BC_REQUIRE_EQUAL(message->size(level::minimum_protocol), sample.size());
 }
 
-BOOST_AUTO_TEST_CASE(alert__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(alert__deserialize1__insufficient_version__nullptr)
 {
-    BOOST_REQUIRE(!alert::deserialize(level::canonical, sample));
+    BC_REQUIRE(!alert::deserialize(level::canonical, sample));
 }
 
-BOOST_AUTO_TEST_CASE(alert__deserialize1__excess_version__nullptr)
+BC_AUTO_TEST_CASE(alert__deserialize1__excess_version__nullptr)
 {
-    BOOST_REQUIRE(!alert::deserialize(excess_version, sample));
+    BC_REQUIRE(!alert::deserialize(excess_version, sample));
 }
 
-BOOST_AUTO_TEST_CASE(alert__deserialize1__truncated_signature__nullptr)
+BC_AUTO_TEST_CASE(alert__deserialize1__truncated_signature__nullptr)
 {
     const system::data_chunk data{ sample.begin(), std::prev(sample.end()) };
-    BOOST_REQUIRE(!alert::deserialize(level::minimum_protocol, data));
+    BC_REQUIRE(!alert::deserialize(level::minimum_protocol, data));
 }
 
-BOOST_AUTO_TEST_CASE(alert__deserialize1__truncated_payload__nullptr)
+BC_AUTO_TEST_CASE(alert__deserialize1__truncated_payload__nullptr)
 {
     const auto data = system::base16_chunk("73010000003766404f00000000");
-    BOOST_REQUIRE(!alert::deserialize(level::minimum_protocol, data));
+    BC_REQUIRE(!alert::deserialize(level::minimum_protocol, data));
 }
 
-BOOST_AUTO_TEST_CASE(alert__serialize1__round_trip__expected)
+BC_AUTO_TEST_CASE(alert__serialize1__round_trip__expected)
 {
     const auto message = alert::deserialize(level::minimum_protocol, sample);
-    BOOST_REQUIRE(message);
+    BC_REQUIRE(message);
 
     system::data_chunk data(message->size(level::minimum_protocol));
-    BOOST_REQUIRE(message->serialize(level::minimum_protocol, data));
-    BOOST_REQUIRE_EQUAL(data, sample);
+    BC_REQUIRE(message->serialize(level::minimum_protocol, data));
+    BC_REQUIRE_EQUAL(data, sample);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -18,36 +18,36 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(race_all_tests)
+BC_AUTO_TEST_SUITE(race_all_tests)
 
 using race_all_t = race_all<const code&>;
 
-BOOST_AUTO_TEST_CASE(race_all__destruct__scoped__success)
+BC_AUTO_TEST_CASE(race_all__destruct__scoped__success)
 {
     code complete{ error::invalid_magic };
 
     {
         race_all_t race_all{ [&](const code& ec) NOEXCEPT { complete = ec; } };
-        BOOST_REQUIRE_EQUAL(complete, error::invalid_magic);
+        BC_REQUIRE_EQUAL(complete, error::invalid_magic);
     }
 
-    BOOST_REQUIRE_EQUAL(complete, error::success);
+    BC_REQUIRE_EQUAL(complete, error::success);
 }
 
-BOOST_AUTO_TEST_CASE(race_all__destruct__referenced__incomplete)
+BC_AUTO_TEST_CASE(race_all__destruct__referenced__incomplete)
 {
     code complete{ error::invalid_magic };
     auto race = std::make_shared<race_all_t>([&](const code& ec) NOEXCEPT { complete = ec; });
     auto copy = race;
 
     race.reset();
-    BOOST_REQUIRE_EQUAL(complete, error::invalid_magic);
+    BC_REQUIRE_EQUAL(complete, error::invalid_magic);
 
     copy.reset();
-    BOOST_REQUIRE_EQUAL(complete, error::success);
+    BC_REQUIRE_EQUAL(complete, error::success);
 }
 
-BOOST_AUTO_TEST_CASE(race_all__destruct__captured__resources_deleted)
+BC_AUTO_TEST_CASE(race_all__destruct__captured__resources_deleted)
 {
     struct destructor
     {
@@ -65,11 +65,11 @@ BOOST_AUTO_TEST_CASE(race_all__destruct__captured__resources_deleted)
         race_all_t race_all{ [=, &complete](const code&) NOEXCEPT { complete = !foo->deleted_; } };
 
         foo.reset();
-        BOOST_REQUIRE(!deleted);
+        BC_REQUIRE(!deleted);
     }
 
-    BOOST_REQUIRE(complete);
-    BOOST_REQUIRE(deleted);
+    BC_REQUIRE(complete);
+    BC_REQUIRE(deleted);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

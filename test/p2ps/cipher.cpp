@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2ps_cipher_tests)
+BC_AUTO_TEST_SUITE(p2ps_cipher_tests)
 
 using namespace network::p2ps;
 using namespace system;
@@ -27,7 +27,7 @@ using namespace system;
 constexpr uint32_t mainnet = 0xd9b4bef9;
 
 // bips.dev/324 packet encoding test vector 1 (initiating, packet index 1).
-BOOST_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_1__expected)
+BC_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_1__expected)
 {
     const ec_secret secret = base16_array("61062ea5071d800bbfd59e2e8b53d47d194b095ae5a4df04936b49772ef0d4d7");
     const cipher::key ours = base16_array("ec0adff257bbfe500c188c80b4fdd640f6b45a482bbc15fc7cef5931deff0aa186f6eb9bba7b85dc4dcc28b28722de1e3d9108b985e2967045668f66098e475b");
@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_1__expected)
     const auto expected = base16_chunk("7530d2a18720162ac09c25329a60d75adf36eda3c3");
 
     cipher self{ secret, ours };
-    BOOST_REQUIRE_EQUAL(self.public_key(), ours);
-    BOOST_REQUIRE(self.initialize(theirs, mainnet, true));
-    BOOST_REQUIRE_EQUAL(self.session_id(), session_id);
-    BOOST_REQUIRE_EQUAL(self.send_terminator(), send_terminator);
-    BOOST_REQUIRE_EQUAL(self.receive_terminator(), receive_terminator);
+    BC_REQUIRE_EQUAL(self.public_key(), ours);
+    BC_REQUIRE(self.initialize(theirs, mainnet, true));
+    BC_REQUIRE_EQUAL(self.session_id(), session_id);
+    BC_REQUIRE_EQUAL(self.send_terminator(), send_terminator);
+    BC_REQUIRE_EQUAL(self.receive_terminator(), receive_terminator);
 
     // Seek to packet index 1 with one decoy encryption.
     data_chunk decoy(cipher::expansion);
@@ -51,11 +51,11 @@ BOOST_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_1__expected)
 
     data_chunk out(contents.size() + cipher::expansion);
     self.encrypt(contents, {}, false, out);
-    BOOST_REQUIRE_EQUAL(out, expected);
+    BC_REQUIRE_EQUAL(out, expected);
 }
 
 // bips.dev/324 packet encoding test vector 2 (responding, packet index 999).
-BOOST_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_2__expected)
+BC_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_2__expected)
 {
     const ec_secret secret = base16_array("6f312890ec83bbb26798abaadd574684a53e74ccef7953b790fcc29409080246");
     const cipher::key ours = base16_array("a8785af31c029efc82fa9fc677d7118031358d7c6a25b5779a9b900e5ccd94aac97eb36a3c5dbcdb2ca5843cc4c2fe0aaa46d10eb3d233a81c3dde476da00eef");
@@ -67,10 +67,10 @@ BOOST_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_2__expected)
     const auto expected = base16_chunk("d78adbcba0eebfb15cfbd8142c84dc729d233d0dc11b1d851e46a114122b8d5b96b7d59317");
 
     cipher self{ secret, ours };
-    BOOST_REQUIRE(self.initialize(theirs, mainnet, false));
-    BOOST_REQUIRE_EQUAL(self.session_id(), session_id);
-    BOOST_REQUIRE_EQUAL(self.send_terminator(), send_terminator);
-    BOOST_REQUIRE_EQUAL(self.receive_terminator(), receive_terminator);
+    BC_REQUIRE(self.initialize(theirs, mainnet, false));
+    BC_REQUIRE_EQUAL(self.session_id(), session_id);
+    BC_REQUIRE_EQUAL(self.send_terminator(), send_terminator);
+    BC_REQUIRE_EQUAL(self.receive_terminator(), receive_terminator);
 
     // Seek to packet index 999 with decoy encryptions (crosses rekeying).
     data_chunk decoy(cipher::expansion);
@@ -79,21 +79,21 @@ BOOST_AUTO_TEST_CASE(p2ps_cipher__encrypt__vector_2__expected)
 
     data_chunk out(contents.size() + cipher::expansion);
     self.encrypt(contents, {}, false, out);
-    BOOST_REQUIRE_EQUAL(out, expected);
+    BC_REQUIRE_EQUAL(out, expected);
 }
 
 // A full session between two generated keypairs, both directions.
-BOOST_AUTO_TEST_CASE(p2ps_cipher__round_trip__both_directions__expected)
+BC_AUTO_TEST_CASE(p2ps_cipher__round_trip__both_directions__expected)
 {
     cipher alpha{};
     cipher beta{};
-    BOOST_REQUIRE(alpha.initialize(beta.public_key(), mainnet, true));
-    BOOST_REQUIRE(beta.initialize(alpha.public_key(), mainnet, false));
+    BC_REQUIRE(alpha.initialize(beta.public_key(), mainnet, true));
+    BC_REQUIRE(beta.initialize(alpha.public_key(), mainnet, false));
 
     // Both sides derive the same session and mirrored terminators.
-    BOOST_REQUIRE_EQUAL(alpha.session_id(), beta.session_id());
-    BOOST_REQUIRE_EQUAL(alpha.send_terminator(), beta.receive_terminator());
-    BOOST_REQUIRE_EQUAL(alpha.receive_terminator(), beta.send_terminator());
+    BC_REQUIRE_EQUAL(alpha.session_id(), beta.session_id());
+    BC_REQUIRE_EQUAL(alpha.send_terminator(), beta.receive_terminator());
+    BC_REQUIRE_EQUAL(alpha.receive_terminator(), beta.send_terminator());
 
     const auto aad = base16_chunk("f00dfeed");
     const auto contents = base16_chunk("00112233445566778899aabbccddeeff");
@@ -102,38 +102,38 @@ BOOST_AUTO_TEST_CASE(p2ps_cipher__round_trip__both_directions__expected)
 
     // Decrypt on the far side (length, then contents).
     const auto length = beta.decrypt_length(std::span<const uint8_t>{ packet.data(), cipher::length_size });
-    BOOST_REQUIRE_EQUAL(length, contents.size());
+    BC_REQUIRE_EQUAL(length, contents.size());
 
     bool ignore{ true };
     data_chunk decrypted(cipher::header_size + length);
     const std::span<const uint8_t> rest{ std::next(packet.data(), cipher::length_size), packet.size() - cipher::length_size };
-    BOOST_REQUIRE(beta.decrypt(decrypted, aad, ignore, rest));
-    BOOST_REQUIRE(!ignore);
+    BC_REQUIRE(beta.decrypt(decrypted, aad, ignore, rest));
+    BC_REQUIRE(!ignore);
     const data_chunk payload(std::next(decrypted.cbegin()), decrypted.cend());
-    BOOST_REQUIRE_EQUAL(payload, contents);
+    BC_REQUIRE_EQUAL(payload, contents);
 
     // Reply direction.
     data_chunk reply(contents.size() + cipher::expansion);
     beta.encrypt(contents, {}, true, reply);
 
     const auto reply_length = alpha.decrypt_length(std::span<const uint8_t>{ reply.data(), cipher::length_size });
-    BOOST_REQUIRE_EQUAL(reply_length, contents.size());
+    BC_REQUIRE_EQUAL(reply_length, contents.size());
 
     data_chunk reply_decrypted(cipher::header_size + reply_length);
     const std::span<const uint8_t> reply_rest{ std::next(reply.data(), cipher::length_size), reply.size() - cipher::length_size };
-    BOOST_REQUIRE(alpha.decrypt(reply_decrypted, {}, ignore, reply_rest));
-    BOOST_REQUIRE(ignore);
+    BC_REQUIRE(alpha.decrypt(reply_decrypted, {}, ignore, reply_rest));
+    BC_REQUIRE(ignore);
     const data_chunk reply_payload(std::next(reply_decrypted.cbegin()), reply_decrypted.cend());
-    BOOST_REQUIRE_EQUAL(reply_payload, contents);
+    BC_REQUIRE_EQUAL(reply_payload, contents);
 }
 
 // Tampered packets do not authenticate.
-BOOST_AUTO_TEST_CASE(p2ps_cipher__decrypt__tampered__false)
+BC_AUTO_TEST_CASE(p2ps_cipher__decrypt__tampered__false)
 {
     cipher alpha{};
     cipher beta{};
-    BOOST_REQUIRE(alpha.initialize(beta.public_key(), mainnet, true));
-    BOOST_REQUIRE(beta.initialize(alpha.public_key(), mainnet, false));
+    BC_REQUIRE(alpha.initialize(beta.public_key(), mainnet, true));
+    BC_REQUIRE(beta.initialize(alpha.public_key(), mainnet, false));
 
     const auto contents = base16_chunk("deadbeef");
     data_chunk packet(contents.size() + cipher::expansion);
@@ -141,12 +141,12 @@ BOOST_AUTO_TEST_CASE(p2ps_cipher__decrypt__tampered__false)
     packet.back() ^= 0x01;
 
     const auto length = beta.decrypt_length(std::span<const uint8_t>{ packet.data(), cipher::length_size });
-    BOOST_REQUIRE_EQUAL(length, contents.size());
+    BC_REQUIRE_EQUAL(length, contents.size());
 
     bool ignore{};
     data_chunk decrypted(cipher::header_size + length);
     const std::span<const uint8_t> rest{ std::next(packet.data(), cipher::length_size), packet.size() - cipher::length_size };
-    BOOST_REQUIRE(!beta.decrypt(decrypted, {}, ignore, rest));
+    BC_REQUIRE(!beta.decrypt(decrypted, {}, ignore, rest));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

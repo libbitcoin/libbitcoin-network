@@ -18,11 +18,11 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(unsubscriber_tests)
+BC_AUTO_TEST_SUITE(unsubscriber_tests)
 
 typedef unsubscriber<size_t> test_unsubscriber;
 
-BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__stopped__subscriber_stopped)
+BC_AUTO_TEST_CASE(unsubscriber__subscribe__stopped__subscriber_stopped)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -52,14 +52,14 @@ BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__stopped__subscriber_stopped)
     }) == error::subscriber_stopped);
 
     result &= is_zero(instance.size());
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(stop_result.first, ec);
-    BOOST_REQUIRE_EQUAL(stop_result.second, expected);
-    BOOST_REQUIRE_EQUAL(retry_result.first, error::subscriber_stopped);
-    BOOST_REQUIRE_EQUAL(retry_result.second, size_t{});
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_result.first, ec);
+    BC_REQUIRE_EQUAL(stop_result.second, expected);
+    BC_REQUIRE_EQUAL(retry_result.first, error::subscriber_stopped);
+    BC_REQUIRE_EQUAL(retry_result.second, size_t{});
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__exists__success)
+BC_AUTO_TEST_CASE(unsubscriber__subscribe__exists__success)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -82,14 +82,14 @@ BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__exists__success)
     });
 
     instance.stop(ec, expected);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(first_result.first, ec);
-    BOOST_REQUIRE_EQUAL(first_result.second, expected);
-    BOOST_REQUIRE_EQUAL(second_result.first, ec);
-    BOOST_REQUIRE_EQUAL(second_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(first_result.first, ec);
+    BC_REQUIRE_EQUAL(first_result.second, expected);
+    BC_REQUIRE_EQUAL(second_result.first, ec);
+    BC_REQUIRE_EQUAL(second_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__removed__expected)
+BC_AUTO_TEST_CASE(unsubscriber__subscribe__removed__expected)
 {
     test_unsubscriber instance{};
     const auto ec1 = error::address_not_found;
@@ -122,14 +122,14 @@ BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__removed__expected)
     instance.stop(ec2, expected2);
     result &= instance.empty();
     result &= is_zero(instance.size());
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(first_result.first, ec1);
-    BOOST_REQUIRE_EQUAL(first_result.second, expected1);
-    BOOST_REQUIRE_EQUAL(second_result.first, ec2);
-    BOOST_REQUIRE_EQUAL(second_result.second, expected2);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(first_result.first, ec1);
+    BC_REQUIRE_EQUAL(first_result.second, expected1);
+    BC_REQUIRE_EQUAL(second_result.first, ec2);
+    BC_REQUIRE_EQUAL(second_result.second, expected2);
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__unique__expected)
+BC_AUTO_TEST_CASE(unsubscriber__subscribe__unique__expected)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -155,14 +155,14 @@ BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__unique__expected)
     result &= (instance.size() == two);
     instance.stop(ec, expected);
     result &= is_zero(instance.size());
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(first_result.first, ec);
-    BOOST_REQUIRE_EQUAL(first_result.second, expected);
-    BOOST_REQUIRE_EQUAL(second_result.first, ec);
-    BOOST_REQUIRE_EQUAL(second_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(first_result.first, ec);
+    BC_REQUIRE_EQUAL(first_result.second, expected);
+    BC_REQUIRE_EQUAL(second_result.first, ec);
+    BC_REQUIRE_EQUAL(second_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__stop_default__once__expected)
+BC_AUTO_TEST_CASE(unsubscriber__stop_default__once__expected)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -178,12 +178,12 @@ BOOST_AUTO_TEST_CASE(unsubscriber__stop_default__once__expected)
     });
 
     instance.stop_default(ec);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(stop_result.first, ec);
-    BOOST_REQUIRE_EQUAL(stop_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_result.first, ec);
+    BC_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__stop__once__expected)
+BC_AUTO_TEST_CASE(unsubscriber__stop__once__expected)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -199,12 +199,12 @@ BOOST_AUTO_TEST_CASE(unsubscriber__stop__once__expected)
     });
 
     instance.stop(ec, expected);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(stop_result.first, ec);
-    BOOST_REQUIRE_EQUAL(stop_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_result.first, ec);
+    BC_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__stop__twice__second_dropped)
+BC_AUTO_TEST_CASE(unsubscriber__stop__twice__second_dropped)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -223,12 +223,12 @@ BOOST_AUTO_TEST_CASE(unsubscriber__stop__twice__second_dropped)
     instance.stop(error::address_blocked, {});
 
     // Handler is not invoked on stop after stop (handlers cleared).
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(stop_result.first, ec);
-    BOOST_REQUIRE_EQUAL(stop_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_result.first, ec);
+    BC_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__notify__stopped__dropped)
+BC_AUTO_TEST_CASE(unsubscriber__notify__stopped__dropped)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -248,12 +248,12 @@ BOOST_AUTO_TEST_CASE(unsubscriber__notify__stopped__dropped)
     instance.notify(ec, expected);
     instance.stop_default(error::address_blocked);
     instance.notify(error::address_blocked, {});
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(notify_result.first, ec);
-    BOOST_REQUIRE_EQUAL(notify_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(notify_result.first, ec);
+    BC_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__notify__once__expected)
+BC_AUTO_TEST_CASE(unsubscriber__notify__once__expected)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -273,12 +273,12 @@ BOOST_AUTO_TEST_CASE(unsubscriber__notify__once__expected)
 
     // Prevents unstopped assertion (uncleared).
     instance.stop_default(error::address_blocked);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(notify_result.first, ec);
-    BOOST_REQUIRE_EQUAL(notify_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(notify_result.first, ec);
+    BC_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__notify__twice_true__expected)
+BC_AUTO_TEST_CASE(unsubscriber__notify__twice_true__expected)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -300,12 +300,12 @@ BOOST_AUTO_TEST_CASE(unsubscriber__notify__twice_true__expected)
 
     // Prevents unstopped assertion (uncleared).
     instance.stop_default(error::address_blocked);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(notify_result.first, ec);
-    BOOST_REQUIRE_EQUAL(notify_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(notify_result.first, ec);
+    BC_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(unsubscriber__notify__twice_false__expected)
+BC_AUTO_TEST_CASE(unsubscriber__notify__twice_false__expected)
 {
     test_unsubscriber instance{};
     const auto ec = error::address_not_found;
@@ -325,9 +325,9 @@ BOOST_AUTO_TEST_CASE(unsubscriber__notify__twice_false__expected)
 
     // Cleared by false return.
     ////instance.stop_default(error::address_blocked);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(notify_result.first, ec);
-    BOOST_REQUIRE_EQUAL(notify_result.second, expected);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(notify_result.first, ec);
+    BC_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

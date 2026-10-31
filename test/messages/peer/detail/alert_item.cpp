@@ -18,7 +18,7 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_alert_item_tests)
+BC_AUTO_TEST_SUITE(p2p_alert_item_tests)
 
 using namespace network::messages::peer;
 
@@ -34,12 +34,12 @@ const system::ec_uncompressed public_key
     }
 };
 
-BOOST_AUTO_TEST_CASE(alert_item__satoshi_public_key__always__expected)
+BC_AUTO_TEST_CASE(alert_item__satoshi_public_key__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(alert_item::satoshi_public_key, public_key);
+    BC_REQUIRE_EQUAL(alert_item::satoshi_public_key, public_key);
 }
 
-BOOST_AUTO_TEST_CASE(alert_item__size__default__expected)
+BC_AUTO_TEST_CASE(alert_item__size__default__expected)
 {
     constexpr auto expected = sizeof(uint32_t)
         + sizeof(uint64_t)
@@ -55,10 +55,10 @@ BOOST_AUTO_TEST_CASE(alert_item__size__default__expected)
         + variable_size(zero)
         + variable_size(zero);
 
-    BOOST_REQUIRE_EQUAL(alert_item{}.size(level::canonical), expected);
+    BC_REQUIRE_EQUAL(alert_item{}.size(level::canonical), expected);
 }
 
-BOOST_AUTO_TEST_CASE(alert_item__deserialize__bitcoin_wiki_sample__expected)
+BC_AUTO_TEST_CASE(alert_item__deserialize__bitcoin_wiki_sample__expected)
 {
     // en.bitcoin.it/wiki/Protocol_documentation#alert
     constexpr auto payload = system::base16_array(
@@ -71,20 +71,20 @@ BOOST_AUTO_TEST_CASE(alert_item__deserialize__bitcoin_wiki_sample__expected)
 
     system::read::bytes::copy source(payload);
     const auto message = alert_item::deserialize(0, source);
-    BOOST_REQUIRE(source);
-    BOOST_REQUIRE_EQUAL(message.version, 1u);
-    BOOST_REQUIRE_EQUAL(message.relay_until, 1329620535u);
-    BOOST_REQUIRE_EQUAL(message.expiration, 1329792435u);
-    BOOST_REQUIRE_EQUAL(message.id, 1010u);
-    BOOST_REQUIRE_EQUAL(message.cancel, 1009u);
-    BOOST_REQUIRE(message.cancels.empty());
-    BOOST_REQUIRE_EQUAL(message.min_version, 10000u);
-    BOOST_REQUIRE_EQUAL(message.max_version, 61000u);
-    BOOST_REQUIRE(message.sub_versions.empty());
-    BOOST_REQUIRE_EQUAL(message.priority, 100u);
-    BOOST_REQUIRE(message.comment.empty());
-    BOOST_REQUIRE_EQUAL(message.status_bar, expected_status_bar);
-    BOOST_REQUIRE(message.reserved.empty());
+    BC_REQUIRE(source);
+    BC_REQUIRE_EQUAL(message.version, 1u);
+    BC_REQUIRE_EQUAL(message.relay_until, 1329620535u);
+    BC_REQUIRE_EQUAL(message.expiration, 1329792435u);
+    BC_REQUIRE_EQUAL(message.id, 1010u);
+    BC_REQUIRE_EQUAL(message.cancel, 1009u);
+    BC_REQUIRE(message.cancels.empty());
+    BC_REQUIRE_EQUAL(message.min_version, 10000u);
+    BC_REQUIRE_EQUAL(message.max_version, 61000u);
+    BC_REQUIRE(message.sub_versions.empty());
+    BC_REQUIRE_EQUAL(message.priority, 100u);
+    BC_REQUIRE(message.comment.empty());
+    BC_REQUIRE_EQUAL(message.status_bar, expected_status_bar);
+    BC_REQUIRE(message.reserved.empty());
 }
 
 static const alert_item populated
@@ -107,46 +107,46 @@ static const auto populated_data = system::base16_chunk(
     "01" "73"
     "00");
 
-BOOST_AUTO_TEST_CASE(alert_item__size__populated__expected)
+BC_AUTO_TEST_CASE(alert_item__size__populated__expected)
 {
-    BOOST_REQUIRE_EQUAL(populated.size(level::canonical), populated_data.size());
+    BC_REQUIRE_EQUAL(populated.size(level::canonical), populated_data.size());
 }
 
-BOOST_AUTO_TEST_CASE(alert_item__serialize__populated__expected)
+BC_AUTO_TEST_CASE(alert_item__serialize__populated__expected)
 {
     system::data_chunk data(populated_data.size());
     system::write::bytes::copy sink(data);
     populated.serialize(level::canonical, sink);
-    BOOST_REQUIRE(sink);
-    BOOST_REQUIRE_EQUAL(data, populated_data);
+    BC_REQUIRE(sink);
+    BC_REQUIRE_EQUAL(data, populated_data);
 }
 
-BOOST_AUTO_TEST_CASE(alert_item__deserialize__populated__expected)
+BC_AUTO_TEST_CASE(alert_item__deserialize__populated__expected)
 {
     system::read::bytes::copy source(populated_data);
     const auto item = alert_item::deserialize(level::canonical, source);
-    BOOST_REQUIRE(source);
-    BOOST_REQUIRE_EQUAL(item.version, 1u);
-    BOOST_REQUIRE_EQUAL(item.relay_until, 2u);
-    BOOST_REQUIRE_EQUAL(item.expiration, 3u);
-    BOOST_REQUIRE_EQUAL(item.id, 4u);
-    BOOST_REQUIRE_EQUAL(item.cancel, 5u);
-    BOOST_REQUIRE(item.cancels == populated.cancels);
-    BOOST_REQUIRE_EQUAL(item.min_version, 8u);
-    BOOST_REQUIRE_EQUAL(item.max_version, 9u);
-    BOOST_REQUIRE(item.sub_versions == populated.sub_versions);
-    BOOST_REQUIRE_EQUAL(item.priority, 10u);
-    BOOST_REQUIRE_EQUAL(item.comment, "c");
-    BOOST_REQUIRE_EQUAL(item.status_bar, "s");
-    BOOST_REQUIRE(item.reserved.empty());
+    BC_REQUIRE(source);
+    BC_REQUIRE_EQUAL(item.version, 1u);
+    BC_REQUIRE_EQUAL(item.relay_until, 2u);
+    BC_REQUIRE_EQUAL(item.expiration, 3u);
+    BC_REQUIRE_EQUAL(item.id, 4u);
+    BC_REQUIRE_EQUAL(item.cancel, 5u);
+    BC_REQUIRE(item.cancels == populated.cancels);
+    BC_REQUIRE_EQUAL(item.min_version, 8u);
+    BC_REQUIRE_EQUAL(item.max_version, 9u);
+    BC_REQUIRE(item.sub_versions == populated.sub_versions);
+    BC_REQUIRE_EQUAL(item.priority, 10u);
+    BC_REQUIRE_EQUAL(item.comment, "c");
+    BC_REQUIRE_EQUAL(item.status_bar, "s");
+    BC_REQUIRE(item.reserved.empty());
 }
 
-BOOST_AUTO_TEST_CASE(alert_item__deserialize__truncated__source_false)
+BC_AUTO_TEST_CASE(alert_item__deserialize__truncated__source_false)
 {
     const auto data = system::base16_chunk("01000000" "0200000000000000" "03");
     system::read::bytes::copy source(data);
     const auto item = alert_item::deserialize(level::canonical, source);
-    BOOST_REQUIRE(!source);
+    BC_REQUIRE(!source);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

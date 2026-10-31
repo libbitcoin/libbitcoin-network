@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(session_tests)
+BC_AUTO_TEST_SUITE(session_tests)
 
 using namespace network::messages::peer;
 using namespace bc::system::chain;
@@ -379,7 +379,7 @@ protected:
 
 // construct/settings
 
-BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
+BC_AUTO_TEST_CASE(session__construct__always__expected_settings)
 {
     const logger log{};
     constexpr auto expected = 42u;
@@ -387,61 +387,61 @@ BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
     set.threads = expected;
     net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE_EQUAL(session.network_settings().threads, expected);
+    BC_REQUIRE_EQUAL(session.network_settings().threads, expected);
 }
 
 // properties
 
-BOOST_AUTO_TEST_CASE(session__properties__default__expected)
+BC_AUTO_TEST_CASE(session__properties__default__expected)
 {
     const logger log{};
     settings set(test::network_settings());
     net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.stopped());
-    BOOST_REQUIRE(!session.stranded());
-    BOOST_REQUIRE(is_zero(session.address_count()));
-    BOOST_REQUIRE(is_zero(session.channel_count()));
-    BOOST_REQUIRE(is_zero(session.inbound_channel_count()));
-    BOOST_REQUIRE(session.is_configured(messages::peer::level::canonical));
-    BOOST_REQUIRE(session.is_configured(messages::peer::level::minimum_protocol));
-    BOOST_REQUIRE(session.is_configured(messages::peer::level::maximum_protocol));
-    BOOST_REQUIRE(is_zero(session.outbound_channel_count()));
+    BC_REQUIRE(session.stopped());
+    BC_REQUIRE(!session.stranded());
+    BC_REQUIRE(is_zero(session.address_count()));
+    BC_REQUIRE(is_zero(session.channel_count()));
+    BC_REQUIRE(is_zero(session.inbound_channel_count()));
+    BC_REQUIRE(session.is_configured(messages::peer::level::canonical));
+    BC_REQUIRE(session.is_configured(messages::peer::level::minimum_protocol));
+    BC_REQUIRE(session.is_configured(messages::peer::level::maximum_protocol));
+    BC_REQUIRE(is_zero(session.outbound_channel_count()));
 }
 
 // factories
 
-BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
+BC_AUTO_TEST_CASE(session__create_acceptor__always__expected)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_acceptor({}));
-    BOOST_REQUIRE_EQUAL(net.acceptors(), 1u);
+    BC_REQUIRE(session.create_acceptor({}));
+    BC_REQUIRE_EQUAL(net.acceptors(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(session__create_manual_connector__always__expected)
+BC_AUTO_TEST_CASE(session__create_manual_connector__always__expected)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_manual_connector(0));
-    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
+    BC_REQUIRE(session.create_manual_connector(0));
+    BC_REQUIRE_EQUAL(net.connectors(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(session__create_seed_connector__always__expected)
+BC_AUTO_TEST_CASE(session__create_seed_connector__always__expected)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.create_seed_connector(0));
-    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
+    BC_REQUIRE(session.create_seed_connector(0));
+    BC_REQUIRE_EQUAL(net.connectors(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
+BC_AUTO_TEST_CASE(session__create_connectors__always__expected)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -449,14 +449,14 @@ BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
     mock_session session(net, 1);
     constexpr auto expected = 42u;
     const auto connectors = session.create_connectors(expected, 0);
-    BOOST_REQUIRE(connectors);
-    BOOST_REQUIRE_EQUAL(connectors->size(), expected);
-    BOOST_REQUIRE_EQUAL(net.connectors(), expected);
+    BC_REQUIRE(connectors);
+    BC_REQUIRE_EQUAL(connectors->size(), expected);
+    BC_REQUIRE_EQUAL(net.connectors(), expected);
 }
 
 // utilities
 
-BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
+BC_AUTO_TEST_CASE(session__take__always__calls_network)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -469,10 +469,10 @@ BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
         taken.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(taken.get_future().get(), error::invalid_magic);
+    BC_REQUIRE_EQUAL(taken.get_future().get(), error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
+BC_AUTO_TEST_CASE(session__fetch__always__calls_network)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -485,10 +485,10 @@ BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
         fetched.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(fetched.get_future().get(), error::bad_stream);
+    BC_REQUIRE_EQUAL(fetched.get_future().get(), error::bad_stream);
 }
 
-BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_address)
+BC_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_address)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -502,16 +502,16 @@ BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_addre
         save.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(save.get_future().get(), error::invalid_magic);
+    BC_REQUIRE_EQUAL(save.get_future().get(), error::invalid_magic);
 
     const auto& saved = net.restored();
-    BOOST_REQUIRE_EQUAL(saved.timestamp, 42u);
-    BOOST_REQUIRE_EQUAL(saved.services, 24u);
-    BOOST_REQUIRE(is_unspecified(saved.address));
-    BOOST_REQUIRE_EQUAL(saved.port, 4224u);
+    BC_REQUIRE_EQUAL(saved.timestamp, 42u);
+    BC_REQUIRE_EQUAL(saved.services, 24u);
+    BC_REQUIRE(is_unspecified(saved.address));
+    BC_REQUIRE_EQUAL(saved.port, 4224u);
 }
 
-BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresses)
+BC_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresses)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -525,25 +525,25 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
         save.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(save.get_future().get(), error::bad_stream);
+    BC_REQUIRE_EQUAL(save.get_future().get(), error::bad_stream);
 
     const auto& saveds = net.saveds();
-    BOOST_REQUIRE_EQUAL(saveds.size(), 2u);
-    BOOST_REQUIRE_EQUAL(saveds[1].timestamp, 42u);
-    BOOST_REQUIRE_EQUAL(saveds[1].services, 24u);
-    BOOST_REQUIRE(is_unspecified(saveds[1].address));
-    BOOST_REQUIRE_EQUAL(saveds[1].port, 4224u);
+    BC_REQUIRE_EQUAL(saveds.size(), 2u);
+    BC_REQUIRE_EQUAL(saveds[1].timestamp, 42u);
+    BC_REQUIRE_EQUAL(saveds[1].services, 24u);
+    BC_REQUIRE(is_unspecified(saveds[1].address));
+    BC_REQUIRE_EQUAL(saveds[1].port, 4224u);
 }
 
 // stop
 
-BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
+BC_AUTO_TEST_CASE(session__stop__stopped__true)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE(session.stopped());
 
     std::promise<bool> stopped;
     io::post(net.strand(), [&]() NOEXCEPT
@@ -552,12 +552,12 @@ BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(stopped.get_future().get());
 }
 
 // start
 
-BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
+BC_AUTO_TEST_CASE(session__start__restart__operation_failed)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     std::promise<code> restarted;
     io::post(net.strand(), [&]() NOEXCEPT
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
+    BC_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
 
     std::promise<bool> stopped;
     io::post(net.strand(), [&]() NOEXCEPT
@@ -593,11 +593,11 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session__start__stop__success)
+BC_AUTO_TEST_CASE(session__start__stop__success)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(session__start__stop__success)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     std::promise<bool> stopped;
     io::post(net.strand(), [&]() NOEXCEPT
@@ -622,21 +622,21 @@ BOOST_AUTO_TEST_CASE(session__start__stop__success)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session.stopped());
 }
 
 // channel sequence
 
 const mock_channel::options_t options{ "test" };
 
-BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_service_stopped_channel_service_stopped_not_pent_or_stored)
+BC_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_service_stopped_channel_service_stopped_not_pent_or_stored)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net net(set, log);
     auto session = std::make_shared<mock_session>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -659,25 +659,25 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     });
 
     // Channel stopped early due to session being stopped (not started).
-    BOOST_REQUIRE(!session->attached_handshake());
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE(!session->attached_handshake());
-    BOOST_REQUIRE(!channel->resumed());
-    BOOST_REQUIRE(!session->attached_protocol());
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE(channel->stopped());
-    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
+    BC_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
+    BC_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE(!channel->resumed());
+    BC_REQUIRE(!session->attached_protocol());
+    BC_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
+    BC_REQUIRE(channel->stopped());
+    BC_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
     // Channel was not stored or counted.
-    BOOST_REQUIRE(is_zero(net.stored_nonce()));
-    BOOST_REQUIRE(is_zero(net.counted_channel()));
+    BC_REQUIRE(is_zero(net.stored_nonce()));
+    BC_REQUIRE(is_zero(net.counted_channel()));
 
     // Channel was not unstored or uncounted.
-    BOOST_REQUIRE(is_zero(net.unstored_nonce()));
-    BOOST_REQUIRE(is_zero(net.uncounted_channel()));
+    BC_REQUIRE(is_zero(net.unstored_nonce()));
+    BC_REQUIRE(is_zero(net.uncounted_channel()));
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_channel_stopped_channel_channel_stopped_stored_and_not_counted)
+BC_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_channel_stopped_channel_channel_stopped_stored_and_not_counted)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -693,7 +693,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -708,8 +708,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
         unstarted_channel.set_value(true);
     });
 
-    BOOST_REQUIRE(unstarted_channel.get_future().get());
-    BOOST_REQUIRE(channel->stopped());
+    BC_REQUIRE(unstarted_channel.get_future().get());
+    BC_REQUIRE(channel->stopped());
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -726,19 +726,19 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
             });
     });
 
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_stopped);
-    BOOST_REQUIRE(session->attached_handshake());
-    BOOST_REQUIRE(channel->resumed());
-    BOOST_REQUIRE(!session->attached_protocol());
-    BOOST_REQUIRE(!channel->reresumed());
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
-    BOOST_REQUIRE(channel->stopped());
-    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::channel_stopped);
+    BC_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_stopped);
+    BC_REQUIRE(session->attached_handshake());
+    BC_REQUIRE(channel->resumed());
+    BC_REQUIRE(!session->attached_protocol());
+    BC_REQUIRE(!channel->reresumed());
+    BC_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
+    BC_REQUIRE(channel->stopped());
+    BC_REQUIRE_EQUAL(channel->stop_code(), error::channel_stopped);
 
     // stored and not counted
-    BOOST_REQUIRE(net.stored_nonce_result());
-    BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
-    BOOST_REQUIRE(is_zero(net.counted_channel()));
+    BC_REQUIRE(net.stored_nonce_result());
+    BC_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
+    BC_REQUIRE(is_zero(net.counted_channel()));
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -747,16 +747,16 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 
     // unstored and not counted/uncounted
-    BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE(is_zero(net.counted_channel()));
-    BOOST_REQUIRE(is_zero(net.uncounted_channel()));
+    BC_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
+    BC_REQUIRE(is_zero(net.counted_channel()));
+    BC_REQUIRE(is_zero(net.uncounted_channel()));
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_service_stopped_stored_and_counted)
+BC_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_service_stopped_stored_and_counted)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -773,7 +773,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -807,17 +807,17 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     });
 
     // The channel does not read, so it is stopped only by the session.
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
-    BOOST_REQUIRE(session->attached_handshake());
-    BOOST_REQUIRE(channel->resumed());
-    ////BOOST_REQUIRE(session->attached_protocol());
-    ////BOOST_REQUIRE(channel->reresumed());
+    BC_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
+    BC_REQUIRE(session->attached_handshake());
+    BC_REQUIRE(channel->resumed());
+    ////BC_REQUIRE(session->attached_protocol());
+    ////BC_REQUIRE(channel->reresumed());
 
     // stored and counted
-    BOOST_REQUIRE(net.stored_nonce_result());
-    BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
+    BC_REQUIRE(net.stored_nonce_result());
+    BC_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -826,20 +826,20 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 
     // The stop handler unstores/uncounts before signaling completion.
-    BOOST_REQUIRE(stopped_channel.get_future().get());
-    BOOST_REQUIRE(channel->stopped());
-    BOOST_REQUIRE(channel->stop_code());
+    BC_REQUIRE(stopped_channel.get_future().get());
+    BC_REQUIRE(channel->stopped());
+    BC_REQUIRE(channel->stop_code());
 
     // unstored and uncounted
-    BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expected_channel_success_stored_and_counted)
+BC_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expected_channel_success_stored_and_counted)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -857,7 +857,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -868,7 +868,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -890,17 +890,17 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
             });
     });
 
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
-    BOOST_REQUIRE(session->attached_handshake());
-    BOOST_REQUIRE(channel->resumed());
-    BOOST_REQUIRE(session->require_attached_protocol());
-    BOOST_REQUIRE(!channel->stopped());
+    BC_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
+    BC_REQUIRE(session->attached_handshake());
+    BC_REQUIRE(channel->resumed());
+    BC_REQUIRE(session->require_attached_protocol());
+    BC_REQUIRE(!channel->stopped());
 
     // stored and counted
-    BOOST_REQUIRE(net.stored_nonce_result());
-    BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
+    BC_REQUIRE(net.stored_nonce_result());
+    BC_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -909,22 +909,22 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(channel->reresumed());
-    BOOST_REQUIRE(channel->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(channel->reresumed());
+    BC_REQUIRE(channel->stopped());
 
     net.close();
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE(channel->stopped());
-    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
+    BC_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
+    BC_REQUIRE(channel->stopped());
+    BC_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
     // unstored and uncounted
-    BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expected_channel_success_not_stored_and_counted)
+BC_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expected_channel_success_not_stored_and_counted)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -942,7 +942,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
 
     std::promise<code> started;
     io::post(net.strand(), [=, &started]() NOEXCEPT
@@ -953,7 +953,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     socket::parameters params{ .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
@@ -975,17 +975,17 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
             });
     });
 
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
-    BOOST_REQUIRE(session->attached_handshake());
-    BOOST_REQUIRE(channel->resumed());
-    BOOST_REQUIRE(session->require_attached_protocol());
-    BOOST_REQUIRE(!channel->stopped());
+    BC_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
+    BC_REQUIRE(session->attached_handshake());
+    BC_REQUIRE(channel->resumed());
+    BC_REQUIRE(session->require_attached_protocol());
+    BC_REQUIRE(!channel->stopped());
 
     // stored and counted
-    BOOST_REQUIRE(net.stored_nonce_result());
-    BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
+    BC_REQUIRE(net.stored_nonce_result());
+    BC_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -994,22 +994,22 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(channel->reresumed());
-    BOOST_REQUIRE(channel->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(channel->reresumed());
+    BC_REQUIRE(channel->stopped());
 
     net.close();
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE(channel->stopped());
-    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
+    BC_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
+    BC_REQUIRE(channel->stopped());
+    BC_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
     // unstored and uncounted
-    BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
+    BC_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_conflict_channel_conflict)
+BC_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_conflict_channel_conflict)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -1025,7 +1025,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_co
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     socket::parameters params{ .maximum_request = 42, .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     const auto socket = std::make_shared<network::socket>(net.log, net.service(), std::move(params));
@@ -1046,10 +1046,10 @@ BOOST_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_co
             });
     });
 
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_conflict);
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_conflict);
-    BOOST_REQUIRE(!session->attached_handshake());
-    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::channel_conflict);
+    BC_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_conflict);
+    BC_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_conflict);
+    BC_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE_EQUAL(channel->stop_code(), error::channel_conflict);
 
     std::promise<bool> stopped;
     io::post(net.strand(), [=, &stopped]() NOEXCEPT
@@ -1058,8 +1058,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_co
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

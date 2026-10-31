@@ -20,7 +20,7 @@
 
 using namespace network::http;
 
-BOOST_FIXTURE_TEST_SUITE(target_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(target_tests, test::directory_setup_fixture)
 
 #if defined(HAVE_WINDOWS)
     static const std::string root{ "c:\\home\\name" };
@@ -36,252 +36,252 @@ BOOST_FIXTURE_TEST_SUITE(target_tests, test::directory_setup_fixture)
 // is_origin_form
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(target__is_origin_form__path_with_query__true)
+BC_AUTO_TEST_CASE(target__is_origin_form__path_with_query__true)
 {
-    BOOST_REQUIRE(is_origin_form("/index.html?field=value"));
+    BC_REQUIRE(is_origin_form("/index.html?field=value"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_origin_form__malformed_uri__false)
+BC_AUTO_TEST_CASE(target__is_origin_form__malformed_uri__false)
 {
-    BOOST_REQUIRE(!is_origin_form("/[invalid"));
+    BC_REQUIRE(!is_origin_form("/[invalid"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_origin_form__oversized__false)
+BC_AUTO_TEST_CASE(target__is_origin_form__oversized__false)
 {
     const std::string oversized(max_url, 'a');
-    BOOST_REQUIRE(!is_origin_form("/" + oversized));
+    BC_REQUIRE(!is_origin_form("/" + oversized));
 }
 
 // is_absolute_form
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(target__is_absolute_form__http_uri__true)
+BC_AUTO_TEST_CASE(target__is_absolute_form__http_uri__true)
 {
-    BOOST_REQUIRE(is_absolute_form("http://www.boost.org/index.html"));
+    BC_REQUIRE(is_absolute_form("http://www.boost.org/index.html"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_absolute_form__ftp_scheme__false)
+BC_AUTO_TEST_CASE(target__is_absolute_form__ftp_scheme__false)
 {
-    BOOST_REQUIRE(!is_absolute_form("ftp://example.com"));
+    BC_REQUIRE(!is_absolute_form("ftp://example.com"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_absolute_form__malformed_uri__false)
+BC_AUTO_TEST_CASE(target__is_absolute_form__malformed_uri__false)
 {
-    BOOST_REQUIRE(!is_absolute_form("http://[invalid"));
+    BC_REQUIRE(!is_absolute_form("http://[invalid"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_absolute_form__oversized__false)
+BC_AUTO_TEST_CASE(target__is_absolute_form__oversized__false)
 {
     const std::string oversized(max_url, 'a');
-    BOOST_REQUIRE(!is_absolute_form("/" + oversized));
+    BC_REQUIRE(!is_absolute_form("/" + oversized));
 }
 
 // is_authority_form
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(target__is_authority_form__valid_authority__true)
+BC_AUTO_TEST_CASE(target__is_authority_form__valid_authority__true)
 {
-    BOOST_REQUIRE(is_authority_form("//user@host:8080"));
+    BC_REQUIRE(is_authority_form("//user@host:8080"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_authority_form__no_leading_slashes__false)
+BC_AUTO_TEST_CASE(target__is_authority_form__no_leading_slashes__false)
 {
-    BOOST_REQUIRE(!is_authority_form("host:8080"));
+    BC_REQUIRE(!is_authority_form("host:8080"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_authority_form__oversized__false)
+BC_AUTO_TEST_CASE(target__is_authority_form__oversized__false)
 {
     const std::string oversized(max_url, 'a');
-    BOOST_REQUIRE(!is_authority_form("/" + oversized));
+    BC_REQUIRE(!is_authority_form("/" + oversized));
 }
 
 // is_asterisk_form
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(target__is_asterisk_form__asterisk__true)
+BC_AUTO_TEST_CASE(target__is_asterisk_form__asterisk__true)
 {
-    BOOST_REQUIRE(is_asterisk_form("*"));
+    BC_REQUIRE(is_asterisk_form("*"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_asterisk_form__non_asterisk__false)
+BC_AUTO_TEST_CASE(target__is_asterisk_form__non_asterisk__false)
 {
-    BOOST_REQUIRE(!is_asterisk_form("/"));
+    BC_REQUIRE(!is_asterisk_form("/"));
 }
 
 // to_target
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(target__to_target__get_origin__origin)
+BC_AUTO_TEST_CASE(target__to_target__get_origin__origin)
 {
-    BOOST_REQUIRE(to_target("/index.html", http::verb::get) == target::origin);
+    BC_REQUIRE(to_target("/index.html", http::verb::get) == target::origin);
 }
 
-BOOST_AUTO_TEST_CASE(target__to_target__options_asterisk__asterisk)
+BC_AUTO_TEST_CASE(target__to_target__options_asterisk__asterisk)
 {
-    BOOST_REQUIRE(to_target("*", http::verb::options) == target::asterisk);
+    BC_REQUIRE(to_target("*", http::verb::options) == target::asterisk);
 }
 
-BOOST_AUTO_TEST_CASE(target__to_target__connect_authority__authority)
+BC_AUTO_TEST_CASE(target__to_target__connect_authority__authority)
 {
-    BOOST_REQUIRE(to_target("//host:8080", http::verb::connect) == target::authority);
+    BC_REQUIRE(to_target("//host:8080", http::verb::connect) == target::authority);
 }
 
-BOOST_AUTO_TEST_CASE(target__to_target__unknown_method__unknown)
+BC_AUTO_TEST_CASE(target__to_target__unknown_method__unknown)
 {
-    BOOST_REQUIRE(to_target("/index.html", http::verb::unknown) == target::unknown);
+    BC_REQUIRE(to_target("/index.html", http::verb::unknown) == target::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(target__to_target__invalid_target__unknown)
+BC_AUTO_TEST_CASE(target__to_target__invalid_target__unknown)
 {
-    BOOST_REQUIRE(to_target("http://[invalid", http::verb::get) == target::unknown);
+    BC_REQUIRE(to_target("http://[invalid", http::verb::get) == target::unknown);
 }
 
 // sanitize_origin
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(target__sanitize_origin__empty__empty)
+BC_AUTO_TEST_CASE(target__sanitize_origin__empty__empty)
 {
     // empty is an invalid origin
     const auto path = sanitize_origin(root, "");
-    BOOST_REQUIRE(path.empty());
+    BC_REQUIRE(path.empty());
 }
 
-BOOST_AUTO_TEST_CASE(target__sanitize_origin__no_leading_slash__empty)
+BC_AUTO_TEST_CASE(target__sanitize_origin__no_leading_slash__empty)
 {
     // leading non-slash is an invalid origin
     const auto path = sanitize_origin(root, "path");
-    BOOST_REQUIRE(path.empty());
+    BC_REQUIRE(path.empty());
 }
 
-BOOST_AUTO_TEST_CASE(target__sanitize_origin__leading_double_slash__empty)
+BC_AUTO_TEST_CASE(target__sanitize_origin__leading_double_slash__empty)
 {
     // leading double-slash is an invalid origin
     const auto path = sanitize_origin(root, "//");
-    BOOST_REQUIRE(path.empty());
+    BC_REQUIRE(path.empty());
 }
 
-BOOST_AUTO_TEST_CASE(target__sanitize_origin__leading_scheme__empty)
+BC_AUTO_TEST_CASE(target__sanitize_origin__leading_scheme__empty)
 {
     // leading scheme is an invalid origin
     const auto path = sanitize_origin(root, "http://");
-    BOOST_REQUIRE(path.empty());
+    BC_REQUIRE(path.empty());
 }
 
-BOOST_AUTO_TEST_CASE(target__sanitize_origin__slash_only__empty)
+BC_AUTO_TEST_CASE(target__sanitize_origin__slash_only__empty)
 {
     // slash only target must be defaulted (e.g. /index.html) before sanitize.
     const auto path = sanitize_origin(root, "/");
-    BOOST_REQUIRE(path.empty());
+    BC_REQUIRE(path.empty());
 }
 
 // is_safe_target
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(target__sanitize_origin__slashed_path__concatenated)
+BC_AUTO_TEST_CASE(target__sanitize_origin__slashed_path__concatenated)
 {
     const auto path = sanitize_origin(root, "/path/foo/bar.ext");
-    BOOST_REQUIRE_EQUAL(path.generic_string(), norm + "/path/foo/bar.ext");
+    BC_REQUIRE_EQUAL(path.generic_string(), norm + "/path/foo/bar.ext");
 }
 
-BOOST_AUTO_TEST_CASE(target__is_safe_target__abstract_socket__false)
+BC_AUTO_TEST_CASE(target__is_safe_target__abstract_socket__false)
 {
-    BOOST_REQUIRE(!is_safe_target("/@socket"));
+    BC_REQUIRE(!is_safe_target("/@socket"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_safe_target__port_like__false)
+BC_AUTO_TEST_CASE(target__is_safe_target__port_like__false)
 {
-    BOOST_REQUIRE(!is_safe_target("/path:foo"));
+    BC_REQUIRE(!is_safe_target("/path:foo"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_safe_target__path_traversal__false)
+BC_AUTO_TEST_CASE(target__is_safe_target__path_traversal__false)
 {
-    BOOST_REQUIRE(!is_safe_target("/path/../bar"));
+    BC_REQUIRE(!is_safe_target("/path/../bar"));
 }
 
-BOOST_AUTO_TEST_CASE(target__is_safe_target__single_segment__true)
+BC_AUTO_TEST_CASE(target__is_safe_target__single_segment__true)
 {
-    BOOST_REQUIRE(is_safe_target("/file.ext"));
+    BC_REQUIRE(is_safe_target("/file.ext"));
 }
 
 // to_canonical
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(target__to_canonical__non_existent_root__concatenated)
+BC_AUTO_TEST_CASE(target__to_canonical__non_existent_root__concatenated)
 {
     const auto path = to_canonical(root + "/nonexistent", "/file.ext");
-    BOOST_REQUIRE_EQUAL(path.generic_string(), norm + "/nonexistent/file.ext");
+    BC_REQUIRE_EQUAL(path.generic_string(), norm + "/nonexistent/file.ext");
 }
 
-BOOST_AUTO_TEST_CASE(target__to_canonical__non_absolute_root__empty)
+BC_AUTO_TEST_CASE(target__to_canonical__non_absolute_root__empty)
 {
     const auto path = to_canonical("relative/path", "/file.ext");
-    BOOST_REQUIRE(path.empty());
+    BC_REQUIRE(path.empty());
 }
 
-BOOST_AUTO_TEST_CASE(target__to_canonical__escaping_path__empty)
+BC_AUTO_TEST_CASE(target__to_canonical__escaping_path__empty)
 {
     const auto path = to_canonical(root, "/path/../../etc/passwd");
-    BOOST_REQUIRE(path.empty());
+    BC_REQUIRE(path.empty());
 }
 
-BOOST_AUTO_TEST_CASE(target__sanitize_origin__valid_deep_path__concatenated)
+BC_AUTO_TEST_CASE(target__sanitize_origin__valid_deep_path__concatenated)
 {
     const auto path = sanitize_origin(root, "/deep/path/to/file.ext");
-    BOOST_REQUIRE_EQUAL(path.generic_string(), norm + "/deep/path/to/file.ext");
+    BC_REQUIRE_EQUAL(path.generic_string(), norm + "/deep/path/to/file.ext");
 }
 
-BOOST_AUTO_TEST_CASE(target__sanitize_origin__valid_non_existent_file__concatenated)
+BC_AUTO_TEST_CASE(target__sanitize_origin__valid_non_existent_file__concatenated)
 {
     const auto path = sanitize_origin(root, "/new/file.ext");
-    BOOST_REQUIRE_EQUAL(path.generic_string(), norm + "/new/file.ext");
+    BC_REQUIRE_EQUAL(path.generic_string(), norm + "/new/file.ext");
 }
 
 // get_file_body
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(target__get_file_body__exists__is_open)
+BC_AUTO_TEST_CASE(target__get_file_body__exists__is_open)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     const auto file = get_file_body(TEST_PATH);
-    BOOST_REQUIRE(file.is_open());
+    BC_REQUIRE(file.is_open());
 }
 
-BOOST_AUTO_TEST_CASE(target__get_file_body__not_exists__not_is_open)
+BC_AUTO_TEST_CASE(target__get_file_body__not_exists__not_is_open)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
 
     const auto file = get_file_body(TEST_PATH + "42");
-    BOOST_REQUIRE(!file.is_open());
+    BC_REQUIRE(!file.is_open());
 }
 
-BOOST_AUTO_TEST_CASE(target__get_file_body__invalid_characters__does_not_throw)
+BC_AUTO_TEST_CASE(target__get_file_body__invalid_characters__does_not_throw)
 {
     const auto file = get_file_body("~`!@#$%^&*()-+=,;:{}][");
-    BOOST_REQUIRE(!file.is_open());
+    BC_REQUIRE(!file.is_open());
 }
 
-BOOST_AUTO_TEST_CASE(target__to_canonical__root_is_file__empty)
+BC_AUTO_TEST_CASE(target__to_canonical__root_is_file__empty)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
     const auto path = to_canonical(std::filesystem::absolute(TEST_PATH), "/file.ext");
-    BOOST_REQUIRE(path.empty());
+    BC_REQUIRE(path.empty());
 }
 
-BOOST_AUTO_TEST_CASE(target__to_canonical__target_is_directory__empty)
+BC_AUTO_TEST_CASE(target__to_canonical__target_is_directory__empty)
 {
     const auto root = std::filesystem::absolute(TEST_DIRECTORY);
-    BOOST_REQUIRE(std::filesystem::create_directory(root / "child"));
+    BC_REQUIRE(std::filesystem::create_directory(root / "child"));
     const auto path = to_canonical(root, "/child");
-    BOOST_REQUIRE(path.empty());
+    BC_REQUIRE(path.empty());
 }
 
-BOOST_AUTO_TEST_CASE(target__to_canonical__existing_file__canonical_file)
+BC_AUTO_TEST_CASE(target__to_canonical__existing_file__canonical_file)
 {
-    BOOST_REQUIRE(test::create(TEST_PATH));
+    BC_REQUIRE(test::create(TEST_PATH));
     const auto root = std::filesystem::absolute(TEST_DIRECTORY);
     const auto path = to_canonical(root, "/" + TEST_NAME);
-    BOOST_REQUIRE(path == std::filesystem::weakly_canonical(std::filesystem::absolute(TEST_PATH)));
+    BC_REQUIRE(path == std::filesystem::weakly_canonical(std::filesystem::absolute(TEST_PATH)));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

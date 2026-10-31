@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(ws_handshake_tests)
+BC_AUTO_TEST_SUITE(ws_handshake_tests)
 
 using namespace network::http;
 
@@ -33,94 +33,94 @@ static request_header make_request()
     return request;
 }
 
-BOOST_AUTO_TEST_CASE(handshake__accept__rfc_request__switching_protocols)
+BC_AUTO_TEST_CASE(handshake__accept__rfc_request__switching_protocols)
 {
     ws::response response{};
-    BOOST_REQUIRE_EQUAL(ws::accept(response, make_request()), error::success);
-    BOOST_REQUIRE(response.result() == status::switching_protocols);
-    BOOST_REQUIRE_EQUAL(response[field::upgrade], "websocket");
-    BOOST_REQUIRE_EQUAL(response[field::connection], "Upgrade");
-    BOOST_REQUIRE_EQUAL(response[field::sec_websocket_accept], "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
+    BC_REQUIRE_EQUAL(ws::accept(response, make_request()), error::success);
+    BC_REQUIRE(response.result() == status::switching_protocols);
+    BC_REQUIRE_EQUAL(response[field::upgrade], "websocket");
+    BC_REQUIRE_EQUAL(response[field::connection], "Upgrade");
+    BC_REQUIRE_EQUAL(response[field::sec_websocket_accept], "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=");
 }
 
-BOOST_AUTO_TEST_CASE(handshake__accept__token_lists__switching_protocols)
+BC_AUTO_TEST_CASE(handshake__accept__token_lists__switching_protocols)
 {
     auto request = make_request();
     request.set(field::connection, "keep-alive, UPGRADE");
     request.set(field::upgrade, "h2c, WebSocket");
     ws::response response{};
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::success);
-    BOOST_REQUIRE(response.result() == status::switching_protocols);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::success);
+    BC_REQUIRE(response.result() == status::switching_protocols);
 }
 
-BOOST_AUTO_TEST_CASE(handshake__accept__http_1_0__bad_http_version)
+BC_AUTO_TEST_CASE(handshake__accept__http_1_0__bad_http_version)
 {
     auto request = make_request();
     request.version(version_1_0);
     ws::response response{};
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::bad_http_version);
-    BOOST_REQUIRE(response.result() == status::bad_request);
-    BOOST_REQUIRE_EQUAL(response.body(), code{ error::bad_http_version }.message());
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::bad_http_version);
+    BC_REQUIRE(response.result() == status::bad_request);
+    BC_REQUIRE_EQUAL(response.body(), code{ error::bad_http_version }.message());
 }
 
-BOOST_AUTO_TEST_CASE(handshake__accept__post__websocket_bad_method)
+BC_AUTO_TEST_CASE(handshake__accept__post__websocket_bad_method)
 {
     auto request = make_request();
     request.method(verb::post);
     ws::response response{};
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::websocket_bad_method);
-    BOOST_REQUIRE(response.result() == status::bad_request);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::websocket_bad_method);
+    BC_REQUIRE(response.result() == status::bad_request);
 }
 
-BOOST_AUTO_TEST_CASE(handshake__accept__missing_fields__expected_errors)
+BC_AUTO_TEST_CASE(handshake__accept__missing_fields__expected_errors)
 {
     ws::response response{};
     auto request = make_request();
     request.erase(field::host);
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::no_host);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::no_host);
 
     request = make_request();
     request.erase(field::connection);
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::no_connection);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::no_connection);
 
     request = make_request();
     request.erase(field::upgrade);
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::no_upgrade);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::no_upgrade);
 
     request = make_request();
     request.erase(field::sec_websocket_key);
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::no_sec_key);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::no_sec_key);
 
     request = make_request();
     request.erase(field::sec_websocket_version);
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::no_sec_version);
-    BOOST_REQUIRE(response.result() == status::bad_request);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::no_sec_version);
+    BC_REQUIRE(response.result() == status::bad_request);
 }
 
-BOOST_AUTO_TEST_CASE(handshake__accept__wrong_tokens__expected_errors)
+BC_AUTO_TEST_CASE(handshake__accept__wrong_tokens__expected_errors)
 {
     ws::response response{};
     auto request = make_request();
     request.set(field::connection, "keep-alive");
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::no_connection_upgrade);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::no_connection_upgrade);
 
     request = make_request();
     request.set(field::upgrade, "h2c");
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::no_upgrade_websocket);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::no_upgrade_websocket);
 
     request = make_request();
     request.set(field::sec_websocket_key, "dGhlIHNhbXBsZSBub25jZQ===");
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::bad_sec_key);
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::bad_sec_key);
 }
 
-BOOST_AUTO_TEST_CASE(handshake__accept__version_8__upgrade_required)
+BC_AUTO_TEST_CASE(handshake__accept__version_8__upgrade_required)
 {
     auto request = make_request();
     request.set(field::sec_websocket_version, "8");
     ws::response response{};
-    BOOST_REQUIRE_EQUAL(ws::accept(response, request), error::bad_sec_version);
-    BOOST_REQUIRE(response.result() == status::upgrade_required);
-    BOOST_REQUIRE_EQUAL(response[field::sec_websocket_version], "13");
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::bad_sec_version);
+    BC_REQUIRE(response.result() == status::upgrade_required);
+    BC_REQUIRE_EQUAL(response[field::sec_websocket_version], "13");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

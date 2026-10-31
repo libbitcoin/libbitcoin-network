@@ -18,28 +18,28 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(io_context_tests)
+BC_AUTO_TEST_SUITE(io_context_tests)
 
-BOOST_AUTO_TEST_CASE(io_context__run__no_work__zero_stopped)
+BC_AUTO_TEST_CASE(io_context__run__no_work__zero_stopped)
 {
     io::context context{};
-    BOOST_REQUIRE_EQUAL(context.run(), 0u);
-    BOOST_REQUIRE(context.stopped());
+    BC_REQUIRE_EQUAL(context.run(), 0u);
+    BC_REQUIRE(context.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(io_context__run__posted__all_run_in_order)
+BC_AUTO_TEST_CASE(io_context__run__posted__all_run_in_order)
 {
     io::context context{};
     std::vector<size_t> order{};
     for (size_t index = 0; index < 5; ++index)
         context.post([&order, index]() NOEXCEPT { order.push_back(index); });
 
-    BOOST_REQUIRE_EQUAL(context.run(), 5u);
-    BOOST_REQUIRE_EQUAL(order, (std::vector<size_t>{ 0, 1, 2, 3, 4 }));
-    BOOST_REQUIRE(context.stopped());
+    BC_REQUIRE_EQUAL(context.run(), 5u);
+    BC_REQUIRE_EQUAL(order, (std::vector<size_t>{ 0, 1, 2, 3, 4 }));
+    BC_REQUIRE(context.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(io_context__run__nested_post__run)
+BC_AUTO_TEST_CASE(io_context__run__nested_post__run)
 {
     io::context context{};
     auto inner = false;
@@ -48,11 +48,11 @@ BOOST_AUTO_TEST_CASE(io_context__run__nested_post__run)
         context.post([&]() NOEXCEPT { inner = true; });
     });
 
-    BOOST_REQUIRE_EQUAL(context.run(), 2u);
-    BOOST_REQUIRE(inner);
+    BC_REQUIRE_EQUAL(context.run(), 2u);
+    BC_REQUIRE(inner);
 }
 
-BOOST_AUTO_TEST_CASE(io_context__dispatch__running__invoked_inline)
+BC_AUTO_TEST_CASE(io_context__dispatch__running__invoked_inline)
 {
     io::context context{};
     std::vector<size_t> order{};
@@ -63,46 +63,46 @@ BOOST_AUTO_TEST_CASE(io_context__dispatch__running__invoked_inline)
     });
 
     context.run();
-    BOOST_REQUIRE_EQUAL(order, (std::vector<size_t>{ 1, 2 }));
+    BC_REQUIRE_EQUAL(order, (std::vector<size_t>{ 1, 2 }));
 }
 
-BOOST_AUTO_TEST_CASE(io_context__dispatch__not_running__posted)
+BC_AUTO_TEST_CASE(io_context__dispatch__not_running__posted)
 {
     io::context context{};
     auto invoked = false;
     context.dispatch([&]() NOEXCEPT { invoked = true; });
-    BOOST_REQUIRE(!invoked);
-    BOOST_REQUIRE(!context.running_in_this_thread());
+    BC_REQUIRE(!invoked);
+    BC_REQUIRE(!context.running_in_this_thread());
     context.run();
-    BOOST_REQUIRE(invoked);
+    BC_REQUIRE(invoked);
 }
 
-BOOST_AUTO_TEST_CASE(io_context__running_in_this_thread__in_handler__true)
+BC_AUTO_TEST_CASE(io_context__running_in_this_thread__in_handler__true)
 {
     io::context context{};
     auto running = false;
     context.post([&]() NOEXCEPT { running = context.running_in_this_thread(); });
     context.run();
-    BOOST_REQUIRE(running);
+    BC_REQUIRE(running);
 }
 
-BOOST_AUTO_TEST_CASE(io_context__stop__in_handler__remaining_retained)
+BC_AUTO_TEST_CASE(io_context__stop__in_handler__remaining_retained)
 {
     io::context context{};
     size_t count{};
     context.post([&]() NOEXCEPT { ++count; context.stop(); });
     context.post([&]() NOEXCEPT { ++count; });
-    BOOST_REQUIRE_EQUAL(context.run(), 1u);
-    BOOST_REQUIRE_EQUAL(count, 1u);
-    BOOST_REQUIRE(context.stopped());
+    BC_REQUIRE_EQUAL(context.run(), 1u);
+    BC_REQUIRE_EQUAL(count, 1u);
+    BC_REQUIRE(context.stopped());
 
     context.restart();
-    BOOST_REQUIRE(!context.stopped());
-    BOOST_REQUIRE_EQUAL(context.run(), 1u);
-    BOOST_REQUIRE_EQUAL(count, 2u);
+    BC_REQUIRE(!context.stopped());
+    BC_REQUIRE_EQUAL(context.run(), 1u);
+    BC_REQUIRE_EQUAL(count, 2u);
 }
 
-BOOST_AUTO_TEST_CASE(io_context__work_guard__reset_from_other_thread__run_returns)
+BC_AUTO_TEST_CASE(io_context__work_guard__reset_from_other_thread__run_returns)
 {
     io::context context{};
     io::work_guard guard{ context };
@@ -113,10 +113,10 @@ BOOST_AUTO_TEST_CASE(io_context__work_guard__reset_from_other_thread__run_return
     started.get_future().wait();
     guard.reset();
     runner.join();
-    BOOST_REQUIRE(context.stopped());
+    BC_REQUIRE(context.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(io_context__run__multiple_threads__all_run)
+BC_AUTO_TEST_CASE(io_context__run__multiple_threads__all_run)
 {
     io::context context{};
     io::work_guard guard{ context };
@@ -137,12 +137,12 @@ BOOST_AUTO_TEST_CASE(io_context__run__multiple_threads__all_run)
     for (auto& thread: threads)
         thread.join();
 
-    BOOST_REQUIRE_EQUAL(count.load(), 1000u);
+    BC_REQUIRE_EQUAL(count.load(), 1000u);
 }
 
 // strand
 
-BOOST_AUTO_TEST_CASE(io_strand__post__ordered_and_not_concurrent)
+BC_AUTO_TEST_CASE(io_strand__post__ordered_and_not_concurrent)
 {
     io::context context{};
     io::work_guard guard{ context };
@@ -173,11 +173,11 @@ BOOST_AUTO_TEST_CASE(io_strand__post__ordered_and_not_concurrent)
 
     std::vector<size_t> expected(500);
     std::iota(expected.begin(), expected.end(), size_t{});
-    BOOST_REQUIRE(!overlapped.load());
-    BOOST_REQUIRE_EQUAL(order, expected);
+    BC_REQUIRE(!overlapped.load());
+    BC_REQUIRE_EQUAL(order, expected);
 }
 
-BOOST_AUTO_TEST_CASE(io_strand__running_in_this_thread__expected)
+BC_AUTO_TEST_CASE(io_strand__running_in_this_thread__expected)
 {
     io::context context{};
     const io::strand strand{ context };
@@ -191,12 +191,12 @@ BOOST_AUTO_TEST_CASE(io_strand__running_in_this_thread__expected)
     });
 
     context.run();
-    BOOST_REQUIRE(in_strand);
-    BOOST_REQUIRE(!in_other);
-    BOOST_REQUIRE(!strand.running_in_this_thread());
+    BC_REQUIRE(in_strand);
+    BC_REQUIRE(!in_other);
+    BC_REQUIRE(!strand.running_in_this_thread());
 }
 
-BOOST_AUTO_TEST_CASE(io_strand__dispatch__in_strand__inline)
+BC_AUTO_TEST_CASE(io_strand__dispatch__in_strand__inline)
 {
     io::context context{};
     const io::strand strand{ context };
@@ -208,22 +208,22 @@ BOOST_AUTO_TEST_CASE(io_strand__dispatch__in_strand__inline)
     });
 
     context.run();
-    BOOST_REQUIRE_EQUAL(order, (std::vector<size_t>{ 1, 2 }));
+    BC_REQUIRE_EQUAL(order, (std::vector<size_t>{ 1, 2 }));
 }
 
-BOOST_AUTO_TEST_CASE(io_strand__copy__same_strand)
+BC_AUTO_TEST_CASE(io_strand__copy__same_strand)
 {
     io::context context{};
     const io::strand strand{ context };
     const io::strand copy{ strand };
     const io::strand other{ context };
-    BOOST_REQUIRE(copy == strand);
-    BOOST_REQUIRE(!(other == strand));
+    BC_REQUIRE(copy == strand);
+    BC_REQUIRE(!(other == strand));
 }
 
 // steady_timer
 
-BOOST_AUTO_TEST_CASE(io_steady_timer__past_expiry__success)
+BC_AUTO_TEST_CASE(io_steady_timer__past_expiry__success)
 {
     io::context context{};
     io::steady_timer timer{ context };
@@ -231,10 +231,10 @@ BOOST_AUTO_TEST_CASE(io_steady_timer__past_expiry__success)
     timer.expires_after(std::chrono::seconds(-1));
     timer.async_wait([&](const code& ec) NOEXCEPT { result = ec; });
     context.run();
-    BOOST_REQUIRE_EQUAL(result, error::success);
+    BC_REQUIRE_EQUAL(result, error::success);
 }
 
-BOOST_AUTO_TEST_CASE(io_steady_timer__short_expiry__success)
+BC_AUTO_TEST_CASE(io_steady_timer__short_expiry__success)
 {
     io::context context{};
     io::steady_timer timer{ context };
@@ -242,22 +242,22 @@ BOOST_AUTO_TEST_CASE(io_steady_timer__short_expiry__success)
     timer.expires_after(std::chrono::milliseconds(1));
     timer.async_wait([&](const code& ec) NOEXCEPT { result = ec; });
     context.run();
-    BOOST_REQUIRE_EQUAL(result, error::success);
+    BC_REQUIRE_EQUAL(result, error::success);
 }
 
-BOOST_AUTO_TEST_CASE(io_steady_timer__cancel__operation_canceled)
+BC_AUTO_TEST_CASE(io_steady_timer__cancel__operation_canceled)
 {
     io::context context{};
     io::steady_timer timer{ context };
     code result{};
     timer.expires_after(std::chrono::hours(1));
     timer.async_wait([&](const code& ec) NOEXCEPT { result = ec; });
-    BOOST_REQUIRE_EQUAL(timer.cancel(), 1u);
+    BC_REQUIRE_EQUAL(timer.cancel(), 1u);
     context.run();
-    BOOST_REQUIRE_EQUAL(result, error::operation_canceled);
+    BC_REQUIRE_EQUAL(result, error::operation_canceled);
 }
 
-BOOST_AUTO_TEST_CASE(io_steady_timer__expires_at__pending_canceled)
+BC_AUTO_TEST_CASE(io_steady_timer__expires_at__pending_canceled)
 {
     io::context context{};
     io::steady_timer timer{ context };
@@ -265,14 +265,14 @@ BOOST_AUTO_TEST_CASE(io_steady_timer__expires_at__pending_canceled)
     code second{ error::unknown };
     timer.expires_after(std::chrono::hours(1));
     timer.async_wait([&](const code& ec) NOEXCEPT { first = ec; });
-    BOOST_REQUIRE_EQUAL(timer.expires_after(std::chrono::seconds(-1)), 1u);
+    BC_REQUIRE_EQUAL(timer.expires_after(std::chrono::seconds(-1)), 1u);
     timer.async_wait([&](const code& ec) NOEXCEPT { second = ec; });
     context.run();
-    BOOST_REQUIRE_EQUAL(first, error::operation_canceled);
-    BOOST_REQUIRE_EQUAL(second, error::success);
+    BC_REQUIRE_EQUAL(first, error::operation_canceled);
+    BC_REQUIRE_EQUAL(second, error::success);
 }
 
-BOOST_AUTO_TEST_CASE(io_steady_timer__expiries__completed_in_expiry_order)
+BC_AUTO_TEST_CASE(io_steady_timer__expiries__completed_in_expiry_order)
 {
     io::context context{};
     io::steady_timer later{ context };
@@ -284,10 +284,10 @@ BOOST_AUTO_TEST_CASE(io_steady_timer__expiries__completed_in_expiry_order)
     later.async_wait([&](const code&) NOEXCEPT { order.push_back(2); });
     sooner.async_wait([&](const code&) NOEXCEPT { order.push_back(1); });
     context.run();
-    BOOST_REQUIRE_EQUAL(order, (std::vector<size_t>{ 1, 2 }));
+    BC_REQUIRE_EQUAL(order, (std::vector<size_t>{ 1, 2 }));
 }
 
-BOOST_AUTO_TEST_CASE(io_steady_timer__strand__completes_in_strand)
+BC_AUTO_TEST_CASE(io_steady_timer__strand__completes_in_strand)
 {
     io::context context{};
     const io::strand strand{ context };
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(io_steady_timer__strand__completes_in_strand)
     timer.expires_after(std::chrono::seconds(-1));
     timer.async_wait([&](const code&) NOEXCEPT { stranded = strand.running_in_this_thread(); });
     context.run();
-    BOOST_REQUIRE(stranded);
+    BC_REQUIRE(stranded);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(config_address_tests)
+BC_AUTO_TEST_SUITE(config_address_tests)
 
 using namespace network::config;
 
@@ -83,336 +83,336 @@ constexpr messages::peer::address_item test_ipv6_address_item
 
 // construct 1/2/3
 
-BOOST_AUTO_TEST_CASE(address__construct__default__false)
+BC_AUTO_TEST_CASE(address__construct__default__false)
 {
     const address host{};
-    BOOST_REQUIRE(!host);
+    BC_REQUIRE(!host);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__bogus_ip__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__bogus_ip__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("bogus"), istream_exception);
+    BC_REQUIRE_THROW(address host("bogus"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__bogus_port__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__bogus_port__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("[::]:bogus"), istream_exception);
+    BC_REQUIRE_THROW(address host("[::]:bogus"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__invalid_ipv4__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__invalid_ipv4__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("999.999.999.999"), istream_exception);
+    BC_REQUIRE_THROW(address host("999.999.999.999"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__invalid_ipv6__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__invalid_ipv6__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("[:::]"), istream_exception);
+    BC_REQUIRE_THROW(address host("[:::]"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__invalid_port__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__invalid_port__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("[::]:12345678901"), istream_exception);
+    BC_REQUIRE_THROW(address host("[::]:12345678901"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__mapped__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__mapped__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("[::1.2.240.1]"), istream_exception);
+    BC_REQUIRE_THROW(address host("[::1.2.240.1]"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__bogus_timestamp__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__bogus_timestamp__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/test/123"), istream_exception);
+    BC_REQUIRE_THROW(address host("42.42.42.42:4242/test/123"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__bogus_services__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__bogus_services__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/123/test"), istream_exception);
+    BC_REQUIRE_THROW(address host("42.42.42.42:4242/123/test"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__extra_token__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__extra_token__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/123/456/"), istream_exception);
+    BC_REQUIRE_THROW(address host("42.42.42.42:4242/123/456/"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__empty_service__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__empty_service__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/123/"), istream_exception);
+    BC_REQUIRE_THROW(address host("42.42.42.42:4242/123/"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__empty_timestamp_service__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__empty_timestamp_service__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242//"), istream_exception);
+    BC_REQUIRE_THROW(address host("42.42.42.42:4242//"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__no_timestamp_service__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__no_timestamp_service__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("42.42.42.42:4242/"), istream_exception);
+    BC_REQUIRE_THROW(address host("42.42.42.42:4242/"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__timestamp_service__valid)
+BC_AUTO_TEST_CASE(address__construct__timestamp_service__valid)
 {
-    BOOST_REQUIRE(address("42.42.42.42:4242/123/456"));
+    BC_REQUIRE(address("42.42.42.42:4242/123/456"));
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__no_service__valid)
+BC_AUTO_TEST_CASE(address__construct__no_service__valid)
 {
-    BOOST_REQUIRE(address("42.42.42.42:4242/42"));
+    BC_REQUIRE(address("42.42.42.42:4242/42"));
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__no_slash__valid)
+BC_AUTO_TEST_CASE(address__construct__no_slash__valid)
 {
-    BOOST_REQUIRE(address("42.42.42.42:4242"));
+    BC_REQUIRE(address("42.42.42.42:4242"));
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__no_port__false)
+BC_AUTO_TEST_CASE(address__construct__no_port__false)
 {
     // zero port produces false.
-    BOOST_REQUIRE(!address("42.42.42.42"));
+    BC_REQUIRE(!address("42.42.42.42"));
 }
 
 // is_v4
 
-BOOST_AUTO_TEST_CASE(address__is_v4__default__true)
+BC_AUTO_TEST_CASE(address__is_v4__default__true)
 {
     const address item{};
-    BOOST_REQUIRE(!item.is_v4());
+    BC_REQUIRE(!item.is_v4());
 }
 
-BOOST_AUTO_TEST_CASE(address__is_v4__unspecified_v6__true)
+BC_AUTO_TEST_CASE(address__is_v4__unspecified_v6__true)
 {
     const address item{ messages::peer::unspecified_address_item };
-    BOOST_REQUIRE(!item.is_v4());
+    BC_REQUIRE(!item.is_v4());
 }
 
-BOOST_AUTO_TEST_CASE(address__is_v4__loopback_v6__true)
+BC_AUTO_TEST_CASE(address__is_v4__loopback_v6__true)
 {
     const address item{ messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{ messages::peer::loopback_ip_address }, 42 } };
-    BOOST_REQUIRE(!item.is_v4());
+    BC_REQUIRE(!item.is_v4());
 }
 
-BOOST_AUTO_TEST_CASE(address__is_v4__loopback_v4__false)
+BC_AUTO_TEST_CASE(address__is_v4__loopback_v4__false)
 {
     const address item{ "127.0.0.1:8333/42/24" };
-    BOOST_REQUIRE(item.is_v4());
+    BC_REQUIRE(item.is_v4());
 }
 
 // is_v6
 
-BOOST_AUTO_TEST_CASE(address__is_v6__default__false)
+BC_AUTO_TEST_CASE(address__is_v6__default__false)
 {
     const address item{};
-    BOOST_REQUIRE(!item.is_v6());
+    BC_REQUIRE(!item.is_v6());
 }
 
-BOOST_AUTO_TEST_CASE(address__is_v6__unspecified__false)
+BC_AUTO_TEST_CASE(address__is_v6__unspecified__false)
 {
     const address item{ messages::peer::unspecified_address_item };
-    BOOST_REQUIRE(!item.is_v6());
+    BC_REQUIRE(!item.is_v6());
 }
 
-BOOST_AUTO_TEST_CASE(address__is_v6__loopback_v6__true)
+BC_AUTO_TEST_CASE(address__is_v6__loopback_v6__true)
 {
     const address item{ messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{ messages::peer::loopback_ip_address }, 42 } };
-    BOOST_REQUIRE(item.is_v6());
+    BC_REQUIRE(item.is_v6());
 }
 
-BOOST_AUTO_TEST_CASE(address__is_v6__loopback_v4__false)
+BC_AUTO_TEST_CASE(address__is_v6__loopback_v4__false)
 {
     const address item{ "127.0.0.1:8333/42/24" };
-    BOOST_REQUIRE(!item.is_v6());
+    BC_REQUIRE(!item.is_v6());
 }
 
 // cast/ip/port
 
-BOOST_AUTO_TEST_CASE(address__address_item__default__unspecified)
+BC_AUTO_TEST_CASE(address__address_item__default__unspecified)
 {
     const address host{};
     const messages::peer::address_item& item = host;
-    BOOST_REQUIRE_EQUAL(messages::peer::to_ip_address(item.address), host.ip());
-    BOOST_REQUIRE_EQUAL(item.port, host.port());
-    BOOST_REQUIRE(!messages::peer::is_specified(item));
+    BC_REQUIRE_EQUAL(messages::peer::to_ip_address(item.address), host.ip());
+    BC_REQUIRE_EQUAL(item.port, host.port());
+    BC_REQUIRE(!messages::peer::is_specified(item));
 }
 
-BOOST_AUTO_TEST_CASE(address__address_item__default__secified_expected)
+BC_AUTO_TEST_CASE(address__address_item__default__secified_expected)
 {
     const address host{ messages::peer::address_item{ 0, 0, messages::peer::ipv6_t{ messages::peer::loopback_ip_address }, 42 } };
     const messages::peer::address_item& item = host;
-    BOOST_REQUIRE_EQUAL(messages::peer::to_ip_address(item.address), host.ip());
-    BOOST_REQUIRE_EQUAL(item.port, host.port());
-    BOOST_REQUIRE(messages::peer::is_specified(item));
+    BC_REQUIRE_EQUAL(messages::peer::to_ip_address(item.address), host.ip());
+    BC_REQUIRE_EQUAL(item.port, host.port());
+    BC_REQUIRE(messages::peer::is_specified(item));
 }
 
 // port
 
-BOOST_AUTO_TEST_CASE(address__port__default__zero_false)
+BC_AUTO_TEST_CASE(address__port__default__zero_false)
 {
     const address host{};
-    BOOST_REQUIRE(!host);
-    BOOST_REQUIRE_EQUAL(host.port(), 0u);
+    BC_REQUIRE(!host);
+    BC_REQUIRE_EQUAL(host.port(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(address__port__nullptr__zero_false)
+BC_AUTO_TEST_CASE(address__port__nullptr__zero_false)
 {
     const address host{ messages::peer::address_item::cptr{} };
-    BOOST_REQUIRE(!host);
-    BOOST_REQUIRE_EQUAL(host.port(), 0u);
+    BC_REQUIRE(!host);
+    BC_REQUIRE_EQUAL(host.port(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(address__port__copy__expected)
+BC_AUTO_TEST_CASE(address__port__copy__expected)
 {
     const address other(test_ipv6_address_item);
     const address host(other);
-    BOOST_REQUIRE_EQUAL(host.port(), test_ipv6_address_item.port);
+    BC_REQUIRE_EQUAL(host.port(), test_ipv6_address_item.port);
 }
 
-BOOST_AUTO_TEST_CASE(address__port__move__expected)
+BC_AUTO_TEST_CASE(address__port__move__expected)
 {
     address other(move_copy(test_ipv6_address_item));
     const address host(std::move(other));
-    BOOST_REQUIRE_EQUAL(host.port(), test_ipv6_address_item.port);
+    BC_REQUIRE_EQUAL(host.port(), test_ipv6_address_item.port);
 }
 
-BOOST_AUTO_TEST_CASE(address__port__ipv4_address__expected)
+BC_AUTO_TEST_CASE(address__port__ipv4_address__expected)
 {
     constexpr uint16_t expected_port = 42;
     std::stringstream stream{};
     stream << BC_AUTHORITY_IPV4_ADDRESS ":" << expected_port;
     const address host(stream.str());
-    BOOST_REQUIRE_EQUAL(host.port(), expected_port);
+    BC_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
-BOOST_AUTO_TEST_CASE(address__port__ipv6_address__expected)
+BC_AUTO_TEST_CASE(address__port__ipv6_address__expected)
 {
     constexpr uint16_t expected_port = 42;
     std::stringstream stream{};
     stream << "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:" << expected_port;
     const address host(stream.str());
-    BOOST_REQUIRE_EQUAL(host.port(), expected_port);
+    BC_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
-BOOST_AUTO_TEST_CASE(address__port__ip_address__expected)
+BC_AUTO_TEST_CASE(address__port__ip_address__expected)
 {
     const address host(test_ipv6_address_item);
-    BOOST_REQUIRE_EQUAL(host.port(), test_ipv6_address_item.port);
+    BC_REQUIRE_EQUAL(host.port(), test_ipv6_address_item.port);
 }
 
-BOOST_AUTO_TEST_CASE(address__port__hostname__zero)
+BC_AUTO_TEST_CASE(address__port__hostname__zero)
 {
     const address host("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
-    BOOST_REQUIRE_EQUAL(host.port(), 0u);
+    BC_REQUIRE_EQUAL(host.port(), 0u);
 }
 
 // timestamp()
 
-BOOST_AUTO_TEST_CASE(address__timestamp__default__zero)
+BC_AUTO_TEST_CASE(address__timestamp__default__zero)
 {
     const address host(BC_AUTHORITY_IPV4_ADDRESS);
-    BOOST_REQUIRE_EQUAL(host.timestamp(), 0u);
+    BC_REQUIRE_EQUAL(host.timestamp(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(address__timestamp__value__expected)
+BC_AUTO_TEST_CASE(address__timestamp__value__expected)
 {
     const address host(test_ipv6_address_item);
-    BOOST_REQUIRE_EQUAL(host.timestamp(), test_ipv6_address_item.timestamp);
+    BC_REQUIRE_EQUAL(host.timestamp(), test_ipv6_address_item.timestamp);
 }
 
 // services()
 
-BOOST_AUTO_TEST_CASE(address__services__default__zero)
+BC_AUTO_TEST_CASE(address__services__default__zero)
 {
     const address host("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
-    BOOST_REQUIRE_EQUAL(host.services(), 0u);
+    BC_REQUIRE_EQUAL(host.services(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(address__services__value__expected)
+BC_AUTO_TEST_CASE(address__services__value__expected)
 {
     const address host(test_ipv6_address_item);
-    BOOST_REQUIRE_EQUAL(host.services(), test_ipv6_address_item.services);
+    BC_REQUIRE_EQUAL(host.services(), test_ipv6_address_item.services);
 }
 
 // bool
 
-BOOST_AUTO_TEST_CASE(address__bool__default__false)
+BC_AUTO_TEST_CASE(address__bool__default__false)
 {
     const address host{};
-    BOOST_REQUIRE(!host);
+    BC_REQUIRE(!host);
 }
 
-BOOST_AUTO_TEST_CASE(address__bool__unspecified__false)
+BC_AUTO_TEST_CASE(address__bool__unspecified__false)
 {
     const address host{ test_unspecified_ip_address_item };
-    BOOST_REQUIRE(!host);
+    BC_REQUIRE(!host);
 }
 
-BOOST_AUTO_TEST_CASE(address__bool__specified__true)
+BC_AUTO_TEST_CASE(address__bool__specified__true)
 {
     const address host{ test_ipv6_address_item };
-    BOOST_REQUIRE(host);
+    BC_REQUIRE(host);
 }
 
 // to_string
 
-BOOST_AUTO_TEST_CASE(address__to_string__default__unspecified)
+BC_AUTO_TEST_CASE(address__to_string__default__unspecified)
 {
     const address host;
-    BOOST_REQUIRE_EQUAL(host.to_string(), "[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]/0/0");
+    BC_REQUIRE_EQUAL(host.to_string(), "[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]/0/0");
 }
 
-BOOST_AUTO_TEST_CASE(address__to_string__unspecified__unspecified)
+BC_AUTO_TEST_CASE(address__to_string__unspecified__unspecified)
 {
     const std::string line = "[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]";
     const address host(line + "/0/0");
-    BOOST_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
+    BC_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
 }
 
-BOOST_AUTO_TEST_CASE(address__to_string__ipv4__expected)
+BC_AUTO_TEST_CASE(address__to_string__ipv4__expected)
 {
     const std::string line = BC_AUTHORITY_IPV4_ADDRESS;
     const address host(line + "/0/0");
-    BOOST_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
+    BC_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
 }
 
-BOOST_AUTO_TEST_CASE(address__to_string__ipv4_port__expected)
+BC_AUTO_TEST_CASE(address__to_string__ipv4_port__expected)
 {
     const std::string line = BC_AUTHORITY_IPV4_ADDRESS ":42";
     const address host(line + "/0/0");
-    BOOST_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
+    BC_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
 }
 
-BOOST_AUTO_TEST_CASE(address__to_string__ipv6__expected)
+BC_AUTO_TEST_CASE(address__to_string__ipv6__expected)
 {
     const std::string line = "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]";
     const address host(line + "/0/0");
-    BOOST_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
+    BC_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
 }
 
-BOOST_AUTO_TEST_CASE(address__to_string__ipv6_port__expected)
+BC_AUTO_TEST_CASE(address__to_string__ipv6_port__expected)
 {
     const std::string line = "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42";
     const address host(line + "/0/0");
-    BOOST_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
+    BC_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
 }
 
 // to_host
 
-BOOST_AUTO_TEST_CASE(address__to_host__default__ipv6_unspecified)
+BC_AUTO_TEST_CASE(address__to_host__default__ipv6_unspecified)
 {
     const address host{};
-    BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS);
+    BC_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS);
 }
 
-BOOST_AUTO_TEST_CASE(address__to_host__ipv4_mapped_ip_address__ipv4)
+BC_AUTO_TEST_CASE(address__to_host__ipv4_mapped_ip_address__ipv4)
 {
     // A mapped ip address serializes as IPv4.
     const address host(test_mapped_ip_address_item);
-    BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV4_ADDRESS);
+    BC_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV4_ADDRESS);
 }
 
-BOOST_AUTO_TEST_CASE(address__to_host__ipv6_address__ipv6_compressed)
+BC_AUTO_TEST_CASE(address__to_host__ipv6_address__ipv6_compressed)
 {
     // An ipv6 address serializes using compression.
     const address host(test_ipv6_address_item);
-    BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
+    BC_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
 }
 
 // onion/i2p
@@ -420,179 +420,179 @@ BOOST_AUTO_TEST_CASE(address__to_host__ipv6_address__ipv6_compressed)
 #define BC_ADDRESS_ONION "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"
 #define BC_ADDRESS_I2P "ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p"
 
-BOOST_AUTO_TEST_CASE(address__construct__onion__torv3)
+BC_AUTO_TEST_CASE(address__construct__onion__torv3)
 {
     const address host{ BC_ADDRESS_ONION ":8333" };
     const messages::peer::address_item& item = host;
-    BOOST_REQUIRE(std::holds_alternative<messages::peer::torv3_t>(item.address));
-    BOOST_REQUIRE_EQUAL(host.port(), 8333u);
-    BOOST_REQUIRE(!host.is_v4());
-    BOOST_REQUIRE(!host.is_v6());
+    BC_REQUIRE(std::holds_alternative<messages::peer::torv3_t>(item.address));
+    BC_REQUIRE_EQUAL(host.port(), 8333u);
+    BC_REQUIRE(!host.is_v4());
+    BC_REQUIRE(!host.is_v6());
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__i2p__i2p)
+BC_AUTO_TEST_CASE(address__construct__i2p__i2p)
 {
     const address host{ BC_ADDRESS_I2P ":8333" };
     const messages::peer::address_item& item = host;
-    BOOST_REQUIRE(std::holds_alternative<messages::peer::i2p_t>(item.address));
-    BOOST_REQUIRE_EQUAL(host.port(), 8333u);
-    BOOST_REQUIRE(!host.is_v4());
-    BOOST_REQUIRE(!host.is_v6());
+    BC_REQUIRE(std::holds_alternative<messages::peer::i2p_t>(item.address));
+    BC_REQUIRE_EQUAL(host.port(), 8333u);
+    BC_REQUIRE(!host.is_v4());
+    BC_REQUIRE(!host.is_v6());
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__onion_no_port__zero_port)
+BC_AUTO_TEST_CASE(address__construct__onion_no_port__zero_port)
 {
     const address host{ BC_ADDRESS_ONION };
-    BOOST_REQUIRE_EQUAL(host.port(), 0u);
-    BOOST_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
+    BC_REQUIRE_EQUAL(host.port(), 0u);
+    BC_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
 }
 
-BOOST_AUTO_TEST_CASE(address__to_host__onion__expected)
+BC_AUTO_TEST_CASE(address__to_host__onion__expected)
 {
     const address host{ BC_ADDRESS_ONION ":8333" };
-    BOOST_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
+    BC_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
 }
 
-BOOST_AUTO_TEST_CASE(address__to_host__i2p__expected)
+BC_AUTO_TEST_CASE(address__to_host__i2p__expected)
 {
     const address host{ BC_ADDRESS_I2P ":8333" };
-    BOOST_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_I2P);
+    BC_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_I2P);
 }
 
-BOOST_AUTO_TEST_CASE(address__to_string__onion__round_trips)
+BC_AUTO_TEST_CASE(address__to_string__onion__round_trips)
 {
     const address host{ BC_ADDRESS_ONION ":8333/42/24" };
-    BOOST_REQUIRE_EQUAL(host.to_string(), BC_ADDRESS_ONION ":8333/42/24");
+    BC_REQUIRE_EQUAL(host.to_string(), BC_ADDRESS_ONION ":8333/42/24");
 }
 
-BOOST_AUTO_TEST_CASE(address__to_string__i2p__round_trips)
+BC_AUTO_TEST_CASE(address__to_string__i2p__round_trips)
 {
     const address host{ BC_ADDRESS_I2P ":8333/42/24" };
-    BOOST_REQUIRE_EQUAL(host.to_string(), BC_ADDRESS_I2P ":8333/42/24");
+    BC_REQUIRE_EQUAL(host.to_string(), BC_ADDRESS_I2P ":8333/42/24");
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__onion_bad_checksum__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__onion_bad_checksum__throws_invalid_option)
 {
     // The leading character of the public key is altered.
-    BOOST_REQUIRE_THROW(address host("qg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"), istream_exception);
+    BC_REQUIRE_THROW(address host("qg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__onion_short__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__onion_short__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscry.onion"), istream_exception);
+    BC_REQUIRE_THROW(address host("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscry.onion"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__i2p_short__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__i2p_short__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host("ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkd.b32.i2p"), istream_exception);
+    BC_REQUIRE_THROW(address host("ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkd.b32.i2p"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__onion_upper_case__torv3)
+BC_AUTO_TEST_CASE(address__construct__onion_upper_case__torv3)
 {
     // Names are case insensitive and serialize lowered.
     const address host{ "PG6MMJIYJMCRSSLVYKFWNNTLARU7P5SVN6Y2YMMJU6NUBXNDF4PSCRYD.onion" };
-    BOOST_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
+    BC_REQUIRE_EQUAL(host.to_host(), BC_ADDRESS_ONION);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__onion_invalid_port__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__onion_invalid_port__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host(BC_ADDRESS_ONION ":bogus"), istream_exception);
+    BC_REQUIRE_THROW(address host(BC_ADDRESS_ONION ":bogus"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(address__construct__i2p_invalid_port__throws_invalid_option)
+BC_AUTO_TEST_CASE(address__construct__i2p_invalid_port__throws_invalid_option)
 {
-    BOOST_REQUIRE_THROW(address host(BC_ADDRESS_I2P ":65536"), istream_exception);
+    BC_REQUIRE_THROW(address host(BC_ADDRESS_I2P ":65536"), istream_exception);
 }
 
 // to_address_item
 
-BOOST_AUTO_TEST_CASE(address__to_address_item__onion__expected)
+BC_AUTO_TEST_CASE(address__to_address_item__onion__expected)
 {
     const address host{ BC_ADDRESS_ONION ":8333/42/24" };
     const auto item = host.to_address_item(7, 9);
-    BOOST_REQUIRE_EQUAL(item.timestamp, 7u);
-    BOOST_REQUIRE_EQUAL(item.services, 9u);
-    BOOST_REQUIRE_EQUAL(item.port, 8333u);
-    BOOST_REQUIRE(std::holds_alternative<messages::peer::torv3_t>(item.address));
-    BOOST_REQUIRE(address{ item } == host);
+    BC_REQUIRE_EQUAL(item.timestamp, 7u);
+    BC_REQUIRE_EQUAL(item.services, 9u);
+    BC_REQUIRE_EQUAL(item.port, 8333u);
+    BC_REQUIRE(std::holds_alternative<messages::peer::torv3_t>(item.address));
+    BC_REQUIRE(address{ item } == host);
 }
 // to_ip
 
-BOOST_AUTO_TEST_CASE(address__to_ip__default__ipv6_unspecified)
+BC_AUTO_TEST_CASE(address__to_ip__default__ipv6_unspecified)
 {
     const address host{};
-    BOOST_REQUIRE(host.to_ip().is_unspecified());
+    BC_REQUIRE(host.to_ip().is_unspecified());
 }
 
-BOOST_AUTO_TEST_CASE(address__to_ip__value__expected)
+BC_AUTO_TEST_CASE(address__to_ip__value__expected)
 {
     const address host{ test_ipv6_address_item };
-    BOOST_REQUIRE_EQUAL(host.to_ip(), system::ip::ipv6(test_ipv6_address));
+    BC_REQUIRE_EQUAL(host.to_ip(), system::ip::ipv6(test_ipv6_address));
 }
 
 // equality
 
-BOOST_AUTO_TEST_CASE(address__equality__default_default__true)
+BC_AUTO_TEST_CASE(address__equality__default_default__true)
 {
     const address host1{};
     const address host2{};
-    BOOST_REQUIRE(host1 == host2);
+    BC_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__default_unspecified__false)
+BC_AUTO_TEST_CASE(address__equality__default_unspecified__false)
 {
     const address host1{};
     const address host2("[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]" ":42");
-    BOOST_REQUIRE(!(host1 == host2));
+    BC_REQUIRE(!(host1 == host2));
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__unspecified_ports__true)
+BC_AUTO_TEST_CASE(address__equality__unspecified_ports__true)
 {
     const address host1("[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]");
     const address host2("[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]" ":42");
-    BOOST_REQUIRE(host1 == host2);
+    BC_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__ipv6_ipv6_distinct_ports__false)
+BC_AUTO_TEST_CASE(address__equality__ipv6_ipv6_distinct_ports__false)
 {
     const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:24");
     const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
-    BOOST_REQUIRE(!(host1 == host2));
+    BC_REQUIRE(!(host1 == host2));
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__ipv4_ipv4__true)
+BC_AUTO_TEST_CASE(address__equality__ipv4_ipv4__true)
 {
     const address host1(BC_AUTHORITY_IPV4_ADDRESS);
     const address host2(BC_AUTHORITY_IPV4_ADDRESS);
-    BOOST_REQUIRE(host1 == host2);
+    BC_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__ipv4_ipv4_port__true)
+BC_AUTO_TEST_CASE(address__equality__ipv4_ipv4_port__true)
 {
     const address host1(BC_AUTHORITY_IPV4_ADDRESS);
     const address host2(BC_AUTHORITY_IPV4_ADDRESS ":42");
-    BOOST_REQUIRE(host1 == host2);
+    BC_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__ipv4_ipv6__false)
+BC_AUTO_TEST_CASE(address__equality__ipv4_ipv6__false)
 {
     const address host1(BC_AUTHORITY_IPV4_ADDRESS);
     const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
-    BOOST_REQUIRE(!(host1 == host2));
+    BC_REQUIRE(!(host1 == host2));
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__ipv6_ipv6__true)
+BC_AUTO_TEST_CASE(address__equality__ipv6_ipv6__true)
 {
     const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
     const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
-    BOOST_REQUIRE(host1 == host2);
+    BC_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__ipv6_ipv6_port__true)
+BC_AUTO_TEST_CASE(address__equality__ipv6_ipv6_port__true)
 {
     const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
     const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
-    BOOST_REQUIRE(host1 == host2);
+    BC_REQUIRE(host1 == host2);
 }
 
 constexpr messages::peer::address_item test_ipv6_address_item_distinct_timestamp
@@ -611,121 +611,121 @@ constexpr messages::peer::address_item test_ipv6_address_item_distinct_service
     33
 };
 
-BOOST_AUTO_TEST_CASE(address__equality__distinct_timestamp__true)
+BC_AUTO_TEST_CASE(address__equality__distinct_timestamp__true)
 {
     const address host1(test_ipv6_address_item);
     const address host2(test_ipv6_address_item_distinct_timestamp);
-    BOOST_REQUIRE(host1 == host2);
+    BC_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__distinct_services__true)
+BC_AUTO_TEST_CASE(address__equality__distinct_services__true)
 {
     const address host1(test_ipv6_address_item);
     const address host2(test_ipv6_address_item_distinct_service);
-    BOOST_REQUIRE(host1 == host2);
+    BC_REQUIRE(host1 == host2);
 }
 
 // equality address_item
 
-BOOST_AUTO_TEST_CASE(address__equality__default_address_item__true)
+BC_AUTO_TEST_CASE(address__equality__default_address_item__true)
 {
     const address host1{};
     const messages::peer::address_item host2{};
-    BOOST_REQUIRE(host1 == host2);
+    BC_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__same_address_item__true)
+BC_AUTO_TEST_CASE(address__equality__same_address_item__true)
 {
     const address host1(test_ipv6_address_item);
-    BOOST_REQUIRE(host1 == test_ipv6_address_item);
+    BC_REQUIRE(host1 == test_ipv6_address_item);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__distinct_address_item__false)
+BC_AUTO_TEST_CASE(address__equality__distinct_address_item__false)
 {
     const address host1(test_ipv6_address_item);
-    BOOST_REQUIRE(!(host1 == test_mapped_ip_address_item));
+    BC_REQUIRE(!(host1 == test_mapped_ip_address_item));
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__distinct_timestamp_address_item__true)
+BC_AUTO_TEST_CASE(address__equality__distinct_timestamp_address_item__true)
 {
     const address host1(test_ipv6_address_item);
-    BOOST_REQUIRE(host1 == test_ipv6_address_item_distinct_timestamp);
+    BC_REQUIRE(host1 == test_ipv6_address_item_distinct_timestamp);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__distinct_services_address_item__true)
+BC_AUTO_TEST_CASE(address__equality__distinct_services_address_item__true)
 {
     const address host1(test_ipv6_address_item);
-    BOOST_REQUIRE(host1 == test_ipv6_address_item_distinct_service);
+    BC_REQUIRE(host1 == test_ipv6_address_item_distinct_service);
 }
 
 // inequality
 
-BOOST_AUTO_TEST_CASE(address__inequality__default_default__false)
+BC_AUTO_TEST_CASE(address__inequality__default_default__false)
 {
     const address host1{};
     const address host2{};
-    BOOST_REQUIRE(!(host1 != host2));
+    BC_REQUIRE(!(host1 != host2));
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__default_unspecified_port__true)
+BC_AUTO_TEST_CASE(address__inequality__default_unspecified_port__true)
 {
     const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
     const address host2("[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]:42");
-    BOOST_REQUIRE(host1 != host2);
+    BC_REQUIRE(host1 != host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__ipv6_ipv6_distinct_ports__true)
+BC_AUTO_TEST_CASE(address__inequality__ipv6_ipv6_distinct_ports__true)
 {
     const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:24");
     const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
-    BOOST_REQUIRE(host1 != host2);
+    BC_REQUIRE(host1 != host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__distinct_timestamp__false)
+BC_AUTO_TEST_CASE(address__inequality__distinct_timestamp__false)
 {
     const address host1(test_ipv6_address_item);
     const address host2(test_ipv6_address_item_distinct_timestamp);
-    BOOST_REQUIRE(!(host1 != host2));
+    BC_REQUIRE(!(host1 != host2));
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__distinct_services__false)
+BC_AUTO_TEST_CASE(address__inequality__distinct_services__false)
 {
     const address host1(test_ipv6_address_item);
     const address host2(test_ipv6_address_item_distinct_service);
-    BOOST_REQUIRE(!(host1 != host2));
+    BC_REQUIRE(!(host1 != host2));
 }
 
 // inequality address_item
 
-BOOST_AUTO_TEST_CASE(address__inequality__default_address_item__true)
+BC_AUTO_TEST_CASE(address__inequality__default_address_item__true)
 {
     const address host1{};
     const messages::peer::address_item host2{};
-    BOOST_REQUIRE(!(host1 != host2));
+    BC_REQUIRE(!(host1 != host2));
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__same_address_item__true)
+BC_AUTO_TEST_CASE(address__inequality__same_address_item__true)
 {
     const address host1(test_ipv6_address_item);
-    BOOST_REQUIRE(!(host1 != test_ipv6_address_item));
+    BC_REQUIRE(!(host1 != test_ipv6_address_item));
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__distinct_address_item__true)
+BC_AUTO_TEST_CASE(address__inequality__distinct_address_item__true)
 {
     const address host1(test_ipv6_address_item);
-    BOOST_REQUIRE(host1 != test_mapped_ip_address_item);
+    BC_REQUIRE(host1 != test_mapped_ip_address_item);
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__distinct_timestamp_address_item_false)
+BC_AUTO_TEST_CASE(address__inequality__distinct_timestamp_address_item_false)
 {
     const address host1(test_ipv6_address_item);
-    BOOST_REQUIRE(!(host1 != test_ipv6_address_item_distinct_timestamp));
+    BC_REQUIRE(!(host1 != test_ipv6_address_item_distinct_timestamp));
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__distinct_services_address_item__false)
+BC_AUTO_TEST_CASE(address__inequality__distinct_services_address_item__false)
 {
     const address host1(test_ipv6_address_item);
-    BOOST_REQUIRE(!(host1 != test_ipv6_address_item_distinct_service));
+    BC_REQUIRE(!(host1 != test_ipv6_address_item_distinct_service));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

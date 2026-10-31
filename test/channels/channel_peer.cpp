@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(channel_peer_tests)
+BC_AUTO_TEST_SUITE(channel_peer_tests)
 
 class mock_channel_peer
   : public channel_peer
@@ -57,7 +57,7 @@ private:
 
 const channel_peer::options_t options{ "test" };
 
-BOOST_AUTO_TEST_CASE(channel_peer__stopped__default__false)
+BC_AUTO_TEST_CASE(channel_peer__stopped__default__false)
 {
     constexpr auto expected = 42u;
     const logger log{};
@@ -68,17 +68,17 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__default__false)
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, expected, set, options);
-    BOOST_REQUIRE(!channel_ptr->stopped());
+    BC_REQUIRE(!channel_ptr->stopped());
 
-    BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);
-    BOOST_REQUIRE_EQUAL(channel_ptr->identifier(), expected);
+    BC_REQUIRE_NE(channel_ptr->nonce(), zero);
+    BC_REQUIRE_EQUAL(channel_ptr->identifier(), expected);
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__lazy__channel_expired__false)
+BC_AUTO_TEST_CASE(channel_peer__lazy__channel_expired__false)
 {
     const logger log{};
     threadpool pool(1);
@@ -91,11 +91,11 @@ BOOST_AUTO_TEST_CASE(channel_peer__lazy__channel_expired__false)
 
     const auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), params);
     const auto channel_ptr = std::make_shared<mock_channel_peer>(log, socket_ptr, 42, set, options);
-    BOOST_REQUIRE(!channel_ptr->lazy(error::channel_expired));
+    BC_REQUIRE(!channel_ptr->lazy(error::channel_expired));
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
+BC_AUTO_TEST_CASE(channel_peer__properties__default__expected)
 {
     const logger log{};
     threadpool pool(1);
@@ -106,25 +106,25 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
-    BOOST_REQUIRE(!channel_ptr->address());
-    BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
-    BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
-    BOOST_REQUIRE(channel_ptr->is_negotiated(messages::peer::level::maximum_protocol));
-    BOOST_REQUIRE(!channel_ptr->wants_address_v2());
+    BC_REQUIRE(!channel_ptr->address());
+    BC_REQUIRE_NE(channel_ptr->nonce(), 0u);
+    BC_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
+    BC_REQUIRE(channel_ptr->is_negotiated(messages::peer::level::maximum_protocol));
+    BC_REQUIRE(!channel_ptr->wants_address_v2());
 
     // TODO: compare to default instance.
-    BOOST_REQUIRE(channel_ptr->peer_version());
+    BC_REQUIRE(channel_ptr->peer_version());
 
-    BOOST_REQUIRE_EQUAL(channel_ptr->options().maximum_request, options.maximum_request);
-    BOOST_REQUIRE_EQUAL(channel_ptr->settings().identifier, set.identifier);
-    BOOST_REQUIRE_EQUAL(channel_ptr->settings().validate_checksum, set.validate_checksum);
+    BC_REQUIRE_EQUAL(channel_ptr->options().maximum_request, options.maximum_request);
+    BC_REQUIRE_EQUAL(channel_ptr->settings().identifier, set.identifier);
+    BC_REQUIRE_EQUAL(channel_ptr->settings().validate_checksum, set.validate_checksum);
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__set_compact_blocks__high_bandwidth__expected)
+BC_AUTO_TEST_CASE(channel_peer__set_compact_blocks__high_bandwidth__expected)
 {
     const logger log{};
     threadpool pool(1);
@@ -138,21 +138,21 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_compact_blocks__high_bandwidth__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
-    BOOST_REQUIRE(!channel_ptr->accepts_compact_blocks());
-    BOOST_REQUIRE(!channel_ptr->wants_compact_blocks());
+    BC_REQUIRE(!channel_ptr->accepts_compact_blocks());
+    BC_REQUIRE(!channel_ptr->wants_compact_blocks());
 
     channel_ptr->set_compact_blocks(true);
-    BOOST_REQUIRE(channel_ptr->accepts_compact_blocks());
-    BOOST_REQUIRE(channel_ptr->wants_compact_blocks());
+    BC_REQUIRE(channel_ptr->accepts_compact_blocks());
+    BC_REQUIRE(channel_ptr->wants_compact_blocks());
 
     channel_ptr->set_compact_blocks(false);
-    BOOST_REQUIRE(channel_ptr->accepts_compact_blocks());
-    BOOST_REQUIRE(!channel_ptr->wants_compact_blocks());
+    BC_REQUIRE(channel_ptr->accepts_compact_blocks());
+    BC_REQUIRE(!channel_ptr->wants_compact_blocks());
 
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__set_wants_witness_tx__default_false__expected)
+BC_AUTO_TEST_CASE(channel_peer__set_wants_witness_tx__default_false__expected)
 {
     const logger log{};
     threadpool pool(1);
@@ -166,15 +166,15 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_wants_witness_tx__default_false__expected
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
-    BOOST_REQUIRE(!channel_ptr->wants_witness_tx());
+    BC_REQUIRE(!channel_ptr->wants_witness_tx());
 
     channel_ptr->set_wants_witness_tx();
-    BOOST_REQUIRE(channel_ptr->wants_witness_tx());
+    BC_REQUIRE(channel_ptr->wants_witness_tx());
 
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__set_wants_address_v2__always__latched)
+BC_AUTO_TEST_CASE(channel_peer__set_wants_address_v2__always__latched)
 {
     const logger log{};
     threadpool pool(1);
@@ -185,14 +185,14 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_wants_address_v2__always__latched)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
-    BOOST_REQUIRE(!channel_ptr->wants_address_v2());
+    BC_REQUIRE(!channel_ptr->wants_address_v2());
     channel_ptr->set_wants_address_v2();
-    BOOST_REQUIRE(channel_ptr->wants_address_v2());
+    BC_REQUIRE(channel_ptr->wants_address_v2());
 
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__set_minimum_fee__always__expected)
+BC_AUTO_TEST_CASE(channel_peer__set_minimum_fee__always__expected)
 {
     const logger log{};
     threadpool pool(1);
@@ -203,14 +203,14 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_minimum_fee__always__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
-    BOOST_REQUIRE(is_zero(channel_ptr->minimum_fee()));
+    BC_REQUIRE(is_zero(channel_ptr->minimum_fee()));
     channel_ptr->set_minimum_fee(42);
-    BOOST_REQUIRE_EQUAL(channel_ptr->minimum_fee(), 42u);
+    BC_REQUIRE_EQUAL(channel_ptr->minimum_fee(), 42u);
 
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__set_pong__unpinged__unchanged)
+BC_AUTO_TEST_CASE(channel_peer__set_pong__unpinged__unchanged)
 {
     const logger log{};
     threadpool pool(1);
@@ -221,37 +221,19 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_pong__unpinged__unchanged)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
-    BOOST_REQUIRE(is_zero(channel_ptr->ping_time().count()));
-    BOOST_REQUIRE(is_zero(channel_ptr->minimum_ping_time().count()));
-    BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
+    BC_REQUIRE(is_zero(channel_ptr->ping_time().count()));
+    BC_REQUIRE(is_zero(channel_ptr->minimum_ping_time().count()));
+    BC_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
 
     channel_ptr->set_pong();
-    BOOST_REQUIRE(is_zero(channel_ptr->ping_time().count()));
-    BOOST_REQUIRE(is_zero(channel_ptr->minimum_ping_time().count()));
-    BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
+    BC_REQUIRE(is_zero(channel_ptr->ping_time().count()));
+    BC_REQUIRE(is_zero(channel_ptr->minimum_ping_time().count()));
+    BC_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
 
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__set_ping__unponged__pending_only)
-{
-    const logger log{};
-    threadpool pool(1);
-    io::strand strand(pool.service().get_executor());
-    const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
-    auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
-
-    channel_ptr->set_ping();
-    BOOST_REQUIRE(is_zero(channel_ptr->ping_time().count()));
-    BOOST_REQUIRE(is_zero(channel_ptr->minimum_ping_time().count()));
-
-    channel_ptr->stop(error::invalid_magic);
-}
-
-BOOST_AUTO_TEST_CASE(channel_peer__set_pong__pinged__timed_not_pending)
+BC_AUTO_TEST_CASE(channel_peer__set_ping__unponged__pending_only)
 {
     const logger log{};
     threadpool pool(1);
@@ -263,19 +245,37 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_pong__pinged__timed_not_pending)
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
     channel_ptr->set_ping();
-    channel_ptr->set_pong();
-    BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
-    BOOST_REQUIRE(channel_ptr->minimum_ping_time() == channel_ptr->ping_time());
-
-    channel_ptr->set_ping();
-    channel_ptr->set_pong();
-    BOOST_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
-    BOOST_REQUIRE(channel_ptr->minimum_ping_time() <= channel_ptr->ping_time());
+    BC_REQUIRE(is_zero(channel_ptr->ping_time().count()));
+    BC_REQUIRE(is_zero(channel_ptr->minimum_ping_time().count()));
 
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
+BC_AUTO_TEST_CASE(channel_peer__set_pong__pinged__timed_not_pending)
+{
+    const logger log{};
+    threadpool pool(1);
+    io::strand strand(pool.service().get_executor());
+    const settings set(test::network_settings());
+    network::socket::parameters params{ .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
+
+    channel_ptr->set_ping();
+    channel_ptr->set_pong();
+    BC_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
+    BC_REQUIRE(channel_ptr->minimum_ping_time() == channel_ptr->ping_time());
+
+    channel_ptr->set_ping();
+    channel_ptr->set_pong();
+    BC_REQUIRE(is_zero(channel_ptr->pending_ping_time().count()));
+    BC_REQUIRE(channel_ptr->minimum_ping_time() <= channel_ptr->ping_time());
+
+    channel_ptr->stop(error::invalid_magic);
+}
+
+BC_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
@@ -300,18 +300,18 @@ BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
             });
     });
 
-    BOOST_REQUIRE(!channel_ptr->stopped());
+    BC_REQUIRE(!channel_ptr->stopped());
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(expected_ec);
 
-    BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
-    BOOST_REQUIRE(channel_ptr->stopped());
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
+    BC_REQUIRE(channel_ptr->stopped());
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
+BC_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
@@ -354,21 +354,21 @@ BOOST_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
         });
     });
 
-    BOOST_REQUIRE(!channel_ptr->stopped());
-    BOOST_REQUIRE_EQUAL(stop_subscribed.get_future().get(), error::success);
+    BC_REQUIRE(!channel_ptr->stopped());
+    BC_REQUIRE_EQUAL(stop_subscribed.get_future().get(), error::success);
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(expected_ec);
 
-    BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
-    BOOST_REQUIRE_EQUAL(stop1_stopped.get_future().get(), expected_ec);
-    BOOST_REQUIRE_EQUAL(stop2_stopped.get_future().get(), expected_ec);
-    BOOST_REQUIRE(channel_ptr->stopped());
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
+    BC_REQUIRE_EQUAL(stop1_stopped.get_future().get(), expected_ec);
+    BC_REQUIRE_EQUAL(stop2_stopped.get_future().get(), expected_ec);
+    BC_REQUIRE(channel_ptr->stopped());
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
+BC_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
 {
     const logger log{};
     threadpool pool(2);
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
         promise.set_value(ec);
     };
 
-    BOOST_REQUIRE(!channel_ptr->stopped());
+    BC_REQUIRE(!channel_ptr->stopped());
     io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         using namespace messages::peer;
@@ -395,15 +395,15 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
+    BC_REQUIRE(result);
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
+BC_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
 {
     const logger log{};
     threadpool pool(2);
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
     auto result = true;
     std::promise<code> promise;
 
-    BOOST_REQUIRE(!channel_ptr->stopped());
+    BC_REQUIRE(!channel_ptr->stopped());
     io::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         using namespace messages::peer;
@@ -429,15 +429,15 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
+    BC_REQUIRE(result);
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__stopped__resume_after_read_fail__true)
+BC_AUTO_TEST_CASE(channel_peer__stopped__resume_after_read_fail__true)
 {
     const logger log{};
     threadpool pool(2);
@@ -456,8 +456,8 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__resume_after_read_fail__true)
         stopped_after_resume.set_value(channel_ptr->stopped());
     });
 
-    BOOST_REQUIRE(!stopped_after_resume.get_future().get());
-    BOOST_REQUIRE(channel_ptr->require_stopped());
+    BC_REQUIRE(!stopped_after_resume.get_future().get());
+    BC_REQUIRE(channel_ptr->require_stopped());
 
     std::promise<bool> stopped_after_read_fail;
     io::post(channel_ptr->strand(), [=, &stopped_after_read_fail]() NOEXCEPT
@@ -465,14 +465,14 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__resume_after_read_fail__true)
         stopped_after_read_fail.set_value(channel_ptr->stopped());
     });
 
-    BOOST_REQUIRE(stopped_after_read_fail.get_future().get());
+    BC_REQUIRE(stopped_after_read_fail.get_future().get());
 
     // Stop is asynchronous, threadpool destruct blocks until all complete.
     // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__set_start_height__value__expected)
+BC_AUTO_TEST_CASE(channel_peer__set_start_height__value__expected)
 {
     const logger log{};
     threadpool pool(1);
@@ -481,16 +481,16 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_start_height__value__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
-    BOOST_REQUIRE(is_zero(channel_ptr->start_height()));
+    BC_REQUIRE(is_zero(channel_ptr->start_height()));
     channel_ptr->set_start_height(42);
-    BOOST_REQUIRE_EQUAL(channel_ptr->start_height(), 42u);
-    BOOST_REQUIRE(channel_ptr->sent_by_message() == channel_peer::counters{});
-    BOOST_REQUIRE(channel_ptr->received_by_message() == channel_peer::counters{});
+    BC_REQUIRE_EQUAL(channel_ptr->start_height(), 42u);
+    BC_REQUIRE(channel_ptr->sent_by_message() == channel_peer::counters{});
+    BC_REQUIRE(channel_ptr->received_by_message() == channel_peer::counters{});
 
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_peer__set_peer_version__services__peer_services_and_updated_address)
+BC_AUTO_TEST_CASE(channel_peer__set_peer_version__services__peer_services_and_updated_address)
 {
     using namespace messages::peer;
     const logger log{};
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__set_peer_version__services__peer_services_and
         states.set_value(std::to_string(channel_ptr->is_peer_service(service::node_witness)) + std::to_string(channel_ptr->is_peer_service(service::node_bloom)) + std::to_string(channel_ptr->current()) + std::to_string(channel_ptr->get_updated_address()->services));
     });
 
-    BOOST_REQUIRE_EQUAL(states.get_future().get(), "1019");
+    BC_REQUIRE_EQUAL(states.get_future().get(), "1019");
     channel_ptr->stop(error::invalid_magic);
 }
 
@@ -527,7 +527,7 @@ static code peer_await(const peer_promise& promise) NOEXCEPT
 {
     using namespace std::chrono_literals;
     auto future = promise->get_future();
-    BOOST_REQUIRE(future.wait_for(5s) == std::future_status::ready);
+    BC_REQUIRE(future.wait_for(5s) == std::future_status::ready);
     return future.get();
 }
 
@@ -575,13 +575,13 @@ struct peer_loopback_fixture
         const auto local = test::loopback(port);
         code ec{};
         acceptor_.open(io::tcp::of(local), ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         acceptor_.set_option(io::reuse_address(true), ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         acceptor_.bind(local, ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         acceptor_.listen(ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
 
         network::socket::parameters params
         {
@@ -598,8 +598,8 @@ struct peer_loopback_fixture
         });
 
         client.connect(local, ec);
-        BOOST_REQUIRE(!ec);
-        BOOST_REQUIRE_EQUAL(peer_await(accepted), error::success);
+        BC_REQUIRE(!ec);
+        BC_REQUIRE_EQUAL(peer_await(accepted), error::success);
 
         channel = std::make_shared<resumable_channel_peer>(log, server, 42, peer_checked_settings, options);
         const auto promise = stopped;
@@ -615,7 +615,7 @@ struct peer_loopback_fixture
         client.close(ignore);
         channel->stop(error::service_stopped);
         pool_.stop();
-        BOOST_REQUIRE(pool_.join());
+        BC_REQUIRE(pool_.join());
     }
 
     void start(const peer_responder& respond, bool current=false) NOEXCEPT
@@ -635,14 +635,14 @@ struct peer_loopback_fixture
             started->set_value(error::success);
         });
 
-        BOOST_REQUIRE_EQUAL(peer_await(started), error::success);
+        BC_REQUIRE_EQUAL(peer_await(started), error::success);
     }
 
     void send(const system::data_chunk& data) NOEXCEPT
     {
         code ec{};
         io::write(client, io::buffer(data), ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
     }
 
     const logger log{};
@@ -664,42 +664,42 @@ static bool peer_keep(const channel_peer::ptr&, const messages::peer::ping::cptr
     return true;
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__zero_magic__invalid_magic, peer_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__zero_magic__invalid_magic, peer_loopback_fixture)
 {
     start(peer_keep);
     send(system::base16_chunk("00000000" "70696e670000000000000000" "08000000" "00000000"));
-    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::invalid_magic);
+    BC_REQUIRE_EQUAL(peer_await(stopped), error::invalid_magic);
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__http_request__invalid_magic, peer_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__http_request__invalid_magic, peer_loopback_fixture)
 {
     start(peer_keep);
     send(system::to_chunk(std::string{ "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n" }));
-    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::invalid_magic);
+    BC_REQUIRE_EQUAL(peer_await(stopped), error::invalid_magic);
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__maximum_payload_size__oversized_payload, peer_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__maximum_payload_size__oversized_payload, peer_loopback_fixture)
 {
     start(peer_keep);
     send(system::base16_chunk("f9beb4d9" "70696e670000000000000000" "ffffffff" "00000000"));
-    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::oversized_payload);
+    BC_REQUIRE_EQUAL(peer_await(stopped), error::oversized_payload);
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__bad_checksum__invalid_checksum, peer_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__bad_checksum__invalid_checksum, peer_loopback_fixture)
 {
     start(peer_keep);
     send(system::base16_chunk("f9beb4d9" "70696e670000000000000000" "08000000" "00000000" "0102030405060708"));
-    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::invalid_checksum);
+    BC_REQUIRE_EQUAL(peer_await(stopped), error::invalid_checksum);
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__ping_without_nonce__invalid_message, peer_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__ping_without_nonce__invalid_message, peer_loopback_fixture)
 {
     start(peer_keep);
     send(system::base16_chunk("f9beb4d9" "70696e670000000000000000" "00000000" "5df6e0e2"));
-    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::invalid_message);
+    BC_REQUIRE_EQUAL(peer_await(stopped), error::invalid_message);
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__ping__dispatched_and_counted, peer_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__ping__dispatched_and_counted, peer_loopback_fixture)
 {
     const auto nonce = std::make_shared<std::promise<uint64_t>>();
     start([=](const channel_peer::ptr&, const messages::peer::ping::cptr& message) NOEXCEPT
@@ -709,10 +709,10 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__ping__dispatched_and_counted, peer
     });
 
     send(peer_frame("ping", system::base16_chunk("0807060504030201")));
-    BOOST_REQUIRE_EQUAL(nonce->get_future().get(), 0x0102030405060708u);
+    BC_REQUIRE_EQUAL(nonce->get_future().get(), 0x0102030405060708u);
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__current_large_payload__dispatched, peer_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__current_large_payload__dispatched, peer_loopback_fixture)
 {
     const auto nonce = std::make_shared<std::promise<uint64_t>>();
     start([=](const channel_peer::ptr&, const messages::peer::ping::cptr& message) NOEXCEPT
@@ -725,10 +725,10 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__current_large_payload__dispatched,
     inventory.resize(add1(150u * 36u));
     send(peer_frame("inv", inventory));
     send(peer_frame("ping", system::base16_chunk("0100000000000000")));
-    BOOST_REQUIRE_EQUAL(nonce->get_future().get(), 1u);
+    BC_REQUIRE_EQUAL(nonce->get_future().get(), 1u);
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__gate__retained_peer_close__peer_disconnect, peer_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__gate__retained_peer_close__peer_disconnect, peer_loopback_fixture)
 {
     const auto retained = std::make_shared<channel::gate_t::ptr>();
     start([=](const channel_peer::ptr& self, const messages::peer::ping::cptr&) NOEXCEPT
@@ -741,7 +741,7 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__gate__retained_peer_close__peer_disconnect
 
     code ignore{};
     client.shutdown(io::socket::shutdown_type::send, ignore);
-    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::peer_disconnect);
+    BC_REQUIRE_EQUAL(peer_await(stopped), error::peer_disconnect);
 }
 
 // p2ps
@@ -763,13 +763,13 @@ struct p2ps_loopback_fixture
         const auto local = test::loopback(port);
         code ec{};
         acceptor_.open(io::tcp::of(local), ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         acceptor_.set_option(io::reuse_address(true), ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         acceptor_.bind(local, ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
         acceptor_.listen(ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
 
         network::socket::parameters params
         {
@@ -787,7 +787,7 @@ struct p2ps_loopback_fixture
         });
 
         client.connect(local, ec);
-        BOOST_REQUIRE(!ec);
+        BC_REQUIRE(!ec);
     }
 
     ~p2ps_loopback_fixture() NOEXCEPT
@@ -802,12 +802,12 @@ struct p2ps_loopback_fixture
         });
 
         pool_.stop();
-        BOOST_REQUIRE(pool_.join());
+        BC_REQUIRE(pool_.join());
     }
 
     void accept() NOEXCEPT
     {
-        BOOST_REQUIRE_EQUAL(peer_await(accepted_), error::success);
+        BC_REQUIRE_EQUAL(peer_await(accepted_), error::success);
         channel = std::make_shared<resumable_channel_peer>(log, server_, 42, peer_checked_settings, options);
         const auto promise = stopped;
         channel->subscribe_stop([=](const code& stop_ec) NOEXCEPT
@@ -844,7 +844,7 @@ struct p2ps_loopback_fixture
             started->set_value(error::success);
         });
 
-        BOOST_REQUIRE_EQUAL(peer_await(started), error::success);
+        BC_REQUIRE_EQUAL(peer_await(started), error::success);
     }
 
     const logger log{};
@@ -863,19 +863,19 @@ public:
     std::shared_ptr<resumable_channel_peer> channel{};
 };
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v1_version_prefix__v1_served, p2ps_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v1_version_prefix__v1_served, p2ps_loopback_fixture)
 {
     code ec{};
     io::write(client, io::buffer(system::base16_chunk("f9beb4d9" "76657273696f6e0000000000" "00000000" "5df6e0e2")), ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     accept();
     start(peer_keep);
-    BOOST_REQUIRE(!encrypted());
-    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::invalid_message);
+    BC_REQUIRE(!encrypted());
+    BC_REQUIRE_EQUAL(peer_await(stopped), error::invalid_message);
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_exchange, p2ps_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_exchange, p2ps_loopback_fixture)
 {
     using namespace messages::peer;
     code handshake{ error::would_block };
@@ -887,10 +887,10 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_
 
     client_service.run();
     client_service.restart();
-    BOOST_REQUIRE(!handshake);
+    BC_REQUIRE(!handshake);
 
     accept();
-    BOOST_REQUIRE(encrypted());
+    BC_REQUIRE(encrypted());
 
     const auto nonce = std::make_shared<std::promise<uint64_t>>();
     start([=](const channel_peer::ptr& self, const ping::cptr& message) NOEXCEPT
@@ -908,8 +908,8 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_
 
     client_service.run();
     client_service.restart();
-    BOOST_REQUIRE(!sent);
-    BOOST_REQUIRE_EQUAL(nonce->get_future().get(), 1u);
+    BC_REQUIRE(!sent);
+    BC_REQUIRE_EQUAL(nonce->get_future().get(), 1u);
 
     uint8_t identifier{};
     system::data_chunk payload{};
@@ -924,12 +924,12 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator__encrypted_ping_
 
     client_service.run();
     client_service.restart();
-    BOOST_REQUIRE(!received);
-    BOOST_REQUIRE_EQUAL(identifier, identifiers::ping);
-    BOOST_REQUIRE_EQUAL(payload, system::base16_chunk("0700000000000000"));
+    BC_REQUIRE(!received);
+    BC_REQUIRE_EQUAL(identifier, identifiers::ping);
+    BC_REQUIRE_EQUAL(payload, system::base16_chunk("0700000000000000"));
 }
 
-BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator_closed__peer_disconnect, p2ps_loopback_fixture)
+BC_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator_closed__peer_disconnect, p2ps_loopback_fixture)
 {
     code handshake{ error::would_block };
     auto initiator = std::make_unique<network::p2ps::stream>(std::move(client), p2ps_configuration);
@@ -940,12 +940,12 @@ BOOST_FIXTURE_TEST_CASE(channel_peer__resume__p2ps_v2_initiator_closed__peer_dis
 
     client_service.run();
     client_service.restart();
-    BOOST_REQUIRE(!handshake);
+    BC_REQUIRE(!handshake);
 
     accept();
     start(peer_keep);
     initiator.reset();
-    BOOST_REQUIRE_EQUAL(peer_await(stopped), error::peer_disconnect);
+    BC_REQUIRE_EQUAL(peer_await(stopped), error::peer_disconnect);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

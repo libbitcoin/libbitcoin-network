@@ -18,7 +18,7 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(http_parser_tests)
+BC_AUTO_TEST_SUITE(http_parser_tests)
 
 using namespace network::http;
 using namespace network::error;
@@ -53,66 +53,66 @@ static code feed(string_parser<IsRequest>& instance, std::string text, std::stri
 
 // requests
 
-BOOST_AUTO_TEST_CASE(http_parser__put__content_length__expected)
+BC_AUTO_TEST_CASE(http_parser__put__content_length__expected)
 {
     string_parser<true> instance{};
     std::string rest{};
     const auto ec = feed(instance, "POST /x?y HTTP/1.1\r\nHost: h\r\nContent-Length: 5\r\n\r\nhelloGET", rest);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(instance.is_done());
-    BOOST_REQUIRE(instance.get().method() == verb::post);
-    BOOST_REQUIRE_EQUAL(instance.get().target(), "/x?y");
-    BOOST_REQUIRE_EQUAL(instance.get().version(), version_1_1);
-    BOOST_REQUIRE_EQUAL(instance.get()[field::host], "h");
-    BOOST_REQUIRE_EQUAL(instance.get().body(), "hello");
-    BOOST_REQUIRE_EQUAL(rest, "GET");
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE(instance.get().method() == verb::post);
+    BC_REQUIRE_EQUAL(instance.get().target(), "/x?y");
+    BC_REQUIRE_EQUAL(instance.get().version(), version_1_1);
+    BC_REQUIRE_EQUAL(instance.get()[field::host], "h");
+    BC_REQUIRE_EQUAL(instance.get().body(), "hello");
+    BC_REQUIRE_EQUAL(rest, "GET");
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__bytewise_chunked__expected)
+BC_AUTO_TEST_CASE(http_parser__put__bytewise_chunked__expected)
 {
     string_parser<true> instance{};
     std::string rest{};
     const auto ec = feed(instance, "POST / HTTP/1.1\r\nTransfer-Encoding: gzip, chunked\r\n\r\n3;a=\"b\"\r\nabc\r\n2\r\nde\r\n0\r\nTrailer: t\r\n\r\n", rest, 1);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(instance.is_done());
-    BOOST_REQUIRE_EQUAL(instance.get().body(), "abcde");
-    BOOST_REQUIRE(instance.get().find("Trailer") == instance.get().end());
-    BOOST_REQUIRE(rest.empty());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE_EQUAL(instance.get().body(), "abcde");
+    BC_REQUIRE(instance.get().find("Trailer") == instance.get().end());
+    BC_REQUIRE(rest.empty());
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__no_framing_request__no_body)
+BC_AUTO_TEST_CASE(http_parser__put__no_framing_request__no_body)
 {
     string_parser<true> instance{};
     std::string rest{};
     const auto ec = feed(instance, "GET / HTTP/1.0\r\n\r\nextra", rest);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(instance.is_done());
-    BOOST_REQUIRE(instance.get().body().empty());
-    BOOST_REQUIRE_EQUAL(rest, "extra");
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE(instance.get().body().empty());
+    BC_REQUIRE_EQUAL(rest, "extra");
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__header__pauses)
+BC_AUTO_TEST_CASE(http_parser__put__header__pauses)
 {
     string_parser<true> instance{};
     const std::string text{ "POST / HTTP/1.1\r\nContent-Length: 2\r\n\r\nab" };
     code ec{};
     const auto used = instance.put(io::const_buffer{ text.data(), text.size() }, ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(instance.is_header_done());
-    BOOST_REQUIRE(!instance.is_done());
-    BOOST_REQUIRE_EQUAL(used, text.size() - 2u);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_header_done());
+    BC_REQUIRE(!instance.is_done());
+    BC_REQUIRE_EQUAL(used, text.size() - 2u);
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__folded_value__space_joined)
+BC_AUTO_TEST_CASE(http_parser__put__folded_value__space_joined)
 {
     string_parser<true> instance{};
     std::string rest{};
     const auto ec = feed(instance, "GET / HTTP/1.1\r\nX-A: one \r\n  two\r\n\r\n", rest);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(instance.get()["X-A"], "one two");
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(instance.get()["X-A"], "one two");
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__errors__expected)
+BC_AUTO_TEST_CASE(http_parser__put__errors__expected)
 {
     const std::vector<std::pair<std::string, http_error_t>> vectors
     {
@@ -140,92 +140,92 @@ BOOST_AUTO_TEST_CASE(http_parser__put__errors__expected)
     {
         string_parser<true> instance{};
         std::string rest{};
-        BOOST_REQUIRE_MESSAGE(feed(instance, text, rest) == expected, text);
+        BC_REQUIRE_MESSAGE(feed(instance, text, rest) == expected, text);
     }
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__header_limit__exceeded)
+BC_AUTO_TEST_CASE(http_parser__put__header_limit__exceeded)
 {
     string_parser<true> instance{};
     instance.header_limit(32);
     std::string rest{};
-    BOOST_REQUIRE(feed(instance, "GET / HTTP/1.1\r\nX-Long: " + std::string(64, 'x') + "\r\n\r\n", rest) == http_error_t::header_limit);
+    BC_REQUIRE(feed(instance, "GET / HTTP/1.1\r\nX-Long: " + std::string(64, 'x') + "\r\n\r\n", rest) == http_error_t::header_limit);
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__body_limit__exceeded)
+BC_AUTO_TEST_CASE(http_parser__put__body_limit__exceeded)
 {
     string_parser<true> instance{};
     instance.body_limit(4);
     std::string rest{};
-    BOOST_REQUIRE(feed(instance, "POST / HTTP/1.1\r\nContent-Length: 5\r\n\r\nhello", rest) == http_error_t::body_limit);
+    BC_REQUIRE(feed(instance, "POST / HTTP/1.1\r\nContent-Length: 5\r\n\r\nhello", rest) == http_error_t::body_limit);
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put_eof__incomplete__expected)
+BC_AUTO_TEST_CASE(http_parser__put_eof__incomplete__expected)
 {
     string_parser<true> empty{};
     code ec{};
     empty.put_eof(ec);
-    BOOST_REQUIRE(ec == http_error_t::end_of_stream);
+    BC_REQUIRE(ec == http_error_t::end_of_stream);
 
     string_parser<true> partial{};
     std::string rest{};
     feed(partial, "GET / HTTP/1.1\r\nHo", rest);
     partial.put_eof(ec);
-    BOOST_REQUIRE(ec == http_error_t::partial_message);
+    BC_REQUIRE(ec == http_error_t::partial_message);
 }
 
 // responses
 
-BOOST_AUTO_TEST_CASE(http_parser__put__response_to_eof__body_on_eof)
+BC_AUTO_TEST_CASE(http_parser__put__response_to_eof__body_on_eof)
 {
     string_parser<false> instance{};
     std::string rest{};
     feed(instance, "HTTP/1.0 200 Fine\r\n\r\nsome body", rest);
-    BOOST_REQUIRE(!instance.is_done());
-    BOOST_REQUIRE_EQUAL(instance.get().reason(), "Fine");
+    BC_REQUIRE(!instance.is_done());
+    BC_REQUIRE_EQUAL(instance.get().reason(), "Fine");
 
     code ec{};
     instance.put_eof(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(instance.is_done());
-    BOOST_REQUIRE_EQUAL(instance.get().body(), "some body");
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE_EQUAL(instance.get().body(), "some body");
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__response_encoded__body_on_eof)
+BC_AUTO_TEST_CASE(http_parser__put__response_encoded__body_on_eof)
 {
     string_parser<false> instance{};
     std::string rest{};
     feed(instance, "HTTP/1.1 200 OK\r\nTransfer-Encoding: gzip\r\n\r\nsome body", rest);
-    BOOST_REQUIRE(!instance.is_done());
+    BC_REQUIRE(!instance.is_done());
 
     code ec{};
     instance.put_eof(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(instance.is_done());
-    BOOST_REQUIRE_EQUAL(instance.get().body(), "some body");
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE_EQUAL(instance.get().body(), "some body");
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__bodiless_status__no_body)
+BC_AUTO_TEST_CASE(http_parser__put__bodiless_status__no_body)
 {
     string_parser<false> instance{};
     std::string rest{};
     const auto ec = feed(instance, "HTTP/1.1 204 No Content\r\nContent-Length: 5\r\n\r\nhello", rest);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(instance.is_done());
-    BOOST_REQUIRE(instance.get().body().empty());
-    BOOST_REQUIRE_EQUAL(rest, "hello");
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE(instance.get().body().empty());
+    BC_REQUIRE_EQUAL(rest, "hello");
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__put__bad_status__expected)
+BC_AUTO_TEST_CASE(http_parser__put__bad_status__expected)
 {
     string_parser<false> instance{};
     std::string rest{};
-    BOOST_REQUIRE(feed(instance, "HTTP/1.1 20 OK\r\n\r\n", rest) == http_error_t::bad_status);
+    BC_REQUIRE(feed(instance, "HTTP/1.1 20 OK\r\n\r\n", rest) == http_error_t::bad_status);
 }
 
 // serializer
 
-BOOST_AUTO_TEST_CASE(http_parser__serializer__chunked__round_trip)
+BC_AUTO_TEST_CASE(http_parser__serializer__chunked__round_trip)
 {
     message<false, string_body> out{ status::ok, version_1_1 };
     out.set(field::server, "test");
@@ -239,16 +239,16 @@ BOOST_AUTO_TEST_CASE(http_parser__serializer__chunked__round_trip)
         for (const auto& buffer: instance.next(ec))
             wire.append(static_cast<const char*>(buffer.data()), buffer.size());
 
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE_EQUAL(wire, "HTTP/1.1 200 OK\r\nServer: test\r\nTransfer-Encoding: chunked\r\n\r\n7\r\npayload\r\n0\r\n\r\n");
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(wire, "HTTP/1.1 200 OK\r\nServer: test\r\nTransfer-Encoding: chunked\r\n\r\n7\r\npayload\r\n0\r\n\r\n");
 
     string_parser<false> parse{};
     std::string rest{};
-    BOOST_REQUIRE(!feed(parse, wire, rest));
-    BOOST_REQUIRE_EQUAL(parse.get().body(), "payload");
+    BC_REQUIRE(!feed(parse, wire, rest));
+    BC_REQUIRE_EQUAL(parse.get().body(), "payload");
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__serializer__content_length__raw_body)
+BC_AUTO_TEST_CASE(http_parser__serializer__content_length__raw_body)
 {
     message<true, string_body> out{ verb::put, "/a", version_1_1 };
     out.body() = "abc";
@@ -261,14 +261,14 @@ BOOST_AUTO_TEST_CASE(http_parser__serializer__content_length__raw_body)
         for (const auto& buffer: instance.next(ec))
             wire.append(static_cast<const char*>(buffer.data()), buffer.size());
 
-    BOOST_REQUIRE_EQUAL(wire, "PUT /a HTTP/1.1\r\nContent-Length: 3\r\n\r\nabc");
+    BC_REQUIRE_EQUAL(wire, "PUT /a HTTP/1.1\r\nContent-Length: 3\r\n\r\nabc");
 }
 
-BOOST_AUTO_TEST_CASE(http_parser__chunk_header__sizes__lower_hex)
+BC_AUTO_TEST_CASE(http_parser__chunk_header__sizes__lower_hex)
 {
-    BOOST_REQUIRE_EQUAL(chunk_header(0), "0\r\n");
-    BOOST_REQUIRE_EQUAL(chunk_header(255), "ff\r\n");
-    BOOST_REQUIRE_EQUAL(chunk_header(4096), "1000\r\n");
+    BC_REQUIRE_EQUAL(chunk_header(0), "0\r\n");
+    BC_REQUIRE_EQUAL(chunk_header(255), "ff\r\n");
+    BC_REQUIRE_EQUAL(chunk_header(4096), "1000\r\n");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

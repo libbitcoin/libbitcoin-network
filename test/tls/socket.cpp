@@ -29,7 +29,7 @@
 #include <string>
 #include <thread>
 
-BOOST_FIXTURE_TEST_SUITE(tls_socket_tests, test::directory_setup_fixture)
+BC_FIXTURE_TEST_SUITE(tls_socket_tests, test::directory_setup_fixture)
 
 using namespace std::chrono_literals;
 
@@ -97,7 +97,7 @@ struct server_fixture
             "client", clients / "client.pem", directory / "client.key");
         tls.cert_auth = authenticate ? clients : std::filesystem::path{};
 
-        BOOST_REQUIRE_EQUAL(tls.initialize_context(), error::success);
+        BC_REQUIRE_EQUAL(tls.initialize_context(), error::success);
 
         code ec{};
         const auto bind = test::loopback();
@@ -125,12 +125,12 @@ struct server_fixture
     {
         server->stop();
         pool.stop();
-        BOOST_REQUIRE(pool.join());
+        BC_REQUIRE(pool.join());
     }
 
     code accept_result()
     {
-        BOOST_REQUIRE(accepted.wait_for(5s) == std::future_status::ready);
+        BC_REQUIRE(accepted.wait_for(5s) == std::future_status::ready);
         return accepted.get();
     }
 
@@ -188,7 +188,7 @@ struct tls_peer
         {
             code ec{};
             const auto count = socket.read_some(io::buffer(buffer), ec);
-            BOOST_REQUIRE(!ec);
+            BC_REQUIRE(!ec);
             client.receive({ buffer.data(), count });
             const auto data = client.read();
             out.insert(out.end(), data.begin(), data.end());
@@ -248,7 +248,7 @@ static code tcp_write(const socket::ptr& server, const system::data_chunk& data)
             promise->set_value(ec);
         });
 
-    BOOST_REQUIRE(future.wait_for(5s) == std::future_status::ready);
+    BC_REQUIRE(future.wait_for(5s) == std::future_status::ready);
     return future.get();
 }
 
@@ -263,8 +263,8 @@ static system::data_chunk tcp_read(const socket::ptr& server, size_t size)
             promise->set_value(ec);
         });
 
-    BOOST_REQUIRE(future.wait_for(5s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(future.get(), error::success);
+    BC_REQUIRE(future.wait_for(5s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(future.get(), error::success);
     return *buffer;
 }
 
@@ -278,13 +278,13 @@ static code tcp_read_result(const socket::ptr& server)
         promise->set_value(ec);
     });
 
-    BOOST_REQUIRE(future.wait_for(5s) == std::future_status::ready);
+    BC_REQUIRE(future.wait_for(5s) == std::future_status::ready);
     return future.get();
 }
 
 // tls_server settings
 
-BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__identity_files__success)
+BC_AUTO_TEST_CASE(tls_socket__initialize_context__identity_files__success)
 {
     const std::filesystem::path directory{ TEST_DIRECTORY };
     settings::tls_server instance{ "test" };
@@ -292,12 +292,12 @@ BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__identity_files__success)
     instance.cert_path = directory / "server.pem";
     instance.key_path = directory / "server.key";
     make_identity(server_secret, "server", instance.cert_path, instance.key_path);
-    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
-    BOOST_REQUIRE(instance.context->is_ready());
-    BOOST_REQUIRE(!instance.context->request());
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BC_REQUIRE(instance.context->is_ready());
+    BC_REQUIRE(!instance.context->request());
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__certificate_is_key__tls_use_certificate)
+BC_AUTO_TEST_CASE(tls_socket__initialize_context__certificate_is_key__tls_use_certificate)
 {
     const std::filesystem::path directory{ TEST_DIRECTORY };
     settings::tls_server instance{ "test" };
@@ -305,20 +305,20 @@ BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__certificate_is_key__tls_use
     instance.cert_path = directory / "server.key";
     instance.key_path = directory / "server.key";
     make_identity(server_secret, "server", directory / "server.pem", instance.key_path);
-    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_certificate);
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_certificate);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__missing_certificate__tls_use_certificate)
+BC_AUTO_TEST_CASE(tls_socket__initialize_context__missing_certificate__tls_use_certificate)
 {
     const std::filesystem::path directory{ TEST_DIRECTORY };
     settings::tls_server instance{ "test" };
     instance.safes = { config::authority{ "127.0.0.1:1" } };
     instance.cert_path = directory / "missing.pem";
     instance.key_path = directory / "missing.key";
-    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_certificate);
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_certificate);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__mismatched_key__tls_use_private_key)
+BC_AUTO_TEST_CASE(tls_socket__initialize_context__mismatched_key__tls_use_private_key)
 {
     const std::filesystem::path directory{ TEST_DIRECTORY };
     settings::tls_server instance{ "test" };
@@ -327,14 +327,14 @@ BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__mismatched_key__tls_use_pri
     instance.key_path = directory / "client.key";
     make_identity(server_secret, "server", instance.cert_path, directory / "server.key");
     make_identity(client_secret, "client", directory / "client.pem", instance.key_path);
-    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_private_key);
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::tls_use_private_key);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__encrypted_key__password_required)
+BC_AUTO_TEST_CASE(tls_socket__initialize_context__encrypted_key__password_required)
 {
     const std::filesystem::path directory{ TEST_DIRECTORY };
     system::x509::secret secret{};
-    BOOST_REQUIRE(system::x509::decode_private_key(secret, encrypted_key, "libbitcoin"));
+    BC_REQUIRE(system::x509::decode_private_key(secret, encrypted_key, "libbitcoin"));
     make_identity(secret, "server", directory / "server.pem", directory / "server.key");
     write_text(directory / "encrypted.key", encrypted_key);
 
@@ -343,23 +343,23 @@ BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__encrypted_key__password_req
     instance.cert_path = directory / "server.pem";
     instance.key_path = directory / "encrypted.key";
     instance.key_pass = "libbitcoin";
-    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::success);
 
     settings::tls_server wrong{ "test" };
     wrong.safes = instance.safes;
     wrong.cert_path = instance.cert_path;
     wrong.key_path = instance.key_path;
     wrong.key_pass = "bitcoin";
-    BOOST_REQUIRE_EQUAL(wrong.initialize_context(), error::tls_use_private_key);
+    BC_REQUIRE_EQUAL(wrong.initialize_context(), error::tls_use_private_key);
 
     settings::tls_server none{ "test" };
     none.safes = instance.safes;
     none.cert_path = instance.cert_path;
     none.key_path = instance.key_path;
-    BOOST_REQUIRE_EQUAL(none.initialize_context(), error::tls_use_private_key);
+    BC_REQUIRE_EQUAL(none.initialize_context(), error::tls_use_private_key);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__authority_directory__anchors_and_verify)
+BC_AUTO_TEST_CASE(tls_socket__initialize_context__authority_directory__anchors_and_verify)
 {
     const std::filesystem::path directory{ TEST_DIRECTORY };
     const auto clients = directory / "clients";
@@ -373,13 +373,13 @@ BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__authority_directory__anchor
     instance.key_path = directory / "server.key";
     instance.cert_auth = clients;
     make_identity(server_secret, "server", instance.cert_path, instance.key_path);
-    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.context->anchors().size(), 1u);
-    BOOST_REQUIRE(instance.context->request());
-    BOOST_REQUIRE(instance.context->require());
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BC_REQUIRE_EQUAL(instance.context->anchors().size(), 1u);
+    BC_REQUIRE(instance.context->request());
+    BC_REQUIRE(instance.context->require());
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__missing_authority_directory__tls_set_add_verify)
+BC_AUTO_TEST_CASE(tls_socket__initialize_context__missing_authority_directory__tls_set_add_verify)
 {
     const std::filesystem::path directory{ TEST_DIRECTORY };
     settings::tls_server instance{ "test" };
@@ -388,35 +388,35 @@ BOOST_AUTO_TEST_CASE(tls_socket__initialize_context__missing_authority_directory
     instance.key_path = directory / "server.key";
     instance.cert_auth = directory / "missing";
     make_identity(server_secret, "server", instance.cert_path, instance.key_path);
-    BOOST_REQUIRE_EQUAL(instance.initialize_context(), error::tls_set_add_verify);
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::tls_set_add_verify);
 }
 
 // socket
 
-BOOST_AUTO_TEST_CASE(tls_socket__accept__handshake_and_exchange__success)
+BC_AUTO_TEST_CASE(tls_socket__accept__handshake_and_exchange__success)
 {
     server_fixture server{ false };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BOOST_REQUIRE(peer.client.is_established());
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+    BC_REQUIRE(peer.client.is_established());
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
     const auto response = system::to_chunk("response from the server");
-    BOOST_REQUIRE_EQUAL(tcp_write(server.server, response), error::success);
-    BOOST_REQUIRE_EQUAL(peer.read(response.size()), response);
+    BC_REQUIRE_EQUAL(tcp_write(server.server, response), error::success);
+    BC_REQUIRE_EQUAL(peer.read(response.size()), response);
 
     const auto request = system::to_chunk("request from the client");
-    BOOST_REQUIRE(peer.client.write(request));
+    BC_REQUIRE(peer.client.write(request));
     peer.flush();
-    BOOST_REQUIRE_EQUAL(tcp_read(server.server, request.size()), request);
+    BC_REQUIRE_EQUAL(tcp_read(server.server, request.size()), request);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__accept__response_of_many_records__exchanged)
+BC_AUTO_TEST_CASE(tls_socket__accept__response_of_many_records__exchanged)
 {
     server_fixture server{ false };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
     system::data_chunk response(100000);
     std::iota(response.begin(), response.end(), uint8_t{});
@@ -427,118 +427,118 @@ BOOST_AUTO_TEST_CASE(tls_socket__accept__response_of_many_records__exchanged)
         promise->set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(peer.read(response.size()), response);
-    BOOST_REQUIRE(written.wait_for(5s) == std::future_status::ready);
-    BOOST_REQUIRE_EQUAL(written.get(), error::success);
+    BC_REQUIRE_EQUAL(peer.read(response.size()), response);
+    BC_REQUIRE(written.wait_for(5s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(written.get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__accept__trusted_client_certificate__success)
+BC_AUTO_TEST_CASE(tls_socket__accept__trusted_client_certificate__success)
 {
     server_fixture server{ true };
     tls_peer peer{ client_options(server, true), server.port };
     peer.handshake();
-    BOOST_REQUIRE(peer.client.is_requested());
-    BOOST_REQUIRE(peer.client.is_established());
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+    BC_REQUIRE(peer.client.is_requested());
+    BC_REQUIRE(peer.client.is_established());
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__accept__absent_client_certificate__failure)
+BC_AUTO_TEST_CASE(tls_socket__accept__absent_client_certificate__failure)
 {
     server_fixture server{ true };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BOOST_REQUIRE(peer.client.is_requested());
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::tls_alert_certificate_required);
+    BC_REQUIRE(peer.client.is_requested());
+    BC_REQUIRE_EQUAL(server.accept_result(), error::tls_alert_certificate_required);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__lazy_stop__zero_connect_timeout__closed_without_close_notify)
+BC_AUTO_TEST_CASE(tls_socket__lazy_stop__zero_connect_timeout__closed_without_close_notify)
 {
     server_fixture server{ false };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BOOST_REQUIRE(peer.client.is_established());
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+    BC_REQUIRE(peer.client.is_established());
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
     server.server->lazy_stop();
-    BOOST_REQUIRE(server.server->stopped());
+    BC_REQUIRE(server.server->stopped());
 
     const auto closed = peer.receive(5s);
     peer.socket.close();
-    BOOST_REQUIRE(closed);
-    BOOST_REQUIRE(!peer.client.is_closed());
+    BC_REQUIRE(closed);
+    BC_REQUIRE(!peer.client.is_closed());
 }
 
 // A peer is not required to answer close_notify (rfc8446 6.1).
-BOOST_AUTO_TEST_CASE(tls_socket__lazy_stop__unanswered_connect_timeout__closed)
+BC_AUTO_TEST_CASE(tls_socket__lazy_stop__unanswered_connect_timeout__closed)
 {
     server_fixture server{ false, 100ms };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BOOST_REQUIRE(peer.client.is_established());
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+    BC_REQUIRE(peer.client.is_established());
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
     server.server->lazy_stop();
-    BOOST_REQUIRE(server.server->stopped());
-    BOOST_REQUIRE(!peer.receive(5s, true));
-    BOOST_REQUIRE(peer.client.is_closed());
+    BC_REQUIRE(server.server->stopped());
+    BC_REQUIRE(!peer.receive(5s, true));
+    BC_REQUIRE(peer.client.is_closed());
 
     const auto closed = peer.receive(5s);
     peer.socket.close();
-    BOOST_REQUIRE(closed);
+    BC_REQUIRE(closed);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__read__peer_close_notify__peer_disconnect)
+BC_AUTO_TEST_CASE(tls_socket__read__peer_close_notify__peer_disconnect)
 {
     server_fixture server{ false };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
     peer.client.close();
     peer.flush();
-    BOOST_REQUIRE_EQUAL(tcp_read_result(server.server), error::peer_disconnect);
+    BC_REQUIRE_EQUAL(tcp_read_result(server.server), error::peer_disconnect);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__read__transport_closed__tls_stream_truncated)
+BC_AUTO_TEST_CASE(tls_socket__read__transport_closed__tls_stream_truncated)
 {
     server_fixture server{ false };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
     REQUIRE_SUCCESS(peer.socket, shutdown, io::socket::shutdown_type::send);
-    BOOST_REQUIRE_EQUAL(tcp_read_result(server.server), error::tls_stream_truncated);
+    BC_REQUIRE_EQUAL(tcp_read_result(server.server), error::tls_stream_truncated);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__read__tampered_record__tls_alert_bad_record_mac)
+BC_AUTO_TEST_CASE(tls_socket__read__tampered_record__tls_alert_bad_record_mac)
 {
     server_fixture server{ false };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
-    BOOST_REQUIRE(peer.client.write(system::to_chunk("data")));
+    BC_REQUIRE(peer.client.write(system::to_chunk("data")));
     peer.client.output().back() ^= 0x01;
     peer.flush();
-    BOOST_REQUIRE_EQUAL(tcp_read_result(server.server), error::tls_alert_bad_record_mac);
+    BC_REQUIRE_EQUAL(tcp_read_result(server.server), error::tls_alert_bad_record_mac);
 }
 
-BOOST_AUTO_TEST_CASE(tls_socket__read__requested_key_update__exchanged)
+BC_AUTO_TEST_CASE(tls_socket__read__requested_key_update__exchanged)
 {
     server_fixture server{ false };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BOOST_REQUIRE_EQUAL(server.accept_result(), error::success);
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
     const auto request = system::to_chunk("request after update");
     peer.client.update(true);
-    BOOST_REQUIRE(peer.client.write(request));
+    BC_REQUIRE(peer.client.write(request));
     peer.flush();
-    BOOST_REQUIRE_EQUAL(tcp_read(server.server, request.size()), request);
+    BC_REQUIRE_EQUAL(tcp_read(server.server, request.size()), request);
 
     const auto response = system::to_chunk("response after update");
-    BOOST_REQUIRE_EQUAL(tcp_write(server.server, response), error::success);
-    BOOST_REQUIRE_EQUAL(peer.read(response.size()), response);
+    BC_REQUIRE_EQUAL(tcp_write(server.server, response), error::success);
+    BC_REQUIRE_EQUAL(peer.read(response.size()), response);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

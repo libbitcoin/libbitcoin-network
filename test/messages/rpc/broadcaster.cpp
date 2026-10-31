@@ -18,7 +18,7 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(broadcaster_tests)
+BC_AUTO_TEST_SUITE(broadcaster_tests)
 
 using namespace rpc;
 using namespace system;
@@ -52,7 +52,7 @@ struct mock_desubscriber
 using mock_desubscriber_interface = publish<mock_desubscriber>;
 using mock_broadcaster = broadcaster<mock_desubscriber_interface>;
 
-BOOST_AUTO_TEST_CASE(broadcaster__notify__native_positional__expected)
+BC_AUTO_TEST_CASE(broadcaster__notify__native_positional__expected)
 {
     mock_broadcaster instance{};
     constexpr uint64_t expected_nonce = 42;
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__native_positional__expected)
     bool result{};
     code stop_ec{};
 
-    BOOST_REQUIRE(!instance.subscribe(
+    BC_REQUIRE(!instance.subscribe(
         [&](const code& ec, ping::cptr ping, uint16_t value)
         {
             // Handle stop notification (unavoidable test condition).
@@ -82,18 +82,18 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__native_positional__expected)
         }, channel_id));
 
     const auto message = emplace_shared<const ping>(expected_nonce);
-    BOOST_REQUIRE(!instance.notify(request_t
+    BC_REQUIRE(!instance.notify(request_t
     {
         .method = "ping0",
         .params = { array_t{ any_t{ message }, expected_value } }
     }, channel_id));
 
     instance.stop(expected_ec);
-    BOOST_REQUIRE_EQUAL(stop_ec, expected_ec);
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_ec, expected_ec);
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(broadcaster__notify__native_named__expected)
+BC_AUTO_TEST_CASE(broadcaster__notify__native_named__expected)
 {
     mock_broadcaster instance{};
     constexpr uint64_t expected_nonce = 42;
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__native_named__expected)
     bool result{};
     code stop_ec{};
 
-    BOOST_REQUIRE(!instance.subscribe(
+    BC_REQUIRE(!instance.subscribe(
         [&](const code& ec, const ping::cptr& ping, const std::string& value)
         {
             // Handle stop notification (unavoidable test condition).
@@ -123,18 +123,18 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__native_named__expected)
         }, channel_id));
 
     const auto message = emplace_shared<const ping>(expected_nonce);
-    BOOST_REQUIRE(!instance.notify(request_t
+    BC_REQUIRE(!instance.notify(request_t
     {
         .method = "ping1",
         .params = { object_t{ { "message", any_t{ message } }, { "value", expected_value } } }
     }, channel_id));
 
     instance.stop(expected_ec);
-    BOOST_REQUIRE_EQUAL(stop_ec, expected_ec);
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_ec, expected_ec);
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_positional__expected)
+BC_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_positional__expected)
 {
     mock_broadcaster instance{};
     using tag = mock_desubscriber::ping2;
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_positional__expect
     bool result{};
     code stop_ec{};
 
-    BOOST_REQUIRE(!instance.subscribe(
+    BC_REQUIRE(!instance.subscribe(
         [&](const code& ec, tag, uint16_t value, std::optional<ping::cptr> ping)
         {
             // Handle stop notification (unavoidable test condition).
@@ -173,11 +173,11 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_positional__expect
     }, channel_id);
 
     instance.stop(expected_ec);
-    BOOST_REQUIRE_EQUAL(stop_ec, expected_ec);
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_ec, expected_ec);
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_named__expected)
+BC_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_named__expected)
 {
     mock_broadcaster instance{};
     using tag = mock_desubscriber::ping3;
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_named__expected)
     bool result{};
     code stop_ec{};
 
-    BOOST_REQUIRE(!instance.subscribe(
+    BC_REQUIRE(!instance.subscribe(
         [&](const code& ec, tag, uint16_t value, std::optional<ping::cptr> ping)
         {
             // Handle stop notification (unavoidable test condition).
@@ -216,11 +216,11 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__non_native_nullable_named__expected)
     }, channel_id);
 
     instance.stop(expected_ec);
-    BOOST_REQUIRE_EQUAL(stop_ec, expected_ec);
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(stop_ec, expected_ec);
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(broadcaster__subscribe__peer_broadcaster_stop__expected)
+BC_AUTO_TEST_CASE(broadcaster__subscribe__peer_broadcaster_stop__expected)
 {
     using peer_broadcaster = broadcaster<interface::peer::broadcast>;
 
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__subscribe__peer_broadcaster_stop__expected)
     constexpr auto expected_ec = network::error::invalid_magic;
     bool result{};
 
-    BOOST_REQUIRE(!instance.subscribe(
+    BC_REQUIRE(!instance.subscribe(
         [&](const code& ec, const address::cptr& address,
             peer_broadcaster::key_t id)
         {
@@ -240,10 +240,10 @@ BOOST_AUTO_TEST_CASE(broadcaster__subscribe__peer_broadcaster_stop__expected)
         }, 17));
 
     instance.stop(expected_ec);
-    BOOST_REQUIRE(result);
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(broadcaster__notify__peer_broadcaster_wire_tx__expected)
+BC_AUTO_TEST_CASE(broadcaster__notify__peer_broadcaster_wire_tx__expected)
 {
     using peer_broadcaster = broadcaster<interface::peer::broadcast>;
 
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__peer_broadcaster_wire_tx__expected)
     wire_tx::cptr result{};
     peer_broadcaster::key_t sender{};
 
-    BOOST_REQUIRE(!instance.subscribe(
+    BC_REQUIRE(!instance.subscribe(
         [&](const code& ec, const wire_tx::cptr& message, peer_broadcaster::key_t id)
         {
             // Handle stop notification (unavoidable test condition).
@@ -272,20 +272,20 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__peer_broadcaster_wire_tx__expected)
     });
 
     instance.stop(network::error::service_stopped);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(result == expected);
-    BOOST_REQUIRE_EQUAL(sender, expected_sender);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(result == expected);
+    BC_REQUIRE_EQUAL(sender, expected_sender);
 }
 
-BOOST_AUTO_TEST_CASE(broadcaster__notify__unknown_method_keyed__unexpected_method)
+BC_AUTO_TEST_CASE(broadcaster__notify__unknown_method_keyed__unexpected_method)
 {
     mock_broadcaster instance{};
     const auto ec = instance.notify(request_t{ .method = "bogus" }, 17);
-    BOOST_REQUIRE_EQUAL(ec, network::error::unexpected_method);
+    BC_REQUIRE_EQUAL(ec, network::error::unexpected_method);
     instance.stop(network::error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(broadcaster__notify__wrong_pointer_type_keyed__unexpected_type)
+BC_AUTO_TEST_CASE(broadcaster__notify__wrong_pointer_type_keyed__unexpected_type)
 {
     mock_broadcaster instance{};
     const auto message = emplace_shared<const pong>(42u);
@@ -295,11 +295,11 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__wrong_pointer_type_keyed__unexpected_t
         .params = { array_t{ any_t{ message }, uint16_t{ 42 } } }
     }, 17);
 
-    BOOST_REQUIRE_EQUAL(ec, network::error::unexpected_type);
+    BC_REQUIRE_EQUAL(ec, network::error::unexpected_type);
     instance.stop(network::error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(broadcaster__notify__wrong_value_type_keyed__unexpected_type)
+BC_AUTO_TEST_CASE(broadcaster__notify__wrong_value_type_keyed__unexpected_type)
 {
     mock_broadcaster instance{};
     const auto message = emplace_shared<const ping>(42u);
@@ -309,11 +309,11 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__wrong_value_type_keyed__unexpected_typ
         .params = { array_t{ any_t{ message }, string_t{ "42" } } }
     }, 17);
 
-    BOOST_REQUIRE_EQUAL(ec, network::error::unexpected_type);
+    BC_REQUIRE_EQUAL(ec, network::error::unexpected_type);
     instance.stop(network::error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(broadcaster__notify__extra_positional_keyed__extra_positional)
+BC_AUTO_TEST_CASE(broadcaster__notify__extra_positional_keyed__extra_positional)
 {
     mock_broadcaster instance{};
     const auto message = emplace_shared<const ping>(42u);
@@ -323,8 +323,8 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__extra_positional_keyed__extra_position
         .params = { array_t{ any_t{ message }, uint16_t{ 42 }, true } }
     }, 17);
 
-    BOOST_REQUIRE_EQUAL(ec, network::error::extra_positional);
+    BC_REQUIRE_EQUAL(ec, network::error::extra_positional);
     instance.stop(network::error::service_stopped);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

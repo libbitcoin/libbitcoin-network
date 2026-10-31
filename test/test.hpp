@@ -94,12 +94,12 @@ struct directory_setup_fixture
 
     directory_setup_fixture() NOEXCEPT
     {
-        BOOST_REQUIRE(clear(directory));
+        BC_REQUIRE(clear(directory));
     }
 
     ~directory_setup_fixture() NOEXCEPT
     {
-        BOOST_REQUIRE(clear(directory));
+        BC_REQUIRE(clear(directory));
     }
 };
 
@@ -110,18 +110,18 @@ struct current_directory_setup_fixture
     current_directory_setup_fixture() NOEXCEPT
       : error_{}, previous_(std::filesystem::current_path(error_))
     {
-        BOOST_REQUIRE(!error_);
+        BC_REQUIRE(!error_);
 
-        BOOST_REQUIRE(clear(directory));
+        BC_REQUIRE(clear(directory));
         std::filesystem::current_path(directory, error_);
-        BOOST_REQUIRE(!error_);
+        BC_REQUIRE(!error_);
     }
 
     ~current_directory_setup_fixture() NOEXCEPT
     {
         std::filesystem::current_path(previous_, error_);
-        BOOST_REQUIRE(!error_);
-        BOOST_REQUIRE(clear(directory));
+        BC_REQUIRE(!error_);
+        BC_REQUIRE(clear(directory));
     }
 
 private:
@@ -134,7 +134,7 @@ private:
 { \
     code require_ec{}; \
     (object).method(__VA_ARGS__ __VA_OPT__(,) require_ec); \
-    BOOST_REQUIRE_EQUAL(require_ec, ::libbitcoin::network::error::success); \
+    BC_REQUIRE_EQUAL(require_ec, ::libbitcoin::network::error::success); \
 }
 
 // Blocking transfers of test peers (required to succeed).
@@ -143,7 +143,7 @@ inline size_t write(Stream& stream, const Buffers& buffers) NOEXCEPT
 {
     code ec{};
     const auto size = io::write(stream, buffers, ec);
-    BOOST_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE_EQUAL(ec, error::success);
     return size;
 }
 
@@ -152,7 +152,7 @@ inline size_t read(Stream& stream, const Buffers& buffers) NOEXCEPT
 {
     code ec{};
     const auto size = io::read(stream, buffers, ec);
-    BOOST_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE_EQUAL(ec, error::success);
     return size;
 }
 
@@ -166,7 +166,7 @@ inline std::string to_string(const io::const_buffer& buffer) NOEXCEPT
 inline system::ip::address address(const std::string_view& text) NOEXCEPT
 {
     system::ip::address out{};
-    BOOST_REQUIRE(system::ip::address::from_string(out, text));
+    BC_REQUIRE(system::ip::address::from_string(out, text));
     return out;
 }
 

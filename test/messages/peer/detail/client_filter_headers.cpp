@@ -18,27 +18,27 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_client_filter_headers_tests)
+BC_AUTO_TEST_SUITE(p2p_client_filter_headers_tests)
 
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(client_filter_headers__properties__always__expected)
+BC_AUTO_TEST_CASE(client_filter_headers__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(client_filter_headers::command, "cfheaders");
+    BC_REQUIRE_EQUAL(client_filter_headers::command, "cfheaders");
     constexpr auto index = messages::peer::registry::index_of<client_filter_headers>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), client_filter_headers::command);
-    BOOST_REQUIRE_EQUAL(client_filter_headers::version_minimum, level::bip157);
-    BOOST_REQUIRE_EQUAL(client_filter_headers::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), client_filter_headers::command);
+    BC_REQUIRE_EQUAL(client_filter_headers::version_minimum, level::bip157);
+    BC_REQUIRE_EQUAL(client_filter_headers::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(client_filter_headers__size__default__expected)
+BC_AUTO_TEST_CASE(client_filter_headers__size__default__expected)
 {
     constexpr auto expected = sizeof(uint8_t)
         + system::hash_size
         + system::hash_size
         + variable_size(zero);
 
-    BOOST_REQUIRE_EQUAL(client_filter_headers{}.size(level::canonical), expected);
+    BC_REQUIRE_EQUAL(client_filter_headers{}.size(level::canonical), expected);
 }
 
 // bitcoin/src/test/data/blockfilters.json (testnet block 2)
@@ -53,53 +53,53 @@ static const auto payload = system::base16_chunk(
     "ebc8ad924c4b239a370dcb9f3278fcc97eb29c45a3c858cab3b5a82afdfad13c");
 static const uint32_t excess_version = add1<uint32_t>(level::maximum_protocol);
 
-BOOST_AUTO_TEST_CASE(client_filter_headers__size__one__expected)
+BC_AUTO_TEST_CASE(client_filter_headers__size__one__expected)
 {
     const client_filter_headers message{ client_filter::type_id::neutrino, stop_hash, previous_header, { filter_hash } };
-    BOOST_REQUIRE_EQUAL(message.size(level::bip157), payload.size());
+    BC_REQUIRE_EQUAL(message.size(level::bip157), payload.size());
 }
 
-BOOST_AUTO_TEST_CASE(client_filter_headers__deserialize1__one__expected)
+BC_AUTO_TEST_CASE(client_filter_headers__deserialize1__one__expected)
 {
     const auto message = client_filter_headers::deserialize(level::bip157, payload);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->filter_type, client_filter::type_id::neutrino);
-    BOOST_REQUIRE_EQUAL(message->stop_hash, stop_hash);
-    BOOST_REQUIRE_EQUAL(message->previous_filter_header, previous_header);
-    BOOST_REQUIRE_EQUAL(message->filter_hashes.size(), one);
-    BOOST_REQUIRE_EQUAL(message->filter_hashes.front(), filter_hash);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->filter_type, client_filter::type_id::neutrino);
+    BC_REQUIRE_EQUAL(message->stop_hash, stop_hash);
+    BC_REQUIRE_EQUAL(message->previous_filter_header, previous_header);
+    BC_REQUIRE_EQUAL(message->filter_hashes.size(), one);
+    BC_REQUIRE_EQUAL(message->filter_hashes.front(), filter_hash);
 }
 
-BOOST_AUTO_TEST_CASE(client_filter_headers__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(client_filter_headers__deserialize1__insufficient_version__nullptr)
 {
-    BOOST_REQUIRE(!client_filter_headers::deserialize(level::bip152, payload));
+    BC_REQUIRE(!client_filter_headers::deserialize(level::bip152, payload));
 }
 
-BOOST_AUTO_TEST_CASE(client_filter_headers__deserialize1__excess_version__nullptr)
+BC_AUTO_TEST_CASE(client_filter_headers__deserialize1__excess_version__nullptr)
 {
-    BOOST_REQUIRE(!client_filter_headers::deserialize(excess_version, payload));
+    BC_REQUIRE(!client_filter_headers::deserialize(excess_version, payload));
 }
 
-BOOST_AUTO_TEST_CASE(client_filter_headers__deserialize1__underflow__nullptr)
+BC_AUTO_TEST_CASE(client_filter_headers__deserialize1__underflow__nullptr)
 {
     const system::data_chunk data{ payload.begin(), std::prev(payload.end()) };
-    BOOST_REQUIRE(!client_filter_headers::deserialize(level::bip157, data));
+    BC_REQUIRE(!client_filter_headers::deserialize(level::bip157, data));
 }
 
-BOOST_AUTO_TEST_CASE(client_filter_headers__deserialize2__one__expected)
+BC_AUTO_TEST_CASE(client_filter_headers__deserialize2__one__expected)
 {
     system::read::bytes::copy source(payload);
     const auto message = client_filter_headers::deserialize(level::maximum_protocol, source);
-    BOOST_REQUIRE(source);
-    BOOST_REQUIRE_EQUAL(message.previous_filter_header, previous_header);
+    BC_REQUIRE(source);
+    BC_REQUIRE_EQUAL(message.previous_filter_header, previous_header);
 }
 
-BOOST_AUTO_TEST_CASE(client_filter_headers__serialize1__one__expected)
+BC_AUTO_TEST_CASE(client_filter_headers__serialize1__one__expected)
 {
     const client_filter_headers message{ client_filter::type_id::neutrino, stop_hash, previous_header, { filter_hash } };
     system::data_chunk data(message.size(level::bip157));
-    BOOST_REQUIRE(message.serialize(level::bip157, data));
-    BOOST_REQUIRE_EQUAL(data, payload);
+    BC_REQUIRE(message.serialize(level::bip157, data));
+    BC_REQUIRE_EQUAL(data, payload);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
