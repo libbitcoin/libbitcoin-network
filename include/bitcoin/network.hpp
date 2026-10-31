@@ -62,6 +62,13 @@
 #include <bitcoin/network/interfaces/interfaces.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
+#include <bitcoin/network/io/buffer.hpp>
+#include <bitcoin/network/io/context.hpp>
+#include <bitcoin/network/io/io.hpp>
+#include <bitcoin/network/io/operations.hpp>
+#include <bitcoin/network/io/socket.hpp>
+#include <bitcoin/network/io/steady_timer.hpp>
+#include <bitcoin/network/io/strand.hpp>
 #include <bitcoin/network/log/capture.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/log.hpp>

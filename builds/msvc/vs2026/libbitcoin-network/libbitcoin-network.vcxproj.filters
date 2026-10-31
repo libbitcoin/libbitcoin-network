@@ -43,128 +43,137 @@
     <Filter Include="include\bitcoin\network\impl\channels">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\impl\messages">
+    <Filter Include="include\bitcoin\network\impl\io">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\impl\messages\http">
+    <Filter Include="include\bitcoin\network\impl\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\impl\messages\rpc">
+    <Filter Include="include\bitcoin\network\impl\messages\http">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\impl\protocols">
+    <Filter Include="include\bitcoin\network\impl\messages\rpc">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\impl\tls">
+    <Filter Include="include\bitcoin\network\impl\protocols">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\interfaces">
+    <Filter Include="include\bitcoin\network\impl\tls">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\interfaces">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\io">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\log">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\http">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\http\enums">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\peer">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\peer\detail">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\peer\enums">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\messages\rpc">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\messages\rpc\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000A1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\net">
+    <Filter Include="include\bitcoin\network\messages\rpc">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\p2ps">
+    <Filter Include="include\bitcoin\network\messages\rpc\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\protocols">
+    <Filter Include="include\bitcoin\network\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\sessions">
+    <Filter Include="include\bitcoin\network\p2ps">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\tls">
+    <Filter Include="include\bitcoin\network\protocols">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\ws">
+    <Filter Include="include\bitcoin\network\sessions">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\zmtp">
+    <Filter Include="include\bitcoin\network\tls">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\ws">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\zmtp">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\async">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\broadcast">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\channels">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\config">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\log">
+    <Filter Include="src\channels">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages">
+    <Filter Include="src\config">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http">
+    <Filter Include="src\io">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000011}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http\enums">
+    <Filter Include="src\log">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000A2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer">
+    <Filter Include="src\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer\detail">
+    <Filter Include="src\messages\http">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\rpc">
+    <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\net">
+    <Filter Include="src\messages\peer">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\p2ps">
+    <Filter Include="src\messages\peer\detail">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\messages\rpc">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tls">
+    <Filter Include="src\p2ps">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ws">
+    <Filter Include="src\protocols">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\zmtp">
+    <Filter Include="src\sessions">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tls">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ws">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\zmtp">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -215,6 +224,30 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\error.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\backend.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\backend_posix.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\backend_windows.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\context.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\native.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\scheduler.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\socket.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\steady_timer.cpp">
+      <Filter>src\io</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\log\capture.cpp">
       <Filter>src\log</Filter>
@@ -716,6 +749,27 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp">
       <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\buffer.hpp">
+      <Filter>include\bitcoin\network\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\context.hpp">
+      <Filter>include\bitcoin\network\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\io.hpp">
+      <Filter>include\bitcoin\network\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\operations.hpp">
+      <Filter>include\bitcoin\network\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\socket.hpp">
+      <Filter>include\bitcoin\network\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\steady_timer.hpp">
+      <Filter>include\bitcoin\network\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\strand.hpp">
+      <Filter>include\bitcoin\network\io</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp">
       <Filter>include\bitcoin\network\log</Filter>
     </ClInclude>
@@ -1172,6 +1226,15 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\zmtp.hpp">
       <Filter>include\bitcoin\network\zmtp</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\src\io\backend.hpp">
+      <Filter>src\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\io\native.hpp">
+      <Filter>src\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\io\scheduler.hpp">
+      <Filter>src\io</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\build\include\bitcoin\network\version.hpp">
@@ -1214,6 +1277,12 @@
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\channels\channel_rpc.ipp">
       <Filter>include\bitcoin\network\impl\channels</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\io\operations.ipp">
+      <Filter>include\bitcoin\network\impl\io</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\io\socket.ipp">
+      <Filter>include\bitcoin\network\impl\io</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\parser.ipp">
       <Filter>include\bitcoin\network\impl\messages\http</Filter>

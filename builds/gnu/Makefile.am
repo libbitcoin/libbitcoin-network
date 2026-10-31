@@ -67,6 +67,14 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/config/credential.cpp \
     ${srcdir}/../../src/config/endpoint.cpp \
     ${srcdir}/../../src/config/utilities.cpp \
+    ${srcdir}/../../src/io/backend.cpp \
+    ${srcdir}/../../src/io/backend_posix.cpp \
+    ${srcdir}/../../src/io/backend_windows.cpp \
+    ${srcdir}/../../src/io/context.cpp \
+    ${srcdir}/../../src/io/native.cpp \
+    ${srcdir}/../../src/io/scheduler.cpp \
+    ${srcdir}/../../src/io/socket.cpp \
+    ${srcdir}/../../src/io/steady_timer.cpp \
     ${srcdir}/../../src/log/capture.cpp \
     ${srcdir}/../../src/log/logger.cpp \
     ${srcdir}/../../src/log/reporter.cpp \
@@ -313,6 +321,13 @@ include_bitcoin_network_impl_channelsdir = \
 include_bitcoin_network_impl_channels_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/impl/channels/channel_rpc.ipp
 
+include_bitcoin_network_impl_iodir = \
+    ${includedir}/bitcoin/network/impl/io
+
+include_bitcoin_network_impl_io_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/io/operations.ipp \
+    ${srcdir}/../../include/bitcoin/network/impl/io/socket.ipp
+
 include_bitcoin_network_impl_messagesdir = \
     ${includedir}/bitcoin/network/impl/messages
 
@@ -353,6 +368,18 @@ include_bitcoin_network_interfaces_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/interfaces/interfaces.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_broadcast.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp
+
+include_bitcoin_network_iodir = \
+    ${includedir}/bitcoin/network/io
+
+include_bitcoin_network_io_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/io/buffer.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/context.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/io.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/operations.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/socket.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/steady_timer.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/strand.hpp
 
 include_bitcoin_network_logdir = \
     ${includedir}/bitcoin/network/log
@@ -642,6 +669,8 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/config/utilities.cpp \
     ${srcdir}/../../test/functional/peer.cpp \
     ${srcdir}/../../test/functional/peer_setup_fixture.cpp \
+    ${srcdir}/../../test/io/context.cpp \
+    ${srcdir}/../../test/io/socket.cpp \
     ${srcdir}/../../test/log/timer.cpp \
     ${srcdir}/../../test/log/tracker.cpp \
     ${srcdir}/../../test/messages/http_body_reader.cpp \

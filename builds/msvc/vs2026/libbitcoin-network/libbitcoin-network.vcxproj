@@ -131,6 +131,18 @@
     <ClCompile Include="..\..\..\..\src\config\utilities.cpp" />
     <ClCompile Include="..\..\..\..\src\define.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />
+    <ClCompile Include="..\..\..\..\src\io\backend.cpp" />
+    <ClCompile Include="..\..\..\..\src\io\backend_posix.cpp" />
+    <ClCompile Include="..\..\..\..\src\io\backend_windows.cpp" />
+    <ClCompile Include="..\..\..\..\src\io\context.cpp">
+      <ObjectFileName>$(IntDir)src_io_context.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\native.cpp" />
+    <ClCompile Include="..\..\..\..\src\io\scheduler.cpp" />
+    <ClCompile Include="..\..\..\..\src\io\socket.cpp">
+      <ObjectFileName>$(IntDir)src_io_socket.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\io\steady_timer.cpp" />
     <ClCompile Include="..\..\..\..\src\log\capture.cpp" />
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
@@ -210,7 +222,9 @@
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\src\net\proxy_actions.cpp" />
     <ClCompile Include="..\..\..\..\src\net\proxy_queue.cpp" />
-    <ClCompile Include="..\..\..\..\src\net\socket.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\socket.cpp">
+      <ObjectFileName>$(IntDir)src_net_socket.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_body.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_connect.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_http.cpp" />
@@ -319,6 +333,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\buffer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\context.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\io.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\operations.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\socket.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\steady_timer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\io\strand.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\levels.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp" />
@@ -471,6 +492,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\role.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\stream.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\zmtp\zmtp.hpp" />
+    <ClInclude Include="..\..\..\..\src\io\backend.hpp" />
+    <ClInclude Include="..\..\..\..\src\io\native.hpp" />
+    <ClInclude Include="..\..\..\..\src\io\scheduler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\desubscriber.ipp" />
@@ -484,6 +508,8 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\channels\channel_rpc.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\io\operations.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\io\socket.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\parser.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\serializer.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json_body.ipp" />

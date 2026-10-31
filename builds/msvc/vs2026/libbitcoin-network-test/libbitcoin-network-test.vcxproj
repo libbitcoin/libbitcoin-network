@@ -126,6 +126,12 @@
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer_setup_fixture.cpp" />
+    <ClCompile Include="..\..\..\..\test\io\context.cpp">
+      <ObjectFileName>$(IntDir)test_io_context.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\io\socket.cpp">
+      <ObjectFileName>$(IntDir)test_io_socket.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
@@ -257,7 +263,9 @@
     <ClCompile Include="..\..\..\..\test\test.cpp" />
     <ClCompile Include="..\..\..\..\test\tls\client.cpp" />
     <ClCompile Include="..\..\..\..\test\tls\codec.cpp" />
-    <ClCompile Include="..\..\..\..\test\tls\context.cpp" />
+    <ClCompile Include="..\..\..\..\test\tls\context.cpp">
+      <ObjectFileName>$(IntDir)test_tls_context.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tls\record.cpp" />
     <ClCompile Include="..\..\..\..\test\tls\schedule.cpp" />
     <ClCompile Include="..\..\..\..\test\tls\server.cpp" />
