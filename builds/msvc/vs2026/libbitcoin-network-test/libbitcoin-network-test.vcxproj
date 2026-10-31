@@ -136,9 +136,11 @@
     <ClCompile Include="..\..\..\..\test\messages\http\enums\media_type.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\header.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
       <ObjectFileName>$(IntDir)test_messages_http_method.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\parser.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http_body_reader.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp" />

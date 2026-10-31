@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
+#include <bitcoin/network/messages/http/file.hpp>
 
 namespace libbitcoin {
 namespace network {

@@ -204,7 +204,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Caller-owned parser for progressive (batched) http reads.
-    using http_parser = boost::beast::http::request_parser<http::body>;
+    using http_parser = http::parser<true, http::body>;
     using http_parser_ptr = std::shared_ptr<http_parser>;
 
     /// Latch http vs. tcp from buffered bytes, reading only as required to
@@ -421,26 +421,36 @@ private:
         http::body::writer writer;
     };
 
-    struct header_state
+    struct serialize_state
     {
-        typedef std::shared_ptr<header_state> ptr;
-        using http_serializer =
-            boost::beast::http::response_serializer<http::body>;
+        typedef std::shared_ptr<serialize_state> ptr;
 
-        header_state(http::response&& response) NOEXCEPT
+        serialize_state(http::response&& response) NOEXCEPT
           : value{ std::move(response) }, serializer{ value }
         {
         }
 
         http::response value;
-        http_serializer serializer;
+        http::serializer<false, http::body> serializer;
+        http::const_buffers buffers{};
+    };
+
+    struct header_state
+    {
+        typedef std::shared_ptr<header_state> ptr;
+
+        header_state(std::string&& text) NOEXCEPT
+          : header{ std::move(text) }
+        {
+        }
+
+        std::string header;
     };
 
     struct chunk_state
     {
         typedef std::shared_ptr<chunk_state> ptr;
         using out_buffer = http::body::writer::out_buffer;
-        using chunk = boost::beast::http::chunk_body<asio::const_buffer>;
 
         chunk_state(http::response&& response) NOEXCEPT
           : value{ std::move(response) }, writer{ value.base(), value.body() }
@@ -458,7 +468,15 @@ private:
         bool more{ true };
         http::response value;
         http::body::writer writer;
-        std::optional<chunk> part{};
+        std::string prefix{};
+        http::const_buffers buffers{};
+    };
+
+    enum class parse_mode
+    {
+        header,
+        some,
+        all
     };
 
     // do
@@ -544,13 +562,19 @@ private:
     void do_http_write(const http::response_ptr& response,
         const count_handler& handler) NOEXCEPT;
 
+    // http (codec)
+    void do_parse(const ref<http::flat_buffer>& buffer,
+        const http_parser_ptr& parser, parse_mode mode, size_t total,
+        const count_handler& handler) NOEXCEPT;
+    void do_serialize(const serialize_state::ptr& out, size_t total,
+        const count_handler& handler) NOEXCEPT;
+
     // http (progressive)
     void do_http_read_header(ref<http::flat_buffer> buffer,
         const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
-    void do_http_read_some(ref<http::flat_buffer> buffer,
-        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void do_http_read_body(ref<http::flat_buffer> buffer,
-        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
+        const http_parser_ptr& parser, parse_mode mode,
+        const count_handler& handler) NOEXCEPT;
     void do_http_write_header(const header_state::ptr& out,
         const count_handler& handler) NOEXCEPT;
     void do_chunk_write(boost_code ec, size_t total,
@@ -633,17 +657,22 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // http/ws (native/rpc)
-    void handle_http_read(const boost_code& ec, size_t size,
+    void handle_http_read(const code& ec, size_t size,
         const ref<http::request>& request, const http_parser_ptr& parser,
         const count_handler& handler) NOEXCEPT;
-    void handle_http_write(const boost_code& ec, size_t size,
-        const http::response_ptr& request,
+    void handle_http_write(const code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
+
+    // http (codec)
+    void handle_parse(const code& ec, size_t size,
+        const ref<http::flat_buffer>& buffer, const http_parser_ptr& parser,
+        parse_mode mode, size_t total, const count_handler& handler) NOEXCEPT;
+    void handle_serialize(const boost_code& ec, size_t size,
+        const serialize_state::ptr& out, size_t total,
         const count_handler& handler) NOEXCEPT;
 
     // http (progressive)
-    void handle_http_read_header(const boost_code& ec, size_t size,
-        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
-    void handle_http_read_some(const boost_code& ec, size_t size,
+    void handle_http_read_header(const code& ec, size_t size,
         const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void handle_http_write_header(const boost_code& ec, size_t size,
         const header_state::ptr& out, const count_handler& handler) NOEXCEPT;

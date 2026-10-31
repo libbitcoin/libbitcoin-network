@@ -188,23 +188,8 @@ std::filesystem::path sanitize_origin(const std::filesystem::path& base,
 
 http::file get_file_body(const std::filesystem::path& path) NOEXCEPT
 {
-    using namespace system;
-    using namespace boost::beast;
-
-    // http::file::open accepts a "utf-8 encoded path to the file" on win32.
-    const auto utf8_path = from_path(path);
     http::file file{};
-
-    try
-    {
-        error_code code{};
-        file.open(utf8_path.c_str(), file_mode::read, code);
-        if (code) file.close();
-    }
-    catch (...)
-    {
-    }
-
+    file.open_read(path);
     return file;
 }
 

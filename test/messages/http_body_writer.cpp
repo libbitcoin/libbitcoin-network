@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_SUITE(http_body_writer_tests)
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__undefined__constructs_empty_writer)
 {
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     ///value = empty_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__undefined__constructs_empty_wr
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__empty__constructs_empty_writer)
 {
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = empty_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__empty__constructs_empty_writer
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__json__constructs_json_writer)
 {
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = json_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__json__constructs_json_writer)
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__data__constructs_data_writer)
 {
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = chunk_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__data__constructs_data_writer)
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__span__constructs_span_writer)
 {
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = span_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__span__constructs_span_writer)
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__buffer__constructs_buffer_writer)
 {
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = buffer_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__buffer__constructs_buffer_writ
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__string__constructs_string_writer)
 {
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = string_body::value_type{};
     const auto variant = accessor::to_writer(header, value);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__string__constructs_string_writ
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__rpc_response__constructs_rpc_writer)
 {
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = rpc::response{};
     const auto variant = accessor::to_writer(header, value);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__rpc_response__constructs_rpc_w
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__rpc_request__constructs_rpc_notifier)
 {
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = rpc::request{};
     const auto variant = accessor::to_writer(header, value);
@@ -133,10 +133,9 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__file__constructs_file_writer)
     // BOOST_ASSERT(body_.file_.is_open());
     boost_code ec{};
     file_body::value_type file{};
-    file.open((TEST_PATH).c_str(), boost::beast::file_mode::write, ec);
-    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(file.open_write(TEST_PATH));
 
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = std::move(file);
     const auto variant = accessor::to_writer(header, value);
@@ -150,10 +149,9 @@ BOOST_AUTO_TEST_CASE(http_body_writer__get__file__expected_content_no_more)
 
     boost_code ec{};
     file_body::value_type file{};
-    file.open((TEST_PATH).c_str(), boost::beast::file_mode::read, ec);
-    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(file.open_read(TEST_PATH));
 
-    message_header<false, fields> header{};
+    response_header header{};
     body::value_type value{};
     value = std::move(file);
     body::writer writer(header, value);
@@ -165,8 +163,8 @@ BOOST_AUTO_TEST_CASE(http_body_writer__get__file__expected_content_no_more)
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(!buffer.get().second);
-    BOOST_REQUIRE_EQUAL(std::string(system::pointer_cast<const char>(buffer.get().first.data()), buffer.get().first.size()), expected);
+    BOOST_REQUIRE(!buffer.value().second);
+    BOOST_REQUIRE_EQUAL(std::string(system::pointer_cast<const char>(buffer.value().first.data()), buffer.value().first.size()), expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

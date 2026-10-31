@@ -300,8 +300,7 @@ BOOST_FIXTURE_TEST_CASE(socket__body_write__empty_file__success, rpc_directory_f
 
     boost_code ec{};
     http::file_value file{};
-    file.open((TEST_PATH).c_str(), boost::beast::file_mode::read, ec);
-    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(file.open_read(TEST_PATH));
 
     http::response response{};
     response.body() = std::move(file);

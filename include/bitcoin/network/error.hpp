@@ -385,7 +385,6 @@ typedef boost::asio::error::addrinfo_errors asio_addrinfo_error_t;
 typedef boost::asio::error::misc_errors asio_misc_error_t;
 typedef boost::asio::ssl::error::stream_errors asio_ssl_stream_error_t;
 typedef boost::beast::websocket::error ws_error_t;
-typedef boost::beast::http::error http_error_t;
 typedef system::error::json_error_t json_error_t;
 
 inline boost_code to_errc_code(boost_errc_t ec) NOEXCEPT
@@ -401,12 +400,49 @@ inline boost_code to_asio_basic_code(asio_basic_error_t ec) NOEXCEPT
     BC_POP_WARNING()
 }
 
+/// Errors of the http codec.
+enum class http_error_t
+{
+    end_of_stream = 1,
+    partial_message,
+    need_more,
+    unexpected_body,
+    need_buffer,
+    end_of_chunk,
+    buffer_overflow,
+    header_limit,
+    body_limit,
+    bad_alloc,
+    bad_line_ending,
+    bad_method,
+    bad_target,
+    bad_version,
+    bad_status,
+    bad_reason,
+    bad_field,
+    bad_value,
+    bad_content_length,
+    bad_transfer_encoding,
+    bad_chunk,
+    bad_chunk_extension,
+    bad_obs_fold,
+    multiple_content_length,
+    stale_parser,
+    short_read
+};
+
+/// The category of http codec errors.
+BCT_API const boost::system::error_category& http_category() NOEXCEPT;
+
 inline boost_code to_http_code(http_error_t ec) NOEXCEPT
 {
-    // no public category.
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return boost::beast::http::make_error_code(ec);
-    BC_POP_WARNING()
+    return { static_cast<int>(ec), http_category() };
+}
+
+/// Enables comparison of boost_code with http_error_t.
+inline boost_code make_error_code(http_error_t ec) NOEXCEPT
+{
+    return to_http_code(ec);
 }
 
 inline boost_code to_ssl_stream_code(asio_ssl_stream_error_t ec) NOEXCEPT
@@ -460,5 +496,17 @@ BCT_API code errc_to_error_code(const boost_code& ec) NOEXCEPT;
 } // namespace libbitcoin
 
 DECLARE_STD_ERROR_REGISTRATION(bc::network::error::error)
+
+namespace boost {
+namespace system {
+
+template <>
+struct is_error_code_enum<bc::network::error::http_error_t>
+  : public std::true_type
+{
+};
+
+} // namespace system
+} // namespace boost
 
 #endif

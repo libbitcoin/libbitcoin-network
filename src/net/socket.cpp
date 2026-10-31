@@ -621,20 +621,17 @@ void socket::async_read_http(http::flat_buffer& buffer, http::request& request,
     {
         if (websocket())
         {
-            // The body reader processes a websocket read just like a
-            // beast::http::async_read but without the headers. The expected
-            // body type (parser) must be preselected on the request object.
+            // The body reader processes a websocket read just like an http
+            // read but without the headers. The expected body type (parser)
+            // must be preselected on the request object.
             body_read(buffer, request, move_copy(handler));
         }
         else
         {
-            // Explicit parser override gives access to limits.
-            auto parser = to_shared<http_parser>();
+            const auto parser = to_shared<http_parser>();
             parser->body_limit(maximum_);
-            parser->header_limit(limit<uint32_t>(header_));
-
-            VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_read,
-                get_tcp(), buffer, *parser,
+            parser->header_limit(header_);
+            do_parse(std::ref(buffer), parser, parse_mode::all, zero,
                 std::bind(&socket::handle_http_read,
                     shared_from_this(), _1, _2, std::ref(request), parser,
                     handler));
@@ -657,18 +654,19 @@ void socket::async_write_http(http::response&& response,
     {
         if (websocket())
         {
-            // The body writer processes a websocket write just like a
-            // beast::http::async_write but without the headers. The expected
-            // body type (serializer) is determined by caller-assigned body.
+            // The body writer processes a websocket write just like an http
+            // write but without the headers. The expected body type
+            // (serializer) is determined by caller-assigned body.
             body_write(std::move(response), move_copy(handler));
         }
         else
         {
-            const auto out = move_shared(std::move(response));
-            VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_write,
-                get_tcp(), *out,
+            const auto out = emplace_shared<serialize_state>(
+                std::move(response));
+
+            do_serialize(out, zero,
                 std::bind(&socket::handle_http_write,
-                    shared_from_this(), _1, _2, out, handler));
+                    shared_from_this(), _1, _2, handler));
         }
     }
     catch (const std::exception& e)

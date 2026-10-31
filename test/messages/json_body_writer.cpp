@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.value().first == out);
+    BOOST_REQUIRE(!buffer.value().second);
 }
 
 BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_more)
@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_m
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.value().first == out);
+    BOOST_REQUIRE(!buffer.value().second);
 }
 
 // A size_hint smaller than the serialized payload forces writer.get() to be
@@ -140,29 +140,29 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four
     const auto buffer1 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
+    BOOST_REQUIRE(buffer1.value().first == out1);
+    BOOST_REQUIRE(buffer1.value().second);
     BOOST_REQUIRE(!writer.done());
 
     const auto buffer2 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(buffer2.get().second);
+    BOOST_REQUIRE(buffer2.value().first == out2);
+    BOOST_REQUIRE(buffer2.value().second);
     BOOST_REQUIRE(!writer.done());
 
     const auto buffer3 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer3.has_value());
-    BOOST_REQUIRE(buffer3.get().first == out3);
-    BOOST_REQUIRE(buffer3.get().second);
+    BOOST_REQUIRE(buffer3.value().first == out3);
+    BOOST_REQUIRE(buffer3.value().second);
     BOOST_REQUIRE(!writer.done());
 
     const auto buffer4 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer4.has_value());
-    BOOST_REQUIRE(buffer4.get().first == out4);
-    BOOST_REQUIRE(!buffer4.get().second);
+    BOOST_REQUIRE(buffer4.value().first == out4);
+    BOOST_REQUIRE(!buffer4.value().second);
     BOOST_REQUIRE(writer.done());
 }
 

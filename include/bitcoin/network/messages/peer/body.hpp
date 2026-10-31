@@ -21,6 +21,8 @@
 
 #include <span>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/http/header.hpp>
+#include <bitcoin/network/messages/http/message.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>
 
@@ -75,8 +77,8 @@ struct BCT_API body
         {
         }
 
-        template <bool IsRequest, class Fields>
-        inline reader(http::message_header<IsRequest, Fields>&,
+        template <bool IsRequest>
+        inline reader(http::header<IsRequest>&,
             value_type& value) NOEXCEPT
           : reader{ value }
         {
@@ -120,8 +122,8 @@ struct BCT_API body
         {
         }
 
-        template <bool IsRequest, class Fields>
-        inline explicit writer(http::message_header<IsRequest, Fields>&,
+        template <bool IsRequest>
+        inline explicit writer(http::header<IsRequest>&,
             value_type& value) NOEXCEPT
           : value_{ value }
         {

@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.value().first == out);
+    BOOST_REQUIRE(!buffer.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -118,8 +118,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__succe
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.value().first == out);
+    BOOST_REQUIRE(!buffer.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -141,9 +141,9 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_e
     BOOST_REQUIRE(buffer.has_value());
 
     using namespace system;
-    const std::string data{ pointer_cast<const char>(buffer.get().first.data()), buffer.get().first.size() };
+    const std::string data{ pointer_cast<const char>(buffer.value().first.data()), buffer.value().first.size() };
     BOOST_REQUIRE_EQUAL(data, expected);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(!buffer.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -165,9 +165,9 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__terminated_fills_bound_less_one__one_
     BOOST_REQUIRE(buffer.has_value());
 
     using namespace system;
-    const std::string data{ pointer_cast<const char>(buffer.get().first.data()), buffer.get().first.size() };
+    const std::string data{ pointer_cast<const char>(buffer.value().first.data()), buffer.value().first.size() };
     BOOST_REQUIRE_EQUAL(data, expected);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(!buffer.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -189,16 +189,16 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__terminated_fills_bound__two_chunks_wi
     const auto buffer1 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().second);
+    BOOST_REQUIRE(buffer1.value().second);
 
-    const std::string part1{ pointer_cast<const char>(buffer1.get().first.data()), buffer1.get().first.size() };
+    const std::string part1{ pointer_cast<const char>(buffer1.value().first.data()), buffer1.value().first.size() };
     const auto buffer2 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(!buffer2.value().second);
     BOOST_REQUIRE(writer.done());
 
-    const std::string part2{ pointer_cast<const char>(buffer2.get().first.data()), buffer2.get().first.size() };
+    const std::string part2{ pointer_cast<const char>(buffer2.value().first.data()), buffer2.value().first.size() };
     BOOST_REQUIRE_LE(part1.size(), bound);
     BOOST_REQUIRE_LE(part2.size(), bound);
     BOOST_REQUIRE_EQUAL(part1 + part2, expected);
@@ -228,15 +228,15 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_terminated__open_pref
     const auto buffer1 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
+    BOOST_REQUIRE(buffer1.value().first == out1);
+    BOOST_REQUIRE(buffer1.value().second);
     BOOST_REQUIRE(!writer.done());
 
     const auto buffer2 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(buffer2.value().first == out2);
+    BOOST_REQUIRE(!buffer2.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -261,15 +261,15 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_continuation_part_terminated__s
     const auto buffer1 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
+    BOOST_REQUIRE(buffer1.value().first == out1);
+    BOOST_REQUIRE(buffer1.value().second);
     BOOST_REQUIRE(!writer.done());
 
     const auto buffer2 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(buffer2.value().first == out2);
+    BOOST_REQUIRE(!buffer2.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -294,15 +294,15 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_terminated__close_te
     const auto buffer1 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
+    BOOST_REQUIRE(buffer1.value().first == out1);
+    BOOST_REQUIRE(buffer1.value().second);
     BOOST_REQUIRE(!writer.done());
 
     const auto buffer2 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(buffer2.value().first == out2);
+    BOOST_REQUIRE(!buffer2.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -325,8 +325,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_non_terminated__clos
     const auto buffer1 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(!buffer1.get().second);
+    BOOST_REQUIRE(buffer1.value().first == out1);
+    BOOST_REQUIRE(!buffer1.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -350,14 +350,14 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_non_terminated__open_
     const auto buffer1 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
+    BOOST_REQUIRE(buffer1.value().first == out1);
+    BOOST_REQUIRE(buffer1.value().second);
 
     const auto buffer2 = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(!buffer2.get().second);
+    BOOST_REQUIRE(buffer2.value().first == out2);
+    BOOST_REQUIRE(!buffer2.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -381,8 +381,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__v2_error_null_id__expected)
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.value().first == out);
+    BOOST_REQUIRE(!buffer.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -403,8 +403,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__v2_error_data_string_id__expected)
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.value().first == out);
+    BOOST_REQUIRE(!buffer.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -429,8 +429,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__notification_non_terminated__
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.value().first == out);
+    BOOST_REQUIRE(!buffer.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -452,9 +452,9 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__notification_terminated__succ
     BOOST_REQUIRE(buffer.has_value());
 
     using namespace system;
-    const std::string data{ pointer_cast<const char>(buffer.get().first.data()), buffer.get().first.size() };
+    const std::string data{ pointer_cast<const char>(buffer.value().first.data()), buffer.value().first.size() };
     BOOST_REQUIRE_EQUAL(data, std::string{ expected_json } + "\n");
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(!buffer.value().second);
     BOOST_REQUIRE(writer.done());
 }
 
@@ -475,8 +475,8 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__request_with_id__expected)
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.value().first == out);
+    BOOST_REQUIRE(!buffer.value().second);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__empty_request__empty_object)
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__empty_request__empty_object)
     const auto buffer = writer.get(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
+    BOOST_REQUIRE(buffer.value().first == out);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_writer__request_init__null_buffer__bad_alloc)

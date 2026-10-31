@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_messa
     const auto expected = system::json::serialize(content.model);
 
     const auto response = std::make_shared<http::response>();
-    response->result(boost::beast::http::status::ok);
+    response->result(http::status::ok);
     response->body() = std::move(content);
 
     const auto accept_result = std::make_shared<std::promise<code>>();
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
     const auto expected = system::json::serialize(content.model);
 
     const auto response = std::make_shared<http::response>();
-    response->result(boost::beast::http::status::ok);
+    response->result(http::status::ok);
     response->body() = std::move(content);
     response->prepare_payload();
 

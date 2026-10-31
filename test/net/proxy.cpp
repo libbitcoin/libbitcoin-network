@@ -432,7 +432,7 @@ template <typename Body>
 static http::response to_http(Body&& body)
 {
     http::response out{};
-    out.result(boost::beast::http::status::ok);
+    out.result(http::status::ok);
     out.body() = std::forward<Body>(body);
     out.prepare_payload();
     return out;
@@ -1157,7 +1157,7 @@ BOOST_FIXTURE_TEST_CASE(proxy__read_http__websocket_upgrade__upgrade_published_a
 {
     BOOST_REQUIRE_EQUAL(upgrade_result, error::upgrade);
     BOOST_REQUIRE_EQUAL(accept_result, error::success);
-    BOOST_REQUIRE(boost::beast::websocket::is_upgrade(http_request));
+    BOOST_REQUIRE(http::is_upgrade(http_request));
     BOOST_REQUIRE(channel->websocket());
 }
 

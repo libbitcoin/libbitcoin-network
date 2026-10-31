@@ -74,8 +74,16 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/log/reporter.cpp \
     ${srcdir}/../../src/messages/http_body.cpp \
     ${srcdir}/../../src/messages/http/fields.cpp \
+    ${srcdir}/../../src/messages/http/file.cpp \
+    ${srcdir}/../../src/messages/http/flat_buffer.cpp \
+    ${srcdir}/../../src/messages/http/header.cpp \
+    ${srcdir}/../../src/messages/http/parser.cpp \
+    ${srcdir}/../../src/messages/http/serializer.cpp \
+    ${srcdir}/../../src/messages/http/enums/field.cpp \
     ${srcdir}/../../src/messages/http/enums/media_type.cpp \
+    ${srcdir}/../../src/messages/http/enums/status.cpp \
     ${srcdir}/../../src/messages/http/enums/target.cpp \
+    ${srcdir}/../../src/messages/http/enums/verb.cpp \
     ${srcdir}/../../src/messages/peer/body.cpp \
     ${srcdir}/../../src/messages/peer/message.cpp \
     ${srcdir}/../../src/messages/peer/detail/address.cpp \
@@ -317,6 +325,13 @@ include_bitcoin_network_impl_messagesdir = \
 include_bitcoin_network_impl_messages_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/impl/messages/json_body.ipp
 
+include_bitcoin_network_impl_messages_httpdir = \
+    ${includedir}/bitcoin/network/impl/messages/http
+
+include_bitcoin_network_impl_messages_http_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/messages/http/parser.ipp \
+    ${srcdir}/../../include/bitcoin/network/impl/messages/http/serializer.ipp
+
 include_bitcoin_network_impl_messages_rpcdir = \
     ${includedir}/bitcoin/network/impl/messages/rpc
 
@@ -364,14 +379,21 @@ include_bitcoin_network_messages_httpdir = \
     ${includedir}/bitcoin/network/messages/http
 
 include_bitcoin_network_messages_http_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/http/bodies.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/fields.hpp \
-    ${srcdir}/../../include/bitcoin/network/messages/http/file_body.hpp \
-    ${srcdir}/../../include/bitcoin/network/messages/http/http.hpp
+    ${srcdir}/../../include/bitcoin/network/messages/http/file.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/flat_buffer.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/header.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/http.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/message.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/parser.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/serializer.hpp
 
 include_bitcoin_network_messages_http_enumsdir = \
     ${includedir}/bitcoin/network/messages/http/enums
 
 include_bitcoin_network_messages_http_enums_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/http/enums/field.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/enums/magic_numbers.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/enums/media_type.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/enums/status.hpp \
@@ -634,7 +656,9 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/messages/json_body_reader.cpp \
     ${srcdir}/../../test/messages/json_body_writer.cpp \
     ${srcdir}/../../test/messages/http/fields.cpp \
+    ${srcdir}/../../test/messages/http/header.cpp \
     ${srcdir}/../../test/messages/http/method.cpp \
+    ${srcdir}/../../test/messages/http/parser.cpp \
     ${srcdir}/../../test/messages/http/enums/magic_numbers.cpp \
     ${srcdir}/../../test/messages/http/enums/media_type.cpp \
     ${srcdir}/../../test/messages/http/enums/target.cpp \

@@ -602,6 +602,56 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
     return errc_to_error_code(ec);
 }
 
+class http_category_t final
+  : public boost::system::error_category
+{
+public:
+    const char* name() const noexcept override
+    {
+        return "libbitcoin.http";
+    }
+
+    std::string message(int value) const override
+    {
+        switch (static_cast<http_error_t>(value))
+        {
+            case http_error_t::end_of_stream: return "end of stream";
+            case http_error_t::partial_message: return "partial message";
+            case http_error_t::need_more: return "need more";
+            case http_error_t::unexpected_body: return "unexpected body";
+            case http_error_t::need_buffer: return "need buffer";
+            case http_error_t::end_of_chunk: return "end of chunk";
+            case http_error_t::buffer_overflow: return "buffer overflow";
+            case http_error_t::header_limit: return "header limit exceeded";
+            case http_error_t::body_limit: return "body limit exceeded";
+            case http_error_t::bad_alloc: return "bad alloc";
+            case http_error_t::bad_line_ending: return "bad line ending";
+            case http_error_t::bad_method: return "bad method";
+            case http_error_t::bad_target: return "bad target";
+            case http_error_t::bad_version: return "bad version";
+            case http_error_t::bad_status: return "bad status";
+            case http_error_t::bad_reason: return "bad reason";
+            case http_error_t::bad_field: return "bad field";
+            case http_error_t::bad_value: return "bad value";
+            case http_error_t::bad_content_length: return "bad Content-Length";
+            case http_error_t::bad_transfer_encoding: return "bad Transfer-Encoding";
+            case http_error_t::bad_chunk: return "bad chunk";
+            case http_error_t::bad_chunk_extension: return "bad chunk extension";
+            case http_error_t::bad_obs_fold: return "bad obs-fold";
+            case http_error_t::multiple_content_length: return "multiple Content-Length";
+            case http_error_t::stale_parser: return "stale parser";
+            case http_error_t::short_read: return "unexpected eof in body";
+            default: return "http error";
+        }
+    }
+};
+
+const boost::system::error_category& http_category() NOEXCEPT
+{
+    static const http_category_t instance{};
+    return instance;
+}
+
 // includes json codes
 code http_to_error_code(const boost_code& ec) NOEXCEPT
 {

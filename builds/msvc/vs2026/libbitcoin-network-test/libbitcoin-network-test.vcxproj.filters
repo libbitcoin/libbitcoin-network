@@ -189,7 +189,13 @@
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\header.cpp">
+      <Filter>src\messages\http</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
+      <Filter>src\messages\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\parser.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\http_body_reader.cpp">

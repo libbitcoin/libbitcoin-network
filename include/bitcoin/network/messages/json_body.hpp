@@ -20,6 +20,9 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_HPP
 
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/http/flat_buffer.hpp>
+#include <bitcoin/network/messages/http/header.hpp>
+#include <bitcoin/network/messages/http/message.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -68,8 +71,8 @@ struct body
         {
         }
 
-        template <bool IsRequest, class Fields>
-        inline explicit reader(http::message_header<IsRequest, Fields>&,
+        template <bool IsRequest>
+        inline explicit reader(http::header<IsRequest>&,
             value_type& value) NOEXCEPT
           : value_{ value }
         {
@@ -101,8 +104,8 @@ struct body
         {
         }
 
-        template <bool IsRequest, class Fields>
-        inline explicit writer(http::message_header<IsRequest, Fields>&,
+        template <bool IsRequest>
+        inline explicit writer(http::header<IsRequest>&,
             value_type& value) NOEXCEPT
           : writer{ value }
         {

@@ -137,26 +137,18 @@ void socket::do_http_read(ref<http::flat_buffer> buffer,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-
     async_read_http(buffer.get(), request.get(), handler);
 }
 
 // private
-void socket::handle_http_read(const boost_code& ec, size_t size,
+void socket::handle_http_read(const code& ec, size_t size,
     const ref<http::request>& request, const http_parser_ptr& parser,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (error::asio_is_canceled(ec))
+    if (!ec && http::is_upgrade(parser->get()))
     {
-        handler(error::channel_stopped, size);
-        return;
-    }
-
-    if (!ec && boost::beast::websocket::is_upgrade(parser->get()))
-    {
-        // Publish the upgrade request, the channel accepts or refuses it.
         request.get() = parser->release();
         handler(error::upgrade, size);
         return;
@@ -165,8 +157,6 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
     if (!ec)
     {
         request.get() = parser->release();
-
-        // Dispatch of `verb::unknown` is reserved for websocket.
         if (request.get().method() == http::verb::unknown)
         {
             handler(error::bad_method, size);
@@ -174,9 +164,7 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
         }
     }
 
-    const auto code = error::http_to_error_code(ec);
-    if (code == error::unknown) logx("http-read", ec);
-    handler(code, size);
+    handler(ec, size);
 }
 
 // HTTP/WS (write).
@@ -200,21 +188,170 @@ void socket::do_http_write(const http::response_ptr& response,
 }
 
 // private
-void socket::handle_http_write(const boost_code& ec, size_t size,
-    const http::response_ptr&, const count_handler& handler) NOEXCEPT
+void socket::handle_http_write(const code& ec, size_t size,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     reclaim_buffer();
+    handler(ec, size);
+}
 
-    if (error::asio_is_canceled(ec))
+// HTTP (parse).
+// ----------------------------------------------------------------------------
+// The buffered bytes are parsed before reading more. The header parse returns
+// once the header is complete, the some parse once it progresses, and the
+// full parse once the message is complete. A body reader may pause any parse
+// (need_buffer), which is returned to the caller.
+
+// private
+void socket::do_parse(const ref<http::flat_buffer>& buffer,
+    const http_parser_ptr& parser, parse_mode mode, size_t total,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    auto& in = buffer.get();
+
+    while (true)
     {
-        handler(error::channel_stopped, size);
+        boost_code ec{};
+        const auto used = parser->put(in.data(), ec);
+        in.consume(used);
+        total = ceilinged_add(total, used);
+
+        if (ec == error::http_error_t::need_more)
+            break;
+
+        if (ec)
+        {
+            const auto code = error::http_to_error_code(ec);
+            if (code == error::unknown) logx("http-parse", ec);
+            handler(code, total);
+            return;
+        }
+
+        if (parser->is_done() || (mode == parse_mode::header &&
+            parser->is_header_done()) || (mode == parse_mode::some &&
+            !is_zero(used)))
+        {
+            handler(error::success, total);
+            return;
+        }
+
+        if (is_zero(used))
+            break;
+    }
+
+    // Read into available capacity, growing by up to the header limit.
+    const auto limit = floored_subtract(in.max_size(), in.size());
+    const auto size = std::min(limit, std::max(in.capacity() - in.size(),
+        header_));
+
+    if (is_zero(size))
+    {
+        handler(error::buffer_overflow, total);
         return;
     }
 
-    const auto code = error::http_to_error_code(ec);
-    if (code == error::unknown) logx("http-write", ec);
-    handler(code, size);
+    async_read_some(in.prepare(size),
+        std::bind(&socket::handle_parse,
+            shared_from_this(), _1, _2, buffer, parser, mode, total,
+            handler));
+}
+
+// private
+void socket::handle_parse(const code& ec, size_t size,
+    const ref<http::flat_buffer>& buffer, const http_parser_ptr& parser,
+    parse_mode mode, size_t total, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // The end of the stream completes a body so delimited, or is premature.
+    if (ec == error::peer_disconnect)
+    {
+        boost_code eof{};
+        parser->put_eof(eof);
+        handler(error::http_to_error_code(eof), total);
+        return;
+    }
+
+    if (ec)
+    {
+        handler(ec, total);
+        return;
+    }
+
+    buffer.get().commit(size);
+    do_parse(buffer, parser, mode, total, handler);
+}
+
+// HTTP (serialize).
+// ----------------------------------------------------------------------------
+// Each set of buffers is written in turn.
+
+// private
+void socket::do_serialize(const serialize_state::ptr& out, size_t total,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    while (true)
+    {
+        boost_code ec{};
+        out->buffers = out->serializer.next(ec);
+        if (ec)
+        {
+            const auto code = error::http_to_error_code(ec);
+            if (code == error::unknown) logx("http-serialize", ec);
+            handler(code, total);
+            return;
+        }
+
+        if (!out->buffers.empty())
+            break;
+
+        if (out->serializer.is_done())
+        {
+            handler(error::success, total);
+            return;
+        }
+    }
+
+    try
+    {
+        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
+            out->buffers, std::bind(&socket::handle_serialize,
+                shared_from_this(), _1, _2, out, total, handler));
+    }
+    catch (const std::exception& e)
+    {
+        LOGF("Exception @ http_serialize: " << e.what());
+        handler(error::operation_failed, total);
+    }
+}
+
+// private
+void socket::handle_serialize(const boost_code& ec, size_t size,
+    const serialize_state::ptr& out, size_t total,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    total = ceilinged_add(total, size);
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, total);
+        return;
+    }
+
+    if (ec)
+    {
+        const auto code = error::asio_to_error_code(ec);
+        if (code == error::unknown) logx("http-write", ec);
+        handler(code, total);
+        return;
+    }
+
+    do_serialize(out, total, handler);
 }
 
 // HTTP (progressive read).
@@ -237,67 +374,49 @@ void socket::do_http_read_header(ref<http::flat_buffer> buffer,
 {
     BC_ASSERT(stranded());
 
-    try
+    // Websocket messages have no http headers.
+    if (websocket())
     {
-        // Websocket messages have no http headers.
-        if (websocket())
-        {
-            handler(error::operation_failed, {});
-            return;
-        }
-
-        auto& parse = *parser;
-        parse.body_limit(maximum_);
-        parse.header_limit(limit<uint32_t>(header_));
-
-        VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_read_header,
-            get_tcp(), buffer.get(), parse,
-            std::bind(&socket::handle_http_read_header,
-                shared_from_this(), _1, _2, parser, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ http_read_header: " << e.what());
         handler(error::operation_failed, {});
+        return;
     }
+
+    parser->body_limit(maximum_);
+    parser->header_limit(header_);
+    do_parse(buffer, parser, parse_mode::header, zero,
+        std::bind(&socket::handle_http_read_header,
+            shared_from_this(), _1, _2, parser, handler));
 }
 
 // private
-void socket::handle_http_read_header(const boost_code& ec, size_t size,
+void socket::handle_http_read_header(const code& ec, size_t size,
     const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (error::asio_is_canceled(ec))
-    {
-        handler(error::channel_stopped, size);
-        return;
-    }
-
-    if (!ec && boost::beast::websocket::is_upgrade(parser->get()))
+    if (!ec && http::is_upgrade(parser->get()))
     {
         handler(error::upgrade, size);
         return;
     }
 
-    // Dispatch of `verb::unknown` is reserved for websocket.
+    // Dispatch of the unknown verb is reserved for websocket.
     if (!ec && parser->get().method() == http::verb::unknown)
     {
         handler(error::bad_method, size);
         return;
     }
 
-    const auto code = error::http_to_error_code(ec);
-    if (code == error::unknown) logx("http-read-header", ec);
-    handler(code, size);
+    handler(ec, size);
 }
 
 void socket::http_read_some(http::flat_buffer& buffer,
     const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_read_some, shared_from_this(),
-            std::ref(buffer), parser, std::move(handler)));
+        std::bind(&socket::do_http_read_body, shared_from_this(),
+            std::ref(buffer), parser, parse_mode::some,
+            std::move(handler)));
 }
 
 void socket::http_read_body(http::flat_buffer& buffer,
@@ -305,80 +424,24 @@ void socket::http_read_body(http::flat_buffer& buffer,
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_http_read_body, shared_from_this(),
-            std::ref(buffer), parser, std::move(handler)));
+            std::ref(buffer), parser, parse_mode::all, std::move(handler)));
 }
 
 // private
 void socket::do_http_read_body(ref<http::flat_buffer> buffer,
-    const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT
+    const http_parser_ptr& parser, parse_mode mode,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    try
+    // Websocket messages have no http framing.
+    if (websocket())
     {
-        // Websocket messages have no http framing.
-        if (websocket())
-        {
-            handler(error::operation_failed, {});
-            return;
-        }
-
-        VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_read,
-            get_tcp(), buffer.get(), *parser,
-            std::bind(&socket::handle_http_read_some,
-                shared_from_this(), _1, _2, parser, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ http_read_body: " << e.what());
         handler(error::operation_failed, {});
-    }
-}
-
-// private
-void socket::do_http_read_some(ref<http::flat_buffer> buffer,
-    const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    try
-    {
-        // Websocket messages have no http framing.
-        if (websocket())
-        {
-            handler(error::operation_failed, {});
-            return;
-        }
-
-        VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_read_some,
-            get_tcp(), buffer.get(), *parser,
-            std::bind(&socket::handle_http_read_some,
-                shared_from_this(), _1, _2, parser, handler));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ http_read_some: " << e.what());
-        handler(error::operation_failed, {});
-    }
-}
-
-// private
-void socket::handle_http_read_some(const boost_code& ec, size_t size,
-    const http_parser_ptr&, const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (error::asio_is_canceled(ec))
-    {
-        handler(error::channel_stopped, size);
         return;
     }
 
-    // A batched body reader delivers a message by pausing the parse, which
-    // maps to error::need_buffer (distinguished from progress by caller).
-    const auto code = error::http_to_error_code(ec);
-    if (code == error::unknown) logx("http-read-some", ec);
-    handler(code, size);
+    do_parse(buffer, parser, mode, zero, handler);
 }
 
 // HTTP (progressive write).
@@ -390,7 +453,9 @@ void socket::handle_http_read_some(const boost_code& ec, size_t size,
 void socket::http_write_header(http::response&& response,
     count_handler&& handler) NOEXCEPT
 {
-    const auto out = emplace_shared<header_state>(std::move(response));
+    const auto out = emplace_shared<header_state>(
+        http::serialize_header(response.base()));
+
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_http_write_header, shared_from_this(),
             out, std::move(handler)));
@@ -402,18 +467,20 @@ void socket::do_http_write_header(const header_state::ptr& out,
 {
     BC_ASSERT(stranded());
 
+    // Websocket messages have no http headers.
+    if (websocket())
+    {
+        handler(error::operation_failed, {});
+        return;
+    }
+
     try
     {
-        // Websocket messages have no http headers.
-        if (websocket())
-        {
-            handler(error::operation_failed, {});
-            return;
-        }
+        const asio::const_buffer data{ out->header.data(),
+            out->header.size() };
 
-        VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_write_header,
-            get_tcp(), out->serializer,
-            std::bind(&socket::handle_http_write_header,
+        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
+            data, std::bind(&socket::handle_http_write_header,
                 shared_from_this(), _1, _2, out, handler));
     }
     catch (const std::exception& e)
@@ -435,7 +502,7 @@ void socket::handle_http_write_header(const boost_code& ec, size_t size,
         return;
     }
 
-    const auto code = error::http_to_error_code(ec);
+    const auto code = error::asio_to_error_code(ec);
     if (code == error::unknown) logx("http-write-header", ec);
     handler(code, size);
 }
@@ -488,13 +555,19 @@ void socket::do_chunk_write(boost_code ec, size_t total,
     out->more = buffer.value().second;
     const auto& data = buffer.value().first;
 
+    // Frame the part buffer as http chunk data (chunk_state lifetime).
+    out->prefix = http::chunk_header(data.size());
+    out->buffers =
+    {
+        asio::const_buffer{ out->prefix.data(), out->prefix.size() },
+        data,
+        asio::const_buffer{ http::chunk_end.data(), http::chunk_end.size() }
+    };
+
     try
     {
-        // Frame the part buffer as http chunk data (chunk_state lifetime).
-        out->part.emplace(boost::beast::http::make_chunk(data));
-
         VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
-            out->part.value(), std::bind(&socket::handle_chunk_write,
+            out->buffers, std::bind(&socket::handle_chunk_write,
                 shared_from_this(), _1, _2, total, out, handler));
     }
     catch (const std::exception& e)
@@ -545,8 +618,8 @@ void socket::handle_chunk_write(const boost_code& ec, size_t size,
 
     try
     {
-        static constexpr std::string_view terminal{ "0\r\n\r\n" };
-        const asio::const_buffer last{ terminal.data(), terminal.size() };
+        const asio::const_buffer last{ http::last_chunk.data(),
+            http::last_chunk.size() };
 
         VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
             last, std::bind(&socket::handle_chunk_last,

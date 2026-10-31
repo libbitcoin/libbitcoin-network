@@ -367,7 +367,7 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_body__chunked_json_rpc__done, http_loo
 
     send("POST / HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n" + http_chunk(R"({"jsonrpc":"2.0","id)") + http_chunk(R"(":1,"method":"echo","params":["hello"]})") + "0\r\n\r\n");
     BOOST_REQUIRE_EQUAL(http_await(header), error::success);
-    BOOST_REQUIRE(parser->chunked());
+    BOOST_REQUIRE(parser->get().chunked());
 
     const auto result = http_make_promise();
     server->http_read_body(buffer, parser, http_complete(result));

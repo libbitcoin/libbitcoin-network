@@ -163,9 +163,10 @@ void socket::accept_secure_websocket(const http::request& request) THROWS
     sock.auto_fragment(false);
     sock.set_option(ws::decorator
     {
-        [](http::fields& header) NOEXCEPT
+        [](boost::beast::websocket::response_type& response) NOEXCEPT
         {
-            header.set(http::field::server, BC_HTTP_SERVER_NAME);
+            response.set(boost::beast::http::field::server,
+                BC_HTTP_SERVER_NAME);
         }
     });
 
@@ -174,7 +175,8 @@ void socket::accept_secure_websocket(const http::request& request) THROWS
             shared_from_this(), _1, _2));
 
     sock.text(true);
-    sock.accept(request);
+    const auto header = http::serialize_header(request.base());
+    sock.accept(boost::asio::buffer(header));
 }
 
 // private
@@ -191,9 +193,10 @@ void socket::accept_clear_websocket(const http::request& request) THROWS
     sock.auto_fragment(false);
     sock.set_option(ws::decorator
     {
-        [](http::fields& header) NOEXCEPT
+        [](boost::beast::websocket::response_type& response) NOEXCEPT
         {
-            header.set(http::field::server, BC_HTTP_SERVER_NAME);
+            response.set(boost::beast::http::field::server,
+                BC_HTTP_SERVER_NAME);
         }
     });
 
@@ -202,7 +205,8 @@ void socket::accept_clear_websocket(const http::request& request) THROWS
             shared_from_this(), _1, _2));
 
     sock.text(true);
-    sock.accept(request);
+    const auto header = http::serialize_header(request.base());
+    sock.accept(boost::asio::buffer(header));
 }
 
 // private

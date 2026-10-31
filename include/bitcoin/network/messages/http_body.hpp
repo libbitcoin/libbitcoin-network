@@ -172,8 +172,8 @@ struct BCT_API body
         using buffer_type = asio::const_buffer;
 
         /// Streamed reads may finish before the message is complete.
-        template <bool IsRequest, class Fields>
-        inline explicit reader(http::message_header<IsRequest, Fields>& header,
+        template <bool IsRequest>
+        inline explicit reader(http::header<IsRequest>& header,
             value_type& value, bool streamed=false) NOEXCEPT
           : header_{ header }, value_{ value }, reader_{ std::monostate{} },
             streamed_{ streamed }
@@ -186,7 +186,7 @@ struct BCT_API body
 
     protected:
         // The reader only reads requests, and http::fields are required.
-        using header = http::message_header<true, http::fields>;
+        using header = http::request_header;
 
         /// Select reader based on content-type header.
         inline void assign_reader(header& header, value_type& value) NOEXCEPT
@@ -271,8 +271,8 @@ struct BCT_API body
         using const_buffers_type = asio::const_buffer;
         using out_buffer = http::get_buffer<const_buffers_type>;
 
-        template <bool IsRequest, class Fields>
-        inline explicit writer(http::message_header<IsRequest, Fields>& header,
+        template <bool IsRequest>
+        inline explicit writer(http::header<IsRequest>& header,
             value_type& value) NOEXCEPT
           : writer_{ to_writer(header, value) }
         {
@@ -368,11 +368,11 @@ struct BCT_API body
     };
 };
 
-using request = boost::beast::http::request<http::body>;
+using request = message<true, http::body>;
 using request_cptr = std::shared_ptr<const request>;
 using request_ptr = std::shared_ptr<request>;
 
-using response = boost::beast::http::response<http::body>;
+using response = message<false, http::body>;
 using response_cptr = std::shared_ptr<const response>;
 using response_ptr = std::shared_ptr<response>;
 

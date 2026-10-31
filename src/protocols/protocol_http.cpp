@@ -342,7 +342,7 @@ bool protocol_http::is_allowed_host(const fields& fields,
 {
     // Disallow unspecified host.
     // Host header field is mandatory at http 1.1.
-    const auto host = fields[field::host];
+    const std::string host{ fields[field::host] };
     if (host.empty() && version >= version_1_1)
         return false;
 
@@ -355,7 +355,7 @@ bool protocol_http::is_allowed_origin(const fields& fields,
 {
     // Allow same-origin and no-origin requests.
     // Origin header field is not available until http 1.1.
-    const auto origin = fields[field::origin];
+    const std::string origin{ fields[field::origin] };
     if (origin.empty() || version < version_1_1)
         return true;
 
