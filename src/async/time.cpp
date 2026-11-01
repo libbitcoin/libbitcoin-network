@@ -75,7 +75,7 @@ std::string format_local_time(time_t time) NOEXCEPT
     if (!local_time(out, time))
         return "";
 
-    constexpr auto format = "%FT%T";
+    constexpr auto format = "%Y-%m-%dT%H:%M:%S";
     constexpr size_t size = std::size("yyyy-mm-dd hh:mm:ss");
     char buffer[size];
 
@@ -91,8 +91,8 @@ std::string format_zulu_time(time_t time) NOEXCEPT
     if (!zulu_time(out, time))
         return "";
 
-    // %FT%TZ writes RFC 3339 formatted utc time.
-    constexpr auto format = "%FT%TZ";
+    // Writes RFC 3339 formatted utc time.
+    constexpr auto format = "%Y-%m-%dT%H:%M:%SZ";
     constexpr size_t size = std::size("yyyy-mm-ddThh:mm:ssZ");
     char buffer[size];
 
