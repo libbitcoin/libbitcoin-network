@@ -223,17 +223,17 @@ void socket::handle_http_write(const boost_code& ec, size_t size,
 // chunk decoding) across the message. A batched json-rpc body delivers each
 // message from the paused parse (need_buffer), mapped to success here.
 
-void socket::http_read_header(http::flat_buffer& buffer, http_parser& parser,
-    count_handler&& handler) NOEXCEPT
+void socket::http_read_header(http::flat_buffer& buffer,
+    const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_http_read_header, shared_from_this(),
-            std::ref(buffer), std::ref(parser), std::move(handler)));
+            std::ref(buffer), parser, std::move(handler)));
 }
 
 // private
 void socket::do_http_read_header(ref<http::flat_buffer> buffer,
-    const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT
+    const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -246,7 +246,7 @@ void socket::do_http_read_header(ref<http::flat_buffer> buffer,
             return;
         }
 
-        auto& parse = parser.get();
+        auto& parse = *parser;
         parse.body_limit(maximum_);
         parse.header_limit(limit<uint32_t>(header_));
 
@@ -264,7 +264,7 @@ void socket::do_http_read_header(ref<http::flat_buffer> buffer,
 
 // private
 void socket::handle_http_read_header(const boost_code& ec, size_t size,
-    const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT
+    const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -274,14 +274,14 @@ void socket::handle_http_read_header(const boost_code& ec, size_t size,
         return;
     }
 
-    if (!ec && boost::beast::websocket::is_upgrade(parser.get().get()))
+    if (!ec && boost::beast::websocket::is_upgrade(parser->get()))
     {
         handler(error::upgrade, size);
         return;
     }
 
     // Dispatch of `verb::unknown` is reserved for websocket.
-    if (!ec && parser.get().get().method() == http::verb::unknown)
+    if (!ec && parser->get().method() == http::verb::unknown)
     {
         handler(error::bad_method, size);
         return;
@@ -292,25 +292,25 @@ void socket::handle_http_read_header(const boost_code& ec, size_t size,
     handler(code, size);
 }
 
-void socket::http_read_some(http::flat_buffer& buffer, http_parser& parser,
-    count_handler&& handler) NOEXCEPT
+void socket::http_read_some(http::flat_buffer& buffer,
+    const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_http_read_some, shared_from_this(),
-            std::ref(buffer), std::ref(parser), std::move(handler)));
+            std::ref(buffer), parser, std::move(handler)));
 }
 
-void socket::http_read_body(http::flat_buffer& buffer, http_parser& parser,
-    count_handler&& handler) NOEXCEPT
+void socket::http_read_body(http::flat_buffer& buffer,
+    const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_http_read_body, shared_from_this(),
-            std::ref(buffer), std::ref(parser), std::move(handler)));
+            std::ref(buffer), parser, std::move(handler)));
 }
 
 // private
 void socket::do_http_read_body(ref<http::flat_buffer> buffer,
-    const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT
+    const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -324,9 +324,9 @@ void socket::do_http_read_body(ref<http::flat_buffer> buffer,
         }
 
         VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_read,
-            get_tcp(), buffer.get(), parser.get(),
+            get_tcp(), buffer.get(), *parser,
             std::bind(&socket::handle_http_read_some,
-                shared_from_this(), _1, _2, handler));
+                shared_from_this(), _1, _2, parser, handler));
     }
     catch (const std::exception& e)
     {
@@ -337,7 +337,7 @@ void socket::do_http_read_body(ref<http::flat_buffer> buffer,
 
 // private
 void socket::do_http_read_some(ref<http::flat_buffer> buffer,
-    const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT
+    const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
@@ -351,9 +351,9 @@ void socket::do_http_read_some(ref<http::flat_buffer> buffer,
         }
 
         VARIANT_DISPATCH_FUNCTION(boost::beast::http::async_read_some,
-            get_tcp(), buffer.get(), parser.get(),
+            get_tcp(), buffer.get(), *parser,
             std::bind(&socket::handle_http_read_some,
-                shared_from_this(), _1, _2, handler));
+                shared_from_this(), _1, _2, parser, handler));
     }
     catch (const std::exception& e)
     {
@@ -364,7 +364,7 @@ void socket::do_http_read_some(ref<http::flat_buffer> buffer,
 
 // private
 void socket::handle_http_read_some(const boost_code& ec, size_t size,
-    const count_handler& handler) NOEXCEPT
+    const http_parser_ptr&, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 

@@ -292,19 +292,19 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read__stop__channel_stopped, http_loopback_
 BOOST_FIXTURE_TEST_CASE(socket__http_read_header__upgrade__upgrade, http_loopback_fixture)
 {
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto result = http_make_promise();
     server->http_read_header(buffer, parser, http_complete(result));
 
     send(http_upgrade_request);
     BOOST_REQUIRE_EQUAL(http_await(result), error::upgrade);
-    BOOST_REQUIRE_EQUAL(parser.get().target(), "/chat");
+    BOOST_REQUIRE_EQUAL(parser->get().target(), "/chat");
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__http_read_header__unknown_method__bad_method, http_loopback_fixture)
 {
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto result = http_make_promise();
     server->http_read_header(buffer, parser, http_complete(result));
 
@@ -315,10 +315,23 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_header__unknown_method__bad_method, ht
 BOOST_FIXTURE_TEST_CASE(socket__http_read_header__stop__channel_stopped, http_loopback_fixture)
 {
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto result = http_make_promise();
     server->http_read_header(buffer, parser, http_complete(result));
 
+    server->stop();
+    const auto ec = http_await(result);
+    BOOST_REQUIRE(ec == error::channel_stopped || ec == error::end_of_stream);
+}
+
+BOOST_FIXTURE_TEST_CASE(socket__http_read_header__released_parser__channel_stopped, http_loopback_fixture)
+{
+    http::flat_buffer buffer{ 4096 };
+    auto parser = system::to_shared<network::socket::http_parser>();
+    const auto result = http_make_promise();
+    server->http_read_header(buffer, parser, http_complete(result));
+
+    parser.reset();
     server->stop();
     const auto ec = http_await(result);
     BOOST_REQUIRE(ec == error::channel_stopped || ec == error::end_of_stream);
@@ -329,44 +342,44 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_header__stop__channel_stopped, http_lo
 BOOST_FIXTURE_TEST_CASE(socket__http_read_body__content_length_json_rpc__done, http_loopback_fixture)
 {
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto header = http_make_promise();
     server->http_read_header(buffer, parser, http_complete(header));
 
     send(http_post(R"({"jsonrpc":"2.0","id":1,"method":"echo","params":["hello"]})"));
     BOOST_REQUIRE_EQUAL(http_await(header), error::success);
-    BOOST_REQUIRE(parser.is_header_done());
+    BOOST_REQUIRE(parser->is_header_done());
 
     const auto result = http_make_promise();
     server->http_read_body(buffer, parser, http_complete(result));
     BOOST_REQUIRE_EQUAL(http_await(result), error::success);
-    BOOST_REQUIRE(parser.is_done());
-    BOOST_REQUIRE(parser.get().body().contains<rpc::request>());
-    BOOST_REQUIRE_EQUAL(parser.get().body().get<rpc::request>().message.method, "echo");
+    BOOST_REQUIRE(parser->is_done());
+    BOOST_REQUIRE(parser->get().body().contains<rpc::request>());
+    BOOST_REQUIRE_EQUAL(parser->get().body().get<rpc::request>().message.method, "echo");
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__http_read_body__chunked_json_rpc__done, http_loopback_fixture)
 {
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto header = http_make_promise();
     server->http_read_header(buffer, parser, http_complete(header));
 
     send("POST / HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\n\r\n" + http_chunk(R"({"jsonrpc":"2.0","id)") + http_chunk(R"(":1,"method":"echo","params":["hello"]})") + "0\r\n\r\n");
     BOOST_REQUIRE_EQUAL(http_await(header), error::success);
-    BOOST_REQUIRE(parser.chunked());
+    BOOST_REQUIRE(parser->chunked());
 
     const auto result = http_make_promise();
     server->http_read_body(buffer, parser, http_complete(result));
     BOOST_REQUIRE_EQUAL(http_await(result), error::success);
-    BOOST_REQUIRE(parser.is_done());
-    BOOST_REQUIRE_EQUAL(parser.get().body().get<rpc::request>().message.method, "echo");
+    BOOST_REQUIRE(parser->is_done());
+    BOOST_REQUIRE_EQUAL(parser->get().body().get<rpc::request>().message.method, "echo");
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__http_read_some__json_rpc_batch__need_buffer_first_element, http_loopback_fixture)
 {
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto header = http_make_promise();
     server->http_read_header(buffer, parser, http_complete(header));
 
@@ -376,15 +389,15 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_some__json_rpc_batch__need_buffer_firs
     const auto result = http_make_promise();
     server->http_read_some(buffer, parser, http_complete(result));
     BOOST_REQUIRE_EQUAL(http_await(result), error::need_buffer);
-    BOOST_REQUIRE(!parser.is_done());
-    BOOST_REQUIRE(parser.get().body().get<rpc::request>().changed);
-    BOOST_REQUIRE_EQUAL(parser.get().body().get<rpc::request>().message.method, "a");
+    BOOST_REQUIRE(!parser->is_done());
+    BOOST_REQUIRE(parser->get().body().get<rpc::request>().changed);
+    BOOST_REQUIRE_EQUAL(parser->get().body().get<rpc::request>().message.method, "a");
 }
 
 BOOST_FIXTURE_TEST_CASE(socket__http_read_some__stop__channel_stopped, http_loopback_fixture)
 {
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto header = http_make_promise();
     server->http_read_header(buffer, parser, http_complete(header));
 
@@ -492,7 +505,7 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_header__websocket__operation_failed, h
 {
     auto websocket = upgrade();
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto result = http_make_promise();
     server->http_read_header(buffer, parser, http_complete(result));
     BOOST_REQUIRE_EQUAL(http_await(result), error::operation_failed);
@@ -502,7 +515,7 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_body__websocket__operation_failed, htt
 {
     auto websocket = upgrade();
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto result = http_make_promise();
     server->http_read_body(buffer, parser, http_complete(result));
     BOOST_REQUIRE_EQUAL(http_await(result), error::operation_failed);
@@ -512,7 +525,7 @@ BOOST_FIXTURE_TEST_CASE(socket__http_read_some__websocket__operation_failed, htt
 {
     auto websocket = upgrade();
     http::flat_buffer buffer{ 4096 };
-    network::socket::http_parser parser{};
+    const auto parser = system::to_shared<network::socket::http_parser>();
     const auto result = http_make_promise();
     server->http_read_some(buffer, parser, http_complete(result));
     BOOST_REQUIRE_EQUAL(http_await(result), error::operation_failed);

@@ -225,15 +225,15 @@ public:
 
     /// Read http request header from the socket (body remains unread).
     virtual void http_read_header(http::flat_buffer& buffer,
-        http_parser& parser, count_handler&& handler) NOEXCEPT;
+        const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT;
 
     /// Read from the http request body (each message pauses the parse).
     virtual void http_read_some(http::flat_buffer& buffer,
-        http_parser& parser, count_handler&& handler) NOEXCEPT;
+        const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT;
 
     /// Read the http request body (completes on done or paused parse).
     virtual void http_read_body(http::flat_buffer& buffer,
-        http_parser& parser, count_handler&& handler) NOEXCEPT;
+        const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT;
 
     /// Write http response header to the socket (body remains unwritten).
     virtual void http_write_header(http::response&& response,
@@ -546,11 +546,11 @@ private:
 
     // http (progressive)
     void do_http_read_header(ref<http::flat_buffer> buffer,
-        const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
+        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void do_http_read_some(ref<http::flat_buffer> buffer,
-        const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
+        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void do_http_read_body(ref<http::flat_buffer> buffer,
-        const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
+        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void do_http_write_header(const header_state::ptr& out,
         const count_handler& handler) NOEXCEPT;
     void do_chunk_write(boost_code ec, size_t total,
@@ -642,9 +642,9 @@ private:
 
     // http (progressive)
     void handle_http_read_header(const boost_code& ec, size_t size,
-        const ref<http_parser>& parser, const count_handler& handler) NOEXCEPT;
+        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void handle_http_read_some(const boost_code& ec, size_t size,
-        const count_handler& handler) NOEXCEPT;
+        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void handle_http_write_header(const boost_code& ec, size_t size,
         const header_state::ptr& out, const count_handler& handler) NOEXCEPT;
     void handle_chunk_write(const boost_code& ec, size_t size, size_t total,
