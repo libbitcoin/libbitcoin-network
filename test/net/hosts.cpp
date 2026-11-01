@@ -39,7 +39,10 @@ class mock_settings final
   : public settings
 {
 public:
-    using settings::settings;
+    mock_settings(const settings& base) NOEXCEPT
+      : settings(base)
+    {
+    }
 
     // Override derivative name, using directory as file.
     std::filesystem::path file() const NOEXCEPT override
@@ -62,7 +65,7 @@ constexpr address_item unspecified00{ 0, 0, ipv6_t{ unspecified_ip_address }, 0 
 BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(set.outbound.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -72,7 +75,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
 {
     // Non-empty capacity causes file open/load.
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -85,7 +88,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
 BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -94,7 +97,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
 BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__success)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -110,7 +113,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__success)
 BOOST_AUTO_TEST_CASE(hosts__start__populated_file__expected)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance1(set, log);
@@ -153,7 +156,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__populated_file__expected)
 BOOST_AUTO_TEST_CASE(hosts__stop__disabled__success)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE(!test::exists(TEST_NAME));
@@ -166,7 +169,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__disabled__success)
 BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -179,7 +182,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
 BOOST_AUTO_TEST_CASE(hosts__stop__enabled_started__success)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -195,7 +198,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__enabled_started__success)
 BOOST_AUTO_TEST_CASE(hosts__count__empty__zero)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     const hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
@@ -214,7 +217,7 @@ constexpr address_item mapped42{ 0, 0, ipv4_t{ mapped_ip_address }, 42 };
 BOOST_AUTO_TEST_CASE(hosts__counts__empty__zeros)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     const hosts instance(set, log);
     BOOST_REQUIRE(instance.counts() == config::address_counts{});
 }
@@ -222,7 +225,7 @@ BOOST_AUTO_TEST_CASE(hosts__counts__empty__zeros)
 BOOST_AUTO_TEST_CASE(hosts__counts__mixed_take_stop__expected)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -270,7 +273,7 @@ BOOST_AUTO_TEST_CASE(hosts__counts__mixed_take_stop__expected)
 BOOST_AUTO_TEST_CASE(hosts__take__family__expected)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -330,7 +333,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__family__expected)
 BOOST_AUTO_TEST_CASE(hosts__counts__eviction__expected)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 2;
     hosts instance(set, log);
@@ -358,7 +361,7 @@ BOOST_AUTO_TEST_CASE(hosts__counts__eviction__expected)
 BOOST_AUTO_TEST_CASE(hosts__take__unconnectable__address_not_found_and_retained)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -389,7 +392,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__unconnectable__address_not_found_and_retained)
 BOOST_AUTO_TEST_CASE(hosts__take__mixed__connectable_taken_other_retained)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -429,7 +432,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__mixed__connectable_taken_other_retained)
 BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -453,7 +456,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -488,7 +491,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
 BOOST_AUTO_TEST_CASE(hosts__restore__disabled_stopped__service_stopped_empty)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     hosts instance(set, log);
     std::promise<code> promise{};
     instance.restore(system::to_shared(loopback00), [&](const code& ec) NOEXCEPT
@@ -503,7 +506,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__disabled_stopped__service_stopped_empty)
 BOOST_AUTO_TEST_CASE(hosts__restore__stopped__service_stopped_empty)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -523,7 +526,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__stopped__service_stopped_empty)
 BOOST_AUTO_TEST_CASE(hosts__restore__unique__accepted)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -546,7 +549,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__unique__accepted)
 BOOST_AUTO_TEST_CASE(hosts__restore__duplicate_authority__updated)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -583,7 +586,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__duplicate_authority__updated)
 BOOST_AUTO_TEST_CASE(hosts__stop__named_address__round_trips)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_tor = true;
@@ -612,7 +615,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__named_address__round_trips)
 BOOST_AUTO_TEST_CASE(hosts__start__named_address_not_gossiped__purged)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_tor = true;
@@ -639,7 +642,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__named_address_not_gossiped__purged)
 BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -663,7 +666,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 BOOST_AUTO_TEST_CASE(hosts__fetch__single_undivided__expected)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.address_lower = 1;
@@ -696,7 +699,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__single_undivided__expected)
 BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -730,7 +733,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
 BOOST_AUTO_TEST_CASE(hosts__save__three_unique__three)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -753,7 +756,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__three_unique__three)
 BOOST_AUTO_TEST_CASE(hosts__save__redundant__expected)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -776,7 +779,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__redundant__expected)
 BOOST_AUTO_TEST_CASE(hosts__save__stopped__service_stopped)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -796,7 +799,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__stopped__service_stopped)
 BOOST_AUTO_TEST_CASE(hosts__save__empty__address_not_found)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -819,7 +822,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__empty__address_not_found)
 BOOST_AUTO_TEST_CASE(hosts__save__insufficient_services__not_accepted)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log, service::node_network);
@@ -843,7 +846,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__insufficient_services__not_accepted)
 BOOST_AUTO_TEST_CASE(hosts__reserve__unreserve__expected_reserved)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     hosts instance(set, log);
     const config::endpoint host{ "[::1]:42" };
 
@@ -859,7 +862,7 @@ BOOST_AUTO_TEST_CASE(hosts__reserve__unreserve__expected_reserved)
 BOOST_AUTO_TEST_CASE(hosts__take__reserved__address_not_found_and_removed)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);
@@ -897,7 +900,7 @@ static bool write_file(const std::string& name, const std::string& text)
 BOOST_AUTO_TEST_CASE(hosts__start__unspecified_line__purged)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_ipv6 = true;
@@ -912,7 +915,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__unspecified_line__purged)
 BOOST_AUTO_TEST_CASE(hosts__start__malformed_line__purged)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_ipv6 = true;
@@ -927,7 +930,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__malformed_line__purged)
 BOOST_AUTO_TEST_CASE(hosts__start__insufficient_line__purged)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_ipv6 = true;
@@ -942,7 +945,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__insufficient_line__purged)
 BOOST_AUTO_TEST_CASE(hosts__start__unsupported_line__purged)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_ipv6 = true;
@@ -958,7 +961,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__unsupported_line__purged)
 BOOST_AUTO_TEST_CASE(hosts__start__peered_line__purged)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_ipv6 = true;
@@ -975,7 +978,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__peered_line__purged)
 BOOST_AUTO_TEST_CASE(hosts__start__blacklisted_line__purged)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_ipv6 = true;
@@ -991,7 +994,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__blacklisted_line__purged)
 BOOST_AUTO_TEST_CASE(hosts__start__not_whitelisted_line__purged)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     set.gossip_ipv6 = true;
@@ -1007,7 +1010,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__not_whitelisted_line__purged)
 BOOST_AUTO_TEST_CASE(hosts__stop__directory_path__file_save)
 {
     const logger log{};
-    mock_settings set(bc::system::chain::selection::mainnet);
+    mock_settings set(test::network_settings());
     set.path = TEST_NAME;
     set.outbound.host_pool_capacity = 42;
     hosts instance(set, log);

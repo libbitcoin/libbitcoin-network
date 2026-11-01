@@ -154,8 +154,8 @@ struct peer_net_setup_fixture
     DELETE_COPY_MOVE(peer_net_setup_fixture);
 
     peer_net_setup_fixture()
-      : remote_peer(network::settings{ system::chain::selection::mainnet }.identifier),
-        settings_{ system::chain::selection::mainnet }
+      : remote_peer(test::network_settings().identifier),
+        settings_{ test::network_settings() }
     {
         test::clear(test::directory);
         settings_.path = TEST_DIRECTORY;

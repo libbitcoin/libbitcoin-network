@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
 {
     const logger log{};
     constexpr auto expected = 42u;
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.threads = expected;
     net net(set, log);
     mock_session session(net, 1);
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
 BOOST_AUTO_TEST_CASE(session__properties__default__expected)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net net(set, log);
     mock_session session(net, 1);
     BOOST_REQUIRE(session.stopped());
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
 BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
     BOOST_REQUIRE(session.create_acceptor({}));
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
 BOOST_AUTO_TEST_CASE(session__create_manual_connector__always__expected)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
     BOOST_REQUIRE(session.create_manual_connector(0));
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(session__create_manual_connector__always__expected)
 BOOST_AUTO_TEST_CASE(session__create_seed_connector__always__expected)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
     BOOST_REQUIRE(session.create_seed_connector(0));
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(session__create_seed_connector__always__expected)
 BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
     constexpr auto expected = 42u;
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
 BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
 
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
 BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
 
@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
 BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_address)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
 
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_addre
 BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresses)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
 
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
 BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
     BOOST_REQUIRE(session.stopped());
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
 BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
 
@@ -600,7 +600,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
 BOOST_AUTO_TEST_CASE(session__start__stop__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     mock_session session(net, 1);
 
@@ -633,7 +633,7 @@ const mock_channel::options_t options{ "test" };
 BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_service_stopped_channel_service_stopped_not_pent_or_stored)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     auto session = std::make_shared<mock_session>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -680,7 +680,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
 BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_channel_stopped_channel_channel_stopped_stored_and_not_counted)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net net(set, log);
     auto session = std::make_shared<mock_session>(net, 1);
 
@@ -759,7 +759,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_service_stopped_stored_and_counted)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 0;
     mock_net net(set, log);
     auto session = std::make_shared<mock_session>(net, 1);
@@ -842,7 +842,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expected_channel_success_stored_and_counted)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 0;
     mock_net net(set, log);
 
@@ -927,7 +927,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
 BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expected_channel_success_not_stored_and_counted)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.outbound.host_pool_capacity = 0;
     mock_net net(set, log);
 
@@ -1012,7 +1012,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
 BOOST_AUTO_TEST_CASE(session__start_channel__nonce_conflict__handlers_channel_conflict_channel_conflict)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net_conflict net(set, log);
     auto session = std::make_shared<mock_session>(net, 1);
 

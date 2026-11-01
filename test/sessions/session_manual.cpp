@@ -314,7 +314,7 @@ private:
 BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
 BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
     mock_session_manual session(net, 1);
 
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
 BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
 BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped
 BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
 BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
 
     // Connect will return invalid_magic when executed.
     mock_net<mock_connector_connect_fail> net(set, log);
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
 BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -594,7 +594,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
 BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expected)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
 
     mock_net<mock_connector_connect_success> net(set, log);
 
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
 BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
 
     std::promise<code> started;
@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     BOOST_REQUIRE(set.manual.peers.empty());
 
     // Connector is not invoked.
@@ -697,7 +697,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__s
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.4", 42 };
@@ -767,7 +767,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
@@ -797,7 +797,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
@@ -827,7 +827,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     BOOST_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
@@ -888,7 +888,7 @@ public:
 BOOST_AUTO_TEST_CASE(session_manual__options__always__manual_settings)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
     const auto session = std::make_shared<mock_session_manual_options>(net, 1);
     BOOST_REQUIRE_EQUAL(&session->options(), &net.network_settings().manual);
@@ -905,7 +905,7 @@ struct manual_peer
     using configurator = std::function<void(settings&)>;
 
     manual_peer(const configurator& configure)
-      : set_{ selection::mainnet }, net_{ set_, log_ }
+      : set_{ test::network_settings() }, net_{ set_, log_ }
     {
         test::clear(test::directory);
         set_.path = TEST_DIRECTORY;

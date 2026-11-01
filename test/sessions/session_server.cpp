@@ -136,7 +136,7 @@ static std::shared_ptr<mock_channel> make_channel(net& instance)
 BOOST_AUTO_TEST_CASE(session_server__identifier__constructed__expected)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session>(instance, 42);
     BOOST_REQUIRE_EQUAL(session->identifier(), 42u);
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(session_server__identifier__constructed__expected)
 BOOST_AUTO_TEST_CASE(session_server__start__disabled__success_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session>(instance, 1);
 
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(session_server__start__disabled__success_stopped)
 BOOST_AUTO_TEST_CASE(session_server__create_service__always__acceptor)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session>(instance, 1);
     BOOST_REQUIRE(session->create_service({ .maximum_request = 42, .maximum_buffer = server_options.maximum_buffer }));
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(session_server__create_service__always__acceptor)
 BOOST_AUTO_TEST_CASE(session_server__defer__stopped__service_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session>(instance, 1);
 
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(session_server__defer__stopped__service_stopped)
 BOOST_AUTO_TEST_CASE(session_server__start_channel__started__protocols_attached_stopped_by_session)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session>(instance, 1);
     start(instance, session);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(session_server__start_channel__started__protocols_attached_
 BOOST_AUTO_TEST_CASE(session_server__start_channel__handshake_failure__handlers_failure_channel_stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session_handshake_fail>(instance, 1);
     start(instance, session);
@@ -357,7 +357,7 @@ static bool dropped(boost::asio::ip::tcp::socket& client)
 BOOST_AUTO_TEST_CASE(session_server__accept__client__protocols_attached)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
     BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(session_server__accept__client__protocols_attached)
 BOOST_AUTO_TEST_CASE(session_server__accept__oversubscribed__second_client_dropped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
     BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(session_server__accept__oversubscribed__second_client_dropp
 BOOST_AUTO_TEST_CASE(session_server__accept__disabled__client_dropped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_server_disabled>(instance, 1, one_connection);
     BOOST_REQUIRE_EQUAL(start_server(instance, session), error::success);
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(session_server__accept__disabled__client_dropped)
 BOOST_AUTO_TEST_CASE(session_server__accept__blacklisted__client_dropped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.blacklists.emplace_back("127.0.0.1");
     net instance(set, log);
     const auto session = std::make_shared<mock_server>(instance, 1, one_connection);
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(session_server__accept__blacklisted__client_dropped)
 BOOST_AUTO_TEST_CASE(session_server__accept__not_whitelisted__client_dropped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.whitelists.emplace_back("1.2.3.4");
     net instance(set, log);
     const auto session = std::make_shared<mock_server>(instance, 1, one_connection);

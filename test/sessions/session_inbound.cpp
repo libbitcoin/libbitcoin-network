@@ -405,7 +405,7 @@ private:
 BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
 BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     mock_net<> net(set, log);
     mock_session_inbound session(net, 1);
 
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
 BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 0;
     mock_net<> net(set, log);
     mock_session_inbound session(net, 1);
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__success)
 BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     set.inbound.binds.clear();
     mock_net<> net(set, log);
@@ -504,7 +504,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__success)
 BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operation_failed)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
 BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepted)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_fail> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
 BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_stopped__not_attached)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_stopped> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 ////BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_code__no_accept)
 ////{
 ////    const logger log{};
-////    settings set(selection::mainnet);
+////    settings set(test::network_settings());
 ////    set.inbound.connections = 1;
 ////    mock_net<mock_acceptor_start_success_accept_success> net(set, log);
 ////
@@ -687,7 +687,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_attached)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_fail> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
@@ -735,7 +735,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelisted__not_attached)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
@@ -787,7 +787,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted__not_attached)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
@@ -839,7 +839,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscribed__not_attached)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_disabled__not_attached)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
@@ -944,7 +944,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_disabled__no
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__attached)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     set.inbound.connections = 1;
     set.inbound.connect_timeout_seconds = 10000;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
@@ -1011,7 +1011,7 @@ public:
 BOOST_AUTO_TEST_CASE(session_inbound__options__always__inbound_settings)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session_inbound_options>(instance, 1);
     BOOST_REQUIRE_EQUAL(&session->options(), &instance.network_settings().inbound);
@@ -1027,7 +1027,7 @@ struct inbound_peer
     using configurator = std::function<void(settings&)>;
 
     inbound_peer(const configurator& configure)
-      : set_{ selection::mainnet }, net_{ set_, log_ }
+      : set_{ test::network_settings() }, net_{ set_, log_ }
     {
         test::clear(test::directory);
         set_.path = TEST_DIRECTORY;

@@ -82,4 +82,35 @@ bool remove(const std::filesystem::path& file_path) NOEXCEPT
     BC_POP_WARNING()
 }
 
+network::settings network_settings() NOEXCEPT
+{
+    using namespace messages::peer;
+    network::settings out{ system::chain::selection::none };
+    out.network = system::chain::selection::mainnet;
+    out.identifier = 3652501241;
+    out.protocol_maximum = level::maximum_protocol;
+    out.protocol_minimum = level::minimum_protocol;
+    out.enable_address = false;
+    out.enable_address_v2 = true;
+    out.enable_witness_tx = false;
+    out.enable_compact = false;
+    out.enable_not_found = false;
+    out.enable_relay = false;
+    out.maximum_skew_minutes = 120;
+
+    out.outbound.connections = 10;
+    out.outbound.connect_batch_size = 5;
+    out.outbound.host_pool_capacity = 0;
+    out.outbound.seeds.clear();
+    out.outbound.seeds.emplace_back("mainnet1.libbitcoin.net", 8333_u16);
+    out.outbound.seeds.emplace_back("mainnet2.libbitcoin.net", 8333_u16);
+    out.outbound.seeds.emplace_back("mainnet3.libbitcoin.net", 8333_u16);
+    out.outbound.seeds.emplace_back("mainnet4.libbitcoin.net", 8333_u16);
+
+    out.inbound.connections = 0;
+    out.inbound.binds.clear();
+    out.inbound.binds.emplace_back(asio::address{}, 8333_u16);
+    return out;
+}
+
 } // namespace test
