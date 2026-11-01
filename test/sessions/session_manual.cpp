@@ -541,6 +541,9 @@ BC_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopped)
 
     BC_REQUIRE(stopped.get_future().get());
     BC_REQUIRE(session->stopped());
+
+    // The connect handler reenters until the network closes.
+    net.close();
 }
 
 BC_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__service_stopped)
@@ -650,6 +653,9 @@ BC_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expecte
     BC_REQUIRE(stopped.get_future().get());
     BC_REQUIRE(session->stopped());
     BC_REQUIRE(session->attached_handshake());
+
+    // The connect handler reenters until the network closes.
+    net.close();
 }
 
 // start via network (not required for coverage)
