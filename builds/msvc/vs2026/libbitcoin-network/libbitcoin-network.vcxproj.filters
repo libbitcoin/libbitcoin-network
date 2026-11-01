@@ -1132,6 +1132,9 @@
     <ClInclude Include="..\..\..\..\build\include\bitcoin\network\version.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
+    <ClCompile Include="..\..\..\..\build\src\version.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\desubscriber.ipp">
