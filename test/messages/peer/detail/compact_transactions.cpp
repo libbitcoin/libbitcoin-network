@@ -73,6 +73,12 @@ BOOST_AUTO_TEST_CASE(compact_transactions__deserialize1__excess_version__nullptr
     BOOST_REQUIRE(!compact_transactions::deserialize(excess_version, payload, true));
 }
 
+BOOST_AUTO_TEST_CASE(compact_transactions__deserialize1__count_exceeds_data__nullptr)
+{
+    const auto data = system::base16_chunk("0000000000000000000000000000000000000000000000000000000000000000" "fe40420f00" "000000000001fe40420f00");
+    BOOST_REQUIRE(!compact_transactions::deserialize(level::bip152, data, true));
+}
+
 BOOST_AUTO_TEST_CASE(compact_transactions__deserialize1__truncated__nullptr)
 {
     const system::data_chunk data{ payload.begin(), std::prev(payload.end()) };
