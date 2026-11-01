@@ -69,7 +69,7 @@ compact_block compact_block::deserialize(uint32_t version, reader& source,
         compact_block_items txs;
         txs.reserve(size);
 
-        for (size_t id = 0; id < size; ++id)
+        for (size_t id = 0; id < size && source; ++id)
             txs.push_back(compact_block_item::deserialize(
                 version, source, witness));
 

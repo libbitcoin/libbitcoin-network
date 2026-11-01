@@ -56,7 +56,7 @@ compact_transactions compact_transactions::deserialize(uint32_t version,
         chain::transaction_cptrs transaction_ptrs;
         transaction_ptrs.reserve(size);
 
-        for (size_t tx = 0; tx < size; ++tx)
+        for (size_t tx = 0; tx < size && source; ++tx)
             transaction_ptrs.push_back(
                 to_shared<chain::transaction>(source, witness));
 

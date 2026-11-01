@@ -102,6 +102,12 @@ BOOST_AUTO_TEST_CASE(compact_block__deserialize1__truncated_short_id__nullptr)
     BOOST_REQUIRE(!compact_block::deserialize(level::bip152, data, true));
 }
 
+BOOST_AUTO_TEST_CASE(compact_block__deserialize1__prefilled_count_exceeds_data__nullptr)
+{
+    const auto data = system::base16_chunk("0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" "0000000000000000" "00" "fe40420f00" "00" "000000000001fe40420f00");
+    BOOST_REQUIRE(!compact_block::deserialize(level::bip152, data, true));
+}
+
 BOOST_AUTO_TEST_CASE(compact_block__deserialize1__truncated_prefilled__nullptr)
 {
     const system::data_chunk data{ prefilled.begin(), std::prev(prefilled.end()) };
