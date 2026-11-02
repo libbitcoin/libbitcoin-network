@@ -345,7 +345,7 @@ enum error_t : uint8_t
 };
 
 // No current need for error_code equivalence mapping.
-DECLARE_ERROR_T_CODE_CATEGORY(error);
+DECLARE_ERROR_T_CODE_CATEGORY(error, BCT_API);
 
 typedef system::error::json_error_t json_error_t;
 

@@ -50,7 +50,7 @@ struct BCT_API settings
         ref<const zmtp::context>
     >;
 
-    struct socks5
+    struct BCT_API socks5
     {
         DEFAULT_COPY_MOVE_DESTRUCT(socks5);
         socks5() NOEXCEPT;
@@ -69,7 +69,7 @@ struct BCT_API settings
         virtual bool authenticated() const NOEXCEPT;
     };
 
-    struct sam
+    struct BCT_API sam
     {
         DEFAULT_COPY_MOVE_DESTRUCT(sam);
         sam() NOEXCEPT;
@@ -103,7 +103,7 @@ struct BCT_API settings
         virtual bool authenticated() const NOEXCEPT;
     };
 
-    struct tcp_server
+    struct BCT_API tcp_server
     {
         DEFAULT_COPY_MOVE_DESTRUCT(tcp_server);
         tcp_server(const std::string_view& logging_name) NOEXCEPT;
@@ -135,7 +135,7 @@ struct BCT_API settings
         virtual void default_ports() NOEXCEPT;
     };
 
-    struct secure_server
+    struct BCT_API secure_server
       : public tcp_server
     {
         DEFAULT_COPY_MOVE_DESTRUCT(secure_server);
@@ -164,7 +164,7 @@ struct BCT_API settings
         virtual transport secure_context() const NOEXCEPT;
     };
 
-    struct tls_server
+    struct BCT_API tls_server
       : public secure_server
     {
         DELETE_COPY(tls_server);
@@ -198,7 +198,7 @@ struct BCT_API settings
         transport secure_context() const NOEXCEPT override;
     };
 
-    struct zmtp_server
+    struct BCT_API zmtp_server
       : public secure_server
     {
         DELETE_COPY(zmtp_server);
@@ -231,7 +231,7 @@ struct BCT_API settings
         transport secure_context() const NOEXCEPT override;
     };
 
-    struct http_server
+    struct BCT_API http_server
       : public tls_server
     {
         using tls_server::tls_server;
@@ -271,7 +271,7 @@ struct BCT_API settings
         system::string_list origin_names_{};
     };
 
-    struct websocket_server
+    struct BCT_API websocket_server
       : public http_server
     {
         using http_server::http_server;
@@ -279,7 +279,7 @@ struct BCT_API settings
         // TODO: settings unique to the websocket aspect.
     };
 
-    struct peer_manual
+    struct BCT_API peer_manual
       : public tcp_server, public socks5
     {
         // The friends field must be initialized after peers is set.
@@ -300,7 +300,7 @@ struct BCT_API settings
             const messages::peer::address_item& item) const NOEXCEPT;
     };
 
-    struct peer_outbound
+    struct BCT_API peer_outbound
       : public tcp_server, public socks5
     {
         peer_outbound(system::chain::selection context) NOEXCEPT
@@ -379,7 +379,7 @@ struct BCT_API settings
         virtual steady_clock::duration seeding_timeout() const NOEXCEPT;
     };
     
-    struct peer_inbound
+    struct BCT_API peer_inbound
       : public tcp_server, public sam
     {
         peer_inbound(system::chain::selection context) NOEXCEPT

@@ -195,7 +195,7 @@ struct BCT_API body
         std::optional<body_value> inner_{};
     };
 
-    class reader
+    class BCT_API reader
     {
     public:
         using buffer_type = io::const_buffer;
@@ -294,7 +294,7 @@ struct BCT_API body
         const bool streamed_;
     };
 
-    class writer
+    class BCT_API writer
     {
     public:
         using const_buffers_type = io::const_buffer;
