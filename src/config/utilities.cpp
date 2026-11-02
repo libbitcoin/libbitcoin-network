@@ -25,52 +25,20 @@
 namespace libbitcoin {
 namespace network {
 namespace config {
-    
-using namespace boost::asio;
+
 using namespace system::config;
 
-static_assert(array_count<messages::peer::ip_address> == ipv6_size);
-static_assert(is_same_type<ip::address_v6::bytes_type, messages::peer::ip_address>);
+static_assert(array_count<messages::peer::ip_address> == system::ip::ipv6::size);
 
-static asio::ipv6 to_v6(const asio::ipv4& ip4) NOEXCEPT
+messages::peer::ip_address to_address(const system::ip::address& ip) NOEXCEPT
 {
-    try
-    {
-        return asio::ipv6{ system::splice(ip_map_prefix, ip4.to_bytes()) };
-    }
-    catch (const std::exception&)
-    {
-        return {};
-    }
+    return system::ip::normalize(ip).to_bytes();
 }
 
-static asio::ipv6 get_ipv6(const asio::address& ip) NOEXCEPT
+system::ip::address from_address(
+    const messages::peer::ip_address& address) NOEXCEPT
 {
-    try
-    {
-        return ip.is_v6() ? ip.to_v6() : to_v6(ip.to_v4());
-    }
-    catch (const std::exception&)
-    {
-        return {};
-    }
-}
-
-messages::peer::ip_address to_address(const asio::address& ip) NOEXCEPT
-{
-    return get_ipv6(ip).to_bytes();
-}
-
-asio::address from_address(const messages::peer::ip_address& address) NOEXCEPT
-{
-    try
-    {
-        return { asio::ipv6{ address } };
-    }
-    catch (const std::exception&)
-    {
-        return { asio::ipv6{} };
-    }
+    return { system::ip::ipv6{ address } };
 }
 
 std::string to_normal_host(const std::string& host,

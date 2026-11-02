@@ -27,14 +27,14 @@
 using system::data_chunk;
 using system::data_stack;
 
-BOOST_FIXTURE_TEST_SUITE(zmtp_proxy_tests, publisher_setup_fixture)
+BC_FIXTURE_TEST_SUITE(zmtp_proxy_tests, publisher_setup_fixture)
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__accept__v31_peer__handshake_success)
+BC_AUTO_TEST_CASE(zmtp_proxy__accept__v31_peer__handshake_success)
 {
-    BOOST_REQUIRE(sock);
+    BC_REQUIRE(sock);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__read__ping__pong_queued_and_read_absorbed)
+BC_AUTO_TEST_CASE(zmtp_proxy__read__ping__pong_queued_and_read_absorbed)
 {
     rpc::request request{};
     arm_read(request);
@@ -48,18 +48,18 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__ping__pong_queued_and_read_absorbed)
 
     const auto topic = chunk("hashblock");
     peer_write(peer, command("SUBSCRIBE", topic));
-    BOOST_REQUIRE_EQUAL(await_read(), error::success);
-    BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
-    BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
-    BOOST_REQUIRE(!cancel_of(request));
+    BC_REQUIRE_EQUAL(await_read(), error::success);
+    BC_REQUIRE_EQUAL(request.message.method, "subscribe");
+    BC_REQUIRE_EQUAL(prefix_of(request), topic);
+    BC_REQUIRE(!cancel_of(request));
 
     // The PONG was queued by the proxy, in response to the absorbed PING.
     data_chunk content{};
-    BOOST_REQUIRE_EQUAL(peer_read_command(peer, content), "PONG");
-    BOOST_REQUIRE_EQUAL(content, context_bytes);
+    BC_REQUIRE_EQUAL(peer_read_command(peer, content), "PONG");
+    BC_REQUIRE_EQUAL(content, context_bytes);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__read__pong__read_absorbed)
+BC_AUTO_TEST_CASE(zmtp_proxy__read__pong__read_absorbed)
 {
     rpc::request request{};
     arm_read(request);
@@ -69,13 +69,13 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__pong__read_absorbed)
 
     const auto topic = chunk("rawtx");
     peer_write(peer, command("CANCEL", topic));
-    BOOST_REQUIRE_EQUAL(await_read(), error::success);
-    BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
-    BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
-    BOOST_REQUIRE(cancel_of(request));
+    BC_REQUIRE_EQUAL(await_read(), error::success);
+    BC_REQUIRE_EQUAL(request.message.method, "subscribe");
+    BC_REQUIRE_EQUAL(prefix_of(request), topic);
+    BC_REQUIRE(cancel_of(request));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__read__v30_subscription__delivered)
+BC_AUTO_TEST_CASE(zmtp_proxy__read__v30_subscription__delivered)
 {
     rpc::request request{};
     arm_read(request);
@@ -85,13 +85,13 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__v30_subscription__delivered)
     data_chunk body{ 0x01 };
     body.insert(body.end(), topic.begin(), topic.end());
     peer_write(peer, zmtp_stream::frame_encode(body, false, false));
-    BOOST_REQUIRE_EQUAL(await_read(), error::success);
-    BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
-    BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
-    BOOST_REQUIRE(!cancel_of(request));
+    BC_REQUIRE_EQUAL(await_read(), error::success);
+    BC_REQUIRE_EQUAL(request.message.method, "subscribe");
+    BC_REQUIRE_EQUAL(prefix_of(request), topic);
+    BC_REQUIRE(!cancel_of(request));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__read__v30_cancellation__delivered)
+BC_AUTO_TEST_CASE(zmtp_proxy__read__v30_cancellation__delivered)
 {
     rpc::request request{};
     arm_read(request);
@@ -101,23 +101,23 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__v30_cancellation__delivered)
     data_chunk body{ 0x00 };
     body.insert(body.end(), topic.begin(), topic.end());
     peer_write(peer, zmtp_stream::frame_encode(body, false, false));
-    BOOST_REQUIRE_EQUAL(await_read(), error::success);
-    BOOST_REQUIRE_EQUAL(request.message.method, "subscribe");
-    BOOST_REQUIRE_EQUAL(prefix_of(request), topic);
-    BOOST_REQUIRE(cancel_of(request));
+    BC_REQUIRE_EQUAL(await_read(), error::success);
+    BC_REQUIRE_EQUAL(request.message.method, "subscribe");
+    BC_REQUIRE_EQUAL(prefix_of(request), topic);
+    BC_REQUIRE(cancel_of(request));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__read__empty_message__unexpected_message)
+BC_AUTO_TEST_CASE(zmtp_proxy__read__empty_message__unexpected_message)
 {
     rpc::request request{};
     arm_read(request);
 
     // A subscription carries at least the dialect byte.
     peer_write(peer, zmtp_stream::frame_encode({}, false, false));
-    BOOST_REQUIRE_EQUAL(await_read(), error::zmtp_unexpected_message);
+    BC_REQUIRE_EQUAL(await_read(), error::zmtp_unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__read__data_message__unexpected_message)
+BC_AUTO_TEST_CASE(zmtp_proxy__read__data_message__unexpected_message)
 {
     rpc::request request{};
     arm_read(request);
@@ -125,47 +125,47 @@ BOOST_AUTO_TEST_CASE(zmtp_proxy__read__data_message__unexpected_message)
     // A publisher receives no data messages.
     const data_chunk payload{ 0x42, 0x43 };
     peer_write(peer, zmtp_stream::frame_encode(payload, false, false));
-    BOOST_REQUIRE_EQUAL(await_read(), error::zmtp_unexpected_message);
+    BC_REQUIRE_EQUAL(await_read(), error::zmtp_unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__read__unknown_command__unexpected_command)
+BC_AUTO_TEST_CASE(zmtp_proxy__read__unknown_command__unexpected_command)
 {
     rpc::request request{};
     arm_read(request);
     peer_write(peer, command("BOGUS", {}));
-    BOOST_REQUIRE_EQUAL(await_read(), error::zmtp_unexpected_command);
+    BC_REQUIRE_EQUAL(await_read(), error::zmtp_unexpected_command);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__write__notification__topic_and_param_frames)
+BC_AUTO_TEST_CASE(zmtp_proxy__write__notification__topic_and_param_frames)
 {
     // The write is unconditional, filtering by subscription is the protocol's.
     const auto body = system::to_shared(chunk("body"));
     rpc::request notification{};
     notification.message.method = "hashblock";
     notification.message.params = rpc::array_t{ rpc::any_t{ body }, rpc::value_t{ uint32_t{ 0x01020304 } } };
-    BOOST_REQUIRE_EQUAL(notify(std::move(notification)), error::success);
+    BC_REQUIRE_EQUAL(notify(std::move(notification)), error::success);
 
     const auto received = peer_read_message(peer);
-    BOOST_REQUIRE_EQUAL(received.size(), 3u);
-    BOOST_REQUIRE_EQUAL(received.at(0), chunk("hashblock"));
-    BOOST_REQUIRE_EQUAL(received.at(1), *body);
-    BOOST_REQUIRE_EQUAL(received.at(2), system::base16_chunk("04030201"));
+    BC_REQUIRE_EQUAL(received.size(), 3u);
+    BC_REQUIRE_EQUAL(received.at(0), chunk("hashblock"));
+    BC_REQUIRE_EQUAL(received.at(1), *body);
+    BC_REQUIRE_EQUAL(received.at(2), system::base16_chunk("04030201"));
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__write__response__unserializable)
+BC_AUTO_TEST_CASE(zmtp_proxy__write__response__unserializable)
 {
     // A publisher has no reply path.
     rpc::response response{};
     response.message.result = rpc::value_t{ rpc::string_t{ "result" } };
-    BOOST_REQUIRE_EQUAL(respond(std::move(response)), error::zmtp_unserializable);
+    BC_REQUIRE_EQUAL(respond(std::move(response)), error::zmtp_unserializable);
 }
 
-BOOST_AUTO_TEST_CASE(zmtp_proxy__write__double_param__unserializable)
+BC_AUTO_TEST_CASE(zmtp_proxy__write__double_param__unserializable)
 {
     rpc::request notification{};
     notification.message.method = "hashblock";
     notification.message.params = rpc::array_t{ rpc::value_t{ 42.0 } };
-    BOOST_REQUIRE_EQUAL(notify(std::move(notification)), error::zmtp_unserializable);
+    BC_REQUIRE_EQUAL(notify(std::move(notification)), error::zmtp_unserializable);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

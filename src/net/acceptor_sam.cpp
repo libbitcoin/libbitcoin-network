@@ -243,8 +243,8 @@ static std::string to_stream_forward(const std::string& id,
 // Construct/start/stop.
 // ----------------------------------------------------------------------------
 
-acceptor_sam::acceptor_sam(const logger& log, asio::strand& strand,
-    asio::context& service, std::atomic_bool& suspended,
+acceptor_sam::acceptor_sam(const logger& log, io::strand& strand,
+    io::context& service, std::atomic_bool& suspended,
     parameters&& parameters, const settings::sam& sam) NOEXCEPT
   : acceptor(log, strand, service, suspended, std::move(parameters)),
     sam_(sam),
@@ -257,7 +257,7 @@ code acceptor_sam::start(const config::authority&) NOEXCEPT
 {
     const config::authority loopback
     {
-        asio::address{ boost::asio::ip::address_v4::loopback() }, 0
+        system::ip::ipv4::loopback(), 0
     };
 
     if (const auto ec = acceptor::start(loopback))
@@ -497,7 +497,7 @@ void acceptor_sam::handle_session_create(const code& ec,
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&acceptor_sam::do_session_ready,
             shared_from_base<acceptor_sam>(), socket, handler));
 }
@@ -602,7 +602,7 @@ void acceptor_sam::handle_forward_status(const code& ec,
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&acceptor_sam::do_forward_ready,
             shared_from_base<acceptor_sam>(), socket, handler));
 }
@@ -635,7 +635,7 @@ void acceptor_sam::do_forward_ready(const socket::ptr& socket,
 
 void acceptor_sam::handle_close(const code& ec) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&acceptor_sam::do_close,
             shared_from_base<acceptor_sam>(), ec));
 }

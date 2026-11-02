@@ -28,7 +28,7 @@ struct protocol_alert_311_setup_fixture
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(protocol_alert_311_tests, protocol_alert_311_setup_fixture)
+BC_FIXTURE_TEST_SUITE(protocol_alert_311_tests, protocol_alert_311_setup_fixture)
 
 using namespace network::messages::peer;
 
@@ -53,14 +53,14 @@ static const alert message
     system::data_chunk{ 0x30, 0x45, 0x02, 0x21, 0x00 }
 };
 
-BOOST_AUTO_TEST_CASE(protocol_alert_311__receive_alert__bip31_peer__connected)
+BC_AUTO_TEST_CASE(protocol_alert_311__receive_alert__bip31_peer__connected)
 {
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::bip31));
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::bip31));
     send(message, level::bip31);
 
     send(ping{ 42 }, level::bip31);
-    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
+    BC_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -34,7 +34,7 @@ struct net_tests_setup_fixture
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(net_tests, net_tests_setup_fixture)
+BC_FIXTURE_TEST_SUITE(net_tests, net_tests_setup_fixture)
 
 using namespace bc::system::chain;
 using namespace network::messages::peer;
@@ -149,33 +149,33 @@ private:
     };
 };
 
-BOOST_AUTO_TEST_CASE(net__network_settings__unstarted__expected)
+BC_AUTO_TEST_CASE(net__network_settings__unstarted__expected)
 {
     const logger log{};
     settings set(test::network_settings());
-    BOOST_REQUIRE_EQUAL(set.threads, 0u);
+    BC_REQUIRE_EQUAL(set.threads, 0u);
 
     net net(set, log);
-    BOOST_REQUIRE_EQUAL(net.network_settings().threads, 0u);
+    BC_REQUIRE_EQUAL(net.network_settings().threads, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(net__address_count__unstarted__zero)
+BC_AUTO_TEST_CASE(net__address_count__unstarted__zero)
 {
     const logger log{};
     const settings set(test::network_settings());
     net net(set, log);
-    BOOST_REQUIRE_EQUAL(net.address_count(), 0u);
+    BC_REQUIRE_EQUAL(net.address_count(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(net__address_counts__unstarted__zeros)
+BC_AUTO_TEST_CASE(net__address_counts__unstarted__zeros)
 {
     const logger log{};
     const settings set(test::network_settings());
     net net(set, log);
-    BOOST_REQUIRE(net.address_counts() == config::address_counts{});
+    BC_REQUIRE(net.address_counts() == config::address_counts{});
 }
 
-BOOST_AUTO_TEST_CASE(net__dump_addresses__unstarted__service_stopped)
+BC_AUTO_TEST_CASE(net__dump_addresses__unstarted__service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -188,19 +188,19 @@ BOOST_AUTO_TEST_CASE(net__dump_addresses__unstarted__service_stopped)
     });
 
     const auto result = promise.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
-    BOOST_REQUIRE(!result.second);
+    BC_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BC_REQUIRE(!result.second);
 }
 
-BOOST_AUTO_TEST_CASE(net__channel_count__unstarted__zero)
+BC_AUTO_TEST_CASE(net__channel_count__unstarted__zero)
 {
     const logger log{};
     const settings set(test::network_settings());
     net net(set, log);
-    BOOST_REQUIRE_EQUAL(net.channel_count(), 0u);
+    BC_REQUIRE_EQUAL(net.channel_count(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(net__connect__unstarted__service_stopped)
+BC_AUTO_TEST_CASE(net__connect__unstarted__service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -217,11 +217,11 @@ BOOST_AUTO_TEST_CASE(net__connect__unstarted__service_stopped)
     net.connect({ "truckers.ca", 42 });
     net.connect({ "truckers.ca", 42 }, handler);
     const auto result = promise.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
-    BOOST_REQUIRE(!result.second);
+    BC_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BC_REQUIRE(!result.second);
 }
 
-BOOST_AUTO_TEST_CASE(net__subscribe_connect__closed___service_stopped)
+BC_AUTO_TEST_CASE(net__subscribe_connect__closed___service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -244,15 +244,15 @@ BOOST_AUTO_TEST_CASE(net__subscribe_connect__closed___service_stopped)
 
     net.subscribe_connect(handler, complete);
     const auto result1 = promise_complete.get_future().get();
-    BOOST_REQUIRE_EQUAL(result1.first, error::service_stopped);
-    BOOST_REQUIRE_EQUAL(result1.second, zero);
+    BC_REQUIRE_EQUAL(result1.first, error::service_stopped);
+    BC_REQUIRE_EQUAL(result1.second, zero);
 
     const auto result2 = promise_handler.get_future().get();
-    BOOST_REQUIRE_EQUAL(result2.first, error::service_stopped);
-    BOOST_REQUIRE(!result2.second);
+    BC_REQUIRE_EQUAL(result2.first, error::service_stopped);
+    BC_REQUIRE(!result2.second);
 }
 
-BOOST_AUTO_TEST_CASE(net__subscribe_connect__unclosed___success)
+BC_AUTO_TEST_CASE(net__subscribe_connect__unclosed___success)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -274,17 +274,17 @@ BOOST_AUTO_TEST_CASE(net__subscribe_connect__unclosed___success)
 
     net.subscribe_connect(handler, complete);
     const auto result1 = promise_complete.get_future().get();
-    BOOST_REQUIRE_EQUAL(result1.first, error::success);
-    BOOST_REQUIRE_EQUAL(result1.second, one);
+    BC_REQUIRE_EQUAL(result1.first, error::success);
+    BC_REQUIRE_EQUAL(result1.second, one);
 
     // Close (or ~net) required to clear subscription.
     net.close();
     const auto result2 = promise_handler.get_future().get();
-    BOOST_REQUIRE_EQUAL(result2.first, error::service_stopped);
-    BOOST_REQUIRE(!result2.second);
+    BC_REQUIRE_EQUAL(result2.first, error::service_stopped);
+    BC_REQUIRE(!result2.second);
 }
 
-BOOST_AUTO_TEST_CASE(net__subscribe_close__closed__service_stopped)
+BC_AUTO_TEST_CASE(net__subscribe_close__closed__service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -307,12 +307,12 @@ BOOST_AUTO_TEST_CASE(net__subscribe_close__closed__service_stopped)
 
     net.subscribe_close(handler, complete);
     const auto result = promise_complete.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
-    BOOST_REQUIRE_EQUAL(result.second, zero);
-    BOOST_REQUIRE_EQUAL(promise_handler.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BC_REQUIRE_EQUAL(result.second, zero);
+    BC_REQUIRE_EQUAL(promise_handler.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__subscribe_close__unclosed___success)
+BC_AUTO_TEST_CASE(net__subscribe_close__unclosed___success)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -334,24 +334,24 @@ BOOST_AUTO_TEST_CASE(net__subscribe_close__unclosed___success)
 
     net.subscribe_close(handler, complete);
     const auto result = promise_complete.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::success);
-    BOOST_REQUIRE_EQUAL(result.second, one);
+    BC_REQUIRE_EQUAL(result.first, error::success);
+    BC_REQUIRE_EQUAL(result.second, one);
 
     // Close (or ~net) required to clear subscription.
     net.close();
-    BOOST_REQUIRE_EQUAL(promise_handler.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(promise_handler.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__start__outbound_connections_but_no_peers_no_seeds__seeding_unsuccessful)
+BC_AUTO_TEST_CASE(net__start__outbound_connections_but_no_peers_no_seeds__seeding_unsuccessful)
 {
     const logger log{};
     settings set(test::network_settings());
     set.outbound.seeds.clear();
-    BOOST_REQUIRE(set.manual.peers.empty());
+    BC_REQUIRE(set.manual.peers.empty());
 
     net net(set, log);
-    BOOST_REQUIRE(net.network_settings().manual.peers.empty());
-    BOOST_REQUIRE(net.network_settings().outbound.seeds.empty());
+    BC_REQUIRE(net.network_settings().manual.peers.empty());
+    BC_REQUIRE(net.network_settings().outbound.seeds.empty());
 
     std::promise<code> promise;
     const auto handler = [&](const code& ec) NOEXCEPT
@@ -360,10 +360,10 @@ BOOST_AUTO_TEST_CASE(net__start__outbound_connections_but_no_peers_no_seeds__see
     };
 
     net.start(handler);
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::seeding_unsuccessful);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::seeding_unsuccessful);
 }
 
-BOOST_AUTO_TEST_CASE(net__run__closed__service_stopped)
+BC_AUTO_TEST_CASE(net__run__closed__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -377,20 +377,20 @@ BOOST_AUTO_TEST_CASE(net__run__closed__service_stopped)
     };
 
     net.run(handler);
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__run__started_no_outbound_connections__success)
+BC_AUTO_TEST_CASE(net__run__started_no_outbound_connections__success)
 {
     const logger log{};
     settings set(test::network_settings());
     set.outbound.connections = 0;
     set.outbound.seeds.clear();
-    BOOST_REQUIRE(set.manual.peers.empty());
+    BC_REQUIRE(set.manual.peers.empty());
 
     net net(set, log);
-    BOOST_REQUIRE(net.network_settings().manual.peers.empty());
-    BOOST_REQUIRE(net.network_settings().outbound.seeds.empty());
+    BC_REQUIRE(net.network_settings().manual.peers.empty());
+    BC_REQUIRE(net.network_settings().outbound.seeds.empty());
 
     std::promise<code> promise_run;
     const auto run_handler = [&](const code& ec) NOEXCEPT
@@ -406,8 +406,8 @@ BOOST_AUTO_TEST_CASE(net__run__started_no_outbound_connections__success)
     };
 
     net.start(start_handler);
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
 }
 
 class mock_settings final
@@ -426,11 +426,11 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(net__run__started_no_peers_no_seeds_one_connection_one_batch__success)
+BC_AUTO_TEST_CASE(net__run__started_no_peers_no_seeds_one_connection_one_batch__success)
 {
     const logger log{};
     mock_settings set(test::network_settings());
-    BOOST_REQUIRE(set.manual.peers.empty());
+    BC_REQUIRE(set.manual.peers.empty());
 
     // This implies seeding would be required.
     set.outbound.host_pool_capacity = 1;
@@ -463,13 +463,13 @@ BOOST_AUTO_TEST_CASE(net__run__started_no_peers_no_seeds_one_connection_one_batc
     };
 
     net.start(start_handler);
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
 }
 
 // start
 
-BOOST_AUTO_TEST_CASE(net__start__success_success__success)
+BC_AUTO_TEST_CASE(net__start__success_success__success)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -482,10 +482,10 @@ BOOST_AUTO_TEST_CASE(net__start__success_success__success)
         start.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(net__start__unknown_success__unknown)
+BC_AUTO_TEST_CASE(net__start__unknown_success__unknown)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -498,10 +498,10 @@ BOOST_AUTO_TEST_CASE(net__start__unknown_success__unknown)
         start.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(net__start__success_unknown__unknown)
+BC_AUTO_TEST_CASE(net__start__success_unknown__unknown)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -514,10 +514,10 @@ BOOST_AUTO_TEST_CASE(net__start__success_unknown__unknown)
         start.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(net__start__unknown_unknown__unknown)
+BC_AUTO_TEST_CASE(net__start__unknown_unknown__unknown)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -530,10 +530,10 @@ BOOST_AUTO_TEST_CASE(net__start__unknown_unknown__unknown)
         start.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(net__start__file_load_success_success__file_load)
+BC_AUTO_TEST_CASE(net__start__file_load_success_success__file_load)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -546,10 +546,10 @@ BOOST_AUTO_TEST_CASE(net__start__file_load_success_success__file_load)
         start.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::file_load);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::file_load);
 }
 
-BOOST_AUTO_TEST_CASE(net__start__file_load_unknown_success__unknown)
+BC_AUTO_TEST_CASE(net__start__file_load_unknown_success__unknown)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -562,10 +562,10 @@ BOOST_AUTO_TEST_CASE(net__start__file_load_unknown_success__unknown)
         start.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(net__start__file_load_success_unknown__file_load)
+BC_AUTO_TEST_CASE(net__start__file_load_success_unknown__file_load)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -578,10 +578,10 @@ BOOST_AUTO_TEST_CASE(net__start__file_load_success_unknown__file_load)
         start.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::file_load);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::file_load);
 }
 
-BOOST_AUTO_TEST_CASE(net__start__file_load_unknown_unknown__unknown)
+BC_AUTO_TEST_CASE(net__start__file_load_unknown_unknown__unknown)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -594,12 +594,12 @@ BOOST_AUTO_TEST_CASE(net__start__file_load_unknown_unknown__unknown)
         start.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
 }
 
 // run
 
-BOOST_AUTO_TEST_CASE(net__run__stopped_success_success__service_stopped)
+BC_AUTO_TEST_CASE(net__run__stopped_success_success__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -611,10 +611,10 @@ BOOST_AUTO_TEST_CASE(net__run__stopped_success_success__service_stopped)
         run.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__run__started_success_success__success)
+BC_AUTO_TEST_CASE(net__run__started_success_success__success)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -626,10 +626,10 @@ BOOST_AUTO_TEST_CASE(net__run__started_success_success__success)
         run.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(net__run__stopped_unknown_success__service_stopped)
+BC_AUTO_TEST_CASE(net__run__stopped_unknown_success__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -641,10 +641,10 @@ BOOST_AUTO_TEST_CASE(net__run__stopped_unknown_success__service_stopped)
         run.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__run__started_unknown_success__unknown)
+BC_AUTO_TEST_CASE(net__run__started_unknown_success__unknown)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -656,10 +656,10 @@ BOOST_AUTO_TEST_CASE(net__run__started_unknown_success__unknown)
         run.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(net__run__stopped_success_unknown__service_stopped)
+BC_AUTO_TEST_CASE(net__run__stopped_success_unknown__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -671,10 +671,10 @@ BOOST_AUTO_TEST_CASE(net__run__stopped_success_unknown__service_stopped)
         run.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__run__started_success_unknown__unknown)
+BC_AUTO_TEST_CASE(net__run__started_success_unknown__unknown)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -686,10 +686,10 @@ BOOST_AUTO_TEST_CASE(net__run__started_success_unknown__unknown)
         run.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
 }
 
-BOOST_AUTO_TEST_CASE(net__run__stopped_unknown_unknown__service_stopped)
+BC_AUTO_TEST_CASE(net__run__stopped_unknown_unknown__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -701,10 +701,10 @@ BOOST_AUTO_TEST_CASE(net__run__stopped_unknown_unknown__service_stopped)
         run.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__run__started_unknown_unknown__unknown)
+BC_AUTO_TEST_CASE(net__run__started_unknown_unknown__unknown)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(net__run__started_unknown_unknown__unknown)
         run.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
 }
 
 // protected
@@ -781,7 +781,7 @@ template <typename Function>
 static auto on_strand(net& instance, Function&& function)
 {
     std::promise<decltype(function())> promise{};
-    boost::asio::post(instance.strand(), [&]() NOEXCEPT
+    io::post(instance.strand(), [&]() NOEXCEPT
     {
         promise.set_value(function());
     });
@@ -806,29 +806,29 @@ static channel_peer::ptr make_outbound(net& instance, const logger& log)
     return std::make_shared<channel_peer>(log, socket, 2, instance.network_settings(), peer_options);
 }
 
-BOOST_AUTO_TEST_CASE(net__suspend__resume__expected)
+BC_AUTO_TEST_CASE(net__suspend__resume__expected)
 {
     const logger log{};
     const settings set(test::network_settings());
     net net(set, log);
-    BOOST_REQUIRE(!net.suspended());
+    BC_REQUIRE(!net.suspended());
 
     net.suspend(error::unknown);
-    BOOST_REQUIRE(net.suspended());
+    BC_REQUIRE(net.suspended());
 
-    BOOST_REQUIRE(net.resume());
-    BOOST_REQUIRE(!net.suspended());
+    BC_REQUIRE(net.resume());
+    BC_REQUIRE(!net.suspended());
 }
 
-BOOST_AUTO_TEST_CASE(net__reserved_count__unstarted__zero)
+BC_AUTO_TEST_CASE(net__reserved_count__unstarted__zero)
 {
     const logger log{};
     const settings set(test::network_settings());
     net net(set, log);
-    BOOST_REQUIRE_EQUAL(net.reserved_count(), 0u);
+    BC_REQUIRE_EQUAL(net.reserved_count(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(net__fetch_totals__unstarted__success_empty)
+BC_AUTO_TEST_CASE(net__fetch_totals__unstarted__success_empty)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -841,13 +841,13 @@ BOOST_AUTO_TEST_CASE(net__fetch_totals__unstarted__success_empty)
     });
 
     const auto result = promise.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::success);
-    BOOST_REQUIRE_EQUAL(result.second.sent, 0u);
-    BOOST_REQUIRE_EQUAL(result.second.received, 0u);
-    BOOST_REQUIRE(result.second.actives.empty());
+    BC_REQUIRE_EQUAL(result.first, error::success);
+    BC_REQUIRE_EQUAL(result.second.sent, 0u);
+    BC_REQUIRE_EQUAL(result.second.received, 0u);
+    BC_REQUIRE(result.second.actives.empty());
 }
 
-BOOST_AUTO_TEST_CASE(net__fetch_totals__closed__service_stopped)
+BC_AUTO_TEST_CASE(net__fetch_totals__closed__service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -860,10 +860,10 @@ BOOST_AUTO_TEST_CASE(net__fetch_totals__closed__service_stopped)
         promise.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__unsubscribe_connect__subscribed__desubscribed)
+BC_AUTO_TEST_CASE(net__unsubscribe_connect__subscribed__desubscribed)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -884,31 +884,31 @@ BOOST_AUTO_TEST_CASE(net__unsubscribe_connect__subscribed__desubscribed)
 
     net.subscribe_connect(handler, complete);
     const auto key = promise_complete.get_future().get();
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.connect_subscriber_count(); }), 1u);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.connect_subscriber_count(); }), 1u);
 
     net.unsubscribe_connect(key);
-    BOOST_REQUIRE_EQUAL(promise_handler.get_future().get(), error::desubscribed);
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.connect_subscriber_count(); }), 0u);
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.stop_subscriber_count(); }), 0u);
+    BC_REQUIRE_EQUAL(promise_handler.get_future().get(), error::desubscribed);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.connect_subscriber_count(); }), 0u);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.stop_subscriber_count(); }), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(net__create_service__always__acceptor)
+BC_AUTO_TEST_CASE(net__create_service__always__acceptor)
 {
     const logger log{};
     const settings set(test::network_settings());
     net_accessor net(set, log);
-    BOOST_REQUIRE(net.create_service({ .maximum_request = 42 }));
+    BC_REQUIRE(net.create_service({ .maximum_request = 42 }));
 }
 
-BOOST_AUTO_TEST_CASE(net__create_acceptor_sam__privacy__acceptor_sam)
+BC_AUTO_TEST_CASE(net__create_acceptor_sam__privacy__acceptor_sam)
 {
     const logger log{};
     const settings set(test::network_settings());
     net_accessor net(set, log, service::node_none, service::node_encrypted_transport);
-    BOOST_REQUIRE(net.create_acceptor_sam());
+    BC_REQUIRE(net.create_acceptor_sam());
 }
 
-BOOST_AUTO_TEST_CASE(net__to_connector__proxied_privacy__connector_socks)
+BC_AUTO_TEST_CASE(net__to_connector__proxied_privacy__connector_socks)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -916,20 +916,20 @@ BOOST_AUTO_TEST_CASE(net__to_connector__proxied_privacy__connector_socks)
     settings::socks5 socks{};
     socks.socks = { "127.0.0.1:65140" };
     const auto instance = net.to_connector(socks, set.outbound, seconds(1), 0);
-    BOOST_REQUIRE(std::dynamic_pointer_cast<connector_socks>(instance));
+    BC_REQUIRE(std::dynamic_pointer_cast<connector_socks>(instance));
 }
 
-BOOST_AUTO_TEST_CASE(net__to_connector__unproxied__connector)
+BC_AUTO_TEST_CASE(net__to_connector__unproxied__connector)
 {
     const logger log{};
     const settings set(test::network_settings());
     net_accessor net(set, log);
     const auto instance = net.to_connector(settings::socks5{}, set.outbound, seconds(1), 0);
-    BOOST_REQUIRE(instance);
-    BOOST_REQUIRE(!std::dynamic_pointer_cast<connector_socks>(instance));
+    BC_REQUIRE(instance);
+    BC_REQUIRE(!std::dynamic_pointer_cast<connector_socks>(instance));
 }
 
-BOOST_AUTO_TEST_CASE(net__save__unstarted__service_stopped)
+BC_AUTO_TEST_CASE(net__save__unstarted__service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -941,10 +941,10 @@ BOOST_AUTO_TEST_CASE(net__save__unstarted__service_stopped)
         promise.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__save__closed__service_stopped)
+BC_AUTO_TEST_CASE(net__save__closed__service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -956,10 +956,10 @@ BOOST_AUTO_TEST_CASE(net__save__closed__service_stopped)
         promise.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__fetch__closed__service_stopped)
+BC_AUTO_TEST_CASE(net__fetch__closed__service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -971,17 +971,17 @@ BOOST_AUTO_TEST_CASE(net__fetch__closed__service_stopped)
         promise.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__do_run__closed__service_stopped)
+BC_AUTO_TEST_CASE(net__do_run__closed__service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
     closed_net_accessor net(set, log);
 
     std::promise<code> promise{};
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         net.do_run([&](const code& ec) NOEXCEPT
         {
@@ -989,45 +989,45 @@ BOOST_AUTO_TEST_CASE(net__do_run__closed__service_stopped)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__store_nonce__outbound__stored_once)
+BC_AUTO_TEST_CASE(net__store_nonce__outbound__stored_once)
 {
     const logger log{};
     const settings set(test::network_settings());
     net_accessor net(set, log);
     const auto channel = make_outbound(net, log);
 
-    BOOST_REQUIRE(on_strand(net, [&]() NOEXCEPT { return net.store_nonce(*channel); }));
-    BOOST_REQUIRE(!on_strand(net, [&]() NOEXCEPT { return net.store_nonce(*channel); }));
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.nonces_count(); }), 1u);
-    BOOST_REQUIRE(on_strand(net, [&]() NOEXCEPT { return net.unstore_nonce(*channel); }));
-    BOOST_REQUIRE(!on_strand(net, [&]() NOEXCEPT { return net.unstore_nonce(*channel); }));
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.nonces_count(); }), 0u);
+    BC_REQUIRE(on_strand(net, [&]() NOEXCEPT { return net.store_nonce(*channel); }));
+    BC_REQUIRE(!on_strand(net, [&]() NOEXCEPT { return net.store_nonce(*channel); }));
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.nonces_count(); }), 1u);
+    BC_REQUIRE(on_strand(net, [&]() NOEXCEPT { return net.unstore_nonce(*channel); }));
+    BC_REQUIRE(!on_strand(net, [&]() NOEXCEPT { return net.unstore_nonce(*channel); }));
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.nonces_count(); }), 0u);
     channel->stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__count_channel__outbound_duplicate__address_in_use)
+BC_AUTO_TEST_CASE(net__count_channel__outbound_duplicate__address_in_use)
 {
     const logger log{};
     const settings set(test::network_settings());
     net_accessor net(set, log);
     const auto channel = make_outbound(net, log);
 
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.count_channel(*channel); }), error::success);
-    BOOST_REQUIRE_EQUAL(net.channel_count(), 1u);
-    BOOST_REQUIRE_EQUAL(net.reserved_count(), 1u);
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.count_channel(*channel); }), error::address_in_use);
-    BOOST_REQUIRE_EQUAL(net.channel_count(), 1u);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.count_channel(*channel); }), error::success);
+    BC_REQUIRE_EQUAL(net.channel_count(), 1u);
+    BC_REQUIRE_EQUAL(net.reserved_count(), 1u);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.count_channel(*channel); }), error::address_in_use);
+    BC_REQUIRE_EQUAL(net.channel_count(), 1u);
 
     on_strand(net, [&]() NOEXCEPT { net.uncount_channel(*channel); return true; });
-    BOOST_REQUIRE_EQUAL(net.channel_count(), 0u);
-    BOOST_REQUIRE_EQUAL(net.reserved_count(), 0u);
+    BC_REQUIRE_EQUAL(net.channel_count(), 0u);
+    BC_REQUIRE_EQUAL(net.reserved_count(), 0u);
     channel->stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__count_channel__inbound_own_nonce__accept_failed)
+BC_AUTO_TEST_CASE(net__count_channel__inbound_own_nonce__accept_failed)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -1038,21 +1038,21 @@ BOOST_AUTO_TEST_CASE(net__count_channel__inbound_own_nonce__accept_failed)
     const auto version = std::make_shared<messages::peer::version>();
     version->nonce = outbound->nonce();
     std::promise<bool> promise{};
-    boost::asio::post(inbound->strand(), [&]() NOEXCEPT
+    io::post(inbound->strand(), [&]() NOEXCEPT
     {
         inbound->set_peer_version(version);
         promise.set_value(true);
     });
 
-    BOOST_REQUIRE(promise.get_future().get());
-    BOOST_REQUIRE(on_strand(net, [&]() NOEXCEPT { return net.store_nonce(*outbound); }));
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.count_channel(*inbound); }), error::accept_failed);
-    BOOST_REQUIRE_EQUAL(net.inbound_channel_count(), 0u);
+    BC_REQUIRE(promise.get_future().get());
+    BC_REQUIRE(on_strand(net, [&]() NOEXCEPT { return net.store_nonce(*outbound); }));
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.count_channel(*inbound); }), error::accept_failed);
+    BC_REQUIRE_EQUAL(net.inbound_channel_count(), 0u);
     outbound->stop(error::service_stopped);
     inbound->stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__connect_handled__closed__service_stopped)
+BC_AUTO_TEST_CASE(net__connect_handled__closed__service_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -1066,27 +1066,27 @@ BOOST_AUTO_TEST_CASE(net__connect_handled__closed__service_stopped)
         return false;
     });
 
-    BOOST_REQUIRE_EQUAL(result, error::service_stopped);
+    BC_REQUIRE_EQUAL(result, error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__stop_services__attached_service__stopped_once)
+BC_AUTO_TEST_CASE(net__stop_services__attached_service__stopped_once)
 {
     const logger log{};
     const settings set(test::network_settings());
     net_accessor net(set, log);
 
     const auto session = on_strand(net, [&]() NOEXCEPT { return net.attach_service_stranded<mock_service_session>(); });
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.service_subscriber_count(); }), 1u);
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.stop_subscriber_count(); }), 1u);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.service_subscriber_count(); }), 1u);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.stop_subscriber_count(); }), 1u);
 
     net.stop_services(error::service_stopped);
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.service_subscriber_count(); }), 0u);
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return session->stops; }), 1u);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.service_subscriber_count(); }), 0u);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return session->stops; }), 1u);
     net.close();
-    BOOST_REQUIRE_EQUAL(session->stops, 2u);
+    BC_REQUIRE_EQUAL(session->stops, 2u);
 }
 
-BOOST_AUTO_TEST_CASE(net__subscribe_close__stranded__subscribed_then_stopped)
+BC_AUTO_TEST_CASE(net__subscribe_close__stranded__subscribed_then_stopped)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -1104,21 +1104,21 @@ BOOST_AUTO_TEST_CASE(net__subscribe_close__stranded__subscribed_then_stopped)
         return true;
     });
 
-    BOOST_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.stop_subscriber_count(); }), 1u);
+    BC_REQUIRE_EQUAL(on_strand(net, [&]() NOEXCEPT { return net.stop_subscriber_count(); }), 1u);
     net.close();
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
+    BC_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(net__wire_tx_demanded__unstarted__false)
+BC_AUTO_TEST_CASE(net__wire_tx_demanded__unstarted__false)
 {
     const logger log{};
     const settings set(test::network_settings());
     net net(set, log);
-    BOOST_REQUIRE(!net.wire_tx_demanded());
-    BOOST_REQUIRE(!net.wire_block_demanded());
+    BC_REQUIRE(!net.wire_tx_demanded());
+    BC_REQUIRE(!net.wire_block_demanded());
 }
 
-BOOST_AUTO_TEST_CASE(net__demand_wire_tx__demanded_twice_undemanded_twice__expected)
+BC_AUTO_TEST_CASE(net__demand_wire_tx__demanded_twice_undemanded_twice__expected)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -1126,17 +1126,17 @@ BOOST_AUTO_TEST_CASE(net__demand_wire_tx__demanded_twice_undemanded_twice__expec
 
     net.demand_wire_tx(true);
     net.demand_wire_tx(true);
-    BOOST_REQUIRE(net.wire_tx_demanded());
-    BOOST_REQUIRE(!net.wire_block_demanded());
+    BC_REQUIRE(net.wire_tx_demanded());
+    BC_REQUIRE(!net.wire_block_demanded());
 
     net.demand_wire_tx(false);
-    BOOST_REQUIRE(net.wire_tx_demanded());
+    BC_REQUIRE(net.wire_tx_demanded());
 
     net.demand_wire_tx(false);
-    BOOST_REQUIRE(!net.wire_tx_demanded());
+    BC_REQUIRE(!net.wire_tx_demanded());
 }
 
-BOOST_AUTO_TEST_CASE(net__demand_wire_block__demanded_twice_undemanded_twice__expected)
+BC_AUTO_TEST_CASE(net__demand_wire_block__demanded_twice_undemanded_twice__expected)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -1144,17 +1144,17 @@ BOOST_AUTO_TEST_CASE(net__demand_wire_block__demanded_twice_undemanded_twice__ex
 
     net.demand_wire_block(true);
     net.demand_wire_block(true);
-    BOOST_REQUIRE(net.wire_block_demanded());
-    BOOST_REQUIRE(!net.wire_tx_demanded());
+    BC_REQUIRE(net.wire_block_demanded());
+    BC_REQUIRE(!net.wire_tx_demanded());
 
     net.demand_wire_block(false);
-    BOOST_REQUIRE(net.wire_block_demanded());
+    BC_REQUIRE(net.wire_block_demanded());
 
     net.demand_wire_block(false);
-    BOOST_REQUIRE(!net.wire_block_demanded());
+    BC_REQUIRE(!net.wire_block_demanded());
 }
 
-BOOST_AUTO_TEST_CASE(net__broadcast__wire_tx_subscribed__expected)
+BC_AUTO_TEST_CASE(net__broadcast__wire_tx_subscribed__expected)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -1173,11 +1173,11 @@ BOOST_AUTO_TEST_CASE(net__broadcast__wire_tx_subscribed__expected)
     const auto result = promise.get_future().get();
     net.close();
 
-    BOOST_REQUIRE(result.first == expected);
-    BOOST_REQUIRE_EQUAL(result.second, 7u);
+    BC_REQUIRE(result.first == expected);
+    BC_REQUIRE_EQUAL(result.second, 7u);
 }
 
-BOOST_AUTO_TEST_CASE(net__broadcast__wire_block_subscribed__expected)
+BC_AUTO_TEST_CASE(net__broadcast__wire_block_subscribed__expected)
 {
     const logger log{};
     const settings set(test::network_settings());
@@ -1198,8 +1198,8 @@ BOOST_AUTO_TEST_CASE(net__broadcast__wire_block_subscribed__expected)
     const auto result = promise.get_future().get();
     net.close();
 
-    BOOST_REQUIRE(result.first == expected);
-    BOOST_REQUIRE_EQUAL(result.second, 7u);
+    BC_REQUIRE(result.first == expected);
+    BC_REQUIRE_EQUAL(result.second, 7u);
 }
 
 // seed
@@ -1369,108 +1369,108 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(net__seed__once__one_session)
+BC_AUTO_TEST_CASE(net__seed__once__one_session)
 {
     const logger log{};
     const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_complete> net(set, log);
-    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    BC_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.reseeds(), 1u);
+    BC_REQUIRE_EQUAL(net.reseeds(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(net__seed__startup_running__no_session)
+BC_AUTO_TEST_CASE(net__seed__startup_running__no_session)
 {
     const logger log{};
     const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_complete, mock_session_seed_running> net(set, log);
-    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    BC_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.reseeds(), 0u);
+    BC_REQUIRE_EQUAL(net.reseeds(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(net__seed__twice_running__one_session)
+BC_AUTO_TEST_CASE(net__seed__twice_running__one_session)
 {
     const logger log{};
     const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_running> net(set, log);
-    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    BC_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.reseeds(), 1u);
+    BC_REQUIRE_EQUAL(net.reseeds(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(net__seed__twice_complete__two_sessions)
+BC_AUTO_TEST_CASE(net__seed__twice_complete__two_sessions)
 {
     const logger log{};
     const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_complete> net(set, log);
-    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    BC_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.reseeds(), 2u);
+    BC_REQUIRE_EQUAL(net.reseeds(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(net__seed__no_seeds__no_session)
+BC_AUTO_TEST_CASE(net__seed__no_seeds__no_session)
 {
     const logger log{};
     settings set(test::network_settings());
     set.outbound.seeds.clear();
     mock_net_seed<mock_session_seed_complete> net(set, log);
-    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    BC_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.reseeds(), 0u);
+    BC_REQUIRE_EQUAL(net.reseeds(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(net__seed__sufficient_addresses__no_session)
+BC_AUTO_TEST_CASE(net__seed__sufficient_addresses__no_session)
 {
     const logger log{};
     const settings set(test::network_settings());
     sufficient_mock_net_seed<mock_session_seed_complete> net(set, log);
-    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    BC_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.reseeds(), 0u);
+    BC_REQUIRE_EQUAL(net.reseeds(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(net__seed__startup_completed_recently__no_session)
+BC_AUTO_TEST_CASE(net__seed__startup_completed_recently__no_session)
 {
     const logger log{};
     const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_complete, mock_session_seed_completed_recently> net(set, log);
-    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    BC_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.reseeds(), 0u);
+    BC_REQUIRE_EQUAL(net.reseeds(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(net__seed__twice_completed_recently__one_session)
+BC_AUTO_TEST_CASE(net__seed__twice_completed_recently__one_session)
 {
     const logger log{};
     const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_completed_recently> net(set, log);
-    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    BC_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.reseeds(), 1u);
+    BC_REQUIRE_EQUAL(net.reseeds(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(net__seed__twice_completed_long_ago__two_sessions)
+BC_AUTO_TEST_CASE(net__seed__twice_completed_long_ago__two_sessions)
 {
     const logger log{};
     const settings set(test::network_settings());
     mock_net_seed<mock_session_seed_completed_long_ago> net(set, log);
-    BOOST_REQUIRE_EQUAL(net.start_and_wait(), error::success);
+    BC_REQUIRE_EQUAL(net.start_and_wait(), error::success);
     net.seed_and_wait();
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.reseeds(), 2u);
+    BC_REQUIRE_EQUAL(net.reseeds(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(net__seed__closed__no_session)
+BC_AUTO_TEST_CASE(net__seed__closed__no_session)
 {
     const logger log{};
     const settings set(test::network_settings());
     closed_mock_net_seed<mock_session_seed_complete> net(set, log);
     net.seed_and_wait();
-    BOOST_REQUIRE_EQUAL(net.seed_sessions(), 0u);
+    BC_REQUIRE_EQUAL(net.seed_sessions(), 0u);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

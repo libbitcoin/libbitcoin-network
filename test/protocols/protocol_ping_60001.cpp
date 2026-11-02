@@ -71,58 +71,58 @@ protected:
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(protocol_ping_60001_tests, peer_net_setup_fixture<>)
+BC_FIXTURE_TEST_SUITE(protocol_ping_60001_tests, peer_net_setup_fixture<>)
 
-BOOST_AUTO_TEST_CASE(protocol_ping_60001__start__bip31_peer__ping_with_nonzero_nonce)
+BC_AUTO_TEST_CASE(protocol_ping_60001__start__bip31_peer__ping_with_nonzero_nonce)
 {
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::bip31));
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::bip31));
 
     const auto message = receive<ping>(level::bip31);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_NE(message->nonce, 0_u64);
+    BC_REQUIRE(message);
+    BC_REQUIRE_NE(message->nonce, 0_u64);
 }
 
-BOOST_AUTO_TEST_CASE(protocol_ping_60001__receive_pong__matching_nonce__connected)
+BC_AUTO_TEST_CASE(protocol_ping_60001__receive_pong__matching_nonce__connected)
 {
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::bip31));
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::bip31));
 
     const auto message = receive<ping>(level::bip31);
-    BOOST_REQUIRE(message);
+    BC_REQUIRE(message);
     send(pong{ message->nonce }, level::bip31);
 
     send(ping{ 42 }, level::bip31);
-    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
+    BC_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
 }
 
-BOOST_FIXTURE_TEST_CASE(protocol_ping_60001__handle_timer__expired_no_pong__dropped, peer_net_setup_fixture<ping_60001_net>)
+BC_FIXTURE_TEST_CASE(protocol_ping_60001__handle_timer__expired_no_pong__dropped, peer_net_setup_fixture<ping_60001_net>)
 {
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::bip31));
-    BOOST_REQUIRE(receive<ping>(level::bip31));
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::bip31));
+    BC_REQUIRE(receive<ping>(level::bip31));
 
     net_->probe.get_future().get()->expire();
-    BOOST_REQUIRE(dropped());
+    BC_REQUIRE(dropped());
 }
 
-BOOST_FIXTURE_TEST_CASE(protocol_ping_60001__handle_timer__expired_after_pong__ping_again, peer_net_setup_fixture<ping_60001_net>)
+BC_FIXTURE_TEST_CASE(protocol_ping_60001__handle_timer__expired_after_pong__ping_again, peer_net_setup_fixture<ping_60001_net>)
 {
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::bip31));
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::bip31));
 
     const auto first = receive<ping>(level::bip31);
-    BOOST_REQUIRE(first);
+    BC_REQUIRE(first);
     send(pong{ first->nonce }, level::bip31);
 
     // The pong echo orders the node's handling of the peer's pong.
     send(ping{ 42 }, level::bip31);
-    BOOST_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
+    BC_REQUIRE_EQUAL(receive<pong>(level::bip31)->nonce, 42_u64);
 
     net_->probe.get_future().get()->expire();
     const auto next = receive<ping>(level::bip31);
-    BOOST_REQUIRE(next);
-    BOOST_REQUIRE_NE(next->nonce, 0_u64);
+    BC_REQUIRE(next);
+    BC_REQUIRE_NE(next->nonce, 0_u64);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -154,7 +154,6 @@ AC_MSG_RESULT([$enable_ndebug])
 AM_CONDITIONAL([ENABLE_NDEBUG], [test "x${enable_ndebug}" != "xno"])
 AS_IF([test "x${enable_ndebug}" != "xno"], [AC_DEFINE([NDEBUG])])
 
-AS_IF([test "x${enable_shared}" != "xno"], [AC_DEFINE([BOOST_ALL_DYN_LINK])])
 
 AC_MSG_CHECKING([--with-tests option])
 AC_ARG_WITH([tests],
@@ -164,15 +163,6 @@ AC_ARG_WITH([tests],
     [with_tests=yes])
 AC_MSG_RESULT([$with_tests])
 AM_CONDITIONAL([WITH_TESTS], [test "x${with_tests}" != "xno"])
-
-AC_MSG_CHECKING([--with-ssl option])
-AC_ARG_WITH([ssl],
-    AS_HELP_STRING([--with-ssl],
-        [Use embedded ssl library. @<:@default=yes@:>@]),
-    [with_ssl=$withval],
-    [with_ssl=yes])
-AC_MSG_RESULT([$with_ssl])
-AM_CONDITIONAL([WITH_SSL], [test "x${with_ssl}" != "xno"])
 
 # Set flags.
 #==============================================================================
@@ -272,35 +262,6 @@ AS_IF([test "x${enable_isystem}" != "xno"],
   [AC_SUBST([libbitcoin_system_BUILD_CPPFLAGS], [${libbitcoin_system_ISYS_CPPFLAGS}])],
   [AC_SUBST([libbitcoin_system_BUILD_CPPFLAGS], [${libbitcoin_system_CPPFLAGS}])])
 AC_MSG_NOTICE([libbitcoin_system_BUILD_CPPFLAGS : ${libbitcoin_system_BUILD_CPPFLAGS}])
-
-AX_BOOST_BASE([1.86.0],
-  [
-    AC_SUBST([boost_CPPFLAGS], [${BOOST_CPPFLAGS}])
-    AC_SUBST([boost_ISYSTEM_CPPFLAGS], [`echo ${boost_CPPFLAGS} | ${SED} s/^-I/-isystem/g | ${SED} s/' -I'/' -isystem'/g`])
-    AC_SUBST([boost_LDFLAGS], [${BOOST_LDFLAGS}])
-    AC_MSG_NOTICE([boost_CPPFLAGS : ${boost_CPPFLAGS}])
-    AC_MSG_NOTICE([boost_ISYS_CPPFLAGS : ${boost_ISYS_CPPFLAGS}])
-    AC_MSG_NOTICE([boost_LDFLAGS : ${boost_LDFLAGS}])
-  ],
-  [
-    AC_MSG_ERROR([Boost 1.86.0 or later is required but was not found.])
-  ])
-
-AS_IF([test "x${enable_isystem}" != "xno"],
-  [ AC_SUBST([boost_BUILD_CPPFLAGS], [${boost_ISYSTEM_CPPFLAGS}]) ],
-  [ AC_SUBST([boost_BUILD_CPPFLAGS], [${boost_CPPFLAGS}]) ])
-
-AC_MSG_NOTICE([boost_BUILD_CPPFLAGS : ${boost_BUILD_CPPFLAGS}])
-
-# Set preprocessor defines.
-#==============================================================================
-AS_IF([test "x${with_ssl}" != "xno"], [
-        AC_DEFINE([WITH_SSL])
-        AC_SUBST([ssl], [-DWITH_SSL])
-    ])
-
-AS_IF([test "x${with_ssl}" != "xno"],
-    [ AC_SUBST([ssl_include], [-I${includedir}/bitcoin/network/ssl]) ])
 
 AC_CONFIG_FILES([
     Makefile

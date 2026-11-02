@@ -18,11 +18,11 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(session_html_tests)
+BC_AUTO_TEST_SUITE(session_html_tests)
 
-BOOST_AUTO_TEST_CASE(session_html_tests)
+BC_AUTO_TEST_CASE(session_html_tests)
 {
-    BOOST_REQUIRE(true);
+    BC_REQUIRE(true);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

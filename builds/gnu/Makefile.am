@@ -39,8 +39,6 @@ src_libbitcoin_network_la_LIBS = src/libbitcoin-network.la
 src_libbitcoin_network_la_CPPFLAGS = \
     -I${top_builddir}/include \
     -I${srcdir}/../../include \
-    -I${top_builddir}/include/bitcoin/network/ssl \
-    -I${srcdir}/../../include/bitcoin/network/ssl \
     ${libbitcoin_system_BUILD_CPPFLAGS}
 
 src_libbitcoin_network_la_LDFLAGS = \
@@ -50,7 +48,6 @@ src_libbitcoin_network_la_LIBADD = \
     ${libbitcoin_system_LIBS}
 
 src_libbitcoin_network_la_SOURCES = \
-    ${srcdir}/../../src/asio.cpp \
     ${srcdir}/../../src/define.cpp \
     ${srcdir}/../../src/error.cpp \
     ${srcdir}/../../src/memory.cpp \
@@ -69,13 +66,29 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/config/credential.cpp \
     ${srcdir}/../../src/config/endpoint.cpp \
     ${srcdir}/../../src/config/utilities.cpp \
+    ${srcdir}/../../src/io/backend.cpp \
+    ${srcdir}/../../src/io/backend_posix.cpp \
+    ${srcdir}/../../src/io/backend_windows.cpp \
+    ${srcdir}/../../src/io/context.cpp \
+    ${srcdir}/../../src/io/native.cpp \
+    ${srcdir}/../../src/io/scheduler.cpp \
+    ${srcdir}/../../src/io/socket.cpp \
+    ${srcdir}/../../src/io/steady_timer.cpp \
     ${srcdir}/../../src/log/capture.cpp \
     ${srcdir}/../../src/log/logger.cpp \
     ${srcdir}/../../src/log/reporter.cpp \
     ${srcdir}/../../src/messages/http_body.cpp \
     ${srcdir}/../../src/messages/http/fields.cpp \
+    ${srcdir}/../../src/messages/http/file.cpp \
+    ${srcdir}/../../src/messages/http/flat_buffer.cpp \
+    ${srcdir}/../../src/messages/http/header.cpp \
+    ${srcdir}/../../src/messages/http/parser.cpp \
+    ${srcdir}/../../src/messages/http/serializer.cpp \
+    ${srcdir}/../../src/messages/http/enums/field.cpp \
     ${srcdir}/../../src/messages/http/enums/media_type.cpp \
+    ${srcdir}/../../src/messages/http/enums/status.cpp \
     ${srcdir}/../../src/messages/http/enums/target.cpp \
+    ${srcdir}/../../src/messages/http/enums/verb.cpp \
     ${srcdir}/../../src/messages/peer/body.cpp \
     ${srcdir}/../../src/messages/peer/message.cpp \
     ${srcdir}/../../src/messages/peer/detail/address.cpp \
@@ -174,16 +187,13 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/tls/record.cpp \
     ${srcdir}/../../src/tls/schedule.cpp \
     ${srcdir}/../../src/tls/server.cpp \
+    ${srcdir}/../../src/tls/stream.cpp \
+    ${srcdir}/../../src/ws/frame.cpp \
+    ${srcdir}/../../src/ws/handshake.cpp \
+    ${srcdir}/../../src/ws/reader.cpp \
     ${srcdir}/../../src/zmtp/cipher.cpp \
     ${srcdir}/../../src/zmtp/context.cpp \
     ${srcdir}/../../src/zmtp/stream.cpp
-
-if WITH_SSL
-
-src_libbitcoin_network_la_SOURCES += \
-    ${srcdir}/../../src/ssl/openssl.cpp
-
-endif WITH_SSL
 
 nodist_src_libbitcoin_network_la_SOURCES = \
     src/version.cpp
@@ -215,9 +225,6 @@ include_bitcoin_networkdir = \
     ${includedir}/bitcoin/network
 
 include_bitcoin_network_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/asio.hpp \
-    ${srcdir}/../../include/bitcoin/network/beast.hpp \
-    ${srcdir}/../../include/bitcoin/network/boost.hpp \
     ${srcdir}/../../include/bitcoin/network/define.hpp \
     ${srcdir}/../../include/bitcoin/network/error.hpp \
     ${srcdir}/../../include/bitcoin/network/have.hpp \
@@ -311,11 +318,26 @@ include_bitcoin_network_impl_channelsdir = \
 include_bitcoin_network_impl_channels_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/impl/channels/channel_rpc.ipp
 
+include_bitcoin_network_impl_iodir = \
+    ${includedir}/bitcoin/network/impl/io
+
+include_bitcoin_network_impl_io_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/io/operations.ipp \
+    ${srcdir}/../../include/bitcoin/network/impl/io/socket.ipp
+
 include_bitcoin_network_impl_messagesdir = \
     ${includedir}/bitcoin/network/impl/messages
 
 include_bitcoin_network_impl_messages_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/impl/messages/json_body.ipp
+
+include_bitcoin_network_impl_messages_httpdir = \
+    ${includedir}/bitcoin/network/impl/messages/http
+
+include_bitcoin_network_impl_messages_http_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/messages/http/operations.ipp \
+    ${srcdir}/../../include/bitcoin/network/impl/messages/http/parser.ipp \
+    ${srcdir}/../../include/bitcoin/network/impl/messages/http/serializer.ipp
 
 include_bitcoin_network_impl_messages_rpcdir = \
     ${includedir}/bitcoin/network/impl/messages/rpc
@@ -330,6 +352,18 @@ include_bitcoin_network_impl_protocolsdir = \
 include_bitcoin_network_impl_protocols_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/impl/protocols/protocol_rpc.ipp
 
+include_bitcoin_network_impl_tlsdir = \
+    ${includedir}/bitcoin/network/impl/tls
+
+include_bitcoin_network_impl_tls_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/tls/stream.ipp
+
+include_bitcoin_network_impl_wsdir = \
+    ${includedir}/bitcoin/network/impl/ws
+
+include_bitcoin_network_impl_ws_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/ws/client.ipp
+
 include_bitcoin_network_interfacesdir = \
     ${includedir}/bitcoin/network/interfaces
 
@@ -338,6 +372,18 @@ include_bitcoin_network_interfaces_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/interfaces/interfaces.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_broadcast.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp
+
+include_bitcoin_network_iodir = \
+    ${includedir}/bitcoin/network/io
+
+include_bitcoin_network_io_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/io/buffer.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/context.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/io.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/operations.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/socket.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/steady_timer.hpp \
+    ${srcdir}/../../include/bitcoin/network/io/strand.hpp
 
 include_bitcoin_network_logdir = \
     ${includedir}/bitcoin/network/log
@@ -357,6 +403,7 @@ include_bitcoin_network_messagesdir = \
 include_bitcoin_network_messages_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/http_body.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http_method.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/indirect.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/json_body.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/messages.hpp
 
@@ -364,14 +411,22 @@ include_bitcoin_network_messages_httpdir = \
     ${includedir}/bitcoin/network/messages/http
 
 include_bitcoin_network_messages_http_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/http/bodies.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/fields.hpp \
-    ${srcdir}/../../include/bitcoin/network/messages/http/file_body.hpp \
-    ${srcdir}/../../include/bitcoin/network/messages/http/http.hpp
+    ${srcdir}/../../include/bitcoin/network/messages/http/file.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/flat_buffer.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/header.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/http.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/message.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/operations.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/parser.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/serializer.hpp
 
 include_bitcoin_network_messages_http_enumsdir = \
     ${includedir}/bitcoin/network/messages/http/enums
 
 include_bitcoin_network_messages_http_enums_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/http/enums/field.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/enums/magic_numbers.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/enums/media_type.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/enums/status.hpp \
@@ -527,24 +582,6 @@ include_bitcoin_network_sessions_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/sessions/session_server.hpp \
     ${srcdir}/../../include/bitcoin/network/sessions/sessions.hpp
 
-if WITH_SSL
-
-include_bitcoin_network_ssl_openssldir = \
-    ${includedir}/bitcoin/network/ssl/openssl
-
-include_bitcoin_network_ssl_openssl_HEADERS = \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/conf.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/dh.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/engine.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/err.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/openssl.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/rsa.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/ssl.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/x509.h \
-    ${srcdir}/../../include/bitcoin/network/ssl/openssl/x509v3.h
-
-endif WITH_SSL
-
 include_bitcoin_network_tlsdir = \
     ${includedir}/bitcoin/network/tls
 
@@ -555,7 +592,18 @@ include_bitcoin_network_tls_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/tls/record.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/schedule.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/server.hpp \
+    ${srcdir}/../../include/bitcoin/network/tls/stream.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/tls.hpp
+
+include_bitcoin_network_wsdir = \
+    ${includedir}/bitcoin/network/ws
+
+include_bitcoin_network_ws_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/ws/client.hpp \
+    ${srcdir}/../../include/bitcoin/network/ws/frame.hpp \
+    ${srcdir}/../../include/bitcoin/network/ws/handshake.hpp \
+    ${srcdir}/../../include/bitcoin/network/ws/reader.hpp \
+    ${srcdir}/../../include/bitcoin/network/ws/ws.hpp
 
 include_bitcoin_network_zmtpdir = \
     ${includedir}/bitcoin/network/zmtp
@@ -578,21 +626,17 @@ check_PROGRAMS = test/libbitcoin-network-test
 test_libbitcoin_network_test_CPPFLAGS = \
     -I${top_builddir}/test \
     -I${srcdir}/../../test \
-    ${boost_BUILD_CPPFLAGS} \
     ${src_libbitcoin_network_la_CPPFLAGS}
 
 test_libbitcoin_network_test_LDFLAGS = \
     ${mingw_program_LDFLAGS} \
-    ${boost_LDFLAGS} \
     ${src_libbitcoin_network_la_LDFLAGS}
 
 test_libbitcoin_network_test_LDADD = \
-    ${boost_LIBS} \
     ${src_libbitcoin_network_la_LIBS} \
     ${src_libbitcoin_network_la_LIBADD}
 
 test_libbitcoin_network_test_SOURCES = \
-    ${srcdir}/../../test/asio.cpp \
     ${srcdir}/../../test/error.cpp \
     ${srcdir}/../../test/main.cpp \
     ${srcdir}/../../test/memory.cpp \
@@ -627,14 +671,19 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/config/utilities.cpp \
     ${srcdir}/../../test/functional/peer.cpp \
     ${srcdir}/../../test/functional/peer_setup_fixture.cpp \
+    ${srcdir}/../../test/io/context.cpp \
+    ${srcdir}/../../test/io/socket.cpp \
     ${srcdir}/../../test/log/timer.cpp \
     ${srcdir}/../../test/log/tracker.cpp \
     ${srcdir}/../../test/messages/http_body_reader.cpp \
     ${srcdir}/../../test/messages/http_body_writer.cpp \
+    ${srcdir}/../../test/messages/indirect.cpp \
     ${srcdir}/../../test/messages/json_body_reader.cpp \
     ${srcdir}/../../test/messages/json_body_writer.cpp \
     ${srcdir}/../../test/messages/http/fields.cpp \
+    ${srcdir}/../../test/messages/http/header.cpp \
     ${srcdir}/../../test/messages/http/method.cpp \
+    ${srcdir}/../../test/messages/http/parser.cpp \
     ${srcdir}/../../test/messages/http/enums/magic_numbers.cpp \
     ${srcdir}/../../test/messages/http/enums/media_type.cpp \
     ${srcdir}/../../test/messages/http/enums/target.cpp \
@@ -738,6 +787,9 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/tls/server.cpp \
     ${srcdir}/../../test/tls/server_hello.cpp \
     ${srcdir}/../../test/tls/socket.cpp \
+    ${srcdir}/../../test/ws/frame.cpp \
+    ${srcdir}/../../test/ws/handshake.cpp \
+    ${srcdir}/../../test/ws/reader.cpp \
     ${srcdir}/../../test/zmtp/cipher.cpp \
     ${srcdir}/../../test/zmtp/proxy.cpp \
     ${srcdir}/../../test/zmtp/role.cpp \

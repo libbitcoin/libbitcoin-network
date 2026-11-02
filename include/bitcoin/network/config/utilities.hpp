@@ -29,8 +29,10 @@ namespace network {
 namespace config {
 
 /// Not denormalizing.
-BCT_API messages::peer::ip_address to_address(const asio::address& ip) NOEXCEPT;
-BCT_API asio::address from_address(const messages::peer::ip_address& address) NOEXCEPT;
+BCT_API messages::peer::ip_address to_address(
+    const system::ip::address& ip) NOEXCEPT;
+BCT_API system::ip::address from_address(
+    const messages::peer::ip_address& address) NOEXCEPT;
 
 /// Get ascii lowered host:port form, with default substitution.
 BCT_API std::string to_normal_host(const std::string& host,

@@ -191,7 +191,6 @@ media_type file_media_type(const std::filesystem::path& path,
 media_type target_media_type(const std::string& target,
     media_type default_) NOEXCEPT
 {
-    // request.target() is a boost::string_view, which requres path conversion.
     return file_media_type(target, default_);
 }
 

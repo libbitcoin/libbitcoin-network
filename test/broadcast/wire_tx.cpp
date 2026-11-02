@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(wire_tx_tests)
+BC_AUTO_TEST_SUITE(wire_tx_tests)
 
 static const system::chain::block& genesis() NOEXCEPT
 {
@@ -26,30 +26,30 @@ static const system::chain::block& genesis() NOEXCEPT
     return bitcoin.genesis_block;
 }
 
-BOOST_AUTO_TEST_CASE(wire_tx__command__always__tx)
+BC_AUTO_TEST_CASE(wire_tx__command__always__tx)
 {
-    BOOST_REQUIRE_EQUAL(std::string{ wire_tx::command }, "tx");
+    BC_REQUIRE_EQUAL(std::string{ wire_tx::command }, "tx");
 }
 
-BOOST_AUTO_TEST_CASE(wire_tx__tx__shared__same_instance)
+BC_AUTO_TEST_CASE(wire_tx__tx__shared__same_instance)
 {
     const auto tx = system::emplace_shared<const wire_tx::view>(genesis().transactions_ptr()->front()->to_data(true), true, true);
     const wire_tx instance{ tx };
-    BOOST_REQUIRE(instance.tx() == tx);
+    BC_REQUIRE(instance.tx() == tx);
 }
 
-BOOST_AUTO_TEST_CASE(wire_tx__write__genesis_coinbase__witness_encoding)
+BC_AUTO_TEST_CASE(wire_tx__write__genesis_coinbase__witness_encoding)
 {
     const auto expected = genesis().transactions_ptr()->front()->to_data(true);
     const wire_tx instance{ system::emplace_shared<const wire_tx::view>(system::data_chunk{ expected }, true, true) };
-    BOOST_REQUIRE_EQUAL(instance.size(), expected.size());
+    BC_REQUIRE_EQUAL(instance.size(), expected.size());
 
     system::data_chunk out(instance.size());
     system::stream::out::fast sink{ out };
     system::write::bytes::fast writer{ sink };
     instance.write(writer);
-    BOOST_REQUIRE(writer);
-    BOOST_REQUIRE(out == expected);
+    BC_REQUIRE(writer);
+    BC_REQUIRE(out == expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -20,91 +20,91 @@
 
 ////#if defined(HAVE_SLOW_TESTS)
 
-BOOST_AUTO_TEST_SUITE(json_body_writer_tests)
+BC_AUTO_TEST_SUITE(json_body_writer_tests)
 
 using namespace network::http;
 using namespace network::json;
 using value = system::json::value;
 using object = system::json::object;
 
-bool operator==(const asio::const_buffer& left, const asio::const_buffer& right)
+bool operator==(const io::const_buffer& left, const io::const_buffer& right)
 {
     return left.size() == right.size() &&
         is_zero(std::memcmp(left.data(), right.data(), left.size()));
 }
 
-bool operator!=(const asio::const_buffer& left, const asio::const_buffer& right)
+bool operator!=(const io::const_buffer& left, const io::const_buffer& right)
 {
     return !(left == right);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__constructor1__default__null_model)
+BC_AUTO_TEST_CASE(json_body_writer__constructor1__default__null_model)
 {
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    BOOST_REQUIRE(body.model.is_null());
+    BC_REQUIRE(body.model.is_null());
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__constructor2__default__null_model)
+BC_AUTO_TEST_CASE(json_body_writer__constructor2__default__null_model)
 {
     response_header header{};
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(header, body);
-    BOOST_REQUIRE(body.model.is_null());
+    BC_REQUIRE(body.model.is_null());
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__init__default__success)
+BC_AUTO_TEST_CASE(json_body_writer__init__default__success)
 {
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more)
+BC_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more)
 {
     const std::string_view expected{ "null" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_more)
+BC_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_more)
 {
     const std::string_view expected{ R"({"key":"value"})" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     body.model = object{ { "key", "value" } };
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
 }
 
 // A size_hint smaller than the serialized payload forces writer.get() to be
@@ -115,16 +115,16 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_m
 // serializer::read() fills the given buffer to capacity on
 // every pass but the last, so for this size_hint and payload the split is
 // deterministic: four 8-byte-or-fewer chunks.
-BOOST_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four_chunks_reassemble_with_terminal_no_more)
+BC_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four_chunks_reassemble_with_terminal_no_more)
 {
     const std::string_view expected1{ R"({"key":")" };
     const std::string_view expected2{ "xxxxxxxx" };
     const std::string_view expected3{ "xxxxxxxx" };
     const std::string_view expected4{ R"(xxxx"})" };
-    const asio::const_buffer out1{ expected1.data(), expected1.size() };
-    const asio::const_buffer out2{ expected2.data(), expected2.size() };
-    const asio::const_buffer out3{ expected3.data(), expected3.size() };
-    const asio::const_buffer out4{ expected4.data(), expected4.size() };
+    const io::const_buffer out1{ expected1.data(), expected1.size() };
+    const io::const_buffer out2{ expected2.data(), expected2.size() };
+    const io::const_buffer out3{ expected3.data(), expected3.size() };
+    const io::const_buffer out4{ expected4.data(), expected4.size() };
 
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
@@ -132,100 +132,100 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four
     body.model = object{ { "key", std::string(20, 'x') } };
     body.size_hint = 8;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer1 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(buffer1.value().first == out1);
+    BC_REQUIRE(buffer1.value().second);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer2 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(buffer2.get().second);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer2.has_value());
+    BC_REQUIRE(buffer2.value().first == out2);
+    BC_REQUIRE(buffer2.value().second);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer3 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer3.has_value());
-    BOOST_REQUIRE(buffer3.get().first == out3);
-    BOOST_REQUIRE(buffer3.get().second);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer3.has_value());
+    BC_REQUIRE(buffer3.value().first == out3);
+    BC_REQUIRE(buffer3.value().second);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer4 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer4.has_value());
-    BOOST_REQUIRE(buffer4.get().first == out4);
-    BOOST_REQUIRE(!buffer4.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer4.has_value());
+    BC_REQUIRE(buffer4.value().first == out4);
+    BC_REQUIRE(!buffer4.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__init__null_buffer__bad_alloc)
+BC_AUTO_TEST_CASE(json_body_writer__init__null_buffer__bad_alloc)
 {
     json::body<>::value_type body{};
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(ec == error::http_error_t::bad_alloc);
+    BC_REQUIRE(ec == error::http_error_t::bad_alloc);
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__get__null_buffer_after_init__bad_alloc)
+BC_AUTO_TEST_CASE(json_body_writer__get__null_buffer_after_init__bad_alloc)
 {
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     body.buffer = nullptr;
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(ec == error::http_error_t::bad_alloc);
-    BOOST_REQUIRE(!buffer.has_value());
+    BC_REQUIRE(ec == error::http_error_t::bad_alloc);
+    BC_REQUIRE(!buffer.has_value());
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__get__zero_limit_buffer__buffer_overflow)
+BC_AUTO_TEST_CASE(json_body_writer__get__zero_limit_buffer__buffer_overflow)
 {
     http::flat_buffer scratch{ 0 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(ec == error::http_error_t::buffer_overflow);
-    BOOST_REQUIRE(!buffer.has_value());
+    BC_REQUIRE(ec == error::http_error_t::buffer_overflow);
+    BC_REQUIRE(!buffer.has_value());
 }
 
-BOOST_AUTO_TEST_CASE(json_body_writer__get__after_done__end_of_stream)
+BC_AUTO_TEST_CASE(json_body_writer__get__after_done__end_of_stream)
 {
     http::flat_buffer scratch{ 64 * 1024 };
     json::body<>::value_type body{};
     body.buffer = &scratch;
     json::body<>::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer1 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(writer.done());
 
     const auto buffer2 = writer.get(ec);
-    BOOST_REQUIRE(ec == error::http_error_t::end_of_stream);
-    BOOST_REQUIRE(!buffer2.has_value());
+    BC_REQUIRE(ec == error::http_error_t::end_of_stream);
+    BC_REQUIRE(!buffer2.has_value());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 
 ////#endif // HAVE_SLOW_TESTS

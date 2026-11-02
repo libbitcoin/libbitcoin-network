@@ -28,7 +28,7 @@ namespace network {
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Factory for variable deadline timer pointer construction (or null).
-inline deadline::ptr make_throttle(const logger& log, asio::strand& strand,
+inline deadline::ptr make_throttle(const logger& log, io::strand& strand,
     uint32_t rate_limit) NOEXCEPT
 {
     return to_bool(rate_limit) ?
@@ -116,7 +116,7 @@ void proxy::finish_stop(const code& ec) NOEXCEPT
     else
         socket_->stop();
 
-    boost::asio::post(strand(),
+    io::post(strand(),
         std::bind(&proxy::stopping, shared_from_this(), ec));
 }
 
@@ -174,7 +174,7 @@ void proxy::subscribe_stop(result_handler&& handler,
         return;
     }
 
-    boost::asio::dispatch(strand(),
+    io::dispatch(strand(),
         std::bind(&proxy::do_subscribe_stop,
             shared_from_this(), std::move(handler), std::move(complete)));
 }
@@ -205,19 +205,19 @@ void proxy::writing() NOEXCEPT
 // private
 void proxy::do_reading() NOEXCEPT
 {
-    boost::asio::dispatch(strand(),
+    io::dispatch(strand(),
         std::bind(&proxy::reading, shared_from_this()));
 }
 
 // Properties.
 // ----------------------------------------------------------------------------
 
-asio::context& proxy::service() const NOEXCEPT
+io::context& proxy::service() const NOEXCEPT
 {
     return socket_->service();
 }
 
-asio::strand& proxy::strand() NOEXCEPT
+io::strand& proxy::strand() NOEXCEPT
 {
     return socket_->strand();
 }

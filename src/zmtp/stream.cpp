@@ -31,7 +31,7 @@ using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-constexpr auto protocol_error = boost::asio::error::no_protocol_option;
+constexpr auto protocol_error = error::protocol_violation;
 
 // The mechanism name occupies the 20-byte mechanism field.
 constexpr auto mechanism_size = 20_size;
@@ -51,7 +51,7 @@ constexpr auto command_message = "MESSAGE";
 
 // The context selects the upgrade and configures the CURVE mechanism, the
 // role selects the socket type and thereby the compatible peer socket types.
-stream::stream(asio::socket&& socket, const context& context,
+stream::stream(io::socket&& socket, const context& context,
     zmtp::role role) NOEXCEPT
   : socket_(std::move(socket)), context_(context), role_(role)
 {
@@ -67,12 +67,12 @@ stream::executor_type stream::get_executor() NOEXCEPT
     return socket_.get_executor();
 }
 
-asio::socket& stream::next_layer() NOEXCEPT
+io::socket& stream::next_layer() NOEXCEPT
 {
     return socket_;
 }
 
-const asio::socket& stream::next_layer() const NOEXCEPT
+const io::socket& stream::next_layer() const NOEXCEPT
 {
     return socket_;
 }
@@ -371,13 +371,13 @@ void stream::write_greeting(bool as_server,
     // Send our complete greeting eagerly (waiting to read first deadlocks).
     const auto greeting = to_shared(make_greeting(as_server,
         cipher_.has_value()));
-    const boost::asio::const_buffer out{ greeting->data(), greeting->size() };
-    boost::asio::async_write(socket_, out,
+    const io::const_buffer out{ greeting->data(), greeting->size() };
+    io::async_write(socket_, out,
         std::bind(&stream::handle_greeting_sent,
             this, _1, as_server, greeting, handler));
 }
 
-void stream::handle_greeting_sent(const boost_code& ec, bool as_server,
+void stream::handle_greeting_sent(const code& ec, bool as_server,
     const chunk_cptr&, const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -394,13 +394,13 @@ void stream::read_greeting(bool as_server,
 {
     // Read the peer greeting progressively: signature and major first.
     greeting_.resize(greeting_size);
-    const boost::asio::mutable_buffer in{ greeting_.data(), greeting_stage1 };
-    boost::asio::async_read(socket_, in,
+    const io::mutable_buffer in{ greeting_.data(), greeting_stage1 };
+    io::async_read(socket_, in,
         std::bind(&stream::handle_greeting_stage1,
             this, _1, as_server, handler));
 }
 
-void stream::handle_greeting_stage1(const boost_code& ec, bool as_server,
+void stream::handle_greeting_stage1(const code& ec, bool as_server,
     const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -419,13 +419,13 @@ void stream::handle_greeting_stage1(const boost_code& ec, bool as_server,
     }
 
     const auto begin = std::next(greeting_.data(), greeting_stage1);
-    const boost::asio::mutable_buffer in{ begin, greeting_stage2 };
-    boost::asio::async_read(socket_, in,
+    const io::mutable_buffer in{ begin, greeting_stage2 };
+    io::async_read(socket_, in,
         std::bind(&stream::handle_greeting_stage2,
             this, _1, as_server, handler));
 }
 
-void stream::handle_greeting_stage2(const boost_code& ec, bool as_server,
+void stream::handle_greeting_stage2(const code& ec, bool as_server,
     const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -466,9 +466,9 @@ void stream::fail_handshake(const std::string& reason,
 {
     // Best-effort ERROR command, then fail the handshake.
     const auto error = to_shared(make_error(reason));
-    const boost::asio::const_buffer out{ error->data(), error->size() };
-    boost::asio::async_write(socket_, out,
-        [error, handler](const boost_code&, size_t) NOEXCEPT
+    const io::const_buffer out{ error->data(), error->size() };
+    io::async_write(socket_, out,
+        [error, handler](const code&, size_t) NOEXCEPT
         {
             handler(protocol_error);
         });
@@ -497,13 +497,13 @@ const std::string& stream::identity() const NOEXCEPT
 void stream::write_ready(const handshake_handler& handler) NOEXCEPT
 {
     const auto ready = to_shared(make_ready(role_));
-    const boost::asio::const_buffer out{ ready->data(), ready->size() };
-    boost::asio::async_write(socket_, out,
+    const io::const_buffer out{ ready->data(), ready->size() };
+    io::async_write(socket_, out,
         std::bind(&stream::handle_ready_sent,
             this, _1, ready, handler));
 }
 
-void stream::handle_ready_sent(const boost_code& ec, const chunk_cptr&,
+void stream::handle_ready_sent(const code& ec, const chunk_cptr&,
     const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -524,7 +524,7 @@ void stream::read_ready(const handshake_handler& handler) NOEXCEPT
             this, _1, _2, ready, handler));
 }
 
-void stream::handle_ready(const boost_code& ec, size_t,
+void stream::handle_ready(const code& ec, size_t,
     const frame_ptr& ready, const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -556,7 +556,7 @@ void stream::handle_ready(const boost_code& ec, size_t,
     }
 
     // Handshake complete; the tier above reads from here.
-    handler(boost_code{});
+    handler(error::success);
 }
 
 // CURVE mechanism (server).
@@ -571,7 +571,7 @@ void stream::read_hello(const handshake_handler& handler) NOEXCEPT
             this, _1, _2, hello, handler));
 }
 
-void stream::handle_hello(const boost_code& ec, size_t,
+void stream::handle_hello(const code& ec, size_t,
     const frame_ptr& hello, const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -600,13 +600,13 @@ void stream::handle_hello(const boost_code& ec, size_t,
     }
 
     const auto frame = to_shared(frame_encode(welcome, true, false));
-    const boost::asio::const_buffer out{ frame->data(), frame->size() };
-    boost::asio::async_write(socket_, out,
+    const io::const_buffer out{ frame->data(), frame->size() };
+    io::async_write(socket_, out,
         std::bind(&stream::handle_welcome_sent,
             this, _1, frame, handler));
 }
 
-void stream::handle_welcome_sent(const boost_code& ec, const chunk_cptr&,
+void stream::handle_welcome_sent(const code& ec, const chunk_cptr&,
     const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -622,7 +622,7 @@ void stream::handle_welcome_sent(const boost_code& ec, const chunk_cptr&,
             this, _1, _2, initiate, handler));
 }
 
-void stream::handle_initiate(const boost_code& ec, size_t,
+void stream::handle_initiate(const code& ec, size_t,
     const frame_ptr& initiate, const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -665,13 +665,13 @@ void stream::handle_initiate(const boost_code& ec, size_t,
     }
 
     const auto frame = to_shared(frame_encode(ready, true, false));
-    const boost::asio::const_buffer out{ frame->data(), frame->size() };
-    boost::asio::async_write(socket_, out,
+    const io::const_buffer out{ frame->data(), frame->size() };
+    io::async_write(socket_, out,
         std::bind(&stream::handle_curve_ready_sent,
             this, _1, frame, handler));
 }
 
-void stream::handle_curve_ready_sent(const boost_code& ec, const chunk_cptr&,
+void stream::handle_curve_ready_sent(const code& ec, const chunk_cptr&,
     const handshake_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -682,7 +682,7 @@ void stream::handle_curve_ready_sent(const boost_code& ec, const chunk_cptr&,
 
     // Handshake complete; frames are boxed from here.
     secured_ = true;
-    handler(boost_code{});
+    handler(error::success);
 }
 
 // Frame reader (one whole frame: flags, length, body).
@@ -692,13 +692,13 @@ void stream::async_read_frame(frame& out, size_t maximum,
     io_handler&& handler) NOEXCEPT
 {
     // Read the single flags byte into the caller's frame.
-    const boost::asio::mutable_buffer in{ &out.flags, sizeof(out.flags) };
-    boost::asio::async_read(socket_, in,
+    const io::mutable_buffer in{ &out.flags, sizeof(out.flags) };
+    io::async_read(socket_, in,
         std::bind(&stream::handle_frame_flags,
             this, _1, std::ref(out), maximum, std::move(handler)));
 }
 
-void stream::handle_frame_flags(const boost_code& ec, ref<frame> out,
+void stream::handle_frame_flags(const code& ec, ref<frame> out,
     size_t maximum, const io_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -710,13 +710,13 @@ void stream::handle_frame_flags(const boost_code& ec, ref<frame> out,
     // LONG selects an 8-byte length, otherwise a single length byte.
     const auto long_size = !is_zero(out.get().flags & flag_long);
     const auto size = long_size ? sizeof(uint64_t) : sizeof(uint8_t);
-    const boost::asio::mutable_buffer in{ length_.data(), size };
-    boost::asio::async_read(socket_, in,
+    const io::mutable_buffer in{ length_.data(), size };
+    io::async_read(socket_, in,
         std::bind(&stream::handle_frame_length,
             this, _1, long_size, out, maximum, handler));
 }
 
-void stream::handle_frame_length(const boost_code& ec, bool long_size,
+void stream::handle_frame_length(const code& ec, bool long_size,
     ref<frame> out, size_t maximum, const io_handler& handler) NOEXCEPT
 {
     if (ec)
@@ -738,7 +738,7 @@ void stream::handle_frame_length(const boost_code& ec, bool long_size,
 
     if (length > maximum)
     {
-        handler(boost::asio::error::message_size, zero);
+        handler(error::oversized_payload, zero);
         return;
     }
 
@@ -746,17 +746,17 @@ void stream::handle_frame_length(const boost_code& ec, bool long_size,
     body.resize(length);
     if (is_zero(length))
     {
-        handle_frame_body(boost_code{}, zero, out, handler);
+        handle_frame_body(code{ error::success }, zero, out, handler);
         return;
     }
 
-    const boost::asio::mutable_buffer in{ body.data(), length };
-    boost::asio::async_read(socket_, in,
+    const io::mutable_buffer in{ body.data(), length };
+    io::async_read(socket_, in,
         std::bind(&stream::handle_frame_body,
             this, _1, _2, out, handler));
 }
 
-void stream::handle_frame_body(const boost_code& ec, size_t size,
+void stream::handle_frame_body(const code& ec, size_t size,
     ref<frame> out, const io_handler& handler) NOEXCEPT
 {
     if (ec || !secured_)
@@ -807,12 +807,12 @@ void stream::handle_frame_body(const boost_code& ec, size_t size,
 // Buffer write (caller-framed, caller-retained until the handler fires).
 // ----------------------------------------------------------------------------
 
-void stream::async_write(const asio::const_buffer& in,
+void stream::async_write(const io::const_buffer& in,
     io_handler&& handler) NOEXCEPT
 {
     if (!secured_)
     {
-        boost::asio::async_write(socket_, in, std::move(handler));
+        io::async_write(socket_, in, std::move(handler));
         return;
     }
 
@@ -853,8 +853,8 @@ void stream::async_write(const asio::const_buffer& in,
         boxed_.insert(boxed_.end(), frame.begin(), frame.end());
     }
 
-    const boost::asio::const_buffer out{ boxed_.data(), boxed_.size() };
-    boost::asio::async_write(socket_, out, std::move(handler));
+    const io::const_buffer out{ boxed_.data(), boxed_.size() };
+    io::async_write(socket_, out, std::move(handler));
 }
 
 BC_POP_WARNING()

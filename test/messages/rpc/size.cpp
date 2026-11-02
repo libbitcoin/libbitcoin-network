@@ -18,7 +18,7 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(rpc_size_tests)
+BC_AUTO_TEST_SUITE(rpc_size_tests)
 
 using namespace rpc;
 
@@ -28,193 +28,193 @@ constexpr auto envelope = envelope_size;
 // value_t
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_size__value__null__element)
+BC_AUTO_TEST_CASE(rpc_size__value__null__element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(value_t{}), element);
+    BC_REQUIRE_EQUAL(to_size(value_t{}), element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__value__boolean__element)
+BC_AUTO_TEST_CASE(rpc_size__value__boolean__element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(value_t{ true }), element);
+    BC_REQUIRE_EQUAL(to_size(value_t{ true }), element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__value__number__element)
+BC_AUTO_TEST_CASE(rpc_size__value__number__element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(value_t{ 42_u64 }), element);
+    BC_REQUIRE_EQUAL(to_size(value_t{ 42_u64 }), element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__value__empty_text__element)
+BC_AUTO_TEST_CASE(rpc_size__value__empty_text__element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(value_t{ string_t{} }), element);
+    BC_REQUIRE_EQUAL(to_size(value_t{ string_t{} }), element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__value__text__text_size_plus_element)
+BC_AUTO_TEST_CASE(rpc_size__value__text__text_size_plus_element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(value_t{ string_t{ "abcde" } }), 5u + element);
+    BC_REQUIRE_EQUAL(to_size(value_t{ string_t{ "abcde" } }), 5u + element);
 }
 
 // array_t
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_size__array__empty__element)
+BC_AUTO_TEST_CASE(rpc_size__array__empty__element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(array_t{}), element);
+    BC_REQUIRE_EQUAL(to_size(array_t{}), element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__array__two_numbers__three_elements)
+BC_AUTO_TEST_CASE(rpc_size__array__two_numbers__three_elements)
 {
-    BOOST_REQUIRE_EQUAL(to_size(array_t{ value_t{ 1_u64 }, value_t{ 2_u64 } }), 3u * element);
+    BC_REQUIRE_EQUAL(to_size(array_t{ value_t{ 1_u64 }, value_t{ 2_u64 } }), 3u * element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__array__text__text_size_plus_two_elements)
+BC_AUTO_TEST_CASE(rpc_size__array__text__text_size_plus_two_elements)
 {
-    BOOST_REQUIRE_EQUAL(to_size(array_t{ value_t{ string_t{ "abc" } } }), 3u + 2u * element);
+    BC_REQUIRE_EQUAL(to_size(array_t{ value_t{ string_t{ "abc" } } }), 3u + 2u * element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__array__nested_array__accumulates_nested)
+BC_AUTO_TEST_CASE(rpc_size__array__nested_array__accumulates_nested)
 {
     const array_t nested{ value_t{ string_t{ "abc" } } };
-    BOOST_REQUIRE_EQUAL(to_size(array_t{ value_t{ nested } }), 3u + 3u * element);
+    BC_REQUIRE_EQUAL(to_size(array_t{ value_t{ nested } }), 3u + 3u * element);
 }
 
 // object_t
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_size__object__empty__element)
+BC_AUTO_TEST_CASE(rpc_size__object__empty__element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(object_t{}), element);
+    BC_REQUIRE_EQUAL(to_size(object_t{}), element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__object__keyed_number__key_size_plus_two_elements)
+BC_AUTO_TEST_CASE(rpc_size__object__keyed_number__key_size_plus_two_elements)
 {
-    BOOST_REQUIRE_EQUAL(to_size(object_t{ { "key", value_t{ 1_u64 } } }), 3u + 2u * element);
+    BC_REQUIRE_EQUAL(to_size(object_t{ { "key", value_t{ 1_u64 } } }), 3u + 2u * element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__object__keyed_text__key_and_text_sizes_plus_two_elements)
+BC_AUTO_TEST_CASE(rpc_size__object__keyed_text__key_and_text_sizes_plus_two_elements)
 {
-    BOOST_REQUIRE_EQUAL(to_size(object_t{ { "key", value_t{ string_t{ "value" } } } }), 3u + 5u + 2u * element);
+    BC_REQUIRE_EQUAL(to_size(object_t{ { "key", value_t{ string_t{ "value" } } } }), 3u + 5u + 2u * element);
 }
 
 // json_t
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_size__json__null__element)
+BC_AUTO_TEST_CASE(rpc_size__json__null__element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(json_t{}), element);
+    BC_REQUIRE_EQUAL(to_size(json_t{}), element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__json__number__element)
+BC_AUTO_TEST_CASE(rpc_size__json__number__element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(json_t(42)), element);
+    BC_REQUIRE_EQUAL(to_size(json_t(42)), element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__json__text__text_size_plus_element)
+BC_AUTO_TEST_CASE(rpc_size__json__text__text_size_plus_element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(json_t("abcde")), 5u + element);
+    BC_REQUIRE_EQUAL(to_size(json_t("abcde")), 5u + element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__json__array__accumulates_elements)
+BC_AUTO_TEST_CASE(rpc_size__json__array__accumulates_elements)
 {
     const json_t value = system::json::array{ "abc", 1 };
-    BOOST_REQUIRE_EQUAL(to_size(value), 3u + 3u * element);
+    BC_REQUIRE_EQUAL(to_size(value), 3u + 3u * element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__json__object__accumulates_keys_and_values)
+BC_AUTO_TEST_CASE(rpc_size__json__object__accumulates_keys_and_values)
 {
     const json_t value = system::json::object{ { "key", "value" }, { "nested", system::json::array{ "abc" } } };
-    BOOST_REQUIRE_EQUAL(to_size(value), 3u + 5u + 6u + 3u + 4u * element);
+    BC_REQUIRE_EQUAL(to_size(value), 3u + 5u + 6u + 3u + 4u * element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__value__json_text__text_size_plus_element)
+BC_AUTO_TEST_CASE(rpc_size__value__json_text__text_size_plus_element)
 {
-    BOOST_REQUIRE_EQUAL(to_size(value_t{ json_t("abcde") }), 5u + element);
+    BC_REQUIRE_EQUAL(to_size(value_t{ json_t("abcde") }), 5u + element);
 }
 
 // params_option
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_size__params__none__zero)
+BC_AUTO_TEST_CASE(rpc_size__params__none__zero)
 {
-    BOOST_REQUIRE_EQUAL(to_size(params_option{}), zero);
+    BC_REQUIRE_EQUAL(to_size(params_option{}), zero);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__params__value__value_size)
+BC_AUTO_TEST_CASE(rpc_size__params__value__value_size)
 {
     const params_option params{ value_t{ string_t{ "abc" } } };
-    BOOST_REQUIRE_EQUAL(to_size(params), 3u + element);
+    BC_REQUIRE_EQUAL(to_size(params), 3u + element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__params__array__array_size)
+BC_AUTO_TEST_CASE(rpc_size__params__array__array_size)
 {
     const params_option params{ array_t{ value_t{ string_t{ "abc" } } } };
-    BOOST_REQUIRE_EQUAL(to_size(params), 3u + 2u * element);
+    BC_REQUIRE_EQUAL(to_size(params), 3u + 2u * element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__params__object__object_size)
+BC_AUTO_TEST_CASE(rpc_size__params__object__object_size)
 {
     const params_option params{ object_t{ { "key", value_t{ 1_u64 } } } };
-    BOOST_REQUIRE_EQUAL(to_size(params), 3u + 2u * element);
+    BC_REQUIRE_EQUAL(to_size(params), 3u + 2u * element);
 }
 
 // response_t
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_size__response__empty__envelope)
+BC_AUTO_TEST_CASE(rpc_size__response__empty__envelope)
 {
-    BOOST_REQUIRE_EQUAL(to_size(response_t{}), envelope);
+    BC_REQUIRE_EQUAL(to_size(response_t{}), envelope);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__response__text_result__envelope_plus_result)
+BC_AUTO_TEST_CASE(rpc_size__response__text_result__envelope_plus_result)
 {
     const response_t message{ .result = value_t{ string_t{ "abcde" } } };
-    BOOST_REQUIRE_EQUAL(to_size(message), envelope + 5u + element);
+    BC_REQUIRE_EQUAL(to_size(message), envelope + 5u + element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__response__error__envelope_plus_message_and_element)
+BC_AUTO_TEST_CASE(rpc_size__response__error__envelope_plus_message_and_element)
 {
     const response_t message{ .error = result_t{ .message = "abcde" } };
-    BOOST_REQUIRE_EQUAL(to_size(message), envelope + 5u + element);
+    BC_REQUIRE_EQUAL(to_size(message), envelope + 5u + element);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__response__error_data__envelope_plus_message_data_and_elements)
+BC_AUTO_TEST_CASE(rpc_size__response__error_data__envelope_plus_message_data_and_elements)
 {
     const response_t message{ .error = result_t{ .message = "abcde", .data = value_t{ string_t{ "xyz" } } } };
-    BOOST_REQUIRE_EQUAL(to_size(message), envelope + 5u + 3u + 2u * element);
+    BC_REQUIRE_EQUAL(to_size(message), envelope + 5u + 3u + 2u * element);
 }
 
 // request_t
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_size__request__empty__envelope)
+BC_AUTO_TEST_CASE(rpc_size__request__empty__envelope)
 {
-    BOOST_REQUIRE_EQUAL(to_size(request_t{}), envelope);
+    BC_REQUIRE_EQUAL(to_size(request_t{}), envelope);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__request__method__envelope_plus_method)
+BC_AUTO_TEST_CASE(rpc_size__request__method__envelope_plus_method)
 {
     const request_t message{ .method = "getblock" };
-    BOOST_REQUIRE_EQUAL(to_size(message), envelope + 8u);
+    BC_REQUIRE_EQUAL(to_size(message), envelope + 8u);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__request__method_and_params__envelope_plus_method_and_params)
+BC_AUTO_TEST_CASE(rpc_size__request__method_and_params__envelope_plus_method_and_params)
 {
     const request_t message{ .method = "getblock", .params = array_t{ value_t{ string_t{ "abc" } } } };
-    BOOST_REQUIRE_EQUAL(to_size(message), envelope + 8u + 3u + 2u * element);
+    BC_REQUIRE_EQUAL(to_size(message), envelope + 8u + 3u + 2u * element);
 }
 
 // The estimate is not less than the serialized size of a text payload.
-BOOST_AUTO_TEST_CASE(rpc_size__response__large_text_result__not_less_than_serialized)
+BC_AUTO_TEST_CASE(rpc_size__response__large_text_result__not_less_than_serialized)
 {
     const string_t text(1'000, 'x');
     const response_t message{ .jsonrpc = version::v2, .id = identity_t{ 42_i64 }, .result = value_t{ text } };
-    BOOST_REQUIRE_GE(to_size(message), system::json::serialize(value_from(message)).size());
+    BC_REQUIRE_GE(to_size(message), system::json::serialize(value_from(message)).size());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_size__response__large_json_text_result__not_less_than_serialized)
+BC_AUTO_TEST_CASE(rpc_size__response__large_json_text_result__not_less_than_serialized)
 {
     const string_t text(1'000, 'x');
     const response_t message{ .jsonrpc = version::v2, .id = identity_t{ 42_i64 }, .result = value_t{ json_t(text) } };
-    BOOST_REQUIRE_GE(to_size(message), system::json::serialize(value_from(message)).size());
+    BC_REQUIRE_GE(to_size(message), system::json::serialize(value_from(message)).size());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -34,12 +34,10 @@ using namespace std::placeholders;
 
 // Construct.
 // ----------------------------------------------------------------------------
-// Boost: "The io_context object that the acceptor will use to dispatch
-// handlers for any asynchronous operations performed on the acceptor."
 // Calls are stranded to protect the acceptor member.
 
-acceptor::acceptor(const logger& log, asio::strand& strand,
-    asio::context& service, std::atomic_bool& suspended,
+acceptor::acceptor(const logger& log, io::strand& strand,
+    io::context& service, std::atomic_bool& suspended,
     parameters&& parameters) NOEXCEPT
   : strand_(strand),
     service_(service),
@@ -66,29 +64,29 @@ code acceptor::start(const config::authority& local) NOEXCEPT
 }
 
 // protected
-code acceptor::start(const asio::endpoint& point) NOEXCEPT
+code acceptor::start(const io::endpoint& point) NOEXCEPT
 {
     if (!stopped_)
         return error::operation_failed;
 
-    boost_code ec{};
+    code ec{};
     const auto ipv6 = point.address().is_v6();
 
     // Open the socket.
-    acceptor_.open(point.protocol(), ec);
+    acceptor_.open(io::tcp::of(point), ec);
 
     // An ipv6 socket cannot also accept IPv4 connections.
     if (!ec && ipv6)
-        acceptor_.set_option(asio::v6_only(true), ec);
+        acceptor_.set_option(io::v6_only{ true }, ec);
 
     if (!ec)
-        acceptor_.set_option(asio::reuse_address(true), ec);
+        acceptor_.set_option(io::reuse_address{ true }, ec);
 
     if (!ec)
         acceptor_.bind(point, ec);
 
     if (!ec)
-        acceptor_.listen(asio::socket::max_listen_connections, ec);
+        acceptor_.listen(ec);
 
     if (!ec)
     {
@@ -96,11 +94,11 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
     }
     else
     {
-        boost_code ignore;
+        code ignore;
         acceptor_.cancel(ignore);
     }
 
-    return error::asio_to_error_code(ec);
+    return ec;
 }
 
 void acceptor::stop() NOEXCEPT
@@ -108,7 +106,7 @@ void acceptor::stop() NOEXCEPT
     BC_ASSERT(stranded());
 
     // Posts handle_accept to strand (if not already posted).
-    boost_code ignore;
+    code ignore;
     acceptor_.cancel(ignore);
     stopped_ = true;
 }
@@ -119,7 +117,8 @@ void acceptor::stop() NOEXCEPT
 config::authority acceptor::local() const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    return { stopped_ ? asio::endpoint{} : acceptor_.local_endpoint() };
+    return { stopped_ ? system::ip::endpoint{} :
+        acceptor_.local_endpoint() };
 }
 
 // protected
@@ -208,7 +207,7 @@ void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
     // Return from socket accept (no TLS) is acceptor (network) stranded.
     if (!stranded())
     {
-        boost::asio::post(strand_,
+        io::post(strand_,
             std::bind(&acceptor::do_handle_accept,
                 shared_from_this(), ec, socket, handler));
         return;
@@ -296,7 +295,7 @@ void acceptor::handle_connected(const code& ec, const socket::ptr& socket,
 void acceptor::handle_handshake(const code& ec, const socket::ptr& socket,
     const socket_handler& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&acceptor::do_handle_accept,
             shared_from_this(), ec, socket, handler));
 }

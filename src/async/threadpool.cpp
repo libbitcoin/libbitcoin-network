@@ -25,21 +25,11 @@
 namespace libbitcoin {
 namespace network {
 
-// Work keeps the threadpool alive when there are no threads running.
-threadpool::work_guard threadpool::keep_alive(
-    asio::context& service) NOEXCEPT
-{
-    // If make_work_guard throws, application will abort at startup.
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return boost::asio::make_work_guard(service);
-    BC_POP_WARNING()
-}
-
 // The run() function blocks until all work has finished and there are no
 // more handlers to be dispatched, or until the io_context has been stopped.
 threadpool::threadpool(size_t number_threads,
     processing_priority priority) NOEXCEPT
-  : work_(keep_alive(service_))
+  : work_(service_)
 {
     for (size_t thread = 0; thread < number_threads; ++thread)
     {
@@ -47,10 +37,7 @@ threadpool::threadpool(size_t number_threads,
         {
             set_processing_priority(priority);
 
-            // If service.run throws, application will abort at startup.
-            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
             service_.run();
-            BC_POP_WARNING()
         }));
     }
 }
@@ -61,10 +48,8 @@ threadpool::~threadpool() NOEXCEPT
     join();
 }
 
-// Stopping the I/O service would abandon unfinished operations without
-// permitting ready handlers to be dispatched. More information here:
-// www.boost.org/doc/libs/1_69_0/doc/html/boost_asio/reference/io_context.html#
-// boost_asio.reference.io_context.stopping_the_io_context_from_running_out_of_work
+// Stopping the context would abandon unfinished operations without
+// permitting ready handlers to be dispatched.
 void threadpool::stop() NOEXCEPT
 {
     // Clear the work keep-alive.
@@ -101,7 +86,7 @@ bool threadpool::join() NOEXCEPT
     return true;
 }
 
-asio::context& threadpool::service() NOEXCEPT
+io::context& threadpool::service() NOEXCEPT
 {
     return service_;
 }

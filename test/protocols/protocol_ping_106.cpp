@@ -91,42 +91,42 @@ protected:
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(protocol_ping_106_tests, peer_net_setup_fixture<>)
+BC_FIXTURE_TEST_SUITE(protocol_ping_106_tests, peer_net_setup_fixture<>)
 
-BOOST_AUTO_TEST_CASE(protocol_ping_106__start__address_timestamp_peer__ping_without_nonce)
+BC_AUTO_TEST_CASE(protocol_ping_106__start__address_timestamp_peer__ping_without_nonce)
 {
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::address_timestamp));
-    BOOST_REQUIRE(receive(ping::command).empty());
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::address_timestamp));
+    BC_REQUIRE(receive(ping::command).empty());
 }
 
-BOOST_FIXTURE_TEST_CASE(protocol_ping_106__handle_timer__expired__pings_repeated, peer_net_setup_fixture<ping_106_net>)
+BC_FIXTURE_TEST_CASE(protocol_ping_106__handle_timer__expired__pings_repeated, peer_net_setup_fixture<ping_106_net>)
 {
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::address_timestamp));
-    BOOST_REQUIRE(receive(ping::command).empty());
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::address_timestamp));
+    BC_REQUIRE(receive(ping::command).empty());
 
     const auto probe = net_->probe.get_future().get();
     probe->expire();
-    BOOST_REQUIRE(receive(ping::command).empty());
+    BC_REQUIRE(receive(ping::command).empty());
     probe->expire();
-    BOOST_REQUIRE(receive(ping::command).empty());
+    BC_REQUIRE(receive(ping::command).empty());
     probe->expire();
-    BOOST_REQUIRE(receive(ping::command).empty());
+    BC_REQUIRE(receive(ping::command).empty());
 }
 
-BOOST_FIXTURE_TEST_CASE(protocol_ping_106__receive_ping__address_timestamp_peer__no_pong, peer_net_setup_fixture<ping_106_net>)
+BC_FIXTURE_TEST_CASE(protocol_ping_106__receive_ping__address_timestamp_peer__no_pong, peer_net_setup_fixture<ping_106_net>)
 {
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::address_timestamp));
-    BOOST_REQUIRE(receive(ping::command).empty());
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::address_timestamp));
+    BC_REQUIRE(receive(ping::command).empty());
 
     // The expired ping follows the node's handling of the peer's ping.
     const auto probe = net_->probe.get_future().get();
     send(ping{}, level::address_timestamp);
-    BOOST_REQUIRE(probe->received.get_future().get());
+    BC_REQUIRE(probe->received.get_future().get());
     probe->expire();
-    BOOST_REQUIRE_EQUAL(receive().first, ping::command);
+    BC_REQUIRE_EQUAL(receive().first, ping::command);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

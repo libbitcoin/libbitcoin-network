@@ -15,9 +15,6 @@
  */
 
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/asio.hpp>
-#include <bitcoin/network/beast.hpp>
-#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/have.hpp>
@@ -63,6 +60,13 @@
 #include <bitcoin/network/interfaces/interfaces.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
+#include <bitcoin/network/io/buffer.hpp>
+#include <bitcoin/network/io/context.hpp>
+#include <bitcoin/network/io/io.hpp>
+#include <bitcoin/network/io/operations.hpp>
+#include <bitcoin/network/io/socket.hpp>
+#include <bitcoin/network/io/steady_timer.hpp>
+#include <bitcoin/network/io/strand.hpp>
 #include <bitcoin/network/log/capture.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -72,11 +76,20 @@
 #include <bitcoin/network/log/tracker.hpp>
 #include <bitcoin/network/messages/http_body.hpp>
 #include <bitcoin/network/messages/http_method.hpp>
+#include <bitcoin/network/messages/indirect.hpp>
 #include <bitcoin/network/messages/json_body.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/http/bodies.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
-#include <bitcoin/network/messages/http/file_body.hpp>
+#include <bitcoin/network/messages/http/file.hpp>
+#include <bitcoin/network/messages/http/flat_buffer.hpp>
+#include <bitcoin/network/messages/http/header.hpp>
 #include <bitcoin/network/messages/http/http.hpp>
+#include <bitcoin/network/messages/http/message.hpp>
+#include <bitcoin/network/messages/http/operations.hpp>
+#include <bitcoin/network/messages/http/parser.hpp>
+#include <bitcoin/network/messages/http/serializer.hpp>
+#include <bitcoin/network/messages/http/enums/field.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/http/enums/media_type.hpp>
 #include <bitcoin/network/messages/http/enums/status.hpp>
@@ -186,24 +199,19 @@
 #include <bitcoin/network/sessions/session_seed.hpp>
 #include <bitcoin/network/sessions/session_server.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
-#if WITH_SSL
-#include <bitcoin/network/ssl/openssl/conf.h>
-#include <bitcoin/network/ssl/openssl/dh.h>
-#include <bitcoin/network/ssl/openssl/engine.h>
-#include <bitcoin/network/ssl/openssl/err.h>
-#include <bitcoin/network/ssl/openssl/openssl.h>
-#include <bitcoin/network/ssl/openssl/rsa.h>
-#include <bitcoin/network/ssl/openssl/ssl.h>
-#include <bitcoin/network/ssl/openssl/x509.h>
-#include <bitcoin/network/ssl/openssl/x509v3.h>
-#endif
 #include <bitcoin/network/tls/codec.hpp>
 #include <bitcoin/network/tls/constants.hpp>
 #include <bitcoin/network/tls/context.hpp>
 #include <bitcoin/network/tls/record.hpp>
 #include <bitcoin/network/tls/schedule.hpp>
 #include <bitcoin/network/tls/server.hpp>
+#include <bitcoin/network/tls/stream.hpp>
 #include <bitcoin/network/tls/tls.hpp>
+#include <bitcoin/network/ws/client.hpp>
+#include <bitcoin/network/ws/frame.hpp>
+#include <bitcoin/network/ws/handshake.hpp>
+#include <bitcoin/network/ws/reader.hpp>
+#include <bitcoin/network/ws/ws.hpp>
 #include <bitcoin/network/zmtp/cipher.hpp>
 #include <bitcoin/network/zmtp/context.hpp>
 #include <bitcoin/network/zmtp/role.hpp>

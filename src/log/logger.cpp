@@ -74,7 +74,7 @@ void logger::stop(const code& ec, const std::string& message,
     stopped_.store(true);
 
     // Protect pool and subscribers (idempotent but not thread safe).
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&logger::do_stop,
             this, ec, zulu_time(), message, level));
 }
@@ -105,7 +105,7 @@ void logger::do_stop(const code& ec, time_t zulu, const std::string& message,
 void logger::notify(const code& ec, uint8_t level,
     std::string&& message) const NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&logger::do_notify_message, this, ec, level, zulu_time(),
             std::move(message)));
 }
@@ -126,7 +126,7 @@ void logger::subscribe_messages(message_notifier&& handler) const NOEXCEPT
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&logger::do_subscribe_messages,
             this, std::move(handler)));
 }
@@ -144,7 +144,7 @@ void logger::do_subscribe_messages(
 
 void logger::fire(uint8_t event_, uint64_t value) const NOEXCEPT
 {
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&logger::do_notify_event,
             this, event_, value, fine_clock::now()));
 }
@@ -165,7 +165,7 @@ void logger::subscribe_events(event_notifier&& handler) const NOEXCEPT
         return;
     }
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&logger::do_subscribe_events,
             this, std::move(handler)));
 }

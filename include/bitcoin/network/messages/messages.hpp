@@ -22,6 +22,7 @@
 #include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/messages/http_body.hpp>
 #include <bitcoin/network/messages/http_method.hpp>
+#include <bitcoin/network/messages/indirect.hpp>
 #include <bitcoin/network/messages/json_body.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
 #include <bitcoin/network/messages/rpc/rpc.hpp>

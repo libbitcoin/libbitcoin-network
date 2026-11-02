@@ -144,7 +144,7 @@ private:
     // These are thread safe.
     std::atomic_bool stopped_{ false };
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    mutable asio::strand strand_{ pool_.service().get_executor() };
+    mutable io::strand strand_{ pool_.service().get_executor() };
     BC_POP_WARNING()
 
     // These are protected by strand.

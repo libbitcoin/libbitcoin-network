@@ -29,7 +29,7 @@ using namespace network::error;
 // http::body::reader
 // ----------------------------------------------------------------------------
 
-void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
+void body::reader::init(const length_type& length, code& ec) NOEXCEPT
 {
     // Header is unread at construct, so this must be deferred until init.
     assign_reader(header_, value_);
@@ -44,7 +44,7 @@ void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
         {
             if (!value_.get<file_value>().is_open())
             {
-                ec = to_errc_code(boost_errc_t::bad_file_descriptor);
+                ec = error::bad_stream;
                 return;
             }
 
@@ -71,7 +71,7 @@ void body::reader::init(const length_type& length, boost_code& ec) NOEXCEPT
     }, reader_);
 }
 
-size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
+size_t body::reader::put(const buffer_type& buffer, code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
@@ -95,13 +95,13 @@ size_t body::reader::put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
     }, reader_);
 }
 
-void body::reader::finish(boost_code& ec) NOEXCEPT
+void body::reader::finish(code& ec) NOEXCEPT
 {
     std::visit(overload
     {
         [&](std::monostate&) NOEXCEPT
         {
-            // Called at beast finish_header and must succeed.
+            // Called at parser finish (without a body) and must succeed.
             ec = {};
         },
         [&](auto& read) NOEXCEPT
@@ -125,7 +125,7 @@ void body::reader::finish(boost_code& ec) NOEXCEPT
 // http::body::writer
 // ----------------------------------------------------------------------------
     
-void body::writer::init(boost_code& ec) NOEXCEPT
+void body::writer::init(code& ec) NOEXCEPT
 {
     std::visit(overload
     {
@@ -147,7 +147,7 @@ void body::writer::init(boost_code& ec) NOEXCEPT
     }, writer_);
 }
 
-body::writer::out_buffer body::writer::get(boost_code& ec) NOEXCEPT
+body::writer::out_buffer body::writer::get(code& ec) NOEXCEPT
 {
     return std::visit(overload
     {

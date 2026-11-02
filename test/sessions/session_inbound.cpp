@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(session_inbound_tests)
+BC_AUTO_TEST_SUITE(session_inbound_tests)
 
 using namespace bc::system::chain;
 
@@ -81,7 +81,7 @@ public:
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
-        boost::asio::post(strand_, [=]() NOEXCEPT
+        io::post(strand_, [=]() NOEXCEPT
         {
             accepted(error::success);
             handler(error::success, socket);
@@ -107,7 +107,7 @@ public:
     void accept(result_handler&& accepted, socket_handler&&) NOEXCEPT override
     {
         ++accepts_;
-        boost::asio::post(strand_, [=]() NOEXCEPT
+        io::post(strand_, [=]() NOEXCEPT
         {
             accepted(error::unknown);
         });
@@ -127,7 +127,7 @@ public:
     void accept(result_handler&& accepted, socket_handler&&) NOEXCEPT override
     {
         ++accepts_;
-        boost::asio::post(strand_, [=]() NOEXCEPT
+        io::post(strand_, [=]() NOEXCEPT
         {
             accepted(error::service_stopped);
         });
@@ -210,7 +210,7 @@ public:
 
         // The handshake protocol pauses the channel upon completion, which is
         // after the session resumes it to start the read loop, so this posts.
-        boost::asio::post(channel->strand(),
+        io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
                 channel->pause();
@@ -402,17 +402,17 @@ private:
 
 // stop
 
-BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
+BC_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec) NOEXCEPT
@@ -421,22 +421,22 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
+BC_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -444,29 +444,29 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
     mock_session_inbound session(net, 1);
 
     std::promise<bool> promise;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         promise.set_value(true);
     });
 
-    BOOST_REQUIRE(promise.get_future().get());
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE(promise.get_future().get());
+    BC_REQUIRE(session.stopped());
 }
 
 // start
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__success)
+BC_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__success)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 0;
     mock_net<> net(set, log);
     mock_session_inbound session(net, 1);
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE(session.stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.start([&](const code& ec) NOEXCEPT
         {
@@ -474,11 +474,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__success)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__success)
+BC_AUTO_TEST_CASE(session_inbound__start__empty_binds__success)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -486,10 +486,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__success)
     set.inbound.binds.clear();
     mock_net<> net(set, log);
     mock_session_inbound session(net, 1);
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE(session.stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.start([&](const code& ec) NOEXCEPT
         {
@@ -497,21 +497,21 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__success)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(session.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operation_failed)
+BC_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operation_failed)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -519,11 +519,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<code> restarted;
-    boost::asio::post(net.strand(), [=, &restarted]() NOEXCEPT
+    io::post(net.strand(), [=, &restarted]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -531,33 +531,33 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
         });
     });
 
-    BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepted)
+BC_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepted)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_fail> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec) NOEXCEPT
@@ -567,44 +567,44 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
     });
 
     // mock_acceptor_start_fail.start returns invalid_magic, so start_accept aborts.
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::invalid_magic);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
-    BOOST_REQUIRE(!net.get_acceptor()->stopped());
-    BOOST_REQUIRE(!net.get_acceptor()->accepted());
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::invalid_magic);
+    BC_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
+    BC_REQUIRE(!net.get_acceptor()->stopped());
+    BC_REQUIRE(!net.get_acceptor()->accepted());
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 
     // start_accept is not invoked in the case of a start error.
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::unknown);
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::unknown);
 
     // acceptor.stop is not called because acceptor.start failed.
-    BOOST_REQUIRE(!net.get_acceptor()->stopped());
+    BC_REQUIRE(!net.get_acceptor()->stopped());
 
     // Attach is not invoked.
-    BOOST_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE(!session->attached_handshake());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_stopped__not_attached)
+BC_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_stopped__not_attached)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_stopped> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec) NOEXCEPT
@@ -614,33 +614,33 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
-    BOOST_REQUIRE(!net.get_acceptor()->stopped());
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
+    BC_REQUIRE(!net.get_acceptor()->stopped());
+    BC_REQUIRE(!session->stopped());
 
     // Block until accepted.
-    BOOST_REQUIRE(session->require_accepted());
-    BOOST_REQUIRE(net.get_acceptor()->accepted());
+    BC_REQUIRE(session->require_accepted());
+    BC_REQUIRE(net.get_acceptor()->accepted());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BC_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept returned stopped.
-    BOOST_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE(!session->attached_handshake());
 }
 
 // start_accept(error) is not currently handled in any session type (no scenario).
-////BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_code__no_accept)
+////BC_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_code__no_accept)
 ////{
 ////    const logger log{};
 ////    settings set(test::network_settings());
@@ -649,11 +649,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 ////
 ////    // start_accept is invoked with invalid_checksum.
 ////    auto session = std::make_shared<mock_session_start_accept_parameter_error>(net, 1);
-////    BOOST_REQUIRE(session->stopped());
-////    BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
+////    BC_REQUIRE(session->stopped());
+////    BC_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 ////
 ////    std::promise<code> started;
-////    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+////    io::post(net.strand(), [=, &started]() NOEXCEPT
 ////    {
 ////        // Will cause started to be set and acceptor created.
 ////        session->start([&](const code& ec) NOEXCEPT
@@ -662,40 +662,40 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 ////        });
 ////    });
 ////
-////    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-////    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
-////    BOOST_REQUIRE(!net.get_acceptor()->stopped());
-////    BOOST_REQUIRE(!net.get_acceptor()->accepted());
-////    BOOST_REQUIRE(!session->stopped());
+////    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+////    BC_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
+////    BC_REQUIRE(!net.get_acceptor()->stopped());
+////    BC_REQUIRE(!net.get_acceptor()->accepted());
+////    BC_REQUIRE(!session->stopped());
 ////
 ////    std::promise<bool> stopped;
-////    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+////    io::post(net.strand(), [=, &stopped]() NOEXCEPT
 ////    {
 ////        session->stop();
 ////        stopped.set_value(true);
 ////    });
 ////
-////    BOOST_REQUIRE(stopped.get_future().get());
-////    BOOST_REQUIRE(session->stopped());
-////    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::invalid_checksum);
-////    BOOST_REQUIRE(net.get_acceptor()->stopped());
+////    BC_REQUIRE(stopped.get_future().get());
+////    BC_REQUIRE(session->stopped());
+////    BC_REQUIRE_EQUAL(session->start_accept_code(), error::invalid_checksum);
+////    BC_REQUIRE(net.get_acceptor()->stopped());
 ////
 ////    // Attach is not invoked.
-////    BOOST_REQUIRE(!session->attached_handshake());
+////    BC_REQUIRE(!session->attached_handshake());
 ////}
 
-BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_attached)
+BC_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_attached)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_fail> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
         session->start([=, &started](const code& ec) NOEXCEPT
@@ -705,40 +705,40 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
-    BOOST_REQUIRE(!net.get_acceptor()->stopped());
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
+    BC_REQUIRE(!net.get_acceptor()->stopped());
+    BC_REQUIRE(!session->stopped());
 
     // Block until accepted.
-    BOOST_REQUIRE(session->require_accepted());
-    BOOST_REQUIRE(net.get_acceptor()->accepted());
+    BC_REQUIRE(session->require_accepted());
+    BC_REQUIRE(net.get_acceptor()->accepted());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BC_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept returned error.
-    BOOST_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE(!session->attached_handshake());
 }
 
 // Socket termination (sockets have no stop codes).
 
-BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelisted__not_attached)
+BC_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelisted__not_attached)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
-    BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
+    BC_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 
     std::promise<code> net_started;
     net.start([&](const code& ec) NOEXCEPT
@@ -746,14 +746,14 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
         net_started.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
     auto session = std::make_shared<mock_session_inbound_whitelist_fail>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
-    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
+    io::post(net.strand(), [=, &session_started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec) NOEXCEPT
@@ -763,34 +763,34 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
-    BOOST_REQUIRE(!net.get_acceptor()->stopped());
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
+    BC_REQUIRE(!net.get_acceptor()->stopped());
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(net.get_acceptor()->stopped());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::success);
 
     // Not attached because accept never succeeded.
-    BOOST_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE(!session->attached_handshake());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted__not_attached)
+BC_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted__not_attached)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
-    BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
+    BC_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 
     std::promise<code> net_started;
     net.start([&](const code& ec) NOEXCEPT
@@ -798,14 +798,14 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
         net_started.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
     auto session = std::make_shared<mock_session_inbound_blacklist_fail>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
-    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
+    io::post(net.strand(), [=, &session_started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec) NOEXCEPT
@@ -815,34 +815,34 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
-    BOOST_REQUIRE(!net.get_acceptor()->stopped());
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
+    BC_REQUIRE(!net.get_acceptor()->stopped());
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(net.get_acceptor()->stopped());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::success);
 
     // Not attached because accept never succeeded.
-    BOOST_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE(!session->attached_handshake());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscribed__not_attached)
+BC_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscribed__not_attached)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
-    BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
+    BC_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 
     std::promise<code> net_started;
     net.start([&](const code& ec)
@@ -850,14 +850,14 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
         net_started.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
     auto session = std::make_shared<mock_session_inbound_channel_count_fail>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
-    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
+    io::post(net.strand(), [=, &session_started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec) NOEXCEPT
@@ -867,35 +867,35 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
-    BOOST_REQUIRE(!net.get_acceptor()->stopped());
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
+    BC_REQUIRE(!net.get_acceptor()->stopped());
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BC_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept never succeeded.
-    BOOST_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE(!session->attached_handshake());
 }
 
 
-BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_disabled__not_attached)
+BC_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_disabled__not_attached)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
-    BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
+    BC_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 
     std::promise<code> net_started;
     net.start([&](const code& ec)
@@ -903,14 +903,14 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_disabled__no
         net_started.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
     auto session = std::make_shared<mock_session_inbound_disabled_true>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
-    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
+    io::post(net.strand(), [=, &session_started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec) NOEXCEPT
@@ -920,35 +920,35 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_disabled__no
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
-    BOOST_REQUIRE(!net.get_acceptor()->stopped());
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
+    BC_REQUIRE(!net.get_acceptor()->stopped());
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BC_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept never succeeded.
-    BOOST_REQUIRE(!session->attached_handshake());
+    BC_REQUIRE(!session->attached_handshake());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__attached)
+BC_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__attached)
 {
     const logger log{};
     settings set(test::network_settings());
     set.inbound.connections = 1;
     set.inbound.connect_timeout_seconds = 10000;
     mock_net<mock_acceptor_start_success_accept_success> net(set, log);
-    BOOST_REQUIRE_EQUAL(set.inbound.binds.size(), one);
+    BC_REQUIRE_EQUAL(set.inbound.binds.size(), one);
 
     std::promise<code> net_started;
     net.start([&](const code& ec) NOEXCEPT
@@ -956,14 +956,14 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
         net_started.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session using the network reference.
     auto session = std::make_shared<mock_session_inbound_handshake_failure>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
-    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
+    io::post(net.strand(), [=, &session_started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec) NOEXCEPT
@@ -973,29 +973,29 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
-    BOOST_REQUIRE(!net.get_acceptor()->stopped());
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound.binds.front().port());
+    BC_REQUIRE(!net.get_acceptor()->stopped());
+    BC_REQUIRE(!session->stopped());
 
     // Block until accepted.
-    BOOST_REQUIRE(session->require_accepted());
-    BOOST_REQUIRE(session->require_attached_handshake());
+    BC_REQUIRE(session->require_accepted());
+    BC_REQUIRE(session->require_attached_handshake());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BC_REQUIRE(net.get_acceptor()->stopped());
 
     // Handshake protocols attached.
-    BOOST_REQUIRE(session->attached_handshake());
+    BC_REQUIRE(session->attached_handshake());
 }
 
 // options
@@ -1008,13 +1008,13 @@ public:
     using session_inbound::options;
 };
 
-BOOST_AUTO_TEST_CASE(session_inbound__options__always__inbound_settings)
+BC_AUTO_TEST_CASE(session_inbound__options__always__inbound_settings)
 {
     const logger log{};
     settings set(test::network_settings());
     net instance(set, log);
     const auto session = std::make_shared<mock_session_inbound_options>(instance, 1);
-    BOOST_REQUIRE_EQUAL(&session->options(), &instance.network_settings().inbound);
+    BC_REQUIRE_EQUAL(&session->options(), &instance.network_settings().inbound);
 }
 
 // Inbound connection from the test acting as a raw peer on loopback.
@@ -1045,7 +1045,7 @@ struct inbound_peer
             started.set_value(ec);
         });
 
-        BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+        BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
         std::promise<code> running{};
         net_.run([&](const code& ec) NOEXCEPT
@@ -1053,8 +1053,8 @@ struct inbound_peer
             running.set_value(ec);
         });
 
-        BOOST_REQUIRE_EQUAL(running.get_future().get(), error::success);
-        socket_.connect({ boost::asio::ip::address_v4::loopback(), inbound_peer_port });
+        BC_REQUIRE_EQUAL(running.get_future().get(), error::success);
+        REQUIRE_SUCCESS(socket_, connect, test::loopback(inbound_peer_port));
     }
 
     ~inbound_peer()
@@ -1068,11 +1068,11 @@ struct inbound_peer
     {
         using namespace messages::peer;
         system::data_chunk payload(message.size(version));
-        BOOST_REQUIRE(message.serialize(version, payload));
+        BC_REQUIRE(message.serialize(version, payload));
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
-        BOOST_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
-        boost::asio::write(socket_, boost::asio::buffer(system::splice(frame, payload)));
+        BC_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
     // Read framed messages until the command matches.
@@ -1082,12 +1082,12 @@ struct inbound_peer
         while (true)
         {
             system::data_array<heading::size()> head_data{};
-            boost::asio::read(socket_, boost::asio::buffer(head_data));
+            test::read(socket_, io::buffer(head_data));
             const auto head = heading::deserialize(head_data);
-            BOOST_REQUIRE(head);
+            BC_REQUIRE(head);
 
             system::data_chunk payload(head->payload_size);
-            boost::asio::read(socket_, boost::asio::buffer(payload));
+            test::read(socket_, io::buffer(payload));
             if (head->command == command)
                 return payload;
         }
@@ -1111,7 +1111,7 @@ struct inbound_peer
             send(send_address_v2{}, value);
 
         const auto node = version::deserialize(value, receive(version::command));
-        BOOST_REQUIRE(node);
+        BC_REQUIRE(node);
         receive(version_acknowledge::command);
         send(version_acknowledge{}, value);
         return node;
@@ -1121,11 +1121,11 @@ private:
     settings set_;
     const logger log_{};
     net net_;
-    boost::asio::io_context io_{};
-    boost::asio::ip::tcp::socket socket_{ io_ };
+    io::context io_{};
+    io::socket socket_{ io_ };
 };
 
-BOOST_AUTO_TEST_CASE(session_inbound__attach_protocols__70016_address_v2__self_advertised_v2)
+BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70016_address_v2__self_advertised_v2)
 {
     using namespace messages::peer;
     inbound_peer peer{ [](settings& set)
@@ -1134,15 +1134,15 @@ BOOST_AUTO_TEST_CASE(session_inbound__attach_protocols__70016_address_v2__self_a
     } };
 
     const auto node = peer.handshake(level::bip155, true);
-    BOOST_REQUIRE_EQUAL(node->value, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(node->value, level::maximum_protocol);
 
     const auto message = address_v2::deserialize(level::bip155, peer.receive(address_v2::command));
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->addresses.size(), 1u);
-    BOOST_REQUIRE_EQUAL(message->addresses.front().port, 8333u);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->addresses.size(), 1u);
+    BC_REQUIRE_EQUAL(message->addresses.front().port, 8333u);
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__attach_protocols__70002_alert_reject__self_advertised)
+BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70002_alert_reject__self_advertised)
 {
     using namespace messages::peer;
     inbound_peer peer{ [](settings& set)
@@ -1153,15 +1153,15 @@ BOOST_AUTO_TEST_CASE(session_inbound__attach_protocols__70002_alert_reject__self
     } };
 
     const auto node = peer.handshake(level::bip61, false);
-    BOOST_REQUIRE_EQUAL(node->value, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(node->value, level::maximum_protocol);
 
     const auto message = address::deserialize(level::bip61, peer.receive(address::command));
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->addresses.size(), 1u);
-    BOOST_REQUIRE_EQUAL(message->addresses.front().port, 8333u);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->addresses.size(), 1u);
+    BC_REQUIRE_EQUAL(message->addresses.front().port, 8333u);
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__attach_protocols__31800__self_advertised)
+BC_AUTO_TEST_CASE(session_inbound__attach_protocols__31800__self_advertised)
 {
     using namespace messages::peer;
     inbound_peer peer{ [](settings& set)
@@ -1170,12 +1170,12 @@ BOOST_AUTO_TEST_CASE(session_inbound__attach_protocols__31800__self_advertised)
     } };
 
     const auto node = peer.handshake(level::headers_protocol, false);
-    BOOST_REQUIRE_EQUAL(node->value, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(node->value, level::maximum_protocol);
 
     const auto message = address::deserialize(level::headers_protocol, peer.receive(address::command));
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->addresses.size(), 1u);
-    BOOST_REQUIRE_EQUAL(message->addresses.front().port, 8333u);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->addresses.size(), 1u);
+    BC_REQUIRE_EQUAL(message->addresses.front().port, 8333u);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

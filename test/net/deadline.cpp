@@ -18,103 +18,103 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(deadline_tests)
+BC_AUTO_TEST_SUITE(deadline_tests)
 
-BOOST_AUTO_TEST_CASE(deadline__construct1__one_thread_start_zero_delay__success)
+BC_AUTO_TEST_CASE(deadline__construct1__one_thread_start_zero_delay__success)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand);
     timer->start([timer](code ec)
     {
-        BOOST_REQUIRE(timer && !ec);
+        BC_REQUIRE(timer && !ec);
     });
 }
 
-BOOST_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
+BC_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
 {
     const logger log{};
     threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand);
     timer->start([timer](code ec)
     {
-        BOOST_REQUIRE(timer && !ec);
+        BC_REQUIRE(timer && !ec);
     }, milliseconds(1));
 }
 
-BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__success)
+BC_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__success)
 {
     const logger log{};
     threadpool pool(3);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand, seconds(42));
     timer->start([timer](code ec)
     {
-        BOOST_REQUIRE(timer && !ec);
+        BC_REQUIRE(timer && !ec);
     }, seconds(0));
 }
 
-BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
+BC_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
 {
     // Thread starved timer.
     const logger log{};
     threadpool pool(0);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand);
     timer->start([timer](code)
     {
         // This should never be invoked (no threads).
-        BOOST_REQUIRE(!timer);
+        BC_REQUIRE(!timer);
     });
 
     // Stop timer.
     threadpool stop_pool(1);
-    asio::strand stop_strand(stop_pool.service().get_executor());
+    io::strand stop_strand(stop_pool.service().get_executor());
     const auto stopper = std::make_shared<deadline>(log, stop_strand, milliseconds(1));
     stopper->start([timer, stopper](code ec)
     {
-        BOOST_REQUIRE(stopper && !ec);
+        BC_REQUIRE(stopper && !ec);
         timer->stop();
     });
 }
 
-BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
+BC_AUTO_TEST_CASE(deadline__stop__race__success)
 {
     // Slow timer.
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand, seconds(10));
     timer->start([timer](code ec)
     {
         // In the case of a race won by the slow timer, this catches success.
         // In the case of a race won by the stop timer, this catches canceled.
         // A 10s delay indicates the slow timer has won the race (unexpected).
-        BOOST_REQUIRE(timer && ec == error::operation_canceled);
+        BC_REQUIRE(timer && ec == error::operation_canceled);
     });
 
     // Stop timer.
     threadpool stop_pool(1);
-    asio::strand stop_strand(stop_pool.service().get_executor());
+    io::strand stop_strand(stop_pool.service().get_executor());
     const auto stopper = std::make_shared<deadline>(log, stop_strand);
     stopper->start([timer, stopper](code ec)
     {
-        BOOST_REQUIRE(stopper && !ec);
+        BC_REQUIRE(stopper && !ec);
         timer->stop();
     }, milliseconds(1));
 }
 
-BOOST_AUTO_TEST_CASE(deadline__remaining__started__within_timeout)
+BC_AUTO_TEST_CASE(deadline__remaining__started__within_timeout)
 {
     const logger log{};
     threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand, seconds(100));
     std::promise<code> fired{};
     std::promise<seconds> remaining{};
-    boost::asio::post(strand, [&]() NOEXCEPT
+    io::post(strand, [&]() NOEXCEPT
     {
         timer->start([&](code ec) NOEXCEPT
         {
@@ -126,11 +126,11 @@ BOOST_AUTO_TEST_CASE(deadline__remaining__started__within_timeout)
     });
 
     const auto left = remaining.get_future().get();
-    BOOST_REQUIRE_EQUAL(fired.get_future().get(), error::operation_canceled);
-    BOOST_REQUIRE_LE(left, seconds(100));
-    BOOST_REQUIRE_GT(left, seconds(90));
+    BC_REQUIRE_EQUAL(fired.get_future().get(), error::operation_canceled);
+    BC_REQUIRE_LE(left, seconds(100));
+    BC_REQUIRE_GT(left, seconds(90));
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

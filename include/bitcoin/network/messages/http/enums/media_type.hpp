@@ -21,6 +21,7 @@
 
 #include <filesystem>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/http/fields.hpp>
 
 namespace libbitcoin {
 namespace network {

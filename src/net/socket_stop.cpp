@@ -35,7 +35,7 @@ constexpr size_t drain_size = 1024;
 
 // Stop (async).
 // ----------------------------------------------------------------------------
-// Hard stop (no graceful websocket/ssl closure).
+// Hard stop (no graceful websocket/tls closure).
 
 void socket::stop() NOEXCEPT
 {
@@ -44,7 +44,7 @@ void socket::stop() NOEXCEPT
         return;
 
     // Stop is posted to strand to protect the socket.
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&socket::do_stop, shared_from_this()));
 }
 
@@ -53,24 +53,18 @@ void socket::do_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (websocket())
-    {
-        // Release ws control callback handler.
-        VARIANT_DISPATCH_METHOD(get_ws(), control_callback());
-    }
-
     watch_->stop();
     timer_->stop();
 
-    boost_code ignore{};
+    code ignore{};
     auto& layer = get_base();
-    layer.shutdown(asio::socket::shutdown_both, ignore);
+    layer.shutdown(io::socket::shutdown_type::both, ignore);
     layer.close(ignore);
 }
 
 // Stop (lazy).
 // ----------------------------------------------------------------------------
-// Lazy stop (graceful websocket/ssl closure).
+// Lazy stop (graceful websocket/tls closure).
 
 void socket::lazy_stop() NOEXCEPT
 {
@@ -81,7 +75,7 @@ void socket::lazy_stop() NOEXCEPT
     lazy_.store(true);
 
     // Async stop is dispatched to strand to protect the socket.
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_lazy_stop, shared_from_this()));
 }
 
@@ -117,28 +111,34 @@ void socket::do_ws_stop() NOEXCEPT
     BC_ASSERT(stranded());
     if (!websocket())
     {
-        do_ssl_stop();
+        do_tls_stop();
         return;
     }
 
-    VARIANT_DISPATCH_METHOD(get_ws(),
-        async_close(boost::beast::websocket::close_code::normal,
-            std::bind(&socket::handle_ws_close,
-                shared_from_this(), _1)));
+    // A close already sent (answering the peer) is not repeated.
+    if (ws_closing_)
+    {
+        do_tls_stop();
+        return;
+    }
+
+    ws_closing_ = true;
+    ws_send(ws::opcode::close, ws::close_payload(ws::close_code::normal),
+        std::bind(&socket::handle_ws_close, shared_from_this(), _1));
 }
 
 // private
-void socket::handle_ws_close(const boost_code& ec) NOEXCEPT
+void socket::handle_ws_close(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (ec && ec != boost::asio::error::eof && !error::asio_is_canceled(ec))
-        logx("ws_close", ec);
+    if (ec && ec != error::peer_disconnect && ec != error::channel_stopped)
+        LOGX("WS close [" << endpoint() << "] " << ec.message());
 
-    do_ssl_stop();
+    do_tls_stop();
 }
 
 // private
-void socket::do_ssl_stop() NOEXCEPT
+void socket::do_tls_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
     if (!secure())
@@ -147,17 +147,17 @@ void socket::do_ssl_stop() NOEXCEPT
         return;
     }
 
-    get_ssl().async_shutdown(
-        std::bind(&socket::handle_ssl_close,
+    get_tls().async_shutdown(
+        std::bind(&socket::handle_tls_close,
             shared_from_this(), _1));
 }
 
 // private
-void socket::handle_ssl_close(const boost_code& ec) NOEXCEPT
+void socket::handle_tls_close(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (ec && ec != boost::asio::error::eof && !error::asio_is_canceled(ec))
-        logx("ssl_stop", ec);
+    if (ec && ec != error::peer_disconnect && ec != error::operation_canceled)
+        logx("tls_stop", ec);
 
     do_linger();
 }
@@ -169,10 +169,10 @@ void socket::do_linger() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    boost_code ignore{};
+    code ignore{};
     auto& layer = get_base();
     layer.cancel(ignore);
-    layer.shutdown(asio::socket::shutdown_send, ignore);
+    layer.shutdown(io::socket::shutdown_type::send, ignore);
     do_drain(emplace_shared<data_chunk>(drain_size));
 }
 
@@ -181,21 +181,13 @@ void socket::do_drain(const chunk_ptr& sink) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    try
-    {
-        get_base().async_read_some(boost::asio::buffer(*sink),
-            std::bind(&socket::handle_drain,
-                shared_from_this(), _1, sink));
-    }
-    catch (const std::exception& e)
-    {
-        LOGF("Exception @ do_drain: " << e.what());
-        do_stop();
-    }
+    get_base().async_read_some(io::buffer(*sink),
+        std::bind(&socket::handle_drain,
+            shared_from_this(), _1, sink));
 }
 
 // private
-void socket::handle_drain(const boost_code& ec,
+void socket::handle_drain(const code& ec,
     const chunk_ptr& sink) NOEXCEPT
 {
     BC_ASSERT(stranded());

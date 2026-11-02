@@ -214,7 +214,7 @@ void protocol_peer::handle_fetch(const code& ec, const address_cptr& message,
     const address_handler& handler) NOEXCEPT
 {
     // Return to channel strand.
-    boost::asio::post(channel_->strand(),
+    io::post(channel_->strand(),
         std::bind(handler, ec, message));
 }
 
@@ -229,7 +229,7 @@ void protocol_peer::handle_save(const code& ec, size_t accepted,
     const count_handler& handler) NOEXCEPT
 {
     // Return to channel strand.
-    boost::asio::post(channel_->strand(),
+    io::post(channel_->strand(),
         std::bind(handler, ec, accepted));
 }
 

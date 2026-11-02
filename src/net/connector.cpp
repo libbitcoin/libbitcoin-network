@@ -44,8 +44,8 @@ constexpr auto encryption = messages::peer::service::node_encrypted_transport;
 // ----------------------------------------------------------------------------
 // seed timeout uses same timer for connect, handshake and completion.
 
-connector::connector(const logger& log, asio::strand& strand,
-    asio::context& service, std::atomic_bool& suspended,
+connector::connector(const logger& log, io::strand& strand,
+    io::context& service, std::atomic_bool& suspended,
     parameters&& parameters) NOEXCEPT
   : strand_(strand),
     service_(service),
@@ -155,8 +155,8 @@ void connector::start(const std::string& hostname, uint16_t port,
 }
 
 // private
-void connector::handle_resolve(const boost_code& ec,
-    const asio::endpoints& range, const finish_ptr& finish,
+void connector::handle_resolve(const code& ec,
+    const io::endpoints& range, const finish_ptr& finish,
     const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -181,7 +181,7 @@ void connector::handle_resolve(const boost_code& ec,
     {
         timer_->stop();
         socket->stop();
-        racer_.finish(error::asio_to_error_code(ec), nullptr);
+        racer_.finish(ec, nullptr);
         return;
     }
 
@@ -198,7 +198,7 @@ void connector::do_handle_connect(const code& ec, const finish_ptr& finish,
 {
     BC_ASSERT(socket->stranded());
 
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&connector::handle_connect,
             shared_from_this(), ec, finish, socket));
 }

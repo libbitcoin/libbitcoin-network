@@ -33,7 +33,7 @@
 ////    }
 ////};
 
-BOOST_AUTO_TEST_SUITE(protocol_tests)
+BC_AUTO_TEST_SUITE(protocol_tests)
 
 using namespace bc::system::chain;
 using namespace network::messages::peer;
@@ -58,8 +58,8 @@ class mock_acceptor
   : public acceptor
 {
 public:
-    mock_acceptor(const logger& log, asio::strand& strand,
-        asio::context& service, acceptor::parameters&& params) NOEXCEPT
+    mock_acceptor(const logger& log, io::strand& strand,
+        io::context& service, acceptor::parameters&& params) NOEXCEPT
       : acceptor(log, strand, service, suspended_, std::move(params)),
         stopped_(false), port_(0)
     {
@@ -99,7 +99,7 @@ public:
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
-        boost::asio::post(strand_, [=]() NOEXCEPT
+        io::post(strand_, [=]() NOEXCEPT
         {
             accepted(error::success);
             handler(error::success, socket);
@@ -117,8 +117,8 @@ class mock_connector
   : public connector
 {
 public:
-    mock_connector(const logger& log, asio::strand& strand,
-        asio::context& service, connector::parameters&& params) NOEXCEPT
+    mock_connector(const logger& log, io::strand& strand,
+        io::context& service, connector::parameters&& params) NOEXCEPT
       : connector(log, strand, service, suspended_, std::move(params)),
         stopped_(false)
     {
@@ -490,63 +490,63 @@ struct protocol_probe_setup_fixture
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(protocol__properties__handshaken_inbound__expected, protocol_probe_setup_fixture)
+BC_FIXTURE_TEST_CASE(protocol__properties__handshaken_inbound__expected, protocol_probe_setup_fixture)
 {
     settings_.inbound.inactivity_minutes = 10;
     settings_.inbound.expiration_minutes = 60;
-    BOOST_REQUIRE(open());
-    BOOST_REQUIRE(handshake(level::bip61));
+    BC_REQUIRE(open());
+    BC_REQUIRE(handshake(level::bip61));
     const auto record = net_->promise.get_future().get();
     const auto now = network::unix_time();
 
-    BOOST_REQUIRE(!record.encrypted);
-    BOOST_REQUIRE_EQUAL(record.start_height, node_version->start_height);
-    BOOST_REQUIRE(record.peer_version);
-    BOOST_REQUIRE_EQUAL(record.peer_version->value, level::bip61);
-    BOOST_REQUIRE_EQUAL(record.peer_version->user_agent, "/test/");
-    BOOST_REQUIRE_EQUAL(record.negotiated_version, level::bip61);
-    BOOST_REQUIRE(record.wants_address_v2);
-    BOOST_REQUIRE_EQUAL(record.selfs.addresses.size(), 2u);
-    BOOST_REQUIRE(settings_.inbound.selfs.front() == record.selfs.addresses.front());
-    BOOST_REQUIRE(settings_.inbound.self == record.selfs.addresses.back());
-    BOOST_REQUIRE_EQUAL(record.selfs.addresses.front().services, service::node_none);
-    BOOST_REQUIRE_GT(record.remaining, 0u);
-    BOOST_REQUIRE_LE(record.remaining, settings_.inbound.expiration_minutes * 60u);
-    BOOST_REQUIRE_EQUAL(record.opposite_port, port());
-    BOOST_REQUIRE_EQUAL(record.binding_port, settings_.inbound.binds.back().port());
-    BOOST_REQUIRE(!record.terminal);
-    BOOST_REQUIRE_EQUAL(record.nonce, node_version->nonce);
-    BOOST_REQUIRE_GT(record.sent, 0u);
-    BOOST_REQUIRE_GT(record.received, 0u);
-    BOOST_REQUIRE_GT(record.sent_by_message, 0u);
-    BOOST_REQUIRE_GT(record.received_by_message, 0u);
-    BOOST_REQUIRE_GT(record.created, 0u);
-    BOOST_REQUIRE_LE(record.created, now);
-    BOOST_REQUIRE_LE(record.created, record.last_read);
-    BOOST_REQUIRE_LE(record.last_read, now);
-    BOOST_REQUIRE_LE(record.created, record.last_write);
-    BOOST_REQUIRE_LE(record.last_write, now);
-    BOOST_REQUIRE_NE(record.identifier, 0u);
-    BOOST_REQUIRE_EQUAL(record.minimum_fee, 42u);
-    BOOST_REQUIRE(record.pending_ping_time == steady_clock::duration::zero());
-    BOOST_REQUIRE(record.minimum_ping_time <= record.ping_time);
-    BOOST_REQUIRE_EQUAL(record.sender, record.identifier);
-    BOOST_REQUIRE_EQUAL(record.save_ec, error::success);
-    BOOST_REQUIRE_EQUAL(record.accepted, 2u);
-    BOOST_REQUIRE_EQUAL(record.address_count, 2u);
-    BOOST_REQUIRE_EQUAL(record.fetch_ec, error::success);
-    BOOST_REQUIRE(record.fetched);
-    BOOST_REQUIRE_EQUAL(record.fetched->addresses.size(), 2u);
+    BC_REQUIRE(!record.encrypted);
+    BC_REQUIRE_EQUAL(record.start_height, node_version->start_height);
+    BC_REQUIRE(record.peer_version);
+    BC_REQUIRE_EQUAL(record.peer_version->value, level::bip61);
+    BC_REQUIRE_EQUAL(record.peer_version->user_agent, "/test/");
+    BC_REQUIRE_EQUAL(record.negotiated_version, level::bip61);
+    BC_REQUIRE(record.wants_address_v2);
+    BC_REQUIRE_EQUAL(record.selfs.addresses.size(), 2u);
+    BC_REQUIRE(settings_.inbound.selfs.front() == record.selfs.addresses.front());
+    BC_REQUIRE(settings_.inbound.self == record.selfs.addresses.back());
+    BC_REQUIRE_EQUAL(record.selfs.addresses.front().services, service::node_none);
+    BC_REQUIRE_GT(record.remaining, 0u);
+    BC_REQUIRE_LE(record.remaining, settings_.inbound.expiration_minutes * 60u);
+    BC_REQUIRE_EQUAL(record.opposite_port, port());
+    BC_REQUIRE_EQUAL(record.binding_port, settings_.inbound.binds.back().port());
+    BC_REQUIRE(!record.terminal);
+    BC_REQUIRE_EQUAL(record.nonce, node_version->nonce);
+    BC_REQUIRE_GT(record.sent, 0u);
+    BC_REQUIRE_GT(record.received, 0u);
+    BC_REQUIRE_GT(record.sent_by_message, 0u);
+    BC_REQUIRE_GT(record.received_by_message, 0u);
+    BC_REQUIRE_GT(record.created, 0u);
+    BC_REQUIRE_LE(record.created, now);
+    BC_REQUIRE_LE(record.created, record.last_read);
+    BC_REQUIRE_LE(record.last_read, now);
+    BC_REQUIRE_LE(record.created, record.last_write);
+    BC_REQUIRE_LE(record.last_write, now);
+    BC_REQUIRE_NE(record.identifier, 0u);
+    BC_REQUIRE_EQUAL(record.minimum_fee, 42u);
+    BC_REQUIRE(record.pending_ping_time == steady_clock::duration::zero());
+    BC_REQUIRE(record.minimum_ping_time <= record.ping_time);
+    BC_REQUIRE_EQUAL(record.sender, record.identifier);
+    BC_REQUIRE_EQUAL(record.save_ec, error::success);
+    BC_REQUIRE_EQUAL(record.accepted, 2u);
+    BC_REQUIRE_EQUAL(record.address_count, 2u);
+    BC_REQUIRE_EQUAL(record.fetch_ec, error::success);
+    BC_REQUIRE(record.fetched);
+    BC_REQUIRE_EQUAL(record.fetched->addresses.size(), 2u);
 }
 
-BOOST_FIXTURE_TEST_CASE(protocol__stop__handshaken_inbound__dropped, protocol_probe_setup_fixture)
+BC_FIXTURE_TEST_CASE(protocol__stop__handshaken_inbound__dropped, protocol_probe_setup_fixture)
 {
-    BOOST_REQUIRE(!start());
+    BC_REQUIRE(!start());
     net_->drop = true;
-    BOOST_REQUIRE(!run());
+    BC_REQUIRE(!run());
     connect(settings_.inbound.binds.back().to_endpoint());
-    BOOST_REQUIRE(handshake(level::bip61));
-    BOOST_REQUIRE(dropped());
+    BC_REQUIRE(handshake(level::bip61));
+    BC_REQUIRE(dropped());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -18,24 +18,24 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_block_tests)
+BC_AUTO_TEST_SUITE(p2p_block_tests)
 
 using namespace network::messages;
 
-BOOST_AUTO_TEST_CASE(block__properties__always__expected)
+BC_AUTO_TEST_CASE(block__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(peer::block::command, "block");
+    BC_REQUIRE_EQUAL(peer::block::command, "block");
     constexpr auto index = messages::peer::registry::index_of<peer::block>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), peer::block::command);
-    BOOST_REQUIRE_EQUAL(peer::block::version_minimum, peer::level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(peer::block::version_maximum, peer::level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), peer::block::command);
+    BC_REQUIRE_EQUAL(peer::block::version_minimum, peer::level::minimum_protocol);
+    BC_REQUIRE_EQUAL(peer::block::version_maximum, peer::level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(block__size__default__zero)
+BC_AUTO_TEST_CASE(block__size__default__zero)
 {
     const peer::block default_block{ { {}, {} } };
-    BOOST_REQUIRE_EQUAL(default_block.size(peer::level::canonical, true), zero);
-    BOOST_REQUIRE_EQUAL(default_block.size(peer::level::canonical, false), zero);
+    BC_REQUIRE_EQUAL(default_block.size(peer::level::canonical, true), zero);
+    BC_REQUIRE_EQUAL(default_block.size(peer::level::canonical, false), zero);
 }
 
 // bitcoin/src/test/data/blockfilters.json (testnet block 2)
@@ -48,73 +48,73 @@ static const uint32_t excess_version = add1<uint32_t>(peer::level::maximum_proto
 
 // deserialize1
 
-BOOST_AUTO_TEST_CASE(block__deserialize1__testnet_block2__expected)
+BC_AUTO_TEST_CASE(block__deserialize1__testnet_block2__expected)
 {
     const auto message = peer::block::deserialize(peer::level::minimum_protocol, block2, true);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->block.hash(), block2_hash);
-    BOOST_REQUIRE_EQUAL(message->block.transactions(), one);
-    BOOST_REQUIRE_EQUAL(message->size(peer::level::minimum_protocol, true), block2.size());
-    BOOST_REQUIRE_EQUAL(message->size(peer::level::minimum_protocol, false), block2.size());
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->block.hash(), block2_hash);
+    BC_REQUIRE_EQUAL(message->block.transactions(), one);
+    BC_REQUIRE_EQUAL(message->size(peer::level::minimum_protocol, true), block2.size());
+    BC_REQUIRE_EQUAL(message->size(peer::level::minimum_protocol, false), block2.size());
 }
 
-BOOST_AUTO_TEST_CASE(block__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(block__deserialize1__insufficient_version__nullptr)
 {
-    BOOST_REQUIRE(!peer::block::deserialize(peer::level::canonical, block2, true));
+    BC_REQUIRE(!peer::block::deserialize(peer::level::canonical, block2, true));
 }
 
-BOOST_AUTO_TEST_CASE(block__deserialize1__excess_version__nullptr)
+BC_AUTO_TEST_CASE(block__deserialize1__excess_version__nullptr)
 {
-    BOOST_REQUIRE(!peer::block::deserialize(excess_version, block2, true));
+    BC_REQUIRE(!peer::block::deserialize(excess_version, block2, true));
 }
 
-BOOST_AUTO_TEST_CASE(block__deserialize1__empty__nullptr)
+BC_AUTO_TEST_CASE(block__deserialize1__empty__nullptr)
 {
-    BOOST_REQUIRE(!peer::block::deserialize(peer::level::minimum_protocol, system::data_chunk{}, true));
+    BC_REQUIRE(!peer::block::deserialize(peer::level::minimum_protocol, system::data_chunk{}, true));
 }
 
-BOOST_AUTO_TEST_CASE(block__deserialize1__truncated__nullptr)
+BC_AUTO_TEST_CASE(block__deserialize1__truncated__nullptr)
 {
     const system::data_chunk data{ block2.begin(), std::prev(block2.end()) };
-    BOOST_REQUIRE(!peer::block::deserialize(peer::level::minimum_protocol, data, false));
+    BC_REQUIRE(!peer::block::deserialize(peer::level::minimum_protocol, data, false));
 }
 
 // deserialize2
 
-BOOST_AUTO_TEST_CASE(block__deserialize2__testnet_block2__expected)
+BC_AUTO_TEST_CASE(block__deserialize2__testnet_block2__expected)
 {
     system::read::bytes::copy source(block2);
     const auto message = peer::block::deserialize(peer::level::maximum_protocol, source, false);
-    BOOST_REQUIRE(source);
-    BOOST_REQUIRE_EQUAL(message.block.hash(), block2_hash);
+    BC_REQUIRE(source);
+    BC_REQUIRE_EQUAL(message.block.hash(), block2_hash);
 }
 
-BOOST_AUTO_TEST_CASE(block__deserialize2__insufficient_version__source_false)
+BC_AUTO_TEST_CASE(block__deserialize2__insufficient_version__source_false)
 {
     system::read::bytes::copy source(block2);
     const auto message = peer::block::deserialize(peer::level::canonical, source, true);
-    BOOST_REQUIRE(!source);
-    BOOST_REQUIRE(!message.block.is_valid());
+    BC_REQUIRE(!source);
+    BC_REQUIRE(!message.block.is_valid());
 }
 
-BOOST_AUTO_TEST_CASE(block__deserialize2__truncated__source_false)
+BC_AUTO_TEST_CASE(block__deserialize2__truncated__source_false)
 {
     const system::data_chunk data{ block2.begin(), std::prev(block2.end()) };
     system::read::bytes::copy source(data);
     const auto message = peer::block::deserialize(peer::level::minimum_protocol, source, true);
-    BOOST_REQUIRE(!source);
+    BC_REQUIRE(!source);
 }
 
 // serialize1
 
-BOOST_AUTO_TEST_CASE(block__serialize1__round_trip__expected)
+BC_AUTO_TEST_CASE(block__serialize1__round_trip__expected)
 {
     const auto message = peer::block::deserialize(peer::level::minimum_protocol, block2, true);
-    BOOST_REQUIRE(message);
+    BC_REQUIRE(message);
 
     system::data_chunk data(message->size(peer::level::minimum_protocol, true));
-    BOOST_REQUIRE(message->serialize(peer::level::minimum_protocol, data, true));
-    BOOST_REQUIRE_EQUAL(data, block2);
+    BC_REQUIRE(message->serialize(peer::level::minimum_protocol, data, true));
+    BC_REQUIRE_EQUAL(data, block2);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

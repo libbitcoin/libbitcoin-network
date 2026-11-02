@@ -18,21 +18,23 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(http_method_tests)
+BC_AUTO_TEST_SUITE(http_method_tests)
 
 using namespace network::http::method;
 
-BOOST_AUTO_TEST_CASE(method__static_method__always__equals_verb)
+BC_AUTO_TEST_CASE(method__static_method__always__equals_verb)
 {
-    BOOST_REQUIRE(get::method == http::verb::get);
-    BOOST_REQUIRE(head::method == http::verb::head);
-    BOOST_REQUIRE(post::method == http::verb::post);
-    BOOST_REQUIRE(put::method == http::verb::put);
-    BOOST_REQUIRE(delete_::method == http::verb::delete_);
-    BOOST_REQUIRE(trace::method == http::verb::trace);
-    BOOST_REQUIRE(options::method == http::verb::options);
-    BOOST_REQUIRE(connect::method == http::verb::connect);
-    BOOST_REQUIRE(unknown::method == http::verb::unknown);
+    BC_REQUIRE(get::method == http::verb::get);
+    BC_REQUIRE(head::method == http::verb::head);
+    BC_REQUIRE(post::method == http::verb::post);
+    BC_REQUIRE(put::method == http::verb::put);
+    BC_REQUIRE(delete_::method == http::verb::delete_);
+    BC_REQUIRE(trace::method == http::verb::trace);
+    BC_REQUIRE(options::method == http::verb::options);
+    BC_REQUIRE(connect::method == http::verb::connect);
+    BC_REQUIRE(unknown::method == http::verb::unknown);
+    BC_REQUIRE(websocket::method == http::verb::websocket);
+    BC_REQUIRE(stream::method == http::verb::stream);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

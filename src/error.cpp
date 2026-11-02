@@ -139,23 +139,11 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { sam_timeout, "sam timeout" },
     { sam_unassigned_failure, "sam unassigned failure" },
 
-    // boost
-    { system_unknown, "system error" },
-    { misc_unknown, "misc error" },
-    { errc_unknown, "errc error" },
-    { ssl_unknown, "ssl error" },
-
-    // boost tls
-    { tls_set_options, "failed to set tls options" },
+    // tls
     { tls_use_certificate, "failed to set tls certificate" },
     { tls_use_private_key, "failed to set tls private key" },
-    { tls_set_password, "failed to set tls private key password" },
-    { tls_set_default_verify, "failed to set tls default certificate authority" },
     { tls_set_add_verify, "failed to set tls certificate authority" },
     { tls_stream_truncated, "tls stream truncated" },
-    { tls_unspecified_system_error, "tls unspecified system error" },
-    { tls_unexpected_result, "tls handshake failure" },
-    { tls_unknown, "tls error" },
 
     // tls alerts
     { tls_alert_unexpected_message, "tls alert unexpected message" },
@@ -176,7 +164,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { tls_alert_certificate_required, "tls alert certificate required" },
     { tls_alert_unknown, "tls alert" },
 
-    // boost beast http 4xx client error
+    // http 4xx client error
     { bad_request, "bad request" },
     { unauthorized, "unauthorized" },
     ////{ payment_required, "payment required" },
@@ -207,7 +195,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     ////{ request_header_fields_too_large, "request header fields too large" },
     ////{ unavailable_for_legal_reasons, "unavailable for legal reasons" },
 
-    // boost beast http 5xx server error
+    // http 5xx server error
     { internal_server_error, "internal server error" },
     { not_implemented, "not implemented" },
     ////{ bad_gateway, "bad gateway" },
@@ -220,7 +208,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     ////{ not_extended, "not extended" },
     ////{ network_authentication_required, "network authentication required" },
 
-    // boost beast http error
+    // http error
     { end_of_stream, "end of stream" },
     { partial_message, "partial message" },
     { need_more, "need more" },
@@ -249,7 +237,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { short_read, "short read" },
     { http_unknown, "http error" },
 
-    // boost beast websocket error
+    // websocket error
     { websocket_closed, "websocket closed" },
     { websocket_buffer_overflow, "websocket buffer overflow" },
     { partial_deflate_block, "partial deflate block" },
@@ -281,7 +269,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { bad_close_code, "bad close code" },
     { bad_close_size, "bad close size" },
     { bad_close_payload, "bad close payload" },
-    { websocket_unknown, "websocket error" },
 
     // json error
     { syntax, "syntax error" },
@@ -316,7 +303,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { json_unknown, "json error" },
 
     // query string parse error
-    { message_overflow, "message overflow" },
     { undefined_type, "undefined type" },
     { unexpected_method, "unexpected method" },
     { unexpected_type, "unexpected type" },
@@ -345,265 +331,66 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { zmtp_unexpected_command, "zmtp unexpected command" },
     { zmtp_unexpected_message, "zmtp unexpected message" },
     { zmtp_excessive_parts, "zmtp excessive parts" },
-    { zmtp_unserializable, "zmtp unserializable" }
+    { zmtp_unserializable, "zmtp unserializable" },
+
+    // io
+    { would_block, "would block" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
 
-bool asio_is_canceled(const boost_code& ec) NOEXCEPT
+class http_category_t final
+  : public std::error_category
 {
-    return ec == asio_basic_error_t::operation_aborted
-        || ec == boost::system::errc::errc_t::operation_canceled;
-}
+public:
+    const char* name() const noexcept override
+    {
+        return "libbitcoin.http";
+    }
 
-// Boost cross platform codes (not asio).
-code errc_to_error_code(const boost_code& ec) NOEXCEPT
+    std::string message(int value) const override
+    {
+        switch (static_cast<http_error_t>(value))
+        {
+            case http_error_t::end_of_stream: return "end of stream";
+            case http_error_t::partial_message: return "partial message";
+            case http_error_t::need_more: return "need more";
+            case http_error_t::unexpected_body: return "unexpected body";
+            case http_error_t::need_buffer: return "need buffer";
+            case http_error_t::end_of_chunk: return "end of chunk";
+            case http_error_t::buffer_overflow: return "buffer overflow";
+            case http_error_t::header_limit: return "header limit exceeded";
+            case http_error_t::body_limit: return "body limit exceeded";
+            case http_error_t::bad_alloc: return "bad alloc";
+            case http_error_t::bad_line_ending: return "bad line ending";
+            case http_error_t::bad_method: return "bad method";
+            case http_error_t::bad_target: return "bad target";
+            case http_error_t::bad_version: return "bad version";
+            case http_error_t::bad_status: return "bad status";
+            case http_error_t::bad_reason: return "bad reason";
+            case http_error_t::bad_field: return "bad field";
+            case http_error_t::bad_value: return "bad value";
+            case http_error_t::bad_content_length: return "bad Content-Length";
+            case http_error_t::bad_transfer_encoding: return "bad Transfer-Encoding";
+            case http_error_t::bad_chunk: return "bad chunk";
+            case http_error_t::bad_chunk_extension: return "bad chunk extension";
+            case http_error_t::bad_obs_fold: return "bad obs-fold";
+            case http_error_t::multiple_content_length: return "multiple Content-Length";
+            case http_error_t::stale_parser: return "stale parser";
+            case http_error_t::short_read: return "unexpected eof in body";
+            default: return "http error";
+        }
+    }
+};
+
+const std::error_category& http_category() NOEXCEPT
 {
-    if (!ec)
-        return error::success;
-
-    // Platform (system) codes are mapped to their generic condition.
-    const auto condition = ec.default_error_condition();
-    if (condition.category() == boost::system::generic_category())
-    {
-        switch (static_cast<boost_errc_t>(condition.value()))
-        {
-            case boost_errc_t::connection_aborted:
-            case boost_errc_t::operation_canceled:
-                return error::operation_canceled;
-                
-            // peer termination
-            // stackoverflow.com/a/19891985/1172329
-            case boost_errc_t::connection_reset:
-                return error::peer_disconnect;
-
-            // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
-            // connect-tcp-greater-than-5000-error-wsaenobufs-10055
-            case boost_errc_t::no_buffer_space:
-                return error::insufficient_buffer;
-
-            // network
-            case boost_errc_t::operation_not_permitted:
-            case boost_errc_t::operation_not_supported:
-            case boost_errc_t::owner_dead:
-            case boost_errc_t::permission_denied:
-                return error::not_allowed;
-
-            // connect-resolve
-            case boost_errc_t::address_family_not_supported:
-            case boost_errc_t::bad_address:
-            case boost_errc_t::destination_address_required:
-                return error::resolve_failed;
-
-            // connect-connect
-            case boost_errc_t::address_not_available:
-            case boost_errc_t::network_down:
-            case boost_errc_t::network_unreachable:
-            case boost_errc_t::no_link:
-                return error::net_unreachable;
-
-            case boost_errc_t::host_unreachable:
-                return error::host_unreachable;
-
-            case boost_errc_t::connection_refused:
-                return error::connection_refused;
-
-            case boost_errc_t::not_connected:
-            case boost_errc_t::broken_pipe:
-            case boost_errc_t::network_reset:
-            case boost_errc_t::no_protocol_option:
-            case boost_errc_t::no_such_file_or_directory:
-            case boost_errc_t::not_a_socket:
-            case boost_errc_t::protocol_not_supported:
-            case boost_errc_t::wrong_protocol_type:
-                return error::connect_failed;
-
-            // connect-address
-            case boost_errc_t::address_in_use:
-            case boost_errc_t::already_connected:
-            case boost_errc_t::connection_already_in_progress:
-            case boost_errc_t::operation_in_progress:
-                return error::address_in_use;
-
-            // I/O (bad_file_descriptor if socket is not initialized)
-            case boost_errc_t::bad_file_descriptor:
-            case boost_errc_t::bad_message:
-            case boost_errc_t::illegal_byte_sequence:
-            case boost_errc_t::io_error:
-            case boost_errc_t::message_size:
-            case boost_errc_t::no_message_available:
-            case boost_errc_t::no_message:
-            case boost_errc_t::no_stream_resources:
-            case boost_errc_t::not_a_stream:
-            case boost_errc_t::protocol_error:
-                return error::bad_stream;
-
-            // timeout
-            case boost_errc_t::stream_timeout:
-            case boost_errc_t::timed_out:
-                return error::channel_timeout;
-
-            // file system errors (bad_file_descriptor used in I/O)
-            case boost_errc_t::cross_device_link:
-            case boost_errc_t::device_or_resource_busy:
-            case boost_errc_t::directory_not_empty:
-            case boost_errc_t::executable_format_error:
-            case boost_errc_t::file_exists:
-            case boost_errc_t::file_too_large:
-            case boost_errc_t::filename_too_long:
-            case boost_errc_t::invalid_seek:
-            case boost_errc_t::is_a_directory:
-            case boost_errc_t::no_space_on_device:
-            case boost_errc_t::no_such_device:
-            case boost_errc_t::no_such_device_or_address:
-            case boost_errc_t::read_only_file_system:
-            case boost_errc_t::resource_unavailable_try_again:
-            case boost_errc_t::text_file_busy:
-            case boost_errc_t::too_many_files_open:
-            case boost_errc_t::too_many_files_open_in_system:
-            case boost_errc_t::too_many_links:
-            case boost_errc_t::too_many_symbolic_link_levels:
-                return error::file_system;
-
-            default:
-                break;
-        }
-
-        if (ec.category() == boost::system::generic_category())
-            return error::errc_unknown;
-    }
-
-    return error::unknown;
-}
-
-// includes errc_to_error_code
-code asio_to_error_code(const boost_code& ec) NOEXCEPT
-{
-    if (!ec)
-        return error::success;
-
-    // In msvc boost::system::system_category() aliases netdb and addrinfo.
-    if (ec.category() == boost::asio::error::get_system_category())
-    {
-        switch (static_cast<asio_basic_error_t>(ec.value()))
-        {
-            case asio_basic_error_t::operation_aborted:
-            case asio_basic_error_t::connection_aborted:
-                return error::operation_canceled;
-
-            case asio_basic_error_t::address_family_not_supported:
-                return error::resolve_failed;
-
-            case asio_basic_error_t::address_in_use:
-            case asio_basic_error_t::already_connected:
-            case asio_basic_error_t::already_started:
-            case asio_basic_error_t::in_progress:
-                return error::address_in_use;
-
-            case asio_basic_error_t::network_down:
-            case asio_basic_error_t::network_unreachable:
-                return error::net_unreachable;
-
-            case asio_basic_error_t::host_unreachable:
-                return error::host_unreachable;
-
-            case asio_basic_error_t::connection_refused:
-                return error::connection_refused;
-
-            case asio_basic_error_t::shut_down:
-            case asio_basic_error_t::would_block:
-            case asio_basic_error_t::broken_pipe:
-            case asio_basic_error_t::network_reset:
-            case asio_basic_error_t::no_protocol_option:
-            case asio_basic_error_t::not_connected:
-            case asio_basic_error_t::not_socket:
-                return error::connect_failed;
-
-            case asio_basic_error_t::connection_reset:
-                return error::peer_disconnect;
-
-            case asio_basic_error_t::bad_descriptor:
-            case asio_basic_error_t::message_size:
-                return error::bad_stream;
-
-            case asio_basic_error_t::no_memory:
-            case asio_basic_error_t::fault:
-            case asio_basic_error_t::interrupted:
-            case asio_basic_error_t::invalid_argument:
-            case asio_basic_error_t::name_too_long:
-            case asio_basic_error_t::no_descriptors:
-                return error::invalid_configuration;
-
-            case asio_basic_error_t::no_buffer_space:
-                return error::insufficient_buffer;
-
-                // This duplicates would_block except on MSVC.
-                ////case asio_basic_error_t::try_again:
-            case asio_basic_error_t::no_such_device:
-                return error::file_system;
-
-            case asio_basic_error_t::access_denied:
-            case asio_basic_error_t::no_permission:
-            case asio_basic_error_t::operation_not_supported:
-                return error::not_allowed;
-
-            case asio_basic_error_t::timed_out:
-                return error::channel_timeout;
-        }
-
-#if !defined(HAVE_WINDOWS)
-    }
-    if (ec.category() == boost::asio::error::get_netdb_category())
-    {
-#endif
-        switch (static_cast<asio_netdb_error_t>(ec.value()))
-        {
-            // connect-resolve
-            case asio_netdb_error_t::host_not_found:
-            case asio_netdb_error_t::host_not_found_try_again:
-                return error::resolve_failed;
-
-            case asio_netdb_error_t::no_data:
-            case asio_netdb_error_t::no_recovery:
-                return error::operation_failed;
-        }
-
-#if !defined(HAVE_WINDOWS)
-    }
-    if (ec.category() == boost::asio::error::get_addrinfo_category())
-    {
-#endif
-        switch (static_cast<asio_addrinfo_error_t>(ec.value()))
-        {
-            // connect-resolve
-            case asio_addrinfo_error_t::service_not_found:
-            case asio_addrinfo_error_t::socket_type_not_supported:
-                return error::resolve_failed;
-        }
-    }
-
-    if (ec.category() == boost::asio::error::get_misc_category())
-    {
-        switch (static_cast<asio_misc_error_t>(ec.value()))
-        {
-            // peer termination
-            // stackoverflow.com/a/19891985/1172329
-            case asio_misc_error_t::eof:
-                return error::peer_disconnect;
-            case asio_misc_error_t::already_open:
-                return error::connect_failed;
-            case asio_misc_error_t::not_found:
-                return error::resolve_failed;
-            case asio_misc_error_t::fd_set_failure:
-                return error::file_system;
-        }
-    }
-
-    return errc_to_error_code(ec);
+    static const http_category_t instance{};
+    return instance;
 }
 
 // includes json codes
-code http_to_error_code(const boost_code& ec) NOEXCEPT
+code http_to_error_code(const code& ec) NOEXCEPT
 {
     if (!ec)
         return error::success;
@@ -645,117 +432,39 @@ code http_to_error_code(const boost_code& ec) NOEXCEPT
     return json_to_error_code(ec);
 }
 
-// includes asio codes
-code ssl_to_error_code(const boost_code& ec) NOEXCEPT
+code tls_to_error_code(uint8_t alert) NOEXCEPT
 {
-    if (!ec)
-        return error::success;
-
-    if (ec.category() == boost::asio::ssl::error::get_stream_category())
+    switch (alert)
     {
-        switch (static_cast<asio_ssl_stream_error_t>(ec.value()))
-        {
-            case asio_ssl_stream_error_t::stream_truncated:
-                return error::tls_stream_truncated;
-            case asio_ssl_stream_error_t::unspecified_system_error:
-                return error::tls_unspecified_system_error;
-            case asio_ssl_stream_error_t::unexpected_result:
-                return error::tls_unexpected_result;
-            default: return error::tls_unknown;
-        }
+        case tls::alert::unexpected_message: return error::tls_alert_unexpected_message;
+        case tls::alert::bad_record_mac: return error::tls_alert_bad_record_mac;
+        case tls::alert::record_overflow: return error::tls_alert_record_overflow;
+        case tls::alert::handshake_failure: return error::tls_alert_handshake_failure;
+        case tls::alert::bad_certificate: return error::tls_alert_bad_certificate;
+        case tls::alert::unsupported_certificate: return error::tls_alert_unsupported_certificate;
+        case tls::alert::certificate_expired: return error::tls_alert_certificate_expired;
+        case tls::alert::certificate_unknown: return error::tls_alert_certificate_unknown;
+        case tls::alert::illegal_parameter: return error::tls_alert_illegal_parameter;
+        case tls::alert::unknown_ca: return error::tls_alert_unknown_ca;
+        case tls::alert::decode_error: return error::tls_alert_decode_error;
+        case tls::alert::decrypt_error: return error::tls_alert_decrypt_error;
+        case tls::alert::protocol_version: return error::tls_alert_protocol_version;
+        case tls::alert::internal_error: return error::tls_alert_internal_error;
+        case tls::alert::missing_extension: return error::tls_alert_missing_extension;
+        case tls::alert::certificate_required: return error::tls_alert_certificate_required;
+        default: return error::tls_alert_unknown;
     }
-
-    // Alerts sent or received are reported as ssl reasons offset by 1000.
-    if (ec.category() == boost::asio::error::get_ssl_category())
-    {
-        const auto value = static_cast<unsigned long>(ec.value());
-        const auto reason = ERR_GET_REASON(value);
-        if (ERR_GET_LIB(value) != ERR_LIB_SSL || reason < SSL_AD_REASON_OFFSET)
-            return error::ssl_unknown;
-
-        switch (reason - SSL_AD_REASON_OFFSET)
-        {
-            case tls::alert::unexpected_message: return error::tls_alert_unexpected_message;
-            case tls::alert::bad_record_mac: return error::tls_alert_bad_record_mac;
-            case tls::alert::record_overflow: return error::tls_alert_record_overflow;
-            case tls::alert::handshake_failure: return error::tls_alert_handshake_failure;
-            case tls::alert::bad_certificate: return error::tls_alert_bad_certificate;
-            case tls::alert::unsupported_certificate: return error::tls_alert_unsupported_certificate;
-            case tls::alert::certificate_expired: return error::tls_alert_certificate_expired;
-            case tls::alert::certificate_unknown: return error::tls_alert_certificate_unknown;
-            case tls::alert::illegal_parameter: return error::tls_alert_illegal_parameter;
-            case tls::alert::unknown_ca: return error::tls_alert_unknown_ca;
-            case tls::alert::decode_error: return error::tls_alert_decode_error;
-            case tls::alert::decrypt_error: return error::tls_alert_decrypt_error;
-            case tls::alert::protocol_version: return error::tls_alert_protocol_version;
-            case tls::alert::internal_error: return error::tls_alert_internal_error;
-            case tls::alert::missing_extension: return error::tls_alert_missing_extension;
-            case tls::alert::certificate_required: return error::tls_alert_certificate_required;
-            default: return error::tls_alert_unknown;
-        }
-    }
-
-    return asio_to_error_code(ec);
 }
 
-// includes json codes
-code ws_to_error_code(const boost_code& ec) NOEXCEPT
+// network codes pass
+code json_to_error_code(const code& ec) NOEXCEPT
 {
     if (!ec)
         return error::success;
 
-    if (ec.category() == to_websocket_code(ws_error_t::closed).category())
+    if (ec.category() == system::error::json_error_category::singleton)
     {
-        switch (static_cast<ws_error_t>(ec.value()))
-        {
-            case ws_error_t::closed: return error::websocket_closed;
-            case ws_error_t::buffer_overflow: return error::websocket_buffer_overflow;
-            case ws_error_t::partial_deflate_block: return error::partial_deflate_block;
-            case ws_error_t::message_too_big: return error::message_too_big;
-            case ws_error_t::bad_http_version: return error::bad_http_version;
-            case ws_error_t::bad_method: return error::websocket_bad_method;
-            case ws_error_t::no_host: return error::no_host;
-            case ws_error_t::no_connection: return error::no_connection;
-            case ws_error_t::no_connection_upgrade: return error::no_connection_upgrade;
-            case ws_error_t::no_upgrade: return error::no_upgrade;
-            case ws_error_t::no_upgrade_websocket: return error::no_upgrade_websocket;
-            case ws_error_t::no_sec_key: return error::no_sec_key;
-            case ws_error_t::bad_sec_key: return error::bad_sec_key;
-            case ws_error_t::no_sec_version: return error::no_sec_version;
-            case ws_error_t::bad_sec_version: return error::bad_sec_version;
-            case ws_error_t::no_sec_accept: return error::no_sec_accept;
-            case ws_error_t::bad_sec_accept: return error::bad_sec_accept;
-            case ws_error_t::upgrade_declined: return error::upgrade_declined;
-            case ws_error_t::bad_opcode: return error::bad_opcode;
-            case ws_error_t::bad_data_frame: return error::bad_data_frame;
-            case ws_error_t::bad_continuation: return error::bad_continuation;
-            case ws_error_t::bad_reserved_bits: return error::bad_reserved_bits;
-            case ws_error_t::bad_control_fragment: return error::bad_control_fragment;
-            case ws_error_t::bad_control_size: return error::bad_control_size;
-            case ws_error_t::bad_unmasked_frame: return error::bad_unmasked_frame;
-            case ws_error_t::bad_masked_frame: return error::bad_masked_frame;
-            case ws_error_t::bad_size: return error::bad_size;
-            case ws_error_t::bad_frame_payload: return error::bad_frame_payload;
-            case ws_error_t::bad_close_code: return error::bad_close_code;
-            case ws_error_t::bad_close_size: return error::bad_close_size;
-            case ws_error_t::bad_close_payload: return error::bad_close_payload;
-            default: return error::websocket_unknown;
-        }
-    }
-
-    return http_to_error_code(ec);
-}
-
-// includes asio codes
-code json_to_error_code(const boost_code& ec) NOEXCEPT
-{
-    if (!ec)
-        return error::success;
-
-    if (const auto value = static_cast<code>(ec);
-        value.category() == system::error::json_error_category::singleton)
-    {
-        switch (static_cast<json_error_t>(value.value()))
+        switch (static_cast<json_error_t>(ec.value()))
         {
             case json_error_t::json_syntax: return error::syntax;
             case json_error_t::json_extra_data: return error::extra_data;
@@ -790,19 +499,20 @@ code json_to_error_code(const boost_code& ec) NOEXCEPT
         }
     }
 
-    return asio_to_error_code(ec);
+    if (ec.category() == network::error::error_category::singleton)
+        return ec;
+
+    return error::unknown;
 }
 
 // includes http codes
-code rpc_to_error_code(const boost_code& ec) NOEXCEPT
+code rpc_to_error_code(const code& ec) NOEXCEPT
 {
     if (!ec)
         return error::success;
 
-    // libbitcoin-category-in-boost codes, for portability via boost_code.
-    if (const auto portable = static_cast<code>(ec);
-        portable.category() == network::error::error_category::singleton)
-        return portable;
+    if (ec.category() == network::error::error_category::singleton)
+        return ec;
 
     return http_to_error_code(ec);
 }

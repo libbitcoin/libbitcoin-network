@@ -81,6 +81,25 @@ set( repository_root_dir "${CMAKE_CURRENT_SOURCE_DIR}/../.." )
 if ( MSVC )
   set( CMAKE_STATIC_LIBRARY_PREFIX "lib" )
   set( CMAKE_SHARED_LIBRARY_PREFIX "lib" )
+
+  if ( BUILD_SHARED_LIBS )
+    message( FATAL_ERROR "Shared libraries are not supported with the MSVC frontend." )
+  endif()
+
+  add_compile_options(
+    /W4
+    /bigobj
+    /permissive-
+    /Zc:__cplusplus
+    /Zc:preprocessor
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-unused-command-line-argument> )
+
+  add_compile_definitions(
+    UNICODE
+    _UNICODE
+    WIN32_LEAN_AND_MEAN
+    NOMINMAX
+    _WIN32_WINNT=0x0A00 )
 endif()
 
 include(CheckCCompilerFlag)
@@ -90,7 +109,6 @@ include(CheckCXXSourceCompiles)
 #------------------------------------------------------------------------------
 # Project options.
 #------------------------------------------------------------------------------
-option( with-ssl "Use embedded ssl library." ON )
 option( with-tests "Compile with unit tests." ON )
 
 #------------------------------------------------------------------------------
@@ -98,16 +116,12 @@ option( with-tests "Compile with unit tests." ON )
 #------------------------------------------------------------------------------
 if ( BUILD_SHARED_LIBS )
   set( libbitcoin-system_USE_STATIC_LIBS "OFF" )
-  set( Boost_USE_STATIC_LIBS "OFF" )
 else()
   set( libbitcoin-system_USE_STATIC_LIBS "ON" )
-  set( Boost_USE_STATIC_LIBS "ON" )
 endif()
 
 find_package( libbitcoin-system 4.0.0 REQUIRED )
 set( libbitcoin_system_VERSION ${libbitcoin-system_VERSION} )
-
-find_package( Boost 1.86.0 REQUIRED )
 
 #------------------------------------------------------------------------------
 # Architecture options.
@@ -116,73 +130,75 @@ find_package( Boost 1.86.0 REQUIRED )
 #------------------------------------------------------------------------------
 # Compiler options.
 #------------------------------------------------------------------------------
+if ( NOT MSVC )
 
-check_cxx_compiler_flag( "-Wall" HAS_FLAG_WALL )
-if ( !HAS_FLAG_WALL )
-    message( FATAL_ERROR "Compiler does not support '-Wall'." )
-endif()
-
-check_cxx_compiler_flag( "-Wextra" HAS_FLAG_WEXTRA )
-if ( !HAS_FLAG_WEXTRA )
-    message( FATAL_ERROR "Compiler does not support '-Wextra'." )
-endif()
-
-check_cxx_compiler_flag( "-Wno-reorder" HAS_FLAG_WNO-REORDER )
-if ( !HAS_FLAG_WNO-REORDER )
-    message( FATAL_ERROR "Compiler does not support '-Wno-reorder'." )
-endif()
-
-check_cxx_compiler_flag( "-Wno-missing-field-initializers" HAS_FLAG_WNO-MISSING-FIELD-INITIALIZERS )
-if ( !HAS_FLAG_WNO-MISSING-FIELD-INITIALIZERS )
-    message( FATAL_ERROR "Compiler does not support '-Wno-missing-field-initializers'." )
-endif()
-
-check_cxx_compiler_flag( "-Wno-missing-braces" HAS_FLAG_WNO-MISSING-BRACES )
-if ( !HAS_FLAG_WNO-MISSING-BRACES )
-    message( FATAL_ERROR "Compiler does not support '-Wno-missing-braces'." )
-endif()
-
-check_cxx_compiler_flag( "-Wno-comment" HAS_FLAG_WNO-COMMENT )
-if ( !HAS_FLAG_WNO-COMMENT )
-    message( FATAL_ERROR "Compiler does not support '-Wno-comment'." )
-endif()
-
-check_cxx_compiler_flag( "-Wno-deprecated-copy" HAS_FLAG_WNO-DEPRECATED-COPY )
-if ( !HAS_FLAG_WNO-DEPRECATED-COPY )
-    message( FATAL_ERROR "Compiler does not support '-Wno-deprecated-copy'." )
-endif()
-
-if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
-  check_cxx_compiler_flag( "-Wno-mismatched-tags" HAS_FLAG_WNO-MISMATCHED-TAGS )
-  if ( !HAS_FLAG_WNO-MISMATCHED-TAGS )
-      message( FATAL_ERROR "Compiler does not support '-Wno-mismatched-tags'." )
+  check_cxx_compiler_flag( "-Wall" HAS_FLAG_WALL )
+  if ( !HAS_FLAG_WALL )
+      message( FATAL_ERROR "Compiler does not support '-Wall'." )
   endif()
-endif()
 
-check_cxx_compiler_flag( "-fstack-protector-all" HAS_FLAG_FSTACK-PROTECTOR-ALL )
-if ( !HAS_FLAG_FSTACK-PROTECTOR-ALL )
-    message( FATAL_ERROR "Compiler does not support '-fstack-protector-all'." )
-endif()
+  check_cxx_compiler_flag( "-Wextra" HAS_FLAG_WEXTRA )
+  if ( !HAS_FLAG_WEXTRA )
+      message( FATAL_ERROR "Compiler does not support '-Wextra'." )
+  endif()
 
-check_cxx_compiler_flag( "-Wno-uninitialized" HAS_FLAG_WNO-UNINITIALIZED )
-if ( !HAS_FLAG_WNO-UNINITIALIZED )
-    message( FATAL_ERROR "Compiler does not support '-Wno-uninitialized'." )
-endif()
+  check_cxx_compiler_flag( "-Wno-reorder" HAS_FLAG_WNO-REORDER )
+  if ( !HAS_FLAG_WNO-REORDER )
+      message( FATAL_ERROR "Compiler does not support '-Wno-reorder'." )
+  endif()
 
-check_cxx_compiler_flag( "-Wno-ignored-attributes" HAS_FLAG_WNO-IGNORED-ATTRIBUTES )
-if ( !HAS_FLAG_WNO-IGNORED-ATTRIBUTES )
-    message( FATAL_ERROR "Compiler does not support '-Wno-ignored-attributes'." )
-endif()
+  check_cxx_compiler_flag( "-Wno-missing-field-initializers" HAS_FLAG_WNO-MISSING-FIELD-INITIALIZERS )
+  if ( !HAS_FLAG_WNO-MISSING-FIELD-INITIALIZERS )
+      message( FATAL_ERROR "Compiler does not support '-Wno-missing-field-initializers'." )
+  endif()
 
-check_cxx_compiler_flag( "-Wno-long-long" HAS_FLAG_WNO-LONG-LONG )
-if ( !HAS_FLAG_WNO-LONG-LONG )
-    message( FATAL_ERROR "Compiler does not support '-Wno-long-long'." )
-endif()
+  check_cxx_compiler_flag( "-Wno-missing-braces" HAS_FLAG_WNO-MISSING-BRACES )
+  if ( !HAS_FLAG_WNO-MISSING-BRACES )
+      message( FATAL_ERROR "Compiler does not support '-Wno-missing-braces'." )
+  endif()
 
-if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
-  check_cxx_compiler_flag( "-fno-var-tracking-assignments" HAS_FLAG_FNO-VAR-TRACKING-ASSIGNMENTS )
-  if ( !HAS_FLAG_FNO-VAR-TRACKING-ASSIGNMENTS )
-      message( FATAL_ERROR "Compiler does not support '-fno-var-tracking-assignments'." )
+  check_cxx_compiler_flag( "-Wno-comment" HAS_FLAG_WNO-COMMENT )
+  if ( !HAS_FLAG_WNO-COMMENT )
+      message( FATAL_ERROR "Compiler does not support '-Wno-comment'." )
+  endif()
+
+  check_cxx_compiler_flag( "-Wno-deprecated-copy" HAS_FLAG_WNO-DEPRECATED-COPY )
+  if ( !HAS_FLAG_WNO-DEPRECATED-COPY )
+      message( FATAL_ERROR "Compiler does not support '-Wno-deprecated-copy'." )
+  endif()
+
+  if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+    check_cxx_compiler_flag( "-Wno-mismatched-tags" HAS_FLAG_WNO-MISMATCHED-TAGS )
+    if ( !HAS_FLAG_WNO-MISMATCHED-TAGS )
+        message( FATAL_ERROR "Compiler does not support '-Wno-mismatched-tags'." )
+    endif()
+  endif()
+
+  check_cxx_compiler_flag( "-fstack-protector-all" HAS_FLAG_FSTACK-PROTECTOR-ALL )
+  if ( !HAS_FLAG_FSTACK-PROTECTOR-ALL )
+      message( FATAL_ERROR "Compiler does not support '-fstack-protector-all'." )
+  endif()
+
+  check_cxx_compiler_flag( "-Wno-uninitialized" HAS_FLAG_WNO-UNINITIALIZED )
+  if ( !HAS_FLAG_WNO-UNINITIALIZED )
+      message( FATAL_ERROR "Compiler does not support '-Wno-uninitialized'." )
+  endif()
+
+  check_cxx_compiler_flag( "-Wno-ignored-attributes" HAS_FLAG_WNO-IGNORED-ATTRIBUTES )
+  if ( !HAS_FLAG_WNO-IGNORED-ATTRIBUTES )
+      message( FATAL_ERROR "Compiler does not support '-Wno-ignored-attributes'." )
+  endif()
+
+  check_cxx_compiler_flag( "-Wno-long-long" HAS_FLAG_WNO-LONG-LONG )
+  if ( !HAS_FLAG_WNO-LONG-LONG )
+      message( FATAL_ERROR "Compiler does not support '-Wno-long-long'." )
+  endif()
+
+  if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+    check_cxx_compiler_flag( "-fno-var-tracking-assignments" HAS_FLAG_FNO-VAR-TRACKING-ASSIGNMENTS )
+    if ( !HAS_FLAG_FNO-VAR-TRACKING-ASSIGNMENTS )
+        message( FATAL_ERROR "Compiler does not support '-fno-var-tracking-assignments'." )
+    endif()
   endif()
 endif()
 
@@ -216,24 +232,28 @@ target_compile_features( libbitcoin-network
     cxx_std_20
 )
 
-target_compile_options( libbitcoin-network
-  PRIVATE
-    -Wall
-    -Wextra
-    $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder>
-    $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-field-initializers>
-    $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-braces>
-    $<$<COMPILE_LANGUAGE:CXX>:-Wno-comment>
-    $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-copy>
-    $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
-    $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
-    $<$<COMPILE_LANGUAGE:CXX>:-Wno-uninitialized>
-)
+if ( NOT MSVC )
+  target_compile_options( libbitcoin-network
+    PRIVATE
+      -Wall
+      -Wextra
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-field-initializers>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-braces>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-comment>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-copy>
+      $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
+      $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-uninitialized>
+  )
+endif()
 
-target_compile_definitions( libbitcoin-network
-  PUBLIC
-    $<$<BOOL:${with-ssl}>:WITH_SSL>
-)
+if ( MSVC )
+  target_compile_definitions( libbitcoin-network
+    PUBLIC
+      BCT_STATIC
+  )
+endif()
 
 file( GLOB_RECURSE libbitcoin_network_HEADERS CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.h"
@@ -241,29 +261,10 @@ file( GLOB_RECURSE libbitcoin_network_HEADERS CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.ipp"
 )
 
-file( GLOB_RECURSE libbitcoin_network_HEADERS_SSL CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.ipp"
-)
-
-if ( !with-ssl )
-  list( REMOVE_ITEM libbitcoin_network_HEADERS ${libbitcoin_network_HEADERS_SSL} )
-endif()
-
 file( GLOB_RECURSE libbitcoin_network_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.cpp"
 )
-
-file( GLOB_RECURSE libbitcoin_network_SOURCES_SSL CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../src/ssl/*.c"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../../src/ssl/*.cpp"
-)
-
-if ( !with-ssl )
-  list( REMOVE_ITEM libbitcoin_network_SOURCES ${libbitcoin_network_SOURCES_SSL} )
-endif()
 
 target_sources( libbitcoin-network
   PUBLIC
@@ -283,8 +284,6 @@ target_include_directories( libbitcoin-network
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
     $<INSTALL_INTERFACE:include>
-    $<$<BOOL:${with-ssl}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl>>
-    $<$<BOOL:${with-ssl}>:$<INSTALL_INTERFACE:include/bitcoin/network/ssl>>
 )
 
 target_link_libraries( libbitcoin-network
@@ -336,22 +335,24 @@ if ( with-tests )
       cxx_std_20
   )
 
-  target_compile_options( libbitcoin-network-test
-    PRIVATE
-      -Wall
-      -Wextra
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-field-initializers>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-braces>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-comment>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-copy>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-ignored-attributes>
-      $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-long-long>
-      $<$<CXX_COMPILER_ID:GNU>:-fno-var-tracking-assignments>
-      $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
-      $<$<COMPILE_LANGUAGE:CXX>:-Wno-uninitialized>
-  )
+  if ( NOT MSVC )
+    target_compile_options( libbitcoin-network-test
+      PRIVATE
+        -Wall
+        -Wextra
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-field-initializers>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-braces>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-comment>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-copy>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-ignored-attributes>
+        $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-long-long>
+        $<$<CXX_COMPILER_ID:GNU>:-fno-var-tracking-assignments>
+        $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-uninitialized>
+    )
+  endif()
 
   file( GLOB_RECURSE libbitcoin_network_test_HEADERS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.h"
@@ -381,7 +382,6 @@ if ( with-tests )
 
   target_link_libraries( libbitcoin-network-test
     PRIVATE
-      Boost::headers
       bitcoin::network
   )
 

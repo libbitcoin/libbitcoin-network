@@ -18,13 +18,13 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(timer_tests)
+BC_AUTO_TEST_SUITE(timer_tests)
 
-BOOST_AUTO_TEST_CASE(timer__execution__always__non_empty)
+BC_AUTO_TEST_CASE(timer__execution__always__non_empty)
 {
     const auto sleep = []() { std::this_thread::sleep_for(milliseconds(42)); };
     const auto result = timer<milliseconds, steady_clock>::execution(sleep);
-    BOOST_REQUIRE_GT(result, 0);
+    BC_REQUIRE_GT(result, 0);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -18,21 +18,21 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_version_tests)
+BC_AUTO_TEST_SUITE(p2p_version_tests)
 
 using namespace system;
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(version__properties__always__expected)
+BC_AUTO_TEST_CASE(version__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(version::command, "version");
+    BC_REQUIRE_EQUAL(version::command, "version");
     constexpr auto index = messages::peer::registry::index_of<version>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), version::command);
-    BOOST_REQUIRE_EQUAL(version::version_minimum, level::minimum_protocol);
-    BOOST_REQUIRE_EQUAL(version::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), version::command);
+    BC_REQUIRE_EQUAL(version::version_minimum, level::minimum_protocol);
+    BC_REQUIRE_EQUAL(version::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(version__size__default_minimum_version__expected)
+BC_AUTO_TEST_CASE(version__size__default_minimum_version__expected)
 {
     const auto expected = sizeof(uint32_t)
         + sizeof(uint64_t)
@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(version__size__default_minimum_version__expected)
         + sizeof(uint32_t)
         + zero;
 
-    BOOST_REQUIRE_EQUAL(version{}.size(level::minimum_protocol), expected);
+    BC_REQUIRE_EQUAL(version{}.size(level::minimum_protocol), expected);
 }
 
-BOOST_AUTO_TEST_CASE(version__size__default_bip37_version__expected)
+BC_AUTO_TEST_CASE(version__size__default_bip37_version__expected)
 {
     const auto expected = sizeof(uint32_t)
         + sizeof(uint64_t)
@@ -59,49 +59,49 @@ BOOST_AUTO_TEST_CASE(version__size__default_bip37_version__expected)
         + sizeof(uint32_t)
         + sizeof(uint8_t);
 
-    BOOST_REQUIRE_EQUAL(version{}.size(level::bip37), expected);
-    BOOST_REQUIRE_EQUAL(version{}.size(level::maximum_protocol), expected);
+    BC_REQUIRE_EQUAL(version{}.size(level::bip37), expected);
+    BC_REQUIRE_EQUAL(version{}.size(level::maximum_protocol), expected);
 }
 
 // relay
 
-BOOST_AUTO_TEST_CASE(version__deserialize__pre_bip37__relay_true)
+BC_AUTO_TEST_CASE(version__deserialize__pre_bip37__relay_true)
 {
     version instance{};
     instance.value = level::bip35;
     instance.relay = false;
     data_chunk data(instance.size(level::bip35));
-    BOOST_REQUIRE(instance.serialize(level::bip35, data));
+    BC_REQUIRE(instance.serialize(level::bip35, data));
 
     const auto message = version::deserialize(level::bip35, data);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE(message->relay);
+    BC_REQUIRE(message);
+    BC_REQUIRE(message->relay);
 }
 
-BOOST_AUTO_TEST_CASE(version__deserialize__bip37_relay_false__relay_false)
+BC_AUTO_TEST_CASE(version__deserialize__bip37_relay_false__relay_false)
 {
     version instance{};
     instance.value = level::bip37;
     instance.relay = false;
     data_chunk data(instance.size(level::bip37));
-    BOOST_REQUIRE(instance.serialize(level::bip37, data));
+    BC_REQUIRE(instance.serialize(level::bip37, data));
 
     const auto message = version::deserialize(level::bip37, data);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE(!message->relay);
+    BC_REQUIRE(message);
+    BC_REQUIRE(!message->relay);
 }
 
-BOOST_AUTO_TEST_CASE(version__deserialize__bip37_relay_true__relay_true)
+BC_AUTO_TEST_CASE(version__deserialize__bip37_relay_true__relay_true)
 {
     version instance{};
     instance.value = level::bip37;
     instance.relay = true;
     data_chunk data(instance.size(level::bip37));
-    BOOST_REQUIRE(instance.serialize(level::bip37, data));
+    BC_REQUIRE(instance.serialize(level::bip37, data));
 
     const auto message = version::deserialize(level::bip37, data);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE(message->relay);
+    BC_REQUIRE(message);
+    BC_REQUIRE(message->relay);
 }
 
 // wire examples
@@ -122,46 +122,46 @@ static const auto no_relay_satoshi = base16_chunk("7e1101000900000000000000ec429
 // "/therealbitcoin.org:0.9.99.99/" (99999) no relay
 static const auto no_relay_the_real_bitcoin = base16_chunk("9f86010001000000000000002336a15800000000010000000000000000000000000000000000ffff1813e52ebb81010000000000000000000000000000000000ffff6f6f6f6f208db1f33b262e6acb331e2f7468657265616c626974636f696e2e6f72673a302e392e39392e39392fb9e80600");
 
-BOOST_AUTO_TEST_CASE(version__factory__no_relay_anarchist_prime_1__valid)
+BC_AUTO_TEST_CASE(version__factory__no_relay_anarchist_prime_1__valid)
 {
     read::bytes::copy source(no_relay_anarchist_prime_1);
     const auto instance = version::deserialize(version::version_minimum, source);
-    BOOST_REQUIRE(source);
+    BC_REQUIRE(source);
 }
 
-BOOST_AUTO_TEST_CASE(version__factory__no_relay_anarchist_prime_2__valid)
+BC_AUTO_TEST_CASE(version__factory__no_relay_anarchist_prime_2__valid)
 {
     read::bytes::copy source(no_relay_anarchist_prime_2);
     const auto instance = version::deserialize(version::version_minimum, source);
-    BOOST_REQUIRE(source);
+    BC_REQUIRE(source);
 }
 
-BOOST_AUTO_TEST_CASE(version__factory__no_relay_falcon_1__valid)
+BC_AUTO_TEST_CASE(version__factory__no_relay_falcon_1__valid)
 {
     read::bytes::copy source(no_relay_falcon_1);
     const auto instance = version::deserialize(version::version_minimum, source);
-    BOOST_REQUIRE(source);
+    BC_REQUIRE(source);
 }
 
-BOOST_AUTO_TEST_CASE(version__factory__no_relay_falcon_2__valid)
+BC_AUTO_TEST_CASE(version__factory__no_relay_falcon_2__valid)
 {
     read::bytes::copy source(no_relay_falcon_2);
     const auto instance = version::deserialize(version::version_minimum, source);
-    BOOST_REQUIRE(source);
+    BC_REQUIRE(source);
 }
 
-BOOST_AUTO_TEST_CASE(version__factory__no_relay_satoshi__valid)
+BC_AUTO_TEST_CASE(version__factory__no_relay_satoshi__valid)
 {
     read::bytes::copy source(no_relay_satoshi);
     const auto instance = version::deserialize(version::version_minimum, source);
-    BOOST_REQUIRE(source);
+    BC_REQUIRE(source);
 }
 
-BOOST_AUTO_TEST_CASE(version__factory__therealbitcoin__valid)
+BC_AUTO_TEST_CASE(version__factory__therealbitcoin__valid)
 {
     read::bytes::copy source(no_relay_the_real_bitcoin);
     const auto instance = version::deserialize(version::version_minimum, source);
-    BOOST_REQUIRE(source);
+    BC_REQUIRE(source);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

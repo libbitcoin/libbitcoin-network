@@ -19,7 +19,7 @@
 #include <future>
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(connector_socks_tests)
+BC_AUTO_TEST_SUITE(connector_socks_tests)
 
 #define SOCKS_PROXY_ENDPOINT "127.0.0.1:65011"
 #define SOCKS_TARGET_ENDPOINT "127.0.0.1:65012"
@@ -56,16 +56,16 @@ struct socks_setup_fixture
         log.stop();
         socks_settings.socks = { SOCKS_PROXY_ENDPOINT };
         const config::authority listen{ SOCKS_PROXY_ENDPOINT };
-        acceptor.open(boost::asio::ip::tcp::v4());
-        acceptor.set_option(boost::asio::socket_base::reuse_address(true));
-        acceptor.bind(listen.to_endpoint());
-        acceptor.listen();
+        REQUIRE_SUCCESS(acceptor, open, io::tcp::v4());
+        REQUIRE_SUCCESS(acceptor, set_option, io::reuse_address{ true });
+        REQUIRE_SUCCESS(acceptor, bind, listen.to_endpoint());
+        REQUIRE_SUCCESS(acceptor, listen);
     }
 
     ~socks_setup_fixture()
     {
         if (instance)
-            boost::asio::post(strand, [this]() NOEXCEPT { instance->stop(); });
+            io::post(strand, [this]() NOEXCEPT { instance->stop(); });
 
         proxy.close();
         acceptor.close();
@@ -88,7 +88,7 @@ struct socks_setup_fixture
     // Start a connect to the target, returns the future connect result.
     std::future<code> connect(const config::endpoint& target)
     {
-        boost::asio::post(strand, [this, target]() NOEXCEPT
+        io::post(strand, [this, target]() NOEXCEPT
         {
             instance->connect(target,
                 [this](const code& ec, const socket::ptr& socket) NOEXCEPT
@@ -106,7 +106,7 @@ struct socks_setup_fixture
     // Start a connect to the address, returns the future connect result.
     std::future<code> connect(const config::address& target)
     {
-        boost::asio::post(strand, [this, target]() NOEXCEPT
+        io::post(strand, [this, target]() NOEXCEPT
         {
             instance->connect(target,
                 [this](const code& ec, const socket::ptr& socket) NOEXCEPT
@@ -124,19 +124,19 @@ struct socks_setup_fixture
     // Accept the connector's connection to the proxy.
     void accept()
     {
-        acceptor.accept(proxy);
+        REQUIRE_SUCCESS(acceptor, accept, proxy);
     }
 
     system::data_chunk read(size_t size)
     {
         system::data_chunk buffer(size);
-        boost::asio::read(proxy, boost::asio::buffer(buffer));
+        test::read(proxy, io::buffer(buffer));
         return buffer;
     }
 
     void write(const system::data_chunk& data)
     {
-        boost::asio::write(proxy, boost::asio::buffer(data));
+        test::write(proxy, io::buffer(data));
     }
 
     // Read the greeting and answer with the given method.
@@ -150,22 +150,22 @@ struct socks_setup_fixture
     logger log{};
     threadpool pool;
     std::atomic_bool suspended{ false };
-    asio::strand strand;
+    io::strand strand;
     settings::socks5 socks_settings{};
     connector_socks::ptr instance{};
-    boost::asio::io_context context{};
-    boost::asio::ip::tcp::acceptor acceptor;
-    boost::asio::ip::tcp::socket proxy;
+    io::context context{};
+    io::acceptor acceptor;
+    io::socket proxy;
     std::promise<code> connected{};
 };
 
-BOOST_AUTO_TEST_CASE(connector_socks__construct__unproxied__expected)
+BC_AUTO_TEST_CASE(connector_socks__construct__unproxied__expected)
 {
     logger log{};
     log.stop();
     threadpool pool(1);
     std::atomic_bool suspended{ false };
-    asio::strand strand(pool.service().get_executor());
+    io::strand strand(pool.service().get_executor());
     const settings::socks5 socks{};
     connector::parameters params
     {
@@ -173,33 +173,33 @@ BOOST_AUTO_TEST_CASE(connector_socks__construct__unproxied__expected)
         .maximum_request = 42 
     };
     auto instance = std::make_shared<connector_socks>(log, strand, pool.service(), suspended, std::move(params), socks);
-    BOOST_REQUIRE(!socks.proxied());
+    BC_REQUIRE(!socks.proxied());
 
-    boost::asio::post(strand, [&]() NOEXCEPT { instance->stop(); });
+    io::post(strand, [&]() NOEXCEPT { instance->stop(); });
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__clear_greeting_and_ipv4_reply__success, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__clear_greeting_and_ipv4_reply__success, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
     accept();
 
     const auto greeting = greet(socks_method_clear);
-    BOOST_REQUIRE_EQUAL(greeting, system::data_chunk({ socks_version, 0x01, socks_method_clear }));
+    BC_REQUIRE_EQUAL(greeting, system::data_chunk({ socks_version, 0x01, socks_method_clear }));
 
     const auto request = read(4);
-    BOOST_REQUIRE_EQUAL(request, system::data_chunk({ socks_version, 0x01, socks_reserved, socks_address_fqdn }));
+    BC_REQUIRE_EQUAL(request, system::data_chunk({ socks_version, 0x01, socks_reserved, socks_address_fqdn }));
 
     const auto length = read(1);
     read(length.front() + 2u);
     write({ socks_version, 0x00, socks_reserved, socks_address_ipv4, 0, 0, 0, 0, 0, 0 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::success);
+    BC_REQUIRE_EQUAL(result.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__ipv6_reply__success, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__ipv6_reply__success, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -214,10 +214,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__ipv6_reply__success, socks_set
     reply.resize(reply.size() + 16u + 2u);
     write(reply);
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::success);
+    BC_REQUIRE_EQUAL(result.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__fqdn_reply__success, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__fqdn_reply__success, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -230,10 +230,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__fqdn_reply__success, socks_set
 
     write({ socks_version, 0x00, socks_reserved, socks_address_fqdn, 0x02, 'h', 'i', 0, 0 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::success);
+    BC_REQUIRE_EQUAL(result.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__unsupported_reply_address__socks_response_invalid, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__unsupported_reply_address__socks_response_invalid, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -245,10 +245,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__unsupported_reply_address__soc
     read(length.front() + 2u);
     write({ socks_version, 0x00, socks_reserved, 0x42 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_response_invalid);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_response_invalid);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__invalid_reply_version__socks_response_invalid, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__invalid_reply_version__socks_response_invalid, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -260,10 +260,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__invalid_reply_version__socks_r
     read(length.front() + 2u);
     write({ 0x42, 0x00, socks_reserved, socks_address_ipv4 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_response_invalid);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_response_invalid);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_failure__socks_failure, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__reply_failure__socks_failure, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -275,10 +275,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_failure__socks_failure, 
     read(length.front() + 2u);
     write({ socks_version, 0x01, socks_reserved, socks_address_ipv4 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_failure);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_failure);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_unassigned__socks_unassigned_failure, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__reply_unassigned__socks_unassigned_failure, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -290,10 +290,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_unassigned__socks_unassi
     read(length.front() + 2u);
     write({ socks_version, 0x42, socks_reserved, socks_address_ipv4 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_unassigned_failure);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_unassigned_failure);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__unoffered_method__socks_method, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__unoffered_method__socks_method, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -302,10 +302,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__unoffered_method__socks_method
     read(3);
     write({ socks_version, socks_method_basic });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_method);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_method);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authenticated__success, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__authenticated__success, socks_setup_fixture)
 {
     socks_settings.username = "user";
     socks_settings.password = "pass";
@@ -314,10 +314,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authenticated__success, socks_
     accept();
 
     const auto greeting = greet(socks_method_basic);
-    BOOST_REQUIRE_EQUAL(greeting, system::data_chunk({ socks_version, 0x01, socks_method_basic }));
+    BC_REQUIRE_EQUAL(greeting, system::data_chunk({ socks_version, 0x01, socks_method_basic }));
 
     const auto authenticator = read(11);
-    BOOST_REQUIRE_EQUAL(authenticator, system::data_chunk({ socks_basic_version, 0x04, 'u', 's', 'e', 'r', 0x04, 'p', 'a', 's', 's' }));
+    BC_REQUIRE_EQUAL(authenticator, system::data_chunk({ socks_basic_version, 0x04, 'u', 's', 'e', 'r', 0x04, 'p', 'a', 's', 's' }));
     write({ socks_basic_version, 0x00 });
 
     read(4);
@@ -325,10 +325,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authenticated__success, socks_
     read(length.front() + 2u);
     write({ socks_version, 0x00, socks_reserved, socks_address_ipv4, 0, 0, 0, 0, 0, 0 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::success);
+    BC_REQUIRE_EQUAL(result.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authentication_rejected__socks_authentication, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__authentication_rejected__socks_authentication, socks_setup_fixture)
 {
     socks_settings.username = "user";
     socks_settings.password = "pass";
@@ -340,10 +340,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authentication_rejected__socks
     read(11);
     write({ socks_basic_version, 0x01 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_authentication);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_authentication);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__ipv4_address__ipv4_request, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__ipv4_address__ipv4_request, socks_setup_fixture)
 {
     create();
     auto result = connect(config::address{ "1.2.3.4:65012" });
@@ -351,16 +351,16 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__ipv4_address__ipv4_request, so
 
     greet(socks_method_clear);
     const auto request = read(4);
-    BOOST_REQUIRE_EQUAL(request, system::data_chunk({ socks_version, 0x01, socks_reserved, socks_address_ipv4 }));
+    BC_REQUIRE_EQUAL(request, system::data_chunk({ socks_version, 0x01, socks_reserved, socks_address_ipv4 }));
 
     const auto host = read(4u + 2u);
-    BOOST_REQUIRE_EQUAL(host, system::data_chunk({ 0x01, 0x02, 0x03, 0x04, 0xfd, 0xf4 }));
+    BC_REQUIRE_EQUAL(host, system::data_chunk({ 0x01, 0x02, 0x03, 0x04, 0xfd, 0xf4 }));
     write({ socks_version, 0x00, socks_reserved, socks_address_ipv4, 0, 0, 0, 0, 0, 0 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::success);
+    BC_REQUIRE_EQUAL(result.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__ipv6_address__ipv6_request, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__ipv6_address__ipv6_request, socks_setup_fixture)
 {
     create();
     auto result = connect(config::address{ "[2020:db8::1]:65012" });
@@ -368,32 +368,32 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__ipv6_address__ipv6_request, so
 
     greet(socks_method_clear);
     const auto request = read(4);
-    BOOST_REQUIRE_EQUAL(request, system::data_chunk({ socks_version, 0x01, socks_reserved, socks_address_ipv6 }));
+    BC_REQUIRE_EQUAL(request, system::data_chunk({ socks_version, 0x01, socks_reserved, socks_address_ipv6 }));
 
     read(16u + 2u);
     write({ socks_version, 0x00, socks_reserved, socks_address_ipv4, 0, 0, 0, 0, 0, 0 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::success);
+    BC_REQUIRE_EQUAL(result.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__unproxied__direct_success, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__unproxied__direct_success, socks_setup_fixture)
 {
     socks_settings.socks = {};
     create();
     auto result = connect(config::endpoint{ SOCKS_PROXY_ENDPOINT });
     accept();
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::success);
+    BC_REQUIRE_EQUAL(result.get(), error::success);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__proxy_refused__connection_refused, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__proxy_refused__connection_refused, socks_setup_fixture)
 {
     acceptor.close();
     create();
-    BOOST_REQUIRE_EQUAL(connect(config::endpoint{ SOCKS_TARGET_ENDPOINT }).get(), error::connection_refused);
+    BC_REQUIRE_EQUAL(connect(config::endpoint{ SOCKS_TARGET_ENDPOINT }).get(), error::connection_refused);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__greeting_closed__peer_disconnect, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__greeting_closed__peer_disconnect, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -402,10 +402,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__greeting_closed__peer_disconne
     read(3);
     proxy.close();
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+    BC_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__username_overflow__socks_username, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__username_overflow__socks_username, socks_setup_fixture)
 {
     socks_settings.username = std::string(256, 'u');
     socks_settings.password = "pass";
@@ -415,10 +415,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__username_overflow__socks_usern
 
     greet(socks_method_basic);
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_username);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_username);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__password_overflow__socks_password, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__password_overflow__socks_password, socks_setup_fixture)
 {
     socks_settings.username = "user";
     socks_settings.password = std::string(256, 'p');
@@ -428,10 +428,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__password_overflow__socks_passw
 
     greet(socks_method_basic);
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_password);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_password);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__maximum_credentials__expected_authenticator, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__maximum_credentials__expected_authenticator, socks_setup_fixture)
 {
     socks_settings.username = std::string(255, 'u');
     socks_settings.password = std::string(255, 'p');
@@ -441,14 +441,14 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__maximum_credentials__expected_
 
     greet(socks_method_basic);
     const auto authenticator = read(1u + 1u + 255u + 1u + 255u);
-    BOOST_REQUIRE_EQUAL(authenticator.at(1), 255u);
-    BOOST_REQUIRE_EQUAL(authenticator.at(257), 255u);
+    BC_REQUIRE_EQUAL(authenticator.at(1), 255u);
+    BC_REQUIRE_EQUAL(authenticator.at(257), 255u);
     write({ socks_basic_version, 0x01 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_authentication);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_authentication);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authentication_closed__peer_disconnect, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__authentication_closed__peer_disconnect, socks_setup_fixture)
 {
     socks_settings.username = "user";
     socks_settings.password = "pass";
@@ -460,10 +460,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__authentication_closed__peer_di
     read(11);
     proxy.close();
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+    BC_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__host_name_overflow__socks_host_name, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__host_name_overflow__socks_host_name, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ std::string(255, 'h'), 42 });
@@ -471,10 +471,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__host_name_overflow__socks_host
 
     greet(socks_method_clear);
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_host_name);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_host_name);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__maximum_host_name__expected_request, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__maximum_host_name__expected_request, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ std::string(254, 'h'), 42 });
@@ -482,16 +482,16 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__maximum_host_name__expected_re
 
     greet(socks_method_clear);
     const auto request = read(4u + 1u + 254u + 2u);
-    BOOST_REQUIRE_EQUAL(request.at(3), socks_address_fqdn);
-    BOOST_REQUIRE_EQUAL(request.at(4), 254u);
-    BOOST_REQUIRE_EQUAL(request.at(259), 0x00);
-    BOOST_REQUIRE_EQUAL(request.at(260), 42u);
+    BC_REQUIRE_EQUAL(request.at(3), socks_address_fqdn);
+    BC_REQUIRE_EQUAL(request.at(4), 254u);
+    BC_REQUIRE_EQUAL(request.at(259), 0x00);
+    BC_REQUIRE_EQUAL(request.at(260), 42u);
     write({ socks_version, 0x05, socks_reserved, socks_address_ipv4 });
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::socks_connection_refused);
+    BC_REQUIRE_EQUAL(result.get(), error::socks_connection_refused);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__request_closed__peer_disconnect, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__request_closed__peer_disconnect, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -503,10 +503,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__request_closed__peer_disconnec
     read(length.front() + 2u);
     proxy.close();
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+    BC_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_length_closed__peer_disconnect, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__reply_length_closed__peer_disconnect, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -519,10 +519,10 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_length_closed__peer_disc
     write({ socks_version, 0x00, socks_reserved, socks_address_fqdn });
     proxy.close();
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+    BC_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
 }
 
-BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_address_truncated__peer_disconnect, socks_setup_fixture)
+BC_FIXTURE_TEST_CASE(connector_socks__connect__reply_address_truncated__peer_disconnect, socks_setup_fixture)
 {
     create();
     auto result = connect(config::endpoint{ SOCKS_TARGET_ENDPOINT });
@@ -535,22 +535,22 @@ BOOST_FIXTURE_TEST_CASE(connector_socks__connect__reply_address_truncated__peer_
     write({ socks_version, 0x00, socks_reserved, socks_address_ipv4, 0, 0 });
     proxy.close();
 
-    BOOST_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
+    BC_REQUIRE_EQUAL(result.get(), error::peer_disconnect);
 }
 
-BOOST_AUTO_TEST_CASE(connector_socks__socks_response__reply_codes__expected)
+BC_AUTO_TEST_CASE(connector_socks__socks_response__reply_codes__expected)
 {
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x00), error::success);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x01), error::socks_failure);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x02), error::socks_disallowed);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x03), error::socks_net_unreachable);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x04), error::socks_host_unreachable);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x05), error::socks_connection_refused);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x06), error::socks_connection_expired);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x07), error::socks_unsupported_command);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x08), error::socks_unsupported_address);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0x09), error::socks_unassigned_failure);
-    BOOST_REQUIRE_EQUAL(accessor::socks_response(0xff), error::socks_unassigned_failure);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x00), error::success);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x01), error::socks_failure);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x02), error::socks_disallowed);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x03), error::socks_net_unreachable);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x04), error::socks_host_unreachable);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x05), error::socks_connection_refused);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x06), error::socks_connection_expired);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x07), error::socks_unsupported_command);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x08), error::socks_unsupported_address);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0x09), error::socks_unassigned_failure);
+    BC_REQUIRE_EQUAL(accessor::socks_response(0xff), error::socks_unassigned_failure);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

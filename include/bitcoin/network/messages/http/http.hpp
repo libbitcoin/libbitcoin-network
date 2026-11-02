@@ -19,12 +19,20 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_HTTP_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_HTTP_HPP
 
+#include <bitcoin/network/messages/http/bodies.hpp>
+#include <bitcoin/network/messages/http/enums/field.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/http/enums/media_type.hpp>
 #include <bitcoin/network/messages/http/enums/status.hpp>
 #include <bitcoin/network/messages/http/enums/target.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
-#include <bitcoin/network/messages/http/file_body.hpp>
+#include <bitcoin/network/messages/http/file.hpp>
+#include <bitcoin/network/messages/http/flat_buffer.hpp>
+#include <bitcoin/network/messages/http/header.hpp>
+#include <bitcoin/network/messages/http/message.hpp>
+#include <bitcoin/network/messages/http/operations.hpp>
+#include <bitcoin/network/messages/http/parser.hpp>
+#include <bitcoin/network/messages/http/serializer.hpp>
 
 #endif

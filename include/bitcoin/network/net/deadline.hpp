@@ -27,9 +27,9 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe, non-virtual.
-/// Class wrapper for boost::asio::basic_waitable_timer (restartable).
-/// This simplifies invocation, eliminates boost-specific error handling and
-/// makes timer firing and cancellation conditions safe for shared objects.
+/// Class wrapper for io::steady_timer (restartable).
+/// This simplifies invocation and makes timer firing and cancellation
+/// conditions safe for shared objects.
 class BCT_API deadline final
   : public std::enable_shared_from_this<deadline>, protected tracker<deadline>
 {
@@ -40,7 +40,7 @@ public:
     typedef std::shared_ptr<deadline> ptr;
     
     /// Timer notification handler is posted to the service.
-    deadline(const logger& log, asio::strand& strand,
+    deadline(const logger& log, io::strand& strand,
         const duration& timeout=seconds(0)) NOEXCEPT;
 
     /// Assert timer stopped.
@@ -64,14 +64,14 @@ public:
     const duration& timeout() const NOEXCEPT;
 
 private:
-    void handle_timer(const boost_code& ec,
+    void handle_timer(const code& ec,
         const result_handler& handle) NOEXCEPT;
 
     // This is thread safe.
     const duration duration_;
 
     // This is not thread safe.
-    asio::steady_timer timer_;
+    io::steady_timer timer_;
 };
 
 } // namespace network

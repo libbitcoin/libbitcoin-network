@@ -43,7 +43,7 @@ struct peer_setup_fixture
     void send(const Message& message, uint32_t version)
     {
         system::data_chunk payload(message.size(version));
-        BOOST_REQUIRE(message.serialize(version, payload));
+        BC_REQUIRE(message.serialize(version, payload));
         send(Message::command, payload);
     }
 
@@ -66,8 +66,8 @@ protected:
     network::net net_;
 
 private:
-    boost::asio::io_context io_{};
-    boost::asio::ip::tcp::socket socket_{ io_ };
+    io::context io_{};
+    io::socket socket_{ io_ };
 };
 
 #define PEER_LISTEN_ENDPOINT "127.0.0.1:65031"
@@ -105,7 +105,7 @@ public:
     void send(const Message& message, uint32_t version)
     {
         system::data_chunk payload(message.size(version));
-        BOOST_REQUIRE(message.serialize(version, payload));
+        BC_REQUIRE(message.serialize(version, payload));
         send(Message::command, payload);
     }
 
@@ -140,9 +140,9 @@ public:
 
 private:
     const uint32_t identifier_;
-    boost::asio::io_context io_{};
-    boost::asio::ip::tcp::acceptor acceptor_{ io_ };
-    boost::asio::ip::tcp::socket socket_{ io_ };
+    io::context io_{};
+    io::acceptor acceptor_{ io_ };
+    io::socket socket_{ io_ };
 };
 
 // Runs a net instance (created upon start, so settings_ may be modified until
@@ -242,7 +242,7 @@ struct peer_net_setup_fixture
             promise.set_value(ec);
         });
 
-        BOOST_REQUIRE(!promise.get_future().get());
+        BC_REQUIRE(!promise.get_future().get());
     }
 
     /// Write the address pool file (loaded upon start).

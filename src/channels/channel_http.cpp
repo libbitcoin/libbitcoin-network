@@ -247,6 +247,8 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
         CASE_REQUEST_TO_MODEL(trace, request, model);
         CASE_REQUEST_TO_MODEL(options, request, model);
         CASE_REQUEST_TO_MODEL(connect, request, model);
+        CASE_REQUEST_TO_MODEL(websocket, request, model);
+        CASE_REQUEST_TO_MODEL(stream, request, model);
 
         default:
         CASE_REQUEST_TO_MODEL(unknown, request, model);
@@ -293,11 +295,7 @@ request_ptr channel_http::create_request() const NOEXCEPT
     out->body() = default_body();
 
     if (websocket())
-    {
-        // out->method() will return verb::unknown (mapped in dispatch).
-        // socket will not produce verb::unknown for http requests (blocked).
-        out->method_string("websocket");
-    }
+        out->method(verb::websocket);
 
     return out;
 }
@@ -371,7 +369,7 @@ void channel_http::set_authorized(const request& request) NOEXCEPT
     BC_ASSERT(stranded());
 
     if (!authorized_)
-        set_authorized(sha256_hash(request[field::authorization]));
+        set_authorized(sha256_hash(std::string{ request[field::authorization] }));
 }
 
 bool channel_http::permitted(const std::string& method) const NOEXCEPT
@@ -459,8 +457,15 @@ std::string channel_http::log_message(const request& request,
             std::string(request.target());
     }
 
+    if (downgraded())
+    {
+        const std::string scheme = secure() ? "tls" : "tcp";
+        const std::string size = serialize(bytes);
+        return scheme + " (" + size + ") [" + endpoint().to_string() + "]";
+    }
+
     const std::string scheme = secure() ? "https" : "http";
-    const std::string method = request.method_string();
+    const std::string method{ request.method_string() };
     const std::string keep = request.keep_alive() ? "keep" : "drop";
     const std::string size = request.chunked() ? "c" : serialize(bytes);
     const std::string accept = split(request[field::accept], ",").front();

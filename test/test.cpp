@@ -109,7 +109,7 @@ network::settings network_settings() NOEXCEPT
 
     out.inbound.connections = 0;
     out.inbound.binds.clear();
-    out.inbound.binds.emplace_back(asio::address{}, 8333_u16);
+    out.inbound.binds.emplace_back(system::ip::address{}, 8333_u16);
     return out;
 }
 

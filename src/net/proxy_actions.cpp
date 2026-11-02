@@ -94,19 +94,19 @@ void proxy::read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
     socket_->ws_read(out, counted(std::move(handler)));
 }
 
-void proxy::write(const asio::const_buffer& in, bool binary,
+void proxy::write(const io::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
     writer call = std::bind(&proxy::do_ws_write,
         shared_from_this(), in, binary);
 
-    boost::asio::dispatch(strand(),
+    io::dispatch(strand(),
         std::bind(&proxy::do_write, shared_from_this(),
             pending{ in.size(), std::move(call), std::move(handler) }, true));
 }
 
 // private
-void proxy::do_ws_write(const asio::const_buffer& payload,
+void proxy::do_ws_write(const io::const_buffer& payload,
     bool binary) NOEXCEPT
 {
     socket_->ws_write({ payload.data(), payload.size() }, binary,
@@ -117,26 +117,26 @@ void proxy::do_ws_write(const asio::const_buffer& payload,
 //  TCP (generic, fixed size).
 // ----------------------------------------------------------------------------
 
-void proxy::read(const asio::mutable_buffer& out,
+void proxy::read(const io::mutable_buffer& out,
     count_handler&& handler) NOEXCEPT
 {
     do_reading();
     socket_->tcp_read(out, counted(std::move(handler)));
 }
 
-void proxy::write(const asio::const_buffer& in,
+void proxy::write(const io::const_buffer& in,
     count_handler&& handler) NOEXCEPT
 {
     writer call = std::bind(&proxy::do_tcp_write,
         shared_from_this(), in);
 
-    boost::asio::dispatch(strand(),
+    io::dispatch(strand(),
         std::bind(&proxy::do_write, shared_from_this(),
             pending{ in.size(), std::move(call), std::move(handler) }, true));
 }
 
 // private
-void proxy::do_tcp_write(const asio::const_buffer& payload) NOEXCEPT
+void proxy::do_tcp_write(const io::const_buffer& payload) NOEXCEPT
 {
     socket_->tcp_write({ payload.data(), payload.size() },
         metered(std::bind(&proxy::handle_write,
@@ -175,7 +175,7 @@ void proxy::write(frame&& message, count_handler&& handler,
     writer call = std::bind(&proxy::do_peer_write,
         shared_from_this(), out);
 
-    boost::asio::dispatch(strand(),
+    io::dispatch(strand(),
         std::bind(&proxy::do_write, shared_from_this(),
             pending{ cost, std::move(call), std::move(handler) }, bounded));
 }
@@ -392,7 +392,7 @@ void proxy::write(rpc::response&& response, count_handler&& handler) NOEXCEPT
 {
     // Pointer ships moveable message through the send queue.
     const auto out = move_shared(std::move(response));
-    boost::asio::dispatch(strand(),
+    io::dispatch(strand(),
         std::bind(&proxy::do_response_queue, shared_from_this(), out,
             std::move(handler)));
 }
@@ -430,7 +430,7 @@ void proxy::notify(rpc::request&& notification, count_handler&& handler) NOEXCEP
     writer call = std::bind(&proxy::do_notification_write,
         shared_from_this(), out);
 
-    boost::asio::dispatch(strand(),
+    io::dispatch(strand(),
         std::bind(&proxy::do_defer_write, shared_from_this(),
             pending{ cost, std::move(call), std::move(handler) }));
 }
@@ -551,15 +551,14 @@ void proxy::do_downgrade_read(const ref<http::request>& request,
 {
     BC_ASSERT(stranded());
 
-    // A downgraded message carries no request line, so synthesize an unknown
-    // method for dispatch, as does the websocket upgrade.
+    // A downgraded message carries no request line, so tag it for dispatch.
     auto& in = request.get();
-    in.method_string("stream");
+    in.method(http::verb::stream);
     if (!in.body().contains<rpc::request>())
         in.body() = rpc::request{};
 
     // Read as json-rpc, which applies batch normalization.
-    do_rpc_request_read(std::ref(std::get<rpc::request>(in.body().value())),
+    do_rpc_request_read(std::ref(in.body().get<rpc::request>()),
         buffer, handler);
 }
 
@@ -675,7 +674,7 @@ void proxy::handle_http_element(size_t bytes,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    auto& value = std::get<rpc::request>(parser_->get().body().value());
+    auto& value = parser_->get().body().get<rpc::request>();
 
     if (batch_open(value))
         batched_ = true;
@@ -745,14 +744,14 @@ void proxy::write(http::response&& response, count_handler&& handler,
         auto& body = response.body();
         if (body.contains<rpc::response>())
         {
-            write(std::move(std::get<rpc::response>(body.value())),
+            write(std::move(body.get<rpc::response>()),
                 std::move(handler));
             return;
         }
 
         if (body.contains<rpc::request>())
         {
-            notify(std::move(std::get<rpc::request>(body.value())),
+            notify(std::move(body.get<rpc::request>()),
                 std::move(handler));
             return;
         }
@@ -763,7 +762,7 @@ void proxy::write(http::response&& response, count_handler&& handler,
 
     // Pointer ships moveable message through the send queue.
     const auto out = move_shared(std::move(response));
-    boost::asio::dispatch(strand(),
+    io::dispatch(strand(),
         std::bind(&proxy::do_http_queue, shared_from_this(), out,
             std::move(handler), bounded));
 }
@@ -784,7 +783,7 @@ void proxy::do_http_queue(const http::response_ptr& response,
             return;
         }
 
-        auto& part = std::get<rpc::response>(body.value());
+        auto& part = body.get<rpc::response>();
         part.batch = parted_;
         part.changed = !parted_;
         parted_ = true;
@@ -826,7 +825,7 @@ void proxy::do_http_write(const http::response_ptr& response) NOEXCEPT
     auto& body = response->body();
     if (!socket_->websocket() && body.contains<rpc::response>())
     {
-        auto& part = std::get<rpc::response>(body.value());
+        auto& part = body.get<rpc::response>();
         if (part.batch)
         {
             socket_->rpc_write_chunk(std::move(part),

@@ -26,10 +26,8 @@
 namespace libbitcoin {
 namespace network {
 
-// TODO: investigate boost::threadpool.
-
 /// Not thread safe, non-virtual.
-/// A collection of threads that share an asio I/O context (service).
+/// A collection of threads that share an io context (service).
 class BCT_API threadpool final
 {
 public:
@@ -51,19 +49,16 @@ public:
     /// Returns false if called from within threadpool (would deadlock).
     bool join() NOEXCEPT;
 
-    /// Non-const underlying boost::io_service object (thread safe).
-    asio::context& service() NOEXCEPT;
+    /// The io context of the threads (thread safe).
+    io::context& service() NOEXCEPT;
 
 private:
-    using work_guard = boost::asio::executor_work_guard<asio::executor_type>;
-    static inline work_guard keep_alive(asio::context& service) NOEXCEPT;
-
     // This is thread safe.
-    asio::context service_{};
+    io::context service_{};
 
     // These are not thread safe.
     std_vector<std::thread> threads_{};
-    work_guard work_;
+    io::work_guard work_;
 };
 
 } // namespace network

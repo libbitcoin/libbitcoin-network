@@ -20,306 +20,309 @@
 
 using namespace config;
 using namespace system::config;
-using namespace boost::program_options;
+using namespace system::ip;
 
-BOOST_AUTO_TEST_SUITE(utilities_tests)
+BC_AUTO_TEST_SUITE(utilities_tests)
+
+static system::ip::address make_address(const std::string_view& text)
+{
+    system::ip::address out{};
+    BC_REQUIRE(system::ip::address::from_string(out, text));
+    return out;
+}
 
 // is_member
 
-BOOST_AUTO_TEST_CASE(utilities__is_member__defaults_zero__false)
+BC_AUTO_TEST_CASE(utilities__is_member__defaults_zero__false)
 {
-    BOOST_REQUIRE(!is_member(asio::address{}, asio::address{}, 0));
+    BC_REQUIRE(!is_member(system::ip::address{}, system::ip::address{}, 0));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__is_member__defaults_nonzero__false)
+BC_AUTO_TEST_CASE(utilities__is_member__defaults_nonzero__false)
 {
-    BOOST_REQUIRE(!is_member(asio::address{}, asio::address{}, 1));
+    BC_REQUIRE(!is_member(system::ip::address{}, system::ip::address{}, 1));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__is_member__ipv4_defaults_nonzero__false)
+BC_AUTO_TEST_CASE(utilities__is_member__ipv4_defaults_nonzero__false)
 {
-    BOOST_REQUIRE(!is_member(asio::ipv4{}, asio::ipv4{}, 24));
+    BC_REQUIRE(!is_member(system::ip::ipv4{}, system::ip::ipv4{}, 24));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__is_member__ipv6_defaults_nonzero__true)
+BC_AUTO_TEST_CASE(utilities__is_member__ipv6_defaults_nonzero__true)
 {
-    BOOST_REQUIRE(is_member(asio::ipv6{}, asio::ipv6{}, 56));
+    BC_REQUIRE(is_member(system::ip::ipv6{}, system::ip::ipv6{}, 56));
 }
 
-using namespace boost::asio::ip;
-
-BOOST_AUTO_TEST_CASE(utilities__is_member__zero_cidr__expected)
+BC_AUTO_TEST_CASE(utilities__is_member__zero_cidr__expected)
 {
     // zero CIDR valid for ipv4, invalid for ipv6
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("99.99.99.99"), 0));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("9999:9999:9999:9999:9999:9999:9999:9999"), 0));
+    BC_REQUIRE(is_member(make_address("42.42.42.42"), make_address("99.99.99.99"), 0));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("9999:9999:9999:9999:9999:9999:9999:9999"), 0));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__is_member__ipv4_member__true)
+BC_AUTO_TEST_CASE(utilities__is_member__ipv4_member__true)
 {
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.99.99.99"), 8));
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.99.99"), 16));
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.42.99"), 24));
-    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.42.42"), 32));
+    BC_REQUIRE(is_member(make_address("42.42.42.42"), make_address("42.99.99.99"), 8));
+    BC_REQUIRE(is_member(make_address("42.42.42.42"), make_address("42.42.99.99"), 16));
+    BC_REQUIRE(is_member(make_address("42.42.42.42"), make_address("42.42.42.99"), 24));
+    BC_REQUIRE(is_member(make_address("42.42.42.42"), make_address("42.42.42.42"), 32));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__is_member__not_ipv4_member__false)
+BC_AUTO_TEST_CASE(utilities__is_member__not_ipv4_member__false)
 {
-    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("99.99.99.99"), 8));
-    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("42.99.99.99"), 16));
-    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.99.99"), 24));
-    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.42.99"), 32));
+    BC_REQUIRE(!is_member(make_address("42.42.42.42"), make_address("99.99.99.99"), 8));
+    BC_REQUIRE(!is_member(make_address("42.42.42.42"), make_address("42.99.99.99"), 16));
+    BC_REQUIRE(!is_member(make_address("42.42.42.42"), make_address("42.42.99.99"), 24));
+    BC_REQUIRE(!is_member(make_address("42.42.42.42"), make_address("42.42.42.99"), 32));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__is_member__ipv6_non_member__true)
+BC_AUTO_TEST_CASE(utilities__is_member__ipv6_non_member__true)
 {
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("ab99:9999:9999:9999:9999:9999:9999:9999"), 8));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:9999:9999:9999:9999:9999:9999:9999"), 16));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:ab99:9999:9999:9999:9999:9999:9999"), 24));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:9999:9999:9999:9999:9999:9999"), 32));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 40));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 48));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 56));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 64));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 72));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 80));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 88));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 96));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 104));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 112));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 120));
-    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), 128));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("ab99:9999:9999:9999:9999:9999:9999:9999"), 8));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:9999:9999:9999:9999:9999:9999:9999"), 16));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:ab99:9999:9999:9999:9999:9999:9999"), 24));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:9999:9999:9999:9999:9999:9999"), 32));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 40));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 48));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 56));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 64));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 72));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 80));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 88));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 96));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 104));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 112));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 120));
+    BC_REQUIRE(is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), 128));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__is_member__ipv6_non_member__false)
+BC_AUTO_TEST_CASE(utilities__is_member__ipv6_non_member__false)
 {
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("ab99:9999:9999:9999:9999:9999:9999:9999"), 16));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:9999:9999:9999:9999:9999:9999:9999"), 24));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:ab99:9999:9999:9999:9999:9999:9999"), 32));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:9999:9999:9999:9999:9999:9999"), 40));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 48));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 56));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 64));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 72));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 80));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 88));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 96));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 104));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 112));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 120));
-    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 128));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("ab99:9999:9999:9999:9999:9999:9999:9999"), 16));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:9999:9999:9999:9999:9999:9999:9999"), 24));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:ab99:9999:9999:9999:9999:9999:9999"), 32));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:9999:9999:9999:9999:9999:9999"), 40));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 48));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 56));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 64));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 72));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 80));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 88));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 96));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 104));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 112));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 120));
+    BC_REQUIRE(!is_member(make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 128));
 }
 
 // denormalize
 
-BOOST_AUTO_TEST_CASE(utilities__denormalize__defaults__unchanged)
+BC_AUTO_TEST_CASE(utilities__denormalize__defaults__unchanged)
 {
-    BOOST_REQUIRE(denormalize({ asio::ipv4{} }).is_v4());
-    BOOST_REQUIRE(denormalize({ asio::ipv6{} }).is_v6());
+    BC_REQUIRE(denormalize({ system::ip::ipv4{} }).is_v4());
+    BC_REQUIRE(denormalize({ system::ip::ipv6{} }).is_v6());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__denormalize__mapped__unmapped)
+BC_AUTO_TEST_CASE(utilities__denormalize__mapped__unmapped)
 {
-    constexpr asio::ipv6::bytes_type mapped
+    constexpr system::ip::ipv6::bytes_type mapped
     {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0xff, 0xff, 1, 2, 3, 4
     };
 
-    const asio::address ip{ asio::ipv6{ mapped } };
-    BOOST_REQUIRE(denormalize(ip).is_v4());
+    const system::ip::address ip{ system::ip::ipv6{ mapped } };
+    BC_REQUIRE(denormalize(ip).is_v4());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__denormalize__unmapped__unchanged)
+BC_AUTO_TEST_CASE(utilities__denormalize__unmapped__unchanged)
 {
-    constexpr asio::ipv6::bytes_type unmapped
+    constexpr system::ip::ipv6::bytes_type unmapped
     {
         0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0xab, 0xcd, 1, 2, 3, 4
     };
 
-    const asio::address ip{ asio::ipv6{ unmapped } };
-    BOOST_REQUIRE(denormalize(ip) == ip);
+    const system::ip::address ip{ system::ip::ipv6{ unmapped } };
+    BC_REQUIRE(denormalize(ip) == ip);
 }
 
 // to_host
 
-using namespace boost::asio::ip;
-
-BOOST_AUTO_TEST_CASE(utilities__to_host__default__unspecified_v4)
+BC_AUTO_TEST_CASE(utilities__to_host__default__unspecified_v4)
 {
-    // Default asio address is ipv4.
-    const auto host = to_host(asio::address{});
-    BOOST_REQUIRE_EQUAL(host, "0.0.0.0");
+    // Default address is ipv4.
+    const auto host = to_host(system::ip::address{});
+    BC_REQUIRE_EQUAL(host, "0.0.0.0");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_host__default_v4__unspecified_v4)
+BC_AUTO_TEST_CASE(utilities__to_host__default_v4__unspecified_v4)
 {
-    const auto host = to_host(asio::ipv4{});
-    BOOST_REQUIRE_EQUAL(host, "0.0.0.0");
+    const auto host = to_host(system::ip::ipv4{});
+    BC_REQUIRE_EQUAL(host, "0.0.0.0");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_host__default_v6__unspecified_v6)
+BC_AUTO_TEST_CASE(utilities__to_host__default_v6__unspecified_v6)
 {
-    const auto host = to_host(asio::ipv6{});
-    BOOST_REQUIRE_EQUAL(host, "::");
+    const auto host = to_host(system::ip::ipv6{});
+    BC_REQUIRE_EQUAL(host, "::");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_host__v4__expected_v4)
+BC_AUTO_TEST_CASE(utilities__to_host__v4__expected_v4)
 {
     const auto host = to_host(make_address("42.42.42.42"));
-    BOOST_REQUIRE_EQUAL(host, "42.42.42.42");
+    BC_REQUIRE_EQUAL(host, "42.42.42.42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_host__v6__expected_v6)
+BC_AUTO_TEST_CASE(utilities__to_host__v6__expected_v6)
 {
     const auto host = to_host(make_address("42:42::42:42"));
-    BOOST_REQUIRE_EQUAL(host, "42:42::42:42");
+    BC_REQUIRE_EQUAL(host, "42:42::42:42");
 }
 
 // from_host
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__empty__throws_invalid_option_value)
+BC_AUTO_TEST_CASE(utilities__from_host__empty__throws_invalid_option_value)
 {
-    BOOST_REQUIRE_THROW(from_host({}), invalid_option_value);
+    BC_REQUIRE_THROW(from_host({}), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__v4_port__throws_invalid_option_value)
+BC_AUTO_TEST_CASE(utilities__from_host__v4_port__throws_invalid_option_value)
 {
-    BOOST_REQUIRE_THROW(from_host("127.0.0.1:42"), invalid_option_value);
+    BC_REQUIRE_THROW(from_host("127.0.0.1:42"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__v4_cidr__throws_invalid_option_value)
+BC_AUTO_TEST_CASE(utilities__from_host__v4_cidr__throws_invalid_option_value)
 {
-    BOOST_REQUIRE_THROW(from_host("127.0.0.1/24"), invalid_option_value);
+    BC_REQUIRE_THROW(from_host("127.0.0.1/24"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__v6_port__throws_invalid_option_value)
+BC_AUTO_TEST_CASE(utilities__from_host__v6_port__throws_invalid_option_value)
 {
-    BOOST_REQUIRE_THROW(from_host("[42:42::42:42]:42"), invalid_option_value);
+    BC_REQUIRE_THROW(from_host("[42:42::42:42]:42"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__v6_cidr__throws_invalid_option_value)
+BC_AUTO_TEST_CASE(utilities__from_host__v6_cidr__throws_invalid_option_value)
 {
-    BOOST_REQUIRE_THROW(from_host("[42:42::42:42]/24"), invalid_option_value);
+    BC_REQUIRE_THROW(from_host("[42:42::42:42]/24"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__unbracketed_default_v6__throws_invalid_option_value)
+BC_AUTO_TEST_CASE(utilities__from_host__unbracketed_default_v6__throws_invalid_option_value)
 {
-    BOOST_REQUIRE_THROW(from_host("::"), invalid_option_value);
+    BC_REQUIRE_THROW(from_host("::"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__unbracketed_v6__throws_invalid_option_value)
+BC_AUTO_TEST_CASE(utilities__from_host__unbracketed_v6__throws_invalid_option_value)
 {
-    BOOST_REQUIRE_THROW(from_host("4242::4242"), invalid_option_value);
+    BC_REQUIRE_THROW(from_host("4242::4242"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__mapped_v6__throws_invalid_option_value)
+BC_AUTO_TEST_CASE(utilities__from_host__mapped_v6__throws_invalid_option_value)
 {
-    BOOST_REQUIRE_THROW(from_host("[::ffff:127.0.0.1]"), invalid_option_value);
+    BC_REQUIRE_THROW(from_host("[::ffff:127.0.0.1]"), istream_exception);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__unspecified_v4__expected_v4)
+BC_AUTO_TEST_CASE(utilities__from_host__unspecified_v4__expected_v4)
 {
-    BOOST_REQUIRE_EQUAL(from_host("0.0.0.0"), asio::ipv4{});
+    BC_REQUIRE_EQUAL(from_host("0.0.0.0"), system::ip::ipv4{});
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__unspecified_v6__expected_v6)
+BC_AUTO_TEST_CASE(utilities__from_host__unspecified_v6__expected_v6)
 {
-    const asio::ipv6 expected{};
-    BOOST_REQUIRE_EQUAL(from_host("[::]"), asio::ipv6{});
+    const system::ip::ipv6 expected{};
+    BC_REQUIRE_EQUAL(from_host("[::]"), system::ip::ipv6{});
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__v4__expected_v4)
+BC_AUTO_TEST_CASE(utilities__from_host__v4__expected_v4)
 {
-    const asio::ipv4 expected{ asio::ipv4::bytes_type{ 42, 42, 42, 42 } };
-    BOOST_REQUIRE_EQUAL(from_host("42.42.42.42"), expected);
+    const system::ip::ipv4 expected{ system::ip::ipv4::bytes_type{ 42, 42, 42, 42 } };
+    BC_REQUIRE_EQUAL(from_host("42.42.42.42"), expected);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_host__v6__expected_v6)
+BC_AUTO_TEST_CASE(utilities__from_host__v6__expected_v6)
 {
-    const asio::ipv6 expected
+    const system::ip::ipv6 expected
     {
-        asio::ipv6::bytes_type
+        system::ip::ipv6::bytes_type
         {
             0x42, 0x42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x42, 0x42
         }
     };
 
-    BOOST_REQUIRE_EQUAL(from_host("[4242::4242]"), expected);
+    BC_REQUIRE_EQUAL(from_host("[4242::4242]"), expected);
 }
 
-////BOOST_AUTO_TEST_CASE(utilities__from_host__compatible__expected_v4)
+////BC_AUTO_TEST_CASE(utilities__from_host__compatible__expected_v4)
 ////{
-////    const asio::address expected{ asio::ipv4{ asio::ipv4::bytes_type{ 127, 0, 1, 1 } } };
-////    BOOST_REQUIRE_EQUAL(make_address_v6("[::127.0.0.1]:8333"), expected);
+////    const system::ip::address expected{ system::ip::ipv4{ system::ip::ipv4::bytes_type{ 127, 0, 1, 1 } } };
+////    BC_REQUIRE_EQUAL(make_address("[::127.0.0.1]:8333"), expected);
 ////}
 ////
-////BOOST_AUTO_TEST_CASE(utilities__from_host__mapped__expected_v4)
+////BC_AUTO_TEST_CASE(utilities__from_host__mapped__expected_v4)
 ////{
-////    const asio::address expected{ asio::ipv4{ asio::ipv4::bytes_type{ 127, 0, 1, 1 } } };
-////    BOOST_REQUIRE_EQUAL(make_address_v6("[::ffff.127.0.0.1]:8333"), expected);
+////    const system::ip::address expected{ system::ip::ipv4{ system::ip::ipv4::bytes_type{ 127, 0, 1, 1 } } };
+////    BC_REQUIRE_EQUAL(make_address("[::ffff.127.0.0.1]:8333"), expected);
 ////}
 
 // to_literal
 
-BOOST_AUTO_TEST_CASE(utilities__to_literal__default__unspecified_v4)
+BC_AUTO_TEST_CASE(utilities__to_literal__default__unspecified_v4)
 {
-    // Default asio address is ipv4.
-    const auto host = to_literal(asio::address{});
-    BOOST_REQUIRE_EQUAL(host, "0.0.0.0");
+    // Default address is ipv4.
+    const auto host = to_literal(system::ip::address{});
+    BC_REQUIRE_EQUAL(host, "0.0.0.0");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_literal__default_v4__unspecified_v4)
+BC_AUTO_TEST_CASE(utilities__to_literal__default_v4__unspecified_v4)
 {
-    const auto host = to_literal(asio::ipv4{});
-    BOOST_REQUIRE_EQUAL(host, "0.0.0.0");
+    const auto host = to_literal(system::ip::ipv4{});
+    BC_REQUIRE_EQUAL(host, "0.0.0.0");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_literal__default_v6__unspecified_literal_v6)
+BC_AUTO_TEST_CASE(utilities__to_literal__default_v6__unspecified_literal_v6)
 {
-    const auto host = to_literal(asio::ipv6{});
-    BOOST_REQUIRE_EQUAL(host, "[::]");
+    const auto host = to_literal(system::ip::ipv6{});
+    BC_REQUIRE_EQUAL(host, "[::]");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_literal__v4__expected_v4)
+BC_AUTO_TEST_CASE(utilities__to_literal__v4__expected_v4)
 {
     const auto host = to_literal(make_address("42.42.42.42"));
-    BOOST_REQUIRE_EQUAL(host, "42.42.42.42");
+    BC_REQUIRE_EQUAL(host, "42.42.42.42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_literal__v6__expected_literal_v6)
+BC_AUTO_TEST_CASE(utilities__to_literal__v6__expected_literal_v6)
 {
     const auto host = to_literal(make_address("42:42::42:42"));
-    BOOST_REQUIRE_EQUAL(host, "[42:42::42:42]");
+    BC_REQUIRE_EQUAL(host, "[42:42::42:42]");
 }
 
 // to_address
 
-BOOST_AUTO_TEST_CASE(utilities__to_address__default__non_default)
+BC_AUTO_TEST_CASE(utilities__to_address__default__non_default)
 {
     // default address is v4 and ip_address is v6, to_address is not denormalizing.
-    BOOST_REQUIRE_NE(to_address(asio::address{}), messages::peer::ip_address{});
+    BC_REQUIRE_NE(to_address(system::ip::address{}), messages::peer::ip_address{});
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_address__default_v4__not_default)
+BC_AUTO_TEST_CASE(utilities__to_address__default_v4__not_default)
 {
-    BOOST_REQUIRE_NE(to_address(asio::ipv4{}), messages::peer::ip_address{});
+    BC_REQUIRE_NE(to_address(system::ip::ipv4{}), messages::peer::ip_address{});
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_address__default_v6__default)
+BC_AUTO_TEST_CASE(utilities__to_address__default_v6__default)
 {
-    BOOST_REQUIRE_EQUAL(to_address(asio::ipv6{}), messages::peer::ip_address{});
+    BC_REQUIRE_EQUAL(to_address(system::ip::ipv6{}), messages::peer::ip_address{});
 }
 
 // from_address
 
-BOOST_AUTO_TEST_CASE(utilities__from_address__default__default_v6)
+BC_AUTO_TEST_CASE(utilities__from_address__default__default_v6)
 {
-    BOOST_REQUIRE_EQUAL(from_address(messages::peer::ip_address{}), asio::ipv6{});
+    BC_REQUIRE_EQUAL(from_address(messages::peer::ip_address{}), system::ip::ipv6{});
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_address__v6_mapped_loopback__loopback_v4)
+BC_AUTO_TEST_CASE(utilities__from_address__v6_mapped_loopback__loopback_v4)
 {
     constexpr messages::peer::ip_address loopback_v4
     {
@@ -327,22 +330,14 @@ BOOST_AUTO_TEST_CASE(utilities__from_address__v6_mapped_loopback__loopback_v4)
     };
 
     const auto ip = from_address(loopback_v4);
-    BOOST_REQUIRE(ip.is_v6());
+    BC_REQUIRE(ip.is_v6());
 
-    // Does not recognize mapped context.
-    BOOST_REQUIRE(!ip.to_v6().is_loopback());
-
-    // Cannot go straight to ip.to_v4(), must extract the ipv6 object first.
-    // address.to_v4() is not the same as ipv6.to_v4(), the former is a getter
-    // while the latter is a convertor.
-    BOOST_REQUIRE(ip.to_v6().is_v4_mapped());
-
-    ////BOOST_REQUIRE(ip.to_v6().to_v4().is_loopback());
-    const auto loop = boost::asio::ip::make_address_v4(boost::asio::ip::v4_mapped, ip.to_v6());
-    BOOST_REQUIRE(loop.is_loopback());
+    BC_REQUIRE(!ip.to_v6().is_loopback());
+    BC_REQUIRE(ip.to_v6().is_v4_mapped());
+    BC_REQUIRE(ip.to_v6().to_v4().is_loopback());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__from_address__loopback_v6__loopback_v6)
+BC_AUTO_TEST_CASE(utilities__from_address__loopback_v6__loopback_v6)
 {
     constexpr messages::peer::ip_address loopback_v6
     {
@@ -350,244 +345,244 @@ BOOST_AUTO_TEST_CASE(utilities__from_address__loopback_v6__loopback_v6)
     };
 
     const auto ip = from_address(loopback_v6);
-    BOOST_REQUIRE(ip.is_v6());
-    BOOST_REQUIRE(ip.is_loopback());
-    BOOST_REQUIRE(!ip.to_v6().is_v4_mapped());
+    BC_REQUIRE(ip.is_v6());
+    BC_REQUIRE(ip.is_loopback());
+    BC_REQUIRE(!ip.to_v6().is_v4_mapped());
 }
 
 // parse_authority
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__empty__false)
+BC_AUTO_TEST_CASE(utilities__parse_authority__empty__false)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, ""));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, ""));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4__expected)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v4__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1"));
-    BOOST_REQUIRE(ip.is_v4());
-    BOOST_REQUIRE(ip.is_loopback());
-    BOOST_REQUIRE_EQUAL(port, 0u);
-    BOOST_REQUIRE_EQUAL(cidr, 0u);
+    BC_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1"));
+    BC_REQUIRE(ip.is_v4());
+    BC_REQUIRE(ip.is_loopback());
+    BC_REQUIRE_EQUAL(port, 0u);
+    BC_REQUIRE_EQUAL(cidr, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_port__expected)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v4_port__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1:65535"));
-    BOOST_REQUIRE(ip.is_v4());
-    BOOST_REQUIRE(ip.is_loopback());
-    BOOST_REQUIRE_EQUAL(port, 65535u);
-    BOOST_REQUIRE_EQUAL(cidr, 0u);
+    BC_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1:65535"));
+    BC_REQUIRE(ip.is_v4());
+    BC_REQUIRE(ip.is_loopback());
+    BC_REQUIRE_EQUAL(port, 65535u);
+    BC_REQUIRE_EQUAL(cidr, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_cidr__expected)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v4_cidr__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1/24"));
-    BOOST_REQUIRE(ip.is_v4());
-    BOOST_REQUIRE(ip.is_loopback());
-    BOOST_REQUIRE_EQUAL(port, 0u);
-    BOOST_REQUIRE_EQUAL(cidr, 24u);
+    BC_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1/24"));
+    BC_REQUIRE(ip.is_v4());
+    BC_REQUIRE(ip.is_loopback());
+    BC_REQUIRE_EQUAL(port, 0u);
+    BC_REQUIRE_EQUAL(cidr, 24u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_port_cidr__expected)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v4_port_cidr__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1:42/24"));
-    BOOST_REQUIRE(ip.is_v4());
-    BOOST_REQUIRE(ip.is_loopback());
-    BOOST_REQUIRE_EQUAL(port, 42u);
-    BOOST_REQUIRE_EQUAL(cidr, 24u);
+    BC_REQUIRE(parse_authority(ip, port, cidr, "127.0.0.1:42/24"));
+    BC_REQUIRE(ip.is_v4());
+    BC_REQUIRE(ip.is_loopback());
+    BC_REQUIRE_EQUAL(port, 42u);
+    BC_REQUIRE_EQUAL(cidr, 24u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v4_invalids__false)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v4_invalids__false)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "[127.0.0.1]"));
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "127.0.0.1:65536"));
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "127.0.0.1/0"));
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "127.0.0.1/33"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "[127.0.0.1]"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "127.0.0.1:65536"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "127.0.0.1/0"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "127.0.0.1/33"));
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6__expected)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v6__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(parse_authority(ip, port, cidr, "[::1]"));
-    BOOST_REQUIRE(ip.is_v6());
-    BOOST_REQUIRE(ip.is_loopback());
-    BOOST_REQUIRE_EQUAL(port, 0u);
-    BOOST_REQUIRE_EQUAL(cidr, 0u);
+    BC_REQUIRE(parse_authority(ip, port, cidr, "[::1]"));
+    BC_REQUIRE(ip.is_v6());
+    BC_REQUIRE(ip.is_loopback());
+    BC_REQUIRE_EQUAL(port, 0u);
+    BC_REQUIRE_EQUAL(cidr, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_port__expected)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v6_port__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(parse_authority(ip, port, cidr, "[::1]:65535"));
-    BOOST_REQUIRE(ip.is_v6());
-    BOOST_REQUIRE(ip.is_loopback());
-    BOOST_REQUIRE_EQUAL(port, 65535u);
-    BOOST_REQUIRE_EQUAL(cidr, 0u);
+    BC_REQUIRE(parse_authority(ip, port, cidr, "[::1]:65535"));
+    BC_REQUIRE(ip.is_v6());
+    BC_REQUIRE(ip.is_loopback());
+    BC_REQUIRE_EQUAL(port, 65535u);
+    BC_REQUIRE_EQUAL(cidr, 0u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_cidr__expected)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v6_cidr__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(parse_authority(ip, port, cidr, "[::1]/64"));
-    BOOST_REQUIRE(ip.is_v6());
-    BOOST_REQUIRE(ip.is_loopback());
-    BOOST_REQUIRE_EQUAL(port, 0u);
-    BOOST_REQUIRE_EQUAL(cidr, 64u);
+    BC_REQUIRE(parse_authority(ip, port, cidr, "[::1]/64"));
+    BC_REQUIRE(ip.is_v6());
+    BC_REQUIRE(ip.is_loopback());
+    BC_REQUIRE_EQUAL(port, 0u);
+    BC_REQUIRE_EQUAL(cidr, 64u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_port_cidr__expected)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v6_port_cidr__expected)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(parse_authority(ip, port, cidr, "[::1]:42/64"));
-    BOOST_REQUIRE(ip.is_v6());
-    BOOST_REQUIRE(ip.is_loopback());
-    BOOST_REQUIRE_EQUAL(port, 42u);
-    BOOST_REQUIRE_EQUAL(cidr, 64u);
+    BC_REQUIRE(parse_authority(ip, port, cidr, "[::1]:42/64"));
+    BC_REQUIRE(ip.is_v6());
+    BC_REQUIRE(ip.is_loopback());
+    BC_REQUIRE_EQUAL(port, 42u);
+    BC_REQUIRE_EQUAL(cidr, 64u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_invalids__false)
+BC_AUTO_TEST_CASE(utilities__parse_authority__v6_invalids__false)
 {
-    asio::address ip{};
+    system::ip::address ip{};
     uint16_t port{};
     uint8_t cidr{};
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "::"));
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "::1"));
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "4242::4242"));
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "[::1]:65536"));
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "[::1]/0"));
-    BOOST_REQUIRE(!parse_authority(ip, port, cidr, "[::1]/129"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "::"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "::1"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "4242::4242"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "[::1]:65536"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "[::1]/0"));
+    BC_REQUIRE(!parse_authority(ip, port, cidr, "[::1]/129"));
 }
 
 // parse_endpoint
 
-BOOST_AUTO_TEST_CASE(utilities__parse_endpoint__full__true_expected)
+BC_AUTO_TEST_CASE(utilities__parse_endpoint__full__true_expected)
 {
     std::string host{};
     uint16_t port{};
-    BOOST_REQUIRE(parse_endpoint(host, port, "foo.bar:42"));
-    BOOST_REQUIRE_EQUAL(host, "foo.bar");
-    BOOST_REQUIRE_EQUAL(port, 42u);
+    BC_REQUIRE(parse_endpoint(host, port, "foo.bar:42"));
+    BC_REQUIRE_EQUAL(host, "foo.bar");
+    BC_REQUIRE_EQUAL(port, 42u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_endpoint__host_port__true_expected)
+BC_AUTO_TEST_CASE(utilities__parse_endpoint__host_port__true_expected)
 {
     std::string host{};
     uint16_t port{};
-    BOOST_REQUIRE(parse_endpoint(host, port, "foo.bar:65535"));
-    BOOST_REQUIRE_EQUAL(host, "foo.bar");
-    BOOST_REQUIRE_EQUAL(port, 65535u);
+    BC_REQUIRE(parse_endpoint(host, port, "foo.bar:65535"));
+    BC_REQUIRE_EQUAL(host, "foo.bar");
+    BC_REQUIRE_EQUAL(port, 65535u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_endpoint__invalids__false_expected)
+BC_AUTO_TEST_CASE(utilities__parse_endpoint__invalids__false_expected)
 {
     std::string host{};
     uint16_t port{};
-    BOOST_REQUIRE(!parse_endpoint(host, port, "tcp://foo.bar:65536"));
-    BOOST_REQUIRE(!parse_endpoint(host, port, "foobar://foo.bar:42"));
-    BOOST_REQUIRE(!parse_endpoint(host, port, "tcp://:42"));
-    BOOST_REQUIRE(!parse_endpoint(host, port, ":42"));
-    BOOST_REQUIRE(!parse_endpoint(host, port, ""));
+    BC_REQUIRE(!parse_endpoint(host, port, "tcp://foo.bar:65536"));
+    BC_REQUIRE(!parse_endpoint(host, port, "foobar://foo.bar:42"));
+    BC_REQUIRE(!parse_endpoint(host, port, "tcp://:42"));
+    BC_REQUIRE(!parse_endpoint(host, port, ":42"));
+    BC_REQUIRE(!parse_endpoint(host, port, ""));
 }
 
 // to_normal_host
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_default_zero__empty)
+BC_AUTO_TEST_CASE(utilities__to_normal_host__empty_default_zero__empty)
 {
-    BOOST_REQUIRE(to_normal_host("", 0).empty());
+    BC_REQUIRE(to_normal_host("", 0).empty());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_default_nonzero__empty)
+BC_AUTO_TEST_CASE(utilities__to_normal_host__empty_default_nonzero__empty)
 {
-    BOOST_REQUIRE(to_normal_host("", 42).empty());
+    BC_REQUIRE(to_normal_host("", 42).empty());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__nonempty_default_nonzero__nonempty_nonzero)
+BC_AUTO_TEST_CASE(utilities__to_normal_host__nonempty_default_nonzero__nonempty_nonzero)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_host("localhost", 42), "localhost:42");
+    BC_REQUIRE_EQUAL(to_normal_host("localhost", 42), "localhost:42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__numeric_nonzero__numeric_nonzero)
+BC_AUTO_TEST_CASE(utilities__to_normal_host__numeric_nonzero__numeric_nonzero)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_host("127.0.0.1", 42), "127.0.0.1:42");
+    BC_REQUIRE_EQUAL(to_normal_host("127.0.0.1", 42), "127.0.0.1:42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__numeric_nonzero_nonzero__numeric_origin_nonzero)
+BC_AUTO_TEST_CASE(utilities__to_normal_host__numeric_nonzero_nonzero__numeric_origin_nonzero)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_host("127.0.0.1:80", 42), "127.0.0.1:80");
+    BC_REQUIRE_EQUAL(to_normal_host("127.0.0.1:80", 42), "127.0.0.1:80");
 }
 
 // to_normal_origin
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__empty__empty)
+BC_AUTO_TEST_CASE(utilities__to_normal_origin__empty__empty)
 {
-    BOOST_REQUIRE(to_normal_origin("", 42).empty());
+    BC_REQUIRE(to_normal_origin("", 42).empty());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__no_scheme__default_port)
+BC_AUTO_TEST_CASE(utilities__to_normal_origin__no_scheme__default_port)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_origin("Example.com", 42), "example.com:42");
+    BC_REQUIRE_EQUAL(to_normal_origin("Example.com", 42), "example.com:42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__http__default_port)
+BC_AUTO_TEST_CASE(utilities__to_normal_origin__http__default_port)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_origin("http://Example.com", 42), "example.com:42");
+    BC_REQUIRE_EQUAL(to_normal_origin("http://Example.com", 42), "example.com:42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__https__default_port)
+BC_AUTO_TEST_CASE(utilities__to_normal_origin__https__default_port)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_origin("https://example.com", 42), "example.com:42");
+    BC_REQUIRE_EQUAL(to_normal_origin("https://example.com", 42), "example.com:42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__upper_scheme__empty)
+BC_AUTO_TEST_CASE(utilities__to_normal_origin__upper_scheme__empty)
 {
-    BOOST_REQUIRE(to_normal_origin("HTTPS://example.com", 42).empty());
+    BC_REQUIRE(to_normal_origin("HTTPS://example.com", 42).empty());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__tcp_scheme__default_port)
+BC_AUTO_TEST_CASE(utilities__to_normal_origin__tcp_scheme__default_port)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_origin("tcp://example.com", 42), "example.com:42");
+    BC_REQUIRE_EQUAL(to_normal_origin("tcp://example.com", 42), "example.com:42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__explicit_port__explicit_port)
+BC_AUTO_TEST_CASE(utilities__to_normal_origin__explicit_port__explicit_port)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_origin("http://127.0.0.1:8080", 42), "127.0.0.1:8080");
+    BC_REQUIRE_EQUAL(to_normal_origin("http://127.0.0.1:8080", 42), "127.0.0.1:8080");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__ipv6__expected)
+BC_AUTO_TEST_CASE(utilities__to_normal_origin__ipv6__expected)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_origin("https://[::1]", 42), "[::1]:42");
+    BC_REQUIRE_EQUAL(to_normal_origin("https://[::1]", 42), "[::1]:42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_origin__scheme_only__empty)
+BC_AUTO_TEST_CASE(utilities__to_normal_origin__scheme_only__empty)
 {
-    BOOST_REQUIRE(to_normal_origin("http://", 42).empty());
+    BC_REQUIRE(to_normal_origin("http://", 42).empty());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

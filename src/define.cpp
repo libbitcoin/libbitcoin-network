@@ -22,15 +22,12 @@
 // All non-network headers include define.hpp.
 // Network inclusions are chained as follows.
 
-// /ssl           : <nothing>
 // version        : <generated>
 // have           : version
 // preprocessor   : have <bitcoin/system>
-// boost          : /ssl preprocessor
-// asio           : boost
-// beast          : asio
-// error          : beast
-// define         : error
+// error          : preprocessor
+// /io            : error
+// define         : error /io
 
 // Other directory common includes are not internally chained.
 // Each header includes only its required common headers.
@@ -44,7 +41,7 @@
 // /log           : /async
 // /p2ps          : /messages
 // /zmtp          : define
-// settings       : /async /config /p2ps /zmtp
+// settings       : /async /config /p2ps /tls /zmtp
 // /net           : /log settings
 // /channels      : /interfaces /net
 // /sessions      : /channels                      [forward: net]

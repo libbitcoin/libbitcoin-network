@@ -59,14 +59,14 @@ constexpr bool is_electrum_terminator(char character) NOEXCEPT
 // Delivery is self-selecting on observed framing. A batched read delivers
 // each message from put by pausing the parse (need_buffer) at the element
 // boundary and re-arming for the next element, uniformly across framings: a
-// beast (http) parse pauses natively, a stream read completes on the pause
+// http parse pauses natively, a stream read completes on the pause
 // with buffer residue carried to the next read; for batched reads finish
 // only validates message-end state. A singleton delivers classically from
-// finish, compatible with one-shot (beast) body reads.
+// finish, compatible with one-shot body reads.
 
 // Convert the parsed model to a request message and validate. Tolerated
 // jrpc violations are reported as lax flags (the channel validates policy).
-static void to_request(rpc::request& value, boost_code& ec) NOEXCEPT
+static void to_request(rpc::request& value, code& ec) NOEXCEPT
 {
     value.lax_params = false;
     value.lax_batch = false;
@@ -125,7 +125,7 @@ static void to_request(rpc::request& value, boost_code& ec) NOEXCEPT
 
 template <>
 size_t body<rpc::request_t>::reader::
-put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
+put(const buffer_type& buffer, code& ec) NOEXCEPT
 {
     // Null and empty guarded in base reader.
     if (is_zero(buffer.size()) || is_null(buffer.data()))
@@ -142,7 +142,7 @@ put(const buffer_type& buffer, boost_code& ec) NOEXCEPT
         return terminated_ && (closed_ || (!value_.batch && !opened_));
     };
 
-    // A completed element is re-fed (beast) only with its trailer.
+    // A completed element is re-fed (http parser) only with its trailer.
     const auto completed = started_ && base::reader::done();
 
     // Prologue: consume whitespace and batch delimiters until element start,
@@ -349,13 +349,13 @@ done() const NOEXCEPT
 
 template <>
 void body<rpc::request_t>::reader::
-finish(boost_code& ec) NOEXCEPT
+finish(code& ec) NOEXCEPT
 {
     // Batched messages are delivered from put, so finish only validates
     // message-end state (delivered close, otherwise incomplete).
     if ((closed_ || opened_ || value_.batch) && !started_)
     {
-        ec = (closed_ && signaled_) ? boost_code{} :
+        ec = (closed_ && signaled_) ? code{ error::success } :
             to_http_code(http_error_t::need_more);
         return;
     }
@@ -372,7 +372,7 @@ finish(boost_code& ec) NOEXCEPT
 
 template <>
 size_t body<rpc::response_t>::reader::
-put(const buffer_type&, boost_code&) NOEXCEPT
+put(const buffer_type&, code&) NOEXCEPT
 {
     BC_ASSERT(false);
     return {};
@@ -380,7 +380,7 @@ put(const buffer_type&, boost_code&) NOEXCEPT
 
 template <>
 void body<rpc::response_t>::reader::
-finish(boost_code&) NOEXCEPT
+finish(code&) NOEXCEPT
 {
     BC_ASSERT(false);
 }
@@ -404,7 +404,7 @@ done() const NOEXCEPT
 
 template <>
 void body<rpc::response_t>::writer::
-init(boost_code& ec) NOEXCEPT
+init(code& ec) NOEXCEPT
 {
     set_terminator_ = false;
     set_prefix_ = false;
@@ -450,9 +450,8 @@ init(boost_code& ec) NOEXCEPT
 template <>
 body<rpc::response_t>::writer::out_buffer
 body<rpc::response_t>::writer::
-get(boost_code& ec) NOEXCEPT
+get(code& ec) NOEXCEPT
 {
-    using namespace boost::asio;
     static constexpr auto open = '[';
     static constexpr auto comma = ',';
     static constexpr auto close = ']';
@@ -461,7 +460,7 @@ get(boost_code& ec) NOEXCEPT
     // Buffer a single static framing character.
     const auto single = [](const char& character, bool more) NOEXCEPT
     {
-        return out_buffer{ std::make_pair(buffer(&character, one), more) };
+        return out_buffer{ std::make_pair(io::buffer(&character, one), more) };
     };
 
     // Emit batch framing (open or separator) preceding the part.
@@ -509,7 +508,7 @@ done() const NOEXCEPT
 
 template <>
 void body<rpc::request_t>::writer::
-init(boost_code& ec) NOEXCEPT
+init(code& ec) NOEXCEPT
 {
     if (is_zero(value_.size_hint))
         value_.size_hint = to_size(value_.message);
@@ -540,7 +539,7 @@ init(boost_code& ec) NOEXCEPT
 template <>
 body<rpc::request_t>::writer::out_buffer
 body<rpc::request_t>::writer::
-get(boost_code& ec) NOEXCEPT
+get(code& ec) NOEXCEPT
 {
     return base::writer::done() ? out_buffer{} : base::writer::get(ec);
 }

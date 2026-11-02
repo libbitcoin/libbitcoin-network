@@ -34,7 +34,7 @@
     #define THREAD_PRIORITY_LOWEST PRIO_MAX
 #endif
 
-BOOST_AUTO_TEST_SUITE(thread_tests)
+BC_AUTO_TEST_SUITE(thread_tests)
 
 static int get_processing_priority_test()
 {
@@ -60,40 +60,40 @@ void set_processing_priority_test(int priority)
 
 #ifdef HAVE_WINDOWS
 
-BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
+BC_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 {
     // Save so we can restore at the end of this test case.
     const int save = get_processing_priority_test();
 
     set_processing_priority(processing_priority::highest);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_HIGHEST, get_processing_priority_test());
+    BC_REQUIRE_EQUAL(THREAD_PRIORITY_HIGHEST, get_processing_priority_test());
     set_processing_priority(processing_priority::high);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_ABOVE_NORMAL, get_processing_priority_test());
+    BC_REQUIRE_EQUAL(THREAD_PRIORITY_ABOVE_NORMAL, get_processing_priority_test());
     set_processing_priority(processing_priority::medium);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_NORMAL, get_processing_priority_test());
+    BC_REQUIRE_EQUAL(THREAD_PRIORITY_NORMAL, get_processing_priority_test());
     set_processing_priority(processing_priority::low);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_BELOW_NORMAL, get_processing_priority_test());
+    BC_REQUIRE_EQUAL(THREAD_PRIORITY_BELOW_NORMAL, get_processing_priority_test());
     set_processing_priority(processing_priority::lowest);
-    BOOST_REQUIRE_EQUAL(THREAD_PRIORITY_LOWEST, get_processing_priority_test());
+    BC_REQUIRE_EQUAL(THREAD_PRIORITY_LOWEST, get_processing_priority_test());
 
     // Restore and verify test execution thread priority to minimize side effect.
     set_processing_priority_test(save);
-    BOOST_REQUIRE_EQUAL(save, get_processing_priority_test());
+    BC_REQUIRE_EQUAL(save, get_processing_priority_test());
 }
 
 #else
 
-BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
+BC_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 {
     // Save so we can restore at the end of this test case.
     const int save = get_processing_priority_test();
 
     // Haven't had any luck matching the set and get priority calls as in win.
-    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::highest));
-    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::high));
-    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::medium));
-    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::low));
-    BOOST_REQUIRE_NO_THROW(set_processing_priority(processing_priority::lowest));
+    BC_REQUIRE_NO_THROW(set_processing_priority(processing_priority::highest));
+    BC_REQUIRE_NO_THROW(set_processing_priority(processing_priority::high));
+    BC_REQUIRE_NO_THROW(set_processing_priority(processing_priority::medium));
+    BC_REQUIRE_NO_THROW(set_processing_priority(processing_priority::low));
+    BC_REQUIRE_NO_THROW(set_processing_priority(processing_priority::lowest));
 
     // Restore and verify test execution thread priority to minimize side effect.
     set_processing_priority_test(save);
@@ -116,25 +116,25 @@ static void set_memory_priority_test(unsigned long priority)
     SetProcessInformation(GetCurrentProcess(), ProcessMemoryPriority, &information, sizeof(information));
 }
 
-BOOST_AUTO_TEST_CASE(thread__set_memory_priority__all__set_as_expected)
+BC_AUTO_TEST_CASE(thread__set_memory_priority__all__set_as_expected)
 {
     const auto save = get_memory_priority_test();
 
     set_memory_priority(memory_priority::lowest);
-    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_VERY_LOW));
+    BC_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_VERY_LOW));
     set_memory_priority(memory_priority::low);
-    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_LOW));
+    BC_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_LOW));
     set_memory_priority(memory_priority::medium);
-    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_MEDIUM));
+    BC_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_MEDIUM));
     set_memory_priority(memory_priority::high);
-    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_BELOW_NORMAL));
+    BC_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_BELOW_NORMAL));
     set_memory_priority(memory_priority::highest);
-    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_NORMAL));
+    BC_REQUIRE_EQUAL(get_memory_priority_test(), static_cast<unsigned long>(MEMORY_PRIORITY_NORMAL));
 
     set_memory_priority_test(save);
-    BOOST_REQUIRE_EQUAL(get_memory_priority_test(), save);
+    BC_REQUIRE_EQUAL(get_memory_priority_test(), save);
 }
 
 #endif
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

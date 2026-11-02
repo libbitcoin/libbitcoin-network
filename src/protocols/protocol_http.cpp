@@ -72,6 +72,8 @@ void protocol_http::start() NOEXCEPT
     SUBSCRIBE_CHANNEL(method::options, handle_receive_options, _1, _2);
     SUBSCRIBE_CHANNEL(method::connect, handle_receive_connect, _1, _2);
     SUBSCRIBE_CHANNEL(method::unknown, handle_receive_unknown, _1, _2);
+    SUBSCRIBE_CHANNEL(method::websocket, handle_receive_websocket, _1, _2);
+    SUBSCRIBE_CHANNEL(method::stream, handle_receive_stream, _1, _2);
     protocol::start();
 }
 
@@ -148,6 +150,22 @@ void protocol_http::handle_receive_unknown(const code& ec,
     BC_ASSERT(stranded());
     if (stopped(ec)) return;
     send_method_not_allowed(*unknown);
+}
+
+void protocol_http::handle_receive_websocket(const code& ec,
+    const method::websocket::cptr& websocket) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*websocket);
+}
+
+void protocol_http::handle_receive_stream(const code& ec,
+    const method::stream::cptr& stream) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    if (stopped(ec)) return;
+    send_method_not_allowed(*stream);
 }
 
 // Senders.
@@ -342,7 +360,7 @@ bool protocol_http::is_allowed_host(const fields& fields,
 {
     // Disallow unspecified host.
     // Host header field is mandatory at http 1.1.
-    const auto host = fields[field::host];
+    const std::string host{ fields[field::host] };
     if (host.empty() && version >= version_1_1)
         return false;
 
@@ -355,7 +373,7 @@ bool protocol_http::is_allowed_origin(const fields& fields,
 {
     // Allow same-origin and no-origin requests.
     // Origin header field is not available until http 1.1.
-    const auto origin = fields[field::origin];
+    const std::string origin{ fields[field::origin] };
     if (origin.empty() || version < version_1_1)
         return true;
 
@@ -377,7 +395,6 @@ void protocol_http::add_common_headers(fields& fields,
         fields.set(field::server, options_.server);
 
     // http 1.1 assumes keep-alive if not specified, http 1.0 does not.
-    // Beast parser defaults keep-alive to true in http 1.1 requests.
     if (closing || !request.keep_alive())
     {
         fields.set(field::connection, "close");

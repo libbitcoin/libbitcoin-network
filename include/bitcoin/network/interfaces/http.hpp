@@ -38,7 +38,9 @@ struct http_methods
         method<"trace", http::method::trace::cptr>{},
         method<"options", http::method::options::cptr>{},
         method<"connect", http::method::connect::cptr>{},
-        method<"unknown", http::method::unknown::cptr>{}
+        method<"unknown", http::method::unknown::cptr>{},
+        method<"websocket", http::method::websocket::cptr>{},
+        method<"stream", http::method::stream::cptr>{}
     };
 
     /// Subscriber requires void handlers, injects `code` parameter.

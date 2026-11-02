@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(wire_block_tests)
+BC_AUTO_TEST_SUITE(wire_block_tests)
 
 static const system::chain::block& genesis() NOEXCEPT
 {
@@ -26,44 +26,44 @@ static const system::chain::block& genesis() NOEXCEPT
     return bitcoin.genesis_block;
 }
 
-BOOST_AUTO_TEST_CASE(wire_block__command__always__block)
+BC_AUTO_TEST_CASE(wire_block__command__always__block)
 {
-    BOOST_REQUIRE_EQUAL(std::string{ wire_block::command }, "block");
+    BC_REQUIRE_EQUAL(std::string{ wire_block::command }, "block");
 }
 
-BOOST_AUTO_TEST_CASE(wire_block__block__shared__same_instance)
+BC_AUTO_TEST_CASE(wire_block__block__shared__same_instance)
 {
     const auto block = system::emplace_shared<const wire_block::view>(genesis().to_data(true), true);
     const wire_block instance{ block, true };
-    BOOST_REQUIRE(instance.block() == block);
-    BOOST_REQUIRE(instance.organized());
+    BC_REQUIRE(instance.block() == block);
+    BC_REQUIRE(instance.organized());
 }
 
-BOOST_AUTO_TEST_CASE(wire_block__organized__reorganized__false)
+BC_AUTO_TEST_CASE(wire_block__organized__reorganized__false)
 {
     const wire_block instance{ system::emplace_shared<const wire_block::view>(genesis().to_data(true), true), false };
-    BOOST_REQUIRE(!instance.organized());
+    BC_REQUIRE(!instance.organized());
 }
 
-BOOST_AUTO_TEST_CASE(wire_block__transactions__genesis__coinbase_encoding)
+BC_AUTO_TEST_CASE(wire_block__transactions__genesis__coinbase_encoding)
 {
     const wire_block instance{ system::emplace_shared<const wire_block::view>(genesis().to_data(true), true), true };
-    BOOST_REQUIRE_EQUAL(instance.transactions().size(), 1u);
-    BOOST_REQUIRE(instance.transactions().front()->tx()->to_data(true) == genesis().transactions_ptr()->front()->to_data(true));
+    BC_REQUIRE_EQUAL(instance.transactions().size(), 1u);
+    BC_REQUIRE(instance.transactions().front()->tx()->to_data(true) == genesis().transactions_ptr()->front()->to_data(true));
 }
 
-BOOST_AUTO_TEST_CASE(wire_block__write__genesis__witness_encoding)
+BC_AUTO_TEST_CASE(wire_block__write__genesis__witness_encoding)
 {
     const auto expected = genesis().to_data(true);
     const wire_block instance{ system::emplace_shared<const wire_block::view>(system::data_chunk{ expected }, true), true };
-    BOOST_REQUIRE_EQUAL(instance.size(), expected.size());
+    BC_REQUIRE_EQUAL(instance.size(), expected.size());
 
     system::data_chunk out(instance.size());
     system::stream::out::fast sink{ out };
     system::write::bytes::fast writer{ sink };
     instance.write(writer);
-    BOOST_REQUIRE(writer);
-    BOOST_REQUIRE(out == expected);
+    BC_REQUIRE(writer);
+    BC_REQUIRE(out == expected);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

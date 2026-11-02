@@ -98,8 +98,8 @@ code connector_socks::socks_response(uint8_t value) NOEXCEPT
 }
 
 // Caller can avoid proxied() condition by using connector when not proxied.
-connector_socks::connector_socks(const logger& log, asio::strand& strand,
-    asio::context& service, std::atomic_bool& suspended,
+connector_socks::connector_socks(const logger& log, io::strand& strand,
+    io::context& service, std::atomic_bool& suspended,
     parameters&& params, const settings::socks5& socks) NOEXCEPT
   : connector(log, strand, service, suspended, std::move(params)),
     socks5_(socks),
@@ -576,7 +576,7 @@ void connector_socks::handle_socks_handshake(const code& ec,
     BC_ASSERT(socket->stranded());
 
     // End of socket strand sequence.
-    boost::asio::post(strand_,
+    io::post(strand_,
         std::bind(&connector_socks::socks_finish,
             shared_from_base<connector_socks>(), ec, socket));
 }

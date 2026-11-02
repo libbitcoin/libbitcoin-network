@@ -501,13 +501,13 @@ void socket::do_zmtp_read(const zmtp_read_state::ptr& in,
 }
 
 // private
-void socket::handle_zmtp_read(const boost_code& ec, size_t size,
+void socket::handle_zmtp_read(const code& ec, size_t size,
     const zmtp_read_state::ptr& in, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     in->total = ceilinged_add(in->total, size);
 
-    if (ec == boost::asio::error::message_size)
+    if (ec == error::oversized_payload)
     {
         handler(error::oversized_payload, in->total);
         return;
@@ -596,7 +596,7 @@ void socket::do_zmtp_write(const chunk_ptr& packet,
     BC_ASSERT(stranded());
 
     get_zmtp().async_write({ packet->data(), packet->size() },
-        [self = shared_from_this(), packet, handler](const boost_code& ec,
+        [self = shared_from_this(), packet, handler](const code& ec,
             size_t size) NOEXCEPT
         {
             self->handle_async(ec, size, handler, "async_write");

@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_ERROR_HPP
 
 #include <system_error>
-#include <bitcoin/network/beast.hpp>
+#include <bitcoin/network/preprocessor.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -29,15 +29,11 @@ namespace network {
 /// std::error_code "network" category holds network::error::error_t.
 typedef std::error_code code;
 
-/// Alias boost code - analagous to, but incompatible with, std::error_code.
-/// boost::system::error_code "system" category holds boost::asio::basic_errors.
-typedef boost::system::error_code boost_code;
-
 namespace error {
 
-/// Boost codes are translated to the system error codes below.
+/// Platform (socket) errors are translated to the codes below.
 /// Stop by explicit call is mapped to channel_stopped or service_stopped
-/// depending on the context. Asio errors returned on cancel calls are ignored.
+/// depending on the context.
 enum error_t : uint8_t
 {
     success,
@@ -150,23 +146,11 @@ enum error_t : uint8_t
     sam_timeout,
     sam_unassigned_failure,
 
-    // boost
-    system_unknown,
-    misc_unknown,
-    errc_unknown,
-    ssl_unknown,
-
-    // boost tls
-    tls_set_options,
+    // tls
     tls_use_certificate,
     tls_use_private_key,
-    tls_set_password,
-    tls_set_default_verify,
     tls_set_add_verify,
     tls_stream_truncated,
-    tls_unspecified_system_error,
-    tls_unexpected_result,
-    tls_unknown,
 
     // tls alerts
     tls_alert_unexpected_message,
@@ -187,7 +171,7 @@ enum error_t : uint8_t
     tls_alert_certificate_required,
     tls_alert_unknown,
 
-    // boost beast http 4xx client error
+    // http 4xx client error
     bad_request,
     unauthorized,
     ////payment_required,
@@ -218,7 +202,7 @@ enum error_t : uint8_t
     ////request_header_fields_too_large,
     ////unavailable_for_legal_reasons,
 
-    // boost beast http 5xx server error
+    // http 5xx server error
     internal_server_error,
     not_implemented,
     ////bad_gateway,
@@ -231,7 +215,7 @@ enum error_t : uint8_t
     ////not_extended,
     ////network_authentication_required,
 
-    // boost beast http error
+    // http error
     end_of_stream,
     partial_message,
     need_more,
@@ -260,7 +244,7 @@ enum error_t : uint8_t
     short_read,
     http_unknown,
 
-    // boost beast websocket error
+    // websocket error
     websocket_closed,
     websocket_buffer_overflow,
     partial_deflate_block,
@@ -292,7 +276,6 @@ enum error_t : uint8_t
     bad_close_code,
     bad_close_size,
     bad_close_payload,
-    websocket_unknown,
 
     // json error
     syntax,
@@ -327,7 +310,6 @@ enum error_t : uint8_t
     json_unknown,
 
     // query string parse error
-    message_overflow,
     undefined_type,
     unexpected_method,
     unexpected_type,
@@ -356,109 +338,94 @@ enum error_t : uint8_t
     zmtp_unexpected_command,
     zmtp_unexpected_message,
     zmtp_excessive_parts,
-    zmtp_unserializable
+    zmtp_unserializable,
+
+    // io (synchronous calls on a nonblocking socket)
+    would_block
 };
 
 // No current need for error_code equivalence mapping.
 DECLARE_ERROR_T_CODE_CATEGORY(error);
 
-/// Unfortunately std::error_code and boost::system::error_code are distinct
-/// types, so they do not compare as would be expected across distinct
-/// categories of one or the other type. One solution is to rely exclusively on
-/// boost::system::error_code, but we prefer to normalize the public interface
-/// on std::error_code, and eventually phase out boost codes. Also we prefer to
-/// propagate only errors in library categories. To bridge the gap we map other
-/// codes to network::error_t codes. This cannot be done using the equivalence
-/// operator overloads of either, since the error_code types are distinct,
-/// despite being effectively identical. So we provide this explicit mapping.
-
-/// Alias asio code error enumerations.
-/// These are platform-specific error codes, for which we have seen variance.
-/// boost::system::errc::errc_t is the boost::system error condition enum.
-/// By comparing against conditions we obtain platform-independent error codes.
-/// boost::system::error_code "system" category holds boost::asio::basic_errors.
-
-typedef boost::system::errc::errc_t boost_errc_t;
-typedef boost::asio::error::basic_errors asio_basic_error_t;
-typedef boost::asio::error::netdb_errors asio_netdb_error_t;
-typedef boost::asio::error::addrinfo_errors asio_addrinfo_error_t;
-typedef boost::asio::error::misc_errors asio_misc_error_t;
-typedef boost::asio::ssl::error::stream_errors asio_ssl_stream_error_t;
-typedef boost::beast::websocket::error ws_error_t;
-typedef boost::beast::http::error http_error_t;
 typedef system::error::json_error_t json_error_t;
 
-inline boost_code to_errc_code(boost_errc_t ec) NOEXCEPT
+/// Errors of the http codec.
+enum class http_error_t
 {
-    // boost::system::generic_category();
-    return boost::system::errc::make_error_code(ec);
+    end_of_stream = 1,
+    partial_message,
+    need_more,
+    unexpected_body,
+    need_buffer,
+    end_of_chunk,
+    buffer_overflow,
+    header_limit,
+    body_limit,
+    bad_alloc,
+    bad_line_ending,
+    bad_method,
+    bad_target,
+    bad_version,
+    bad_status,
+    bad_reason,
+    bad_field,
+    bad_value,
+    bad_content_length,
+    bad_transfer_encoding,
+    bad_chunk,
+    bad_chunk_extension,
+    bad_obs_fold,
+    multiple_content_length,
+    stale_parser,
+    short_read
+};
+
+/// The category of http codec errors.
+BCT_API const std::error_category& http_category() NOEXCEPT;
+
+inline code to_http_code(http_error_t ec) NOEXCEPT
+{
+    return { static_cast<int>(ec), http_category() };
 }
 
-inline boost_code to_asio_basic_code(asio_basic_error_t ec) NOEXCEPT
+/// Enables comparison of code with http_error_t.
+inline code make_error_code(http_error_t ec) NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return { ec, boost::asio::error::get_system_category() };
-    BC_POP_WARNING()
+    return to_http_code(ec);
 }
 
-inline boost_code to_http_code(http_error_t ec) NOEXCEPT
-{
-    // no public category.
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return boost::beast::http::make_error_code(ec);
-    BC_POP_WARNING()
-}
-
-inline boost_code to_ssl_stream_code(asio_ssl_stream_error_t ec) NOEXCEPT
-{
-    // boost::asio::ssl::error::stream::get_stream_category()
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return boost::asio::ssl::error::make_error_code(ec);
-    BC_POP_WARNING()
-}
-
-inline boost_code to_websocket_code(ws_error_t ec) NOEXCEPT
-{
-    // no public category.
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return boost::beast::websocket::make_error_code(ec);
-    BC_POP_WARNING()
-}
-
-inline boost_code to_json_code(json_error_t ec) NOEXCEPT
+inline code to_json_code(json_error_t ec) NOEXCEPT
 {
     // system::error::json_error_category::singleton
     return code{ ec };
 }
 
-/// Shortcircuit common boost code mapping.
-BCT_API bool asio_is_canceled(const boost_code& ec) NOEXCEPT;
+/// 1:1 mapping of http_error_t to network (includes json codes).
+BCT_API code http_to_error_code(const code& ec) NOEXCEPT;
 
-/// mapping of boost::asio error codes to network.
-BCT_API code asio_to_error_code(const boost_code& ec) NOEXCEPT;
+/// Mapping of tls alert descriptions to network.
+BCT_API code tls_to_error_code(uint8_t alert) NOEXCEPT;
 
-/// 1:1 mapping of boost::beast:http::error to network.
-BCT_API code http_to_error_code(const boost_code& ec) NOEXCEPT;
+/// Mapping of system::error::json_error_t to network (network codes pass).
+BCT_API code json_to_error_code(const code& ec) NOEXCEPT;
 
-/// mapping of boost::asio::ssl stream error codes to network.
-BCT_API code ssl_to_error_code(const boost_code& ec) NOEXCEPT;
-
-/// 1:1 mapping of boost::beast::websocket::error to network.
-BCT_API code ws_to_error_code(const boost_code& ec) NOEXCEPT;
-
-/// Mapping of system::error::json_error_t to network.
-BCT_API code json_to_error_code(const boost_code& ec) NOEXCEPT;
-
-/// 1:1 mapping of wrapped json-rpc codes back to network.
-BCT_API code rpc_to_error_code(const boost_code& ec) NOEXCEPT;
-
-/// mapping of boost::system::errc codes to network.
-BCT_API code errc_to_error_code(const boost_code& ec) NOEXCEPT;
+/// 1:1 mapping of wrapped json-rpc codes back to network (includes http).
+BCT_API code rpc_to_error_code(const code& ec) NOEXCEPT;
 
 } // namespace error
 } // namespace network
 } // namespace libbitcoin
 
 DECLARE_STD_ERROR_REGISTRATION(bc::network::error::error)
+
+namespace std {
+
+template <>
+struct is_error_code_enum<bc::network::error::http_error_t>
+  : public std::true_type
+{
+};
+
+} // namespace std
 
 #endif

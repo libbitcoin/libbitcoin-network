@@ -18,7 +18,7 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(dispatcher_tests)
+BC_AUTO_TEST_SUITE(dispatcher_tests)
 
 // boolean_t defined in global namespace by:
 // Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/
@@ -64,23 +64,23 @@ struct mock_methods
 using mock_interface = publish<mock_methods>;
 using distributor_mock = dispatcher<mock_interface>;
 
-BOOST_AUTO_TEST_CASE(dispatcher__construct__stop__stops)
+BC_AUTO_TEST_CASE(dispatcher__construct__stop__stops)
 {
     distributor_mock instance{};
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__no_subscriber__success)
+BC_AUTO_TEST_CASE(dispatcher__notify__no_subscriber__success)
 {
     distributor_mock instance{};
     request_t request{};
     request.method = "empty_method";
     const auto ec = instance.notify(request);
     instance.stop(error::service_stopped);
-    BOOST_REQUIRE_EQUAL(ec, error::success);
+    BC_REQUIRE_EQUAL(ec, error::success);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stopped__subscriber_stopped)
+BC_AUTO_TEST_CASE(dispatcher__subscribe__stopped__subscriber_stopped)
 {
     distributor_mock instance{};
     auto result = true;
@@ -98,11 +98,11 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stopped__subscriber_stopped)
             return false;
         });
 
-    BOOST_REQUIRE_EQUAL(error::subscriber_stopped, subscribe_ec);
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(error::subscriber_stopped, subscribe_ec);
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stop__service_stopped)
+BC_AUTO_TEST_CASE(dispatcher__subscribe__stop__service_stopped)
 {
     distributor_mock instance{};
     code result_ec{};
@@ -119,12 +119,12 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__stop__service_stopped)
         });
 
     instance.stop(error::invalid_magic);
-    BOOST_REQUIRE_EQUAL(result_ec, error::invalid_magic);
-    BOOST_REQUIRE(!subscribe_ec);
-    BOOST_REQUIRE(result);
+    BC_REQUIRE_EQUAL(result_ec, error::invalid_magic);
+    BC_REQUIRE(!subscribe_ec);
+    BC_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__subscribe__multiple__expected)
+BC_AUTO_TEST_CASE(dispatcher__subscribe__multiple__expected)
 {
     distributor_mock instance{};
 
@@ -140,21 +140,21 @@ BOOST_AUTO_TEST_CASE(dispatcher__subscribe__multiple__expected)
             return true;
         });
 
-    BOOST_REQUIRE(!ec1);
-    BOOST_REQUIRE(!ec2);
+    BC_REQUIRE(!ec1);
+    BC_REQUIRE(!ec2);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__unknown_method__unexpected_method)
+BC_AUTO_TEST_CASE(dispatcher__notify__unknown_method__unexpected_method)
 {
     distributor_mock instance{};
     request_t request{};
     request.method = "unknown_method";
-    BOOST_REQUIRE_EQUAL(instance.notify(request), error::unexpected_method);
+    BC_REQUIRE_EQUAL(instance.notify(request), error::unexpected_method);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes_both)
+BC_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes_both)
 {
     distributor_mock instance{};
     bool first_called{};
@@ -189,17 +189,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__multiple_decayable_subscribers__invokes
     request_t request{};
     request.method = "all_required";
     request.params = params_t{ array_t{ boolean_type{ true }, number_t{ 24.0 }, string_t{ "42" } } };
-    BOOST_REQUIRE(!instance.notify(request));
-    BOOST_CHECK_EQUAL(first_result_a, true);
-    BOOST_CHECK_EQUAL(second_result_a, true);
-    BOOST_CHECK_EQUAL(first_result_b, 24.0);
-    BOOST_CHECK_EQUAL(second_result_b, 24.0);
-    BOOST_CHECK_EQUAL(first_result_c, "42");
-    BOOST_CHECK_EQUAL(second_result_c, "42");
+    BC_REQUIRE(!instance.notify(request));
+    BC_CHECK_EQUAL(first_result_a, true);
+    BC_CHECK_EQUAL(second_result_a, true);
+    BC_CHECK_EQUAL(first_result_b, 24.0);
+    BC_CHECK_EQUAL(second_result_b, 24.0);
+    BC_CHECK_EQUAL(first_result_c, "42");
+    BC_CHECK_EQUAL(second_result_c, "42");
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
+BC_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
 {
     distributor_mock instance{};
     bool called{};
@@ -213,12 +213,12 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_no_params__success)
 
     request_t request{};
     request.method = "empty_method";
-    BOOST_REQUIRE(!instance.notify(request));
-    BOOST_REQUIRE(called);
+    BC_REQUIRE(!instance.notify(request));
+    BC_REQUIRE(called);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
+BC_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
 {
     distributor_mock instance{};
     bool called{};
@@ -236,12 +236,12 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_empty_array__success)
         .params = { array_t{} }
     };
 
-    BOOST_REQUIRE(!instance.notify(request));
-    BOOST_REQUIRE(called);
+    BC_REQUIRE(!instance.notify(request));
+    BC_REQUIRE(called);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positional)
+BC_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positional)
 {
     distributor_mock instance{};
 
@@ -251,11 +251,11 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__empty_method_array_params__extra_positi
         .params = { array_t{ value_t{ 1.0 } } }
     };
 
-    BOOST_REQUIRE_EQUAL(instance.notify(request), error::extra_positional);
+    BC_REQUIRE_EQUAL(instance.notify(request), error::extra_positional);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -298,17 +298,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_positional_params__expecte
         .params = { array_t{ boolean_type{ true }, number_t{ 24.0 }, string_t{ "42" } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE_EQUAL(ec2, error::unexpected_type);
-    BOOST_REQUIRE_EQUAL(ec3, error::extra_positional);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_a, true);
-    BOOST_REQUIRE_EQUAL(result_b, 24.0);
-    BOOST_REQUIRE_EQUAL(result_c, "42");
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec2, error::unexpected_type);
+    BC_REQUIRE_EQUAL(ec3, error::extra_positional);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_a, true);
+    BC_REQUIRE_EQUAL(result_b, 24.0);
+    BC_REQUIRE_EQUAL(result_c, "42");
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
     const auto ec5 = instance.notify(
     {
         // success � duplicate keys are allowed (real JSON input)
-        // Boost.JSON parser resolves duplicates using last-writer-wins,
+        // The json parser resolves duplicates using last-writer-wins,
         // before object_t conversion occurs, so map never sees duplicates.
         // Test construction uses initializer_list -> first-writer-wins.
         .method = "all_required",
@@ -379,20 +379,20 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
         .params = { object_t{ { "b", number_t{ 24.0 } }, { "c", string_t{ "24" } }, { "a", boolean_type{ false } } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE_EQUAL(ec2, error::missing_parameter);
-    BOOST_REQUIRE_EQUAL(ec3, error::unexpected_type);
-    BOOST_REQUIRE_EQUAL(ec4, error::extra_named);
-    BOOST_REQUIRE(!ec5);
-    BOOST_REQUIRE(!ec6);
-    BOOST_REQUIRE(!ec7);
-    BOOST_REQUIRE_EQUAL(result_a, false);
-    BOOST_REQUIRE_EQUAL(result_b, 42.0);
-    BOOST_REQUIRE_EQUAL(result_c, "24");
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec2, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec3, error::unexpected_type);
+    BC_REQUIRE_EQUAL(ec4, error::extra_named);
+    BC_REQUIRE(!ec5);
+    BC_REQUIRE(!ec6);
+    BC_REQUIRE(!ec7);
+    BC_REQUIRE_EQUAL(result_a, false);
+    BC_REQUIRE_EQUAL(result_b, 42.0);
+    BC_REQUIRE_EQUAL(result_c, "24");
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -435,17 +435,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_positional_params__expecte
         .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, boolean_type{ false } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_a, "42");
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, true);
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_a, "42");
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, true);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -488,17 +488,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
         .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", boolean_type{ false } } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_a, "42");
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, true);
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_a, "42");
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, true);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -541,17 +541,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expecte
         .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, null_t{} } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_a, "42");
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, true);
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_a, "42");
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, true);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -594,17 +594,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
         .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", null_t{} } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_a, "42");
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, true);
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_a, "42");
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, true);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -647,17 +647,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expecte
         .params = { array_t{ string_t{ "42" }, boolean_type{ false }, number_t{ 42.0 } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_a, "42");
-    BOOST_REQUIRE_EQUAL(result_b, true);
-    BOOST_REQUIRE_EQUAL(result_c, 4.2);
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_a, "42");
+    BC_REQUIRE_EQUAL(result_b, true);
+    BC_REQUIRE_EQUAL(result_c, 4.2);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -700,17 +700,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
         .params = { object_t{ { "a", string_t{ "42" } }, { "b", boolean_type{ false } }, { "c", number_t{ 42.0 } } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_a, "42");
-    BOOST_REQUIRE_EQUAL(result_b, true);
-    BOOST_REQUIRE_EQUAL(result_c, 4.2);
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_a, "42");
+    BC_REQUIRE_EQUAL(result_b, true);
+    BC_REQUIRE_EQUAL(result_c, 4.2);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -751,16 +751,16 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expecte
         .params = { array_t{ boolean_type{ false }, number_t{ 42.0 } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_a, true);
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_a, true);
+    BC_REQUIRE_EQUAL(result_b, 4.2);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -801,18 +801,18 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
         .params = { object_t{ { "a", boolean_type{ false } }, { "b", number_t{ 42.0 } } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_a, true);
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_a, true);
+    BC_REQUIRE_EQUAL(result_b, 4.2);
     instance.stop(error::service_stopped);
 }
 
 //  method<"with_nullopt", std::string, nullopt<4.2>, nullopt<true>>{ "a", "b", "c" },
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_positional_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_positional_params__expected)
 {
     distributor_mock instance{};
     size_t called{};
@@ -834,9 +834,9 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_positional_params__expecte
         .params = { array_t{ string_t{ "a" }, null_t{}, null_t{} } }
     });
 
-    BOOST_REQUIRE(!ec1);
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, true);
+    BC_REQUIRE(!ec1);
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, true);
 
     const auto ec2 = instance.notify(
     {
@@ -844,9 +844,9 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_positional_params__expecte
         .params = { array_t{ string_t{ "a" } } }
     });
 
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, true);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, true);
 
     const auto ec3 = instance.notify(
     {
@@ -854,9 +854,9 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_positional_params__expecte
         .params = { array_t{ string_t{ "a" }, null_t{}, boolean_type{ false } } }
     });
 
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, false);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, false);
 
     const auto ec4 = instance.notify(
     {
@@ -864,14 +864,14 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_positional_params__expecte
         .params = { array_t{ string_t{ "a" }, number_t{ 42.0 }, null_t{} } }
     });
 
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE_EQUAL(result_b, 42.0);
-    BOOST_REQUIRE_EQUAL(result_c, true);
-    BOOST_REQUIRE_EQUAL(called, 4u);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(result_b, 42.0);
+    BC_REQUIRE_EQUAL(result_c, true);
+    BC_REQUIRE_EQUAL(called, 4u);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_named_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_named_params__expected)
 {
     distributor_mock instance{};
     size_t called{};
@@ -893,9 +893,9 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_named_params__expected)
         .params = { object_t{ { "a", string_t{ "a" } }, { "b", null_t{} }, { "c", null_t{} } } }
     });
 
-    BOOST_REQUIRE(!ec1);
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, true);
+    BC_REQUIRE(!ec1);
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, true);
 
     const auto ec2 = instance.notify(
     {
@@ -903,9 +903,9 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_named_params__expected)
         .params = { object_t{ { "a", string_t{ "a" } } } }
     });
 
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, true);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, true);
 
     const auto ec3 = instance.notify(
     {
@@ -913,17 +913,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__with_nullopt_named_params__expected)
         .params = { object_t{ { "a", string_t{ "a" } }, { "c", boolean_type{ false } } } }
     });
 
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE_EQUAL(result_b, 4.2);
-    BOOST_REQUIRE_EQUAL(result_c, false);
-    BOOST_REQUIRE_EQUAL(called, 3u);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE_EQUAL(result_b, 4.2);
+    BC_REQUIRE_EQUAL(result_c, false);
+    BC_REQUIRE_EQUAL(called, 3u);
     instance.stop(error::service_stopped);
 }
 
 //  method<"text_options", optional<"a"_t>, optional<"b"_t>>{ "a", "b" },
 
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__text_options_positional_params__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__text_options_positional_params__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -964,16 +964,16 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__text_options_positional_params__expecte
         .params = { array_t{ boolean_type{ false }, number_t{ 42.0 } } }
     });
 
-    BOOST_CHECK(!ec1);
-    BOOST_CHECK(!ec2);
-    BOOST_CHECK(!ec3);
-    BOOST_CHECK_EQUAL(ec4, error::unexpected_type);
-    BOOST_CHECK_EQUAL(result_a, "c");
-    BOOST_CHECK_EQUAL(result_b, "b");
+    BC_CHECK(!ec1);
+    BC_CHECK(!ec2);
+    BC_CHECK(!ec3);
+    BC_CHECK_EQUAL(ec4, error::unexpected_type);
+    BC_CHECK_EQUAL(result_a, "c");
+    BC_CHECK_EQUAL(result_b, "b");
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
+BC_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -996,13 +996,13 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional__expected)
         .params = { array_t{ any_t{ pointer } } }
     });
 
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(result->nonce, expected);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(result->nonce, expected);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
+BC_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
 {
     distributor_mock instance{};
     bool called{};
@@ -1025,9 +1025,9 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_named__expected)
         .params = { object_t{ { "message", any_t{ pointer } } } }
     });
 
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(result);
-    BOOST_REQUIRE_EQUAL(result->nonce, expected);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(result->nonce, expected);
     instance.stop(error::service_stopped);
 }
 
@@ -1053,7 +1053,7 @@ struct mock_missing_nullable
 using missing_nullable_interface = publish<mock_missing_nullable>;
 using distributor_missing_nullable = dispatcher<missing_nullable_interface>;
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
 {
     distributor_missing_nullable instance{};
     double result_a{};
@@ -1096,17 +1096,17 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable__expected)
         .params = { object_t{ { "a", 24.0 } } }
     });
 
-    BOOST_REQUIRE(!ec1);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE(!ec5);
-    BOOST_REQUIRE(result_b);
-    BOOST_REQUIRE_EQUAL(result_a, 24.0);
+    BC_REQUIRE(!ec1);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE(!ec5);
+    BC_REQUIRE(result_b);
+    BC_REQUIRE_EQUAL(result_a, 24.0);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
 {
     distributor_missing_nullable instance{};
     double result_a{};
@@ -1164,15 +1164,15 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
         .params = { object_t{ { "a", 42.0 }, { "b", any_t{ ping42 } } } }
     });
 
-    BOOST_REQUIRE(!ec1);
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE_EQUAL(ec3, error::missing_parameter);
-    BOOST_REQUIRE(!ec4);
-    BOOST_REQUIRE(!ec5);
-    BOOST_REQUIRE(!ec6);
-    BOOST_REQUIRE(!ec7);
-    BOOST_REQUIRE_EQUAL(result_a, 42.0);
-    BOOST_REQUIRE_EQUAL(result_b->nonce, ping42->nonce);
+    BC_REQUIRE(!ec1);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE_EQUAL(ec3, error::missing_parameter);
+    BC_REQUIRE(!ec4);
+    BC_REQUIRE(!ec5);
+    BC_REQUIRE(!ec6);
+    BC_REQUIRE(!ec7);
+    BC_REQUIRE_EQUAL(result_a, 42.0);
+    BC_REQUIRE_EQUAL(result_b->nonce, ping42->nonce);
     instance.stop(error::service_stopped);
 }
 
@@ -1199,7 +1199,7 @@ struct mock_value_type
 
 using mock_value_type_interface = publish<mock_value_type>;
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__value_type__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__value_type__expected)
 {
     dispatcher<mock_value_type_interface> instance{};
     using method = mock_value_type_interface::value_type;
@@ -1217,35 +1217,35 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__value_type__expected)
         .method = string_t{ method::name },
         .params = { array_t{ { 42.0 }, { false } } }
     });
-    BOOST_REQUIRE(!ec1);
-    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
-    BOOST_REQUIRE(!std::get<bool>(result_b.value()));
-    BOOST_REQUIRE_EQUAL(result_a, 42.0);
+    BC_REQUIRE(!ec1);
+    BC_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BC_REQUIRE(!std::get<bool>(result_b.value()));
+    BC_REQUIRE_EQUAL(result_a, 42.0);
     
     const auto ec2 = instance.notify(
     {
         .method = string_t{ method::name },
         .params = { object_t{ { "a", 22.0 }, { "b", false } } }
     });
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
-    BOOST_REQUIRE(!std::get<bool>(result_b.value()));
-    BOOST_REQUIRE_EQUAL(result_a, 22.0);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BC_REQUIRE(!std::get<bool>(result_b.value()));
+    BC_REQUIRE_EQUAL(result_a, 22.0);
     
     const auto ec3 = instance.notify(
     {
         .method = string_t{ method::name },
         .params = { object_t{ { "b", true }, { "a", 24.0 } } }
     });
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
-    BOOST_REQUIRE(std::get<bool>(result_b.value()));
-    BOOST_REQUIRE_EQUAL(result_a, 24.0);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BC_REQUIRE(std::get<bool>(result_b.value()));
+    BC_REQUIRE_EQUAL(result_a, 24.0);
 
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__value_optional__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__value_optional__expected)
 {
     dispatcher<mock_value_type_interface> instance{};
     using method = mock_value_type_interface::value_optional;
@@ -1263,34 +1263,34 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__value_optional__expected)
         .method = string_t{ method::name },
         .params = { array_t{ { 42.0 } } }
     });
-    BOOST_REQUIRE(!ec1);
-    BOOST_REQUIRE(std::holds_alternative<null_t>(result_b.value()));
-    BOOST_REQUIRE_EQUAL(result_a, 42.0);
+    BC_REQUIRE(!ec1);
+    BC_REQUIRE(std::holds_alternative<null_t>(result_b.value()));
+    BC_REQUIRE_EQUAL(result_a, 42.0);
     
     const auto ec2 = instance.notify(
     {
         .method = string_t{ method::name },
         .params = { object_t{ { "a", 22.0 }, { "b", false } } }
     });
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
-    BOOST_REQUIRE(!std::get<bool>(result_b.value()));
-    BOOST_REQUIRE_EQUAL(result_a, 22.0);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BC_REQUIRE(!std::get<bool>(result_b.value()));
+    BC_REQUIRE_EQUAL(result_a, 22.0);
     
     const auto ec3 = instance.notify(
     {
         .method = string_t{ method::name },
         .params = { object_t{ { "b", true }, { "a", 24.0 } } }
     });
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value()));
-    BOOST_REQUIRE(std::get<bool>(result_b.value()));
-    BOOST_REQUIRE_EQUAL(result_a, 24.0);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(std::holds_alternative<bool>(result_b.value()));
+    BC_REQUIRE(std::get<bool>(result_b.value()));
+    BC_REQUIRE_EQUAL(result_a, 24.0);
 
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__value_nullable__expected)
+BC_AUTO_TEST_CASE(dispatcher__notify__value_nullable__expected)
 {
     dispatcher<mock_value_type_interface> instance{};
     using method = mock_value_type_interface::value_nullable;
@@ -1308,31 +1308,31 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__value_nullable__expected)
         .method = string_t{ method::name },
         .params = { array_t{ { 42.0 } } }
     });
-    BOOST_REQUIRE(!ec1);
-    BOOST_REQUIRE(!result_b.has_value());
-    BOOST_REQUIRE_EQUAL(result_a, 42.0);
+    BC_REQUIRE(!ec1);
+    BC_REQUIRE(!result_b.has_value());
+    BC_REQUIRE_EQUAL(result_a, 42.0);
     
     const auto ec2 = instance.notify(
     {
         .method = string_t{ method::name },
         .params = { object_t{ { "a", 22.0 }, { "b", false } } }
     });
-    BOOST_REQUIRE(!ec2);
-    BOOST_REQUIRE(result_b.has_value());
-    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value().value()));
-    BOOST_REQUIRE(!std::get<bool>(result_b.value().value()));
-    BOOST_REQUIRE_EQUAL(result_a, 22.0);
+    BC_REQUIRE(!ec2);
+    BC_REQUIRE(result_b.has_value());
+    BC_REQUIRE(std::holds_alternative<bool>(result_b.value().value()));
+    BC_REQUIRE(!std::get<bool>(result_b.value().value()));
+    BC_REQUIRE_EQUAL(result_a, 22.0);
     
     const auto ec3 = instance.notify(
     {
         .method = string_t{ method::name },
         .params = { object_t{ { "b", true }, { "a", 24.0 } } }
     });
-    BOOST_REQUIRE(!ec3);
-    BOOST_REQUIRE(result_b.has_value());
-    BOOST_REQUIRE(std::holds_alternative<bool>(result_b.value().value()));
-    BOOST_REQUIRE(std::get<bool>(result_b.value().value()));
-    BOOST_REQUIRE_EQUAL(result_a, 24.0);
+    BC_REQUIRE(!ec3);
+    BC_REQUIRE(result_b.has_value());
+    BC_REQUIRE(std::holds_alternative<bool>(result_b.value().value()));
+    BC_REQUIRE(std::get<bool>(result_b.value().value()));
+    BC_REQUIRE_EQUAL(result_a, 24.0);
 
     instance.stop(error::service_stopped);
 }
@@ -1343,7 +1343,7 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__value_nullable__expected)
 using positional_interface = publish<mock_methods, grouping::positional>;
 using named_interface = publish<mock_methods, grouping::named>;
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__value_params_either__missing_object)
+BC_AUTO_TEST_CASE(dispatcher__notify__value_params_either__missing_object)
 {
     distributor_mock instance{};
     const auto ec = instance.notify(
@@ -1352,11 +1352,11 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__value_params_either__missing_object)
         .params = { value_t{ true } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec, error::missing_object);
+    BC_REQUIRE_EQUAL(ec, error::missing_object);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__object_params_positional__missing_array)
+BC_AUTO_TEST_CASE(dispatcher__notify__object_params_positional__missing_array)
 {
     dispatcher<positional_interface> instance{};
     const auto ec = instance.notify(
@@ -1365,11 +1365,11 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__object_params_positional__missing_array
         .params = { object_t{ { "a", true }, { "b", 42.0 }, { "c", string_t{ "c" } } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec, error::missing_array);
+    BC_REQUIRE_EQUAL(ec, error::missing_array);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__array_params_named__missing_object)
+BC_AUTO_TEST_CASE(dispatcher__notify__array_params_named__missing_object)
 {
     dispatcher<named_interface> instance{};
     const auto ec = instance.notify(
@@ -1378,11 +1378,11 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__array_params_named__missing_object)
         .params = { array_t{ true, 42.0, string_t{ "c" } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec, error::missing_object);
+    BC_REQUIRE_EQUAL(ec, error::missing_object);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(dispatcher__notify__no_params_named_empty_method__success)
+BC_AUTO_TEST_CASE(dispatcher__notify__no_params_named_empty_method__success)
 {
     dispatcher<named_interface> instance{};
     bool called{};
@@ -1396,12 +1396,12 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__no_params_named_empty_method__success)
 
     request_t request{};
     request.method = "empty_method";
-    BOOST_REQUIRE(!instance.notify(request));
-    BOOST_REQUIRE(called);
+    BC_REQUIRE(!instance.notify(request));
+    BC_REQUIRE(called);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional_wrong_pointer_type__unexpected_type)
+BC_AUTO_TEST_CASE(distributor__notify__ping_positional_wrong_pointer_type__unexpected_type)
 {
     distributor_mock instance{};
     const auto pointer = system::to_shared<messages::peer::pong>(42u);
@@ -1411,8 +1411,8 @@ BOOST_AUTO_TEST_CASE(distributor__notify__ping_positional_wrong_pointer_type__un
         .params = { array_t{ any_t{ pointer } } }
     });
 
-    BOOST_REQUIRE_EQUAL(ec, error::unexpected_type);
+    BC_REQUIRE_EQUAL(ec, error::unexpected_type);
     instance.stop(error::service_stopped);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

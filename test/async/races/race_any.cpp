@@ -18,55 +18,55 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(race_any_tests)
+BC_AUTO_TEST_SUITE(race_any_tests)
 
 using race_any_t = race_any<const code&>;
 
-BOOST_AUTO_TEST_CASE(race_any__destruct__unfinished__operation_failed)
+BC_AUTO_TEST_CASE(race_any__destruct__unfinished__operation_failed)
 {
     code complete{ error::invalid_magic };
 
     {
         race_any_t race_any{ [&](const code& ec) NOEXCEPT { complete = ec; } };
-        BOOST_REQUIRE_EQUAL(complete, error::invalid_magic);
+        BC_REQUIRE_EQUAL(complete, error::invalid_magic);
     }
 
-    BOOST_REQUIRE_EQUAL(complete, error::operation_failed);
+    BC_REQUIRE_EQUAL(complete, error::operation_failed);
 }
 
-BOOST_AUTO_TEST_CASE(race_any__finish__first__true_expected_invocation)
+BC_AUTO_TEST_CASE(race_any__finish__first__true_expected_invocation)
 {
     code complete{ error::invalid_magic };
     race_any_t race_any{ [&](const code& ec) NOEXCEPT { complete = ec; } };
 
-    BOOST_REQUIRE(race_any.finish(error::accept_failed));
-    BOOST_REQUIRE_EQUAL(complete, error::accept_failed);
+    BC_REQUIRE(race_any.finish(error::accept_failed));
+    BC_REQUIRE_EQUAL(complete, error::accept_failed);
 }
 
-BOOST_AUTO_TEST_CASE(race_any__finish__subsequent__false_not_invoked)
+BC_AUTO_TEST_CASE(race_any__finish__subsequent__false_not_invoked)
 {
     code complete{ error::invalid_magic };
     race_any_t race_any{ [&](const code& ec) NOEXCEPT { complete = ec; } };
 
-    BOOST_REQUIRE(race_any.finish(error::accept_failed));
-    BOOST_REQUIRE(!race_any.finish(error::address_invalid));
-    BOOST_REQUIRE(!race_any.finish(error::success));
-    BOOST_REQUIRE_EQUAL(complete, error::accept_failed);
+    BC_REQUIRE(race_any.finish(error::accept_failed));
+    BC_REQUIRE(!race_any.finish(error::address_invalid));
+    BC_REQUIRE(!race_any.finish(error::success));
+    BC_REQUIRE_EQUAL(complete, error::accept_failed);
 }
 
-BOOST_AUTO_TEST_CASE(race_any__destruct__finished__not_reinvoked)
+BC_AUTO_TEST_CASE(race_any__destruct__finished__not_reinvoked)
 {
     code complete{ error::invalid_magic };
 
     {
         race_any_t race_any{ [&](const code& ec) NOEXCEPT { complete = ec; } };
-        BOOST_REQUIRE(race_any.finish(error::success));
+        BC_REQUIRE(race_any.finish(error::success));
     }
 
-    BOOST_REQUIRE_EQUAL(complete, error::success);
+    BC_REQUIRE_EQUAL(complete, error::success);
 }
 
-BOOST_AUTO_TEST_CASE(race_any__finish__winner__resources_deleted)
+BC_AUTO_TEST_CASE(race_any__finish__winner__resources_deleted)
 {
     struct destructor
     {
@@ -83,10 +83,10 @@ BOOST_AUTO_TEST_CASE(race_any__finish__winner__resources_deleted)
     race_any_t race_any{ [=, &complete](const code&) NOEXCEPT { complete = !foo->deleted_; } };
 
     foo.reset();
-    BOOST_REQUIRE(!deleted);
-    BOOST_REQUIRE(race_any.finish(error::success));
-    BOOST_REQUIRE(complete);
-    BOOST_REQUIRE(deleted);
+    BC_REQUIRE(!deleted);
+    BC_REQUIRE(race_any.finish(error::success));
+    BC_REQUIRE(complete);
+    BC_REQUIRE(deleted);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

@@ -18,96 +18,96 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(race_unity_tests)
+BC_AUTO_TEST_SUITE(race_unity_tests)
 
 using race_unity_t = race_unity<const code&, size_t>;
 
-BOOST_AUTO_TEST_CASE(race_unity__running__empty__false)
+BC_AUTO_TEST_CASE(race_unity__running__empty__false)
 {
     race_unity_t race_unity{ 0 };
-    BOOST_REQUIRE(!race_unity.running());
+    BC_REQUIRE(!race_unity.running());
 }
 
-BOOST_AUTO_TEST_CASE(race_unity__running__unstarted__false)
+BC_AUTO_TEST_CASE(race_unity__running__unstarted__false)
 {
     race_unity_t race_unity{ 2 };
-    BOOST_REQUIRE(!race_unity.running());
+    BC_REQUIRE(!race_unity.running());
 }
 
-BOOST_AUTO_TEST_CASE(race_unity__start__unstarted__true_running)
+BC_AUTO_TEST_CASE(race_unity__start__unstarted__true_running)
 {
     race_unity_t race_unity{ 3 };
-    BOOST_REQUIRE(race_unity.start([&](code, size_t) NOEXCEPT {}));
-    BOOST_REQUIRE(race_unity.running());
+    BC_REQUIRE(race_unity.start([&](code, size_t) NOEXCEPT {}));
+    BC_REQUIRE(race_unity.running());
 
     // Avoid running at destruct assertion.
-    BOOST_REQUIRE(!race_unity.finish({}, {}));
-    BOOST_REQUIRE(!race_unity.finish({}, {}));
-    BOOST_REQUIRE(race_unity.finish({}, {}));
-    BOOST_REQUIRE(!race_unity.running());
+    BC_REQUIRE(!race_unity.finish({}, {}));
+    BC_REQUIRE(!race_unity.finish({}, {}));
+    BC_REQUIRE(race_unity.finish({}, {}));
+    BC_REQUIRE(!race_unity.running());
 }
 
-BOOST_AUTO_TEST_CASE(race_unity__start__started__false_running)
+BC_AUTO_TEST_CASE(race_unity__start__started__false_running)
 {
     race_unity_t race_unity{ 3 };
-    BOOST_REQUIRE(race_unity.start([&](code, size_t) NOEXCEPT {}));
-    BOOST_REQUIRE(!race_unity.start([&](code, size_t) NOEXCEPT {}));
-    BOOST_REQUIRE(race_unity.running());
+    BC_REQUIRE(race_unity.start([&](code, size_t) NOEXCEPT {}));
+    BC_REQUIRE(!race_unity.start([&](code, size_t) NOEXCEPT {}));
+    BC_REQUIRE(race_unity.running());
 
     // Avoid running at destruct assertion.
-    BOOST_REQUIRE(!race_unity.finish({}, {}));
-    BOOST_REQUIRE(!race_unity.finish({}, {}));
-    BOOST_REQUIRE(race_unity.finish({}, {}));
-    BOOST_REQUIRE(!race_unity.running());
+    BC_REQUIRE(!race_unity.finish({}, {}));
+    BC_REQUIRE(!race_unity.finish({}, {}));
+    BC_REQUIRE(race_unity.finish({}, {}));
+    BC_REQUIRE(!race_unity.running());
 }
 
-BOOST_AUTO_TEST_CASE(race_unity__running__3_of_3__false_expected_invocation)
+BC_AUTO_TEST_CASE(race_unity__running__3_of_3__false_expected_invocation)
 {
     const std::pair<code, size_t> expected{ error::invalid_magic, 3 };
     std::pair<code, size_t> complete{};
     race_unity_t race_unity{ 3 };
 
-    BOOST_REQUIRE(!race_unity.running());
-    BOOST_REQUIRE(race_unity.start([&](code ec, size_t size) NOEXCEPT
+    BC_REQUIRE(!race_unity.running());
+    BC_REQUIRE(race_unity.start([&](code ec, size_t size) NOEXCEPT
     {
         complete = { ec, size };
     }));
 
-    BOOST_REQUIRE(race_unity.running());
-    BOOST_REQUIRE(!race_unity.finish(expected.first, expected.second));
-    BOOST_REQUIRE(race_unity.running());
-    BOOST_REQUIRE(!race_unity.finish(error::address_invalid, 1));
-    BOOST_REQUIRE(race_unity.running());
-    BOOST_REQUIRE(!race_unity.finish(error::accept_failed, 2));
-    BOOST_REQUIRE(!race_unity.running());
-    BOOST_REQUIRE_EQUAL(complete.first, expected.first);
-    BOOST_REQUIRE_EQUAL(complete.second, expected.second);
+    BC_REQUIRE(race_unity.running());
+    BC_REQUIRE(!race_unity.finish(expected.first, expected.second));
+    BC_REQUIRE(race_unity.running());
+    BC_REQUIRE(!race_unity.finish(error::address_invalid, 1));
+    BC_REQUIRE(race_unity.running());
+    BC_REQUIRE(!race_unity.finish(error::accept_failed, 2));
+    BC_REQUIRE(!race_unity.running());
+    BC_REQUIRE_EQUAL(complete.first, expected.first);
+    BC_REQUIRE_EQUAL(complete.second, expected.second);
 }
 
-BOOST_AUTO_TEST_CASE(race_unity__running__4_of_3__false_expected_invocation)
+BC_AUTO_TEST_CASE(race_unity__running__4_of_3__false_expected_invocation)
 {
     const std::pair<code, size_t> expected{ error::invalid_magic, 2 };
     std::pair<code, size_t> complete{};
     race_unity_t race_unity{ 3 };
 
-    BOOST_REQUIRE(!race_unity.running());
-    BOOST_REQUIRE(race_unity.start([&](code ec, size_t size) NOEXCEPT
+    BC_REQUIRE(!race_unity.running());
+    BC_REQUIRE(race_unity.start([&](code ec, size_t size) NOEXCEPT
     {
         complete = { ec, size };
     }));
 
-    BOOST_REQUIRE(race_unity.running());
-    BOOST_REQUIRE(!race_unity.finish(error::success, 1));
-    BOOST_REQUIRE(!race_unity.finish(expected.first, expected.second));
-    BOOST_REQUIRE(!race_unity.finish(error::address_invalid, 3));
-    BOOST_REQUIRE(!race_unity.running());
-    BOOST_REQUIRE(!race_unity.finish(error::success, 4));
-    BOOST_REQUIRE(!race_unity.running());
-    BOOST_REQUIRE_EQUAL(complete.first, expected.first);
-    BOOST_REQUIRE_EQUAL(complete.second, expected.second);
+    BC_REQUIRE(race_unity.running());
+    BC_REQUIRE(!race_unity.finish(error::success, 1));
+    BC_REQUIRE(!race_unity.finish(expected.first, expected.second));
+    BC_REQUIRE(!race_unity.finish(error::address_invalid, 3));
+    BC_REQUIRE(!race_unity.running());
+    BC_REQUIRE(!race_unity.finish(error::success, 4));
+    BC_REQUIRE(!race_unity.running());
+    BC_REQUIRE_EQUAL(complete.first, expected.first);
+    BC_REQUIRE_EQUAL(complete.second, expected.second);
 }
 
-BOOST_AUTO_TEST_CASE(race_unity__finish__3_of_3__resources_deleted)
+BC_AUTO_TEST_CASE(race_unity__finish__3_of_3__resources_deleted)
 {
     struct destructor
     {
@@ -125,38 +125,38 @@ BOOST_AUTO_TEST_CASE(race_unity__finish__3_of_3__resources_deleted)
     code result{ error::success };
 
     // foo/bar captured/passed into handler.
-    BOOST_REQUIRE(race_unity.start([=, &complete, &result](const code& ec, const destructor::ptr& bar) NOEXCEPT
+    BC_REQUIRE(race_unity.start([=, &complete, &result](const code& ec, const destructor::ptr& bar) NOEXCEPT
     {
         result = ec;
         complete = { !foo->deleted_, !bar->deleted_ };
     }));
 
     // First finish is failer, captures foo/ec.
-    BOOST_REQUIRE(!race_unity.finish(expected, foo));
-    BOOST_REQUIRE(race_unity.running());
-    BOOST_REQUIRE(!complete.first);
-    BOOST_REQUIRE(!complete.second);
-    BOOST_REQUIRE(!result);
+    BC_REQUIRE(!race_unity.finish(expected, foo));
+    BC_REQUIRE(race_unity.running());
+    BC_REQUIRE(!complete.first);
+    BC_REQUIRE(!complete.second);
+    BC_REQUIRE(!result);
 
     // race_unity not finished, resources retained.
     foo.reset();
-    BOOST_REQUIRE(!deleted);
+    BC_REQUIRE(!deleted);
 
     // race_unity not finished, resources retained.
-    BOOST_REQUIRE(!race_unity.finish(error::success, {}));
-    BOOST_REQUIRE(race_unity.running());
-    BOOST_REQUIRE(!complete.first);
-    BOOST_REQUIRE(!complete.second);
-    BOOST_REQUIRE(!result);
-    BOOST_REQUIRE(!deleted);
+    BC_REQUIRE(!race_unity.finish(error::success, {}));
+    BC_REQUIRE(race_unity.running());
+    BC_REQUIRE(!complete.first);
+    BC_REQUIRE(!complete.second);
+    BC_REQUIRE(!result);
+    BC_REQUIRE(!deleted);
 
     // race_unity finished (invoked with failer), resourced cleared.
-    BOOST_REQUIRE(!race_unity.finish(error::success, {}));
-    BOOST_REQUIRE(!race_unity.running());
-    BOOST_REQUIRE(complete.first);
-    BOOST_REQUIRE(complete.second);
-    BOOST_REQUIRE_EQUAL(result, expected);
-    BOOST_REQUIRE(deleted);
+    BC_REQUIRE(!race_unity.finish(error::success, {}));
+    BC_REQUIRE(!race_unity.running());
+    BC_REQUIRE(complete.first);
+    BC_REQUIRE(complete.second);
+    BC_REQUIRE_EQUAL(result, expected);
+    BC_REQUIRE(deleted);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

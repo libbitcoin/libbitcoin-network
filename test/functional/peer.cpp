@@ -18,42 +18,42 @@
  */
 #include "peer_setup_fixture.hpp"
 
-BOOST_FIXTURE_TEST_SUITE(functional_peer_tests, peer_setup_fixture)
+BC_FIXTURE_TEST_SUITE(functional_peer_tests, peer_setup_fixture)
 
 using namespace messages::peer;
 
-BOOST_AUTO_TEST_CASE(functional_peer__handshake__default__expected_version)
+BC_AUTO_TEST_CASE(functional_peer__handshake__default__expected_version)
 {
-    BOOST_REQUIRE(handshake());
-    BOOST_REQUIRE_EQUAL(node_version->value, settings_.protocol_maximum);
-    BOOST_REQUIRE_EQUAL(node_version->services, service::node_none);
-    BOOST_REQUIRE_EQUAL(node_version->user_agent, settings_.user_agent);
+    BC_REQUIRE(handshake());
+    BC_REQUIRE_EQUAL(node_version->value, settings_.protocol_maximum);
+    BC_REQUIRE_EQUAL(node_version->services, service::node_none);
+    BC_REQUIRE_EQUAL(node_version->user_agent, settings_.user_agent);
 }
 
-BOOST_AUTO_TEST_CASE(functional_peer__ping__nonce__pong_echo)
+BC_AUTO_TEST_CASE(functional_peer__ping__nonce__pong_echo)
 {
-    BOOST_REQUIRE(handshake());
+    BC_REQUIRE(handshake());
 
     constexpr uint64_t expected = 42;
     send(ping{ expected }, node_version->value);
 
     const auto payload = receive(pong::command);
     const auto message = pong::deserialize(node_version->value, payload);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->nonce, expected);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->nonce, expected);
 }
 
-BOOST_AUTO_TEST_CASE(functional_peer__ping__pipelined__ponged_in_order)
+BC_AUTO_TEST_CASE(functional_peer__ping__pipelined__ponged_in_order)
 {
-    BOOST_REQUIRE(handshake());
+    BC_REQUIRE(handshake());
 
     send(ping{ 1 }, node_version->value);
     send(ping{ 2 }, node_version->value);
     send(ping{ 3 }, node_version->value);
 
-    BOOST_REQUIRE_EQUAL(pong::deserialize(node_version->value, receive(pong::command))->nonce, 1_u64);
-    BOOST_REQUIRE_EQUAL(pong::deserialize(node_version->value, receive(pong::command))->nonce, 2_u64);
-    BOOST_REQUIRE_EQUAL(pong::deserialize(node_version->value, receive(pong::command))->nonce, 3_u64);
+    BC_REQUIRE_EQUAL(pong::deserialize(node_version->value, receive(pong::command))->nonce, 1_u64);
+    BC_REQUIRE_EQUAL(pong::deserialize(node_version->value, receive(pong::command))->nonce, 2_u64);
+    BC_REQUIRE_EQUAL(pong::deserialize(node_version->value, receive(pong::command))->nonce, 3_u64);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

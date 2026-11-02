@@ -70,30 +70,30 @@ void parse_command(const data_chunk& body, std::string& name, data_chunk& conten
 {
     std::span<const uint8_t> rest{};
     const std::span<const uint8_t> frame{ body };
-    BOOST_REQUIRE(zmtp_stream::command_name(name, rest, frame));
+    BC_REQUIRE(zmtp_stream::command_name(name, rest, frame));
     content.assign(rest.begin(), rest.end());
 }
 
 void peer_write(peer_socket& peer, const data_chunk& data)
 {
-    const boost::asio::const_buffer out{ data.data(), data.size() };
-    boost::asio::write(peer, out);
+    const io::const_buffer out{ data.data(), data.size() };
+    test::write(peer, out);
 }
 
 void peer_read_frame(peer_socket& peer, uint8_t& flags, data_chunk& body)
 {
     system::data_array<2> head{};
-    const boost::asio::mutable_buffer in{ head.data(), head.size() };
-    boost::asio::read(peer, in);
+    const io::mutable_buffer in{ head.data(), head.size() };
+    test::read(peer, in);
     flags = head.front();
-    BOOST_REQUIRE(is_zero(flags & zmtp_stream::flag_long));
+    BC_REQUIRE(is_zero(flags & zmtp_stream::flag_long));
 
     body.assign(head.back(), 0x00);
     if (body.empty())
         return;
 
-    const boost::asio::mutable_buffer rest{ body.data(), body.size() };
-    boost::asio::read(peer, rest);
+    const io::mutable_buffer rest{ body.data(), body.size() };
+    test::read(peer, rest);
 }
 
 data_stack peer_read_message(peer_socket& peer)
@@ -117,7 +117,7 @@ std::string peer_read_command(peer_socket& peer, data_chunk& content)
     uint8_t flags{};
     data_chunk body{};
     peer_read_frame(peer, flags, body);
-    BOOST_REQUIRE(!is_zero(flags & zmtp_stream::flag_command));
+    BC_REQUIRE(!is_zero(flags & zmtp_stream::flag_command));
 
     std::string name{};
     parse_command(body, name, content);
@@ -131,12 +131,12 @@ std::string peer_handshake(peer_socket& peer, const std::string& type, const std
     peer_write(peer, greeting);
 
     data_chunk theirs(zmtp_stream::greeting_size, 0x00);
-    const boost::asio::mutable_buffer in{ theirs.data(), theirs.size() };
-    boost::asio::read(peer, in);
+    const io::mutable_buffer in{ theirs.data(), theirs.size() };
+    test::read(peer, in);
     uint8_t their_minor{};
     bool curve{};
     bool as_server{};
-    BOOST_REQUIRE(zmtp_stream::parse_greeting(theirs, their_minor, curve, as_server));
+    BC_REQUIRE(zmtp_stream::parse_greeting(theirs, their_minor, curve, as_server));
 
     peer_write(peer, ready(type, identity));
     data_chunk content{};
@@ -190,15 +190,15 @@ socket_setup_fixture::socket_setup_fixture(zmtp_role value, const std::string& t
     acceptor(strand),
     peer(peer_context)
 {
-    boost_code ec{};
-    acceptor.open(asio::tcp::v4(), ec);
-    BOOST_REQUIRE(!ec);
-    acceptor.set_option(asio::reuse_address(true), ec);
-    BOOST_REQUIRE(!ec);
-    acceptor.bind({ boost::asio::ip::address_v4::loopback(), 0 }, ec);
-    BOOST_REQUIRE(!ec);
-    acceptor.listen(1, ec);
-    BOOST_REQUIRE(!ec);
+    code ec{};
+    acceptor.open(io::tcp::v4(), ec);
+    BC_REQUIRE(!ec);
+    acceptor.set_option(io::reuse_address(true), ec);
+    BC_REQUIRE(!ec);
+    acceptor.bind(test::loopback(0), ec);
+    BC_REQUIRE(!ec);
+    acceptor.listen(ec);
+    BC_REQUIRE(!ec);
 
     // The accept completes with the handshake, which the peer drives.
     std::promise<code> promised{};
@@ -207,7 +207,7 @@ socket_setup_fixture::socket_setup_fixture(zmtp_role value, const std::string& t
         promised.set_value(result);
     });
 
-    peer.connect(acceptor.local_endpoint());
+    REQUIRE_SUCCESS(peer, connect, acceptor.local_endpoint());
     first = peer_handshake(peer, type, identity);
     accepted = promised.get_future().get();
 }
@@ -219,7 +219,7 @@ socket_setup_fixture::~socket_setup_fixture()
     peer.close();
     sock->stop();
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
 code socket_setup_fixture::read(rpc::request& request)
@@ -272,15 +272,15 @@ publisher_setup_fixture::publisher_setup_fixture()
     acceptor(strand),
     peer(peer_context)
 {
-    boost_code ec{};
-    acceptor.open(asio::tcp::v4(), ec);
-    BOOST_REQUIRE(!ec);
-    acceptor.set_option(asio::reuse_address(true), ec);
-    BOOST_REQUIRE(!ec);
-    acceptor.bind({ boost::asio::ip::address_v4::loopback(), 0 }, ec);
-    BOOST_REQUIRE(!ec);
-    acceptor.listen(1, ec);
-    BOOST_REQUIRE(!ec);
+    code ec{};
+    acceptor.open(io::tcp::v4(), ec);
+    BC_REQUIRE(!ec);
+    acceptor.set_option(io::reuse_address(true), ec);
+    BC_REQUIRE(!ec);
+    acceptor.bind(test::loopback(0), ec);
+    BC_REQUIRE(!ec);
+    acceptor.listen(ec);
+    BC_REQUIRE(!ec);
 
     std::promise<code> promised{};
     sock->accept(acceptor, [&](const code& result) NOEXCEPT
@@ -288,9 +288,9 @@ publisher_setup_fixture::publisher_setup_fixture()
         promised.set_value(result);
     });
 
-    peer.connect(acceptor.local_endpoint());
-    BOOST_REQUIRE_EQUAL(peer_handshake(peer, "SUB"), "READY");
-    BOOST_REQUIRE_EQUAL(promised.get_future().get(), error::success);
+    REQUIRE_SUCCESS(peer, connect, acceptor.local_endpoint());
+    BC_REQUIRE_EQUAL(peer_handshake(peer, "SUB"), "READY");
+    BC_REQUIRE_EQUAL(promised.get_future().get(), error::success);
 }
 
 publisher_setup_fixture::~publisher_setup_fixture()
@@ -298,7 +298,7 @@ publisher_setup_fixture::~publisher_setup_fixture()
     peer.close();
     prx->stop(error::channel_stopped);
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
 // The promise is a member, as the read is armed by one call and awaited by
@@ -307,7 +307,7 @@ void publisher_setup_fixture::arm_read(rpc::request& request)
 {
     armed = {};
     std::promise<bool> posted{};
-    boost::asio::post(prx->strand(), [&]() NOEXCEPT
+    io::post(prx->strand(), [&]() NOEXCEPT
     {
         prx->read1(buffer, request, [this](const code& ec, size_t) NOEXCEPT
         {
@@ -318,7 +318,7 @@ void publisher_setup_fixture::arm_read(rpc::request& request)
     });
 
     // The read is armed before the peer writes, so control is absorbed.
-    BOOST_REQUIRE(posted.get_future().get());
+    BC_REQUIRE(posted.get_future().get());
 }
 
 code publisher_setup_fixture::await_read()
@@ -369,15 +369,15 @@ role_setup_fixture::role_setup_fixture(zmtp_role value, uint16_t port)
     if (!enabled)
         return;
 
-    boost_code ec{};
-    acceptor.open(asio::tcp::v4(), ec);
-    BOOST_REQUIRE(!ec);
-    acceptor.set_option(asio::reuse_address(true), ec);
-    BOOST_REQUIRE(!ec);
-    acceptor.bind({ boost::asio::ip::address_v4::loopback(), port }, ec);
-    BOOST_REQUIRE(!ec);
-    acceptor.listen(1, ec);
-    BOOST_REQUIRE(!ec);
+    code ec{};
+    acceptor.open(io::tcp::v4(), ec);
+    BC_REQUIRE(!ec);
+    acceptor.set_option(io::reuse_address(true), ec);
+    BC_REQUIRE(!ec);
+    acceptor.bind(test::loopback(port), ec);
+    BC_REQUIRE(!ec);
+    acceptor.listen(ec);
+    BC_REQUIRE(!ec);
 
     std::promise<code> promised{};
     sock->accept(acceptor, [&](const code& result) NOEXCEPT
@@ -385,7 +385,7 @@ role_setup_fixture::role_setup_fixture(zmtp_role value, uint16_t port)
         promised.set_value(result);
     });
 
-    BOOST_REQUIRE_EQUAL(promised.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(promised.get_future().get(), error::success);
 }
 BC_POP_WARNING()
 
@@ -393,7 +393,7 @@ role_setup_fixture::~role_setup_fixture()
 {
     sock->stop();
     pool.stop();
-    BOOST_REQUIRE(pool.join());
+    BC_REQUIRE(pool.join());
 }
 
 code role_setup_fixture::read(rpc::request& request)

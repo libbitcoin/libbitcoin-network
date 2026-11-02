@@ -41,11 +41,11 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 void socket::peer_read(data_chunk& buffer, frame& message,
     count_handler&& handler) NOEXCEPT
 {
-    boost_code ec{};
+    code ec{};
     const auto in = emplace_shared<peer_state>(message, buffer);
     in->reader.init({}, ec);
 
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_peer_read,
             shared_from_this(), zero, in, std::move(handler)));
 }
@@ -98,20 +98,20 @@ void socket::handle_peer_read(const code& ec, size_t size, size_t residue,
         return;
     }
 
-    boost_code code{};
+    code result{};
     const auto data = in->headed ? in->payload.data() : in->head.data();
-    in->reader.put({ data, size }, code);
+    in->reader.put({ data, size }, result);
 
-    if (code)
+    if (result)
     {
-        handler(error::http_to_error_code(code), total);
+        handler(error::http_to_error_code(result), total);
         return;
     }
 
     if (in->reader.done())
     {
-        in->reader.finish(code);
-        handler(error::http_to_error_code(code), total);
+        in->reader.finish(result);
+        handler(error::http_to_error_code(result), total);
         return;
     }
 
@@ -120,7 +120,7 @@ void socket::handle_peer_read(const code& ec, size_t size, size_t residue,
 }
 
 // private
-void socket::handle_peer_read_encrypted(const boost_code& ec,
+void socket::handle_peer_read_encrypted(const code& ec,
     uint8_t identifier, const std::string& command,
     const std::span<const uint8_t>& payload, const peer_state::ptr& in,
     const count_handler& handler) NOEXCEPT
@@ -129,19 +129,19 @@ void socket::handle_peer_read_encrypted(const boost_code& ec,
 
     if (ec)
     {
-        handler(error::asio_to_error_code(ec), in->payload.size());
+        handler(ec, in->payload.size());
         return;
     }
 
-    boost_code code{};
-    in->reader.put(identifier, command, payload, code);
-    handler(error::http_to_error_code(code), in->payload.size());
+    code result{};
+    in->reader.put(identifier, command, payload, result);
+    handler(error::http_to_error_code(result), in->payload.size());
 }
 
 void socket::peer_write(frame&& message,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    io::dispatch(strand_,
         std::bind(&socket::do_peer_write,
             shared_from_this(), emplace_shared<frame>(std::move(message)),
             std::move(handler)));

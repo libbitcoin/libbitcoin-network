@@ -21,61 +21,61 @@
 using namespace config;
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_SUITE(address_type_tests)
+BC_AUTO_TEST_SUITE(address_type_tests)
 
 // address_types
 
-BOOST_AUTO_TEST_CASE(address_type__address_types__always__bip155_networks)
+BC_AUTO_TEST_CASE(address_type__address_types__always__bip155_networks)
 {
-    BOOST_REQUIRE_EQUAL(address_types, 7u);
-    BOOST_REQUIRE_EQUAL(address_counts{}.size(), address_types);
+    BC_REQUIRE_EQUAL(address_types, 7u);
+    BC_REQUIRE_EQUAL(address_counts{}.size(), address_types);
 }
 
 // The alternative index is the BIP155 network identifier.
 
-BOOST_AUTO_TEST_CASE(address_type__index__unspecified__zero)
+BC_AUTO_TEST_CASE(address_type__index__unspecified__zero)
 {
-    BOOST_REQUIRE_EQUAL(address_t{}.index(), 0u);
+    BC_REQUIRE_EQUAL(address_t{}.index(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(address_type__index__ipv4__one)
+BC_AUTO_TEST_CASE(address_type__index__ipv4__one)
 {
-    BOOST_REQUIRE_EQUAL(address_t{ ipv4_t{} }.index(), 1u);
+    BC_REQUIRE_EQUAL(address_t{ ipv4_t{} }.index(), 1u);
 }
 
-BOOST_AUTO_TEST_CASE(address_type__index__ipv6__two)
+BC_AUTO_TEST_CASE(address_type__index__ipv6__two)
 {
-    BOOST_REQUIRE_EQUAL(address_t{ ipv6_t{} }.index(), 2u);
+    BC_REQUIRE_EQUAL(address_t{ ipv6_t{} }.index(), 2u);
 }
 
-BOOST_AUTO_TEST_CASE(address_type__index__torv2__three)
+BC_AUTO_TEST_CASE(address_type__index__torv2__three)
 {
-    BOOST_REQUIRE_EQUAL(address_t{ torv2_t{} }.index(), 3u);
+    BC_REQUIRE_EQUAL(address_t{ torv2_t{} }.index(), 3u);
 }
 
-BOOST_AUTO_TEST_CASE(address_type__index__torv3__four)
+BC_AUTO_TEST_CASE(address_type__index__torv3__four)
 {
-    BOOST_REQUIRE_EQUAL(address_t{ torv3_t{} }.index(), 4u);
+    BC_REQUIRE_EQUAL(address_t{ torv3_t{} }.index(), 4u);
 }
 
-BOOST_AUTO_TEST_CASE(address_type__index__i2p__five)
+BC_AUTO_TEST_CASE(address_type__index__i2p__five)
 {
-    BOOST_REQUIRE_EQUAL(address_t{ i2p_t{} }.index(), 5u);
+    BC_REQUIRE_EQUAL(address_t{ i2p_t{} }.index(), 5u);
 }
 
-BOOST_AUTO_TEST_CASE(address_type__index__cjdns__six)
+BC_AUTO_TEST_CASE(address_type__index__cjdns__six)
 {
-    BOOST_REQUIRE_EQUAL(address_t{ cjdns_t{} }.index(), 6u);
+    BC_REQUIRE_EQUAL(address_t{ cjdns_t{} }.index(), 6u);
 }
 
 // to_address
 
-BOOST_AUTO_TEST_CASE(address_type__to_address__loopback_v6__ipv6)
+BC_AUTO_TEST_CASE(address_type__to_address__loopback_v6__ipv6)
 {
-    BOOST_REQUIRE(to_address(loopback_ip_address) == address_t{ ipv6_t{ loopback_ip_address } });
+    BC_REQUIRE(to_address(loopback_ip_address) == address_t{ ipv6_t{ loopback_ip_address } });
 }
 
-BOOST_AUTO_TEST_CASE(address_type__to_address__loopback_mapped__ipv4)
+BC_AUTO_TEST_CASE(address_type__to_address__loopback_mapped__ipv4)
 {
     constexpr ip_address mapped
     {
@@ -83,10 +83,10 @@ BOOST_AUTO_TEST_CASE(address_type__to_address__loopback_mapped__ipv4)
         0xff, 0xff, 127, 0, 0, 1
     };
 
-    BOOST_REQUIRE(to_address(mapped) == address_t{ ipv4_t{ mapped } });
+    BC_REQUIRE(to_address(mapped) == address_t{ ipv4_t{ mapped } });
 }
 
-BOOST_AUTO_TEST_CASE(address_type__to_address__onion_cat__unspecified)
+BC_AUTO_TEST_CASE(address_type__to_address__onion_cat__unspecified)
 {
     constexpr ip_address onion_cat
     {
@@ -94,17 +94,17 @@ BOOST_AUTO_TEST_CASE(address_type__to_address__onion_cat__unspecified)
         0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa
     };
 
-    BOOST_REQUIRE(to_address(onion_cat) == address_t{});
+    BC_REQUIRE(to_address(onion_cat) == address_t{});
 }
 
 // to_ip_address
 
-BOOST_AUTO_TEST_CASE(address_type__to_ip_address__ipv6__expected)
+BC_AUTO_TEST_CASE(address_type__to_ip_address__ipv6__expected)
 {
-    BOOST_REQUIRE_EQUAL(to_ip_address(address_t{ ipv6_t{ loopback_ip_address } }), loopback_ip_address);
+    BC_REQUIRE_EQUAL(to_ip_address(address_t{ ipv6_t{ loopback_ip_address } }), loopback_ip_address);
 }
 
-BOOST_AUTO_TEST_CASE(address_type__to_ip_address__cjdns__expected)
+BC_AUTO_TEST_CASE(address_type__to_ip_address__cjdns__expected)
 {
     constexpr ip_address cjdns
     {
@@ -112,34 +112,34 @@ BOOST_AUTO_TEST_CASE(address_type__to_ip_address__cjdns__expected)
         0x00, 0x04, 0x00, 0x05, 0x00, 0x06, 0x00, 0x07
     };
 
-    BOOST_REQUIRE_EQUAL(to_ip_address(address_t{ cjdns_t{ cjdns } }), cjdns);
+    BC_REQUIRE_EQUAL(to_ip_address(address_t{ cjdns_t{ cjdns } }), cjdns);
 }
 
-BOOST_AUTO_TEST_CASE(address_type__to_ip_address__unspecified__unspecified)
+BC_AUTO_TEST_CASE(address_type__to_ip_address__unspecified__unspecified)
 {
-    BOOST_REQUIRE_EQUAL(to_ip_address(address_t{}), unspecified_ip_address);
+    BC_REQUIRE_EQUAL(to_ip_address(address_t{}), unspecified_ip_address);
 }
 
-BOOST_AUTO_TEST_CASE(address_type__to_ip_address__torv3__unspecified)
+BC_AUTO_TEST_CASE(address_type__to_ip_address__torv3__unspecified)
 {
-    BOOST_REQUIRE_EQUAL(to_ip_address(address_t{ torv3_t{} }), unspecified_ip_address);
+    BC_REQUIRE_EQUAL(to_ip_address(address_t{ torv3_t{} }), unspecified_ip_address);
 }
 
 // is_unspecified
 
-BOOST_AUTO_TEST_CASE(address_type__is_unspecified__default__true)
+BC_AUTO_TEST_CASE(address_type__is_unspecified__default__true)
 {
-    BOOST_REQUIRE(is_unspecified(address_t{}));
+    BC_REQUIRE(is_unspecified(address_t{}));
 }
 
-BOOST_AUTO_TEST_CASE(address_type__is_unspecified__zero_ipv6__true)
+BC_AUTO_TEST_CASE(address_type__is_unspecified__zero_ipv6__true)
 {
-    BOOST_REQUIRE(is_unspecified(address_t{ ipv6_t{ unspecified_ip_address } }));
+    BC_REQUIRE(is_unspecified(address_t{ ipv6_t{ unspecified_ip_address } }));
 }
 
-BOOST_AUTO_TEST_CASE(address_type__is_unspecified__loopback__false)
+BC_AUTO_TEST_CASE(address_type__is_unspecified__loopback__false)
 {
-    BOOST_REQUIRE(!is_unspecified(address_t{ ipv6_t{ loopback_ip_address } }));
+    BC_REQUIRE(!is_unspecified(address_t{ ipv6_t{ loopback_ip_address } }));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

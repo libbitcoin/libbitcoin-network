@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_NET_SOCKET_HPP
 
 #include <atomic>
+#include <deque>
 #include <optional>
 #include <span>
 #include <bitcoin/network/async/async.hpp>
@@ -29,14 +30,13 @@
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/p2ps/p2ps.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/ws/ws.hpp>
 #include <bitcoin/network/zmtp/zmtp.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// beast stores http field name and value sizes as uint16_t and throws
-/// std::length_error above 65533 bytes, which its parser does not catch.
-/// The header limit bounds the whole header, so it must stay below that.
+/// The header limit bounds the whole http header.
 constexpr size_t maximum_http_header = 16 * 1024;
 
 /// Virtual, thread safe (see comments on accept).
@@ -62,7 +62,7 @@ public:
         size_t maximum_buffer{};
         socket::context context{};
         zmtp::role role{};
-        asio::endpoint bind{};
+        io::endpoint bind{};
         size_t slot{ max_size_t };
     };
 
@@ -72,14 +72,14 @@ public:
     DELETE_COPY_MOVE(socket);
 
     /// Inbound connections (proxied defers the handshake to the acceptor).
-    socket(const logger& log, asio::context& service,
+    socket(const logger& log, io::context& service,
         const parameters& params, bool proxied=false) NOEXCEPT;
 
     /// Outbound connections.
     /// Endpoint represents the peer or client (non-proxy) that the connector
     /// attempted to reach. Address holds a copy of the tcp address associated
     /// with the connection (or empty).
-    socket(const logger& log, asio::context& service, const parameters& params,
+    socket(const logger& log, io::context& service, const parameters& params,
         const config::address& address, const config::endpoint& endpoint,
         bool proxied) NOEXCEPT;
 
@@ -113,12 +113,12 @@ public:
 
     /// Accept an incoming connection, handler posted to *acceptor* strand.
     /// Concurrent calls are NOT thread safe until this handler is invoked.
-    virtual void accept(asio::acceptor& acceptor,
+    virtual void accept(io::acceptor& acceptor,
         result_handler&& handler) NOEXCEPT;
 
     /// Create an outbound connection, handler posted to socket strand.
     /// Authority will be set to the connected endpoint unless proxied is set.
-    virtual void connect(const asio::endpoints& range,
+    virtual void connect(const io::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
     /// Upgrade the socket to its configured transport, handler posted to
@@ -139,18 +139,18 @@ public:
         count_handler&& handler) NOEXCEPT;
 
     /// Write buffer as frame to websocket, handler posted to socket strand.
-    virtual void ws_write(const asio::const_buffer& in, bool binary,
+    virtual void ws_write(const io::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
     /// TCP (generic, fixed size).
     /// -----------------------------------------------------------------------
 
     /// Read fixed buffer from tcp socket, handler posted to socket strand.
-    virtual void tcp_read(const asio::mutable_buffer& out,
+    virtual void tcp_read(const io::mutable_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
     /// Write fixed buffer to socket, handler posted to socket strand.
-    virtual void tcp_write(const asio::const_buffer& in,
+    virtual void tcp_write(const io::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
     /// PEER (TCP: bitcoin p2p).
@@ -204,7 +204,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Caller-owned parser for progressive (batched) http reads.
-    using http_parser = boost::beast::http::request_parser<http::body>;
+    using http_parser = http::parser<true, http::body>;
     using http_parser_ptr = std::shared_ptr<http_parser>;
 
     /// Latch http vs. tcp from buffered bytes, reading only as required to
@@ -248,10 +248,10 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Get the network threadpool iocontext.
-    virtual asio::context& service() const NOEXCEPT;
+    virtual io::context& service() const NOEXCEPT;
 
     /// Get the strand of the socket.
-    virtual asio::strand& strand() NOEXCEPT;
+    virtual io::strand& strand() NOEXCEPT;
 
     /// The strand is running in this thread.
     virtual bool stranded() const NOEXCEPT;
@@ -262,7 +262,7 @@ public:
     /// The socket was accepted (vs. connected).
     virtual bool inbound() const NOEXCEPT;
 
-    /// The socket was upgraded to ssl.
+    /// The socket was upgraded to tls.
     virtual bool secure() const NOEXCEPT;
 
     /// The socket was upgraded to p2ps (the peer is v2).
@@ -302,29 +302,27 @@ public:
     virtual void set_address(const config::address& address) NOEXCEPT;
 
 protected:
-    using ws_t = std::variant<ref<ws::socket>, ref<ws::ssl::socket>>;
-    using tcp_t = std::variant<ref<asio::socket>, ref<asio::ssl::socket>>;
-    using socket_t = std::variant<asio::socket, asio::ssl::socket, ws::socket,
-        ws::ssl::socket, p2ps::stream, zmtp::stream>;
+    using tcp_t = std::variant<ref<io::socket>, ref<tls::stream>>;
+    using socket_t = std::variant<io::socket, tls::stream,
+        p2ps::stream, zmtp::stream>;
 
     /// Construct.
     /// -----------------------------------------------------------------------
-    socket(const logger& log, asio::context& service, const parameters& params,
+    socket(const logger& log, io::context& service, const parameters& params,
         const config::address& address, const config::endpoint& endpoint,
         bool proxied, bool inbound) NOEXCEPT;
 
     /// Variant state (protected by strand).
     /// -----------------------------------------------------------------------
 
-    /// The socket is not upgraded (asio::socket).
+    /// The socket is not upgraded (io::socket).
     bool is_base() const NOEXCEPT;
 
     /// Variant accessors (protected by strand).
     /// -----------------------------------------------------------------------
-    ws_t get_ws() NOEXCEPT;
     tcp_t get_tcp() NOEXCEPT;
-    asio::socket& get_base() NOEXCEPT;
-    asio::ssl::socket& get_ssl() NOEXCEPT;
+    io::socket& get_base() NOEXCEPT;
+    tls::stream& get_tls() NOEXCEPT;
     p2ps::stream& get_p2ps() NOEXCEPT;
     zmtp::stream& get_zmtp() NOEXCEPT;
 
@@ -332,11 +330,11 @@ protected:
     /// -----------------------------------------------------------------------
     void async_read(http::flat_buffer& buffer,
         const count_handler& handler) NOEXCEPT;
-    void async_read(const asio::mutable_buffer& buffer,
+    void async_read(const io::mutable_buffer& buffer,
         const count_handler& handler) NOEXCEPT;
-    void async_read_some(const asio::mutable_buffer& buffer,
+    void async_read_some(const io::mutable_buffer& buffer,
         const count_handler& handler) NOEXCEPT;
-    void async_write(const asio::const_buffer& buffer, bool binary,
+    void async_write(const io::const_buffer& buffer, bool binary,
         bool finish, const count_handler& handler) NOEXCEPT;
     void async_read_http(http::flat_buffer& buffer, http::request& request,
         const count_handler& handler) NOEXCEPT;
@@ -375,72 +373,44 @@ private:
         size_t total{};
     };
 
-    struct read_state
-    {
-        typedef std::shared_ptr<read_state> ptr;
+    using body_parser = http::body_parser<true, http::body>;
+    using body_parser_ptr = std::shared_ptr<body_parser>;
+    using http_serializer = http::serializer<false, http::body>;
+    using body_serializer = http::body_serializer<false, http::body>;
+    using notify_serializer = http::body_serializer<true, http::body>;
 
-        read_state(http::request& request, http::flat_buffer& buffer,
-            bool streamed) NOEXCEPT
-          : value{ request }, reader{ value.base(), value.body(), streamed },
-            buffer{ buffer }
+    template <class Serializer>
+    struct serialize_state
+    {
+        typedef std::shared_ptr<serialize_state> ptr;
+        using message_type = typename Serializer::message_type;
+
+        serialize_state(message_type&& message) NOEXCEPT
+          : value{ std::move(message) }, serializer{ value }
         {
         }
 
-        http::request& value;
-        http::body::reader reader;
-        http::flat_buffer& buffer;
-    };
-
-    struct write_state
-    {
-        typedef std::shared_ptr<write_state> ptr;
-        using out_buffer = http::body::writer::out_buffer;
-
-        write_state(http::response&& response) NOEXCEPT
-          : value{ std::move(response) }, writer{ value.base(), value.body() }
-        {
-        }
-
-        bool more{ true };
-        http::response value;
-        http::body::writer writer;
-    };
-
-    struct notify_state
-    {
-        typedef std::shared_ptr<notify_state> ptr;
-        using out_buffer = http::body::writer::out_buffer;
-
-        notify_state(http::request&& request) NOEXCEPT
-          : value{ std::move(request) }, writer{ value.base(), value.body() }
-        {
-        }
-
-        bool more{ true };
-        http::request value;
-        http::body::writer writer;
+        message_type value;
+        Serializer serializer;
+        http::const_buffers buffers{};
     };
 
     struct header_state
     {
         typedef std::shared_ptr<header_state> ptr;
-        using http_serializer =
-            boost::beast::http::response_serializer<http::body>;
 
-        header_state(http::response&& response) NOEXCEPT
-          : value{ std::move(response) }, serializer{ value }
+        header_state(std::string&& text) NOEXCEPT
+          : header{ std::move(text) }
         {
         }
 
-        http::response value;
-        http_serializer serializer;
+        std::string header;
     };
 
     struct chunk_state
     {
         typedef std::shared_ptr<chunk_state> ptr;
         using out_buffer = http::body::writer::out_buffer;
-        using chunk = boost::beast::http::chunk_body<asio::const_buffer>;
 
         chunk_state(http::response&& response) NOEXCEPT
           : value{ std::move(response) }, writer{ value.base(), value.body() }
@@ -458,7 +428,26 @@ private:
         bool more{ true };
         http::response value;
         http::body::writer writer;
-        std::optional<chunk> part{};
+        std::string prefix{};
+        http::const_buffers buffers{};
+    };
+
+    struct ws_frame
+    {
+        typedef std::shared_ptr<ws_frame> ptr;
+
+        system::data_chunk header{};
+        system::data_chunk payload{};
+        io::const_buffer data{};
+        count_handler handler{};
+        std::array<io::const_buffer, 2> buffers{};
+    };
+
+    enum class parse_mode
+    {
+        header,
+        some,
+        all
     };
 
     // do
@@ -468,24 +457,22 @@ private:
     void do_stop() NOEXCEPT;
     void do_lazy_stop() NOEXCEPT;
     void do_ws_stop() NOEXCEPT;
-    void do_ssl_stop() NOEXCEPT;
+    void do_tls_stop() NOEXCEPT;
     void do_linger() NOEXCEPT;
     void do_drain(const system::chunk_ptr& sink) NOEXCEPT;
 
     // config
-    void do_ws_event(ws::frame_type kind, const std::string& data) NOEXCEPT;
-    void accept_secure_websocket(const http::request& request) THROWS;
-    void accept_clear_websocket(const http::request& request) THROWS;
-    void revert_websocket() NOEXCEPT;
+    void do_ws_event(ws::opcode kind,
+        const system::data_chunk& data) NOEXCEPT;
 
     // wait
     void do_watch(const result_handler& handler) NOEXCEPT;
     void do_poll(const result_handler& handler) NOEXCEPT;
 
     // connection
-    void do_connect(const asio::endpoints& range,
+    void do_connect(const io::endpoints& range,
         const result_handler& handler) NOEXCEPT;
-    void do_connect_bound(const asio::endpoints& range, size_t index,
+    void do_connect_bound(const io::endpoints& range, size_t index,
         const result_handler& handler) NOEXCEPT;
     void do_handshake(const result_handler& handler) NOEXCEPT;
     void do_upgrade(const result_handler& handler) NOEXCEPT;
@@ -493,11 +480,19 @@ private:
     // ws (framed)
     void do_ws_read(ref<http::flat_buffer> out,
         const count_handler& handler) NOEXCEPT;
-    void do_ws_write(const asio::const_buffer& in, bool binary,
+    void do_ws_write(const io::const_buffer& in, bool binary,
         const count_handler& handler) NOEXCEPT;
+    void do_ws_read_message(const ref<http::flat_buffer>& out,
+        const count_handler& handler) NOEXCEPT;
+    void ws_send_data(const io::const_buffer& data, bool binary,
+        bool finish, const count_handler& handler) NOEXCEPT;
+    void ws_send(ws::opcode code, const system::data_chunk& payload,
+        const count_handler& handler) NOEXCEPT;
+    void ws_pong(const system::data_chunk& payload) NOEXCEPT;
+    void ws_write_next() NOEXCEPT;
 
     // tcp (fixed)
-    void do_tcp_read(const asio::mutable_buffer& out,
+    void do_tcp_read(const io::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
 
     // rpc (transport selection)
@@ -526,12 +521,9 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // body
-    void do_body_read(boost_code ec, size_t total,
-        const read_state::ptr& in, const count_handler& handler) NOEXCEPT;
-    void do_body_write(boost_code ec, size_t total,
-        const write_state::ptr& out, const count_handler& handler) NOEXCEPT;
-    void do_body_notify(boost_code ec, size_t total,
-        const notify_state::ptr& out, const count_handler& handler) NOEXCEPT;
+    template <class Serializer>
+    void body_send(typename Serializer::message_type&& message,
+        count_handler&& handler) NOEXCEPT;
 
     // detect (first read)
     void do_detect(const ref<http::flat_buffer>& buffer,
@@ -544,16 +536,24 @@ private:
     void do_http_write(const http::response_ptr& response,
         const count_handler& handler) NOEXCEPT;
 
+    // codec
+    template <class Parser>
+    void do_parse(const ref<http::flat_buffer>& buffer,
+        const std::shared_ptr<Parser>& parser, parse_mode mode, size_t total,
+        const count_handler& handler) NOEXCEPT;
+    template <class Serializer>
+    void do_serialize(const std::shared_ptr<serialize_state<Serializer>>& out,
+        size_t total, const count_handler& handler) NOEXCEPT;
+
     // http (progressive)
     void do_http_read_header(ref<http::flat_buffer> buffer,
         const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
-    void do_http_read_some(ref<http::flat_buffer> buffer,
-        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
     void do_http_read_body(ref<http::flat_buffer> buffer,
-        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
+        const http_parser_ptr& parser, parse_mode mode,
+        const count_handler& handler) NOEXCEPT;
     void do_http_write_header(const header_state::ptr& out,
         const count_handler& handler) NOEXCEPT;
-    void do_chunk_write(boost_code ec, size_t total,
+    void do_chunk_write(code ec, size_t total,
         const chunk_state::ptr& out, const count_handler& handler) NOEXCEPT;
 
     // handle
@@ -561,14 +561,20 @@ private:
 
     // stop (lazy)
     void handle_lazy_timer(const code& ec) NOEXCEPT;
-    void handle_ws_close(const boost_code& ec) NOEXCEPT;
-    void handle_ssl_close(const boost_code& ec) NOEXCEPT;
-    void handle_drain(const boost_code& ec,
+    void handle_ws_close(const code& ec) NOEXCEPT;
+    void handle_tls_close(const code& ec) NOEXCEPT;
+    void handle_drain(const code& ec,
         const system::chunk_ptr& sink) NOEXCEPT;
 
-    // config
-    void handle_ws_event(ws::frame_type kind,
-        const std::string& data) NOEXCEPT;
+    // ws (framed)
+    void handle_ws_read_message(const code& ec, size_t size,
+        const ref<http::flat_buffer>& out,
+        const count_handler& handler) NOEXCEPT;
+    void handle_ws_frame(const code& ec, size_t size,
+        const ws_frame::ptr& frame) NOEXCEPT;
+    void handle_ws_echo(const code& ec, size_t size,
+        const ref<http::flat_buffer>& out,
+        const count_handler& handler) NOEXCEPT;
 
     // wait
     void handle_watch(const code& ec,
@@ -578,34 +584,34 @@ private:
 
 
     // connect/accept
-    void handle_accept(boost_code ec,
+    void handle_accept(code ec,
         const result_handler& handler) NOEXCEPT;
-    void handle_connect(const boost_code& ec, const asio::endpoint& peer,
+    void handle_connect(const code& ec, const io::endpoint& peer,
         const result_handler& handler) NOEXCEPT;
-    void handle_connect_bound(const boost_code& ec,
-        const asio::endpoints& range, size_t next, const asio::endpoint& peer,
+    void handle_connect_bound(const code& ec,
+        const io::endpoints& range, size_t next, const io::endpoint& peer,
         const result_handler& handler) NOEXCEPT;
-    void handle_handshake(const boost_code& ec,
+    void handle_handshake(const code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_handshaked(const code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_handshake_timer(const code& ec) NOEXCEPT;
-    void handle_encrypted_handshake(const boost_code& ec,
+    void handle_encrypted_handshake(const code& ec,
         const result_handler& handler) NOEXCEPT;
-    void handle_publisher_handshake(const boost_code& ec,
+    void handle_publisher_handshake(const code& ec,
         const result_handler& handler) NOEXCEPT;
-    void handle_detection(const boost_code& ec,
+    void handle_detection(const code& ec,
         const result_handler& handler) NOEXCEPT;
 
     // read/write (tcp/ws)
-    void handle_async(const boost_code& ec, size_t size,
+    void handle_async(const code& ec, size_t size,
         const count_handler& handler,const std::string& operation) NOEXCEPT;
 
     // peer
     void handle_peer_read(const code& ec, size_t size, size_t residue,
         size_t total, const peer_state::ptr& in,
         const count_handler& handler) NOEXCEPT;
-    void handle_peer_read_encrypted(const boost_code& ec, uint8_t identifier,
+    void handle_peer_read_encrypted(const code& ec, uint8_t identifier,
         const std::string& command, const std::span<const uint8_t>& payload,
         const peer_state::ptr& in, const count_handler& handler) NOEXCEPT;
 
@@ -616,16 +622,12 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // zmtp
-    void handle_zmtp_read(const boost_code& ec, size_t size,
+    void handle_zmtp_read(const code& ec, size_t size,
         const zmtp_read_state::ptr& in, const count_handler& handler) NOEXCEPT;
 
     // body
-    void handle_body_read(const code& ec, size_t size, size_t total,
-        const read_state::ptr& in, const count_handler& handler) NOEXCEPT;
-    void handle_body_write(const code& ec, size_t size, size_t total,
-        const write_state::ptr& out, const count_handler& handler) NOEXCEPT;
-    void handle_body_notify(const code& ec, size_t size, size_t total,
-        const notify_state::ptr& out, const count_handler& handler) NOEXCEPT;
+    void handle_body_read(const code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
 
     // detect
     void handle_detect(const code& ec, size_t size,
@@ -633,30 +635,38 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // http/ws (native/rpc)
-    void handle_http_read(const boost_code& ec, size_t size,
+    void handle_http_read(const code& ec, size_t size,
         const ref<http::request>& request, const http_parser_ptr& parser,
         const count_handler& handler) NOEXCEPT;
-    void handle_http_write(const boost_code& ec, size_t size,
-        const http::response_ptr& request,
+    void handle_http_write(const code& ec, size_t size,
+        const count_handler& handler) NOEXCEPT;
+
+    // codec
+    template <class Parser>
+    void handle_parse(const code& ec, size_t size,
+        const ref<http::flat_buffer>& buffer,
+        const std::shared_ptr<Parser>& parser, parse_mode mode, size_t total,
+        const count_handler& handler) NOEXCEPT;
+    template <class Serializer>
+    void handle_serialize(const code& ec, size_t size,
+        const std::shared_ptr<serialize_state<Serializer>>& out, size_t total,
         const count_handler& handler) NOEXCEPT;
 
     // http (progressive)
-    void handle_http_read_header(const boost_code& ec, size_t size,
+    void handle_http_read_header(const code& ec, size_t size,
         const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
-    void handle_http_read_some(const boost_code& ec, size_t size,
-        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
-    void handle_http_write_header(const boost_code& ec, size_t size,
+    void handle_http_write_header(const code& ec, size_t size,
         const header_state::ptr& out, const count_handler& handler) NOEXCEPT;
-    void handle_chunk_write(const boost_code& ec, size_t size, size_t total,
+    void handle_chunk_write(const code& ec, size_t size, size_t total,
         const chunk_state::ptr& out, const count_handler& handler) NOEXCEPT;
-    void handle_chunk_last(const boost_code& ec, size_t size, size_t total,
+    void handle_chunk_last(const code& ec, size_t size, size_t total,
         const count_handler& handler) NOEXCEPT;
 
     // utility
     // ------------------------------------------------------------------------
 
-    void logx(const std::string& context, const boost_code& ec) const NOEXCEPT;
-    size_t next_bound(const asio::endpoints& range,
+    void logx(const std::string& context, const code& ec) const NOEXCEPT;
+    size_t next_bound(const io::endpoints& range,
         size_t index) const NOEXCEPT;
 
 protected:
@@ -666,10 +676,10 @@ protected:
     const size_t maximum_;
     const size_t header_;
     const size_t minimum_buffer_;
-    const asio::endpoint bind_;
+    const io::endpoint bind_;
     const size_t slot_;
-    asio::strand strand_;
-    asio::context& service_;
+    io::strand strand_;
+    io::context& service_;
     const context context_;
     const zmtp::role role_;
     std::atomic_bool lazy_{};
@@ -691,6 +701,15 @@ protected:
 
     // Retains the json serialization buffer (allocated on first write).
     http::flat_buffer response_;
+
+    // Websocket framing (once upgraded).
+    std::optional<ws::reader> ws_reader_{};
+    http::flat_buffer ws_input_{};
+    std::deque<ws_frame::ptr> ws_queue_{};
+    ws_frame::ptr ws_pong_{};
+    bool ws_writing_{};
+    bool ws_continuing_{};
+    bool ws_closing_{};
 };
 
 typedef std::function<void(const code&, const socket::ptr&)> socket_handler;

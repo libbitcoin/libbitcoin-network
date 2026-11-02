@@ -112,7 +112,7 @@ void session::start_channel(const channel::ptr& channel,
 
     // Switch to channel context.
     // Channel/network strands share same pool.
-    boost::asio::post(channel->strand(),
+    io::post(channel->strand(),
         BIND(do_attach_handshake, channel, std::move(shake)));
 }
 
@@ -138,7 +138,7 @@ void session::handle_handshake(const code& ec, const channel::ptr& channel,
         channel->stop(ec);
 
     // Return to network context.
-    boost::asio::post(network_.strand(),
+    io::post(network_.strand(),
         BIND(do_handle_handshake, ec, channel, start));
 }
 
@@ -182,7 +182,7 @@ void session::handle_channel_started(const code& ec,
     BC_ASSERT_MSG(channel->stranded() || stranded(), "strand");
 
     // Return to network context.
-    boost::asio::post(network_.strand(),
+    io::post(network_.strand(),
         BIND(do_handle_channel_started, ec, channel, started));
 }
 
@@ -199,7 +199,7 @@ void session::do_handle_channel_started(const code& ec,
     }
 
     // Switch to channel context (started is invoked on network strand).
-    boost::asio::post(channel->strand(),
+    io::post(channel->strand(),
         BIND(do_attach_protocols, channel, started));
 }
 
@@ -215,7 +215,7 @@ void session::do_attach_protocols(const channel::ptr& channel,
     channel->resume();
 
     // Complete on network strand.
-    boost::asio::post(network_.strand(),
+    io::post(network_.strand(),
         std::bind(started, error::success));
 }
 
@@ -225,7 +225,7 @@ void session::handle_channel_stopped(const code& ec,
     BC_ASSERT_MSG(channel->stranded() || stranded(), "strand");
 
     // Return to network context.
-    boost::asio::post(network_.strand(),
+    io::post(network_.strand(),
         BIND(do_handle_channel_stopped, ec, channel, stopped));
 }
 
@@ -392,7 +392,7 @@ bool session::stranded() const NOEXCEPT
 }
 
 // protected
-asio::strand& session::strand() NOEXCEPT
+io::strand& session::strand() NOEXCEPT
 {
     return network_.strand();
 }

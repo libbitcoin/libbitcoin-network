@@ -18,55 +18,55 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_witness_tx_id_relay_tests)
+BC_AUTO_TEST_SUITE(p2p_witness_tx_id_relay_tests)
 
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(witness_tx_id_relay__properties__always__expected)
+BC_AUTO_TEST_CASE(witness_tx_id_relay__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(witness_tx_id_relay::command, "wtxidrelay");
+    BC_REQUIRE_EQUAL(witness_tx_id_relay::command, "wtxidrelay");
     constexpr auto index = messages::peer::registry::index_of<witness_tx_id_relay>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), witness_tx_id_relay::command);
-    BOOST_REQUIRE_EQUAL(witness_tx_id_relay::version_minimum, level::bip339);
-    BOOST_REQUIRE_EQUAL(witness_tx_id_relay::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), witness_tx_id_relay::command);
+    BC_REQUIRE_EQUAL(witness_tx_id_relay::version_minimum, level::bip339);
+    BC_REQUIRE_EQUAL(witness_tx_id_relay::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(witness_tx_id_relay__size__always__zero)
+BC_AUTO_TEST_CASE(witness_tx_id_relay__size__always__zero)
 {
-    BOOST_REQUIRE_EQUAL(witness_tx_id_relay::size(level::canonical), zero);
+    BC_REQUIRE_EQUAL(witness_tx_id_relay::size(level::canonical), zero);
 }
 
-BOOST_AUTO_TEST_CASE(witness_tx_id_relay__deserialize1__empty__expected)
-{
-    const system::data_chunk data{};
-    BOOST_REQUIRE(witness_tx_id_relay::deserialize(level::bip339, data));
-}
-
-BOOST_AUTO_TEST_CASE(witness_tx_id_relay__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(witness_tx_id_relay__deserialize1__empty__expected)
 {
     const system::data_chunk data{};
-    BOOST_REQUIRE(!witness_tx_id_relay::deserialize(level::bip339 - 1u, data));
+    BC_REQUIRE(witness_tx_id_relay::deserialize(level::bip339, data));
 }
 
-BOOST_AUTO_TEST_CASE(witness_tx_id_relay__deserialize1__excessive_version__nullptr)
+BC_AUTO_TEST_CASE(witness_tx_id_relay__deserialize1__insufficient_version__nullptr)
 {
     const system::data_chunk data{};
-    BOOST_REQUIRE(!witness_tx_id_relay::deserialize(level::maximum_protocol + 1u, data));
+    BC_REQUIRE(!witness_tx_id_relay::deserialize(level::bip339 - 1u, data));
 }
 
-BOOST_AUTO_TEST_CASE(witness_tx_id_relay__deserialize2__insufficient_version__source_false)
+BC_AUTO_TEST_CASE(witness_tx_id_relay__deserialize1__excessive_version__nullptr)
+{
+    const system::data_chunk data{};
+    BC_REQUIRE(!witness_tx_id_relay::deserialize(level::maximum_protocol + 1u, data));
+}
+
+BC_AUTO_TEST_CASE(witness_tx_id_relay__deserialize2__insufficient_version__source_false)
 {
     const system::data_chunk data{};
     system::read::bytes::copy source(data);
     witness_tx_id_relay::deserialize(level::bip339 - 1u, source);
-    BOOST_REQUIRE(!source);
+    BC_REQUIRE(!source);
 }
 
-BOOST_AUTO_TEST_CASE(witness_tx_id_relay__serialize1__default__empty)
+BC_AUTO_TEST_CASE(witness_tx_id_relay__serialize1__default__empty)
 {
     system::data_chunk data{};
-    BOOST_REQUIRE(witness_tx_id_relay{}.serialize(level::bip339, data));
-    BOOST_REQUIRE(data.empty());
+    BC_REQUIRE(witness_tx_id_relay{}.serialize(level::bip339, data));
+    BC_REQUIRE(data.empty());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

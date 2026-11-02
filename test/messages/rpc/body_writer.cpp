@@ -20,110 +20,110 @@
 
 ////#if defined(HAVE_SLOW_TESTS)
 
-BOOST_AUTO_TEST_SUITE(rpc_body_writer_tests)
+BC_AUTO_TEST_SUITE(rpc_body_writer_tests)
 
 using namespace network::http;
 using namespace network::rpc;
 using value = system::json::value;
 
-bool operator==(const asio::const_buffer& left, const asio::const_buffer& right)
+bool operator==(const io::const_buffer& left, const io::const_buffer& right)
 {
     return left.size() == right.size() &&
         is_zero(std::memcmp(left.data(), right.data(), left.size()));
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__construct1__default__default_response_terminated)
+BC_AUTO_TEST_CASE(rpc_body_writer__construct1__default__default_response_terminated)
 {
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
     rpc::response_body::writer writer(body);
-    BOOST_REQUIRE(body.message.jsonrpc == version::undefined);
-    BOOST_REQUIRE(!body.message.id.has_value());
-    BOOST_REQUIRE(!body.message.error.has_value());
-    BOOST_REQUIRE(!body.message.result.has_value());
+    BC_REQUIRE(body.message.jsonrpc == version::undefined);
+    BC_REQUIRE(!body.message.id.has_value());
+    BC_REQUIRE(!body.message.error.has_value());
+    BC_REQUIRE(!body.message.result.has_value());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__construct2__default__default_response_non_terminated)
+BC_AUTO_TEST_CASE(rpc_body_writer__construct2__default__default_response_non_terminated)
 {
     response_header header{};
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
     rpc::response_body::writer writer(header, body);
-    BOOST_REQUIRE(body.message.jsonrpc == version::undefined);
-    BOOST_REQUIRE(!body.message.id.has_value());
-    BOOST_REQUIRE(!body.message.error.has_value());
-    BOOST_REQUIRE(!body.message.result.has_value());
+    BC_REQUIRE(body.message.jsonrpc == version::undefined);
+    BC_REQUIRE(!body.message.id.has_value());
+    BC_REQUIRE(!body.message.error.has_value());
+    BC_REQUIRE(!body.message.result.has_value());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__init__default__success)
+BC_AUTO_TEST_CASE(rpc_body_writer__init__default__success)
 {
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
     rpc::response_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__init__any_result__jsonrpc_writer_exception)
+BC_AUTO_TEST_CASE(rpc_body_writer__init__any_result__jsonrpc_writer_exception)
 {
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
     body.message.result = value_t{ any_t{ system::to_shared<int>(42) } };
     rpc::response_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(ec == error::jsonrpc_writer_exception);
+    BC_REQUIRE(ec == error::jsonrpc_writer_exception);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success_expected_no_more)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success_expected_no_more)
 {
     const std::string_view expected{ R"({"error":null,"result":null})" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
     response_header header{};
     rpc::response_body::writer writer(header, body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__success_expected_no_more)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__success_expected_no_more)
 {
     const std::string_view expected{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
     body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
     response_header header{};
     rpc::response_body::writer writer(header, body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_expected_with_newline_no_more)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_expected_with_newline_no_more)
 {
     const std::string_view expected{ "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":true}\n" };
     http::flat_buffer scratch{ 64 * 1024 };
@@ -132,22 +132,22 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_e
     body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
     body.terminate = true;
     rpc::response_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
 
     using namespace system;
-    const std::string data{ pointer_cast<const char>(buffer.get().first.data()), buffer.get().first.size() };
-    BOOST_REQUIRE_EQUAL(data, expected);
-    BOOST_REQUIRE(!buffer.get().second);
-    BOOST_REQUIRE(writer.done());
+    const std::string data{ pointer_cast<const char>(buffer.value().first.data()), buffer.value().first.size() };
+    BC_REQUIRE_EQUAL(data, expected);
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__terminated_fills_bound_less_one__one_chunk_with_newline)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__terminated_fills_bound_less_one__one_chunk_with_newline)
 {
     const std::string_view expected{ "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":true}\n" };
     http::flat_buffer scratch{ expected.size() };
@@ -156,22 +156,22 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__terminated_fills_bound_less_one__one_
     body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
     body.terminate = true;
     rpc::response_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
 
     using namespace system;
-    const std::string data{ pointer_cast<const char>(buffer.get().first.data()), buffer.get().first.size() };
-    BOOST_REQUIRE_EQUAL(data, expected);
-    BOOST_REQUIRE(!buffer.get().second);
-    BOOST_REQUIRE(writer.done());
+    const std::string data{ pointer_cast<const char>(buffer.value().first.data()), buffer.value().first.size() };
+    BC_REQUIRE_EQUAL(data, expected);
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__terminated_fills_bound__two_chunks_within_bound)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__terminated_fills_bound__two_chunks_within_bound)
 {
     const std::string_view expected{ "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":true}\n" };
     const auto bound = sub1(expected.size());
@@ -181,38 +181,38 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__terminated_fills_bound__two_chunks_wi
     body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
     body.terminate = true;
     rpc::response_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     using namespace system;
     const auto buffer1 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().second);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(buffer1.value().second);
 
-    const std::string part1{ pointer_cast<const char>(buffer1.get().first.data()), buffer1.get().first.size() };
+    const std::string part1{ pointer_cast<const char>(buffer1.value().first.data()), buffer1.value().first.size() };
     const auto buffer2 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(!buffer2.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer2.has_value());
+    BC_REQUIRE(!buffer2.value().second);
+    BC_REQUIRE(writer.done());
 
-    const std::string part2{ pointer_cast<const char>(buffer2.get().first.data()), buffer2.get().first.size() };
-    BOOST_REQUIRE_LE(part1.size(), bound);
-    BOOST_REQUIRE_LE(part2.size(), bound);
-    BOOST_REQUIRE_EQUAL(part1 + part2, expected);
+    const std::string part2{ pointer_cast<const char>(buffer2.value().first.data()), buffer2.value().first.size() };
+    BC_REQUIRE_LE(part1.size(), bound);
+    BC_REQUIRE_LE(part2.size(), bound);
+    BC_REQUIRE_EQUAL(part1 + part2, expected);
 }
 
 // batch
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_terminated__open_prefix_message_no_terminator)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_terminated__open_prefix_message_no_terminator)
 {
     const std::string_view prefix{ "[" };
     const std::string_view expected{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
-    const asio::const_buffer out1{ prefix.data(), prefix.size() };
-    const asio::const_buffer out2{ expected.data(), expected.size() };
+    const io::const_buffer out1{ prefix.data(), prefix.size() };
+    const io::const_buffer out2{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
@@ -220,32 +220,32 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_terminated__open_pref
     body.changed = true;
     body.terminate = true;
     rpc::response_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer1 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(buffer1.value().first == out1);
+    BC_REQUIRE(buffer1.value().second);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer2 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(!buffer2.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer2.has_value());
+    BC_REQUIRE(buffer2.value().first == out2);
+    BC_REQUIRE(!buffer2.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_continuation_part_terminated__separator_prefix_message_no_terminator)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_continuation_part_terminated__separator_prefix_message_no_terminator)
 {
     const std::string_view prefix{ "," };
     const std::string_view expected{ R"({"jsonrpc":"2.0","id":2,"result":true})" };
-    const asio::const_buffer out1{ prefix.data(), prefix.size() };
-    const asio::const_buffer out2{ expected.data(), expected.size() };
+    const io::const_buffer out1{ prefix.data(), prefix.size() };
+    const io::const_buffer out2{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
@@ -253,32 +253,32 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_continuation_part_terminated__s
     body.batch = true;
     body.terminate = true;
     rpc::response_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer1 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(buffer1.value().first == out1);
+    BC_REQUIRE(buffer1.value().second);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer2 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(!buffer2.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer2.has_value());
+    BC_REQUIRE(buffer2.value().first == out2);
+    BC_REQUIRE(!buffer2.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_terminated__close_terminator_no_message)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_terminated__close_terminator_no_message)
 {
     const std::string_view close{ "]" };
     const std::string_view line{ "\n" };
-    const asio::const_buffer out1{ close.data(), close.size() };
-    const asio::const_buffer out2{ line.data(), line.size() };
+    const io::const_buffer out1{ close.data(), close.size() };
+    const io::const_buffer out2{ line.data(), line.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
@@ -286,30 +286,30 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_terminated__close_te
     body.changed = true;
     body.terminate = true;
     rpc::response_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer1 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(buffer1.value().first == out1);
+    BC_REQUIRE(buffer1.value().second);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer2 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(!buffer2.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer2.has_value());
+    BC_REQUIRE(buffer2.value().first == out2);
+    BC_REQUIRE(!buffer2.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_non_terminated__close_only_no_message)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_non_terminated__close_only_no_message)
 {
     const std::string_view close{ "]" };
-    const asio::const_buffer out1{ close.data(), close.size() };
+    const io::const_buffer out1{ close.data(), close.size() };
     response_header header{};
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
@@ -317,25 +317,25 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_non_terminated__clos
     body.batch = true;
     body.changed = true;
     rpc::response_body::writer writer(header, body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer1 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(!buffer1.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(buffer1.value().first == out1);
+    BC_REQUIRE(!buffer1.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_non_terminated__open_prefix_message)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_non_terminated__open_prefix_message)
 {
     const std::string_view prefix{ "[" };
     const std::string_view expected{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
-    const asio::const_buffer out1{ prefix.data(), prefix.size() };
-    const asio::const_buffer out2{ expected.data(), expected.size() };
+    const io::const_buffer out1{ prefix.data(), prefix.size() };
+    const io::const_buffer out2{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
@@ -343,98 +343,98 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_non_terminated__open_
     body.changed = true;
     response_header header{};
     rpc::response_body::writer writer(header, body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer1 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer1.has_value());
-    BOOST_REQUIRE(buffer1.get().first == out1);
-    BOOST_REQUIRE(buffer1.get().second);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(buffer1.value().first == out1);
+    BC_REQUIRE(buffer1.value().second);
 
     const auto buffer2 = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer2.has_value());
-    BOOST_REQUIRE(buffer2.get().first == out2);
-    BOOST_REQUIRE(!buffer2.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer2.has_value());
+    BC_REQUIRE(buffer2.value().first == out2);
+    BC_REQUIRE(!buffer2.value().second);
+    BC_REQUIRE(writer.done());
 }
 
 // error
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__v2_error_null_id__expected)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_error_null_id__expected)
 {
     const std::string_view expected{ R"({"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"Parse error"}})" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
     body.message = response_t{ version::v2, identity_t{ null_t{} }, result_t{ -32700, "Parse error", {} }, {} };
     response_header header{};
     rpc::response_body::writer writer(header, body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__v2_error_data_string_id__expected)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_error_data_string_id__expected)
 {
     const std::string_view expected{ R"({"jsonrpc":"2.0","id":"abc","error":{"code":-32601,"message":"Method not found","data":"bogus"}})" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
     body.message = response_t{ version::v2, identity_t{ string_t{ "abc" } }, result_t{ -32601, "Method not found", value_t{ string_t{ "bogus" } } }, {} };
     response_header header{};
     rpc::response_body::writer writer(header, body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
 }
 
 // request (notifier)
 // ----------------------------------------------------------------------------
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__notification_non_terminated__success_expected_no_more)
+BC_AUTO_TEST_CASE(rpc_body_writer__request_get__notification_non_terminated__success_expected_no_more)
 {
     const std::string_view expected{ R"({"jsonrpc":"2.0","method":"blockchain.headers.subscribe","params":[{"height":0}]})" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::request_body::value_type body{};
     body.buffer = &scratch;
     body.message = request_t{ version::v2, {}, "blockchain.headers.subscribe", params_t{ array_t{ value_t{ object_t{ { "height", value_t{ uint32_t{ 0 } } } } } } } };
     request_header header{};
     rpc::request_body::writer writer(header, body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!writer.done());
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
-    BOOST_REQUIRE(writer.done());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__notification_terminated__success_expected_with_newline_no_more)
+BC_AUTO_TEST_CASE(rpc_body_writer__request_get__notification_terminated__success_expected_with_newline_no_more)
 {
     const std::string_view expected_json{ R"({"jsonrpc":"2.0","method":"m","params":["a"]})" };
     http::flat_buffer scratch{ 64 * 1024 };
@@ -443,71 +443,71 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__notification_terminated__succ
     body.message = request_t{ version::v2, {}, "m", params_t{ array_t{ value_t{ string_t{ "a" } } } } };
     body.terminate = true;
     rpc::request_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
 
     using namespace system;
-    const std::string data{ pointer_cast<const char>(buffer.get().first.data()), buffer.get().first.size() };
-    BOOST_REQUIRE_EQUAL(data, std::string{ expected_json } + "\n");
-    BOOST_REQUIRE(!buffer.get().second);
-    BOOST_REQUIRE(writer.done());
+    const std::string data{ pointer_cast<const char>(buffer.value().first.data()), buffer.value().first.size() };
+    BC_REQUIRE_EQUAL(data, std::string{ expected_json } + "\n");
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__request_with_id__expected)
+BC_AUTO_TEST_CASE(rpc_body_writer__request_get__request_with_id__expected)
 {
     const std::string_view expected{ R"({"jsonrpc":"1.0","id":"curltest","method":"getblockcount","params":[]})" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::request_body::value_type body{};
     body.buffer = &scratch;
     body.message = request_t{ version::v1, identity_t{ string_t{ "curltest" } }, "getblockcount", params_t{ array_t{} } };
     request_header header{};
     rpc::request_body::writer writer(header, body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__request_get__empty_request__empty_object)
+BC_AUTO_TEST_CASE(rpc_body_writer__request_get__empty_request__empty_object)
 {
     const std::string_view expected{ "{}" };
-    const asio::const_buffer out{ expected.data(), expected.size() };
+    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::request_body::value_type body{};
     body.buffer = &scratch;
     request_header header{};
     rpc::request_body::writer writer(header, body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(!ec);
+    BC_REQUIRE(!ec);
 
     const auto buffer = writer.get(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(buffer.has_value());
-    BOOST_REQUIRE(buffer.get().first == out);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__request_init__null_buffer__bad_alloc)
+BC_AUTO_TEST_CASE(rpc_body_writer__request_init__null_buffer__bad_alloc)
 {
     rpc::request_body::value_type body{};
     body.message = request_t{ version::v2, {}, "m", {} };
     rpc::request_body::writer writer(body);
-    boost_code ec{};
+    code ec{};
     writer.init(ec);
-    BOOST_REQUIRE(ec == error::http_error_t::bad_alloc);
+    BC_REQUIRE(ec == error::http_error_t::bad_alloc);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
 
 ////#endif // HAVE_SLOW_TESTS

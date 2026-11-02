@@ -21,6 +21,8 @@
 
 #include <span>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/http/header.hpp>
+#include <bitcoin/network/messages/http/message.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>
 
@@ -29,7 +31,7 @@ namespace network {
 namespace messages {
 namespace peer {
 
-/// boost::beast::http body for bitcoin p2p messages.
+/// http body for bitcoin p2p messages.
 struct BCT_API body
 {
     /// Content passed to/from the reader/writer via request/response.
@@ -63,7 +65,7 @@ struct BCT_API body
     class BCT_API reader
     {
     public:
-        using buffer_type = asio::const_buffer;
+        using buffer_type = io::const_buffer;
 
         inline explicit reader(value_type& value) NOEXCEPT
           : value_{ value }
@@ -75,21 +77,21 @@ struct BCT_API body
         {
         }
 
-        template <bool IsRequest, class Fields>
-        inline reader(http::message_header<IsRequest, Fields>&,
+        template <bool IsRequest>
+        inline reader(http::header<IsRequest>&,
             value_type& value) NOEXCEPT
           : reader{ value }
         {
         }
 
-        void init(const http::length_type& length, boost_code& ec) NOEXCEPT;
-        size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT;
-        void finish(boost_code& ec) NOEXCEPT;
+        void init(const http::length_type& length, code& ec) NOEXCEPT;
+        size_t put(const buffer_type& buffer, code& ec) NOEXCEPT;
+        void finish(code& ec) NOEXCEPT;
         bool done() const NOEXCEPT;
 
         /// Accept the payload of the identified message (v2).
         void put(uint8_t identifier, const std::string& command,
-            const std::span<const uint8_t>& payload, boost_code& ec) NOEXCEPT;
+            const std::span<const uint8_t>& payload, code& ec) NOEXCEPT;
 
         /// Bytes required to advance the parse (zero when done).
         size_t need() const NOEXCEPT;
@@ -102,7 +104,7 @@ struct BCT_API body
 
     private:
         bool accept(const std::span<const uint8_t>& payload,
-            boost_code& ec) NOEXCEPT;
+            code& ec) NOEXCEPT;
 
         size_t need_{};
         bool headed_{};
@@ -112,7 +114,7 @@ struct BCT_API body
     class BCT_API writer
     {
     public:
-        using const_buffers_type = asio::const_buffer;
+        using const_buffers_type = io::const_buffer;
         using out_buffer = http::get_buffer<const_buffers_type>;
 
         inline explicit writer(value_type& value) NOEXCEPT
@@ -120,15 +122,15 @@ struct BCT_API body
         {
         }
 
-        template <bool IsRequest, class Fields>
-        inline explicit writer(http::message_header<IsRequest, Fields>&,
+        template <bool IsRequest>
+        inline explicit writer(http::header<IsRequest>&,
             value_type& value) NOEXCEPT
           : value_{ value }
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT;
-        out_buffer get(boost_code& ec) NOEXCEPT;
+        void init(code& ec) NOEXCEPT;
+        out_buffer get(code& ec) NOEXCEPT;
         bool done() const NOEXCEPT;
 
     protected:

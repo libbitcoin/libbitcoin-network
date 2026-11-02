@@ -18,6 +18,6 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(magic_numbers_tests)
+BC_AUTO_TEST_SUITE(magic_numbers_tests)
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

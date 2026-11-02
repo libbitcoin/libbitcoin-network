@@ -28,56 +28,59 @@
     <Filter Include="src\functional">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\log">
+    <Filter Include="src\io">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages">
+    <Filter Include="src\log">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http">
+    <Filter Include="src\messages">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http\enums">
+    <Filter Include="src\messages\http">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer">
+    <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer\detail">
+    <Filter Include="src\messages\peer">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer\enums">
+    <Filter Include="src\messages\peer\detail">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\rpc">
+    <Filter Include="src\messages\peer\enums">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\net">
+    <Filter Include="src\messages\rpc">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\p2ps">
+    <Filter Include="src\net">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\p2ps">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\pyzmq">
+    <Filter Include="src\protocols">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\pyzmq">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tls">
+    <Filter Include="src\sessions">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\zmtp">
+    <Filter Include="src\tls">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ws">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\zmtp">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\asio.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
@@ -165,6 +168,12 @@
     <ClCompile Include="..\..\..\..\test\functional\peer_setup_fixture.cpp">
       <Filter>src\functional</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\io\context.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\io\socket.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\log\timer.cpp">
       <Filter>src\log</Filter>
     </ClCompile>
@@ -189,13 +198,22 @@
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\header.cpp">
+      <Filter>src\messages\http</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
+      <Filter>src\messages\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\parser.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\http_body_reader.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\indirect.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp">
@@ -512,6 +530,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tls\socket.cpp">
       <Filter>src\tls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ws\frame.cpp">
+      <Filter>src\ws</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ws\handshake.cpp">
+      <Filter>src\ws</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ws\reader.cpp">
+      <Filter>src\ws</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\zmtp\cipher.cpp">
       <Filter>src\zmtp</Filter>

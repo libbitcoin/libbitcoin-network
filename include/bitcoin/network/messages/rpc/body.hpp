@@ -71,7 +71,7 @@ struct message_type
     bool terminate{};
 };
 
-/// Derived boost::beast::http body for JSON-RPC messages.
+/// Derived http body for JSON-RPC messages.
 /// Extends json::body with JSON-RPC validation.
 template <typename Message>
 struct BCT_API body
@@ -93,15 +93,15 @@ struct BCT_API body
         {
         }
 
-        template <bool IsRequest, class Fields>
-        inline explicit reader(http::message_header<IsRequest, Fields>& header,
+        template <bool IsRequest>
+        inline explicit reader(http::header<IsRequest>& header,
             value_type& value) NOEXCEPT
           : reader_type{ header, value }
         {
         }
 
-        size_t put(const buffer_type& buffer, boost_code& ec) NOEXCEPT override;
-        void finish(boost_code& ec) NOEXCEPT override;
+        size_t put(const buffer_type& buffer, code& ec) NOEXCEPT override;
+        void finish(code& ec) NOEXCEPT override;
         bool done() const NOEXCEPT override;
 
     private:
@@ -127,15 +127,15 @@ struct BCT_API body
         {
         }
 
-        template <bool IsRequest, class Fields>
-        inline explicit writer(http::message_header<IsRequest, Fields>& header,
+        template <bool IsRequest>
+        inline explicit writer(http::header<IsRequest>& header,
             value_type& value) NOEXCEPT
           : writer_type{ header, value }
         {
         }
 
-        void init(boost_code& ec) NOEXCEPT override;
-        out_buffer get(boost_code& ec) NOEXCEPT override;
+        void init(code& ec) NOEXCEPT override;
+        out_buffer get(code& ec) NOEXCEPT override;
         bool done() const NOEXCEPT override;
 
     private:

@@ -21,7 +21,7 @@
 
 #include <optional>
 #include <span>
-#include <bitcoin/network/asio.hpp>
+#include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/zmtp/cipher.hpp>
 #include <bitcoin/network/zmtp/context.hpp>
@@ -40,15 +40,15 @@ namespace zmtp {
 /// same frames either way. It is a transport, not a framework. The role is
 /// the socket type advertised in the handshake (admits compatible peers).
 /// All calls must be sequenced on the underlying socket's executor. Read and
-/// write chains may overlap each other but not themselves (as asio streams).
+/// write chains may overlap each other but not themselves.
 class BCT_API stream
 {
 public:
     DELETE_COPY_MOVE(stream);
 
-    typedef std::function<void(const boost_code&)> handshake_handler;
-    typedef std::function<void(const boost_code&, size_t)> io_handler;
-    using executor_type = asio::socket::executor_type;
+    typedef std::function<void(const code&)> handshake_handler;
+    typedef std::function<void(const code&, size_t)> io_handler;
+    using executor_type = io::socket::executor_type;
 
     /// One wire frame: the flags byte and the body (caller-owned on read).
     struct frame
@@ -99,13 +99,13 @@ public:
     static constexpr size_t maximum_parts = 32;
 
     /// Assume ownership of the connected tcp socket, in the given role.
-    stream(asio::socket&& socket, const context& context,
+    stream(io::socket&& socket, const context& context,
         zmtp::role role) NOEXCEPT;
 
-    /// asio stream conventions (next_layer enables get_lowest_layer).
+    /// The executor and the socket of the stream.
     executor_type get_executor() NOEXCEPT;
-    asio::socket& next_layer() NOEXCEPT;
-    const asio::socket& next_layer() const NOEXCEPT;
+    io::socket& next_layer() NOEXCEPT;
+    const io::socket& next_layer() const NOEXCEPT;
 
     /// Perform the ZMTP greeting and mechanism handshake.
     /// as_server is set for accepted (bound) connections, clear for connected.
@@ -119,7 +119,7 @@ public:
 
     /// Write a caller-framed buffer (see frame_message). The caller retains
     /// the buffer until the handler fires, when the peer has accepted it.
-    void async_write(const asio::const_buffer& in,
+    void async_write(const io::const_buffer& in,
         io_handler&& handler) NOEXCEPT;
 
     // Codec (static, stateless). Exposed for the tier above and for test.
@@ -195,51 +195,51 @@ private:
     // handshake
     void write_greeting(bool as_server,
         const handshake_handler& handler) NOEXCEPT;
-    void handle_greeting_sent(const boost_code& ec, bool as_server,
+    void handle_greeting_sent(const code& ec, bool as_server,
         const system::chunk_cptr& greeting,
         const handshake_handler& handler) NOEXCEPT;
     void read_greeting(bool as_server,
         const handshake_handler& handler) NOEXCEPT;
-    void handle_greeting_stage1(const boost_code& ec, bool as_server,
+    void handle_greeting_stage1(const code& ec, bool as_server,
         const handshake_handler& handler) NOEXCEPT;
-    void handle_greeting_stage2(const boost_code& ec, bool as_server,
+    void handle_greeting_stage2(const code& ec, bool as_server,
         const handshake_handler& handler) NOEXCEPT;
     void fail_handshake(const std::string& reason,
         const handshake_handler& handler) NOEXCEPT;
 
     // NULL mechanism
     void write_ready(const handshake_handler& handler) NOEXCEPT;
-    void handle_ready_sent(const boost_code& ec,
+    void handle_ready_sent(const code& ec,
         const system::chunk_cptr& ready,
         const handshake_handler& handler) NOEXCEPT;
     void read_ready(const handshake_handler& handler) NOEXCEPT;
-    void handle_ready(const boost_code& ec, size_t size,
+    void handle_ready(const code& ec, size_t size,
         const frame_ptr& ready, const handshake_handler& handler) NOEXCEPT;
 
     // CURVE mechanism (server)
     void read_hello(const handshake_handler& handler) NOEXCEPT;
-    void handle_hello(const boost_code& ec, size_t size,
+    void handle_hello(const code& ec, size_t size,
         const frame_ptr& hello, const handshake_handler& handler) NOEXCEPT;
-    void handle_welcome_sent(const boost_code& ec,
+    void handle_welcome_sent(const code& ec,
         const system::chunk_cptr& welcome,
         const handshake_handler& handler) NOEXCEPT;
-    void handle_initiate(const boost_code& ec, size_t size,
+    void handle_initiate(const code& ec, size_t size,
         const frame_ptr& initiate, const handshake_handler& handler) NOEXCEPT;
-    void handle_curve_ready_sent(const boost_code& ec,
+    void handle_curve_ready_sent(const code& ec,
         const system::chunk_cptr& ready,
         const handshake_handler& handler) NOEXCEPT;
     bool compatible(const std::span<const uint8_t>& metadata) NOEXCEPT;
 
     // frame reader (one whole frame: flags, length, body)
-    void handle_frame_flags(const boost_code& ec, ref<frame> out,
+    void handle_frame_flags(const code& ec, ref<frame> out,
         size_t maximum, const io_handler& handler) NOEXCEPT;
-    void handle_frame_length(const boost_code& ec, bool long_size,
+    void handle_frame_length(const code& ec, bool long_size,
         ref<frame> out, size_t maximum, const io_handler& handler) NOEXCEPT;
-    void handle_frame_body(const boost_code& ec, size_t size,
+    void handle_frame_body(const code& ec, size_t size,
         ref<frame> out, const io_handler& handler) NOEXCEPT;
 
     // These are protected by stream (executor) sequencing.
-    asio::socket socket_;
+    io::socket socket_;
     const context& context_;
     const zmtp::role role_;
     std::string identity_{};

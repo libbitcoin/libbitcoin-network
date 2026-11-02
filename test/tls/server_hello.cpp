@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(tls_server_hello_tests)
+BC_AUTO_TEST_SUITE(tls_server_hello_tests)
 
 using namespace bc::system;
 using namespace tls;
@@ -127,187 +127,187 @@ static uint8_t failure_of(const hello& value)
     return server.is_failed() ? server.failure() : alert::close_notify;
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__valid__accepted)
+BC_AUTO_TEST_CASE(tls_server_hello__valid__accepted)
 {
-    BOOST_REQUIRE_EQUAL(failure_of({}), alert::close_notify);
+    BC_REQUIRE_EQUAL(failure_of({}), alert::close_notify);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__missing_versions__protocol_version)
+BC_AUTO_TEST_CASE(tls_server_hello__missing_versions__protocol_version)
 {
     hello value{};
     value.versions = false;
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::protocol_version);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::protocol_version);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__tls12_version_only__protocol_version)
+BC_AUTO_TEST_CASE(tls_server_hello__tls12_version_only__protocol_version)
 {
     hello value{};
     value.version_list = base16_chunk("0303");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::protocol_version);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::protocol_version);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__missing_algorithms__missing_extension)
+BC_AUTO_TEST_CASE(tls_server_hello__missing_algorithms__missing_extension)
 {
     hello value{};
     value.algorithms = false;
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::missing_extension);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::missing_extension);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__missing_groups__missing_extension)
+BC_AUTO_TEST_CASE(tls_server_hello__missing_groups__missing_extension)
 {
     hello value{};
     value.groups = false;
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::missing_extension);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::missing_extension);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__missing_key_share__missing_extension)
+BC_AUTO_TEST_CASE(tls_server_hello__missing_key_share__missing_extension)
 {
     hello value{};
     value.shares = false;
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::missing_extension);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::missing_extension);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__no_p256_signature__handshake_failure)
+BC_AUTO_TEST_CASE(tls_server_hello__no_p256_signature__handshake_failure)
 {
     hello value{};
     value.algorithm_list = base16_chunk("0503");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::handshake_failure);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::handshake_failure);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__no_supported_group__handshake_failure)
+BC_AUTO_TEST_CASE(tls_server_hello__no_supported_group__handshake_failure)
 {
     hello value{};
     value.group_list = base16_chunk("001e");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::handshake_failure);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::handshake_failure);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__p256_group_without_share__retried)
+BC_AUTO_TEST_CASE(tls_server_hello__p256_group_without_share__retried)
 {
     hello value{};
     value.group_list = base16_chunk("0017");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::close_notify);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::close_notify);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__invalid_p256_share__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__invalid_p256_share__illegal_parameter)
 {
     hello value{};
     value.group_list = base16_chunk("0017");
     value.key_share = splice(base16_chunk("0017004104"), data_chunk(64, 0x01));
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__short_p256_share__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__short_p256_share__illegal_parameter)
 {
     hello value{};
     value.group_list = base16_chunk("0017");
     value.key_share = splice(base16_chunk("0017002102"), p256_generator_x);
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__invalid_p384_share__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__invalid_p384_share__illegal_parameter)
 {
     hello value{};
     value.group_list = base16_chunk("0018");
     value.key_share = splice(base16_chunk("0018006104"), data_chunk(96, 0x01));
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__duplicate_extension__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__duplicate_extension__illegal_parameter)
 {
     hello value{};
     value.duplicate = true;
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__compression__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__compression__illegal_parameter)
 {
     hello value{};
     value.compression = base16_chunk("01");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__long_session__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__long_session__decode_error)
 {
     hello value{};
     value.session = 33;
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__odd_suites__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__odd_suites__decode_error)
 {
     hello value{};
     value.suites = base16_chunk("130113");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__malformed_groups__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__malformed_groups__decode_error)
 {
     hello value{};
     value.group_list = base16_chunk("001d00");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__malformed_share__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__malformed_share__decode_error)
 {
     hello value{};
     value.key_share = base16_chunk("001d00ff");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__malformed_versions__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__malformed_versions__decode_error)
 {
     hello value{};
     value.version_list = base16_chunk("030403");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__malformed_algorithms__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__malformed_algorithms__decode_error)
 {
     hello value{};
     value.algorithm_list = base16_chunk("040305");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__trailing_share_list__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__trailing_share_list__decode_error)
 {
     hello value{};
     value.share_trailer = base16_chunk("00");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__truncated_extension__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__truncated_extension__decode_error)
 {
     hello value{};
     value.extension_trailer = base16_chunk("0000ff");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__short_share__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__short_share__illegal_parameter)
 {
     hello value{};
     value.key_share = base16_chunk("001d000101");
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__zero_share__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__zero_share__illegal_parameter)
 {
     hello value{};
     value.key_share = splice(base16_chunk("001d0020"), data_chunk(32, 0x00));
-    BOOST_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
+    BC_REQUIRE_EQUAL(failure_of(value), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__retry_without_share__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__retry_without_share__illegal_parameter)
 {
     const setup instance{};
     tls::server server{ instance.context };
     hello value{};
     value.key_share = {};
-    BOOST_REQUIRE(server.receive(encode(value)));
-    BOOST_REQUIRE(!server.receive(encode(value)));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::illegal_parameter);
+    BC_REQUIRE(server.receive(encode(value)));
+    BC_REQUIRE(!server.receive(encode(value)));
+    BC_REQUIRE_EQUAL(server.failure(), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__retry_other_group__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__retry_other_group__illegal_parameter)
 {
     const setup instance{};
     tls::server server{ instance.context };
@@ -315,13 +315,13 @@ BOOST_AUTO_TEST_CASE(tls_server_hello__retry_other_group__illegal_parameter)
     first.key_share = {};
     hello second{};
     second.key_share = splice(base16_chunk("00170041"), p256_generator);
-    BOOST_REQUIRE(server.receive(encode(first)));
-    BOOST_REQUIRE_EQUAL(server.group(), x25519_group);
-    BOOST_REQUIRE(!server.receive(encode(second)));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::illegal_parameter);
+    BC_REQUIRE(server.receive(encode(first)));
+    BC_REQUIRE_EQUAL(server.group(), x25519_group);
+    BC_REQUIRE(!server.receive(encode(second)));
+    BC_REQUIRE_EQUAL(server.failure(), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__retry_with_early_data__illegal_parameter)
+BC_AUTO_TEST_CASE(tls_server_hello__retry_with_early_data__illegal_parameter)
 {
     const setup instance{};
     tls::server server{ instance.context };
@@ -329,91 +329,91 @@ BOOST_AUTO_TEST_CASE(tls_server_hello__retry_with_early_data__illegal_parameter)
     first.key_share = {};
     hello second{};
     second.early = true;
-    BOOST_REQUIRE(server.receive(encode(first)));
-    BOOST_REQUIRE(!server.receive(encode(second)));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::illegal_parameter);
+    BC_REQUIRE(server.receive(encode(first)));
+    BC_REQUIRE(!server.receive(encode(second)));
+    BC_REQUIRE_EQUAL(server.failure(), alert::illegal_parameter);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__retry_change_cipher_spec__ignored)
+BC_AUTO_TEST_CASE(tls_server_hello__retry_change_cipher_spec__ignored)
 {
     const setup instance{};
     tls::server server{ instance.context };
     hello value{};
     value.key_share = {};
-    BOOST_REQUIRE(server.receive(encode(value)));
-    BOOST_REQUIRE(server.receive(record_of(content::change_cipher_spec, base16_chunk("01"))));
-    BOOST_REQUIRE(!server.is_failed());
+    BC_REQUIRE(server.receive(encode(value)));
+    BC_REQUIRE(server.receive(record_of(content::change_cipher_spec, base16_chunk("01"))));
+    BC_REQUIRE(!server.is_failed());
 }
 
 // records
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__change_cipher_spec_first__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server_hello__change_cipher_spec_first__unexpected_message)
 {
     const setup instance{};
     tls::server server{ instance.context };
-    BOOST_REQUIRE(!server.receive(record_of(content::change_cipher_spec, base16_chunk("01"))));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
+    BC_REQUIRE(!server.receive(record_of(content::change_cipher_spec, base16_chunk("01"))));
+    BC_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__empty_handshake__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server_hello__empty_handshake__unexpected_message)
 {
     const setup instance{};
     tls::server server{ instance.context };
-    BOOST_REQUIRE(!server.receive(record_of(content::handshake, {})));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
+    BC_REQUIRE(!server.receive(record_of(content::handshake, {})));
+    BC_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__long_alert__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__long_alert__decode_error)
 {
     const setup instance{};
     tls::server server{ instance.context };
-    BOOST_REQUIRE(!server.receive(record_of(content::alert, base16_chunk("020a00"))));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::decode_error);
+    BC_REQUIRE(!server.receive(record_of(content::alert, base16_chunk("020a00"))));
+    BC_REQUIRE_EQUAL(server.failure(), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__unknown_content__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server_hello__unknown_content__unexpected_message)
 {
     const setup instance{};
     tls::server server{ instance.context };
-    BOOST_REQUIRE(!server.receive(record_of(24, base16_chunk("00"))));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
+    BC_REQUIRE(!server.receive(record_of(24, base16_chunk("00"))));
+    BC_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__oversized_message__decode_error)
+BC_AUTO_TEST_CASE(tls_server_hello__oversized_message__decode_error)
 {
     const setup instance{};
     tls::server server{ instance.context };
-    BOOST_REQUIRE(!server.receive(record_of(content::handshake, base16_chunk("01ffffff"))));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::decode_error);
+    BC_REQUIRE(!server.receive(record_of(content::handshake, base16_chunk("01ffffff"))));
+    BC_REQUIRE_EQUAL(server.failure(), alert::decode_error);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__unexpected_message_type__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server_hello__unexpected_message_type__unexpected_message)
 {
     const setup instance{};
     tls::server server{ instance.context };
-    BOOST_REQUIRE(!server.receive(record_of(content::handshake, base16_chunk("14000000"))));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
+    BC_REQUIRE(!server.receive(record_of(content::handshake, base16_chunk("14000000"))));
+    BC_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__trailing_message__unexpected_message)
+BC_AUTO_TEST_CASE(tls_server_hello__trailing_message__unexpected_message)
 {
     const setup instance{};
     tls::server server{ instance.context };
     const auto hello_record = encode({});
     const data_chunk message(std::next(hello_record.begin(), record_header_size), hello_record.end());
-    BOOST_REQUIRE(!server.receive(record_of(content::handshake, splice(message, base16_chunk("14000000")))));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
+    BC_REQUIRE(!server.receive(record_of(content::handshake, splice(message, base16_chunk("14000000")))));
+    BC_REQUIRE_EQUAL(server.failure(), alert::unexpected_message);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__oversized_plaintext__record_overflow)
+BC_AUTO_TEST_CASE(tls_server_hello__oversized_plaintext__record_overflow)
 {
     const setup instance{};
     tls::server server{ instance.context };
-    BOOST_REQUIRE(!server.receive(record_of(content::handshake, data_chunk(add1(maximum_plaintext), 0x00))));
-    BOOST_REQUIRE_EQUAL(server.failure(), alert::record_overflow);
+    BC_REQUIRE(!server.receive(record_of(content::handshake, data_chunk(add1(maximum_plaintext), 0x00))));
+    BC_REQUIRE_EQUAL(server.failure(), alert::record_overflow);
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__message_across_records__accepted)
+BC_AUTO_TEST_CASE(tls_server_hello__message_across_records__accepted)
 {
     const setup instance{};
     tls::server server{ instance.context };
@@ -421,20 +421,20 @@ BOOST_AUTO_TEST_CASE(tls_server_hello__message_across_records__accepted)
     const auto middle = std::next(hello_record.begin(), record_header_size + 10u);
     const data_chunk first(std::next(hello_record.begin(), record_header_size), middle);
     const data_chunk second(middle, hello_record.end());
-    BOOST_REQUIRE(server.receive(record_of(content::handshake, first)));
-    BOOST_REQUIRE(server.output().empty());
-    BOOST_REQUIRE(server.receive(record_of(content::handshake, second)));
-    BOOST_REQUIRE(!server.output().empty());
-    BOOST_REQUIRE(!server.is_failed());
+    BC_REQUIRE(server.receive(record_of(content::handshake, first)));
+    BC_REQUIRE(server.output().empty());
+    BC_REQUIRE(server.receive(record_of(content::handshake, second)));
+    BC_REQUIRE(!server.output().empty());
+    BC_REQUIRE(!server.is_failed());
 }
 
-BOOST_AUTO_TEST_CASE(tls_server_hello__failed__further_receive_false)
+BC_AUTO_TEST_CASE(tls_server_hello__failed__further_receive_false)
 {
     const setup instance{};
     tls::server server{ instance.context };
-    BOOST_REQUIRE(!server.receive(record_of(24, base16_chunk("00"))));
-    BOOST_REQUIRE(!server.receive(encode({})));
-    BOOST_REQUIRE(!server.write(base16_chunk("00")));
+    BC_REQUIRE(!server.receive(record_of(24, base16_chunk("00"))));
+    BC_REQUIRE(!server.receive(encode({})));
+    BC_REQUIRE(!server.write(base16_chunk("00")));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

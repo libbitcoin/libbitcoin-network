@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(session_manual_tests)
+BC_AUTO_TEST_SUITE(session_manual_tests)
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
@@ -71,7 +71,7 @@ public:
             std::move(params));
 
         // Must be asynchronous or is an infinite recursion.
-        boost::asio::post(strand_, [=]() NOEXCEPT
+        io::post(strand_, [=]() NOEXCEPT
         {
             // Connect result code is independent of channel stop code.
             // Error code would set re-listener timer, channel pointer ignored.
@@ -100,7 +100,7 @@ public:
         if (is_zero(connects_++))
             peer_ = peer;
 
-        boost::asio::post(strand_, [=]() NOEXCEPT
+        io::post(strand_, [=]() NOEXCEPT
         {
             // This error is eaten by handle_connect, due to retry logic.
             // invalid_magic is a non-terminal code (timer retry).
@@ -175,7 +175,7 @@ public:
 
         // The handshake protocol pauses the channel upon completion, which is
         // after the session resumes it to start the read loop, so this posts.
-        boost::asio::post(channel->strand(),
+        io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
                 channel->pause();
@@ -311,16 +311,16 @@ private:
 
 // stop
 
-BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
+BC_AUTO_TEST_CASE(session_manual__stop__started__stopped)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set (only).
         session->start([&](const code& ec) NOEXCEPT
@@ -329,21 +329,21 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
+BC_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -351,28 +351,28 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
     mock_session_manual session(net, 1);
 
     std::promise<bool> promise;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         promise.set_value(true);
     });
 
-    BOOST_REQUIRE(promise.get_future().get());
-    BOOST_REQUIRE(session.stopped());
+    BC_REQUIRE(promise.get_future().get());
+    BC_REQUIRE(session.stopped());
 }
 
 // start
 
-BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
+BC_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -380,11 +380,11 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<code> restart;
-    boost::asio::post(net.strand(), [=, &restart]() NOEXCEPT
+    io::post(net.strand(), [=, &restart]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -392,67 +392,67 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(restart.get_future().get(), error::operation_failed);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(restart.get_future().get(), error::operation_failed);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
 // connect
 
-BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped)
+BC_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     const endpoint peer{ "42.42.42.42", 42 };
 
-    boost::asio::post(net.strand(), [=]() NOEXCEPT
+    io::post(net.strand(), [=]() NOEXCEPT
     {
         // This synchronous overload has no handler, so cannot capture values.
         session->connect(peer);
     });
 
     // No handler so rely on connect.
-    BOOST_REQUIRE(session->require_connected());
+    BC_REQUIRE(session->require_connected());
 
     // A connector was created/subscribed, which requires unstarted service stop.
-    BOOST_REQUIRE(net.get_connector());
+    BC_REQUIRE(net.get_connector());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
+BC_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     const endpoint peer{ "42.42.42.42", 42 };
 
     std::promise<std::pair<code, channel::ptr>> connected;
-    boost::asio::post(net.strand(), [=, &connected]() NOEXCEPT
+    io::post(net.strand(), [=, &connected]() NOEXCEPT
     {
         session->connect(peer, [&](const code& ec, const channel::ptr& channel)
         {
@@ -462,24 +462,24 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
     });
 
     const auto result = connected.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
-    BOOST_REQUIRE(!result.second);
+    BC_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BC_REQUIRE(!result.second);
 
     // A connector was created/subscribed, which requires unstarted service stop.
-    BOOST_REQUIRE(net.get_connector());
+    BC_REQUIRE(net.get_connector());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopped)
+BC_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -488,12 +488,12 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
     mock_net<mock_connector_connect_fail> net(set, log);
 
     auto session = std::make_shared<mock_session_manual>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     const endpoint peer{ "42.42.42.42", 42 };
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -501,13 +501,13 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     auto first = true;
     std::promise<bool> started_connect;
     std::promise<std::pair<code, channel::ptr>> connected;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session->connect(peer, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
         {
@@ -525,10 +525,10 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
         started_connect.set_value(true);
     });
 
-    BOOST_REQUIRE(started_connect.get_future().get());
+    BC_REQUIRE(started_connect.get_future().get());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -536,25 +536,28 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
 
     // connector.connect sets invalid_magic, causing a timer reconnect.
     const auto result = connected.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::invalid_magic);
-    BOOST_REQUIRE(!result.second);
+    BC_REQUIRE_EQUAL(result.first, error::invalid_magic);
+    BC_REQUIRE(!result.second);
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+
+    // The connect handler reenters until the network closes.
+    net.close();
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__service_stopped)
+BC_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__service_stopped)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     const endpoint expected{ "42.42.42.42", 42 };
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -562,12 +565,12 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
     std::promise<std::pair<code, channel::ptr>> connected;
-    boost::asio::post(net.strand(), [=, &stopped, &connected]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped, &connected]() NOEXCEPT
     {
         session->connect(expected, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
         {
@@ -582,16 +585,16 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
     });
 
     const auto result = connected.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
-    BOOST_REQUIRE(!result.second);
+    BC_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BC_REQUIRE(!result.second);
 
-    BOOST_REQUIRE(session->require_connected());
-    BOOST_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->require_connected());
+    BC_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expected)
+BC_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expected)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -599,12 +602,12 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
     mock_net<mock_connector_connect_success> net(set, log);
 
     auto session = std::make_shared<mock_session_manual_handshake_failure>(net, 1);
-    BOOST_REQUIRE(session->stopped());
+    BC_REQUIRE(session->stopped());
 
     const endpoint expected{ "42.42.42.42", 42 };
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
+    io::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec) NOEXCEPT
         {
@@ -612,12 +615,12 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE(!session->stopped());
 
     auto first = true;
     std::promise<std::pair<code, channel::ptr>> connected;
-    boost::asio::post(net.strand(), [&]() NOEXCEPT
+    io::post(net.strand(), [&]() NOEXCEPT
     {
         session->connect(expected, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
         {
@@ -634,28 +637,31 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
 
     // mock_session_manual_handshake_failure sets channel.stop(invalid_checksum).
     const auto result = connected.get_future().get();
-    BOOST_REQUIRE_EQUAL(result.first, error::invalid_checksum);
-    BOOST_REQUIRE(!result.second);
+    BC_REQUIRE_EQUAL(result.first, error::invalid_checksum);
+    BC_REQUIRE(!result.second);
 
-    BOOST_REQUIRE(session->require_connected());
-    BOOST_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
+    BC_REQUIRE(session->require_connected());
+    BC_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    io::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE(session->attached_handshake());
+    BC_REQUIRE(stopped.get_future().get());
+    BC_REQUIRE(session->stopped());
+    BC_REQUIRE(session->attached_handshake());
+
+    // The connect handler reenters until the network closes.
+    net.close();
 }
 
 // start via network (not required for coverage)
 // ============================================================================
 
-BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
+BC_AUTO_TEST_CASE(session_manual__start__network_start__success)
 {
     const logger log{};
     settings set(test::network_settings());
@@ -667,14 +673,14 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
         started.set_value(ec);
     });
     
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
+BC_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
 {
     const logger log{};
     settings set(test::network_settings());
-    BOOST_REQUIRE(set.manual.peers.empty());
+    BC_REQUIRE(set.manual.peers.empty());
 
     // Connector is not invoked.
     mock_net<> net(set, log);
@@ -690,15 +696,15 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__success)
+BC_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__success)
 {
     const logger log{};
     settings set(test::network_settings());
-    BOOST_REQUIRE(set.manual.peers.empty());
+    BC_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
     set.manual.peers.push_back(expected);
@@ -718,20 +724,20 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__s
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
     // Connector is established and connect is called for all configured
     // connections prior to completion of network run call.
-    BOOST_REQUIRE(net.get_connector());
-    BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
+    BC_REQUIRE(net.get_connector());
+    BC_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__success)
+BC_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__success)
 {
     const logger log{};
     settings set(test::network_settings());
-    BOOST_REQUIRE(set.manual.peers.empty());
+    BC_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.4", 42 };
     set.manual.peers.push_back({ "42.42.42.1", 42 });
@@ -754,21 +760,21 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
     // Connector is established and connect is called for all configured
     // connections prior to completion of network run call. The last connection
     // is reflected by the mock connector as connections invoked in order.
-    BOOST_REQUIRE(net.get_connector());
-    BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
+    BC_REQUIRE(net.get_connector());
+    BC_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
+BC_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
 {
     const logger log{};
     settings set(test::network_settings());
-    BOOST_REQUIRE(set.manual.peers.empty());
+    BC_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
 
@@ -788,17 +794,17 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
     net.close();
-    BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
+    BC_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
+BC_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
 {
     const logger log{};
     settings set(test::network_settings());
-    BOOST_REQUIRE(set.manual.peers.empty());
+    BC_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
 
@@ -818,17 +824,17 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
     net.close();
-    BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
+    BC_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
+BC_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
 {
     const logger log{};
     settings set(test::network_settings());
-    BOOST_REQUIRE(set.manual.peers.empty());
+    BC_REQUIRE(set.manual.peers.empty());
 
     const endpoint expected{ "42.42.42.42", 42 };
 
@@ -861,8 +867,8 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
     // connector.connect sets invalid_magic, causing a timer reconnect.
     const auto result = connect.get_future().get();
@@ -870,9 +876,9 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
     // The connection loops on connect failure until service stop.
     net.close();
 
-    BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
-    BOOST_REQUIRE_EQUAL(result.first, error::invalid_magic);
-    BOOST_REQUIRE(!result.second);
+    BC_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
+    BC_REQUIRE_EQUAL(result.first, error::invalid_magic);
+    BC_REQUIRE(!result.second);
 }
 
 // options
@@ -885,13 +891,13 @@ public:
     using session_manual::options;
 };
 
-BOOST_AUTO_TEST_CASE(session_manual__options__always__manual_settings)
+BC_AUTO_TEST_CASE(session_manual__options__always__manual_settings)
 {
     const logger log{};
     settings set(test::network_settings());
     mock_net<> net(set, log);
     const auto session = std::make_shared<mock_session_manual_options>(net, 1);
-    BOOST_REQUIRE_EQUAL(&session->options(), &net.network_settings().manual);
+    BC_REQUIRE_EQUAL(&session->options(), &net.network_settings().manual);
 }
 
 // Manual connection to the test acting as a raw peer on loopback.
@@ -920,7 +926,7 @@ struct manual_peer
             started.set_value(ec);
         });
 
-        BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+        BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
         std::promise<code> running{};
         net_.run([&](const code& ec) NOEXCEPT
@@ -928,7 +934,7 @@ struct manual_peer
             running.set_value(ec);
         });
 
-        BOOST_REQUIRE_EQUAL(running.get_future().get(), error::success);
+        BC_REQUIRE_EQUAL(running.get_future().get(), error::success);
     }
 
     ~manual_peer()
@@ -953,7 +959,7 @@ struct manual_peer
 
     void accept()
     {
-        acceptor_.accept(socket_);
+        REQUIRE_SUCCESS(acceptor_, accept, socket_);
     }
 
     template <class Message>
@@ -961,11 +967,11 @@ struct manual_peer
     {
         using namespace messages::peer;
         system::data_chunk payload(message.size(version));
-        BOOST_REQUIRE(message.serialize(version, payload));
+        BC_REQUIRE(message.serialize(version, payload));
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
-        BOOST_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
-        boost::asio::write(socket_, boost::asio::buffer(system::splice(frame, payload)));
+        BC_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
     // Read framed messages until the command matches.
@@ -975,12 +981,12 @@ struct manual_peer
         while (true)
         {
             system::data_array<heading::size()> head_data{};
-            boost::asio::read(socket_, boost::asio::buffer(head_data));
+            test::read(socket_, io::buffer(head_data));
             const auto head = heading::deserialize(head_data);
-            BOOST_REQUIRE(head);
+            BC_REQUIRE(head);
 
             system::data_chunk payload(head->payload_size);
-            boost::asio::read(socket_, boost::asio::buffer(payload));
+            test::read(socket_, io::buffer(payload));
             if (head->command == command)
                 return payload;
         }
@@ -991,7 +997,7 @@ struct manual_peer
     {
         using namespace messages::peer;
         const auto node = version::deserialize(value, receive(version::command));
-        BOOST_REQUIRE(node);
+        BC_REQUIRE(node);
 
         version out{};
         out.value = value;
@@ -1012,12 +1018,12 @@ struct manual_peer
     }
 
     // Read until the node disconnects, returning the terminal read code.
-    boost_code disconnected()
+    code disconnected()
     {
-        boost_code ec{};
+        code ec{};
         uint8_t byte{};
         while (!ec)
-            boost::asio::read(socket_, boost::asio::buffer(&byte, one), ec);
+            io::read(socket_, io::buffer(&byte, one), ec);
 
         return ec;
     }
@@ -1028,12 +1034,12 @@ private:
     mock_net<> net_;
     std::atomic_bool notified_{ false };
     std::promise<code> connected_{};
-    boost::asio::io_context io_{};
-    boost::asio::ip::tcp::acceptor acceptor_{ io_, { boost::asio::ip::address_v4::loopback(), manual_peer_port } };
-    boost::asio::ip::tcp::socket socket_{ io_ };
+    io::context io_{};
+    io::acceptor acceptor_{ io_, test::loopback(manual_peer_port) };
+    io::socket socket_{ io_ };
 };
 
-BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__started_address_requested)
+BC_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__started_address_requested)
 {
     using namespace messages::peer;
     manual_peer peer{ [](settings& set)
@@ -1046,12 +1052,12 @@ BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__starte
     auto connected = peer.connect(manual_peer_port, true);
     peer.accept();
     const auto node = peer.handshake(level::bip155, true);
-    BOOST_REQUIRE_EQUAL(node->value, level::bip155);
-    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
-    BOOST_REQUIRE(get_address::deserialize(level::bip155, peer.receive(get_address::command)));
+    BC_REQUIRE_EQUAL(node->value, level::bip155);
+    BC_REQUIRE_EQUAL(connected.get(), error::success);
+    BC_REQUIRE(get_address::deserialize(level::bip155, peer.receive(get_address::command)));
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70014_compact__started_address_requested)
+BC_AUTO_TEST_CASE(session_manual__connect__handshake_70014_compact__started_address_requested)
 {
     using namespace messages::peer;
     manual_peer peer{ [](settings& set)
@@ -1064,12 +1070,12 @@ BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70014_compact__started_a
     auto connected = peer.connect(manual_peer_port, true);
     peer.accept();
     const auto node = peer.handshake(level::bip152, false);
-    BOOST_REQUIRE_EQUAL(node->value, level::bip152);
-    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
-    BOOST_REQUIRE(get_address::deserialize(level::bip152, peer.receive(get_address::command)));
+    BC_REQUIRE_EQUAL(node->value, level::bip152);
+    BC_REQUIRE_EQUAL(connected.get(), error::success);
+    BC_REQUIRE(get_address::deserialize(level::bip152, peer.receive(get_address::command)));
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70002_reject__started)
+BC_AUTO_TEST_CASE(session_manual__connect__handshake_70002_reject__started)
 {
     using namespace messages::peer;
     manual_peer peer{ [](settings& set)
@@ -1081,11 +1087,11 @@ BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70002_reject__started)
     auto connected = peer.connect(manual_peer_port, true);
     peer.accept();
     const auto node = peer.handshake(level::bip61, false);
-    BOOST_REQUIRE_EQUAL(node->value, level::bip61);
-    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+    BC_REQUIRE_EQUAL(node->value, level::bip61);
+    BC_REQUIRE_EQUAL(connected.get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70001__started)
+BC_AUTO_TEST_CASE(session_manual__connect__handshake_70001__started)
 {
     using namespace messages::peer;
     manual_peer peer{ [](settings& set)
@@ -1096,11 +1102,11 @@ BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_70001__started)
     auto connected = peer.connect(manual_peer_port, true);
     peer.accept();
     const auto node = peer.handshake(level::bip37, false);
-    BOOST_REQUIRE_EQUAL(node->value, level::bip37);
-    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+    BC_REQUIRE_EQUAL(node->value, level::bip37);
+    BC_REQUIRE_EQUAL(connected.get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_31800_address__started_address_requested)
+BC_AUTO_TEST_CASE(session_manual__connect__handshake_31800_address__started_address_requested)
 {
     using namespace messages::peer;
     manual_peer peer{ [](settings& set)
@@ -1112,12 +1118,12 @@ BOOST_AUTO_TEST_CASE(session_manual__connect__handshake_31800_address__started_a
     auto connected = peer.connect(manual_peer_port, true);
     peer.accept();
     const auto node = peer.handshake(level::headers_protocol, false);
-    BOOST_REQUIRE_EQUAL(node->value, level::headers_protocol);
-    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
-    BOOST_REQUIRE(get_address::deserialize(level::headers_protocol, peer.receive(get_address::command)));
+    BC_REQUIRE_EQUAL(node->value, level::headers_protocol);
+    BC_REQUIRE_EQUAL(connected.get(), error::success);
+    BC_REQUIRE(get_address::deserialize(level::headers_protocol, peer.receive(get_address::command)));
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__connect__notifier_drops_started__disconnected)
+BC_AUTO_TEST_CASE(session_manual__connect__notifier_drops_started__disconnected)
 {
     using namespace messages::peer;
     manual_peer peer{ [](settings&) {} };
@@ -1125,12 +1131,12 @@ BOOST_AUTO_TEST_CASE(session_manual__connect__notifier_drops_started__disconnect
     auto connected = peer.connect(manual_peer_port, false);
     peer.accept();
     peer.handshake(level::bip155, false);
-    BOOST_REQUIRE_EQUAL(connected.get(), error::success);
+    BC_REQUIRE_EQUAL(connected.get(), error::success);
     const auto ec = peer.disconnected();
-    BOOST_REQUIRE(ec == boost::asio::error::eof || ec == boost::asio::error::connection_reset);
+    BC_REQUIRE(ec == error::peer_disconnect || ec == error::peer_disconnect);
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__connect__notifier_drops_connect_failure__failure)
+BC_AUTO_TEST_CASE(session_manual__connect__notifier_drops_connect_failure__failure)
 {
     manual_peer peer{ [](settings& set)
     {
@@ -1138,9 +1144,9 @@ BOOST_AUTO_TEST_CASE(session_manual__connect__notifier_drops_connect_failure__fa
     } };
 
     auto connected = peer.connect(manual_closed_port, false);
-    BOOST_REQUIRE(connected.get());
+    BC_REQUIRE(connected.get());
 }
 
 BC_POP_WARNING()
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()

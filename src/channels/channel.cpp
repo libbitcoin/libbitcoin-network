@@ -34,7 +34,7 @@ using namespace std::placeholders;
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Factory for fixed deadline timer pointer construction (or null).
-inline deadline::ptr make_timer(const logger& log, asio::strand& strand,
+inline deadline::ptr make_timer(const logger& log, io::strand& strand,
     const deadline::duration& span) NOEXCEPT
 {
     return to_bool(span.count()) ?
@@ -197,7 +197,7 @@ channel::gate_t::ptr channel::make_gate() NOEXCEPT
 // private
 void channel::handle_gate(const code&) NOEXCEPT
 {
-    boost::asio::post(strand(),
+    io::post(strand(),
         std::bind(&channel::do_receive,
             shared_from_base<channel>()));
 }

@@ -94,7 +94,6 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\asio.cpp" />
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
     <ClCompile Include="..\..\..\..\test\async\races\race_all.cpp" />
@@ -126,6 +125,12 @@
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer.cpp" />
     <ClCompile Include="..\..\..\..\test\functional\peer_setup_fixture.cpp" />
+    <ClCompile Include="..\..\..\..\test\io\context.cpp">
+      <ObjectFileName>$(IntDir)test_io_context.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\io\socket.cpp">
+      <ObjectFileName>$(IntDir)test_io_socket.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
@@ -136,11 +141,14 @@
     <ClCompile Include="..\..\..\..\test\messages\http\enums\media_type.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\header.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
       <ObjectFileName>$(IntDir)test_messages_http_method.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\parser.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http_body_reader.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http_body_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\indirect.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\body.cpp" />
@@ -254,7 +262,9 @@
     <ClCompile Include="..\..\..\..\test\test.cpp" />
     <ClCompile Include="..\..\..\..\test\tls\client.cpp" />
     <ClCompile Include="..\..\..\..\test\tls\codec.cpp" />
-    <ClCompile Include="..\..\..\..\test\tls\context.cpp" />
+    <ClCompile Include="..\..\..\..\test\tls\context.cpp">
+      <ObjectFileName>$(IntDir)test_tls_context.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tls\record.cpp" />
     <ClCompile Include="..\..\..\..\test\tls\schedule.cpp" />
     <ClCompile Include="..\..\..\..\test\tls\server.cpp" />
@@ -262,6 +272,9 @@
     <ClCompile Include="..\..\..\..\test\tls\socket.cpp">
       <ObjectFileName>$(IntDir)test_tls_socket.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\ws\frame.cpp" />
+    <ClCompile Include="..\..\..\..\test\ws\handshake.cpp" />
+    <ClCompile Include="..\..\..\..\test\ws\reader.cpp" />
     <ClCompile Include="..\..\..\..\test\zmtp\cipher.cpp">
       <ObjectFileName>$(IntDir)test_zmtp_cipher.obj</ObjectFileName>
     </ClCompile>
@@ -292,14 +305,12 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(NuGetPackageRoot)libbitcoin-boost.1.91.0.1\build\libbitcoin-boost.targets" Condition="Exists('$(NuGetPackageRoot)libbitcoin-boost.1.91.0.1\build\libbitcoin-boost.targets')" />
     <Import Project="$(NuGetPackageRoot)secp256k1_vc145.0.8.0\build\native\secp256k1_vc145.targets" Condition="Exists('$(NuGetPackageRoot)secp256k1_vc145.0.8.0\build\native\secp256k1_vc145.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The Missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('$(NuGetPackageRoot)libbitcoin-boost.1.91.0.1\build\libbitcoin-boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)libbitcoin-boost.1.91.0.1\build\libbitcoin-boost.targets'))" />
     <Error Condition="!Exists('$(NuGetPackageRoot)secp256k1_vc145.0.8.0\build\native\secp256k1_vc145.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(NuGetPackageRoot)secp256k1_vc145.0.8.0\build\native\secp256k1_vc145.targets'))" />
   </Target>
   <ItemGroup>

@@ -19,17 +19,13 @@
 #ifndef LIBBITCOIN_NETWORK_TEST_HPP
 #define LIBBITCOIN_NETWORK_TEST_HPP
 
-#include <boost/test/unit_test.hpp>
-
 #include <filesystem>
 #include <bitcoin/network.hpp>
 
 // copied from libbitcoin-system-test
 
 #define TEST_NAME \
-    boost::unit_test::framework::current_test_case().p_name.get()
-#define SUITE_NAME \
-    boost::unit_test::framework::current_auto_test_suite().p_name.get()
+    ::libbitcoin::system::unit_test::session::instance().case_name()
 #define TEST_DIRECTORY \
     test::directory
 #define TEST_PATH \
@@ -98,12 +94,12 @@ struct directory_setup_fixture
 
     directory_setup_fixture() NOEXCEPT
     {
-        BOOST_REQUIRE(clear(directory));
+        BC_REQUIRE(clear(directory));
     }
 
     ~directory_setup_fixture() NOEXCEPT
     {
-        BOOST_REQUIRE(clear(directory));
+        BC_REQUIRE(clear(directory));
     }
 };
 
@@ -114,24 +110,76 @@ struct current_directory_setup_fixture
     current_directory_setup_fixture() NOEXCEPT
       : error_{}, previous_(std::filesystem::current_path(error_))
     {
-        BOOST_REQUIRE(!error_);
+        BC_REQUIRE(!error_);
 
-        BOOST_REQUIRE(clear(directory));
+        BC_REQUIRE(clear(directory));
         std::filesystem::current_path(directory, error_);
-        BOOST_REQUIRE(!error_);
+        BC_REQUIRE(!error_);
     }
 
     ~current_directory_setup_fixture() NOEXCEPT
     {
         std::filesystem::current_path(previous_, error_);
-        BOOST_REQUIRE(!error_);
-        BOOST_REQUIRE(clear(directory));
+        BC_REQUIRE(!error_);
+        BC_REQUIRE(clear(directory));
     }
 
 private:
     std::error_code error_;
     std::filesystem::path previous_;
 };
+
+// Require success of a synchronous io call (the code is appended).
+#define REQUIRE_SUCCESS(object, method, ...) \
+{ \
+    code require_ec{}; \
+    (object).method(__VA_ARGS__ __VA_OPT__(,) require_ec); \
+    BC_REQUIRE_EQUAL(require_ec, ::libbitcoin::network::error::success); \
+}
+
+// Blocking transfers of test peers (required to succeed).
+template <typename Stream, typename Buffers>
+inline size_t write(Stream& stream, const Buffers& buffers) NOEXCEPT
+{
+    code ec{};
+    const auto size = io::write(stream, buffers, ec);
+    BC_REQUIRE_EQUAL(ec, error::success);
+    return size;
+}
+
+template <typename Stream, typename Buffers>
+inline size_t read(Stream& stream, const Buffers& buffers) NOEXCEPT
+{
+    code ec{};
+    const auto size = io::read(stream, buffers, ec);
+    BC_REQUIRE_EQUAL(ec, error::success);
+    return size;
+}
+
+// The bytes of a buffer as text.
+inline std::string to_string(const io::const_buffer& buffer) NOEXCEPT
+{
+    return { system::pointer_cast<const char>(buffer.data()), buffer.size() };
+}
+
+// The address of text (required to parse).
+inline system::ip::address address(const std::string_view& text) NOEXCEPT
+{
+    system::ip::address out{};
+    BC_REQUIRE(system::ip::address::from_string(out, text));
+    return out;
+}
+
+// Loopback endpoints (an ephemeral port by default).
+inline io::endpoint loopback(uint16_t port=0) NOEXCEPT
+{
+    return { system::ip::address{ system::ip::ipv4{ { 127, 0, 0, 1 } } }, port };
+}
+
+inline io::endpoint loopback_v6(uint16_t port=0) NOEXCEPT
+{
+    return { system::ip::address{ system::ip::ipv6{ { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 } } }, port };
+}
 
 } // namespace test
 

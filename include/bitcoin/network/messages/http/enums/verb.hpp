@@ -25,8 +25,54 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
-/// Verb is aliased to beast boost define.
-using verb = boost::beast::http::verb;
+/// Request methods (rfc9110 and registered extensions), and websocket and
+/// stream, which tag a message received over an upgraded or downgraded
+/// connection.
+enum class verb : uint8_t
+{
+    unknown,
+    delete_,
+    get,
+    head,
+    post,
+    put,
+    connect,
+    options,
+    trace,
+    copy,
+    lock,
+    mkcol,
+    move,
+    propfind,
+    proppatch,
+    search,
+    unlock,
+    bind,
+    rebind,
+    unbind,
+    acl,
+    report,
+    mkactivity,
+    checkout,
+    merge,
+    msearch,
+    notify,
+    subscribe,
+    unsubscribe,
+    patch,
+    purge,
+    mkcalendar,
+    link,
+    unlink,
+    websocket,
+    stream
+};
+
+/// The verb of the method token (case sensitive), or unknown.
+BCT_API verb to_verb(const std::string_view& method) NOEXCEPT;
+
+/// The method token of the verb, empty for unknown, websocket and stream.
+BCT_API std::string_view to_string(verb method) NOEXCEPT;
 
 } // namespace http
 } // namespace network

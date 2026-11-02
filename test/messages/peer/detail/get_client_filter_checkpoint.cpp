@@ -18,69 +18,69 @@
  */
 #include "../../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(p2p_get_client_filter_checkpoint_tests)
+BC_AUTO_TEST_SUITE(p2p_get_client_filter_checkpoint_tests)
 
 using namespace network::messages::peer;
 
-BOOST_AUTO_TEST_CASE(get_client_filter_checkpoint__properties__always__expected)
+BC_AUTO_TEST_CASE(get_client_filter_checkpoint__properties__always__expected)
 {
-    BOOST_REQUIRE_EQUAL(get_client_filter_checkpoint::command, "getcfcheckpt");
+    BC_REQUIRE_EQUAL(get_client_filter_checkpoint::command, "getcfcheckpt");
     constexpr auto index = messages::peer::registry::index_of<get_client_filter_checkpoint>();
-    BOOST_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), get_client_filter_checkpoint::command);
-    BOOST_REQUIRE_EQUAL(get_client_filter_checkpoint::version_minimum, level::bip157);
-    BOOST_REQUIRE_EQUAL(get_client_filter_checkpoint::version_maximum, level::maximum_protocol);
+    BC_REQUIRE_EQUAL(messages::peer::registry::commands().at(index), get_client_filter_checkpoint::command);
+    BC_REQUIRE_EQUAL(get_client_filter_checkpoint::version_minimum, level::bip157);
+    BC_REQUIRE_EQUAL(get_client_filter_checkpoint::version_maximum, level::maximum_protocol);
 }
 
-BOOST_AUTO_TEST_CASE(get_client_filter_checkpoint__size__always__expected)
+BC_AUTO_TEST_CASE(get_client_filter_checkpoint__size__always__expected)
 {
     constexpr auto expected = sizeof(uint8_t)
         + system::hash_size;
 
-    BOOST_REQUIRE_EQUAL(get_client_filter_checkpoint::size(level::canonical), expected);
+    BC_REQUIRE_EQUAL(get_client_filter_checkpoint::size(level::canonical), expected);
 }
 
 static const auto stop_hash = system::base16_hash("000000006c02c8ea6e4ff69651f7fcde348fb9d557a06e6957b65552002a7820");
 static const auto payload = system::base16_chunk("00" "20782a005255b657696ea057d5b98f34defcf75196f64f6eeac8026c00000000");
 static const uint32_t excess_version = add1<uint32_t>(level::maximum_protocol);
 
-BOOST_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize1__valid__expected)
+BC_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize1__valid__expected)
 {
     const auto message = get_client_filter_checkpoint::deserialize(level::bip157, payload);
-    BOOST_REQUIRE(message);
-    BOOST_REQUIRE_EQUAL(message->filter_type, client_filter::type_id::neutrino);
-    BOOST_REQUIRE_EQUAL(message->stop_hash, stop_hash);
+    BC_REQUIRE(message);
+    BC_REQUIRE_EQUAL(message->filter_type, client_filter::type_id::neutrino);
+    BC_REQUIRE_EQUAL(message->stop_hash, stop_hash);
 }
 
-BOOST_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize1__insufficient_version__nullptr)
+BC_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize1__insufficient_version__nullptr)
 {
-    BOOST_REQUIRE(!get_client_filter_checkpoint::deserialize(level::bip152, payload));
+    BC_REQUIRE(!get_client_filter_checkpoint::deserialize(level::bip152, payload));
 }
 
-BOOST_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize1__excess_version__nullptr)
+BC_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize1__excess_version__nullptr)
 {
-    BOOST_REQUIRE(!get_client_filter_checkpoint::deserialize(excess_version, payload));
+    BC_REQUIRE(!get_client_filter_checkpoint::deserialize(excess_version, payload));
 }
 
-BOOST_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize1__underflow__nullptr)
+BC_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize1__underflow__nullptr)
 {
     const system::data_chunk data{ payload.begin(), std::prev(payload.end()) };
-    BOOST_REQUIRE(!get_client_filter_checkpoint::deserialize(level::bip157, data));
+    BC_REQUIRE(!get_client_filter_checkpoint::deserialize(level::bip157, data));
 }
 
-BOOST_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize2__valid__expected)
+BC_AUTO_TEST_CASE(get_client_filter_checkpoint__deserialize2__valid__expected)
 {
     system::read::bytes::copy source(payload);
     const auto message = get_client_filter_checkpoint::deserialize(level::maximum_protocol, source);
-    BOOST_REQUIRE(source);
-    BOOST_REQUIRE_EQUAL(message.stop_hash, stop_hash);
+    BC_REQUIRE(source);
+    BC_REQUIRE_EQUAL(message.stop_hash, stop_hash);
 }
 
-BOOST_AUTO_TEST_CASE(get_client_filter_checkpoint__serialize1__valid__expected)
+BC_AUTO_TEST_CASE(get_client_filter_checkpoint__serialize1__valid__expected)
 {
     const get_client_filter_checkpoint message{ client_filter::type_id::neutrino, stop_hash };
     system::data_chunk data(get_client_filter_checkpoint::size(level::bip157));
-    BOOST_REQUIRE(message.serialize(level::bip157, data));
-    BOOST_REQUIRE_EQUAL(data, payload);
+    BC_REQUIRE(message.serialize(level::bip157, data));
+    BC_REQUIRE_EQUAL(data, payload);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BC_AUTO_TEST_SUITE_END()
