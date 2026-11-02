@@ -90,7 +90,7 @@ size_t parse_header(frame_header& out, const std::span<const uint8_t>& data,
     }
 
     const auto length = second & length_bits;
-    if (is_control(out.code) && length > maximum_control)
+    if (is_control(out.code) && is_greater(length, maximum_control))
     {
         ec = error::bad_control_size;
         return {};
