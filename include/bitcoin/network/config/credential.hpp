@@ -69,9 +69,9 @@ public:
     /// Operators.
     /// -----------------------------------------------------------------------
 
-    friend std::istream& operator>>(std::istream& input,
+    friend BCT_API std::istream& operator>>(std::istream& input,
         credential& argument) THROWS;
-    friend std::ostream& operator<<(std::ostream& output,
+    friend BCT_API std::ostream& operator<<(std::ostream& output,
         const credential& argument) NOEXCEPT;
 
 private:

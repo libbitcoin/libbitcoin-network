@@ -208,8 +208,8 @@ struct BCT_API address_item
 };
 
 // Equality ignores timestamp and services (used in hosts).
-bool operator==(const address_item& left, const address_item& right) NOEXCEPT;
-bool operator!=(const address_item& left, const address_item& right) NOEXCEPT;
+BCT_API bool operator==(const address_item& left, const address_item& right) NOEXCEPT;
+BCT_API bool operator!=(const address_item& left, const address_item& right) NOEXCEPT;
 
 typedef std_vector<address_item> address_items;
 typedef std::shared_ptr<address_items> address_items_ptr;

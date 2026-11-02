@@ -81,7 +81,7 @@ struct BCT_API body
     using base = typename json::body<message_value>;
     using value_type = base::value_type;
 
-    class reader
+    class BCT_API reader
       : public json::body<message_value>::reader
     {
     public:
@@ -115,7 +115,7 @@ struct BCT_API body
         bool delivered_{};
     };
 
-    class writer
+    class BCT_API writer
       : public json::body<message_value>::writer
     {
     public:
@@ -144,6 +144,39 @@ struct BCT_API body
         bool set_close_{};
     };
 };
+
+template <>
+size_t body<request_t>::reader::put(const buffer_type& buffer,
+    code& ec) NOEXCEPT;
+template <>
+void body<request_t>::reader::finish(code& ec) NOEXCEPT;
+template <>
+bool body<request_t>::reader::done() const NOEXCEPT;
+template <>
+void body<request_t>::writer::init(code& ec) NOEXCEPT;
+template <>
+body<request_t>::writer::out_buffer body<request_t>::writer::get(
+    code& ec) NOEXCEPT;
+template <>
+bool body<request_t>::writer::done() const NOEXCEPT;
+
+template <>
+size_t body<response_t>::reader::put(const buffer_type& buffer,
+    code& ec) NOEXCEPT;
+template <>
+void body<response_t>::reader::finish(code& ec) NOEXCEPT;
+template <>
+bool body<response_t>::reader::done() const NOEXCEPT;
+template <>
+void body<response_t>::writer::init(code& ec) NOEXCEPT;
+template <>
+body<response_t>::writer::out_buffer body<response_t>::writer::get(
+    code& ec) NOEXCEPT;
+template <>
+bool body<response_t>::writer::done() const NOEXCEPT;
+
+extern template struct BCT_API body<request_t>;
+extern template struct BCT_API body<response_t>;
 
 using request_body = body<request_t>;
 using request = request_body::value_type;

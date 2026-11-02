@@ -77,7 +77,7 @@ inline system::chunk_ptr serialize(const Message& message, uint32_t magic,
 // Specialize for tx to eliminate hash computation on non-witness writes.
 // Transaction is the only message that can reuse identity hash for heading.
 template <>
-system::chunk_ptr serialize<transaction>(const transaction& message,
+BCT_API system::chunk_ptr serialize<transaction>(const transaction& message,
     uint32_t magic, uint32_t version) NOEXCEPT;
 
 } // namespace peer
