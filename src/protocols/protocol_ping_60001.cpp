@@ -39,8 +39,8 @@ constexpr auto minimum_nonce = add1(acknowledged);
 protocol_ping_60001::protocol_ping_60001(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_ping_106(session, channel),
-    nonce_(acknowledged),
-    tracker<protocol_ping_60001>(session->log)
+    tracker<protocol_ping_60001>(session->log),
+    nonce_(acknowledged)
 {
 }
 

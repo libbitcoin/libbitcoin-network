@@ -46,8 +46,8 @@ protocol_version_70002::protocol_version_70002(const session::ptr& session,
 protocol_version_70002::protocol_version_70002(const session::ptr& session,
     const channel::ptr& channel, bool relay, bool reject) NOEXCEPT
   : protocol_version_70001(session, channel, relay),
-    reject_(reject),
-    tracker<protocol_version_70002>(session->log)
+    tracker<protocol_version_70002>(session->log),
+    reject_(reject)
 {
 }
 
@@ -73,6 +73,12 @@ void protocol_version_70002::shake(result_handler&& handle_event) NOEXCEPT
 // ----------------------------------------------------------------------------
 // Reject is the only difference at protocol level 70002.
 
+static reject rejected(reject::reason_code code,
+    const std::string& reason={}) NOEXCEPT
+{
+    return { version::command, code, reason, {} };
+}
+
 void protocol_version_70002::rejection(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
@@ -83,27 +89,24 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
         return;
     }
 
+    using enum reject::reason_code;
+
     // Handshake completion may result before completion of this send (okay).
     if (ec == error::peer_insufficient)
     {
-        SEND((reject{ version::command, reject::reason_code::obsolete }),
-            handle_send, _1);
+        SEND(rejected(obsolete), handle_send, _1);
     }
     else if (ec == error::peer_unsupported)
     {
-        SEND((reject{ version::command, reject::reason_code::undefined,
-            "services" }),
-            handle_send, _1);
+        SEND(rejected(undefined, "services"), handle_send, _1);
     }
     else if (ec == error::protocol_violation)
     {
-        SEND((reject{ version::command, reject::reason_code::duplicate }),
-            handle_send, _1);
+        SEND(rejected(duplicate), handle_send, _1);
     }
     else if (ec == error::peer_timestamp)
     {
-        SEND((reject{ version::command, reject::reason_code::undefined,
-            "timestamp" }), handle_send, _1);
+        SEND(rejected(undefined, "timestamp"), handle_send, _1);
     }
 
     protocol_version_70001::rejection(ec);

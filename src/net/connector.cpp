@@ -47,14 +47,14 @@ constexpr auto encryption = messages::peer::service::node_encrypted_transport;
 connector::connector(const logger& log, io::strand& strand,
     io::context& service, std::atomic_bool& suspended,
     parameters&& parameters) NOEXCEPT
-  : strand_(strand),
+  : reporter(log),
+    tracker<connector>(log),
+    strand_(strand),
     service_(service),
     suspended_(suspended),
     parameters_(std::move(parameters)),
     resolver_(strand),
-    timer_(emplace_shared<deadline>(log, strand, parameters.connect_timeout)),
-    reporter(log),
-    tracker<connector>(log)
+    timer_(emplace_shared<deadline>(log, strand, parameters.connect_timeout))
 {
 }
 

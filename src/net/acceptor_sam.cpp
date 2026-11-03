@@ -247,8 +247,8 @@ acceptor_sam::acceptor_sam(const logger& log, io::strand& strand,
     io::context& service, std::atomic_bool& suspended,
     parameters&& parameters, const settings::sam& sam) NOEXCEPT
   : acceptor(log, strand, service, suspended, std::move(parameters)),
-    sam_(sam),
-    tracker<acceptor_sam>(log)
+    tracker<acceptor_sam>(log),
+    sam_(sam)
 {
 }
 

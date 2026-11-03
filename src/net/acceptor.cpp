@@ -39,13 +39,13 @@ using namespace std::placeholders;
 acceptor::acceptor(const logger& log, io::strand& strand,
     io::context& service, std::atomic_bool& suspended,
     parameters&& parameters) NOEXCEPT
-  : strand_(strand),
+  : reporter(log),
+    tracker<acceptor>(log),
+    strand_(strand),
     service_(service),
     suspended_(suspended),
     parameters_(std::move(parameters)),
-    acceptor_(strand_),
-    reporter(log),
-    tracker<acceptor>(log)
+    acceptor_(strand_)
 {
 }
 

@@ -42,10 +42,10 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session::session(net& network, uint64_t identifier) NOEXCEPT
-  : network_(network),
+  : reporter(network),
+    network_(network),
     broadcaster_(network.broadcaster_),
-    identifier_(identifier),
-    reporter(network)
+    identifier_(identifier)
 {
 }
 
