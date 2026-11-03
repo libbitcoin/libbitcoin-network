@@ -118,6 +118,14 @@ public:
     explicit backend(detail::scheduler& scheduler) NOEXCEPT;
     ~backend() NOEXCEPT;
 
+    /// Threads may wait at once, a completion or interrupt returning one of
+    /// them (otherwise one thread waits at a time).
+#if defined(HAVE_APPLE)
+    static constexpr bool concurrent = false;
+#else
+    static constexpr bool concurrent = true;
+#endif
+
     /// Wait up to the timeout (none is unbounded) for completions, appending
     /// them to out. Interrupt returns a waiting call early.
     void wait(const timeout& duration, std::vector<handler>& out) NOEXCEPT;
@@ -168,7 +176,11 @@ private:
         std::vector<handler>& out) NOEXCEPT;
 
     int handle_{ -1 };
+#if defined(HAVE_APPLE)
     int interrupter_[2]{ -1, -1 };
+#else
+    int interrupter_{ -1 };
+#endif
 
     // The registered descriptors (by key), protected by mutex_.
     std::mutex mutex_{};

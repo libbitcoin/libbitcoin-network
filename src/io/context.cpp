@@ -59,8 +59,10 @@ void executor::dispatch(handler&& handler) const NOEXCEPT
 {
     if (running_in_this_thread())
         handler();
+    else if (strand_)
+        strand_->dispatch(std::move(handler));
     else
-        post(std::move(handler));
+        context_->post(std::move(handler));
 }
 
 bool executor::running_in_this_thread() const NOEXCEPT

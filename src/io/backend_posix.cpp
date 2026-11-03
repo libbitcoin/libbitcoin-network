@@ -29,6 +29,7 @@
     #include <sys/time.h>
 #else
     #include <sys/epoll.h>
+    #include <sys/eventfd.h>
 #endif
 
 namespace libbitcoin {
@@ -58,6 +59,7 @@ static void set_close_on_exec(int socket) NOEXCEPT
 backend::backend(detail::scheduler& scheduler) NOEXCEPT
   : next_key_(add1(interrupter_key)), scheduler_(scheduler)
 {
+#if defined(HAVE_APPLE)
     if (::pipe(interrupter_) == 0)
     {
         int native{};
@@ -67,7 +69,6 @@ backend::backend(detail::scheduler& scheduler) NOEXCEPT
         set_blocking(interrupter_[1], false, native);
     }
 
-#if defined(HAVE_APPLE)
     handle_ = ::kqueue();
     set_close_on_exec(handle_);
     struct kevent event{};
@@ -75,19 +76,24 @@ backend::backend(detail::scheduler& scheduler) NOEXCEPT
         reinterpret_cast<void*>(interrupter_key));
     ::kevent(handle_, &event, 1, nullptr, 0, nullptr);
 #else
+    interrupter_ = ::eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE);
     handle_ = ::epoll_create1(EPOLL_CLOEXEC);
     epoll_event event{};
     event.events = EPOLLIN;
     event.data.u64 = interrupter_key;
-    ::epoll_ctl(handle_, EPOLL_CTL_ADD, interrupter_[0], &event);
+    ::epoll_ctl(handle_, EPOLL_CTL_ADD, interrupter_, &event);
 #endif
 }
 
 backend::~backend() NOEXCEPT
 {
     ::close(handle_);
+#if defined(HAVE_APPLE)
     ::close(interrupter_[0]);
     ::close(interrupter_[1]);
+#else
+    ::close(interrupter_);
+#endif
 }
 
 // Wait.
@@ -153,8 +159,14 @@ void backend::wait(const timeout& duration,
 
         if (key == interrupter_key)
         {
+#if defined(HAVE_APPLE)
             uint8_t sink[sizeof(uint64_t)]{};
             while (::read(interrupter_[0], sink, sizeof(sink)) > 0);
+#else
+            uint64_t unit{};
+            const auto ignore = ::read(interrupter_, &unit, sizeof(unit));
+            static_cast<void>(ignore);
+#endif
             continue;
         }
 
@@ -173,8 +185,13 @@ void backend::wait(const timeout& duration,
 
 void backend::interrupt() NOEXCEPT
 {
+#if defined(HAVE_APPLE)
     const uint8_t byte{};
     const auto ignore = ::write(interrupter_[1], &byte, sizeof(byte));
+#else
+    const uint64_t unit{ 1 };
+    const auto ignore = ::write(interrupter_, &unit, sizeof(unit));
+#endif
     static_cast<void>(ignore);
 }
 

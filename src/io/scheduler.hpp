@@ -116,11 +116,13 @@ private:
     std::condition_variable condition_{};
     std::deque<handler> queue_{};
     timers timers_{};
+    clock::time_point deadline_{};
     size_t outstanding_{};
     size_t waiting_{};
+    size_t waiting_backend_{};
     size_t pass_{};
     bool stopped_{};
-    bool waiting_backend_{};
+    bool timed_{};
 
     // These are protected by resolve_mutex_.
     std::mutex resolve_mutex_{};
@@ -140,10 +142,16 @@ public:
     strand_state(io::context& context) NOEXCEPT;
 
     void post(handler&& handler) NOEXCEPT;
+
+    /// Run the handler now if on a thread of the context and the strand is
+    /// idle, otherwise post it.
+    void dispatch(handler&& handler) NOEXCEPT;
+
     bool running_in_this_thread() const NOEXCEPT;
 
 private:
     void run() NOEXCEPT;
+    void release() NOEXCEPT;
 
     io::context& context_;
 
