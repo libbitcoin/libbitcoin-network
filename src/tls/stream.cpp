@@ -90,6 +90,12 @@ void stream::handle_handshake(const code& ec,
         return;
     }
 
+    if (server_.is_closed())
+    {
+        handler(error::peer_disconnect);
+        return;
+    }
+
     if (server_.is_established())
     {
         handler(error::success);

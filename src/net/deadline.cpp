@@ -34,9 +34,9 @@ BC_DEBUG_ONLY(static const steady_clock::time_point epoch{};)
 
 deadline::deadline(const logger& log, io::strand& strand,
     const duration& timeout) NOEXCEPT
-  : duration_(timeout),
-    timer_(strand),
-    tracker<deadline>(log)
+  : tracker<deadline>(log),
+    duration_(timeout),
+    timer_(strand)
 {
     // Timer is disarmed (epoch) at construct.
 }

@@ -310,7 +310,7 @@ bool server::fail(uint8_t description) NOEXCEPT
 
 bool server::receive(const const_byte_span& data) NOEXCEPT
 {
-    if (is_failed())
+    if (is_failed() || closed_)
         return false;
 
     input_.insert(input_.cend(), data.begin(), data.end());

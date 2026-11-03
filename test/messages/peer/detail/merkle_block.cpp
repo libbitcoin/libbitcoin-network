@@ -83,4 +83,10 @@ BC_AUTO_TEST_CASE(merkle_block__serialize__with_header__round_trips)
     BC_REQUIRE_EQUAL(message->flags, flags);
 }
 
+BC_AUTO_TEST_CASE(merkle_block__deserialize__hash_count_exceeds_block_transactions__nullptr)
+{
+    const auto data = build_chunk({ data_chunk(chain::header::serialized_size(), 0x00), base16_chunk("2a000000" "fd1b41") });
+    BC_REQUIRE(!merkle_block::deserialize(merkle_block::version_maximum, data));
+}
+
 BC_AUTO_TEST_SUITE_END()

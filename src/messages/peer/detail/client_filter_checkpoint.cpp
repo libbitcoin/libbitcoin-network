@@ -54,11 +54,11 @@ client_filter_checkpoint client_filter_checkpoint::deserialize(
 
     const auto read_filter_headers = [](reader& source) NOEXCEPT
     {
-        const auto size = source.read_size(chain::max_block_size);
+        const auto size = source.read_size(max_payload / system::hash_size);
         hashes filter_headers;
         filter_headers.reserve(size);
 
-        for (size_t header = 0; header < size; header++)
+        for (size_t header = 0; header < size && source; header++)
             filter_headers.push_back(source.read_hash());
 
         return filter_headers;

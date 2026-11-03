@@ -54,11 +54,11 @@ client_filter_headers client_filter_headers::deserialize(uint32_t version,
 
     const auto read_filter_hashes = [](reader& source) NOEXCEPT
     {
-        const auto size = source.read_size(chain::max_block_size);
+        const auto size = source.read_size(max_client_filter_headers);
         hashes filter_hashes;
         filter_hashes.reserve(size);
 
-        for (size_t header = 0; header < size; header++)
+        for (size_t header = 0; header < size && source; header++)
             filter_hashes.push_back(source.read_hash());
 
         return filter_hashes;

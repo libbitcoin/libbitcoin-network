@@ -70,6 +70,12 @@ BC_AUTO_TEST_CASE(get_compact_transactions__deserialize1__excess_version__nullpt
     BC_REQUIRE(!get_compact_transactions::deserialize(excess_version, payload));
 }
 
+BC_AUTO_TEST_CASE(get_compact_transactions__deserialize1__count_exceeds_block_transactions__nullptr)
+{
+    const auto data = system::build_chunk({ system::data_chunk(system::hash_size, 0x00), system::base16_chunk("fd1b41") });
+    BC_REQUIRE(!get_compact_transactions::deserialize(level::bip152, data));
+}
+
 BC_AUTO_TEST_CASE(get_compact_transactions__deserialize1__truncated__nullptr)
 {
     const system::data_chunk data{ payload.begin(), std::prev(payload.end()) };

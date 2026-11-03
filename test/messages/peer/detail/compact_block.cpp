@@ -96,6 +96,12 @@ BC_AUTO_TEST_CASE(compact_block__deserialize1__excess_version__nullptr)
     BC_REQUIRE(!compact_block::deserialize(excess_version, unfilled, true));
 }
 
+BC_AUTO_TEST_CASE(compact_block__deserialize1__short_id_count_exceeds_block_transactions__nullptr)
+{
+    const auto data = system::build_chunk({ header2, system::base16_chunk("0807060504030201" "fd1b41") });
+    BC_REQUIRE(!compact_block::deserialize(level::bip152, data, true));
+}
+
 BC_AUTO_TEST_CASE(compact_block__deserialize1__truncated_short_id__nullptr)
 {
     const auto data = system::splice(header2, system::base16_chunk("0807060504030201" "02" "010203040506" "0a0b0c"));

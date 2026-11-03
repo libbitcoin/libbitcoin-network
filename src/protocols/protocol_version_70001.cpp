@@ -45,8 +45,8 @@ protocol_version_70001::protocol_version_70001(const session::ptr& session,
     const channel::ptr& channel,
     bool relay) NOEXCEPT
   : protocol_version_106(session, channel),
-    relay_(relay),
-    tracker<protocol_version_70001>(session->log)
+    tracker<protocol_version_70001>(session->log),
+    relay_(relay)
 {
 }
 

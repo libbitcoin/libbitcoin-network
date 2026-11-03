@@ -58,6 +58,12 @@ BC_AUTO_TEST_CASE(client_filter_checkpoint__size__two__expected)
     BC_REQUIRE_EQUAL(message.size(level::bip157), payload.size());
 }
 
+BC_AUTO_TEST_CASE(client_filter_checkpoint__deserialize1__count_exceeds_payload__nullptr)
+{
+    const auto data = system::build_chunk({ system::base16_chunk("00"), system::data_chunk(system::hash_size, 0x00), system::base16_chunk("fe49e80100") });
+    BC_REQUIRE(!client_filter_checkpoint::deserialize(level::bip157, data));
+}
+
 BC_AUTO_TEST_CASE(client_filter_checkpoint__deserialize1__two__expected)
 {
     const auto message = client_filter_checkpoint::deserialize(level::bip157, payload);

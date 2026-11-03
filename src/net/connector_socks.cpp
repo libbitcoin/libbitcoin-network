@@ -102,9 +102,9 @@ connector_socks::connector_socks(const logger& log, io::strand& strand,
     io::context& service, std::atomic_bool& suspended,
     parameters&& params, const settings::socks5& socks) NOEXCEPT
   : connector(log, strand, service, suspended, std::move(params)),
+    tracker<connector_socks>(log),
     socks5_(socks),
-    method_(socks.authenticated() ? socks::method_basic : socks::method_clear),
-    tracker<connector_socks>(log)
+    method_(socks.authenticated() ? socks::method_basic : socks::method_clear)
 {
 }
 

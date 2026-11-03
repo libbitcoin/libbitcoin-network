@@ -39,9 +39,9 @@ using namespace std::placeholders;
 // Channels invoke channel stop for channel timouts and communcation failures.
 protocol::protocol(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
-  : channel_(channel),
-    session_(session),
-    reporter(session->log)
+  : reporter(session->log),
+    channel_(channel),
+    session_(session)
 {
 }
 

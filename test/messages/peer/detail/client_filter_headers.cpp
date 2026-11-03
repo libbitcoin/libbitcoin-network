@@ -86,6 +86,12 @@ BC_AUTO_TEST_CASE(client_filter_headers__deserialize1__underflow__nullptr)
     BC_REQUIRE(!client_filter_headers::deserialize(level::bip157, data));
 }
 
+BC_AUTO_TEST_CASE(client_filter_headers__deserialize1__count_exceeds_maximum__nullptr)
+{
+    const auto data = system::build_chunk({ system::base16_chunk("00"), system::data_chunk(two * system::hash_size, 0x00), system::base16_chunk("fdd107") });
+    BC_REQUIRE(!client_filter_headers::deserialize(level::bip157, data));
+}
+
 BC_AUTO_TEST_CASE(client_filter_headers__deserialize2__one__expected)
 {
     system::read::bytes::copy source(payload);

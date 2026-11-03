@@ -53,11 +53,11 @@ compact_block compact_block::deserialize(uint32_t version, reader& source,
 
     const auto read_short_ids = [](reader& source) NOEXCEPT
     {
-        const auto size = source.read_size(chain::max_block_size);
+        const auto size = source.read_size(max_block_transactions);
         short_id_list short_ids;
         short_ids.reserve(size);
 
-        for (size_t id = 0; id < size; ++id)
+        for (size_t id = 0; id < size && source; ++id)
             short_ids.push_back(source.read_mini_hash());
 
         return short_ids;
@@ -65,7 +65,7 @@ compact_block compact_block::deserialize(uint32_t version, reader& source,
 
     const auto read_transactions = [=](reader& source) NOEXCEPT
     {
-        const auto size = source.read_size(chain::max_block_size);
+        const auto size = source.read_size(max_block_transactions);
         compact_block_items txs;
         txs.reserve(size);
 

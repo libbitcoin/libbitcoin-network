@@ -534,6 +534,17 @@ BC_AUTO_TEST_CASE(tls_server__receive__split_records__established)
 
 // client authentication
 
+BC_AUTO_TEST_CASE(tls_server__receive__after_close_notify__false_not_failed)
+{
+    const server_setup setup{};
+    tls::server server{ setup.context };
+    BC_REQUIRE(server.receive(base16_chunk("15030300020100")));
+    BC_REQUIRE(server.is_closed());
+    BC_REQUIRE(!server.receive(base16_chunk("170303000100")));
+    BC_REQUIRE(!server.is_failed());
+    BC_REQUIRE(server.output().empty());
+}
+
 BC_AUTO_TEST_CASE(tls_server__receive__user_canceled__not_failed)
 {
     const server_setup setup{};

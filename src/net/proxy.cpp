@@ -40,11 +40,11 @@ inline deadline::ptr make_throttle(const logger& log, io::strand& strand,
 // is not started.
 proxy::proxy(const socket::ptr& socket, uint32_t rate_limit,
     size_t maximum_backlog) NOEXCEPT
-  : rate_limit_(rate_limit),
+  : reporter(socket->log),
+    rate_limit_(rate_limit),
     maximum_backlog_(maximum_backlog),
     socket_(socket),
-    throttle_(make_throttle(socket->log, socket->strand(), rate_limit)),
-    reporter(socket->log)
+    throttle_(make_throttle(socket->log, socket->strand(), rate_limit))
 {
 }
 

@@ -43,12 +43,12 @@ constexpr auto seed_backoff = 10;
 
 net::net(const settings& settings, const logger& log,
     uint64_t required_services, uint64_t provided_services) NOEXCEPT
-  : settings_(settings),
+  : reporter(log),
+    settings_(settings),
     privacy_(to_bool(bit_and(provided_services, to_value(encryption)))),
     threadpool_(settings.threads_()),
     strand_(threadpool_.service().get_executor()),
-    hosts_(settings, log, required_services),
-    reporter(log)
+    hosts_(settings, log, required_services)
 {
     ////LOG_LOG("Aplication log compiled..: ", news_defined);
     ////LOG_LOG("News log compiled........: ", news_defined);

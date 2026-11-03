@@ -41,6 +41,7 @@ using namespace std::placeholders;
 protocol_version_106::protocol_version_106(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_peer(session, channel),
+    tracker<protocol_version_106>(session->log),
     inbound_(channel->inbound()),
     minimum_version_(session->network_settings().protocol_minimum),
     maximum_version_(session->network_settings().protocol_maximum),
@@ -49,8 +50,7 @@ protocol_version_106::protocol_version_106(const session::ptr& session,
     invalid_services_(session->network_settings().invalid_services),
     maximum_skew_minutes_(session->network_settings().maximum_skew_minutes),
     timer_(emplace_shared<deadline>(session->log, channel->strand(),
-        session->network_settings().channel_handshake())),
-    tracker<protocol_version_106>(session->log)
+        session->network_settings().channel_handshake()))
 {
 }
 

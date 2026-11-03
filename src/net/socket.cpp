@@ -61,7 +61,9 @@ socket::socket(const logger& log, io::context& service,
 socket::socket(const logger& log, io::context& service,
     const parameters& params, const config::address& address,
     const config::endpoint& endpoint, bool proxied, bool inbound) NOEXCEPT
-  : inbound_(inbound),
+  : reporter(log),
+    tracker<socket>(log),
+    inbound_(inbound),
     proxied_(proxied),
     maximum_(params.maximum_request),
     header_(std::min(params.maximum_request, maximum_http_header)),
@@ -77,9 +79,7 @@ socket::socket(const logger& log, io::context& service,
     timer_(emplace_shared<deadline>(log, strand_, params.connect_timeout)),
     watch_(emplace_shared<deadline>(log, strand_, watch_interval)),
     socket_(std::in_place_type<io::socket>, strand_),
-    response_(params.maximum_buffer),
-    reporter(log),
-    tracker<socket>(log)
+    response_(params.maximum_buffer)
 {
 }
 

@@ -34,10 +34,10 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 hosts::hosts(const settings& settings, const logger& log,
     uint64_t required_services) NOEXCEPT
-  : settings_(settings),
+  : reporter(log),
+    settings_(settings),
     required_(required_services),
-    capacity_(settings.outbound.host_pool_capacity),
-    reporter(log)
+    capacity_(settings.outbound.host_pool_capacity)
 {
 }
 

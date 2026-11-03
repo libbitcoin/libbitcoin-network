@@ -50,7 +50,6 @@ struct BCT_API pong
         system::writer& sink) const NOEXCEPT;
 
     uint64_t nonce;
-    bool valid;
 };
 
 } // namespace peer
