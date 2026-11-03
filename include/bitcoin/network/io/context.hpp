@@ -118,8 +118,8 @@ public:
     /// Queue the handler for execution (never invoked by this call).
     void post(handler&& handler) const NOEXCEPT;
 
-    /// Invoke the handler now if this thread is running on the executor,
-    /// otherwise post it.
+    /// Invoke the handler now if this thread is running on the executor (or
+    /// on its context while the strand is idle), otherwise post it.
     void dispatch(handler&& handler) const NOEXCEPT;
 
     /// This thread is running a handler of the executor (of the strand, or of

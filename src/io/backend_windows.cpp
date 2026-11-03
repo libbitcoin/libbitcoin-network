@@ -93,52 +93,45 @@ backend::~backend() NOEXCEPT
 void backend::wait(const timeout& duration,
     std::vector<handler>& out) NOEXCEPT
 {
-    auto milliseconds = to_milliseconds(duration);
-    while (true)
+    DWORD bytes{};
+    ULONG_PTR key{};
+    LPOVERLAPPED overlapped{};
+    const auto success = ::GetQueuedCompletionStatus(port_, &bytes, &key,
+        &overlapped, to_milliseconds(duration));
+
+    // Timeout or interruption (posted without overlapped).
+    if (overlapped == nullptr)
+        return;
+
+    const auto op = reinterpret_cast<operation*>(overlapped);
+    const auto native = success ? 0 : static_cast<int>(::GetLastError());
+
+    switch (op->type)
     {
-        DWORD bytes{};
-        ULONG_PTR key{};
-        LPOVERLAPPED overlapped{};
-        const auto success = ::GetQueuedCompletionStatus(port_, &bytes, &key,
-            &overlapped, milliseconds);
-
-        // Timeout or interruption (posted without overlapped).
-        if (overlapped == nullptr)
-            return;
-
-        const auto op = reinterpret_cast<operation*>(overlapped);
-        const auto native = success ? 0 : static_cast<int>(::GetLastError());
-
-        switch (op->type)
+        case operation::kind::read:
         {
-            case operation::kind::read:
-            {
-                // A completed read of no bytes is the end of the stream.
-                const auto end = is_zero(native) && is_zero(bytes) &&
-                    is_nonzero(op->requested);
+            // A completed read of no bytes is the end of the stream.
+            const auto end = is_zero(native) && is_zero(bytes) &&
+                is_nonzero(op->requested);
 
-                set_result(op, end ? code{ error::peer_disconnect } :
-                    to_code(native), bytes);
-                break;
-            }
-            case operation::kind::write:
-                set_result(op, to_code(native), bytes);
-                break;
-            case operation::kind::accept:
-                set_result(op, to_code(native), zero);
-                finish_accept(op);
-                break;
-            case operation::kind::connect:
-                set_result(op, to_code(native), zero);
-                finish_connect(op);
-                break;
+            set_result(op, end ? code{ error::peer_disconnect } :
+                to_code(native), bytes);
+            break;
         }
-
-        out.push_back(to_completion(op));
-
-        // Drain other completions without waiting.
-        milliseconds = 0;
+        case operation::kind::write:
+            set_result(op, to_code(native), bytes);
+            break;
+        case operation::kind::accept:
+            set_result(op, to_code(native), zero);
+            finish_accept(op);
+            break;
+        case operation::kind::connect:
+            set_result(op, to_code(native), zero);
+            finish_connect(op);
+            break;
     }
+
+    out.push_back(to_completion(op));
 }
 
 void backend::interrupt() NOEXCEPT

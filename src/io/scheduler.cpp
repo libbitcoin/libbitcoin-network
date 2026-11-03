@@ -117,10 +117,11 @@ size_t scheduler::run() NOEXCEPT
 
     while (!stopped_)
     {
-        // Each pass over the queue yields once to the backend, so that posted
-        // work cannot starve completions and timers.
+        // Each pass over the queue yields once to the backend unless a thread
+        // waits on it (and on the first timer, if any), so that posted work
+        // cannot starve completions and timers.
         const auto poll = !queue_.empty() && is_zero(pass_) &&
-            !waiting_backend_;
+            (is_zero(waiting_backend_) || (!timed_ && !timers_.empty()));
 
         if (!queue_.empty() && !poll)
         {
@@ -129,8 +130,8 @@ size_t scheduler::run() NOEXCEPT
 
             auto next = std::move(queue_.front());
             queue_.pop_front();
-            if (!queue_.empty() && is_nonzero(waiting_))
-                condition_.notify_one();
+            if (!queue_.empty())
+                wake();
 
             // The handler (and its captures) is released before relocking,
             // as its destruction may reenter the scheduler.
@@ -146,26 +147,53 @@ size_t scheduler::run() NOEXCEPT
             continue;
         }
 
-        // One thread at a time waits on the backend, others on the queue.
-        if (!waiting_backend_)
+        // Threads wait on the backend together if it allows, otherwise one at
+        // a time with the others waiting on the queue.
+        if (backend::concurrent || is_zero(waiting_backend_))
         {
-            waiting_backend_ = true;
-            const auto duration = poll ? clock::duration::zero() :
-                next_timeout();
+            timeout duration{};
+            clock::time_point deadline{};
+            auto timed = false;
+
+            // One waiter is timed by the first timer (a poll does not sleep).
+            if (poll)
+            {
+                duration = clock::duration::zero();
+            }
+            else if (!timers_.empty() &&
+                (!timed_ || timers_.begin()->first < deadline_))
+            {
+                timed = true;
+                timed_ = true;
+                deadline = timers_.begin()->first;
+                deadline_ = deadline;
+                duration = next_timeout();
+            }
+
+            ++waiting_backend_;
             lock.unlock();
 
             completions.clear();
             backend_->wait(duration, completions);
 
             lock.lock();
-            waiting_backend_ = false;
+            --waiting_backend_;
+            if (timed && deadline_ == deadline)
+                timed_ = false;
+
             for (auto& completion: completions)
                 queue_.push_back(std::move(completion));
 
             expire_timers();
             pass_ = queue_.size();
+
+            // A stop returns the backend waiters one after another.
+            if (stopped_ && is_nonzero(waiting_backend_))
+                backend_->interrupt();
+
+            // The sole backend waiter runs the queue, so another takes over.
             if (!queue_.empty() && is_nonzero(waiting_))
-                condition_.notify_all();
+                condition_.notify_one();
 
             continue;
         }
@@ -239,7 +267,7 @@ void scheduler::wake() NOEXCEPT
 {
     if (is_nonzero(waiting_))
         condition_.notify_one();
-    else if (waiting_backend_)
+    else if (is_nonzero(waiting_backend_))
         backend_->interrupt();
 }
 
@@ -248,7 +276,7 @@ void scheduler::stop_locked() NOEXCEPT
 {
     stopped_ = true;
     condition_.notify_all();
-    if (waiting_backend_)
+    if (is_nonzero(waiting_backend_))
         backend_->interrupt();
 }
 
@@ -267,8 +295,9 @@ void scheduler::wait_timer(const std::shared_ptr<timer_state>& timer,
     timer->queued = true;
     const auto position = timers_.emplace(timer->expiry, timer);
 
-    // An earlier first timer shortens the backend wait.
-    if (position == timers_.begin() && waiting_backend_)
+    // An earlier first timer shortens the timed backend wait.
+    if (position == timers_.begin() && is_nonzero(waiting_backend_) &&
+        (!timed_ || timer->expiry < deadline_))
         backend_->interrupt();
 }
 
@@ -314,7 +343,7 @@ handler scheduler::to_completion(timer_state::waiter&& waiter,
     return [waiter = std::move(waiter), ec]() NOEXCEPT
     {
         auto handler = waiter.handler;
-        waiter.executor.post([handler, ec]() NOEXCEPT
+        waiter.executor.dispatch([handler, ec]() NOEXCEPT
         {
             handler(ec);
         });
@@ -355,6 +384,9 @@ timeout scheduler::next_timeout() const NOEXCEPT
 // private
 void scheduler::expire_timers() NOEXCEPT
 {
+    if (timers_.empty())
+        return;
+
     const auto now = clock::now();
     while (!timers_.empty() && timers_.begin()->first <= now)
     {
@@ -433,28 +465,66 @@ void strand_state::post(handler&& handler) NOEXCEPT
     });
 }
 
+void strand_state::dispatch(handler&& handler) NOEXCEPT
+{
+    if (!context_.running_in_this_thread())
+    {
+        post(std::move(handler));
+        return;
+    }
+
+    {
+        std::unique_lock lock{ mutex_ };
+        if (scheduled_)
+        {
+            queue_.push_back(std::move(handler));
+            return;
+        }
+
+        scheduled_ = true;
+    }
+
+    {
+        const running_scope scope{ running_strand,
+            static_cast<const strand_state*>(this) };
+
+        handler();
+    }
+
+    release();
+}
+
 bool strand_state::running_in_this_thread() const NOEXCEPT
 {
     return running_strand == this;
 }
 
 // private
-// The handlers queued when the run starts are run, then the strand is
-// rescheduled if more were posted, so that other work interleaves.
+// Only the handlers queued when the run starts are run, so that other work
+// interleaves.
 void strand_state::run() NOEXCEPT
 {
-    const running_scope scope{ running_strand,
-        static_cast<const strand_state*>(this) };
-
-    std::deque<handler> batch{};
     {
-        std::unique_lock lock{ mutex_ };
-        batch.swap(queue_);
+        const running_scope scope{ running_strand,
+            static_cast<const strand_state*>(this) };
+
+        std::deque<handler> batch{};
+        {
+            std::unique_lock lock{ mutex_ };
+            batch.swap(queue_);
+        }
+
+        for (auto& next: batch)
+            next();
     }
 
-    for (auto& next: batch)
-        next();
+    release();
+}
 
+// private
+// The strand is rescheduled if handlers were posted during the run.
+void strand_state::release() NOEXCEPT
+{
     {
         std::unique_lock lock{ mutex_ };
         if (queue_.empty())
