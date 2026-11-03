@@ -63,6 +63,7 @@ project( libbitcoin-network
   DESCRIPTION "Bitcoin P2P Network Library"
   LANGUAGES C CXX )
 
+set( CMAKE_CXX_SCAN_FOR_MODULES OFF )
 
 set( repository_root_dir "${CMAKE_CURRENT_SOURCE_DIR}/../.." )
 
