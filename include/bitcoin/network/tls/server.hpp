@@ -51,7 +51,7 @@ public:
     ~server() NOEXCEPT;
 
     /// Consume received transport bytes. False once failed, when output holds
-    /// any alert to be sent.
+    /// any alert to be sent, or once the peer has sent close_notify.
     bool receive(const const_byte_span& data) NOEXCEPT;
 
     /// Transport bytes to be sent (the caller consumes them).
