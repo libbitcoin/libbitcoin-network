@@ -552,8 +552,8 @@ done() const NOEXCEPT
     }
 }
 
-template struct BCT_API body<request_t>;
-template struct BCT_API body<response_t>;
+template struct BC_INSTANCE(BCT_API) body<request_t>;
+template struct BC_INSTANCE(BCT_API) body<response_t>;
 
 BC_POP_WARNING()
 BC_POP_WARNING()
