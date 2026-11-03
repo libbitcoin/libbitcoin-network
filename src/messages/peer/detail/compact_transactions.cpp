@@ -52,7 +52,7 @@ compact_transactions compact_transactions::deserialize(uint32_t version,
 
     const auto read_transactions = [=](reader& source) NOEXCEPT
     {
-        const auto size = source.read_size(chain::max_block_size);
+        const auto size = source.read_size(max_block_transactions);
         chain::transaction_cptrs transaction_ptrs;
         transaction_ptrs.reserve(size);
 

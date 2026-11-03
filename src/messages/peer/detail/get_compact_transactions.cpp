@@ -52,11 +52,11 @@ get_compact_transactions get_compact_transactions::deserialize(uint32_t version,
 
     const auto read_indexes = [](reader& source) NOEXCEPT
     {
-        const auto size = source.read_size(chain::max_block_size);
+        const auto size = source.read_size(max_block_transactions);
         std_vector<uint64_t> indexes;
         indexes.reserve(size);
 
-        for (size_t index = 0; index < size; ++index)
+        for (size_t index = 0; index < size && source; ++index)
             indexes.push_back(source.read_size());
 
         return indexes;

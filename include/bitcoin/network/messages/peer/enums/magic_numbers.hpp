@@ -47,6 +47,10 @@ constexpr size_t heading_command_size = 12;
 /// The maximum p2p message payload.
 constexpr size_t max_payload = system::chain::max_block_weight;
 
+/// The maximum number of transactions in a block.
+constexpr size_t max_block_transactions = system::chain::max_block_size /
+    system::chain::min_transaction_size;
+
 /// This is just a guess, required as memory guard.
 constexpr size_t max_reject_message = max_uint16;
 
