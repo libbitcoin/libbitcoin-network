@@ -81,6 +81,8 @@ private:
         done
     };
 
+    void append_body(const_buffers& buffers, code& ec) NOEXCEPT;
+
     message_type& message_;
     writer_type writer_;
     const bool chunked_;

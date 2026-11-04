@@ -38,10 +38,13 @@ CLASS::serializer(message_type& message) NOEXCEPT
 {
 }
 
+// The header is yielded with the first body buffers, so that a message of one
+// body buffer is written in one operation.
 TEMPLATE
 const_buffers CLASS::next(code& ec) NOEXCEPT
 {
     ec.clear();
+    const_buffers buffers{};
     switch (state_)
     {
         case state::header:
@@ -52,42 +55,53 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
                 return {};
 
             state_ = state::body;
-            return { io::const_buffer{ header_.data(), header_.size() } };
+            buffers.emplace_back(header_.data(), header_.size());
+            append_body(buffers, ec);
+            return ec ? const_buffers{} : buffers;
         }
         case state::body:
         {
-            const auto out = writer_.get(ec);
-            if (ec)
-                return {};
-
-            const auto more = out.has_value() && out.value().second;
-            const auto data = out.has_value() ? out.value().first :
-                io::const_buffer{};
-
-            if (!more)
-                state_ = state::done;
-
-            if (!chunked_)
-                return { data };
-
-            const_buffers buffers{};
-            if (!is_zero(data.size()))
-            {
-                prefix_ = chunk_header(data.size());
-                buffers.emplace_back(prefix_.data(), prefix_.size());
-                buffers.push_back(data);
-                buffers.emplace_back(chunk_end.data(), chunk_end.size());
-            }
-
-            if (!more)
-                buffers.emplace_back(last_chunk.data(), last_chunk.size());
-
-            return buffers;
+            append_body(buffers, ec);
+            return ec ? const_buffers{} : buffers;
         }
         case state::done:
         default:
             return {};
     }
+}
+
+TEMPLATE
+void CLASS::append_body(const_buffers& buffers, code& ec) NOEXCEPT
+{
+    const auto out = writer_.get(ec);
+    if (ec)
+        return;
+
+    const auto more = out.has_value() && out.value().second;
+    const auto data = out.has_value() ? out.value().first :
+        io::const_buffer{};
+
+    if (!more)
+        state_ = state::done;
+
+    if (!chunked_)
+    {
+        if (!is_zero(data.size()))
+            buffers.push_back(data);
+
+        return;
+    }
+
+    if (!is_zero(data.size()))
+    {
+        prefix_ = chunk_header(data.size());
+        buffers.emplace_back(prefix_.data(), prefix_.size());
+        buffers.push_back(data);
+        buffers.emplace_back(chunk_end.data(), chunk_end.size());
+    }
+
+    if (!more)
+        buffers.emplace_back(last_chunk.data(), last_chunk.size());
 }
 
 TEMPLATE
