@@ -240,7 +240,8 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
     ////BC_ASSERT(stranded());
 
-    if (!inbound_ || is_zero(timer_->timeout().count()))
+    if (!inbound_ || is_zero(timer_->timeout().count()) ||
+        std::holds_alternative<std::monostate>(context_))
     {
         do_upgrade(handler);
         return;
@@ -257,6 +258,7 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 void socket::handle_handshaked(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
+    handshaked_ = true;
     timer_->stop();
     handler(ec);
 }
@@ -265,7 +267,7 @@ void socket::handle_handshaked(const code& ec,
 // Socket stop cancels the pending handshake, which completes the handler.
 void socket::handle_handshake_timer(const code& ec) NOEXCEPT
 {
-    if (!ec)
+    if (!ec && !handshaked_)
         stop();
 }
 
