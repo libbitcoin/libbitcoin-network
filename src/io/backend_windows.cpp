@@ -38,6 +38,17 @@ BC_PUSH_WARNING(NO_REINTERPRET_CAST)
 // The address space AcceptEx requires for each of the two addresses.
 constexpr DWORD accept_address_size = sizeof(sockaddr_storage) + 16;
 
+// The completion key of posted handlers (sockets are associated with zero).
+constexpr ULONG_PTR posted_key = 1;
+
+// A handler queued on the completion port.
+struct posted
+{
+    // The overlapped structure must be first (cast from the completion).
+    OVERLAPPED overlapped{};
+    handler work{};
+};
+
 template <typename Function>
 static bool load_extension(native_socket socket, GUID guid,
     Function& function) NOEXCEPT
@@ -103,8 +114,16 @@ void backend::wait(const timeout& duration,
     if (overlapped == nullptr)
         return;
 
-    const auto op = reinterpret_cast<operation*>(overlapped);
-    const auto native = success ? 0 : static_cast<int>(::GetLastError());
+    if (key == posted_key)
+    {
+        const std::unique_ptr<posted> owned{ pointer_cast<posted>(overlapped) };
+
+        out.push_back(std::move(owned->work));
+        return;
+    }
+
+    const auto op = pointer_cast<operation>(overlapped);
+    const auto native = success ? 0 : sign_cast<int>(::GetLastError());
 
     switch (op->type)
     {
@@ -137,6 +156,38 @@ void backend::wait(const timeout& duration,
 void backend::interrupt() NOEXCEPT
 {
     ::PostQueuedCompletionStatus(port_, 0, 0, nullptr);
+}
+
+void backend::post(handler&& work) NOEXCEPT
+{
+    const auto item = new posted{};
+    item->work = std::move(work);
+    if (::PostQueuedCompletionStatus(port_, 0, posted_key,
+        &item->overlapped) == FALSE)
+        delete item;
+}
+
+bool backend::drain() NOEXCEPT
+{
+    auto drained = false;
+    DWORD bytes{};
+    ULONG_PTR key{};
+    LPOVERLAPPED overlapped{};
+    while (::GetQueuedCompletionStatus(port_, &bytes, &key, &overlapped, 0) ||
+        overlapped != nullptr)
+    {
+        if (overlapped == nullptr)
+            continue;
+
+        if (key == posted_key)
+            delete pointer_cast<posted>(overlapped);
+        else
+            delete pointer_cast<operation>(overlapped);
+
+        drained = true;
+    }
+
+    return drained;
 }
 
 // Descriptors.
@@ -194,7 +245,7 @@ bool backend::associate(native_socket socket, int& native) NOEXCEPT
     if (::CreateIoCompletionPort(reinterpret_cast<HANDLE>(socket), port_, 0,
         0) == nullptr)
     {
-        native = static_cast<int>(::GetLastError());
+        native = sign_cast<int>(::GetLastError());
         return false;
     }
 

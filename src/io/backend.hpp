@@ -131,6 +131,15 @@ public:
     void wait(const timeout& duration, std::vector<handler>& out) NOEXCEPT;
     void interrupt() NOEXCEPT;
 
+#if defined(HAVE_WINDOWS)
+    /// Queue the handler on the completion port (returned by a wait).
+    void post(handler&& work) NOEXCEPT;
+
+    /// Destroy the handlers queued on the completion port without running
+    /// them (true if any).
+    bool drain() NOEXCEPT;
+#endif
+
     /// Open a socket of the family into the closed descriptor.
     bool open(const descriptor_ptr& descriptor, bool v6, int& native) NOEXCEPT;
 
