@@ -695,6 +695,7 @@ protected:
     deadline::ptr timer_;
     deadline::ptr watch_;
     socket_t socket_;
+    bool handshaked_{};
 
     // Retains the detection prefix for a v1 peer (see handle_detection).
     http::flat_buffer detection_{ p2ps::stream::detection_size };
