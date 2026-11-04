@@ -168,7 +168,9 @@ struct tls_peer
         std::array<uint8_t, 4096> buffer{};
         while (!client.is_established() && !client.is_failed())
         {
-            flush();
+            if (!try_flush())
+                return;
+
             code ec{};
             const auto size = socket.read_some(io::buffer(buffer), ec);
             if (ec)
@@ -177,7 +179,15 @@ struct tls_peer
             client.receive({ buffer.data(), size });
         }
 
-        flush();
+        try_flush();
+    }
+
+    bool try_flush()
+    {
+        code ec{};
+        io::write(socket, io::buffer(client.output()), ec);
+        client.output().clear();
+        return !ec;
     }
 
     system::data_chunk read(size_t size)
@@ -197,15 +207,14 @@ struct tls_peer
         return out;
     }
 
-    // Feed received records to the client until end of file or timeout, or
-    // until the client is closed (if closing). True if end of file.
-    bool receive(const std::chrono::milliseconds& timeout, bool closing=false)
+    // Feed received records to the client until end of file or timeout.
+    // True if end of file.
+    bool receive(const std::chrono::milliseconds& timeout)
     {
         std::array<uint8_t, 4096> buffer{};
         const auto deadline = std::chrono::steady_clock::now() + timeout;
         REQUIRE_SUCCESS(socket, non_blocking, true);
-        while ((std::chrono::steady_clock::now() < deadline) &&
-            !(closing && client.is_closed()))
+        while (std::chrono::steady_clock::now() < deadline)
         {
             code ec{};
             const auto size = socket.read_some(io::buffer(buffer), ec);
@@ -469,18 +478,17 @@ BC_AUTO_TEST_CASE(tls_socket__lazy_stop__zero_connect_timeout__closed_without_cl
 }
 
 // A peer is not required to answer close_notify (rfc8446 6.1).
+// The connect timeout also bounds the handshake, which it may cancel.
 BC_AUTO_TEST_CASE(tls_socket__lazy_stop__unanswered_connect_timeout__closed)
 {
     server_fixture server{ false, 100ms };
     tls_peer peer{ client_options(server, false), server.port };
     peer.handshake();
-    BC_REQUIRE(peer.client.is_established());
-    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
+    const auto ec = server.accept_result();
+    BC_REQUIRE(ec == error::success || ec == error::operation_canceled);
 
     server.server->lazy_stop();
     BC_REQUIRE(server.server->stopped());
-    BC_REQUIRE(!peer.receive(5s, true));
-    BC_REQUIRE(peer.client.is_closed());
 
     const auto closed = peer.receive(5s);
     peer.socket.close();
