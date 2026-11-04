@@ -328,6 +328,15 @@ void socket::handle_ws_frame(const code& ec, size_t,
     if (code == error::unknown)
         logx("ws-write", ec);
 
+    // A failed write fails the frames that follow it. These are removed before
+    // any handler runs, as a handler may queue (and write) another frame.
+    std::deque<ws_frame::ptr> failed{};
+    if (code)
+    {
+        ws_pong_.reset();
+        std::swap(failed, ws_queue_);
+    }
+
     // The payload size is reported (as with stream writes).
     const auto size = frame->payload.empty() ? frame->data.size() :
         frame->payload.size();
@@ -335,22 +344,12 @@ void socket::handle_ws_frame(const code& ec, size_t,
     if (frame->handler)
         frame->handler(code, size);
 
-    // A failed write fails the frames that follow it.
-    if (code)
-    {
-        ws_pong_.reset();
-        while (!ws_queue_.empty())
-        {
-            const auto next = ws_queue_.front();
-            ws_queue_.pop_front();
-            if (next->handler)
-                next->handler(code, zero);
-        }
+    for (const auto& next: failed)
+        if (next->handler)
+            next->handler(code, zero);
 
-        return;
-    }
-
-    ws_write_next();
+    if (!code)
+        ws_write_next();
 }
 
 // WS (events).
