@@ -77,6 +77,17 @@ void scheduler::shutdown() NOEXCEPT
     if (resolver_.joinable())
         resolver_.join();
 
+#if defined(HAVE_WINDOWS)
+    {
+        std::unique_lock lock{ mutex_ };
+        timer_stop_ = true;
+    }
+
+    timer_condition_.notify_all();
+    if (timer_thread_.joinable())
+        timer_thread_.join();
+#endif
+
     // Destroyed handlers may queue more (e.g. a timer canceled on destruct).
     while (true)
     {
@@ -84,7 +95,9 @@ void scheduler::shutdown() NOEXCEPT
         std::vector<timer_state::waiter> waiters{};
         {
             std::unique_lock lock{ mutex_ };
+#if !defined(HAVE_WINDOWS)
             handlers.swap(queue_);
+#endif
             for (auto& entry: timers_)
             {
                 auto& timer = *entry.second;
@@ -97,10 +110,57 @@ void scheduler::shutdown() NOEXCEPT
             timers_.clear();
         }
 
-        if (handlers.empty() && waiters.empty())
+#if defined(HAVE_WINDOWS)
+        const auto drained = backend_->drain();
+#else
+        constexpr auto drained = false;
+#endif
+
+        if (handlers.empty() && waiters.empty() && !drained)
             return;
     }
 }
+
+#if defined(HAVE_WINDOWS)
+
+// Threads wait on the completion port together, each running the completion
+// or posted handler that returns it.
+size_t scheduler::run() NOEXCEPT
+{
+    const running_scope scope{ running_scheduler, this };
+    std::vector<handler> completions{};
+    size_t count{};
+
+    if (is_zero(outstanding_.load()))
+    {
+        stop();
+        return count;
+    }
+
+    while (!stopped_.load())
+    {
+        completions.clear();
+        backend_->wait({}, completions);
+
+        // A wait without a completion consumed the stop interrupt.
+        if (completions.empty())
+            signaled_.store(false);
+
+        for (auto& completion: completions)
+        {
+            completion();
+            completion = nullptr;
+            ++count;
+            work_finished();
+        }
+    }
+
+    // A stop returns the waiters one after another.
+    signal_stop();
+    return count;
+}
+
+#else
 
 size_t scheduler::run() NOEXCEPT
 {
@@ -109,7 +169,7 @@ size_t scheduler::run() NOEXCEPT
     size_t count{};
 
     std::unique_lock lock{ mutex_ };
-    if (is_zero(outstanding_))
+    if (is_zero(outstanding_.load()))
     {
         stop_locked();
         return count;
@@ -206,6 +266,8 @@ size_t scheduler::run() NOEXCEPT
     return count;
 }
 
+#endif
+
 void scheduler::stop() NOEXCEPT
 {
     std::unique_lock lock{ mutex_ };
@@ -214,14 +276,12 @@ void scheduler::stop() NOEXCEPT
 
 bool scheduler::stopped() const NOEXCEPT
 {
-    std::unique_lock lock{ mutex_ };
-    return stopped_;
+    return stopped_.load();
 }
 
 void scheduler::restart() NOEXCEPT
 {
-    std::unique_lock lock{ mutex_ };
-    stopped_ = false;
+    stopped_.store(false);
 }
 
 bool scheduler::running_in_this_thread() const NOEXCEPT
@@ -231,30 +291,30 @@ bool scheduler::running_in_this_thread() const NOEXCEPT
 
 void scheduler::post(handler&& handler) NOEXCEPT
 {
-    std::unique_lock lock{ mutex_ };
     ++outstanding_;
-    queue_.push_back(std::move(handler));
-    wake();
+    complete(std::move(handler));
 }
 
 void scheduler::complete(handler&& handler) NOEXCEPT
 {
+#if defined(HAVE_WINDOWS)
+    backend_->post(std::move(handler));
+#else
     std::unique_lock lock{ mutex_ };
     queue_.push_back(std::move(handler));
     wake();
+#endif
 }
 
 void scheduler::work_started() NOEXCEPT
 {
-    std::unique_lock lock{ mutex_ };
     ++outstanding_;
 }
 
 void scheduler::work_finished() NOEXCEPT
 {
-    std::unique_lock lock{ mutex_ };
     if (is_zero(--outstanding_))
-        stop_locked();
+        stop();
 }
 
 detail::backend& scheduler::backend() NOEXCEPT
@@ -263,22 +323,50 @@ detail::backend& scheduler::backend() NOEXCEPT
 }
 
 // private
+void scheduler::enqueue(handler&& handler) NOEXCEPT
+{
+#if defined(HAVE_WINDOWS)
+    backend_->post(std::move(handler));
+#else
+    queue_.push_back(std::move(handler));
+#endif
+}
+
+// private
 void scheduler::wake() NOEXCEPT
 {
+#if !defined(HAVE_WINDOWS)
     if (is_nonzero(waiting_))
         condition_.notify_one();
     else if (is_nonzero(waiting_backend_))
         backend_->interrupt();
+#endif
 }
 
 // private
 void scheduler::stop_locked() NOEXCEPT
 {
-    stopped_ = true;
+    stopped_.store(true);
+
+#if defined(HAVE_WINDOWS)
+    signal_stop();
+#else
     condition_.notify_all();
     if (is_nonzero(waiting_backend_))
         backend_->interrupt();
+#endif
 }
+
+#if defined(HAVE_WINDOWS)
+
+// private
+void scheduler::signal_stop() NOEXCEPT
+{
+    if (!signaled_.exchange(true))
+        backend_->interrupt();
+}
+
+#endif
 
 // Timers.
 // ----------------------------------------------------------------------------
@@ -295,10 +383,18 @@ void scheduler::wait_timer(const std::shared_ptr<timer_state>& timer,
     timer->queued = true;
     const auto position = timers_.emplace(timer->expiry, timer);
 
+#if defined(HAVE_WINDOWS)
+    // An earlier first timer shortens the timer thread wait.
+    if (!timer_stop_ && !timer_thread_.joinable())
+        timer_thread_ = std::thread{ [this]() NOEXCEPT { run_timers(); } };
+    else if (position == timers_.begin())
+        timer_condition_.notify_one();
+#else
     // An earlier first timer shortens the timed backend wait.
     if (position == timers_.begin() && is_nonzero(waiting_backend_) &&
         (!timed_ || timer->expiry < deadline_))
         backend_->interrupt();
+#endif
 }
 
 size_t scheduler::cancel_timer(
@@ -308,8 +404,7 @@ size_t scheduler::cancel_timer(
     unqueue_timer(timer);
     const auto count = timer->waiters.size();
     for (auto& waiter: timer->waiters)
-        queue_.push_back(to_completion(std::move(waiter),
-            error::operation_canceled));
+        enqueue(to_completion(std::move(waiter), error::operation_canceled));
 
     timer->waiters.clear();
     if (is_nonzero(count))
@@ -325,8 +420,7 @@ size_t scheduler::expire_timer(const std::shared_ptr<timer_state>& timer,
     unqueue_timer(timer);
     const auto count = timer->waiters.size();
     for (auto& waiter: timer->waiters)
-        queue_.push_back(to_completion(std::move(waiter),
-            error::operation_canceled));
+        enqueue(to_completion(std::move(waiter), error::operation_canceled));
 
     timer->waiters.clear();
     timer->expiry = expiry;
@@ -394,12 +488,30 @@ void scheduler::expire_timers() NOEXCEPT
         timers_.erase(timers_.begin());
         timer->queued = false;
         for (auto& waiter: timer->waiters)
-            queue_.push_back(to_completion(std::move(waiter),
-                error::success));
+            enqueue(to_completion(std::move(waiter), error::success));
 
         timer->waiters.clear();
     }
 }
+
+#if defined(HAVE_WINDOWS)
+
+// private
+void scheduler::run_timers() NOEXCEPT
+{
+    std::unique_lock lock{ mutex_ };
+    while (!timer_stop_)
+    {
+        if (timers_.empty())
+            timer_condition_.wait(lock);
+        else
+            timer_condition_.wait_until(lock, timers_.begin()->first);
+
+        expire_timers();
+    }
+}
+
+#endif
 
 // Resolver.
 // ----------------------------------------------------------------------------

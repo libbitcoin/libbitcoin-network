@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_IO_SCHEDULER_HPP
 #define LIBBITCOIN_NETWORK_IO_SCHEDULER_HPP
 
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <deque>
@@ -57,7 +58,8 @@ struct timer_state
 
 /// The run queue, timer queue, platform backend and resolver thread of a
 /// context. Work is counted from queued handlers, pending operations and work
-/// guards; when it reaches zero the scheduler stops.
+/// guards; when it reaches zero the scheduler stops. On windows the completion
+/// port is the run queue and timers expire on a timer thread.
 class scheduler
 {
 public:
@@ -104,6 +106,7 @@ private:
     static handler to_completion(timer_state::waiter&& waiter,
         const code& ec) NOEXCEPT;
 
+    void enqueue(handler&& handler) NOEXCEPT;
     void wake() NOEXCEPT;
     void stop_locked() NOEXCEPT;
     timeout next_timeout() const NOEXCEPT;
@@ -111,18 +114,35 @@ private:
     void expire_timers() NOEXCEPT;
     void run_resolver() NOEXCEPT;
 
+#if defined(HAVE_WINDOWS)
+    void signal_stop() NOEXCEPT;
+    void run_timers() NOEXCEPT;
+#endif
+
+    std::atomic<size_t> outstanding_{};
+    std::atomic<bool> stopped_{};
+
+#if defined(HAVE_WINDOWS)
+    // A stop interrupt is queued on the completion port.
+    std::atomic<bool> signaled_{};
+#endif
+
     // These are protected by mutex_.
     mutable std::mutex mutex_{};
+    timers timers_{};
+#if defined(HAVE_WINDOWS)
+    std::condition_variable timer_condition_{};
+    std::thread timer_thread_{};
+    bool timer_stop_{};
+#else
     std::condition_variable condition_{};
     std::deque<handler> queue_{};
-    timers timers_{};
     clock::time_point deadline_{};
-    size_t outstanding_{};
     size_t waiting_{};
     size_t waiting_backend_{};
     size_t pass_{};
-    bool stopped_{};
     bool timed_{};
+#endif
 
     // These are protected by resolve_mutex_.
     std::mutex resolve_mutex_{};
