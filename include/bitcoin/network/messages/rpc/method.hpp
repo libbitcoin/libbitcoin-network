@@ -52,17 +52,65 @@ BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
 struct unimplemented_t {};
 constexpr unimplemented_t unimplemented{};
 
+/// A method may be declared a command (changes service state), by this type
+/// as its last template argument, which is not a parameter of the method.
+struct command {};
+
+template <typename Type, typename Tuple>
+struct prepend_t;
+
+template <typename Type, typename ...Args>
+struct prepend_t<Type, std::tuple<Args...>>
+{
+    using type = std::tuple<Type, Args...>;
+};
+
+template <typename ...Args>
+struct parameters_t
+{
+    using type = std::tuple<Args...>;
+    static constexpr bool is_command = false;
+};
+
+template <typename ...Args>
+struct parameters_t<command, Args...>
+{
+    static_assert(is_zero(sizeof...(Args)), "command must be last");
+    using type = std::tuple<>;
+    static constexpr bool is_command = true;
+};
+
+template <typename First, typename ...Rest>
+struct parameters_t<First, Rest...>
+{
+    using type = typename prepend_t<First,
+        typename parameters_t<Rest...>::type>::type;
+    static constexpr bool is_command = parameters_t<Rest...>::is_command;
+};
+
+template <typename Tuple>
+struct trailing_unrequireds_t;
+
+template <typename ...Args>
+struct trailing_unrequireds_t<std::tuple<Args...>>
+  : std::bool_constant<only_trailing_unrequireds<Args...>> {};
+
 template <text_t Text, typename ...Args>
 struct method
 {
-    static_assert(only_trailing_unrequireds<Args...>, "optionals must be last");
+    using parameters = typename parameters_t<Args...>::type;
+    static_assert(trailing_unrequireds_t<parameters>::value,
+        "optionals must be last");
+
     static constexpr std::string_view name{ Text.text.data(), Text.text.size() };
-    static constexpr bool native = is_tagged<std::tuple<Args...>>;
-    static constexpr auto size = sizeof...(Args);
+    static constexpr bool native = is_tagged<parameters>;
+    static constexpr bool is_command = parameters_t<Args...>::is_command;
+    static constexpr auto size = std::tuple_size_v<parameters>;
 
     using tag = method;
-    using args_native = std::tuple<Args...>;
-    using args = iif<native, args_native, std::tuple<tag, Args...>>;
+    using args_native = parameters;
+    using args = iif<native, args_native,
+        typename prepend_t<tag, parameters>::type>;
     using names = std::array<std::string_view, size>;
 
     /// Required for construction of tag{} and passage of default value.

@@ -89,6 +89,16 @@ constexpr auto method_names() NOEXCEPT
 
 BC_POP_WARNING()
 
+/// True if the named method is declared a command.
+template <auto& Methods>
+constexpr bool is_command(const std::string_view& name) NOEXCEPT
+{
+    return std::apply([&](const auto&... items) NOEXCEPT
+    {
+        return ((items.is_command && items.name == name) || ...);
+    }, Methods);
+}
+
 } // namespace rpc
 } // namespace network
 } // namespace libbitcoin

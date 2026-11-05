@@ -101,6 +101,23 @@ static_assert(!method<"test1", bool>{ unimplemented, "flag" }.implemented());
 static_assert( method<"test1", bool>{ unimplemented, "flag" }.parameter_names().front() == "flag");
 static_assert(is_same_type<decltype(method<"test1", bool>{ "flag" }), decltype(method<"test1", bool>{ unimplemented, "flag" })>);
 
+// method<>::is_command
+// -----------------------------------------------------------------------------
+
+static_assert(!method<"test1">::is_command);
+static_assert(!method<"test1", bool>::is_command);
+static_assert( method<"test1", command>::is_command);
+static_assert( method<"test1", bool, command>::is_command);
+static_assert( method<"test1", bool, nullopt<false>, command>::is_command);
+static_assert( method<"test1", bool, command>::size == 1u);
+static_assert( method<"test1", command>::size == 0u);
+static_assert(is_same_type<method<"test1", bool, command>::args_native, std::tuple<bool>>);
+static_assert(is_same_type<method<"test1", bool, command>::args, std::tuple<method<"test1", bool, command>, bool>>);
+static_assert( method<"test1", bool, command>{ "flag" }.implemented());
+static_assert( method<"test1", bool, command>{ "flag" }.parameter_names().front() == "flag");
+static_assert(!method<"test1", bool, command>{ unimplemented, "flag" }.implemented());
+static_assert(!is_same_type<method<"test1", bool>, method<"test1", bool, command>>);
+
 // names_t<>
 // -----------------------------------------------------------------------------
 
