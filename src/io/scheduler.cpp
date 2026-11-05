@@ -77,7 +77,7 @@ void scheduler::shutdown() NOEXCEPT
     if (resolver_.joinable())
         resolver_.join();
 
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
     {
         std::unique_lock lock{ mutex_ };
         timer_stop_ = true;
@@ -95,7 +95,7 @@ void scheduler::shutdown() NOEXCEPT
         std::vector<timer_state::waiter> waiters{};
         {
             std::unique_lock lock{ mutex_ };
-#if !defined(HAVE_WINDOWS)
+#if defined(HAVE_APPLE)
             handlers.swap(queue_);
 #endif
             for (auto& entry: timers_)
@@ -110,7 +110,7 @@ void scheduler::shutdown() NOEXCEPT
             timers_.clear();
         }
 
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
         const auto drained = backend_->drain();
 #else
         constexpr auto drained = false;
@@ -121,10 +121,10 @@ void scheduler::shutdown() NOEXCEPT
     }
 }
 
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
 
-// Threads wait on the completion port together, each running the completion
-// or posted handler that returns it.
+// Threads wait on the backend together, each running the completions or
+// posted handler that return it.
 size_t scheduler::run() NOEXCEPT
 {
     const running_scope scope{ running_scheduler, this };
@@ -140,10 +140,9 @@ size_t scheduler::run() NOEXCEPT
     while (!stopped_.load())
     {
         completions.clear();
-        backend_->wait({}, completions);
 
-        // A wait without a completion consumed the stop interrupt.
-        if (completions.empty())
+        // A wait returned by the stop interrupt has consumed it.
+        if (backend_->wait({}, completions))
             signaled_.store(false);
 
         for (auto& completion: completions)
@@ -207,9 +206,8 @@ size_t scheduler::run() NOEXCEPT
             continue;
         }
 
-        // Threads wait on the backend together if it allows, otherwise one at
-        // a time with the others waiting on the queue.
-        if (backend::concurrent || is_zero(waiting_backend_))
+        // One thread at a time waits on the backend, the others on the queue.
+        if (is_zero(waiting_backend_))
         {
             timeout duration{};
             clock::time_point deadline{};
@@ -297,7 +295,7 @@ void scheduler::post(handler&& handler) NOEXCEPT
 
 void scheduler::complete(handler&& handler) NOEXCEPT
 {
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
     backend_->post(std::move(handler));
 #else
     std::unique_lock lock{ mutex_ };
@@ -325,7 +323,7 @@ detail::backend& scheduler::backend() NOEXCEPT
 // private
 void scheduler::enqueue(handler&& handler) NOEXCEPT
 {
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
     backend_->post(std::move(handler));
 #else
     queue_.push_back(std::move(handler));
@@ -335,7 +333,7 @@ void scheduler::enqueue(handler&& handler) NOEXCEPT
 // private
 void scheduler::wake() NOEXCEPT
 {
-#if !defined(HAVE_WINDOWS)
+#if defined(HAVE_APPLE)
     if (is_nonzero(waiting_))
         condition_.notify_one();
     else if (is_nonzero(waiting_backend_))
@@ -348,7 +346,7 @@ void scheduler::stop_locked() NOEXCEPT
 {
     stopped_.store(true);
 
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
     signal_stop();
 #else
     condition_.notify_all();
@@ -357,7 +355,7 @@ void scheduler::stop_locked() NOEXCEPT
 #endif
 }
 
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
 
 // private
 void scheduler::signal_stop() NOEXCEPT
@@ -383,7 +381,7 @@ void scheduler::wait_timer(const std::shared_ptr<timer_state>& timer,
     timer->queued = true;
     const auto position = timers_.emplace(timer->expiry, timer);
 
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
     // An earlier first timer shortens the timer thread wait.
     if (!timer_stop_ && !timer_thread_.joinable())
         timer_thread_ = std::thread{ [this]() NOEXCEPT { run_timers(); } };
@@ -494,7 +492,7 @@ void scheduler::expire_timers() NOEXCEPT
     }
 }
 
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
 
 // private
 void scheduler::run_timers() NOEXCEPT

@@ -20,6 +20,7 @@
 
 #if !defined(HAVE_WINDOWS)
 
+#include <array>
 #include <chrono>
 #include <limits>
 #include <bitcoin/network/define.hpp>
@@ -50,6 +51,9 @@ BC_PUSH_WARNING(NO_REINTERPRET_CAST)
 
 // The registration key of the interrupter (descriptors are keyed from one).
 constexpr uint64_t interrupter_key = 0;
+
+// The events returned by one wait (the rest are returned by the next).
+constexpr size_t max_events = 64;
 
 static void set_close_on_exec(int socket) NOEXCEPT
 {
@@ -99,15 +103,9 @@ backend::~backend() NOEXCEPT
 // Wait.
 // ----------------------------------------------------------------------------
 
-void backend::wait(const timeout& duration,
+bool backend::wait(const timeout& duration,
     std::vector<handler>& out) NOEXCEPT
 {
-    size_t capacity{};
-    {
-        std::unique_lock lock{ mutex_ };
-        capacity = add1(descriptors_.size());
-    }
-
 #if defined(HAVE_APPLE)
     timespec time{};
     if (duration.has_value())
@@ -120,8 +118,7 @@ void backend::wait(const timeout& duration,
             duration.value() - seconds).count();
     }
 
-    // Each descriptor has a read and a write filter.
-    std::vector<struct kevent> events(capacity * two);
+    std::array<struct kevent, max_events> events{};
     const auto count = ::kevent(handle_, nullptr, 0, events.data(),
         possible_narrow_sign_cast<int>(events.size()),
         duration.has_value() ? &time : nullptr);
@@ -136,11 +133,12 @@ void backend::wait(const timeout& duration,
             0, std::numeric_limits<int>::max()));
     }
 
-    std::vector<epoll_event> events(capacity);
+    std::array<epoll_event, max_events> events{};
     const auto count = ::epoll_wait(handle_, events.data(),
         possible_narrow_sign_cast<int>(events.size()), milliseconds);
 #endif
 
+    auto interrupted = is_zero(count);
     for (auto index = 0; index < count; ++index)
     {
         const auto& event = events.at(index);
@@ -162,10 +160,24 @@ void backend::wait(const timeout& duration,
 #if defined(HAVE_APPLE)
             uint8_t sink[sizeof(uint64_t)]{};
             while (::read(interrupter_[0], sink, sizeof(sink)) > 0);
+            interrupted = true;
 #else
+            // Each unit is a posted handler, or an interrupt if none is
+            // queued. A failed read is a unit taken by another thread.
             uint64_t unit{};
-            const auto ignore = ::read(interrupter_, &unit, sizeof(unit));
-            static_cast<void>(ignore);
+            if (::read(interrupter_, &unit, sizeof(unit)) == sizeof(unit))
+            {
+                std::unique_lock lock{ posted_mutex_ };
+                if (posted_.empty())
+                {
+                    interrupted = true;
+                }
+                else
+                {
+                    out.push_back(std::move(posted_.front()));
+                    posted_.pop_front();
+                }
+            }
 #endif
             continue;
         }
@@ -181,6 +193,8 @@ void backend::wait(const timeout& duration,
         if (descriptor)
             ready(descriptor, read, write, out);
     }
+
+    return interrupted;
 }
 
 void backend::interrupt() NOEXCEPT
@@ -194,6 +208,33 @@ void backend::interrupt() NOEXCEPT
 #endif
     static_cast<void>(ignore);
 }
+
+#if !defined(HAVE_APPLE)
+
+void backend::post(handler&& work) NOEXCEPT
+{
+    {
+        std::unique_lock lock{ posted_mutex_ };
+        posted_.push_back(std::move(work));
+    }
+
+    interrupt();
+}
+
+bool backend::drain() NOEXCEPT
+{
+    std::deque<handler> drained{};
+    {
+        std::unique_lock lock{ posted_mutex_ };
+        drained.swap(posted_);
+    }
+
+    uint64_t unit{};
+    while (::read(interrupter_, &unit, sizeof(unit)) == sizeof(unit));
+    return !drained.empty();
+}
+
+#endif
 
 // Descriptors.
 // ----------------------------------------------------------------------------

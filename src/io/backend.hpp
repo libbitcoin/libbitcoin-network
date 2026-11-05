@@ -118,25 +118,18 @@ public:
     explicit backend(detail::scheduler& scheduler) NOEXCEPT;
     ~backend() NOEXCEPT;
 
-    /// Threads may wait at once, a completion or interrupt returning one of
-    /// them (otherwise one thread waits at a time).
-#if defined(HAVE_APPLE)
-    static constexpr bool concurrent = false;
-#else
-    static constexpr bool concurrent = true;
-#endif
-
     /// Wait up to the timeout (none is unbounded) for completions, appending
-    /// them to out. Interrupt returns a waiting call early.
-    void wait(const timeout& duration, std::vector<handler>& out) NOEXCEPT;
+    /// them to out. Interrupt returns a waiting call early (true if returned
+    /// by an interrupt or the timeout).
+    bool wait(const timeout& duration, std::vector<handler>& out) NOEXCEPT;
     void interrupt() NOEXCEPT;
 
-#if defined(HAVE_WINDOWS)
-    /// Queue the handler on the completion port (returned by a wait).
+#if !defined(HAVE_APPLE)
+    /// Queue the handler on the backend (returned by a wait).
     void post(handler&& work) NOEXCEPT;
 
-    /// Destroy the handlers queued on the completion port without running
-    /// them (true if any).
+    /// Destroy the handlers queued on the backend without running them (true
+    /// if any).
     bool drain() NOEXCEPT;
 #endif
 
@@ -189,6 +182,11 @@ private:
     int interrupter_[2]{ -1, -1 };
 #else
     int interrupter_{ -1 };
+
+    // The posted handlers (one interrupter unit each), protected by
+    // posted_mutex_.
+    std::mutex posted_mutex_{};
+    std::deque<handler> posted_{};
 #endif
 
     // The registered descriptors (by key), protected by mutex_.

@@ -101,7 +101,7 @@ backend::~backend() NOEXCEPT
 // Completion.
 // ----------------------------------------------------------------------------
 
-void backend::wait(const timeout& duration,
+bool backend::wait(const timeout& duration,
     std::vector<handler>& out) NOEXCEPT
 {
     DWORD bytes{};
@@ -112,14 +112,14 @@ void backend::wait(const timeout& duration,
 
     // Timeout or interruption (posted without overlapped).
     if (overlapped == nullptr)
-        return;
+        return true;
 
     if (key == posted_key)
     {
         const std::unique_ptr<posted> owned{ pointer_cast<posted>(overlapped) };
 
         out.push_back(std::move(owned->work));
-        return;
+        return false;
     }
 
     const auto op = pointer_cast<operation>(overlapped);
@@ -151,6 +151,7 @@ void backend::wait(const timeout& duration,
     }
 
     out.push_back(to_completion(op));
+    return false;
 }
 
 void backend::interrupt() NOEXCEPT

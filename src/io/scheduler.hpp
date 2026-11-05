@@ -58,8 +58,10 @@ struct timer_state
 
 /// The run queue, timer queue, platform backend and resolver thread of a
 /// context. Work is counted from queued handlers, pending operations and work
-/// guards; when it reaches zero the scheduler stops. On windows the completion
-/// port is the run queue and timers expire on a timer thread.
+/// guards; when it reaches zero the scheduler stops. Where the backend queues
+/// posted handlers (windows, linux) it is the run queue and timers expire on a
+/// timer thread; otherwise (apple) handlers are queued here and one thread at
+/// a time waits on the backend.
 class scheduler
 {
 public:
@@ -114,7 +116,7 @@ private:
     void expire_timers() NOEXCEPT;
     void run_resolver() NOEXCEPT;
 
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
     void signal_stop() NOEXCEPT;
     void run_timers() NOEXCEPT;
 #endif
@@ -122,15 +124,15 @@ private:
     std::atomic<size_t> outstanding_{};
     std::atomic<bool> stopped_{};
 
-#if defined(HAVE_WINDOWS)
-    // A stop interrupt is queued on the completion port.
+#if !defined(HAVE_APPLE)
+    // A stop interrupt is queued on the backend.
     std::atomic<bool> signaled_{};
 #endif
 
     // These are protected by mutex_.
     mutable std::mutex mutex_{};
     timers timers_{};
-#if defined(HAVE_WINDOWS)
+#if !defined(HAVE_APPLE)
     std::condition_variable timer_condition_{};
     std::thread timer_thread_{};
     bool timer_stop_{};
