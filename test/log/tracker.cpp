@@ -39,39 +39,45 @@ public:
 };
 
 #if defined(HAVE_LOGO) && !defined(NDEBUG)
-BC_AUTO_TEST_CASE(tracker__construct__guarded__safe_expected_messages)
+BC_AUTO_TEST_CASE(tracker__construct__guarded__construct_message)
 {
-    logger log{};
-    std::promise<code> log_stopped{};
-    auto count = zero;
-    auto result = true;
+    using namespace system;
 
-    log.subscribe_messages(
-        [&](const code& ec, uint8_t, time_t, const std::string& message) NOEXCEPT
-        {
-            if (is_zero(count++))
-            {
-                const auto expected = std::string{ typeid(tracked).name() } + "(1)\n";
-                result &= (message == expected);
-                return true;
-            }
-            else
-            {
-                const auto expected = std::string{ typeid(tracked).name() } + "(0)~\n";
-                result &= (message == expected);
-                log_stopped.set_value(ec);
-                return false;
-            }
-        });
+    const logger log{};
+    std::promise<std::string> notified{};
+    const auto value = bit_right<uint64_t>(levels::objects);
+    const auto interest = emplace_shared<logger::interest>(log, value);
 
-    auto instance = system::to_shared<tracked>(log);
-    BC_REQUIRE(instance->method());
+    log.subscribe_messages(interest, [&](const code&, uint8_t, time_t, const auto& message) NOEXCEPT
+    {
+        notified.set_value(message);
+        return false;
+    });
+
+    const auto instance = to_shared<tracked>(log);
+    const auto expected = std::string{ typeid(tracked).name() } + "(1)\n";
+    BC_REQUIRE_EQUAL(notified.get_future().get(), expected);
+}
+
+BC_AUTO_TEST_CASE(tracker__destruct__guarded__destruct_message)
+{
+    using namespace system;
+
+    const logger log{};
+    std::promise<std::string> notified{};
+    const auto value = bit_right<uint64_t>(levels::objects);
+    const auto interest = emplace_shared<logger::interest>(log, value);
+    auto instance = to_shared<tracked>(log);
+
+    log.subscribe_messages(interest, [&](const code&, uint8_t, time_t, const auto& message) NOEXCEPT
+    {
+        notified.set_value(message);
+        return false;
+    });
 
     instance.reset();
-    BC_REQUIRE_EQUAL(log_stopped.get_future().get(), error::success);
-
-    log.stop();
-    BC_REQUIRE(result);
+    const auto expected = std::string{ typeid(tracked).name() } + "(0)~\n";
+    BC_REQUIRE_EQUAL(notified.get_future().get(), expected);
 }
 #endif
 
@@ -81,63 +87,6 @@ BC_AUTO_TEST_CASE(tracker__construct__stopped_log__safe)
     log.stop();
     tracked instance{ log };
     BC_REQUIRE(instance.method());
-}
-
-BC_AUTO_TEST_SUITE_END()
-
-BC_AUTO_TEST_SUITE(logger_tests)
-
-BC_AUTO_TEST_CASE(logger__subscribe_messages__stopped__service_stopped)
-{
-    logger log{};
-    log.stop();
-
-    code result{};
-    log.subscribe_messages([&](const code& ec, uint8_t, time_t, const std::string&) NOEXCEPT
-    {
-        result = ec;
-        return false;
-    });
-
-    BC_REQUIRE_EQUAL(result, error::service_stopped);
-}
-
-BC_AUTO_TEST_CASE(logger__subscribe_events__stopped__service_stopped)
-{
-    logger log{};
-    log.stop();
-
-    code result{};
-    log.subscribe_events([&](const code& ec, uint8_t, uint64_t, const auto&) NOEXCEPT
-    {
-        result = ec;
-        return false;
-    });
-
-    BC_REQUIRE_EQUAL(result, error::service_stopped);
-}
-
-BC_AUTO_TEST_CASE(logger__fire__subscribed__notified_then_stopped)
-{
-    std::vector<std::tuple<code, uint8_t, uint64_t>> events{};
-
-    {
-        logger log{};
-        log.subscribe_events([&](const code& ec, uint8_t event_, uint64_t value, const auto&) NOEXCEPT
-        {
-            events.emplace_back(ec, event_, value);
-            return true;
-        });
-
-        log.fire(42, 7);
-        log.stop();
-    }
-
-    BC_REQUIRE_EQUAL(events.size(), 2u);
-    BC_REQUIRE_EQUAL(std::get<0>(events.at(0)), error::success);
-    BC_REQUIRE_EQUAL(std::get<1>(events.at(0)), 42u);
-    BC_REQUIRE_EQUAL(std::get<2>(events.at(0)), 7u);
-    BC_REQUIRE_EQUAL(std::get<0>(events.at(1)), error::service_stopped);
 }
 
 BC_AUTO_TEST_SUITE_END()

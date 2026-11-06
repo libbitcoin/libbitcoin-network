@@ -85,6 +85,39 @@ public:
         std::ostringstream stream_{};
     };
 
+    /// Thread safe message interest of a subscription (bit = level).
+    class BCT_API interest final
+    {
+    public:
+        typedef std::shared_ptr<interest> ptr;
+
+        DELETE_COPY_MOVE(interest);
+
+        /// Hold interest in the levels of the mask.
+        interest(const logger& log, uint64_t mask=zero) NOEXCEPT;
+
+        /// Release all interest.
+        ~interest() NOEXCEPT;
+
+        /// Replace the mask, returning the previous mask.
+        uint64_t set(uint64_t mask) NOEXCEPT;
+
+        /// Add or remove interest in the levels of the mask.
+        void enable(uint64_t mask) NOEXCEPT;
+        void disable(uint64_t mask) NOEXCEPT;
+
+        /// Flip the levels of the mask, returning the previous mask.
+        uint64_t toggle(uint64_t mask) NOEXCEPT;
+
+        /// True if interested in the level.
+        bool contains(uint8_t level) const NOEXCEPT;
+
+    private:
+        // These are thread safe.
+        const logger& log_;
+        std::atomic<uint64_t> mask_;
+    };
+
     DELETE_COPY_MOVE(logger);
 
     /// Construct a started (live) logger.
@@ -97,6 +130,13 @@ public:
     /// The writer could capture refcounted logger reference, but this would
     /// require shared logger instances, an unnecessary complication/cost.
     writer write(uint8_t level) const NOEXCEPT;
+
+    /// True if any message interest holds the level.
+    inline bool enabled(uint8_t level) const NOEXCEPT
+    {
+        return level < interest_.size() &&
+            !is_zero(interest_.at(level).load());
+    }
 
     /// Fire event with optional value, recorded with current time.
     void fire(uint8_t event_, uint64_t value=zero) const NOEXCEPT;
@@ -111,7 +151,9 @@ public:
 
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and dropped. Otherwise it is held until stop/drop. False if failed.
-    void subscribe_messages(message_notifier&& handler) const NOEXCEPT;
+    /// Messages are filtered by the interest, which is released on drop.
+    void subscribe_messages(const interest::ptr& value,
+        message_notifier&& handler) const NOEXCEPT;
     void subscribe_events(event_notifier&& handler) const NOEXCEPT;
 
     /// Stop subscribers/pool with final message/empty posted to subscribers.
@@ -126,7 +168,8 @@ protected:
         std::string&& message) const NOEXCEPT;
 
 private:
-    void do_subscribe_messages(
+    void update_interest(uint64_t from, uint64_t to) const NOEXCEPT;
+    void do_subscribe_messages(const std::weak_ptr<interest>& weak,
         const message_notifier& handler) const NOEXCEPT;
     void do_notify_message(const code& ec, uint8_t level, time_t zulu,
         const std::string& message) const NOEXCEPT;
@@ -143,6 +186,7 @@ private:
 
     // These are thread safe.
     std::atomic_bool stopped_{ false };
+    mutable std::array<std::atomic<size_t>, bits<uint64_t>> interest_{};
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     mutable io::strand strand_{ pool_.service().get_executor() };
     BC_POP_WARNING()
