@@ -52,6 +52,17 @@ public:
     using context = settings::transport;
     using parts_t = std::vector<zmtp::stream::frame>;
 
+    /// A framed zmtp message: the packet holds the frame heads and unshared
+    /// parts, the buffers sequence it with the shared parts it retains.
+    struct zmtp_write_state
+    {
+        typedef std::shared_ptr<zmtp_write_state> ptr;
+
+        system::data_chunk packet{};
+        std::vector<system::chunk_cptr> shared{};
+        io::const_buffers buffers{};
+    };
+
     struct parameters
     {
         using duration = steady_clock::duration;
@@ -511,7 +522,7 @@ private:
         const count_handler& handler) NOEXCEPT;
     void do_zmtp_response(const rpc::response_ptr& out,
         const count_handler& handler) NOEXCEPT;
-    void do_zmtp_write(const system::chunk_ptr& packet,
+    void do_zmtp_write(const zmtp_write_state::ptr& packet,
         const count_handler& handler) NOEXCEPT;
 
     // peer

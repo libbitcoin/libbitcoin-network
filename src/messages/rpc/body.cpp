@@ -447,6 +447,11 @@ init(code& ec) NOEXCEPT
             return;
         }
 
+        // A notification has no response, so its response object is empty.
+        auto& message = this->value_.message;
+        if ((message.jsonrpc == version::v2) && !message.id.has_value())
+            message = { .jsonrpc = version::v2 };
+
         if (is_zero(this->value_.size_hint))
             this->value_.size_hint = to_size(this->value_.message);
 

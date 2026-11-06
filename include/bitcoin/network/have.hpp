@@ -21,11 +21,14 @@
 
 #include <bitcoin/network/version.hpp>
 
-/// TODO: Move to build configuration.
-////#define WITH_EVENTS
 #define WITH_LOGGING
+
+// Disabled by default in relase builds.
 #if !defined(NDEBUG)
     #define WITH_LOGO
+    #if !defined(WITH_LOGV)
+        #define WITH_LOGV
+    #endif
 #endif
 #define WITH_LOGA
 #define WITH_LOGN
@@ -35,17 +38,18 @@
 #define WITH_LOGR
 #define WITH_LOGF
 #define WITH_LOGQ
-#define WITH_LOGV
 
-////#if defined(WITH_EVENTS)
-////    #define HAVE_EVENTS
-////#endif
 #if defined(WITH_LOGGING)
     #define HAVE_LOGGING
 
     /// Objects (shared object construct/destruct).
     #if defined(WITH_LOGO)
         #define HAVE_LOGO
+    #endif
+
+    /// Verbose (ad-hoc debugging).
+    #if defined(WITH_LOGV)
+        #define HAVE_LOGV
     #endif
 
     #if defined(WITH_LOGA)
@@ -85,11 +89,6 @@
     /// Quitting connections (e.g. read/write/send abort).
     #if defined(WITH_LOGQ)
         #define HAVE_LOGQ
-    #endif
-
-    /// Verbose (ad-hoc debugging).
-    #if defined(WITH_LOGV)
-        #define HAVE_LOGV
     #endif
 #endif
 

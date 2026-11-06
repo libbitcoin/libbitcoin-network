@@ -354,34 +354,81 @@ static code encode_parts(parts_t& out,
     }, *params);
 }
 
-// The parts are framed into one allocation, values written in place.
-static code frame_parts(data_chunk& packet, const parts_t& message) NOEXCEPT
+// A command is one frame, the packet is its buffer.
+static code frame_packet(socket::zmtp_write_state& out,
+    data_chunk&& packet) NOEXCEPT
 {
+    out.packet = std::move(packet);
+    out.buffers.emplace_back(out.packet.data(), out.packet.size());
+    return error::success;
+}
+
+// The frame heads and unshared parts are written into one allocation and
+// shared parts are referenced from their owners, so the message is a buffer
+// sequence that alternates between the packet and the shared parts.
+static code frame_parts(socket::zmtp_write_state& out,
+    const parts_t& message) NOEXCEPT
+{
+    std::vector<chunk_cptr> shared(message.size());
     size_t size{};
-    for (const auto& in: message)
-        size += stream::frame_size(part_size(in));
-
-    packet.resize(size);
-    system::stream::out::fast sink{ packet };
-    system::write::bytes::fast writer{ sink };
-    for (auto it = message.cbegin(); it != message.cend(); ++it)
+    for (size_t index{}; index < message.size(); ++index)
     {
-        const auto more = std::next(it) != message.cend();
-        stream::write_frame_head(writer, part_size(*it), false, more);
+        const auto& in = message.at(index);
+        if (in.chunk)
+            shared.at(index) = in.chunk;
+        else if (in.value)
+            shared.at(index) = in.value->bytes();
 
-        if (it->value)
-            it->value->write(writer);
-        else if (it->chunk)
-            writer.write_bytes(it->chunk->data(), it->chunk->size());
-        else
-            writer.write_bytes(it->bytes.data(), it->bytes.size());
+        const auto& share = shared.at(index);
+        const auto body = share ? share->size() : part_size(in);
+        size += stream::frame_size(body);
+        if (share)
+            size -= body;
     }
+
+    out.packet.resize(size);
+    system::stream::out::fast sink{ out.packet };
+    system::write::bytes::fast writer{ sink };
+    size_t cut{};
+    size_t position{};
+    for (size_t index{}; index < message.size(); ++index)
+    {
+        const auto& in = message.at(index);
+        const auto& share = shared.at(index);
+        const auto body = share ? share->size() : part_size(in);
+        const auto more = add1(index) != message.size();
+        stream::write_frame_head(writer, body, false, more);
+        position += stream::frame_size(body) - body;
+
+        if (share)
+        {
+            if (position > cut)
+                out.buffers.emplace_back(std::next(out.packet.data(), cut),
+                    position - cut);
+
+            out.buffers.emplace_back(share->data(), body);
+            out.shared.push_back(share);
+            cut = position;
+            continue;
+        }
+
+        if (in.value)
+            in.value->write(writer);
+        else
+            writer.write_bytes(in.bytes.data(), in.bytes.size());
+
+        position += body;
+    }
+
+    if (position > cut)
+        out.buffers.emplace_back(std::next(out.packet.data(), cut),
+            position - cut);
 
     return writer ? error::success : error::zmtp_unserializable;
 }
 
 // A notification is a message (or a control command) written by role.
-static code encode_notification(data_chunk& packet, role role,
+static code encode_notification(socket::zmtp_write_state& out, role role,
     const rpc::request_t& notification) NOEXCEPT
 {
     // Control commands are written in every role.
@@ -397,8 +444,7 @@ static code encode_notification(data_chunk& packet, role role,
             if (!is_one(parts.size()))
                 return error::zmtp_unserializable;
 
-            packet = stream::make_pong(parts.front());
-            return error::success;
+            return frame_packet(out, stream::make_pong(parts.front()));
         }
 
         // PING content is the TTL (big-endian) then the context.
@@ -408,8 +454,7 @@ static code encode_notification(data_chunk& packet, role role,
         std::reverse(parts.front().begin(), parts.front().end());
         auto content = parts.front();
         content.insert(content.end(), parts.back().cbegin(), parts.back().cend());
-        packet = make_command(command_ping, content);
-        return error::success;
+        return frame_packet(out, make_command(command_ping, content));
     }
 
     parts_t message{};
@@ -436,11 +481,11 @@ static code encode_notification(data_chunk& packet, role role,
     if (const auto ec = encode_parts(message, notification.params))
         return ec;
 
-    return frame_parts(packet, message);
+    return frame_parts(out, message);
 }
 
 // A response is a delimited result (one part) or error (code and message).
-static code encode_response(data_chunk& packet, role role,
+static code encode_response(socket::zmtp_write_state& out, role role,
     const rpc::response_t& response) NOEXCEPT
 {
     parts_t message{};
@@ -476,7 +521,7 @@ static code encode_response(data_chunk& packet, role role,
             return ec;
     }
 
-    return frame_parts(packet, message);
+    return frame_parts(out, message);
 }
 
 // ZMTP (read).
@@ -554,7 +599,7 @@ void socket::handle_zmtp_read(const code& ec, size_t size,
 
 // ZMTP (write).
 // ----------------------------------------------------------------------------
-// The packet is fully framed and allocated before write, as tcp_write.
+// The message is framed before write, shared parts referenced (not copied).
 
 // private
 void socket::do_zmtp_notify(const rpc::request_ptr& out,
@@ -562,7 +607,7 @@ void socket::do_zmtp_notify(const rpc::request_ptr& out,
 {
     BC_ASSERT(stranded());
 
-    const auto packet = to_shared<data_chunk>();
+    const auto packet = to_shared<zmtp_write_state>();
     if (const auto ec = encode_notification(*packet, role_, out->message))
     {
         handler(ec, zero);
@@ -578,7 +623,7 @@ void socket::do_zmtp_response(const rpc::response_ptr& out,
 {
     BC_ASSERT(stranded());
 
-    const auto packet = to_shared<data_chunk>();
+    const auto packet = to_shared<zmtp_write_state>();
     if (const auto ec = encode_response(*packet, role_, out->message))
     {
         handler(ec, zero);
@@ -589,13 +634,13 @@ void socket::do_zmtp_response(const rpc::response_ptr& out,
 }
 
 // private
-// The packet is bound to preserve its buffer for the write.
-void socket::do_zmtp_write(const chunk_ptr& packet,
+// The packet is bound to preserve its buffers for the write.
+void socket::do_zmtp_write(const zmtp_write_state::ptr& packet,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    get_zmtp().async_write({ packet->data(), packet->size() },
+    get_zmtp().async_write(packet->buffers,
         [self = shared_from_this(), packet, handler](const code& ec,
             size_t size) NOEXCEPT
         {

@@ -240,6 +240,9 @@ void socket::do_handshake(const result_handler& handler) NOEXCEPT
 {
     ////BC_ASSERT(stranded());
 
+    code ignore{};
+    get_base().set_option(io::no_delay{ true }, ignore);
+
     if (!inbound_ || is_zero(timer_->timeout().count()) ||
         std::holds_alternative<std::monostate>(context_))
     {

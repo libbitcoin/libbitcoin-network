@@ -76,7 +76,6 @@ private:
     static minutes to_deviation(uint64_t timestamp) NOEXCEPT;
 
     // These are protected by strand.
-    bool sent_version_{};
     bool received_version_{};
     bool received_acknowledge_{};
     std::shared_ptr<result_handler> handler_{};

@@ -29,10 +29,10 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// The server side of a TLS 1.3 connection over a tcp socket.
-/// A read or write transfers the first non-empty buffer of a sequence, a
-/// write protecting at most one record. Records produced
-/// by reads (alerts and key updates) are sent in order with written records.
+/// The server side of a TLS 1.3 connection over a tcp socket. A read fills
+/// the first non-empty buffer of a sequence, a write protects the sequence as
+/// one record (up to maximum_plaintext). Records produced by reads (alerts and
+/// key updates) are sent in order with written records.
 /// All calls must be sequenced on the underlying socket's executor. Read and
 /// write chains may overlap each other but not themselves.
 class BCT_API stream
@@ -75,6 +75,8 @@ public:
 private:
     template <typename Buffer, typename Buffers>
     static Buffer first(const Buffers& buffers) NOEXCEPT;
+    template <typename Buffers>
+    const_byte_span flatten(const Buffers& buffers) NOEXCEPT;
     template <typename Handler>
     static io_handler erase(Handler&& handler) NOEXCEPT;
 
@@ -118,6 +120,7 @@ private:
     const context& context_;
     server server_;
     system::data_chunk input_;
+    system::data_chunk plaintext_{};
     system::data_chunk sending_{};
     std::vector<result_handler> receivers_{};
     std::vector<result_handler> waiting_{};

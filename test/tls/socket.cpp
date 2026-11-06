@@ -199,6 +199,7 @@ struct tls_peer
             code ec{};
             const auto count = socket.read_some(io::buffer(buffer), ec);
             BC_REQUIRE(!ec);
+            raw.insert(raw.cend(), buffer.cbegin(), std::next(buffer.cbegin(), count));
             client.receive({ buffer.data(), count });
             const auto data = client.read();
             out.insert(out.end(), data.begin(), data.end());
@@ -232,6 +233,7 @@ struct tls_peer
     io::context io{};
     io::socket socket;
     test::tls_client client;
+    system::data_chunk raw{};
 };
 
 static test::tls_client::options client_options(const server_fixture& server,
@@ -439,6 +441,46 @@ BC_AUTO_TEST_CASE(tls_socket__accept__response_of_many_records__exchanged)
     BC_REQUIRE_EQUAL(peer.read(response.size()), response);
     BC_REQUIRE(written.wait_for(5s) == std::future_status::ready);
     BC_REQUIRE_EQUAL(written.get(), error::success);
+}
+
+// The count of complete records in raw bytes.
+static size_t count_records(const system::data_chunk& raw)
+{
+    size_t count{};
+    size_t offset{};
+    while (raw.size() >= offset + tls::record_header_size)
+    {
+        const auto length = (static_cast<size_t>(raw[offset + 3]) << 8) | raw[offset + 4];
+        offset += tls::record_header_size + length;
+        ++count;
+    }
+
+    return count;
+}
+
+BC_AUTO_TEST_CASE(tls_socket__accept__http_response__one_record)
+{
+    server_fixture server{ false };
+    tls_peer peer{ client_options(server, false), server.port };
+    peer.handshake();
+    BC_REQUIRE_EQUAL(server.accept_result(), error::success);
+
+    const std::string body{ "response from the server" };
+    const std::string expected{ "HTTP/1.1 200 OK\r\nContent-Length: 24\r\n\r\n" + body };
+    http::response response{ http::status::ok, 11 };
+    response.body() = http::string_value{ body };
+    response.content_length(body.size());
+    const auto promise = std::make_shared<std::promise<code>>();
+    auto written = promise->get_future();
+    server.server->http_write(std::move(response), [=](const code& ec, size_t) NOEXCEPT
+    {
+        promise->set_value(ec);
+    });
+
+    BC_REQUIRE_EQUAL(system::to_string(peer.read(expected.size())), expected);
+    BC_REQUIRE(written.wait_for(5s) == std::future_status::ready);
+    BC_REQUIRE_EQUAL(written.get(), error::success);
+    BC_REQUIRE_EQUAL(count_records(peer.raw), 1u);
 }
 
 BC_AUTO_TEST_CASE(tls_socket__accept__trusted_client_certificate__success)

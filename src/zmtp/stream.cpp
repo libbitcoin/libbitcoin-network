@@ -807,6 +807,28 @@ void stream::handle_frame_body(const code& ec, size_t size,
 // Buffer write (caller-framed, caller-retained until the handler fires).
 // ----------------------------------------------------------------------------
 
+void stream::async_write(const io::const_buffers& in,
+    io_handler&& handler) NOEXCEPT
+{
+    if (!secured_)
+    {
+        io::async_write(socket_, in, std::move(handler));
+        return;
+    }
+
+    // Under CURVE the frames are boxed from a contiguous copy.
+    gathered_.clear();
+    for (const auto& buffer: in)
+    {
+        const auto begin = pointer_cast<const uint8_t>(buffer.data());
+        gathered_.insert(gathered_.end(), begin, std::next(begin,
+            buffer.size()));
+    }
+
+    async_write(io::const_buffer{ gathered_.data(), gathered_.size() },
+        std::move(handler));
+}
+
 void stream::async_write(const io::const_buffer& in,
     io_handler&& handler) NOEXCEPT
 {

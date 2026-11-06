@@ -34,6 +34,16 @@ struct mixed_methods
     };
 };
 
+struct commanded_methods
+{
+    static constexpr std::tuple methods
+    {
+        method<"alpha">{},
+        method<"beta", bool, command>{ "flag" },
+        method<"gamma">{ unimplemented }
+    };
+};
+
 struct served_methods
 {
     static constexpr std::tuple methods
@@ -72,6 +82,18 @@ static_assert(to_view(served) == "alpha beta");
 
 // None implemented, no underflow of the delimiter deduction.
 static_assert(refused.empty());
+
+// is_command
+// -----------------------------------------------------------------------------
+
+static_assert(!is_command<commanded_methods::methods>("alpha"));
+static_assert( is_command<commanded_methods::methods>("beta"));
+static_assert(!is_command<commanded_methods::methods>("gamma"));
+static_assert(!is_command<commanded_methods::methods>("delta"));
+static_assert(!is_command<served_methods::methods>("alpha"));
+
+// Commands are implemented (published).
+static_assert(to_view(method_names<commanded_methods::methods>()) == "alpha beta");
 
 // publish
 // -----------------------------------------------------------------------------

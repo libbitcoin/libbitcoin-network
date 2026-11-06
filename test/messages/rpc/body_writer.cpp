@@ -123,6 +123,50 @@ BC_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__success_
     BC_REQUIRE(writer.done());
 }
 
+BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_notification_result__empty_object)
+{
+    const std::string_view expected{ R"({"jsonrpc":"2.0"})" };
+    const io::const_buffer out{ expected.data(), expected.size() };
+    http::flat_buffer scratch{ 64 * 1024 };
+    rpc::response_body::value_type body{};
+    body.buffer = &scratch;
+    body.message = response_t{ version::v2, {}, {}, value_t{ true } };
+    response_header header{};
+    rpc::response_body::writer writer(header, body);
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+
+    const auto buffer = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
+}
+
+BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_notification_error__empty_object)
+{
+    const std::string_view expected{ R"({"jsonrpc":"2.0"})" };
+    const io::const_buffer out{ expected.data(), expected.size() };
+    http::flat_buffer scratch{ 64 * 1024 };
+    rpc::response_body::value_type body{};
+    body.buffer = &scratch;
+    body.message = response_t{ version::v2, {}, result_t{ -32601, "Method not found", {} }, {} };
+    response_header header{};
+    rpc::response_body::writer writer(header, body);
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+
+    const auto buffer = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer.has_value());
+    BC_REQUIRE(buffer.value().first == out);
+    BC_REQUIRE(!buffer.value().second);
+    BC_REQUIRE(writer.done());
+}
+
 BC_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_expected_with_newline_no_more)
 {
     const std::string_view expected{ "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":true}\n" };
