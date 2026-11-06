@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_IMPL_TLS_STREAM_IPP
 
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/tls/constants.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -39,17 +40,13 @@ template <typename Buffers, typename Handler>
 void stream::async_write_some(const Buffers& buffers,
     Handler&& handler) NOEXCEPT
 {
-    const auto buffer = first<io::const_buffer>(buffers);
-    do_write_some({ system::pointer_cast<const uint8_t>(buffer.data()),
-        buffer.size() }, erase(std::forward<Handler>(handler)));
+    do_write_some(flatten(buffers), erase(std::forward<Handler>(handler)));
 }
 
 template <typename Buffers>
 size_t stream::write_some(const Buffers& buffers, code& ec) NOEXCEPT
 {
-    const auto buffer = first<io::const_buffer>(buffers);
-    return do_write({ system::pointer_cast<const uint8_t>(buffer.data()),
-        buffer.size() }, ec);
+    return do_write(flatten(buffers), ec);
 }
 
 // private
@@ -66,6 +63,37 @@ Buffer stream::first(const Buffers& buffers) NOEXCEPT
     }
 
     return {};
+}
+
+// private
+// One record of plaintext, gathered only when it spans buffers.
+template <typename Buffers>
+const_byte_span stream::flatten(const Buffers& buffers) NOEXCEPT
+{
+    const auto end = io::buffer_sequence_end(buffers);
+    auto it = io::buffer_sequence_begin(buffers);
+    while (it != end && is_zero(io::const_buffer{ *it }.size()))
+        ++it;
+
+    if (it == end)
+        return {};
+
+    const io::const_buffer head{ *it };
+    const auto data = system::pointer_cast<const uint8_t>(head.data());
+    if (head.size() >= maximum_plaintext || std::next(it) == end)
+        return { data, std::min(head.size(), maximum_plaintext) };
+
+    plaintext_.clear();
+    for (; it != end && plaintext_.size() < maximum_plaintext; ++it)
+    {
+        const io::const_buffer buffer{ *it };
+        const auto size = std::min(buffer.size(),
+            maximum_plaintext - plaintext_.size());
+        const auto bytes = system::pointer_cast<const uint8_t>(buffer.data());
+        plaintext_.insert(plaintext_.cend(), bytes, std::next(bytes, size));
+    }
+
+    return plaintext_;
 }
 
 // private
