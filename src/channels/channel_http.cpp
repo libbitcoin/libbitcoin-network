@@ -114,7 +114,7 @@ void channel_http::receive() NOEXCEPT
             shared_from_base<channel_http>(), _1, _2, in));
 }
 
-void channel_http::handle_receive(const code& ec, size_t bytes,
+void channel_http::handle_receive(const code& ec, size_t LOG_ONLY(bytes),
     const http::request_ptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -331,8 +331,9 @@ void channel_http::notify(response&& notification,
                 std::move(handler)));
 }
 
-void channel_http::handle_send(const code& ec, size_t bytes,
-    const std::string& message, const result_handler& handler) NOEXCEPT
+void channel_http::handle_send(const code& ec, size_t LOG_ONLY(bytes),
+    const std::string& LOG_ONLY(message),
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
