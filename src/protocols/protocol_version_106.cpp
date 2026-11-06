@@ -180,7 +180,7 @@ void protocol_version_106::stopping(const code& ec) NOEXCEPT
 bool protocol_version_106::complete() const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_106");
-    return sent_version_ && received_version_ && received_acknowledge_;
+    return received_version_ && received_acknowledge_;
 }
 
 // Idempotent on the strand, first caller gets handler.
@@ -227,17 +227,12 @@ void protocol_version_106::handle_send_version(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_106");
 
-    if (stopped(ec))
+    if (stopped(ec) || complete())
         return;
 
     // A zero timeout disables the handshake timer.
     if (!is_zero(network_settings().channel_handshake().count()))
         timer_->start(BIND(handle_timer, _1));
-
-    sent_version_ = true;
-
-    if (complete())
-        callback(error::success);
 }
 
 bool protocol_version_106::handle_receive_acknowledge(const code& ec,
@@ -248,8 +243,8 @@ bool protocol_version_106::handle_receive_acknowledge(const code& ec,
     if (stopped(ec))
         return false;
 
-    // Premature or multiple verack disallowed (persists for channel life).
-    if (!sent_version_ || received_acknowledge_)
+    // Multiple verack disallowed (persists for channel life).
+    if (received_acknowledge_)
     {
         if (complete())
             stop(error::protocol_violation);
