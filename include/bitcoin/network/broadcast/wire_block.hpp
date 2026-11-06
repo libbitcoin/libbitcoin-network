@@ -41,7 +41,8 @@ public:
     DELETE_COPY_MOVE_DESTRUCT(wire_block);
 
     inline wire_block(const view::cptr& block, bool organized) NOEXCEPT
-      : block_(block), organized_(organized), txs_(to_txs(block))
+      : block_(block), organized_(organized), txs_(to_txs(block)),
+        bytes_(block->buffer())
     {
     }
 
@@ -73,6 +74,12 @@ public:
         block_->to_data(sink, true);
     }
 
+    /// The encoding (the block's source buffer), shared by all writers.
+    inline system::chunk_cptr bytes() const NOEXCEPT override
+    {
+        return bytes_;
+    }
+
 private:
     static inline txs to_txs(const view::cptr& block) NOEXCEPT
     {
@@ -91,6 +98,7 @@ private:
     const view::cptr block_;
     const bool organized_;
     const txs txs_;
+    const system::chunk_cptr bytes_;
 };
 
 } // namespace network

@@ -38,6 +38,12 @@ public:
 
     /// Write the encoding to the sink.
     virtual void write(system::write::bytes::fast& sink) const NOEXCEPT = 0;
+
+    /// The encoding as shared bytes (null if only writable).
+    virtual system::chunk_cptr bytes() const NOEXCEPT
+    {
+        return {};
+    }
 };
 
 } // namespace rpc

@@ -122,6 +122,10 @@ public:
     void async_write(const io::const_buffer& in,
         io_handler&& handler) NOEXCEPT;
 
+    /// Write a caller-framed buffer sequence (as one buffer).
+    void async_write(const io::const_buffers& in,
+        io_handler&& handler) NOEXCEPT;
+
     // Codec (static, stateless). Exposed for the tier above and for test.
     // ------------------------------------------------------------------------
 
@@ -252,6 +256,7 @@ private:
 
     // Boxed writer scratch (one in-flight write at a time on the write chain).
     system::data_chunk boxed_{};
+    system::data_chunk gathered_{};
 };
 
 } // namespace zmtp
