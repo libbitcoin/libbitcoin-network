@@ -131,6 +131,7 @@
     <ClCompile Include="..\..\..\..\test\io\socket.cpp">
       <ObjectFileName>$(IntDir)test_io_socket.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />

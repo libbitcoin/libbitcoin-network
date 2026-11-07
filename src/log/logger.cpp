@@ -118,25 +118,105 @@ void logger::do_notify_message(const code& ec, uint8_t level, time_t zulu,
     message_subscriber_.notify(ec, level, zulu, message);
 }
 
-void logger::subscribe_messages(message_notifier&& handler) const NOEXCEPT
+void logger::subscribe_messages(const interest::ptr& value,
+    message_notifier&& handler) const NOEXCEPT
 {
     if (stopped())
     {
+        value->set(zero);
         handler(error::service_stopped, {}, {}, {});
         return;
     }
 
+    const std::weak_ptr<interest> weak{ value };
     io::post(strand_,
         std::bind(&logger::do_subscribe_messages,
-            this, std::move(handler)));
+            this, weak, std::move(handler)));
 }
 
 // private
-void logger::do_subscribe_messages(
+void logger::update_interest(uint64_t from, uint64_t to) const NOEXCEPT
+{
+    for (size_t level{}; level < interest_.size(); ++level)
+    {
+        const auto was = system::get_right(from, level);
+        const auto is = system::get_right(to, level);
+
+        if (is && !was)
+            ++interest_.at(level);
+        else if (was && !is)
+            --interest_.at(level);
+    }
+}
+
+// private
+void logger::do_subscribe_messages(const std::weak_ptr<interest>& weak,
     const message_notifier& handler) const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    message_subscriber_.subscribe(move_copy(handler));
+    message_subscriber_.subscribe(
+        [weak, notify = handler](const code& ec, uint8_t level,
+            time_t zulu, const std::string& message) NOEXCEPT
+        {
+            const auto value = weak.lock();
+            if (!value)
+                return false;
+
+            if (!ec && !value->contains(level))
+                return true;
+
+            if (notify(ec, level, zulu, message) && !ec)
+                return true;
+
+            value->set(zero);
+            return false;
+        });
+}
+
+// interest
+// ----------------------------------------------------------------------------
+
+logger::interest::interest(const logger& log, uint64_t mask) NOEXCEPT
+  : log_(log), mask_(mask)
+{
+    log_.update_interest(zero, mask);
+}
+
+logger::interest::~interest() NOEXCEPT
+{
+    set(zero);
+}
+
+uint64_t logger::interest::set(uint64_t mask) NOEXCEPT
+{
+    const auto previous = mask_.exchange(mask);
+    log_.update_interest(previous, mask);
+    return previous;
+}
+
+void logger::interest::enable(uint64_t mask) NOEXCEPT
+{
+    const auto previous = mask_.fetch_or(mask);
+    log_.update_interest(previous, system::bit_or(previous, mask));
+}
+
+void logger::interest::disable(uint64_t mask) NOEXCEPT
+{
+    const auto keep = system::bit_not(mask);
+    const auto previous = mask_.fetch_and(keep);
+    log_.update_interest(previous, system::bit_and(previous, keep));
+}
+
+uint64_t logger::interest::toggle(uint64_t mask) NOEXCEPT
+{
+    const auto previous = mask_.fetch_xor(mask);
+    log_.update_interest(previous, system::bit_xor(previous, mask));
+    return previous;
+}
+
+bool logger::interest::contains(uint8_t level) const NOEXCEPT
+{
+    return level < bits<uint64_t> && system::get_right(mask_.load(), level);
 }
 
 // events

@@ -28,8 +28,7 @@ Requires: \
     @libbitcoin_system_PKG@
 
 Cflags: \
-    -I${includedir} \
-    @verbose@
+    -I${includedir}
 
 Libs: \
     -L${libdir} \

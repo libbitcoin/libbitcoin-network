@@ -671,6 +671,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/functional/peer_setup_fixture.cpp \
     ${srcdir}/../../test/io/context.cpp \
     ${srcdir}/../../test/io/socket.cpp \
+    ${srcdir}/../../test/log/logger.cpp \
     ${srcdir}/../../test/log/timer.cpp \
     ${srcdir}/../../test/log/tracker.cpp \
     ${srcdir}/../../test/messages/http_body_reader.cpp \

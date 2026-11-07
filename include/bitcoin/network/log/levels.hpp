@@ -44,11 +44,13 @@ enum : uint8_t
     #define LOG_ONLY(name) name
     #define LOG(level_, message) \
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
-        log.write(network::levels::level_) << message << std::endl; \
+        if (!log.enabled(network::levels::level_)) {} else \
+            log.write(network::levels::level_) << message << std::endl; \
         BC_POP_WARNING()
     #define LOG_LOG(name, level_) \
-        log.write(network::levels::application) << name \
-            << network::levels::level_ << std::endl;
+        if (!log.enabled(network::levels::application)) {} else \
+            log.write(network::levels::application) << name \
+                << network::levels::level_ << std::endl;
 #else
     #define LOG_ONLY(name)
     #define LOG(level, message)
@@ -59,7 +61,8 @@ enum : uint8_t
     constexpr auto objects_defined = true;
     #define LOGO(message) \
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
-        log_.write(network::levels::objects) << message << std::endl; \
+        if (!log_.enabled(network::levels::objects)) {} else \
+            log_.write(network::levels::objects) << message << std::endl; \
         BC_POP_WARNING()
 #else
     constexpr auto objects_defined = false;

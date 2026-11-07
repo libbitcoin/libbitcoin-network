@@ -570,6 +570,9 @@ void proxy::do_http_request_read(const ref<http::request>& request,
     BC_ASSERT(stranded());
 
     parser_ = to_shared<socket::http_parser>();
+    parser_->get().body().rpc_post =
+        request.get().body().contains<rpc::request>();
+
     socket_->http_read_header(buffer.get(), parser_,
         std::bind(&proxy::handle_http_header,
             shared_from_this(), _1, _2, request, buffer, handler));

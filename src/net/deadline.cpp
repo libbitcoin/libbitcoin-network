@@ -30,20 +30,12 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace std::placeholders;
 
-BC_DEBUG_ONLY(static const steady_clock::time_point epoch{};)
-
 deadline::deadline(const logger& log, io::strand& strand,
     const duration& timeout) NOEXCEPT
   : tracker<deadline>(log),
     duration_(timeout),
     timer_(strand)
 {
-    // Timer is disarmed (epoch) at construct.
-}
-
-deadline::~deadline() NOEXCEPT
-{
-    BC_ASSERT(timer_.expiry() == epoch);
 }
 
 // Start/stop must not be called concurrently.
@@ -67,7 +59,6 @@ void deadline::start(result_handler&& handle, const duration& timeout) NOEXCEPT
 void deadline::stop() NOEXCEPT
 {
     timer_.cancel();
-    BC_DEBUG_ONLY(timer_.expires_at(epoch);)
 }
 
 const deadline::duration& deadline::timeout() const NOEXCEPT
@@ -85,8 +76,6 @@ seconds deadline::remaining() const NOEXCEPT
 void deadline::handle_timer(const code& ec,
     const result_handler& handle) NOEXCEPT
 {
-    BC_DEBUG_ONLY(timer_.expires_at(epoch);)
-
     handle(ec);
 }
 

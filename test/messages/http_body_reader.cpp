@@ -91,6 +91,75 @@ BC_AUTO_TEST_CASE(http_body_reader__init__default_body_not_plain_application_jso
     BC_REQUIRE(std::holds_alternative<rpc::reader>(reader.reader_));
 }
 
+BC_AUTO_TEST_CASE(http_body_reader__init__rpc_post_post_text_plain__constructs_rpc_reader)
+{
+    request_header header{};
+    header.method(http::verb::post);
+    header.set(http::field::content_type, "text/plain");
+    body::value_type value{};
+    value.rpc_post = true;
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    code ec{};
+    reader.init(length, ec);
+    BC_REQUIRE(std::holds_alternative<rpc::reader>(reader.reader_));
+}
+
+BC_AUTO_TEST_CASE(http_body_reader__init__rpc_post_post_no_content_type__constructs_rpc_reader)
+{
+    request_header header{};
+    header.method(http::verb::post);
+    body::value_type value{};
+    value.rpc_post = true;
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    code ec{};
+    reader.init(length, ec);
+    BC_REQUIRE(std::holds_alternative<rpc::reader>(reader.reader_));
+}
+
+BC_AUTO_TEST_CASE(http_body_reader__init__rpc_post_post_application_json_rpc__constructs_rpc_reader)
+{
+    request_header header{};
+    header.method(http::verb::post);
+    header.set(http::field::content_type, "application/json-rpc");
+    body::value_type value{};
+    value.rpc_post = true;
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    code ec{};
+    reader.init(length, ec);
+    BC_REQUIRE(std::holds_alternative<rpc::reader>(reader.reader_));
+}
+
+BC_AUTO_TEST_CASE(http_body_reader__init__rpc_post_get_application_octet_stream__constructs_data_reader)
+{
+    request_header header{};
+    header.method(http::verb::get);
+    header.set(http::field::content_type, "application/octet-stream");
+    body::value_type value{};
+    value.rpc_post = true;
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    code ec{};
+    reader.init(length, ec);
+    BC_REQUIRE(std::holds_alternative<data_reader>(reader.reader_));
+}
+
+BC_AUTO_TEST_CASE(http_body_reader__init__not_rpc_post_post_text_plain__constructs_string_reader)
+{
+    request_header header{};
+    header.method(http::verb::post);
+    header.set(http::field::content_type, "text/plain");
+    body::value_type value{};
+    value.rpc_post = false;
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    code ec{};
+    reader.init(length, ec);
+    BC_REQUIRE(std::holds_alternative<string_reader>(reader.reader_));
+}
+
 BC_AUTO_TEST_CASE(http_body_reader__init__default_body_application_octet_stream__constructs_data_reader)
 {
     request_header header{};
