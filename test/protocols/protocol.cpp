@@ -513,7 +513,7 @@ BC_FIXTURE_TEST_CASE(protocol__properties__handshaken_inbound__expected, protoco
     BC_REQUIRE_GT(record.remaining, 0u);
     BC_REQUIRE_LE(record.remaining, settings_.inbound.expiration_minutes * 60u);
     BC_REQUIRE_EQUAL(record.opposite_port, port());
-    BC_REQUIRE_EQUAL(record.binding_port, settings_.inbound.binds.back().port());
+    BC_REQUIRE_EQUAL(record.binding_port, net_->binding().port());
     BC_REQUIRE(!record.terminal);
     BC_REQUIRE_EQUAL(record.nonce, node_version->nonce);
     BC_REQUIRE_GT(record.sent, 0u);
@@ -544,7 +544,7 @@ BC_FIXTURE_TEST_CASE(protocol__stop__handshaken_inbound__dropped, protocol_probe
     BC_REQUIRE(!start());
     net_->drop = true;
     BC_REQUIRE(!run());
-    connect(settings_.inbound.binds.back().to_endpoint());
+    connect(net_->binding());
     BC_REQUIRE(handshake(level::bip61));
     BC_REQUIRE(dropped());
 }

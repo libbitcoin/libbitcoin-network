@@ -124,10 +124,11 @@ BC_FIXTURE_TEST_CASE(io_socket__async_connect__accepted__endpoints_match, loopba
 
 BC_FIXTURE_TEST_CASE(io_socket__async_connect__refused__connection_refused, loopback_fixture)
 {
-    code ec{};
-    acceptor.close(ec);
+    io::socket refuser{ context };
+    REQUIRE_SUCCESS(refuser, open, io::tcp::v4());
+    REQUIRE_SUCCESS(refuser, bind, loopback);
     code connected{};
-    client.async_connect(target(), [&](const code& ec) NOEXCEPT { connected = ec; });
+    client.async_connect(refuser.local_endpoint(), [&](const code& ec) NOEXCEPT { connected = ec; });
     context.run();
     BC_REQUIRE_EQUAL(connected, error::connection_refused);
 }

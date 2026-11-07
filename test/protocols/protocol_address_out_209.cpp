@@ -84,7 +84,7 @@ BC_AUTO_TEST_CASE(protocol_address_out_209__handle_broadcast_address__advertisem
     BC_REQUIRE(handshake(level::bip31));
 
     remote_peer inbound{ settings_.identifier };
-    inbound.connect(settings_.inbound.binds.back().to_endpoint());
+    inbound.connect(net_->binding());
     BC_REQUIRE(inbound.handshake(level::bip31));
     inbound.send(get_address{}, level::bip31);
     inbound.send(ping{ 42 }, level::bip31);

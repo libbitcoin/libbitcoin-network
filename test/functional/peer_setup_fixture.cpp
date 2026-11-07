@@ -65,7 +65,7 @@ peer_setup_fixture::peer_setup_fixture(const configurator& configure)
     // Block until the network is running.
     ec = running.get_future().get();
     BC_REQUIRE_MESSAGE(!ec, ec.message());
-    REQUIRE_SUCCESS(socket_, connect, settings_.inbound.binds.back().to_endpoint());
+    REQUIRE_SUCCESS(socket_, connect, net_.binding());
 }
 
 peer_setup_fixture::~peer_setup_fixture()
@@ -163,12 +163,15 @@ void remote_peer::listen(const network::config::authority& endpoint)
     code ec{};
     acceptor_.open(io::tcp::of(local), ec);
     BC_REQUIRE(!ec);
-    acceptor_.set_option(io::reuse_address{ true }, ec);
-    BC_REQUIRE(!ec);
     acceptor_.bind(local, ec);
     BC_REQUIRE(!ec);
     acceptor_.listen(ec);
     BC_REQUIRE(!ec);
+}
+
+io::endpoint remote_peer::listening() const
+{
+    return acceptor_.local_endpoint();
 }
 
 void remote_peer::accept()

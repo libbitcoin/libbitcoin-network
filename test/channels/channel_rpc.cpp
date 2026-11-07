@@ -49,17 +49,13 @@ struct rpc_loopback_fixture
 {
     DELETE_COPY_MOVE(rpc_loopback_fixture);
 
-    static constexpr uint16_t port = 65130;
-
     rpc_loopback_fixture(size_t maximum=1'000'000) NOEXCEPT
       : pool_(2), strand_(pool_.service().get_executor()), acceptor_(strand_),
         client(client_service_)
     {
-        const auto local = test::loopback(port);
+        const auto local = test::loopback();
         code ec{};
         acceptor_.open(io::tcp::of(local), ec);
-        BC_REQUIRE(!ec);
-        acceptor_.set_option(io::reuse_address(true), ec);
         BC_REQUIRE(!ec);
         acceptor_.bind(local, ec);
         BC_REQUIRE(!ec);
@@ -80,7 +76,7 @@ struct rpc_loopback_fixture
             accepted->set_value(accept_ec);
         });
 
-        client.connect(local, ec);
+        client.connect(acceptor_.local_endpoint(), ec);
         BC_REQUIRE(!ec);
         BC_REQUIRE_EQUAL(rpc_await(accepted), error::success);
     }

@@ -26,7 +26,7 @@ struct protocol_seed_70016_setup_fixture
     {
         settings_.outbound.connections = 1;
         settings_.outbound.host_pool_capacity = 100;
-        settings_.outbound.seeds.emplace_back(PEER_LISTEN_ENDPOINT);
+        settings_.outbound.seeds.emplace_back(listening());
     }
 };
 

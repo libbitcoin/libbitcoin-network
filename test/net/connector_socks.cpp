@@ -21,7 +21,6 @@
 
 BC_AUTO_TEST_SUITE(connector_socks_tests)
 
-#define SOCKS_PROXY_ENDPOINT "127.0.0.1:65011"
 #define SOCKS_TARGET_ENDPOINT "127.0.0.1:65012"
 
 class accessor
@@ -51,15 +50,13 @@ struct socks_setup_fixture
 
     socks_setup_fixture()
       : pool(2), strand(pool.service().get_executor()),
-        acceptor(context), proxy(context)
+        acceptor(context), proxy(context), refuser(context)
     {
         log.stop();
-        socks_settings.socks = { SOCKS_PROXY_ENDPOINT };
-        const config::authority listen{ SOCKS_PROXY_ENDPOINT };
         REQUIRE_SUCCESS(acceptor, open, io::tcp::v4());
-        REQUIRE_SUCCESS(acceptor, set_option, io::reuse_address{ true });
-        REQUIRE_SUCCESS(acceptor, bind, listen.to_endpoint());
+        REQUIRE_SUCCESS(acceptor, bind, test::loopback());
         REQUIRE_SUCCESS(acceptor, listen);
+        socks_settings.socks = { acceptor.local_endpoint() };
     }
 
     ~socks_setup_fixture()
@@ -67,6 +64,7 @@ struct socks_setup_fixture
         if (instance)
             io::post(strand, [this]() NOEXCEPT { instance->stop(); });
 
+        refuser.close();
         proxy.close();
         acceptor.close();
         pool.stop();
@@ -139,6 +137,21 @@ struct socks_setup_fixture
         test::write(proxy, io::buffer(data));
     }
 
+    // Point the proxy at a bound socket that is not listening (refuses).
+    void refuse()
+    {
+        REQUIRE_SUCCESS(refuser, open, io::tcp::v4());
+        REQUIRE_SUCCESS(refuser, bind, test::loopback());
+        std::promise<bool> pointed{};
+        io::post(strand, [this, &pointed]() NOEXCEPT
+        {
+            socks_settings.socks = { refuser.local_endpoint() };
+            pointed.set_value(true);
+        });
+
+        pointed.get_future().get();
+    }
+
     // Read the greeting and answer with the given method.
     system::data_chunk greet(uint8_t method)
     {
@@ -156,6 +169,7 @@ struct socks_setup_fixture
     io::context context{};
     io::acceptor acceptor;
     io::socket proxy;
+    io::socket refuser;
     std::promise<code> connected{};
 };
 
@@ -380,7 +394,7 @@ BC_FIXTURE_TEST_CASE(connector_socks__connect__unproxied__direct_success, socks_
 {
     socks_settings.socks = {};
     create();
-    auto result = connect(config::endpoint{ SOCKS_PROXY_ENDPOINT });
+    auto result = connect(config::endpoint{ acceptor.local_endpoint() });
     accept();
 
     BC_REQUIRE_EQUAL(result.get(), error::success);
@@ -388,7 +402,7 @@ BC_FIXTURE_TEST_CASE(connector_socks__connect__unproxied__direct_success, socks_
 
 BC_FIXTURE_TEST_CASE(connector_socks__connect__proxy_refused__connection_refused, socks_setup_fixture)
 {
-    acceptor.close();
+    refuse();
     create();
     BC_REQUIRE_EQUAL(connect(config::endpoint{ SOCKS_TARGET_ENDPOINT }).get(), error::connection_refused);
 }

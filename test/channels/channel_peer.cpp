@@ -566,17 +566,13 @@ struct peer_loopback_fixture
 {
     DELETE_COPY_MOVE(peer_loopback_fixture);
 
-    static constexpr uint16_t port = 65132;
-
     peer_loopback_fixture() NOEXCEPT
       : pool_(2), strand_(pool_.service().get_executor()), acceptor_(strand_),
         client(client_service_)
     {
-        const auto local = test::loopback(port);
+        const auto local = test::loopback();
         code ec{};
         acceptor_.open(io::tcp::of(local), ec);
-        BC_REQUIRE(!ec);
-        acceptor_.set_option(io::reuse_address(true), ec);
         BC_REQUIRE(!ec);
         acceptor_.bind(local, ec);
         BC_REQUIRE(!ec);
@@ -597,7 +593,7 @@ struct peer_loopback_fixture
             accepted->set_value(accept_ec);
         });
 
-        client.connect(local, ec);
+        client.connect(acceptor_.local_endpoint(), ec);
         BC_REQUIRE(!ec);
         BC_REQUIRE_EQUAL(peer_await(accepted), error::success);
 
@@ -754,17 +750,13 @@ struct p2ps_loopback_fixture
 {
     DELETE_COPY_MOVE(p2ps_loopback_fixture);
 
-    static constexpr uint16_t port = 65133;
-
     p2ps_loopback_fixture() NOEXCEPT
       : pool_(2), strand_(pool_.service().get_executor()), acceptor_(strand_),
         client(client_service)
     {
-        const auto local = test::loopback(port);
+        const auto local = test::loopback();
         code ec{};
         acceptor_.open(io::tcp::of(local), ec);
-        BC_REQUIRE(!ec);
-        acceptor_.set_option(io::reuse_address(true), ec);
         BC_REQUIRE(!ec);
         acceptor_.bind(local, ec);
         BC_REQUIRE(!ec);
@@ -786,7 +778,7 @@ struct p2ps_loopback_fixture
             promise->set_value(accept_ec);
         });
 
-        client.connect(local, ec);
+        client.connect(acceptor_.local_endpoint(), ec);
         BC_REQUIRE(!ec);
     }
 

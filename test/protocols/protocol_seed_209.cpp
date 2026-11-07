@@ -26,7 +26,7 @@ struct protocol_seed_209_setup_fixture
     {
         settings_.outbound.connections = 1;
         settings_.outbound.host_pool_capacity = 100;
-        settings_.outbound.seeds.emplace_back(PEER_LISTEN_ENDPOINT);
+        settings_.outbound.seeds.emplace_back(listening());
     }
 };
 
@@ -40,7 +40,6 @@ static const address_item host3 = network::config::address{ "9.10.11.12:8333" }.
 static const address_item host4 = network::config::address{ "13.14.15.16:8333" }.to_address_item(1700000000, service::node_network);
 static const address_item host5 = network::config::address{ "17.18.19.20:8333" }.to_address_item(1700000000, service::node_network);
 static const address_item host6 = network::config::address{ "21.22.23.24:8333" }.to_address_item(1700000000, service::node_network);
-static const address_item seed = network::config::address{ PEER_LISTEN_ENDPOINT }.to_address_item(1700000000, service::node_network);
 static const network::config::address self4{ "9.9.9.9:8333" };
 
 BC_AUTO_TEST_CASE(protocol_seed_209__start__seed_peer__get_address)
@@ -93,6 +92,7 @@ BC_AUTO_TEST_CASE(protocol_seed_209__receive_address__seed_own_address__not_save
     auto started = starting();
     accept();
     BC_REQUIRE(handshake(level::bip31));
+    const auto seed = network::config::address{ listening() }.to_address_item(1700000000, service::node_network);
     send(address{ { seed } }, level::bip31);
     send(address{ { host1, host2, host3, host4, host5 } }, level::bip31);
     BC_REQUIRE(dropped());

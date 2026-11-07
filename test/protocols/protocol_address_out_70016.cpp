@@ -94,7 +94,7 @@ BC_AUTO_TEST_CASE(protocol_address_out_70016__handle_broadcast_address__advertis
     BC_REQUIRE(handshake(level::bip155));
 
     remote_peer inbound{ settings_.identifier };
-    inbound.connect(settings_.inbound.binds.back().to_endpoint());
+    inbound.connect(net_->binding());
     inbound.send_version(level::bip155, service::node_none, network::unix_time());
     inbound.send(send_address_v2{}, level::bip155);
     BC_REQUIRE(inbound.receive_handshake(level::bip155));

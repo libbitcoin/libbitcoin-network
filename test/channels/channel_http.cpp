@@ -116,17 +116,13 @@ struct http_loopback_fixture
 {
     DELETE_COPY_MOVE(http_loopback_fixture);
 
-    static constexpr uint16_t port = 65131;
-
     http_loopback_fixture() NOEXCEPT
       : pool_(2), strand_(pool_.service().get_executor()), acceptor_(strand_),
         client(client_service_)
     {
-        const auto local = test::loopback(port);
+        const auto local = test::loopback();
         code ec{};
         acceptor_.open(io::tcp::of(local), ec);
-        BC_REQUIRE(!ec);
-        acceptor_.set_option(io::reuse_address(true), ec);
         BC_REQUIRE(!ec);
         acceptor_.bind(local, ec);
         BC_REQUIRE(!ec);
@@ -147,7 +143,7 @@ struct http_loopback_fixture
             accepted->set_value(accept_ec);
         });
 
-        client.connect(local, ec);
+        client.connect(acceptor_.local_endpoint(), ec);
         BC_REQUIRE(!ec);
         BC_REQUIRE_EQUAL(http_await(accepted), error::success);
     }

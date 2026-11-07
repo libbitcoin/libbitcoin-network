@@ -23,7 +23,39 @@
 #include <fstream>
 #include <future>
 
-#define PEER_FUNCTIONAL_ENDPOINT "127.0.0.1:65008"
+#define PEER_FUNCTIONAL_ENDPOINT "127.0.0.1"
+
+// A net that retains its peer acceptor, for its bound endpoint.
+template <class Net = network::net>
+class bound_net
+  : public Net
+{
+public:
+    using Net::Net;
+
+    /// The endpoint to which the peer acceptor is bound (requires start).
+    io::endpoint binding() NOEXCEPT
+    {
+        std::promise<io::endpoint> bound{};
+        io::post(this->strand(), [&]() NOEXCEPT
+        {
+            bound.set_value(acceptor_->local().to_endpoint());
+        });
+
+        return bound.get_future().get();
+    }
+
+protected:
+    network::acceptor::ptr create_acceptor(
+        const network::socket::context& context) NOEXCEPT override
+    {
+        acceptor_ = Net::create_acceptor(context);
+        return acceptor_;
+    }
+
+private:
+    network::acceptor::ptr acceptor_{};
+};
 
 // Runs a real net instance accepting on loopback, with the test acting as
 // the remote peer over a raw blocking socket (framing via peer messages).
@@ -63,14 +95,14 @@ struct peer_setup_fixture
 protected:
     network::settings settings_;
     network::logger log_{};
-    network::net net_;
+    bound_net<> net_;
 
 private:
     io::context io_{};
     io::socket socket_{ io_ };
 };
 
-#define PEER_LISTEN_ENDPOINT "127.0.0.1:65031"
+#define PEER_LISTEN_ENDPOINT "127.0.0.1"
 
 // The test as a remote peer over a raw blocking socket, either connecting to
 // the node or accepting the node's connection (framing via peer messages).
@@ -84,6 +116,9 @@ public:
 
     /// Listen for a node connection on the endpoint.
     void listen(const network::config::authority& endpoint);
+
+    /// The endpoint of the listener (requires listen).
+    io::endpoint listening() const;
 
     /// Accept a node connection (requires listen).
     void accept();
@@ -183,7 +218,7 @@ struct peer_net_setup_fixture
     /// Create and start the net, the future is set by the start handler.
     std::future<code> starting()
     {
-        net_ = std::make_shared<Net>(settings_, log_);
+        net_ = std::make_shared<bound_net<Net>>(settings_, log_);
         const auto promise = std::make_shared<std::promise<code>>();
         auto future = promise->get_future();
         net_->start([promise](const code& ec) NOEXCEPT
@@ -218,7 +253,7 @@ struct peer_net_setup_fixture
         if (start() || run())
             return false;
 
-        connect(settings_.inbound.binds.back().to_endpoint());
+        connect(net_->binding());
         return true;
     }
 
@@ -228,7 +263,7 @@ struct peer_net_setup_fixture
         if (start() || run())
             return false;
 
-        net_->connect({ PEER_LISTEN_ENDPOINT });
+        net_->connect(listening());
         accept();
         return true;
     }
@@ -256,7 +291,7 @@ struct peer_net_setup_fixture
 protected:
     network::settings settings_;
     network::logger log_{};
-    std::shared_ptr<Net> net_{};
+    std::shared_ptr<bound_net<Net>> net_{};
 };
 
 #endif
