@@ -113,6 +113,9 @@ struct BCT_API body
         /// Writer is determined by assigned body type.
         bool plain_json{};
 
+        /// Set to read a post body as json-rpc regardless of content type.
+        bool rpc_post{};
+
         /// Allow default construct (empty optional).
         value_type() NOEXCEPT = default;
 
@@ -223,25 +226,32 @@ struct BCT_API body
             // Allows for preselection of reader for non-http reads.
             if (!value_.has_value())
             {
-                switch (http::content_media_type(header))
+                if (value_.rpc_post && (header.method() == http::verb::post))
                 {
-                    case http::media_type::application_json:
-                        if (value_.plain_json)
-                            value = json_value{};
-                        else
-                            value = rpc::request{};
-                        break;
-                    case http::media_type::text_plain:
-                        value = string_value{};
-                        break;
-                    case http::media_type::application_octet_stream:
-                        if (http::has_attachment(header))
-                            value = file_value{};
-                        else
-                            value = data_value{};
-                        break;
-                    default:
-                        value = empty_value{};
+                    value = rpc::request{};
+                }
+                else
+                {
+                    switch (http::content_media_type(header))
+                    {
+                        case http::media_type::application_json:
+                            if (value_.plain_json)
+                                value = json_value{};
+                            else
+                                value = rpc::request{};
+                            break;
+                        case http::media_type::text_plain:
+                            value = string_value{};
+                            break;
+                        case http::media_type::application_octet_stream:
+                            if (http::has_attachment(header))
+                                value = file_value{};
+                            else
+                                value = data_value{};
+                            break;
+                        default:
+                            value = empty_value{};
+                    }
                 }
             }
 
