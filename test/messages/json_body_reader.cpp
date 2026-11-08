@@ -44,7 +44,6 @@ BC_AUTO_TEST_CASE(json_body_reader__construct2__default__null_model)
 BC_AUTO_TEST_CASE(json_body_reader__init__simple_object__success)
 {
     const std::string_view text{ R"({"key":"value"})" };
-    const io::const_buffer buffer{ text.data(), text.size() };
     json::body<>::value_type body{};
     json::body<>::reader reader(body);
     code ec{};
