@@ -856,11 +856,17 @@ BC_FIXTURE_TEST_CASE(socket__http_read__field_above_field_limit__header_limit, a
         read.set(ec);
     });
 
-    code ec{};
-    io::write(client, io::buffer(request_with_field(200'000)), ec);
-    BC_REQUIRE(!ec);
+    // The unread remainder may exceed socket buffering, so the write may block
+    // until the stop closes the socket.
+    auto writer = std::async(std::launch::async, [&]() NOEXCEPT
+    {
+        code ignore{};
+        io::write(client, io::buffer(request_with_field(200'000)), ignore);
+    });
+
     BC_REQUIRE_EQUAL(read.get(), error::header_limit);
     instance->stop();
+    writer.wait();
 }
 
 BC_FIXTURE_TEST_CASE(socket__rpc_read__websocket_complete_message__success, acceptor_fixture)
