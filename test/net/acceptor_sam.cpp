@@ -39,8 +39,7 @@ struct sam_setup_fixture
 
     sam_setup_fixture()
       : pool(2), strand(pool.service().get_executor()),
-        listener(context), bridge(context), forward(context), peer(context),
-        refuser(context)
+        listener(context), bridge(context), forward(context), peer(context)
     {
         log.stop();
         REQUIRE_SUCCESS(listener, open, io::tcp::v4());
@@ -63,7 +62,6 @@ struct sam_setup_fixture
             stopped.get_future().get();
         }
 
-        refuser.close();
         peer.close();
         forward.close();
         bridge.close();
@@ -122,15 +120,13 @@ struct sam_setup_fixture
         return port.get_future().get();
     }
 
-    // Point the bridge at a bound socket that is not listening (refuses).
+    // Point the bridge at an endpoint that refuses connections.
     void refuse()
     {
-        REQUIRE_SUCCESS(refuser, open, io::tcp::v4());
-        REQUIRE_SUCCESS(refuser, bind, test::loopback());
         std::promise<bool> pointed{};
         io::post(strand, [this, &pointed]() NOEXCEPT
         {
-            sam_settings.bridge = { refuser.local_endpoint() };
+            sam_settings.bridge = { test::refuser() };
             pointed.set_value(true);
         });
 
@@ -229,7 +225,6 @@ struct sam_setup_fixture
     io::socket bridge;
     io::socket forward;
     io::socket peer;
-    io::socket refuser;
     std::promise<code> accepted{};
 };
 

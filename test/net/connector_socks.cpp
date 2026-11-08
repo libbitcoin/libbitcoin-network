@@ -50,7 +50,7 @@ struct socks_setup_fixture
 
     socks_setup_fixture()
       : pool(2), strand(pool.service().get_executor()),
-        acceptor(context), proxy(context), refuser(context)
+        acceptor(context), proxy(context)
     {
         log.stop();
         REQUIRE_SUCCESS(acceptor, open, io::tcp::v4());
@@ -64,7 +64,6 @@ struct socks_setup_fixture
         if (instance)
             io::post(strand, [this]() NOEXCEPT { instance->stop(); });
 
-        refuser.close();
         proxy.close();
         acceptor.close();
         pool.stop();
@@ -137,15 +136,13 @@ struct socks_setup_fixture
         test::write(proxy, io::buffer(data));
     }
 
-    // Point the proxy at a bound socket that is not listening (refuses).
+    // Point the proxy at an endpoint that refuses connections.
     void refuse()
     {
-        REQUIRE_SUCCESS(refuser, open, io::tcp::v4());
-        REQUIRE_SUCCESS(refuser, bind, test::loopback());
         std::promise<bool> pointed{};
         io::post(strand, [this, &pointed]() NOEXCEPT
         {
-            socks_settings.socks = { refuser.local_endpoint() };
+            socks_settings.socks = { test::refuser() };
             pointed.set_value(true);
         });
 
@@ -169,7 +166,6 @@ struct socks_setup_fixture
     io::context context{};
     io::acceptor acceptor;
     io::socket proxy;
-    io::socket refuser;
     std::promise<code> connected{};
 };
 

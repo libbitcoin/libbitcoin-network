@@ -653,13 +653,6 @@ struct acceptor_fixture
         acceptor.listen(ec);
         BC_REQUIRE(!ec);
         open_endpoint = acceptor.local_endpoint();
-
-        // A bound socket that is not listening refuses connections.
-        refuser.open(io::tcp::of(test::loopback()), ec);
-        BC_REQUIRE(!ec);
-        refuser.bind(test::loopback(), ec);
-        BC_REQUIRE(!ec);
-        closed_endpoint = refuser.local_endpoint();
     }
 
     ~acceptor_fixture()
@@ -700,9 +693,8 @@ struct acceptor_fixture
     io::acceptor acceptor{ strand };
     io::context service{};
     io::socket client{ service };
-    io::socket refuser{ service };
     io::endpoint open_endpoint{};
-    io::endpoint closed_endpoint{};
+    const io::endpoint closed_endpoint{ test::refuser() };
     const socket::parameters clear
     {
         .maximum_request = 42u,
