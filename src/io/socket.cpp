@@ -105,8 +105,7 @@ static std::vector<WSABUF> to_native(const Buffers& buffers) NOEXCEPT
         out.push_back(
         {
             possible_narrow_cast<ULONG>(buffer.size()),
-            pointer_cast<CHAR>(const_cast<void*>(
-                static_cast<const void*>(buffer.data())))
+            pointer_cast<CHAR>(const_cast<void*>(buffer.data()))
         });
 
     return out;
@@ -221,7 +220,7 @@ void socket::open(const tcp& protocol, code& ec) NOEXCEPT
 void socket::bind(const endpoint& point, code& ec) NOEXCEPT
 {
     const auto address = to_socket_address(point);
-    if (::bind(descriptor_->handle, address.data(), address.size) != 0)
+    if (!is_zero(::bind(descriptor_->handle, address.data(), address.size)))
     {
         ec = native_code();
         return;
@@ -262,20 +261,20 @@ void socket::shutdown(shutdown_type what, code& ec) NOEXCEPT
     const auto how = what == shutdown_type::receive ? shutdown_receive :
         (what == shutdown_type::send ? shutdown_send : shutdown_both);
 
-    ec = ::shutdown(descriptor_->handle, how) != 0 ? native_code() :
+    ec = !is_zero(::shutdown(descriptor_->handle, how)) ? native_code() :
         code{ error::success };
 }
 
 void socket::set_option(const no_delay& option, code& ec) NOEXCEPT
 {
     ec = set_socket_option(descriptor_->handle, IPPROTO_TCP, TCP_NODELAY,
-        option.value ? 1 : 0);
+        to_int(option.value));
 }
 
 void socket::set_option(const keep_alive& option, code& ec) NOEXCEPT
 {
     ec = set_socket_option(descriptor_->handle, SOL_SOCKET, SO_KEEPALIVE,
-        option.value ? 1 : 0);
+        to_int(option.value));
 }
 
 void socket::non_blocking(bool value, code& ec) NOEXCEPT
@@ -303,10 +302,10 @@ size_t socket::available(code& ec) const NOEXCEPT
 {
 #if defined(HAVE_WINDOWS)
     u_long count{};
-    if (::ioctlsocket(descriptor_->handle, FIONREAD, &count) != 0)
+    if (!is_zero(::ioctlsocket(descriptor_->handle, FIONREAD, &count)))
 #else
     int count{};
-    if (::ioctl(descriptor_->handle, FIONREAD, &count) != 0)
+    if (!is_zero(::ioctl(descriptor_->handle, FIONREAD, &count)))
 #endif
     {
         ec = native_code();
@@ -325,7 +324,8 @@ endpoint socket::local_endpoint(code& ec) const NOEXCEPT
 {
     socket_address address{};
     address.size = sizeof(address.storage);
-    if (::getsockname(descriptor_->handle, address.data(), &address.size) != 0)
+    const auto handle = descriptor_->handle;
+    if (!is_zero(::getsockname(handle, address.data(), &address.size)))
     {
         ec = native_code();
         return {};
@@ -339,7 +339,8 @@ endpoint socket::remote_endpoint(code& ec) const NOEXCEPT
 {
     socket_address address{};
     address.size = sizeof(address.storage);
-    if (::getpeername(descriptor_->handle, address.data(), &address.size) != 0)
+    const auto handle = descriptor_->handle;
+    if (!is_zero(::getpeername(handle, address.data(), &address.size)))
     {
         ec = native_code();
         return {};
@@ -394,11 +395,11 @@ bool socket::half_closed() const NOEXCEPT
 void socket::async_connect(const endpoint& point,
     result_handler&& handler) NOEXCEPT
 {
-    io_handler completion = [handler = std::move(handler)](const code& ec,
-        size_t) NOEXCEPT
-    {
-        handler(ec);
-    };
+    io_handler completion =
+        [handler = std::move(handler)](const code& ec, size_t) NOEXCEPT
+        {
+            handler(ec);
+        };
 
     if (!is_open())
     {
@@ -411,8 +412,8 @@ void socket::async_connect(const endpoint& point,
         }
     }
 
-    const auto op = new operation{ operation::kind::connect, descriptor_,
-        executor_ };
+    constexpr auto kind = operation::kind::connect;
+    const auto op = new operation{ kind, descriptor_, executor_ };
     op->target = to_socket_address(point);
     op->handler = std::move(completion);
     backend_of(executor_).start(op);
@@ -426,8 +427,8 @@ void socket::do_read(mutable_buffers&& buffers, io_handler&& handler) NOEXCEPT
         return;
     }
 
-    const auto op = new operation{ operation::kind::read, descriptor_,
-        executor_ };
+    constexpr auto kind = operation::kind::read;
+    const auto op = new operation{ kind, descriptor_, executor_ };
     op->handler = std::move(handler);
     op->requested = total_size(buffers);
 #if defined(HAVE_WINDOWS)
@@ -446,8 +447,8 @@ void socket::do_write(const_buffers&& buffers, io_handler&& handler) NOEXCEPT
         return;
     }
 
-    const auto op = new operation{ operation::kind::write, descriptor_,
-        executor_ };
+    constexpr auto kind = operation::kind::write;
+    const auto op = new operation{ kind, descriptor_, executor_ };
     op->handler = std::move(handler);
     op->requested = total_size(buffers);
 #if defined(HAVE_WINDOWS)
@@ -472,7 +473,7 @@ void socket::connect(const endpoint& point, code& ec) NOEXCEPT
 
     const auto address = to_socket_address(point);
     const auto handle = descriptor_->handle;
-    if (::connect(handle, address.data(), address.size) == 0)
+    if (is_zero(::connect(handle, address.data(), address.size)))
     {
         ec = error::success;
         return;
@@ -493,8 +494,8 @@ void socket::connect(const endpoint& point, code& ec) NOEXCEPT
 
     int result{};
     socklen_t size = sizeof(result);
-    if (::getsockopt(handle, SOL_SOCKET, SO_ERROR,
-        pointer_cast<char>(&result), &size) != 0)
+    const auto value = pointer_cast<char>(&result);
+    if (!is_zero(::getsockopt(handle, SOL_SOCKET, SO_ERROR, value, &size)))
         result = last_error();
 
     ec = to_code(result);
@@ -517,8 +518,8 @@ size_t socket::do_read_some(const mutable_buffers& buffers, code& ec) NOEXCEPT
         DWORD flags{};
         const auto result = ::WSARecv(descriptor_->handle,
             native_buffers.data(),
-            possible_narrow_cast<DWORD>(native_buffers.size()), &bytes,
-            &flags, nullptr, nullptr);
+            possible_narrow_cast<DWORD>(native_buffers.size()),
+            &bytes, &flags, nullptr, nullptr);
 
         const auto failed = result == SOCKET_ERROR;
         const size_t count = bytes;
@@ -526,15 +527,13 @@ size_t socket::do_read_some(const mutable_buffers& buffers, code& ec) NOEXCEPT
         const auto result = ::readv(descriptor_->handle, native_buffers.data(),
             possible_narrow_sign_cast<int>(native_buffers.size()));
 
-        const auto failed = result < 0;
+        const auto failed = is_negative(result);
         const auto count = failed ? zero :
             possible_narrow_sign_cast<size_t>(result);
 #endif
         if (!failed)
         {
-            ec = is_zero(count) ? code{ error::peer_disconnect } :
-                code{ error::success };
-
+            ec = is_zero(count) ? error::peer_disconnect : error::success;
             return count;
         }
 
@@ -561,12 +560,13 @@ size_t socket::do_write_some(const const_buffers& buffers, code& ec) NOEXCEPT
         return zero;
     }
 
+    const auto handle = descriptor_->handle;
     auto native_buffers = to_native(buffers);
     while (true)
     {
 #if defined(HAVE_WINDOWS)
         DWORD bytes{};
-        const auto result = ::WSASend(descriptor_->handle,
+        const auto result = ::WSASend(handle,
             native_buffers.data(),
             possible_narrow_cast<DWORD>(native_buffers.size()), &bytes,
             send_flags, nullptr, nullptr);
@@ -577,10 +577,9 @@ size_t socket::do_write_some(const const_buffers& buffers, code& ec) NOEXCEPT
         msghdr message{};
         message.msg_iov = native_buffers.data();
         message.msg_iovlen = native_buffers.size();
-        const auto result = ::sendmsg(descriptor_->handle, &message,
-            send_flags);
+        const auto result = ::sendmsg(handle, &message, send_flags);
 
-        const auto failed = result < 0;
+        const auto failed = is_negative(result);
         const auto count = failed ? zero :
             possible_narrow_sign_cast<size_t>(result);
 #endif
@@ -660,19 +659,19 @@ void acceptor::open(const tcp& protocol, code& ec) NOEXCEPT
 void acceptor::set_option(const reuse_address& option, code& ec) NOEXCEPT
 {
     ec = set_socket_option(descriptor_->handle, SOL_SOCKET, SO_REUSEADDR,
-        option.value ? 1 : 0);
+        to_int(option.value));
 }
 
 void acceptor::set_option(const v6_only& option, code& ec) NOEXCEPT
 {
     ec = set_socket_option(descriptor_->handle, IPPROTO_IPV6, IPV6_V6ONLY,
-        option.value ? 1 : 0);
+        to_int(option.value));
 }
 
 void acceptor::bind(const endpoint& point, code& ec) NOEXCEPT
 {
     const auto address = to_socket_address(point);
-    if (::bind(descriptor_->handle, address.data(), address.size) != 0)
+    if (!is_zero(::bind(descriptor_->handle, address.data(), address.size)))
     {
         ec = native_code();
         return;
@@ -684,7 +683,7 @@ void acceptor::bind(const endpoint& point, code& ec) NOEXCEPT
 
 void acceptor::listen(code& ec) NOEXCEPT
 {
-    ec = ::listen(descriptor_->handle, SOMAXCONN) != 0 ? native_code() :
+    ec = !is_zero(::listen(descriptor_->handle, SOMAXCONN)) ? native_code() :
         code{ error::success };
 }
 
@@ -718,7 +717,8 @@ endpoint acceptor::local_endpoint(code& ec) const NOEXCEPT
 {
     socket_address address{};
     address.size = sizeof(address.storage);
-    if (::getsockname(descriptor_->handle, address.data(), &address.size) != 0)
+    const auto handle = descriptor_->handle;
+    if (!is_zero(::getsockname(handle, address.data(), &address.size)))
     {
         ec = native_code();
         return {};
@@ -736,21 +736,21 @@ endpoint acceptor::local_endpoint() const NOEXCEPT
 
 void acceptor::async_accept(socket& peer, result_handler&& handler) NOEXCEPT
 {
-    socket::io_handler completion = [handler = std::move(handler)](const code& ec,
-        size_t) NOEXCEPT
-    {
-        handler(ec);
-    };
+    socket::io_handler completion =
+        [handler = std::move(handler)](const code& ec, size_t) NOEXCEPT
+        {
+            handler(ec);
+        };
 
     if (!is_open() || peer.is_open())
     {
-        post_result(executor_, completion, is_open() ?
-            error::connect_failed : error::bad_stream);
+        const auto ec = is_open() ? error::connect_failed : error::bad_stream;
+        post_result(executor_, completion, ec);
         return;
     }
 
-    const auto op = new operation{ operation::kind::accept, descriptor_,
-        executor_ };
+    constexpr auto kind = operation::kind::accept;
+    const auto op = new operation{ kind, descriptor_, executor_ };
     op->peer = peer.descriptor_;
     op->handler = std::move(completion);
     backend_of(executor_).start(op);
@@ -910,11 +910,11 @@ struct range_connect
         if (index == range.size())
         {
             const auto ec = last ? last : code{ error::resolve_failed };
-            socket.get_executor().post([self = shared_from_this(),
-                ec]() NOEXCEPT
-            {
-                self->handler(ec, {});
-            });
+            socket.get_executor().post(
+                [self = shared_from_this(), ec]() NOEXCEPT
+                {
+                    self->handler(ec, {});
+                });
 
             return;
         }

@@ -31,7 +31,7 @@ BC_AUTO_TEST_CASE(io_context__run__posted__all_run_in_order)
 {
     io::context context{};
     std::vector<size_t> order{};
-    for (size_t index = 0; index < 5; ++index)
+    for (size_t index{}; index < 5u; ++index)
         context.post([&order, index]() NOEXCEPT { order.push_back(index); });
 
     BC_REQUIRE_EQUAL(context.run(), 5u);
@@ -122,10 +122,10 @@ BC_AUTO_TEST_CASE(io_context__run__multiple_threads__all_run)
     io::work_guard guard{ context };
     std::atomic<size_t> count{};
     std::vector<std::thread> threads{};
-    for (size_t index = 0; index < 4; ++index)
+    for (size_t index{}; index < 4u; ++index)
         threads.emplace_back([&]() NOEXCEPT { context.run(); });
 
-    for (size_t index = 0; index < 1000; ++index)
+    for (size_t index{}; index < 1000u; ++index)
         io::post(context, [&]() NOEXCEPT { ++count; });
 
     // The guard is released by the last handler so all handlers run first.
@@ -151,11 +151,11 @@ BC_AUTO_TEST_CASE(io_strand__post__ordered_and_not_concurrent)
     std::atomic<size_t> active{};
     std::atomic<bool> overlapped{};
     std::vector<std::thread> threads{};
-    for (size_t index = 0; index < 4; ++index)
+    for (size_t index{}; index < 4u; ++index)
         threads.emplace_back([&]() NOEXCEPT { context.run(); });
 
     std::promise<void> drained{};
-    for (size_t index = 0; index < 500; ++index)
+    for (size_t index{}; index < 500u; ++index)
     {
         io::post(strand, [&, index]() NOEXCEPT
         {

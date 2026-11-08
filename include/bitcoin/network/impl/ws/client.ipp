@@ -207,9 +207,8 @@ TEMPLATE
 code CLASS::receive() NOEXCEPT
 {
     code ec{};
-    const auto size = stream_.read_some(input_.prepare(http::transfer_size),
-        ec);
-
+    const auto buffers = input_.prepare(http::transfer_size);
+    const auto size = stream_.read_some(buffers, ec);
     input_.commit(size);
     return ec;
 }

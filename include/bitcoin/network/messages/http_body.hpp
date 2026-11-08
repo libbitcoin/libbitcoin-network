@@ -378,8 +378,10 @@ struct BCT_API body
                 {
                     // json_writer is not movable (by contained serializer).
                     // So requires in-place construction for variant populate.
-                    return body_writer{ std::in_place_type<json_writer>,
-                        header, value };
+                    return body_writer
+                    {
+                        std::in_place_type<json_writer>, header, value
+                    };
                 },
                 [&](peer_value& value) NOEXCEPT
                 {
@@ -389,15 +391,19 @@ struct BCT_API body
                 {
                     // rpc::writer is not movable (by contained serializer).
                     // So requires in-place construction for variant populate.
-                    return body_writer{ std::in_place_type<rpc::writer>,
-                        header, *value };
+                    return body_writer
+                    {
+                        std::in_place_type<rpc::writer>, header, *value
+                    };
                 },
                 [&](rpc_request& value) NOEXCEPT
                 {
                     // rpc::writer is not movable (by contained serializer).
                     // So requires in-place construction for variant populate.
-                    return body_writer{ std::in_place_type<rpc::notifier>,
-                        header, *value };
+                    return body_writer
+                    {
+                        std::in_place_type<rpc::notifier>, header, *value
+                    };
                 }
             }, value.value());
         }

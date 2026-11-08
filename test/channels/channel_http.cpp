@@ -477,8 +477,10 @@ BC_FIXTURE_TEST_CASE(socket__ws_read__text_after_control_frames__expected, http_
     code ec{};
     ec = websocket.ping("ping");
     BC_REQUIRE(!ec);
+
     ec = websocket.pong("pong");
     BC_REQUIRE(!ec);
+
     ec = websocket.write("hello");
     BC_REQUIRE(!ec);
     BC_REQUIRE_EQUAL(http_await(result), error::success);
