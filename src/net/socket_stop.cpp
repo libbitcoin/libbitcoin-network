@@ -132,7 +132,9 @@ void socket::handle_ws_close(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
     if (ec && ec != error::peer_disconnect && ec != error::channel_stopped)
+    {
         LOGX("WS close [" << endpoint() << "] " << ec.message());
+    }
 
     do_tls_stop();
 }
