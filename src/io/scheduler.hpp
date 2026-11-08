@@ -32,6 +32,10 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/io/context.hpp>
 
+#if defined(HAVE_APPLE) || defined(HAVE_BSD)
+    #define HAVE_KQUEUE
+#endif
+
 namespace libbitcoin {
 namespace network {
 namespace io {
@@ -116,7 +120,7 @@ private:
     void expire_timers() NOEXCEPT;
     void run_resolver() NOEXCEPT;
 
-#if !defined(HAVE_APPLE)
+#if !defined(HAVE_KQUEUE)
     void signal_stop() NOEXCEPT;
     void run_timers() NOEXCEPT;
 #endif
@@ -124,7 +128,7 @@ private:
     std::atomic<size_t> outstanding_{};
     std::atomic<bool> stopped_{};
 
-#if !defined(HAVE_APPLE)
+#if !defined(HAVE_KQUEUE)
     // A stop interrupt is queued on the backend.
     std::atomic<bool> signaled_{};
 #endif
@@ -132,7 +136,7 @@ private:
     // These are protected by mutex_.
     mutable std::mutex mutex_{};
     timers timers_{};
-#if !defined(HAVE_APPLE)
+#if !defined(HAVE_KQUEUE)
     std::condition_variable timer_condition_{};
     std::thread timer_thread_{};
     bool timer_stop_{};

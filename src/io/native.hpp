@@ -45,7 +45,7 @@
     #include <unistd.h>
 #endif
 
-#if defined(HAVE_APPLE)
+#if defined(HAVE_APPLE) || defined(HAVE_BSD)
     #include <netinet/tcp_fsm.h>
 #endif
 

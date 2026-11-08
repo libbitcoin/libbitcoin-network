@@ -388,6 +388,13 @@ bool socket::half_closed() const NOEXCEPT
     if (is_zero(::getsockopt(descriptor_->handle, IPPROTO_TCP, TCP_INFO,
         &info, &size)))
         return info.tcpi_state == TCP_CLOSE_WAIT;
+
+#elif defined(HAVE_BSD)
+    struct tcp_info info{};
+    socklen_t size = sizeof(info);
+    if (is_zero(::getsockopt(descriptor_->handle, IPPROTO_TCP, TCP_INFO,
+        &info, &size)))
+        return info.tcpi_state == TCPS_CLOSE_WAIT;
 #endif
     return false;
 }

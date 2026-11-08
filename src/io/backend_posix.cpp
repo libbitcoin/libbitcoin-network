@@ -25,7 +25,7 @@
 #include <limits>
 #include <bitcoin/network/define.hpp>
 
-#if defined(HAVE_APPLE)
+#if defined(HAVE_KQUEUE)
     #include <sys/event.h>
     #include <sys/time.h>
 #else
@@ -63,7 +63,7 @@ static void set_close_on_exec(int socket) NOEXCEPT
 backend::backend(detail::scheduler& scheduler) NOEXCEPT
   : next_key_(add1(interrupter_key)), scheduler_(scheduler)
 {
-#if defined(HAVE_APPLE)
+#if defined(HAVE_KQUEUE)
     if (::pipe(interrupter_) == 0)
     {
         int native{};
@@ -92,7 +92,7 @@ backend::backend(detail::scheduler& scheduler) NOEXCEPT
 backend::~backend() NOEXCEPT
 {
     ::close(handle_);
-#if defined(HAVE_APPLE)
+#if defined(HAVE_KQUEUE)
     ::close(interrupter_[0]);
     ::close(interrupter_[1]);
 #else
@@ -106,7 +106,7 @@ backend::~backend() NOEXCEPT
 bool backend::wait(const timeout& duration,
     std::vector<handler>& out) NOEXCEPT
 {
-#if defined(HAVE_APPLE)
+#if defined(HAVE_KQUEUE)
     timespec time{};
     if (duration.has_value())
     {
@@ -143,7 +143,7 @@ bool backend::wait(const timeout& duration,
     {
         const auto& event = events.at(index);
 
-#if defined(HAVE_APPLE)
+#if defined(HAVE_KQUEUE)
         const auto key = reinterpret_cast<uint64_t>(event.udata);
         const auto read = event.filter == EVFILT_READ;
         const auto write = event.filter == EVFILT_WRITE;
@@ -157,7 +157,7 @@ bool backend::wait(const timeout& duration,
 
         if (key == interrupter_key)
         {
-#if defined(HAVE_APPLE)
+#if defined(HAVE_KQUEUE)
             uint8_t sink[sizeof(uint64_t)]{};
             while (::read(interrupter_[0], sink, sizeof(sink)) > 0);
             interrupted = true;
@@ -199,7 +199,7 @@ bool backend::wait(const timeout& duration,
 
 void backend::interrupt() NOEXCEPT
 {
-#if defined(HAVE_APPLE)
+#if defined(HAVE_KQUEUE)
     const uint8_t byte{};
     const auto ignore = ::write(interrupter_[1], &byte, sizeof(byte));
 #else
@@ -209,7 +209,7 @@ void backend::interrupt() NOEXCEPT
     static_cast<void>(ignore);
 }
 
-#if !defined(HAVE_APPLE)
+#if !defined(HAVE_KQUEUE)
 
 void backend::post(handler&& work) NOEXCEPT
 {
@@ -324,7 +324,7 @@ bool backend::add(const descriptor_ptr& descriptor, int& native) NOEXCEPT
         descriptors_.emplace(descriptor->key, descriptor);
     }
 
-#if defined(HAVE_APPLE)
+#if defined(HAVE_KQUEUE)
     struct kevent events[2]{};
     const auto key = reinterpret_cast<void*>(descriptor->key);
     EV_SET(&events[0], descriptor->handle, EVFILT_READ, EV_ADD | EV_CLEAR, 0,
