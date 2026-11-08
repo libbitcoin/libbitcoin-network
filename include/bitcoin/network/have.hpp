@@ -26,9 +26,6 @@
 // Disabled by default in relase builds.
 #if !defined(NDEBUG)
     #define WITH_LOGO
-    #if !defined(WITH_LOGV)
-        #define WITH_LOGV
-    #endif
 #endif
 #define WITH_LOGA
 #define WITH_LOGN
@@ -38,6 +35,7 @@
 #define WITH_LOGR
 #define WITH_LOGF
 #define WITH_LOGQ
+#define WITH_LOGV
 
 #if defined(WITH_LOGGING)
     #define HAVE_LOGGING

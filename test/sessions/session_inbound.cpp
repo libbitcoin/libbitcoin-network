@@ -1020,7 +1020,35 @@ BC_AUTO_TEST_CASE(session_inbound__options__always__inbound_settings)
 // Inbound connection from the test acting as a raw peer on loopback.
 // ============================================================================
 
-static constexpr uint16_t inbound_peer_port = 65152;
+// A network that retains its peer acceptor, for its bound port.
+class inbound_net
+  : public net
+{
+public:
+    using net::net;
+
+    uint16_t port() NOEXCEPT
+    {
+        std::promise<uint16_t> bound{};
+        io::post(strand(), [&]() NOEXCEPT
+        {
+            bound.set_value(acceptor_->local().port());
+        });
+
+        return bound.get_future().get();
+    }
+
+protected:
+    acceptor::ptr create_acceptor(
+        const socket::context& context) NOEXCEPT override
+    {
+        acceptor_ = net::create_acceptor(context);
+        return acceptor_;
+    }
+
+private:
+    acceptor::ptr acceptor_{};
+};
 
 struct inbound_peer
 {
@@ -1033,7 +1061,7 @@ struct inbound_peer
         set_.path = TEST_DIRECTORY;
         set_.inbound.connections = 1;
         set_.inbound.binds.clear();
-        set_.inbound.binds.emplace_back("127.0.0.1:65152");
+        set_.inbound.binds.emplace_back("127.0.0.1");
         set_.inbound.selfs.emplace_back("1.2.3.4:8333");
         set_.outbound.connections = 0;
         set_.outbound.seeds.clear();
@@ -1054,7 +1082,7 @@ struct inbound_peer
         });
 
         BC_REQUIRE_EQUAL(running.get_future().get(), error::success);
-        REQUIRE_SUCCESS(socket_, connect, test::loopback(inbound_peer_port));
+        REQUIRE_SUCCESS(socket_, connect, test::loopback(net_.port()));
     }
 
     ~inbound_peer()
@@ -1120,7 +1148,7 @@ struct inbound_peer
 private:
     settings set_;
     const logger log_{};
-    net net_;
+    inbound_net net_;
     io::context io_{};
     io::socket socket_{ io_ };
 };

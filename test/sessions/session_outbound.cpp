@@ -1855,9 +1855,6 @@ BC_AUTO_TEST_CASE(session_outbound__set_connections__started_lowered__slot_ended
 // Outbound connection to the test acting as a raw peer on loopback.
 // ============================================================================
 
-static constexpr uint16_t outbound_peer_port = 65154;
-static constexpr uint16_t outbound_closed_port = 65155;
-
 // A network with one pooled address (the given port) that restores nothing.
 class outbound_net
   : public net
@@ -1902,10 +1899,12 @@ private:
 
 struct outbound_peer
 {
-    using configurator = std::function<void(settings&)>;
+    using configurator = std::function<void(settings&, uint16_t closed)>;
 
-    outbound_peer(const configurator& configure, const code& take_code, uint16_t port)
-      : set_{ test::network_settings() }, net_{ set_, log_, take_code, port }
+    outbound_peer(const configurator& configure, const code& take_code,
+        bool refused=false)
+      : closed_(closed_port()), set_{ test::network_settings() },
+        net_{ set_, log_, take_code, refused ? closed_ : port() }
     {
         test::clear(test::directory);
         set_.path = TEST_DIRECTORY;
@@ -1914,7 +1913,7 @@ struct outbound_peer
         set_.outbound.connect_batch_size = 1;
         set_.outbound.host_pool_capacity = 10;
         set_.outbound.seeds.clear();
-        configure(set_);
+        configure(set_, closed_);
 
         std::promise<code> started{};
         net_.start([&](const code& ec) NOEXCEPT
@@ -2012,20 +2011,35 @@ struct outbound_peer
     }
 
 private:
+    uint16_t port() const
+    {
+        return acceptor_.local_endpoint().port();
+    }
+
+    // A bound socket that is not listening refuses connections.
+    uint16_t closed_port()
+    {
+        REQUIRE_SUCCESS(refuser_, open, io::tcp::of(test::loopback()));
+        REQUIRE_SUCCESS(refuser_, bind, test::loopback());
+        return refuser_.local_endpoint().port();
+    }
+
+    io::context io_{};
+    io::acceptor acceptor_{ io_, test::loopback() };
+    io::socket refuser_{ io_ };
+    io::socket socket_{ io_ };
+    const uint16_t closed_;
     settings set_;
     const logger log_{};
     outbound_net net_;
-    io::context io_{};
-    io::acceptor acceptor_{ io_, test::loopback(outbound_peer_port) };
-    io::socket socket_{ io_ };
 };
 
 BC_AUTO_TEST_CASE(session_outbound__attach_protocols__loopback_peer__address_requested_then_reconnected)
 {
-    outbound_peer peer{ [](settings& set)
+    outbound_peer peer{ [](settings& set, uint16_t)
     {
         set.enable_address = true;
-    }, error::success, outbound_peer_port };
+    }, error::success };
 
     peer.run();
     peer.accept();
@@ -2040,10 +2054,10 @@ BC_AUTO_TEST_CASE(session_outbound__attach_protocols__loopback_peer__address_req
 
 BC_AUTO_TEST_CASE(session_outbound__handle_connect__address_not_found__retaken)
 {
-    outbound_peer peer{ [](settings& set)
+    outbound_peer peer{ [](settings& set, uint16_t)
     {
         set.outbound.connect_timeout_seconds = 1;
-    }, error::address_not_found, outbound_peer_port };
+    }, error::address_not_found };
 
     peer.run();
     BC_REQUIRE(peer.retaken());
@@ -2051,10 +2065,10 @@ BC_AUTO_TEST_CASE(session_outbound__handle_connect__address_not_found__retaken)
 
 BC_AUTO_TEST_CASE(session_outbound__handle_connect__connect_refused__retaken)
 {
-    outbound_peer peer{ [](settings& set)
+    outbound_peer peer{ [](settings& set, uint16_t)
     {
         set.outbound.connect_timeout_seconds = 1;
-    }, error::success, outbound_closed_port };
+    }, error::success, true };
 
     peer.run();
     BC_REQUIRE(peer.retaken());
@@ -2062,10 +2076,10 @@ BC_AUTO_TEST_CASE(session_outbound__handle_connect__connect_refused__retaken)
 
 BC_AUTO_TEST_CASE(session_outbound__handle_channel_stop__full_host_pool__reconnected)
 {
-    outbound_peer peer{ [](settings& set)
+    outbound_peer peer{ [](settings& set, uint16_t)
     {
         set.outbound.host_pool_capacity = 1;
-    }, error::success, outbound_peer_port };
+    }, error::success };
 
     peer.run();
     peer.accept();
@@ -2077,7 +2091,7 @@ BC_AUTO_TEST_CASE(session_outbound__handle_channel_stop__full_host_pool__reconne
 
 BC_AUTO_TEST_CASE(session_outbound__handle_one__suspended__retaken)
 {
-    outbound_peer peer{ [](settings&) {}, error::success, outbound_peer_port };
+    outbound_peer peer{ [](settings&, uint16_t) {}, error::success };
 
     peer.suspend();
     peer.run();
@@ -2086,11 +2100,11 @@ BC_AUTO_TEST_CASE(session_outbound__handle_one__suspended__retaken)
 
 BC_AUTO_TEST_CASE(session_outbound__start_connect__proxied_unreachable__retaken)
 {
-    outbound_peer peer{ [](settings& set)
+    outbound_peer peer{ [](settings& set, uint16_t closed)
     {
-        set.outbound.socks = { "127.0.0.1:65157" };
+        set.outbound.socks = { "127.0.0.1", closed };
         set.outbound.connect_timeout_seconds = 1;
-    }, error::success, outbound_peer_port };
+    }, error::success };
 
     peer.run();
     BC_REQUIRE(peer.retaken());

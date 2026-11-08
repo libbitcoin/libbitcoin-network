@@ -181,6 +181,18 @@ inline io::endpoint loopback_v6(uint16_t port=0) NOEXCEPT
     return { system::ip::address{ system::ip::ipv6{ { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 } } }, port };
 }
 
+// A loopback endpoint on an ephemeral port with no socket bound to it.
+inline io::endpoint refuser() NOEXCEPT
+{
+    io::context context{};
+    io::socket socket{ context };
+    REQUIRE_SUCCESS(socket, open, io::tcp::v4());
+    REQUIRE_SUCCESS(socket, bind, loopback());
+    const auto endpoint = socket.local_endpoint();
+    REQUIRE_SUCCESS(socket, close);
+    return endpoint;
+}
+
 } // namespace test
 
 #endif

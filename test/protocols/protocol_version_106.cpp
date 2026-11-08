@@ -114,7 +114,7 @@ BC_AUTO_TEST_CASE(protocol_version_106__handshake__outbound__bip31_node_version)
     BC_REQUIRE(dial());
     BC_REQUIRE(handshake(level::bip31));
     BC_REQUIRE_EQUAL(node_version->value, level::bip31);
-    BC_REQUIRE_EQUAL(node_version->address_receiver.port, 65031_u16);
+    BC_REQUIRE_EQUAL(node_version->address_receiver.port, listening().port());
 }
 
 BC_AUTO_TEST_CASE(protocol_version_106__shake__minimum_below_minimum_protocol__dropped)

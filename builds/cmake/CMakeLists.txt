@@ -98,7 +98,6 @@ include(CheckCXXSourceCompiles)
 #------------------------------------------------------------------------------
 # Project options.
 #------------------------------------------------------------------------------
-option( with-verbose "Compile verbose logging." OFF )
 option( with-tests "Compile with unit tests." ON )
 
 #------------------------------------------------------------------------------
@@ -237,11 +236,6 @@ if ( NOT MSVC )
       $<$<COMPILE_LANGUAGE:CXX>:-Wno-uninitialized>
   )
 endif()
-
-target_compile_definitions( libbitcoin-network
-  PUBLIC
-    $<$<BOOL:${with-verbose}>:WITH_LOGV>
-)
 
 if ( MSVC )
   target_compile_definitions( libbitcoin-network

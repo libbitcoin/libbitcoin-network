@@ -159,15 +159,6 @@ AC_ARG_WITH([tests],
 AC_MSG_RESULT([$with_tests])
 AM_CONDITIONAL([WITH_TESTS], [test "x${with_tests}" != "xno"])
 
-AC_MSG_CHECKING([--with-verbose option])
-AC_ARG_WITH([verbose],
-    AS_HELP_STRING([--with-verbose],
-        [Compile verbose logging. @<:@default=no@:>@]),
-    [with_verbose=$withval],
-    [with_verbose=no])
-AC_MSG_RESULT([$with_verbose])
-AM_CONDITIONAL([WITH_VERBOSE], [test "x${with_verbose}" != "xno"])
-
 # Set flags.
 #==============================================================================
 AX_CHECK_COMPILE_FLAG([-Wall],
@@ -266,13 +257,6 @@ AS_IF([test "x${enable_isystem}" != "xno"],
   [AC_SUBST([libbitcoin_system_BUILD_CPPFLAGS], [${libbitcoin_system_ISYS_CPPFLAGS}])],
   [AC_SUBST([libbitcoin_system_BUILD_CPPFLAGS], [${libbitcoin_system_CPPFLAGS}])])
 AC_MSG_NOTICE([libbitcoin_system_BUILD_CPPFLAGS : ${libbitcoin_system_BUILD_CPPFLAGS}])
-
-# Set preprocessor defines.
-#==============================================================================
-AS_IF([test "x${with_verbose}" != "xno"], [
-        AC_DEFINE([WITH_LOGV])
-        AC_SUBST([verbose], [-DWITH_LOGV])
-    ])
 
 AC_CONFIG_FILES([
     Makefile

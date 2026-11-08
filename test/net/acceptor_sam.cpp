@@ -21,8 +21,6 @@
 
 BC_AUTO_TEST_SUITE(acceptor_sam_tests)
 
-#define SAM_BRIDGE_ENDPOINT "127.0.0.1:65021"
-
 class accessor
   : public acceptor_sam
 {
@@ -44,12 +42,10 @@ struct sam_setup_fixture
         listener(context), bridge(context), forward(context), peer(context)
     {
         log.stop();
-        sam_settings.bridge = { SAM_BRIDGE_ENDPOINT };
-        const config::authority listen{ SAM_BRIDGE_ENDPOINT };
         REQUIRE_SUCCESS(listener, open, io::tcp::v4());
-        REQUIRE_SUCCESS(listener, set_option, io::reuse_address{ true });
-        REQUIRE_SUCCESS(listener, bind, listen.to_endpoint());
+        REQUIRE_SUCCESS(listener, bind, test::loopback());
         REQUIRE_SUCCESS(listener, listen);
+        sam_settings.bridge = { listener.local_endpoint() };
     }
 
     ~sam_setup_fixture()
@@ -122,6 +118,19 @@ struct sam_setup_fixture
         });
 
         return port.get_future().get();
+    }
+
+    // Point the bridge at an endpoint that refuses connections.
+    void refuse()
+    {
+        std::promise<bool> pointed{};
+        io::post(strand, [this, &pointed]() NOEXCEPT
+        {
+            sam_settings.bridge = { test::refuser() };
+            pointed.set_value(true);
+        });
+
+        pointed.get_future().get();
     }
 
     // Accept the acceptor's connection to the bridge.
@@ -381,7 +390,7 @@ BC_FIXTURE_TEST_CASE(acceptor_sam__start__started__operation_failed, sam_setup_f
 BC_FIXTURE_TEST_CASE(acceptor_sam__accept__no_bridge__connection_refused, sam_setup_fixture)
 {
     BC_REQUIRE_EQUAL(create(), error::success);
-    listener.close();
+    refuse();
     BC_REQUIRE_EQUAL(accept().get(), error::connection_refused);
 }
 
@@ -487,7 +496,7 @@ BC_FIXTURE_TEST_CASE(acceptor_sam__accept__forward_refused__connection_refused, 
     read_line();
     write_line("HELLO REPLY RESULT=OK VERSION=3.1");
     read_line();
-    listener.close();
+    refuse();
     write_line("SESSION STATUS RESULT=OK DESTINATION=" + destination);
 
     BC_REQUIRE_EQUAL(result.get(), error::connection_refused);

@@ -43,9 +43,6 @@ public:
     deadline(const logger& log, io::strand& strand,
         const duration& timeout=seconds(0)) NOEXCEPT;
 
-    /// Assert timer stopped.
-    ~deadline() NOEXCEPT;
-
     /// Start or restart the timer.
     /// Sets error::success on expiration, error::operation_canceled on stop.
     void start(result_handler&& handle) NOEXCEPT;

@@ -616,9 +616,6 @@ BC_AUTO_TEST_CASE(socket__http_write__json_body__serialized_body_received)
 // loopback
 // ----------------------------------------------------------------------------
 
-static const io::endpoint open_endpoint{ test::loopback(65121) };
-static const io::endpoint closed_endpoint{ test::loopback(65122) };
-static const io::endpoint raw_endpoint{ test::loopback(65123) };
 static const p2ps::context mainnet_context{ 0xd9b4bef9 };
 
 template <typename Type>
@@ -649,14 +646,13 @@ struct acceptor_fixture
     acceptor_fixture()
     {
         code ec{};
-        acceptor.open(io::tcp::of(open_endpoint), ec);
+        acceptor.open(io::tcp::of(test::loopback()), ec);
         BC_REQUIRE(!ec);
-        acceptor.set_option(io::reuse_address(true), ec);
-        BC_REQUIRE(!ec);
-        acceptor.bind(open_endpoint, ec);
+        acceptor.bind(test::loopback(), ec);
         BC_REQUIRE(!ec);
         acceptor.listen(ec);
         BC_REQUIRE(!ec);
+        open_endpoint = acceptor.local_endpoint();
     }
 
     ~acceptor_fixture()
@@ -697,6 +693,8 @@ struct acceptor_fixture
     io::acceptor acceptor{ strand };
     io::context service{};
     io::socket client{ service };
+    io::endpoint open_endpoint{};
+    const io::endpoint closed_endpoint{ test::refuser() };
     const socket::parameters clear
     {
         .maximum_request = 42u,
@@ -744,9 +742,9 @@ BC_FIXTURE_TEST_CASE(socket__accept__not_listening__invalid_configuration, accep
 {
     io::acceptor unlistened{ strand };
     code ec{};
-    unlistened.open(io::tcp::of(raw_endpoint), ec);
+    unlistened.open(io::tcp::of(test::loopback()), ec);
     BC_REQUIRE(!ec);
-    unlistened.bind(raw_endpoint, ec);
+    unlistened.bind(test::loopback(), ec);
     BC_REQUIRE(!ec);
 
     const awaiter<code> accepted{};
@@ -1011,14 +1009,13 @@ BC_FIXTURE_TEST_CASE(socket__connect__p2ps_responder_disconnected__peer_disconne
 {
     io::acceptor raw{ service };
     code ec{};
-    raw.open(io::tcp::of(raw_endpoint), ec);
+    raw.open(io::tcp::of(test::loopback()), ec);
     BC_REQUIRE(!ec);
-    raw.set_option(io::reuse_address(true), ec);
-    BC_REQUIRE(!ec);
-    raw.bind(raw_endpoint, ec);
+    raw.bind(test::loopback(), ec);
     BC_REQUIRE(!ec);
     raw.listen(ec);
     BC_REQUIRE(!ec);
+    const auto raw_endpoint = raw.local_endpoint();
 
     auto params = clear;
     params.context = std::cref(mainnet_context);

@@ -372,7 +372,6 @@ BC_AUTO_TEST_CASE(proxy__write__exceeds_backlog_zeromq__message_dropped)
 // loopback
 // ----------------------------------------------------------------------------
 
-static constexpr uint16_t loopback_port = 65120;
 static const std::string response1{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
 static const std::string response2{ R"({"jsonrpc":"2.0","id":2,"result":true})" };
 static const std::string request1{ R"({"jsonrpc":"2.0","id":1,"method":"a"})" };
@@ -465,18 +464,16 @@ struct loopback_fixture
         const auto server = std::make_shared<network::socket>(log, pool.service(), params);
         channel = std::make_shared<mock_proxy>(server, rate_limit, 1'000'000);
 
-        const io::endpoint endpoint{ test::loopback(loopback_port) };
         io::strand strand{ pool.service().get_executor() };
         io::acceptor acceptor{ strand };
         code ec{};
-        acceptor.open(io::tcp::of(endpoint), ec);
+        acceptor.open(io::tcp::of(test::loopback()), ec);
         BC_REQUIRE(!ec);
-        acceptor.set_option(io::reuse_address(true), ec);
-        BC_REQUIRE(!ec);
-        acceptor.bind(endpoint, ec);
+        acceptor.bind(test::loopback(), ec);
         BC_REQUIRE(!ec);
         acceptor.listen(ec);
         BC_REQUIRE(!ec);
+        const auto endpoint = acceptor.local_endpoint();
 
         const awaiter<code> accepted{};
         server->accept(acceptor, [=](const code& accept_ec) NOEXCEPT
@@ -643,7 +640,7 @@ BC_FIXTURE_TEST_CASE(proxy__properties__accepted__expected, loopback_fixture)
     BC_REQUIRE(!channel->downgraded());
     BC_REQUIRE(!channel->websocket());
     BC_REQUIRE_EQUAL(channel->slot(), max_size_t);
-    BC_REQUIRE_EQUAL(channel->binding().port(), loopback_port);
+    BC_REQUIRE_EQUAL(channel->binding().port(), client.remote_endpoint().port());
     BC_REQUIRE_EQUAL(channel->binding().host(), "127.0.0.1");
     BC_REQUIRE_EQUAL(channel->endpoint().port(), client.local_endpoint().port());
 }

@@ -1194,8 +1194,6 @@ BC_AUTO_TEST_CASE(session_seed__options__always__outbound_settings)
 // Seed connection to the test acting as a raw peer on loopback.
 // ============================================================================
 
-static constexpr uint16_t seed_peer_port = 65153;
-
 struct seed_peer
 {
     using configurator = std::function<void(settings&)>;
@@ -1210,7 +1208,8 @@ struct seed_peer
         set_.outbound.connect_batch_size = 1;
         set_.outbound.host_pool_capacity = 1;
         set_.outbound.seeds.clear();
-        set_.outbound.seeds.emplace_back("127.0.0.1", seed_peer_port);
+        const auto port = acceptor_.local_endpoint().port();
+        set_.outbound.seeds.emplace_back("127.0.0.1", port);
         configure(set_);
 
         net_.start([this](const code& ec) NOEXCEPT
@@ -1292,7 +1291,7 @@ private:
     net net_;
     std::promise<code> started_{};
     io::context io_{};
-    io::acceptor acceptor_{ io_, test::loopback(seed_peer_port) };
+    io::acceptor acceptor_{ io_, test::loopback() };
     io::socket socket_{ io_ };
 };
 

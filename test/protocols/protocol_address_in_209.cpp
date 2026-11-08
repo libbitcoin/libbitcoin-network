@@ -44,7 +44,6 @@ using namespace network::messages::peer;
 static const address_item host1 = network::config::address{ "1.2.3.4:8333" }.to_address_item(1700000000, service::node_network);
 static const address_item host2 = network::config::address{ "5.6.7.8:8333" }.to_address_item(1700000000, service::node_network);
 static const address_item host3 = network::config::address{ "9.10.11.12:8333" }.to_address_item(1700000000, service::node_network);
-static const address_item seed = network::config::address{ PEER_LISTEN_ENDPOINT }.to_address_item(1700000000, service::node_network);
 
 BC_AUTO_TEST_CASE(protocol_address_in_209__start__outbound__get_address)
 {
@@ -87,6 +86,7 @@ BC_AUTO_TEST_CASE(protocol_address_in_209__receive_address__peer_own_address__no
 {
     BC_REQUIRE(dial());
     BC_REQUIRE(handshake(level::bip31));
+    const auto seed = network::config::address{ listening() }.to_address_item(1700000000, service::node_network);
     send(address{ { seed } }, level::bip31);
     flush(level::bip31);
     BC_REQUIRE_EQUAL(net_->address_count(), 0u);

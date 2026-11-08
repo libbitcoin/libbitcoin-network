@@ -903,9 +903,6 @@ BC_AUTO_TEST_CASE(session_manual__options__always__manual_settings)
 // Manual connection to the test acting as a raw peer on loopback.
 // ============================================================================
 
-static constexpr uint16_t manual_peer_port = 65150;
-static constexpr uint16_t manual_closed_port = 65151;
-
 struct manual_peer
 {
     using configurator = std::function<void(settings&)>;
@@ -955,6 +952,19 @@ struct manual_peer
         });
 
         return connected_.get_future();
+    }
+
+    uint16_t port() const
+    {
+        return acceptor_.local_endpoint().port();
+    }
+
+    // A bound socket that is not listening refuses connections.
+    uint16_t closed_port()
+    {
+        REQUIRE_SUCCESS(refuser_, open, io::tcp::of(test::loopback()));
+        REQUIRE_SUCCESS(refuser_, bind, test::loopback());
+        return refuser_.local_endpoint().port();
     }
 
     void accept()
@@ -1035,7 +1045,8 @@ private:
     std::atomic_bool notified_{ false };
     std::promise<code> connected_{};
     io::context io_{};
-    io::acceptor acceptor_{ io_, test::loopback(manual_peer_port) };
+    io::acceptor acceptor_{ io_, test::loopback() };
+    io::socket refuser_{ io_ };
     io::socket socket_{ io_ };
 };
 
@@ -1049,7 +1060,7 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__started_a
         set.enable_reject = true;
     } };
 
-    auto connected = peer.connect(manual_peer_port, true);
+    auto connected = peer.connect(peer.port(), true);
     peer.accept();
     const auto node = peer.handshake(level::bip155, true);
     BC_REQUIRE_EQUAL(node->value, level::bip155);
@@ -1067,7 +1078,7 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70014_compact__started_addr
         set.enable_address = true;
     } };
 
-    auto connected = peer.connect(manual_peer_port, true);
+    auto connected = peer.connect(peer.port(), true);
     peer.accept();
     const auto node = peer.handshake(level::bip152, false);
     BC_REQUIRE_EQUAL(node->value, level::bip152);
@@ -1084,7 +1095,7 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70002_reject__started)
         set.enable_reject = true;
     } };
 
-    auto connected = peer.connect(manual_peer_port, true);
+    auto connected = peer.connect(peer.port(), true);
     peer.accept();
     const auto node = peer.handshake(level::bip61, false);
     BC_REQUIRE_EQUAL(node->value, level::bip61);
@@ -1099,7 +1110,7 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70001__started)
         set.protocol_maximum = level::bip37;
     } };
 
-    auto connected = peer.connect(manual_peer_port, true);
+    auto connected = peer.connect(peer.port(), true);
     peer.accept();
     const auto node = peer.handshake(level::bip37, false);
     BC_REQUIRE_EQUAL(node->value, level::bip37);
@@ -1115,7 +1126,7 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_31800_address__started_addr
         set.enable_address = true;
     } };
 
-    auto connected = peer.connect(manual_peer_port, true);
+    auto connected = peer.connect(peer.port(), true);
     peer.accept();
     const auto node = peer.handshake(level::headers_protocol, false);
     BC_REQUIRE_EQUAL(node->value, level::headers_protocol);
@@ -1128,7 +1139,7 @@ BC_AUTO_TEST_CASE(session_manual__connect__notifier_drops_started__disconnected)
     using namespace messages::peer;
     manual_peer peer{ [](settings&) {} };
 
-    auto connected = peer.connect(manual_peer_port, false);
+    auto connected = peer.connect(peer.port(), false);
     peer.accept();
     peer.handshake(level::bip155, false);
     BC_REQUIRE_EQUAL(connected.get(), error::success);
@@ -1143,7 +1154,7 @@ BC_AUTO_TEST_CASE(session_manual__connect__notifier_drops_connect_failure__failu
         set.connect_timeout_seconds = 1;
     } };
 
-    auto connected = peer.connect(manual_closed_port, false);
+    auto connected = peer.connect(peer.closed_port(), false);
     BC_REQUIRE(connected.get());
 }
 

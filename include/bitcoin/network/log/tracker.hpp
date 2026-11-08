@@ -39,12 +39,14 @@ protected:
     inline tracker(const logger& log) NOEXCEPT
       : log_(log)
     {
-        LOGO(typeid(Class).name() << "(" << ++instances_ << ")");
+        const auto instances = ++instances_;
+        LOGO(typeid(Class).name() << "(" << instances << ")");
     }
 
     inline ~tracker() NOEXCEPT
     {
-        LOGO(typeid(Class).name() << "(" << --instances_ << ")~");
+        const auto instances = --instances_;
+        LOGO(typeid(Class).name() << "(" << instances << ")~");
     }
 
 private:

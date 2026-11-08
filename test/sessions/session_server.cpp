@@ -266,13 +266,11 @@ BC_AUTO_TEST_CASE(session_server__start_channel__handshake_failure__handlers_fai
 // Accept cycle (the test connects as a raw client on loopback).
 // ============================================================================
 
-static constexpr uint16_t server_port = 65156;
-
 static settings::secure_server enabled_options()
 {
     settings::secure_server options{ "test" };
     options.connections = 1;
-    options.binds.emplace_back("127.0.0.1:65156");
+    options.binds.emplace_back("127.0.0.1");
     return options;
 }
 
@@ -307,13 +305,31 @@ public:
         return std::make_shared<mock_channel>(log, socket, create_key(), network_settings(), options_);
     }
 
+    acceptor::ptr create_service(socket::parameters&& params) NOEXCEPT override
+    {
+        acceptor_ = session_server::create_service(std::move(params));
+        return acceptor_;
+    }
+
     bool require_attached() NOEXCEPT
     {
         return attached_.get_future().get();
     }
 
+    uint16_t port() NOEXCEPT
+    {
+        std::promise<uint16_t> bound{};
+        io::post(strand(), [&]() NOEXCEPT
+        {
+            bound.set_value(acceptor_->local().port());
+        });
+
+        return bound.get_future().get();
+    }
+
 private:
     const options_t& options_;
+    acceptor::ptr acceptor_{};
     std::atomic_bool protocoled_{ false };
     std::promise<bool> attached_{};
 };
@@ -364,7 +380,7 @@ BC_AUTO_TEST_CASE(session_server__accept__client__protocols_attached)
 
     io::context io{};
     io::socket client{ io };
-    REQUIRE_SUCCESS(client, connect, test::loopback(server_port));
+    REQUIRE_SUCCESS(client, connect, test::loopback(session->port()));
     BC_REQUIRE(session->require_attached());
 
     stop(instance, session);
@@ -382,11 +398,11 @@ BC_AUTO_TEST_CASE(session_server__accept__oversubscribed__second_client_dropped)
 
     io::context io{};
     io::socket first{ io };
-    REQUIRE_SUCCESS(first, connect, test::loopback(server_port));
+    REQUIRE_SUCCESS(first, connect, test::loopback(session->port()));
     BC_REQUIRE(session->require_attached());
 
     io::socket second{ io };
-    REQUIRE_SUCCESS(second, connect, test::loopback(server_port));
+    REQUIRE_SUCCESS(second, connect, test::loopback(session->port()));
     BC_REQUIRE(dropped(second));
 
     stop(instance, session);
@@ -403,7 +419,7 @@ BC_AUTO_TEST_CASE(session_server__accept__disabled__client_dropped)
 
     io::context io{};
     io::socket client{ io };
-    REQUIRE_SUCCESS(client, connect, test::loopback(server_port));
+    REQUIRE_SUCCESS(client, connect, test::loopback(session->port()));
     BC_REQUIRE(dropped(client));
 
     stop(instance, session);
@@ -421,7 +437,7 @@ BC_AUTO_TEST_CASE(session_server__accept__blacklisted__client_dropped)
 
     io::context io{};
     io::socket client{ io };
-    REQUIRE_SUCCESS(client, connect, test::loopback(server_port));
+    REQUIRE_SUCCESS(client, connect, test::loopback(session->port()));
     BC_REQUIRE(dropped(client));
 
     stop(instance, session);
@@ -439,7 +455,7 @@ BC_AUTO_TEST_CASE(session_server__accept__not_whitelisted__client_dropped)
 
     io::context io{};
     io::socket client{ io };
-    REQUIRE_SUCCESS(client, connect, test::loopback(server_port));
+    REQUIRE_SUCCESS(client, connect, test::loopback(session->port()));
     BC_REQUIRE(dropped(client));
 
     stop(instance, session);
