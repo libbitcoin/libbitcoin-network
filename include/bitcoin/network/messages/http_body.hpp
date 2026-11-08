@@ -58,6 +58,7 @@ using data_writer = http::chunk_body::writer;
 using file_writer = http::file_body::writer;
 using span_writer = http::span_body::writer;
 using buffer_writer = http::buffer_body::writer;
+using stream_writer = http::stream_body::writer;
 using string_writer = http::string_body::writer;
 using json_writer = http::json_body::writer;
 using peer_writer = messages::peer::body::writer;
@@ -69,6 +70,7 @@ using body_writer = std::variant
     file_writer,    //     8 bytes
     span_writer,    //     8 bytes
     buffer_writer,  //    16 bytes
+    stream_writer,  //    32 bytes
     string_writer,  //     8 bytes
     peer_writer,    //    16 bytes
     json_writer,    //   136 bytes!
@@ -81,6 +83,7 @@ using data_value = http::chunk_body::value_type;
 using file_value = http::file_body::value_type;
 using span_value = http::span_body::value_type;
 using buffer_value = http::buffer_body::value_type;
+using stream_value = http::stream_body::value_type;
 using string_value = http::string_body::value_type;
 using json_value = http::json_body::value_type;
 using peer_value = messages::peer::body::value_type;
@@ -93,6 +96,7 @@ using body_value = std::variant
     file_value,     //  16 bytes
     span_value,     //  16 bytes
     buffer_value,   //  24 bytes
+    stream_value,   //  80 bytes
     string_value,   //  32 bytes
     json_value,     //  56 bytes
     peer_value,     // 248 bytes
@@ -127,6 +131,7 @@ struct BCT_API body
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, file_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, span_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, buffer_value, inner_)
+        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, stream_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, string_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, json_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, peer_value, inner_)
@@ -261,6 +266,7 @@ struct BCT_API body
                 [&](std::monostate&) NOEXCEPT {},
                 [&](span_value&) NOEXCEPT {},
                 [&](buffer_value&) NOEXCEPT {},
+                [&](stream_value&) NOEXCEPT {},
                 [&](rpc_response&) NOEXCEPT {},
 
                 [&](empty_value& value) NOEXCEPT
@@ -327,6 +333,7 @@ struct BCT_API body
                 [&](const file_writer&)    NOEXCEPT { return true; },
                 [&](const span_writer&)    NOEXCEPT { return true; },
                 [&](const buffer_writer&)  NOEXCEPT { return true; },
+                [&](const stream_writer&)  NOEXCEPT { return true; },
                 [&](const string_writer&)  NOEXCEPT { return false; },
                 [&](const peer_writer&)    NOEXCEPT { return true; },
                 [&](const json_writer&)    NOEXCEPT { return false; },
@@ -369,6 +376,10 @@ struct BCT_API body
                 [&](buffer_value& value) NOEXCEPT
                 {
                     return body_writer{ buffer_writer{ header, value } };
+                },
+                [&](stream_value& value) NOEXCEPT
+                {
+                    return body_writer{ stream_writer{ header, value } };
                 },
                 [&](string_value& value) NOEXCEPT
                 {

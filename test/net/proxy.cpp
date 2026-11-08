@@ -1047,6 +1047,27 @@ BC_FIXTURE_TEST_CASE(proxy__write_http__span_body__client_receives_body, loopbac
     BC_REQUIRE_EQUAL(written.get(), error::success);
 }
 
+BC_FIXTURE_TEST_CASE(proxy__write_http__stream_body__client_receives_body, loopback_fixture)
+{
+    const auto write = [](const system::data_slab& out) NOEXCEPT { std::copy_n("abc", 3, out.begin()); return true; };
+    const awaiter<code> written{};
+    channel->write_http(to_http(http::stream_value{ write, 3 }), complete(written));
+
+    BC_REQUIRE_EQUAL(receive_http().body(), "abc");
+    BC_REQUIRE_EQUAL(written.get(), error::success);
+}
+
+BC_FIXTURE_TEST_CASE(proxy__write_http__stream_body_over_maximum_buffer__client_receives_body, loopback_fixture)
+{
+    const auto size = add1(settings::tcp_server{ "test" }.maximum_buffer);
+    const auto write = [](const system::data_slab& out) NOEXCEPT { std::fill(out.begin(), out.end(), 'x'); return true; };
+    const awaiter<code> written{};
+    channel->write_http(to_http(http::stream_value{ write, size }), complete(written));
+
+    BC_REQUIRE_EQUAL(receive_http().body(), std::string(size, 'x'));
+    BC_REQUIRE_EQUAL(written.get(), error::success);
+}
+
 BC_FIXTURE_TEST_CASE(proxy__write_http__buffer_body__client_receives_body, loopback_fixture)
 {
     static system::data_chunk data{ 'a', 'b', 'c' };

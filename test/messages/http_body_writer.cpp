@@ -87,6 +87,101 @@ BC_AUTO_TEST_CASE(http_body_writer__to_writer__buffer__constructs_buffer_writer)
     BC_REQUIRE(std::holds_alternative<buffer_writer>(variant));
 }
 
+BC_AUTO_TEST_CASE(http_body_writer__to_writer__stream__constructs_stream_writer)
+{
+    response_header header{};
+    body::value_type value{};
+    value = stream_body::value_type{};
+    const auto variant = accessor::to_writer(header, value);
+    BC_REQUIRE(std::holds_alternative<stream_writer>(variant));
+}
+
+static bool write_abc(const system::data_slab& out) NOEXCEPT
+{
+    std::copy_n("abc", 3, out.begin());
+    return true;
+}
+
+static std::string_view to_view(const io::const_buffer& buffer) NOEXCEPT
+{
+    return { system::pointer_cast<const char>(buffer.data()), buffer.size() };
+}
+
+BC_AUTO_TEST_CASE(http_body_writer__stream_writer__within_limit__writes_into_buffer)
+{
+    response_header header{};
+    flat_buffer buffer{ 3 };
+    stream_body::value_type value{ write_abc, 3, &buffer };
+    stream_body::writer writer{ header, value };
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+
+    const auto out = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(out.has_value());
+    BC_REQUIRE(!out.value().second);
+    BC_REQUIRE_EQUAL(to_view(out.value().first), "abc");
+    BC_REQUIRE_EQUAL(buffer.capacity(), 3u);
+    BC_REQUIRE_EQUAL(out.value().first.data(), buffer.cdata().data());
+}
+
+BC_AUTO_TEST_CASE(http_body_writer__stream_writer__over_limit__writes_into_owned)
+{
+    response_header header{};
+    flat_buffer buffer{ 2 };
+    stream_body::value_type value{ write_abc, 3, &buffer };
+    stream_body::writer writer{ header, value };
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+
+    const auto out = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(out.has_value());
+    BC_REQUIRE(!out.value().second);
+    BC_REQUIRE_EQUAL(to_view(out.value().first), "abc");
+    BC_REQUIRE(is_zero(buffer.capacity()));
+}
+
+BC_AUTO_TEST_CASE(http_body_writer__stream_writer__no_buffer__writes_into_owned)
+{
+    response_header header{};
+    stream_body::value_type value{ write_abc, 3, nullptr };
+    stream_body::writer writer{ header, value };
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+
+    const auto out = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(out.has_value());
+    BC_REQUIRE_EQUAL(to_view(out.value().first), "abc");
+}
+
+BC_AUTO_TEST_CASE(http_body_writer__stream_writer__write_fails__unexpected_body)
+{
+    response_header header{};
+    flat_buffer buffer{ 3 };
+    stream_body::value_type value{ [](const system::data_slab&) NOEXCEPT { return false; }, 3, &buffer };
+    stream_body::writer writer{ header, value };
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE_EQUAL(ec, network::error::to_http_code(network::error::http_error_t::unexpected_body));
+}
+
+BC_AUTO_TEST_CASE(http_body_writer__stream_writer__no_write__unexpected_body)
+{
+    response_header header{};
+    flat_buffer buffer{ 3 };
+    stream_body::value_type value{};
+    value.buffer = &buffer;
+    stream_body::writer writer{ header, value };
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE_EQUAL(ec, network::error::to_http_code(network::error::http_error_t::unexpected_body));
+}
+
 BC_AUTO_TEST_CASE(http_body_writer__to_writer__string__constructs_string_writer)
 {
     response_header header{};
