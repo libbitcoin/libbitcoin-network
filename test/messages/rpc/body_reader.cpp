@@ -57,7 +57,6 @@ BC_AUTO_TEST_CASE(rpc_body_reader__construct2__default__null_model_non_terminate
 BC_AUTO_TEST_CASE(rpc_body_reader__init__simple_request__success)
 {
     const std::string_view text{ R"({"jsonrpc":"2.0","id":1,"method":"test"})" };
-    const io::const_buffer buffer{ text.data(), text.size() };
     rpc::request_body::value_type body{};
     rpc::request_body::reader reader(body);
     code ec{};
