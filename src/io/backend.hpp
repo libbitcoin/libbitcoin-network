@@ -124,7 +124,7 @@ public:
     bool wait(const timeout& duration, std::vector<handler>& out) NOEXCEPT;
     void interrupt() NOEXCEPT;
 
-#if !defined(HAVE_APPLE)
+#if !defined(HAVE_KQUEUE)
     /// Queue the handler on the backend (returned by a wait).
     void post(handler&& work) NOEXCEPT;
 
@@ -178,7 +178,7 @@ private:
         std::vector<handler>& out) NOEXCEPT;
 
     int handle_{ -1 };
-#if defined(HAVE_APPLE)
+#if defined(HAVE_KQUEUE)
     int interrupter_[2]{ -1, -1 };
 #else
     int interrupter_{ -1 };
