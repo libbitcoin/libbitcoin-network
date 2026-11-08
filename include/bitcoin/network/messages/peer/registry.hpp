@@ -69,6 +69,9 @@ private:
     using serializers_t = std::array<serializer_t, size>;
     using payloader_t = system::chunk_ptr(*)(const rpc::any_t&, uint32_t);
     using payloaders_t = std::array<payloader_t, size>;
+    using framer_t = bool(*)(const rpc::any_t&, uint32_t, uint32_t,
+        const system::data_slab&);
+    using framers_t = std::array<framer_t, size>;
 
     template <size_t Index>
     static rpc::any_t deserialize(const span_t& data, uint32_t version,
@@ -95,6 +98,14 @@ private:
     }
 
     template <size_t Index>
+    static bool serialize_frame(const rpc::any_t& message, uint32_t magic,
+        uint32_t version, const system::data_slab& data) NOEXCEPT
+    {
+        const auto ptr = message.get<const message_t<Index>>();
+        return ptr && peer::serialize(*ptr, magic, version, data);
+    }
+
+    template <size_t Index>
     static system::chunk_ptr serialize_payload(const rpc::any_t& message,
         uint32_t version) NOEXCEPT
     {
@@ -108,6 +119,13 @@ private:
         std::index_sequence<Index...>) NOEXCEPT
     {
         return { &registry::serialize<Index>... };
+    }
+
+    template <size_t... Index>
+    static constexpr framers_t make_framers(
+        std::index_sequence<Index...>) NOEXCEPT
+    {
+        return { &registry::serialize_frame<Index>... };
     }
 
     template <size_t... Index>
@@ -232,6 +250,16 @@ public:
 
         return index < size ? table.at(index)(message, magic, version) :
             system::chunk_ptr{};
+    }
+
+    static bool to_frame(size_t index, const rpc::any_t& message,
+        uint32_t magic, uint32_t version,
+        const system::data_slab& data) NOEXCEPT
+    {
+        static constexpr auto table = make_framers(
+            std::make_index_sequence<size>{});
+
+        return index < size && table.at(index)(message, magic, version, data);
     }
 
     static system::chunk_ptr to_payload(size_t index, const rpc::any_t& message,

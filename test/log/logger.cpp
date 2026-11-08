@@ -32,8 +32,8 @@ BC_AUTO_TEST_CASE(logger__enabled__unmaskable_level__false)
 {
     const logger log{};
     const logger::interest interest{ log, max_uint64 };
-    BC_REQUIRE(log.enabled(sub1(bits<uint64_t>)));
-    BC_REQUIRE(!log.enabled(bits<uint64_t>));
+    BC_REQUIRE(log.enabled(system::narrow_cast<uint8_t>(sub1(bits<uint64_t>))));
+    BC_REQUIRE(!log.enabled(system::narrow_cast<uint8_t>(bits<uint64_t>)));
 }
 
 BC_AUTO_TEST_CASE(logger__interest__construct__only_masked_levels_enabled)

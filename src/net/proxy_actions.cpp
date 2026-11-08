@@ -69,6 +69,9 @@ static size_t to_cost(http::body::value_type& body) NOEXCEPT
     if (body.contains<http::buffer_value>())
         return body.get<http::buffer_value>().size;
 
+    if (body.contains<http::stream_value>())
+        return body.get<http::stream_value>().size;
+
     if (body.contains<http::peer_value>())
         return body.get<http::peer_value>().size;
 

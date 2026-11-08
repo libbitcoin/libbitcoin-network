@@ -40,13 +40,13 @@ handler backend::to_completion(operation* op) NOEXCEPT
     {
         const std::unique_ptr<operation> owned{ op };
         auto handler = std::move(op->handler);
-        const auto ec = op->ec;
         const auto bytes = op->bytes;
-        op->executor.dispatch([handler = std::move(handler), ec,
-            bytes]() NOEXCEPT
-        {
-            handler(ec, bytes);
-        });
+        const auto ec = op->ec;
+        op->executor.dispatch(
+            [handler = std::move(handler), ec, bytes]() NOEXCEPT
+            {
+                handler(ec, bytes);
+            });
     };
 }
 

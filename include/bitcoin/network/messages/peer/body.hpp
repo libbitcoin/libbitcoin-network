@@ -23,6 +23,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/header.hpp>
 #include <bitcoin/network/messages/http/message.hpp>
+#include <bitcoin/network/messages/http/http.hpp>
 #include <bitcoin/network/messages/peer/heading.hpp>
 #include <bitcoin/network/messages/rpc/model.hpp>
 
@@ -58,8 +59,11 @@ struct BCT_API body
         size_t index{};
         size_t size{};
 
-        /// Serialized v1 frame (write out).
+        /// Serialized v1 frame (write out), unless written to buffer.
         system::chunk_cptr data{};
+
+        /// Writer serialization buffer, owned by the socket.
+        mutable http::flat_buffer* buffer{};
     };
 
     class BCT_API reader
@@ -137,6 +141,7 @@ struct BCT_API body
         value_type& value_;
 
     private:
+        const_buffers_type bytes_{};
         bool done_{};
     };
 };

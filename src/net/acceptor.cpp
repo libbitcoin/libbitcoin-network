@@ -117,8 +117,7 @@ void acceptor::stop() NOEXCEPT
 config::authority acceptor::local() const NOEXCEPT
 {
     BC_ASSERT(stranded());
-    return { stopped_ ? system::ip::endpoint{} :
-        acceptor_.local_endpoint() };
+    return { stopped_ ? system::ip::endpoint{} : acceptor_.local_endpoint() };
 }
 
 // protected

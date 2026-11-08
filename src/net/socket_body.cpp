@@ -72,7 +72,8 @@ void socket::handle_body_read(const code& ec, size_t size,
 // ----------------------------------------------------------------------------
 
 // A json body serializes through the retained buffer, which chunks the write
-// at its bound. Other bodies write from caller memory.
+// at its bound. Stream and peer bodies serialize into it whole, within its
+// bound. Other bodies write from caller memory.
 // The buffer is returned to the minimum once the write has completed.
 void socket::assign_buffer(http::body::value_type& body) NOEXCEPT
 {
@@ -87,6 +88,10 @@ void socket::assign_buffer(http::body::value_type& body) NOEXCEPT
         assign(body.get<rpc::request>());
     else if (body.contains<rpc::response>())
         assign(body.get<rpc::response>());
+    else if (body.contains<http::stream_value>())
+        body.get<http::stream_value>().buffer = &response_;
+    else if (body.contains<http::peer_value>())
+        body.get<http::peer_value>().buffer = &response_;
 }
 
 // The buffer is idle here, so its retention is reduced to the minimum.

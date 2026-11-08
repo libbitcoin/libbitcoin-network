@@ -72,11 +72,11 @@ public:
         // Nothing to transfer completes on the executor.
         if (exhausted(buffers_))
         {
-            stream_.get_executor().post([self = this->shared_from_this()]()
-                NOEXCEPT
-            {
-                self->handler_(error::success, self->total_);
-            });
+            stream_.get_executor().post(
+                [self = this->shared_from_this()]() NOEXCEPT
+                {
+                    self->handler_(error::success, self->total_);
+                });
 
             return;
         }
@@ -87,8 +87,8 @@ public:
 private:
     void next() NOEXCEPT
     {
-        auto completion = [self = this->shared_from_this()](const code& ec,
-            size_t size) NOEXCEPT
+        auto completion = [self = this->shared_from_this()](
+            const code& ec, size_t size) NOEXCEPT
         {
             self->handle(ec, size);
         };
@@ -141,9 +141,9 @@ void async_read(Stream& stream, const Buffers& buffers,
 template <typename Stream, typename Buffers>
 size_t write(Stream& stream, const Buffers& buffers, code& ec) NOEXCEPT
 {
-    auto remaining = to_buffers<const_buffer>(buffers);
     size_t total{};
     ec = error::success;
+    auto remaining = to_buffers<const_buffer>(buffers);
     while (!detail::exhausted(remaining))
     {
         const auto size = stream.write_some(remaining, ec);
@@ -160,9 +160,9 @@ size_t write(Stream& stream, const Buffers& buffers, code& ec) NOEXCEPT
 template <typename Stream, typename Buffers>
 size_t read(Stream& stream, const Buffers& buffers, code& ec) NOEXCEPT
 {
-    auto remaining = to_buffers<mutable_buffer>(buffers);
     size_t total{};
     ec = error::success;
+    auto remaining = to_buffers<mutable_buffer>(buffers);
     while (!detail::exhausted(remaining))
     {
         const auto size = stream.read_some(remaining, ec);
@@ -185,15 +185,13 @@ size_t read_until(Stream& stream, std::string& text,
     size_t searched{};
     while (true)
     {
-        const auto start = system::floored_subtract(searched,
-            delimiter.size());
+        const auto start = system::floored_subtract(searched, delimiter.size());
         const auto position = text.find(delimiter, start);
         if (position != std::string::npos)
             return position + delimiter.size();
 
         searched = text.size();
         chunk.resize(std::max(text.capacity(), delimiter.size()));
-
         const auto size = stream.read_some(buffer(chunk), ec);
         if (ec)
             return zero;

@@ -28,36 +28,26 @@ namespace messages {
 namespace peer {
 
 template <>
-system::chunk_ptr serialize<transaction>(const transaction& message,
-    uint32_t magic, uint32_t version) NOEXCEPT
+bool serialize<transaction>(const transaction& message, uint32_t magic,
+    uint32_t version, const system::data_slab& data) NOEXCEPT
 {
     using namespace system;
     const auto body_size = message.size(version);
-    const auto size = ceilinged_add(heading::size(), body_size);
-    const auto data = emplace_shared<data_chunk>(size);
-    const auto start = std::next(data->begin(), heading::size());
-    const data_slab body(start, data->end());
+    const auto start = std::next(data.begin(), heading::size());
+    const data_slab body(start, data.end());
 
     if (message.transaction_ptr->is_segregated())
-    {
-        if (!message.serialize(version, body) || !heading::factory(magic,
-            transaction::command, body).serialize(*data))
-            return {};
-    }
-    else
-    {
-        // The message heading hash must be full message hash (wtxid if witness
-        // even if not using wtxid in relay). Since wtxid is not cached, this
-        // is counterproductive (buffer hash is faster) except for non-witness
-        // writes.
-        const auto& hash = message.transaction_ptr->get_hash(false);
+        return message.serialize(version, body) && heading::factory(magic,
+            transaction::command, body).serialize(data);
 
-        if (!message.serialize(version, body) || !heading::factory(magic,
-            transaction::command, body_size, hash).serialize(*data))
-            return {};
-    }
+    // The message heading hash must be full message hash (wtxid if witness
+    // even if not using wtxid in relay). Since wtxid is not cached, this
+    // is counterproductive (buffer hash is faster) except for non-witness
+    // writes.
+    const auto& hash = message.transaction_ptr->get_hash(false);
 
-    return data;
+    return message.serialize(version, body) && heading::factory(magic,
+        transaction::command, body_size, hash).serialize(data);
 }
 
 } // namespace peer

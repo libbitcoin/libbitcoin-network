@@ -190,16 +190,50 @@ bool body::reader::done() const NOEXCEPT
 
 // peer::body::writer
 // ----------------------------------------------------------------------------
-// The writer translates the typed message to its serialized v1 frame.
+// The writer translates the typed message to its serialized v1 frame, in the
+// retained buffer when the frame fits within its bound.
 
 void body::writer::init(code& ec) NOEXCEPT
 {
     done_ = false;
-    value_.data = messages::peer::registry::to_frame(value_.index, value_.message,
+    const auto size = ceilinged_add(heading::size(), value_.size);
+    if (!is_null(value_.buffer) && size <= value_.buffer->max_size())
+    {
+        try
+        {
+            value_.buffer->clear();
+            const auto data = pointer_cast<uint8_t>(
+                value_.buffer->prepare(size).data());
+
+            if (!registry::to_frame(value_.index, value_.message,
+                value_.magic, value_.version, { data, std::next(data, size) }))
+            {
+                ec = error::to_http_code(error::http_error_t::bad_value);
+                return;
+            }
+
+            bytes_ = { data, size };
+            ec = error::success;
+        }
+        catch (...)
+        {
+            ec = error::to_http_code(error::http_error_t::bad_alloc);
+        }
+
+        return;
+    }
+
+    value_.data = registry::to_frame(value_.index, value_.message,
         value_.magic, value_.version);
 
-    ec = value_.data ? code{ error::success } :
-        error::to_http_code(error::http_error_t::bad_value);
+    if (!value_.data)
+    {
+        ec = error::to_http_code(error::http_error_t::bad_value);
+        return;
+    }
+
+    bytes_ = { value_.data->data(), value_.data->size() };
+    ec = error::success;
 }
 
 body::writer::out_buffer body::writer::get(code& ec) NOEXCEPT
@@ -210,8 +244,7 @@ body::writer::out_buffer body::writer::get(code& ec) NOEXCEPT
         return {};
 
     done_ = true;
-    return out_buffer{ std::make_pair(const_buffers_type
-        { value_.data->data(), value_.data->size() }, false) };
+    return out_buffer{ std::make_pair(bytes_, false) };
 }
 
 bool body::writer::done() const NOEXCEPT

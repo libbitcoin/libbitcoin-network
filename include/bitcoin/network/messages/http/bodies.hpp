@@ -23,6 +23,7 @@
 #include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/file.hpp>
+#include <bitcoin/network/messages/http/flat_buffer.hpp>
 #include <bitcoin/network/messages/http/header.hpp>
 #include <bitcoin/network/messages/http/message.hpp>
 
@@ -375,6 +376,88 @@ struct buffer_body
     private:
         value_type& value_;
         bool toggle_{};
+    };
+};
+
+/// A body serialized by the caller into the retained writer buffer (written
+/// in one buffer), or into owned memory when larger than the buffer limit.
+struct stream_body
+{
+    struct value_type
+    {
+        /// Serializes exactly size bytes into the provided memory.
+        std::function<bool(const system::data_slab&)> write{};
+
+        /// The serialized size.
+        size_t size{};
+
+        /// Writer serialization buffer, owned by the socket.
+        mutable flat_buffer* buffer{};
+    };
+
+    struct writer
+    {
+        using const_buffers_type = io::const_buffer;
+        using out_buffer = get_buffer<const_buffers_type>;
+
+        template <bool IsRequest>
+        writer(header<IsRequest>&, value_type& value) NOEXCEPT
+          : value_(value)
+        {
+        }
+
+        void init(code& ec) NOEXCEPT
+        {
+            using namespace system;
+            using namespace network::error;
+            if (!value_.write)
+            {
+                ec = to_http_code(http_error_t::unexpected_body);
+                return;
+            }
+
+            try
+            {
+                uint8_t* data{};
+                const auto size = value_.size;
+                if (!is_null(value_.buffer) &&
+                    size <= value_.buffer->max_size())
+                {
+                    value_.buffer->clear();
+                    data = pointer_cast<uint8_t>(
+                        value_.buffer->prepare(size).data());
+                }
+                else
+                {
+                    owned_ = std::make_unique_for_overwrite<uint8_t[]>(size);
+                    data = owned_.get();
+                }
+
+                if (!value_.write({ data, std::next(data, size) }))
+                {
+                    ec = to_http_code(http_error_t::unexpected_body);
+                    return;
+                }
+
+                bytes_ = { data, size };
+                ec.clear();
+            }
+            catch (...)
+            {
+                ec = to_http_code(http_error_t::bad_alloc);
+            }
+        }
+
+        out_buffer get(code& ec) NOEXCEPT
+        {
+            ec.clear();
+            return out_buffer{ std::make_pair(bytes_, false) };
+        }
+
+    private:
+        value_type& value_;
+        std::unique_ptr<uint8_t[]> owned_{};
+        const_buffers_type bytes_{};
     };
 };
 
