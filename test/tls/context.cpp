@@ -45,6 +45,31 @@ const std::string chain384
     "-----END CERTIFICATE-----\n"
 };
 
+// An RSA certificate signed sha256WithRSAEncryption (openssl).
+const std::string rsa_certificate
+{
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIB+DCCAWGgAwIBAgIUGEtUwKm5cw6/L2Mu5zX3kJDM2NswDQYJKoZIhvcNAQEL\n"
+    "BQAwDjEMMAoGA1UEAwwDcnNhMB4XDTI2MTEwODIwNTk0OFoXDTM2MTEwNTIwNTk0\n"
+    "OFowDjEMMAoGA1UEAwwDcnNhMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDQ\n"
+    "K3+c7v4YFdHLr1TVAn64I+udck1ywexWhwwC02mmxJzzd+783qE+ApPjutwMPPSN\n"
+    "74HF9+OgklEduv0oQCYCZm7nrEheIcZU70KZiHrAX2/sPEzGQTvQhOe5Y/7BDnbM\n"
+    "Mbb7kLw2ksL4aZegdweuEPcokFmeqlOsIRxeLHUnUwIDAQABo1MwUTAdBgNVHQ4E\n"
+    "FgQUqHLT7YsNVZrcaGbiIkjSzJd3JC8wHwYDVR0jBBgwFoAUqHLT7YsNVZrcaGbi\n"
+    "IkjSzJd3JC8wDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOBgQBzFvPu\n"
+    "X6EplpbNGenBEKnr3Qa+14GmMej+AXtQEOwlAb4rc1Ko4hvAXictrZhXh0uTgia+\n"
+    "R0PPlwIogjfcNlJu2ZWd2VB04g/vz/XfloS3S1uW6u177Ot0DCLVOd4fyvU+CNaa\n"
+    "1/I4KSzSmWAy+3t3e6TDfNze8rZfMgXalZQeWQ==\n"
+    "-----END CERTIFICATE-----\n"
+};
+
+const std::string malformed_certificate
+{
+    "-----BEGIN CERTIFICATE-----\n"
+    "MAAA\n"
+    "-----END CERTIFICATE-----\n"
+};
+
 static std::string certificate_of(const x509::secret& key)
 {
     x509::subject subject{};
@@ -136,6 +161,36 @@ BC_AUTO_TEST_CASE(tls_context__set_key__secp256r1_for_secp384r1_chain__false_unc
     BC_REQUIRE(context.set_chain(chain384));
     BC_REQUIRE(!context.set_key(x509::encode_private_key(key1), {}));
     BC_REQUIRE(!context.is_ready());
+}
+
+BC_AUTO_TEST_CASE(tls_context__set_chain__rsa_trailing__passed_through)
+{
+    x509::pems leaf{};
+    x509::pems trailing{};
+    const auto chain = certificate_of(key1) + rsa_certificate;
+    BC_REQUIRE(x509::decode_pem(leaf, chain));
+    BC_REQUIRE(x509::decode_pem(trailing, rsa_certificate));
+    tls::context context{};
+    BC_REQUIRE(context.set_chain(chain));
+    BC_REQUIRE(context.set_key(x509::encode_private_key(key1), {}));
+    BC_REQUIRE(context.is_ready());
+    BC_REQUIRE_EQUAL(context.certificates().size(), 2u);
+    BC_REQUIRE_EQUAL(context.certificates().front(), leaf.front().data);
+    BC_REQUIRE_EQUAL(context.certificates().back(), trailing.front().data);
+}
+
+BC_AUTO_TEST_CASE(tls_context__set_chain__rsa_leaf__false)
+{
+    tls::context context{};
+    BC_REQUIRE(!context.set_chain(rsa_certificate + certificate_of(key1)));
+    BC_REQUIRE(context.certificates().empty());
+}
+
+BC_AUTO_TEST_CASE(tls_context__set_chain__malformed_trailing__false)
+{
+    tls::context context{};
+    BC_REQUIRE(!context.set_chain(certificate_of(key1) + malformed_certificate));
+    BC_REQUIRE(context.certificates().empty());
 }
 
 BC_AUTO_TEST_CASE(tls_context__add_anchors__two__accumulated)
