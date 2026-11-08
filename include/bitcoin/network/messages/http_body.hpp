@@ -87,6 +87,7 @@ using stream_value = http::stream_body::value_type;
 using string_value = http::string_body::value_type;
 using json_value = http::json_body::value_type;
 using peer_value = messages::peer::body::value_type;
+using stream_indirect = indirect<stream_value>;
 using rpc_request = indirect<rpc::request>;
 using rpc_response = indirect<rpc::response>;
 using body_value = std::variant
@@ -96,7 +97,7 @@ using body_value = std::variant
     file_value,     //  16 bytes
     span_value,     //  16 bytes
     buffer_value,   //  24 bytes
-    stream_value,   //  80 bytes
+    stream_indirect, //  8 bytes (80 indirect)
     string_value,   //  32 bytes
     json_value,     //  56 bytes
     peer_value,     // 256 bytes
@@ -131,12 +132,17 @@ struct BCT_API body
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, file_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, span_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, buffer_value, inner_)
-        FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, stream_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, string_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, json_value, inner_)
         FORWARD_ALTERNATIVE_VARIANT_ASSIGNMENT(value_type, peer_value, inner_)
 
-        /// The rpc kinds derive from json_value, so are emplaced explicitly.
+        /// The indirect kinds are emplaced explicitly.
+        inline value_type& operator=(stream_value&& value) NOEXCEPT
+        {
+            inner_.emplace(std::in_place_type<stream_indirect>, std::move(value));
+            return *this;
+        }
+
         inline value_type& operator=(rpc::request&& value) NOEXCEPT
         {
             inner_.emplace(std::in_place_type<rpc_request>, std::move(value));
@@ -193,6 +199,7 @@ struct BCT_API body
     private:
         template <typename Inner>
         static constexpr bool is_indirect =
+            std::is_same_v<Inner, stream_value> ||
             std::is_same_v<Inner, rpc::request> ||
             std::is_same_v<Inner, rpc::response>;
 
@@ -266,7 +273,7 @@ struct BCT_API body
                 [&](std::monostate&) NOEXCEPT {},
                 [&](span_value&) NOEXCEPT {},
                 [&](buffer_value&) NOEXCEPT {},
-                [&](stream_value&) NOEXCEPT {},
+                [&](stream_indirect&) NOEXCEPT {},
                 [&](rpc_response&) NOEXCEPT {},
 
                 [&](empty_value& value) NOEXCEPT
@@ -377,9 +384,9 @@ struct BCT_API body
                 {
                     return body_writer{ buffer_writer{ header, value } };
                 },
-                [&](stream_value& value) NOEXCEPT
+                [&](stream_indirect& value) NOEXCEPT
                 {
-                    return body_writer{ stream_writer{ header, value } };
+                    return body_writer{ stream_writer{ header, *value } };
                 },
                 [&](string_value& value) NOEXCEPT
                 {

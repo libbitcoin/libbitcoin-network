@@ -20,15 +20,6 @@
 
 BC_AUTO_TEST_SUITE(indirect_tests)
 
-template <typename>
-struct largest;
-
-template <typename... Types>
-struct largest<std::variant<Types...>>
-{
-    static constexpr size_t value = std::max({ sizeof(Types)... });
-};
-
 BC_AUTO_TEST_CASE(indirect__construct__value__expected)
 {
     const indirect<std::string> instance{ std::string{ "value" } };
@@ -65,7 +56,16 @@ BC_AUTO_TEST_CASE(indirect__move__same_storage)
 
 BC_AUTO_TEST_CASE(indirect__body_value__largest_inline_kind)
 {
-    BC_REQUIRE_EQUAL(largest<http::body_value>::value, sizeof(http::peer_value));
+    BC_REQUIRE_EQUAL(sizeof(http::body_value), sizeof(std::variant<http::peer_value>));
+}
+
+BC_AUTO_TEST_CASE(indirect__body__stream_value__contained)
+{
+    http::body::value_type body{};
+    body = http::stream_value{ .size = 42 };
+    BC_REQUIRE(body.contains<http::stream_value>());
+    BC_REQUIRE(!body.contains<http::peer_value>());
+    BC_REQUIRE_EQUAL(body.get<http::stream_value>().size, 42u);
 }
 
 BC_AUTO_TEST_CASE(indirect__body__rpc_request__contained)
