@@ -423,6 +423,53 @@ BC_AUTO_TEST_CASE(peer_body__writer__frame__emitted)
     BC_REQUIRE_EQUAL(out->first.size(), value.data->size());
 }
 
+BC_AUTO_TEST_CASE(peer_body__writer__buffer__frame_emitted_from_buffer)
+{
+    http::flat_buffer buffer{ 64 * 1024 };
+    auto value = test_frame();
+    value.message = rpc::any_t{ system::to_shared(ping{ nonce }) };
+    value.index = messages::peer::registry::index_of<ping>();
+    value.size = ping{ nonce }.size(value.version);
+    value.buffer = &buffer;
+
+    code ec{};
+    body::writer writer{ value };
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!value.data);
+
+    const auto out = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(out.has_value());
+    BC_REQUIRE(!out->second);
+    BC_REQUIRE_EQUAL(out->first.data(), buffer.cdata().data());
+    const auto bytes = system::pointer_cast<const uint8_t>(out->first.data());
+    BC_REQUIRE_EQUAL(data_chunk(bytes, std::next(bytes, out->first.size())), ping_frame());
+}
+
+BC_AUTO_TEST_CASE(peer_body__writer__buffer_over_limit__frame_emitted_from_data)
+{
+    http::flat_buffer buffer{ heading::size() };
+    auto value = test_frame();
+    value.message = rpc::any_t{ system::to_shared(ping{ nonce }) };
+    value.index = messages::peer::registry::index_of<ping>();
+    value.size = ping{ nonce }.size(value.version);
+    value.buffer = &buffer;
+
+    code ec{};
+    body::writer writer{ value };
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(value.data);
+    BC_REQUIRE_EQUAL(*value.data, ping_frame());
+    BC_REQUIRE(is_zero(buffer.capacity()));
+
+    const auto out = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(out.has_value());
+    BC_REQUIRE_EQUAL(out->first.data(), value.data->data());
+}
+
 BC_AUTO_TEST_CASE(peer_body__writer__get_twice__empty)
 {
     auto value = test_frame();

@@ -72,7 +72,7 @@ using body_writer = std::variant
     buffer_writer,  //    16 bytes
     stream_writer,  //    32 bytes
     string_writer,  //     8 bytes
-    peer_writer,    //    16 bytes
+    peer_writer,    //    32 bytes
     json_writer,    //   136 bytes!
     rpc::writer,    //   144 bytes!
     rpc::notifier   //   144 bytes!
@@ -99,7 +99,7 @@ using body_value = std::variant
     stream_value,   //  80 bytes
     string_value,   //  32 bytes
     json_value,     //  56 bytes
-    peer_value,     // 248 bytes
+    peer_value,     // 256 bytes
     rpc_request,    //   8 bytes (240 indirect)
     rpc_response    //   8 bytes (328 indirect)
 >;

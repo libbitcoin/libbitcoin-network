@@ -71,6 +71,15 @@ BC_AUTO_TEST_CASE(message__serialize__genesis_tx_frame__txid_checksum)
     BC_REQUIRE_EQUAL(*data, splice(base16_chunk("f9beb4d9747800000000000000000000cc0000003ba3edfd"), genesis_tx));
 }
 
+BC_AUTO_TEST_CASE(message__serialize__genesis_tx_frame_into_data__txid_checksum)
+{
+    const auto message = transaction::deserialize(level::minimum_protocol, genesis_tx, true);
+    BC_REQUIRE(message);
+    data_chunk data(heading::size() + message->size(level::minimum_protocol));
+    BC_REQUIRE(messages::peer::serialize(*message, mainnet_magic, level::minimum_protocol, data));
+    BC_REQUIRE_EQUAL(data, splice(base16_chunk("f9beb4d9747800000000000000000000cc0000003ba3edfd"), genesis_tx));
+}
+
 BC_AUTO_TEST_CASE(message__serialize__witness_coinbase_840000_frame__wtxid_checksum)
 {
     const auto message = transaction::deserialize(level::minimum_protocol, coinbase_840000, true);
@@ -140,6 +149,21 @@ BC_AUTO_TEST_CASE(message__registry_to_frame__unknown_index__nullptr)
 {
     const rpc::any_t message{ to_shared(version_acknowledge{}) };
     BC_REQUIRE(!registry::to_frame(registry::unknown, message, mainnet_magic, level::minimum_protocol));
+}
+
+BC_AUTO_TEST_CASE(message__registry_to_frame_into_data__verack__expected)
+{
+    const rpc::any_t message{ to_shared(version_acknowledge{}) };
+    data_chunk data(heading::size());
+    BC_REQUIRE(registry::to_frame(registry::index_of<messages::peer::version_acknowledge>(), message, mainnet_magic, level::minimum_protocol, data));
+    BC_REQUIRE_EQUAL(data, verack_frame);
+}
+
+BC_AUTO_TEST_CASE(message__registry_to_frame_into_data__unknown_index__false)
+{
+    const rpc::any_t message{ to_shared(version_acknowledge{}) };
+    data_chunk data(heading::size());
+    BC_REQUIRE(!registry::to_frame(registry::unknown, message, mainnet_magic, level::minimum_protocol, data));
 }
 
 BC_AUTO_TEST_CASE(message__registry_to_any__ping__expected)

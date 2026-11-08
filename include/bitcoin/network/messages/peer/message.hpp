@@ -56,6 +56,26 @@ inline system::chunk_ptr serialize(const Message& message,
     return message.serialize(version, body) ? data : chunk_ptr{};
 }
 
+/// Serialize message object to the wire protocol encoding, into data sized to
+/// the heading and payload.
+/// Returns false if serialization fails for any reason (unexpected).
+template <typename Message>
+inline bool serialize(const Message& message, uint32_t magic,
+    uint32_t version, const system::data_slab& data) NOEXCEPT
+{
+    using namespace system;
+    const auto start = std::next(data.begin(), heading::size());
+    const data_slab body(start, data.end());
+    return message.serialize(version, body) &&
+        heading::factory(magic, Message::command, body).serialize(data);
+}
+
+// Specialize for tx to eliminate hash computation on non-witness writes.
+// Transaction is the only message that can reuse identity hash for heading.
+template <>
+BCT_API bool serialize<transaction>(const transaction& message,
+    uint32_t magic, uint32_t version, const system::data_slab& data) NOEXCEPT;
+
 /// Serialize message object to the wire protocol encoding.
 /// Returns nullptr if serialization fails for any reason (unexpected).
 template <typename Message>
@@ -65,20 +85,8 @@ inline system::chunk_ptr serialize(const Message& message, uint32_t magic,
     using namespace system;
     const auto size = ceilinged_add(heading::size(), message.size(version));
     const auto data = emplace_shared<data_chunk>(size);
-    const auto start = std::next(data->begin(), heading::size());
-    const data_slab body(start, data->end());
-    if (!message.serialize(version, body) ||
-        !heading::factory(magic, Message::command, body).serialize(*data))
-        return {};
-
-    return data;
+    return serialize(message, magic, version, *data) ? data : chunk_ptr{};
 }
-
-// Specialize for tx to eliminate hash computation on non-witness writes.
-// Transaction is the only message that can reuse identity hash for heading.
-template <>
-BCT_API system::chunk_ptr serialize<transaction>(const transaction& message,
-    uint32_t magic, uint32_t version) NOEXCEPT;
 
 } // namespace peer
 } // namespace messages
