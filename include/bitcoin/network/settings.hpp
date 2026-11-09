@@ -350,6 +350,12 @@ struct BCT_API settings
                     seeds.emplace_back("seed.testnet4.wiz.biz", 48333_u16);
                     break;
                 }
+                case system::chain::selection::testnet5:
+                {
+                    connections = 50;
+                    connect_batch_size = 10;
+                    break;
+                }
                 case system::chain::selection::signet:
                 {
                     seeds.reserve(2);
@@ -404,6 +410,11 @@ struct BCT_API settings
                 case system::chain::selection::testnet4:
                 {
                     binds.emplace_back(system::ip::address{}, 48333_u16);
+                    break;
+                }
+                case system::chain::selection::testnet5:
+                {
+                    binds.emplace_back(system::ip::address{}, 18353_u16);
                     break;
                 }
                 case system::chain::selection::regtest:
