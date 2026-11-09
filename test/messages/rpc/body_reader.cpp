@@ -926,7 +926,7 @@ BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_without_id__jsonrpc_v1_requires_id
     BC_REQUIRE(ec == error::jsonrpc_v1_requires_id);
 }
 
-BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_object_params__jsonrpc_v1_requires_array_params)
+BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_object_params__lax_named)
 {
     const std::string_view text{ R"({"jsonrpc":"1.0","id":"curltest","method":"getblockhash","params":{"height":0}})" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -941,7 +941,9 @@ BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_object_params__jsonrpc_v1_requires
     BC_REQUIRE(!ec);
 
     reader.finish(ec);
-    BC_REQUIRE(ec == error::jsonrpc_v1_requires_array_params);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(body.lax_named);
+    BC_REQUIRE(!body.lax_params);
     BC_REQUIRE(body.message.params.has_value());
     BC_REQUIRE(std::holds_alternative<object_t>(body.message.params.value()));
     BC_REQUIRE_EQUAL(std::get<object_t>(body.message.params.value()).size(), one);

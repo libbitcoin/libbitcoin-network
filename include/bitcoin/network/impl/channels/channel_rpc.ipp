@@ -121,10 +121,17 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
     BC_ASSERT(stranded());
 
     // Electrum laxness (single value params) is allowed, btcd laxness
-    // (batched v1) is not (the rpc channel is jrpc over tcp).
+    // (batched v1) and bitcoind laxness (v1 named params) are not (the rpc
+    // channel is jrpc over tcp).
     if (request->lax_batch)
     {
         stop(error::jsonrpc_batch_requires_v2);
+        return;
+    }
+
+    if (request->lax_named)
+    {
+        stop(error::jsonrpc_v1_requires_array_params);
         return;
     }
 

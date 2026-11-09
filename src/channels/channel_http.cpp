@@ -220,6 +220,12 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
             return;
         }
 
+        if (body.lax_named && !lax_named())
+        {
+            stop(error::jsonrpc_v1_requires_array_params);
+            return;
+        }
+
         if (body.lax_batch)
         {
             stop(error::jsonrpc_batch_requires_v2);
@@ -280,6 +286,11 @@ body::value_type channel_http::default_body() const NOEXCEPT
 }
 
 bool channel_http::lax_params() const NOEXCEPT
+{
+    return false;
+}
+
+bool channel_http::lax_named() const NOEXCEPT
 {
     return false;
 }

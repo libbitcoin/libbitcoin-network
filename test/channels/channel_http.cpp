@@ -1023,6 +1023,13 @@ BC_FIXTURE_TEST_CASE(channel_http__resume__lax_params__jsonrpc_params_not_collec
     BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_params_not_collection);
 }
 
+BC_FIXTURE_TEST_CASE(channel_http__resume__lax_named__jsonrpc_v1_requires_array_params, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"({"jsonrpc":"1.0","id":1,"method":"echo","params":{"value":1}})"));
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_v1_requires_array_params);
+}
+
 BC_FIXTURE_TEST_CASE(channel_http__stop__reading__stopped_with_code, http_channel_fixture)
 {
     start(http_ok);

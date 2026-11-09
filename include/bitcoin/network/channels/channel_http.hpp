@@ -111,6 +111,9 @@ protected:
     /// Override to tolerate json-rpc single value params (electrum laxness).
     virtual bool lax_params() const NOEXCEPT;
 
+    /// Override to tolerate json-rpc v1 named params (bitcoind laxness).
+    virtual bool lax_named() const NOEXCEPT;
+
     /// Latch authorization from request headers (requires strand).
     virtual void set_authorized(const http::request& request) NOEXCEPT;
 
