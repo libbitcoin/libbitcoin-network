@@ -27,6 +27,15 @@ namespace tls {
 
 using namespace system;
 
+constexpr std::string_view certificate_label{ "CERTIFICATE" };
+
+static bool is_framed(const data_chunk& der) NOEXCEPT
+{
+    x509::der::reader source{ der };
+    source.read_encoding(x509::der::sequence_tag);
+    return source.is_complete();
+}
+
 context::context() NOEXCEPT
 {
 }
@@ -39,14 +48,26 @@ context::~context() NOEXCEPT
 
 bool context::set_chain(const std::string& text) NOEXCEPT
 {
-    x509::certificates certificates{};
-    if (!x509::parse(certificates, text))
+    x509::pems blocks{};
+    if (!x509::decode_pem(blocks, text))
         return false;
 
-    const auto& leaf = certificates.front();
     chain value{};
-    for (const auto& certificate: certificates)
-        value.push_back(certificate.encoding);
+    x509::certificate leaf{};
+    for (const auto& block: blocks)
+    {
+        if (block.label != certificate_label)
+            continue;
+
+        if (value.empty() ? !x509::parse(leaf, block.data) :
+            !is_framed(block.data))
+            return false;
+
+        value.push_back(block.data);
+    }
+
+    if (value.empty())
+        return false;
 
     chain_ = std::move(value);
     public_key_ = leaf.public_key;

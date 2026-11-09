@@ -38,7 +38,8 @@ public:
     ~context() NOEXCEPT;
 
     /// Set the certificate chain (leaf first) from "CERTIFICATE" blocks, of a
-    /// P-256 or P-384 leaf. False if malformed or the key does not match.
+    /// P-256 or P-384 leaf, with later certificates passed through unparsed.
+    /// False if malformed or the key does not match.
     bool set_chain(const std::string& text) NOEXCEPT;
 
     /// Set the P-256 or P-384 private key from a key block (encrypted if
