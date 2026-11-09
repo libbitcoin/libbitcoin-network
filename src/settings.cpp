@@ -479,6 +479,7 @@ static uint32_t identifier_from_context(chain::selection context) NOEXCEPT
         case chain::selection::testnet4: return 675223068;
         case chain::selection::regtest:  return 3669344250;
         case chain::selection::signet:   return 1087308554;
+        case chain::selection::testnet5: return 1163282758;
         default: return 0;
     }
 }
