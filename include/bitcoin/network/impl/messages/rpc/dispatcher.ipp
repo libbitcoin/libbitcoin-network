@@ -52,7 +52,7 @@ inline external_t<Argument> CLASS::get_nullified() THROWS
     if constexpr (is_nullopt<Argument>)
         return Argument::default_value();
     else if constexpr (!is_nullable<Argument>)
-        throw std::system_error{ error::missing_parameter };
+        throw std::system_error{ error::unexpected_null };
     else
         return external_t<Argument>{};
 }

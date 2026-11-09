@@ -306,6 +306,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { undefined_type, "undefined type" },
     { unexpected_method, "unexpected method" },
     { unexpected_type, "unexpected type" },
+    { unexpected_null, "unexpected null" },
     { extra_positional, "extra positional" },
     { extra_named, "extra named" },
     { missing_array, "missing array" },

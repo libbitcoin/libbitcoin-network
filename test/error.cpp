@@ -2194,6 +2194,15 @@ BC_AUTO_TEST_CASE(error_t__code__unexpected_type__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "unexpected type");
 }
 
+BC_AUTO_TEST_CASE(error_t__code__unexpected_null__true_expected_message)
+{
+    constexpr auto value = error::unexpected_null;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "unexpected null");
+}
+
 BC_AUTO_TEST_CASE(error_t__code__extra_positional__true_expected_message)
 {
     constexpr auto value = error::extra_positional;

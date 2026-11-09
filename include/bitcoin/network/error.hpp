@@ -313,6 +313,7 @@ enum error_t : uint8_t
     undefined_type,
     unexpected_method,
     unexpected_type,
+    unexpected_null,
     extra_positional,
     extra_named,
     missing_array,
