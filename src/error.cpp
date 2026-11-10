@@ -518,6 +518,17 @@ code rpc_to_error_code(const code& ec) NOEXCEPT
     return http_to_error_code(ec);
 }
 
+bool is_parameter_fault(const code& ec) NOEXCEPT
+{
+    return ec == error::unexpected_type
+        || ec == error::unexpected_null
+        || ec == error::extra_positional
+        || ec == error::extra_named
+        || ec == error::missing_array
+        || ec == error::missing_object
+        || ec == error::missing_parameter;
+}
+
 BC_POP_WARNING()
 
 } // namespace error

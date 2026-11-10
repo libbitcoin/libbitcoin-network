@@ -413,6 +413,9 @@ BCT_API code json_to_error_code(const code& ec) NOEXCEPT;
 /// 1:1 mapping of wrapped json-rpc codes back to network (includes http).
 BCT_API code rpc_to_error_code(const code& ec) NOEXCEPT;
 
+/// True if the code is a failure to bind request parameters to a method.
+BCT_API bool is_parameter_fault(const code& ec) NOEXCEPT;
+
 } // namespace error
 } // namespace network
 } // namespace libbitcoin
