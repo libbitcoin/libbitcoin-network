@@ -461,8 +461,7 @@ BC_AUTO_TEST_CASE(io_socket__half_closed__peer_reset__true)
     BC_REQUIRE(connection.ok);
 
     const struct linger reset{ 1, 0 };
-    BC_REQUIRE(is_zero(::setsockopt(connection.connected.native_handle(),
-        SOL_SOCKET, SO_LINGER, &reset, sizeof(reset))));
+    BC_REQUIRE(is_zero(::setsockopt(connection.connected.native_handle(), SOL_SOCKET, SO_LINGER, &reset, sizeof(reset))));
 
     code ec{};
     connection.connected.close(ec);
