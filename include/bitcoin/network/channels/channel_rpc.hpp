@@ -101,6 +101,10 @@ protected:
         const rpc::request_cptr& request) NOEXCEPT;
 
 private:
+    inline void reject(const code& ec, const rpc::request& request) NOEXCEPT;
+    inline void refuse(rpc::code_t value, const code& ec) NOEXCEPT;
+    inline void handle_rejected(const code& ec, const code& reason) NOEXCEPT;
+
     // These are protected by strand.
     rpc::version version_;
     rpc::id_option identity_;

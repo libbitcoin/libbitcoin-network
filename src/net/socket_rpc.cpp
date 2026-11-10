@@ -73,12 +73,8 @@ void socket::handle_rpc_read(const code& ec, size_t bytes,
     const ref<rpc::request>& out, const http::request_ptr& in,
     const count_handler& handler) NOEXCEPT
 {
-    if (!ec)
-    {
-        // Move rpc::request from http body value to caller out param.
-        out.get() = std::move(in->body().get<rpc::request>());
-    }
-
+    // Move rpc::request from http body value to caller out param.
+    out.get() = std::move(in->body().get<rpc::request>());
     handler(ec, bytes);
 }
 

@@ -98,6 +98,10 @@ public:
     /// Latch authorization from credential digest (requires strand).
     virtual void set_authorized(const system::hash_digest& digest) NOEXCEPT;
 
+    /// The http status of an unbatched json-rpc response.
+    virtual http::status to_rpc_status(
+        const rpc::response_t& model) const NOEXCEPT;
+
 protected:
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
@@ -129,6 +133,7 @@ protected:
 private:
     bool registered(const std::string_view& name) const NOEXCEPT;
     http::request_ptr create_request() const NOEXCEPT;
+    void reject(const code& ec, const http::request& request) NOEXCEPT;
     void handle_rejected(const code& ec, const code& reason) NOEXCEPT;
     std::string log_message(const http::response& response) const NOEXCEPT;
     std::string log_message(const http::request& request,

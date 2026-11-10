@@ -153,6 +153,14 @@ struct result_t
 };
 using error_option = std::optional<result_t>;
 
+/// Error codes reserved by json-rpc.
+namespace reserved {
+constexpr code_t parse_error{ -32700 };
+constexpr code_t invalid_request{ -32600 };
+constexpr code_t method_not_found{ -32601 };
+constexpr code_t invalid_params{ -32602 };
+} // namespace reserved
+
 // linux and macos define id_t in the global namespace.
 // typedef __darwin_id_t id_t;
 // typedef __id_t id_t;

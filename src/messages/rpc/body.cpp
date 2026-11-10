@@ -45,6 +45,22 @@ constexpr bool is_electrum_terminator(char character) NOEXCEPT
     return character == '\n';
 }
 
+// The id of a request that fails conversion, where it is itself convertible.
+static id_option to_identity(const system::json::value& model) NOEXCEPT
+{
+    try
+    {
+        if (model.is_object())
+            if (const auto id = model.as_object().if_contains("id"))
+                return value_to<identity_t>(*id);
+    }
+    catch (...)
+    {
+    }
+
+    return {};
+}
+
 // Convert the parsed model to a request message and validate. Tolerated
 // jrpc violations are reported as lax flags (the channel validates policy).
 static void to_request(rpc::request& value, code& ec) NOEXCEPT
@@ -61,11 +77,13 @@ static void to_request(rpc::request& value, code& ec) NOEXCEPT
     catch (const system::json::exception& e)
     {
         // Primary exception type for conversion operations.
+        value.message.id = to_identity(value.model);
         ec = e.code();
         return;
     }
     catch (...)
     {
+        value.message.id = to_identity(value.model);
         ec = code{ error::jsonrpc_reader_exception };
         return;
     }
