@@ -539,7 +539,7 @@ steady_clock::duration settings::maximum_skew() const NOEXCEPT
 std::filesystem::path settings::file() const NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return path / "hosts.cache";
+    return path / "peers.cache";
     BC_POP_WARNING()
 }
 
