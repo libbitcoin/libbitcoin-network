@@ -46,10 +46,18 @@ static size_t to_estimate(Message& message) NOEXCEPT
     return message.size_hint;
 }
 
+static size_t to_estimate(http::json_value& value) NOEXCEPT
+{
+    if (is_zero(value.size_hint))
+        value.size_hint = rpc::to_size(value.model);
+
+    return value.size_hint;
+}
+
 static size_t to_cost(http::body::value_type& body) NOEXCEPT
 {
     if (body.contains<http::json_value>())
-        return body.get<http::json_value>().size_hint;
+        return to_estimate(body.get<http::json_value>());
 
     if (body.contains<rpc::request>())
         return to_estimate(body.get<rpc::request>());
