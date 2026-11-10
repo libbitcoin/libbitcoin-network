@@ -448,9 +448,11 @@ BC_FIXTURE_TEST_CASE(channel_rpc__send_notification__request__notification_sent,
     BC_REQUIRE(!object.contains("id"));
 }
 
-static void echo_result(const echo_channel::ptr& self, const std::string& text) NOEXCEPT
+static void echo_result(const echo_channel::ptr& self,
+    const std::string& text) NOEXCEPT
 {
-    self->send_result(rpc::value_t{ rpc::string_t{ text } }, [](const code&) NOEXCEPT {});
+    self->send_result(rpc::value_t{ rpc::string_t{ text } },
+        [](const code&) NOEXCEPT {});
 }
 
 BC_FIXTURE_TEST_CASE(channel_rpc__receive__unknown_method__method_not_found_and_continues, rpc_channel_fixture)

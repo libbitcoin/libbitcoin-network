@@ -887,9 +887,11 @@ static const credentialed_options credentialed{};
 static const network::settings http_settings{ test::network_settings() };
 static const std::string rfc7617_authorization{ "Basic dGVzdDoxMjPCow==" };
 
-using http_responder = std::function<void(const channel_http::ptr&, const http::request&)>;
+using http_responder = std::function<void(const channel_http::ptr&,
+    const http::request&)>;
 
-static void http_ok(const channel_http::ptr& self, const http::request& request) NOEXCEPT
+static void http_ok(const channel_http::ptr& self,
+    const http::request& request) NOEXCEPT
 {
     response out{ status::ok, request.version() };
     out.content_length(zero);
@@ -918,7 +920,8 @@ struct rpc_body_channel
         return value;
     }
 
-    http::status to_rpc_status(const rpc::response_t& model) const NOEXCEPT override
+    http::status to_rpc_status(
+        const rpc::response_t& model) const NOEXCEPT override
     {
         return model.error.has_value() ? status::bad_request : status::ok;
     }
@@ -927,14 +930,17 @@ struct rpc_body_channel
 struct http_channel_fixture
   : http_loopback_fixture
 {
-    http_channel_fixture(const channel_http::options_t& options_=options) NOEXCEPT
+    http_channel_fixture(
+        const channel_http::options_t& options_=options) NOEXCEPT
       : http_channel_fixture(std::in_place_type<channel_http>, options_)
     {
     }
 
     template <class Channel>
-    http_channel_fixture(std::in_place_type_t<Channel>, const channel_http::options_t& options_=options) NOEXCEPT
-      : channel(std::make_shared<Channel>(log, server, 42, http_settings, options_))
+    http_channel_fixture(std::in_place_type_t<Channel>,
+        const channel_http::options_t& options_=options) NOEXCEPT
+      : channel(std::make_shared<Channel>(log, server, 42, http_settings,
+            options_))
     {
         const auto promise = stopped;
         channel->subscribe_stop([=](const code& ec) NOEXCEPT
@@ -954,27 +960,32 @@ struct http_channel_fixture
         const auto started = http_make_promise();
         io::post(channel->strand(), [=]() NOEXCEPT
         {
-            self->subscribe<method::get>([=](const code& ec, const method::get::cptr& request) NOEXCEPT
+            self->subscribe<method::get>([=](const code& ec,
+                const method::get::cptr& request) NOEXCEPT
             {
                 if (!ec) respond(self, *request);
             });
 
-            self->subscribe<method::post>([=](const code& ec, const method::post::cptr& request) NOEXCEPT
+            self->subscribe<method::post>([=](const code& ec,
+                const method::post::cptr& request) NOEXCEPT
             {
                 if (!ec) respond(self, *request);
             });
 
-            self->subscribe<method::unknown>([=](const code& ec, const method::unknown::cptr& request) NOEXCEPT
+            self->subscribe<method::unknown>([=](const code& ec,
+                const method::unknown::cptr& request) NOEXCEPT
             {
                 if (!ec) respond(self, *request);
             });
 
-            self->subscribe<method::websocket>([=](const code& ec, const method::websocket::cptr& request) NOEXCEPT
+            self->subscribe<method::websocket>([=](const code& ec,
+                const method::websocket::cptr& request) NOEXCEPT
             {
                 if (!ec) respond(self, *request);
             });
 
-            self->subscribe<method::stream>([=](const code& ec, const method::stream::cptr& request) NOEXCEPT
+            self->subscribe<method::stream>([=](const code& ec,
+                const method::stream::cptr& request) NOEXCEPT
             {
                 if (!ec) respond(self, *request);
             });
