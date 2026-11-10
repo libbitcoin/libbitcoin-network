@@ -1095,6 +1095,86 @@ BC_AUTO_TEST_CASE(rpc_body_reader__finish__boolean_id__error)
     BC_REQUIRE(ec);
 }
 
+BC_AUTO_TEST_CASE(rpc_body_reader__finish__non_string_method_numeric_id__id_recovered)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":7,"method":42})" };
+    const io::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    code ec{};
+    reader.init(text.size(), ec);
+    BC_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BC_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(body.message.id.has_value());
+    BC_REQUIRE(std::holds_alternative<rpc::code_t>(body.message.id.value()));
+    BC_REQUIRE_EQUAL(std::get<rpc::code_t>(body.message.id.value()), 7);
+}
+
+BC_AUTO_TEST_CASE(rpc_body_reader__finish__non_string_method_string_id__id_recovered)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":"abc","method":42})" };
+    const io::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    code ec{};
+    reader.init(text.size(), ec);
+    BC_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BC_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(body.message.id.has_value());
+    BC_REQUIRE(std::holds_alternative<rpc::string_t>(body.message.id.value()));
+    BC_REQUIRE_EQUAL(std::get<rpc::string_t>(body.message.id.value()), "abc");
+}
+
+BC_AUTO_TEST_CASE(rpc_body_reader__finish__non_string_method_boolean_id__id_not_recovered)
+{
+    const std::string_view text{ R"({"jsonrpc":"2.0","id":true,"method":42})" };
+    const io::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    code ec{};
+    reader.init(text.size(), ec);
+    BC_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BC_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(!body.message.id.has_value());
+}
+
+BC_AUTO_TEST_CASE(rpc_body_reader__finish__non_object__id_not_recovered)
+{
+    const std::string_view text{ R"("text")" };
+    const io::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    code ec{};
+    reader.init(text.size(), ec);
+    BC_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BC_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(!body.message.id.has_value());
+}
+
 BC_AUTO_TEST_CASE(rpc_body_reader__put__batch_element_non_string_method__error_undelivered)
 {
     const std::string_view text{ R"([{"jsonrpc":"2.0","id":1,"method":42},)" };

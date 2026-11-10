@@ -257,14 +257,17 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
 {
     BC_ASSERT(stranded());
     count_received(bytes);
+    auto& value = request.get();
 
     if (ec)
     {
+        // A batch that fails on its first element is open for the response.
+        if (batch_open(value))
+            batched_ = true;
+
         handler(ec, bytes);
         return;
     }
-
-    auto& value = request.get();
 
     // ZMTP is not batched, a keepalive is absorbed and the read re-armed.
     if (socket_->zeromq())
@@ -647,7 +650,16 @@ void proxy::handle_http_body(const code& ec, size_t bytes,
 
     if (ec)
     {
-        parser_.reset();
+        // The failed request is published, the parse is retained as framing
+        // for the close of a batch response.
+        request.get() = parser_->release();
+        const auto& body = request.get().body();
+
+        // A batch that fails on its first element is open for the response.
+        if (body.contains<rpc::request>() &&
+            batch_open(body.get<rpc::request>()))
+            batched_ = true;
+
         handler(ec, bytes);
         return;
     }
@@ -697,6 +709,7 @@ void proxy::handle_http_element(size_t bytes,
     // Deliver the element as a request (headers from the message).
     request.get().base() = parser_->get().base();
     request.get().body() = std::move(value);
+    value.message = {};
     value.batch = true;
     value.changed = false;
     handler(error::success, bytes);

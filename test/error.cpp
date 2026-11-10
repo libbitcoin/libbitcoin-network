@@ -2484,4 +2484,74 @@ BC_AUTO_TEST_CASE(is_parameter_fault__other_code__false)
     BC_REQUIRE(!error::is_parameter_fault(error::channel_timeout));
 }
 
+BC_AUTO_TEST_CASE(is_parse_fault__json_parse_fault__true)
+{
+    BC_REQUIRE(error::is_parse_fault(error::syntax));
+    BC_REQUIRE(error::is_parse_fault(error::extra_data));
+    BC_REQUIRE(error::is_parse_fault(error::incomplete));
+    BC_REQUIRE(error::is_parse_fault(error::too_deep));
+    BC_REQUIRE(error::is_parse_fault(error::invalid_escape));
+    BC_REQUIRE(error::is_parse_fault(error::expected_hex_digit));
+    BC_REQUIRE(error::is_parse_fault(error::expected_utf16_escape));
+    BC_REQUIRE(error::is_parse_fault(error::illegal_leading_surrogate));
+    BC_REQUIRE(error::is_parse_fault(error::illegal_trailing_surrogate));
+    BC_REQUIRE(error::is_parse_fault(error::invalid_utf8));
+    BC_REQUIRE(error::is_parse_fault(error::exponent_overflow));
+    BC_REQUIRE(error::is_parse_fault(error::number_too_large));
+    BC_REQUIRE(error::is_parse_fault(error::string_too_large));
+    BC_REQUIRE(error::is_parse_fault(error::key_too_large));
+    BC_REQUIRE(error::is_parse_fault(error::array_too_large));
+    BC_REQUIRE(error::is_parse_fault(error::object_too_large));
+    BC_REQUIRE(error::is_parse_fault(error::jsonrpc_reader_stall));
+    BC_REQUIRE(error::is_parse_fault(error::jsonrpc_batch_malformed));
+}
+
+BC_AUTO_TEST_CASE(is_parse_fault__other_code__false)
+{
+    BC_REQUIRE(!error::is_parse_fault(error::success));
+    BC_REQUIRE(!error::is_parse_fault(error::not_object));
+    BC_REQUIRE(!error::is_parse_fault(error::jsonrpc_requires_method));
+    BC_REQUIRE(!error::is_parse_fault(error::unexpected_type));
+    BC_REQUIRE(!error::is_parse_fault(error::end_of_stream));
+    BC_REQUIRE(!error::is_parse_fault(error::body_limit));
+}
+
+BC_AUTO_TEST_CASE(is_request_fault__invalid_request__true)
+{
+    BC_REQUIRE(error::is_request_fault(error::not_null));
+    BC_REQUIRE(error::is_request_fault(error::not_bool));
+    BC_REQUIRE(error::is_request_fault(error::not_number));
+    BC_REQUIRE(error::is_request_fault(error::not_int64));
+    BC_REQUIRE(error::is_request_fault(error::not_uint64));
+    BC_REQUIRE(error::is_request_fault(error::not_double));
+    BC_REQUIRE(error::is_request_fault(error::not_string));
+    BC_REQUIRE(error::is_request_fault(error::not_array));
+    BC_REQUIRE(error::is_request_fault(error::not_object));
+    BC_REQUIRE(error::is_request_fault(error::not_exact));
+    BC_REQUIRE(error::is_request_fault(error::out_of_range));
+    BC_REQUIRE(error::is_request_fault(error::size_mismatch));
+    BC_REQUIRE(error::is_request_fault(error::exhausted_variants));
+    BC_REQUIRE(error::is_request_fault(error::json_unknown));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_invalid_version));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_requires_method));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_v1_requires_params));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_v1_requires_array_params));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_v1_requires_id));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_params_not_collection));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_reader_exception));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_batch_empty));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_batch_requires_v2));
+    BC_REQUIRE(error::is_request_fault(error::jsonrpc_batch_unsupported));
+}
+
+BC_AUTO_TEST_CASE(is_request_fault__other_code__false)
+{
+    BC_REQUIRE(!error::is_request_fault(error::success));
+    BC_REQUIRE(!error::is_request_fault(error::syntax));
+    BC_REQUIRE(!error::is_request_fault(error::jsonrpc_reader_stall));
+    BC_REQUIRE(!error::is_request_fault(error::jsonrpc_writer_exception));
+    BC_REQUIRE(!error::is_request_fault(error::missing_parameter));
+    BC_REQUIRE(!error::is_request_fault(error::unexpected_method));
+}
+
 BC_AUTO_TEST_SUITE_END()

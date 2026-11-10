@@ -100,7 +100,7 @@ inline void CLASS::handle_receive(const code& ec, size_t bytes,
             LOGR("Rpc read failure [" << endpoint() << "] " << ec.message());
         }
 
-        stop(ec);
+        reject(ec, *request);
         return;
     }
 
@@ -125,13 +125,13 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
     // channel is jrpc over tcp).
     if (request->lax_batch)
     {
-        stop(error::jsonrpc_batch_requires_v2);
+        reject(error::jsonrpc_batch_requires_v2, *request);
         return;
     }
 
     if (request->lax_named)
     {
-        stop(error::jsonrpc_v1_requires_array_params);
+        reject(error::jsonrpc_v1_requires_array_params, *request);
         return;
     }
 
@@ -139,8 +139,70 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
     const auto code = dispatcher_.notify(request->message);
     close_gate();
 
-    if (code)
+    if (code == error::unexpected_method)
+        refuse(rpc::reserved::method_not_found, code);
+    else if (error::is_parameter_fault(code))
+        refuse(rpc::reserved::invalid_params, code);
+    else if (code)
         stop(code);
+}
+
+// private
+// A request that fails to parse or validate is answered before the close,
+// with its id where that is obtained.
+TEMPLATE
+inline void CLASS::reject(const code& ec,
+    const rpc::request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    using namespace std::placeholders;
+
+    const auto parse = error::is_parse_fault(ec);
+    if (!parse && !error::is_request_fault(ec))
+    {
+        stop(ec);
+        return;
+    }
+
+    const auto& message = request.message;
+    const auto versioned = (message.jsonrpc == rpc::version::v1) ||
+        (message.jsonrpc == rpc::version::v2);
+
+    version_ = versioned ? message.jsonrpc : rpc::version::undefined;
+    identity_ = message.id.value_or(rpc::null_t{});
+    send_error(
+    {
+        .code = parse ? rpc::reserved::parse_error :
+            rpc::reserved::invalid_request,
+        .message = ec.message()
+    }, std::bind(&CLASS::handle_rejected,
+        shared_from_base<CLASS>(), _1, ec));
+}
+
+// private
+// A request that fails to dispatch is answered, unless a notification.
+TEMPLATE
+inline void CLASS::refuse(rpc::code_t value, const code& ec) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (!identity_.has_value())
+        return;
+
+    send_error(
+    {
+        .code = value,
+        .message = ec.message()
+    }, [](const code&) NOEXCEPT {});
+}
+
+// private
+TEMPLATE
+inline void CLASS::handle_rejected(const code& ec,
+    const code& reason) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    stop(ec ? ec : reason);
 }
 
 // request helpers

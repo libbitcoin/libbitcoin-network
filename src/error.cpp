@@ -529,6 +529,56 @@ bool is_parameter_fault(const code& ec) NOEXCEPT
         || ec == error::missing_parameter;
 }
 
+bool is_parse_fault(const code& ec) NOEXCEPT
+{
+    return ec == error::syntax
+        || ec == error::extra_data
+        || ec == error::incomplete
+        || ec == error::too_deep
+        || ec == error::invalid_escape
+        || ec == error::expected_hex_digit
+        || ec == error::expected_utf16_escape
+        || ec == error::illegal_leading_surrogate
+        || ec == error::illegal_trailing_surrogate
+        || ec == error::invalid_utf8
+        || ec == error::exponent_overflow
+        || ec == error::number_too_large
+        || ec == error::string_too_large
+        || ec == error::key_too_large
+        || ec == error::array_too_large
+        || ec == error::object_too_large
+        || ec == error::jsonrpc_reader_stall
+        || ec == error::jsonrpc_batch_malformed;
+}
+
+bool is_request_fault(const code& ec) NOEXCEPT
+{
+    return ec == error::not_null
+        || ec == error::not_bool
+        || ec == error::not_number
+        || ec == error::not_int64
+        || ec == error::not_uint64
+        || ec == error::not_double
+        || ec == error::not_string
+        || ec == error::not_array
+        || ec == error::not_object
+        || ec == error::not_exact
+        || ec == error::out_of_range
+        || ec == error::size_mismatch
+        || ec == error::exhausted_variants
+        || ec == error::json_unknown
+        || ec == error::jsonrpc_invalid_version
+        || ec == error::jsonrpc_requires_method
+        || ec == error::jsonrpc_v1_requires_params
+        || ec == error::jsonrpc_v1_requires_array_params
+        || ec == error::jsonrpc_v1_requires_id
+        || ec == error::jsonrpc_params_not_collection
+        || ec == error::jsonrpc_reader_exception
+        || ec == error::jsonrpc_batch_empty
+        || ec == error::jsonrpc_batch_requires_v2
+        || ec == error::jsonrpc_batch_unsupported;
+}
+
 BC_POP_WARNING()
 
 } // namespace error

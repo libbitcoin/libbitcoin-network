@@ -266,6 +266,19 @@ void protocol_http::send_not_implemented(const request& request) NOEXCEPT
 }
 
 // Closes channel.
+void protocol_http::send_unauthorized(const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    const auto code = status::unauthorized;
+    const auto media = to_media_type(request[field::accept]);
+    response out{ code, request.version() };
+    add_common_headers(out, request, true);
+    out.body() = string_status(code, out.reason(), media);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::unauthorized);
+}
+
+// Closes channel.
 void protocol_http::send_forbidden(const request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());

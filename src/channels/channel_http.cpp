@@ -175,7 +175,7 @@ void channel_http::handle_receive(const code& ec, size_t LOG_ONLY(bytes),
             return;
         }
 
-        stop(ec);
+        reject(ec, *request);
         return;
     }
 
@@ -216,19 +216,19 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
         const auto& body = value.get<rpc::request>();
         if (body.lax_params && !lax_params())
         {
-            stop(error::jsonrpc_params_not_collection);
+            reject(error::jsonrpc_params_not_collection, *request);
             return;
         }
 
         if (body.lax_named && !lax_named())
         {
-            stop(error::jsonrpc_v1_requires_array_params);
+            reject(error::jsonrpc_v1_requires_array_params, *request);
             return;
         }
 
         if (body.lax_batch)
         {
-            stop(error::jsonrpc_batch_requires_v2);
+            reject(error::jsonrpc_batch_requires_v2, *request);
             return;
         }
 
@@ -237,7 +237,7 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
         // result without confining the set to a single frame.
         if (websocket() && (body.batch || body.changed))
         {
-            stop(error::jsonrpc_batch_unsupported);
+            reject(error::jsonrpc_batch_unsupported, *request);
             return;
         }
     }
@@ -293,6 +293,11 @@ bool channel_http::lax_params() const NOEXCEPT
 bool channel_http::lax_named() const NOEXCEPT
 {
     return false;
+}
+
+status channel_http::to_rpc_status(const rpc::response_t&) const NOEXCEPT
+{
+    return status::ok;
 }
 
 // private
@@ -453,6 +458,67 @@ void channel_http::handle_rejected(const code& ec,
 {
     BC_ASSERT(stranded());
     stop(ec ? ec : reason);
+}
+
+// private
+// A json-rpc request that fails to parse or validate is answered before the
+// close, with its id where that is obtained.
+void channel_http::reject(const code& ec, const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    const auto& value = request.body();
+    const auto parse = error::is_parse_fault(ec);
+    if (!value.contains<rpc::request>() ||
+        (!parse && !error::is_request_fault(ec)))
+    {
+        stop(ec);
+        return;
+    }
+
+    const auto enveloped = !websocket() && !downgraded();
+    if (enveloped)
+        set_authorized(request);
+
+    if (enveloped && !authorized())
+    {
+        send({ status::unauthorized, request.version() },
+            std::bind(&channel_http::handle_rejected,
+                shared_from_base<channel_http>(), _1, error::unauthorized));
+        return;
+    }
+
+    const auto& body = value.get<rpc::request>();
+    const auto& message = body.message;
+    const auto versioned = (message.jsonrpc == rpc::version::v1) ||
+        (message.jsonrpc == rpc::version::v2);
+
+    rpc::response_t model
+    {
+        .jsonrpc = versioned ? message.jsonrpc : rpc::version::undefined,
+        .id = message.id.value_or(rpc::null_t{}),
+        .error = rpc::result_t
+        {
+            .code = parse ? rpc::reserved::parse_error :
+                rpc::reserved::invalid_request,
+            .message = ec.message()
+        }
+    };
+
+    // A batch part, ws frame or tcp message carries no status.
+    const auto statused = enveloped && !body.batch && !body.changed;
+
+    response out{ statused ? to_rpc_status(model) : status::ok,
+        request.version() };
+
+    out.set(field::content_type,
+        from_media_type(media_type::application_json));
+    out.keep_alive(false);
+    out.body() = rpc::response{ {}, std::move(model) };
+    out.prepare_payload();
+    send(std::move(out),
+        std::bind(&channel_http::handle_rejected,
+            shared_from_base<channel_http>(), _1, ec));
 }
 
 // log helpers

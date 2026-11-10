@@ -905,11 +905,36 @@ static response json_response(const system::json::object& model) NOEXCEPT
     return out;
 }
 
+// The json-rpc body is preselected (ws frames and tcp messages are json-rpc).
+struct rpc_body_channel
+  : channel_http
+{
+    using channel_http::channel_http;
+
+    body::value_type default_body() const NOEXCEPT override
+    {
+        body::value_type value{};
+        value = rpc::request{};
+        return value;
+    }
+
+    http::status to_rpc_status(const rpc::response_t& model) const NOEXCEPT override
+    {
+        return model.error.has_value() ? status::bad_request : status::ok;
+    }
+};
+
 struct http_channel_fixture
   : http_loopback_fixture
 {
     http_channel_fixture(const channel_http::options_t& options_=options) NOEXCEPT
-      : channel(std::make_shared<channel_http>(log, server, 42, http_settings, options_))
+      : http_channel_fixture(std::in_place_type<channel_http>, options_)
+    {
+    }
+
+    template <class Channel>
+    http_channel_fixture(std::in_place_type_t<Channel>, const channel_http::options_t& options_=options) NOEXCEPT
+      : channel(std::make_shared<Channel>(log, server, 42, http_settings, options_))
     {
         const auto promise = stopped;
         channel->subscribe_stop([=](const code& ec) NOEXCEPT
@@ -974,6 +999,27 @@ struct credentialed_channel_fixture
     }
 };
 
+struct rpc_body_channel_fixture
+  : http_channel_fixture
+{
+    rpc_body_channel_fixture() NOEXCEPT
+      : http_channel_fixture(std::in_place_type<rpc_body_channel>)
+    {
+    }
+
+    // Read until the peer closes.
+    std::string receive_all() NOEXCEPT
+    {
+        code ec{};
+        char byte{};
+        std::string text{};
+        while (!is_zero(io::read(client, io::buffer(&byte, one), ec)))
+            text.push_back(byte);
+
+        return text;
+    }
+};
+
 BC_FIXTURE_TEST_CASE(channel_http__resume__get__dispatched_and_response_sent, http_channel_fixture)
 {
     const auto target = std::make_shared<std::promise<std::string>>();
@@ -1016,18 +1062,262 @@ BC_FIXTURE_TEST_CASE(channel_http__resume__large_header_then_get__both_dispatche
     BC_REQUIRE_EQUAL(receive().result_int(), 200u);
 }
 
-BC_FIXTURE_TEST_CASE(channel_http__resume__lax_params__jsonrpc_params_not_collection, http_channel_fixture)
+BC_FIXTURE_TEST_CASE(channel_http__resume__lax_params__invalid_request_and_stopped, http_channel_fixture)
 {
     start(http_ok);
     send(http_post(R"({"jsonrpc":"2.0","id":1,"method":"echo","params":"hello"})"));
+
+    const auto response = receive();
+    BC_REQUIRE_EQUAL(response.result_int(), 200u);
+    BC_REQUIRE(!response.keep_alive());
+
+    const auto fault = system::json::parse(response.body()).as_object();
+    BC_REQUIRE_EQUAL(fault.at("jsonrpc").as_string(), "2.0");
+    BC_REQUIRE_EQUAL(fault.at("id").to_number<int64_t>(), 1);
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(fault.at("error").at("message").as_string(), code{ error::jsonrpc_params_not_collection }.message());
     BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_params_not_collection);
 }
 
-BC_FIXTURE_TEST_CASE(channel_http__resume__lax_named__jsonrpc_v1_requires_array_params, http_channel_fixture)
+BC_FIXTURE_TEST_CASE(channel_http__resume__lax_named__invalid_request_and_stopped, http_channel_fixture)
 {
     start(http_ok);
     send(http_post(R"({"jsonrpc":"1.0","id":1,"method":"echo","params":{"value":1}})"));
+
+    const auto fault = system::json::parse(receive().body()).as_object();
+    BC_REQUIRE_EQUAL(fault.at("id").to_number<int64_t>(), 1);
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
     BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_v1_requires_array_params);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__malformed_json__parse_error_null_id_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"({"jsonrpc":"2.0","id":1,"method":x})"));
+
+    const auto response = receive();
+    BC_REQUIRE_EQUAL(response.result_int(), 200u);
+
+    const auto fault = system::json::parse(response.body()).as_object();
+    BC_REQUIRE(fault.at("id").is_null());
+    BC_REQUIRE(!fault.contains("jsonrpc"));
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::parse_error);
+    BC_REQUIRE(error::is_parse_fault(http_await(stopped)));
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__truncated_json__parse_error_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"({"jsonrpc":"2.0","id":1,)"));
+
+    const auto fault = system::json::parse(receive().body()).as_object();
+    BC_REQUIRE(fault.at("id").is_null());
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::parse_error);
+    BC_REQUIRE(error::is_parse_fault(http_await(stopped)));
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__missing_method__invalid_request_with_id_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"({"jsonrpc":"2.0","id":5,"params":[]})"));
+
+    const auto fault = system::json::parse(receive().body()).as_object();
+    BC_REQUIRE_EQUAL(fault.at("jsonrpc").as_string(), "2.0");
+    BC_REQUIRE_EQUAL(fault.at("id").to_number<int64_t>(), 5);
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_requires_method);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__non_string_method__invalid_request_with_id_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"({"jsonrpc":"2.0","id":"abc","method":42})"));
+
+    const auto fault = system::json::parse(receive().body()).as_object();
+    BC_REQUIRE_EQUAL(fault.at("id").as_string(), "abc");
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE(error::is_request_fault(http_await(stopped)));
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__v1_missing_id__invalid_request_null_id_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"({"method":"echo","params":[]})"));
+
+    const auto fault = system::json::parse(receive().body()).as_object();
+    BC_REQUIRE(fault.at("id").is_null());
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_v1_requires_id);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__empty_batch__invalid_request_array_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_post("[]"));
+
+    const auto response = receive();
+    BC_REQUIRE_EQUAL(response.result_int(), 200u);
+    BC_REQUIRE(response.chunked());
+
+    const auto batch = system::json::parse(response.body()).as_array();
+    BC_REQUIRE_EQUAL(batch.size(), 1u);
+    BC_REQUIRE(batch.at(0).at("id").is_null());
+    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_batch_empty);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__v1_batch_element__invalid_request_array_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"([{"id":1,"method":"echo","params":["hello"]}])"));
+
+    const auto batch = system::json::parse(receive().body()).as_array();
+    BC_REQUIRE_EQUAL(batch.size(), 1u);
+    BC_REQUIRE_EQUAL(batch.at(0).at("id").to_number<int64_t>(), 1);
+    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_batch_requires_v2);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__batch_first_element_malformed__parse_error_array_and_stopped, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"([{"jsonrpc":"2.0","id":1,"method":x}])"));
+
+    const auto batch = system::json::parse(receive().body()).as_array();
+    BC_REQUIRE_EQUAL(batch.size(), 1u);
+    BC_REQUIRE(batch.at(0).at("id").is_null());
+    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::parse_error);
+    BC_REQUIRE(error::is_parse_fault(http_await(stopped)));
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_malformed_json__unauthorized, credentialed_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"({"jsonrpc":"2.0","id":1,"method":x})"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 401u);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::unauthorized);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__status_override__invalid_request_statused, rpc_body_channel_fixture)
+{
+    start(http_ok);
+    send(http_post(R"({"jsonrpc":"2.0","id":5,"params":[]})"));
+
+    const auto response = receive();
+    BC_REQUIRE_EQUAL(response.result_int(), 400u);
+    BC_REQUIRE_EQUAL(system::json::parse(response.body()).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_requires_method);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__status_override_batch__unstatused, rpc_body_channel_fixture)
+{
+    start(http_ok);
+    send(http_post("[]"));
+
+    const auto response = receive();
+    BC_REQUIRE_EQUAL(response.result_int(), 200u);
+    BC_REQUIRE_EQUAL(system::json::parse(response.body()).as_array().size(), 1u);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_batch_empty);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__websocket_malformed_json__parse_error_frame_and_stopped, rpc_body_channel_fixture)
+{
+    start(http_ok);
+
+    code ec{};
+    ws::client<io::socket> websocket{ client };
+    ec = websocket.handshake("127.0.0.1", "/");
+    BC_REQUIRE(!ec);
+
+    ec = websocket.write(R"({"jsonrpc":"2.0","id":1,"method":x})");
+    BC_REQUIRE(!ec);
+
+    http::flat_buffer buffer{};
+    ec = websocket.read(buffer);
+    BC_REQUIRE(!ec);
+
+    const auto fault = system::json::parse(test::to_string(buffer.data())).as_object();
+    BC_REQUIRE(fault.at("id").is_null());
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::parse_error);
+    BC_REQUIRE(error::is_parse_fault(http_await(stopped)));
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__websocket_missing_method__invalid_request_frame_and_stopped, rpc_body_channel_fixture)
+{
+    start(http_ok);
+
+    code ec{};
+    ws::client<io::socket> websocket{ client };
+    ec = websocket.handshake("127.0.0.1", "/");
+    BC_REQUIRE(!ec);
+
+    ec = websocket.write(R"({"jsonrpc":"2.0","id":5,"params":[]})");
+    BC_REQUIRE(!ec);
+
+    http::flat_buffer buffer{};
+    ec = websocket.read(buffer);
+    BC_REQUIRE(!ec);
+
+    const auto fault = system::json::parse(test::to_string(buffer.data())).as_object();
+    BC_REQUIRE_EQUAL(fault.at("id").to_number<int64_t>(), 5);
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_requires_method);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__websocket_batch__invalid_request_frame_and_stopped, rpc_body_channel_fixture)
+{
+    start(http_ok);
+
+    code ec{};
+    ws::client<io::socket> websocket{ client };
+    ec = websocket.handshake("127.0.0.1", "/");
+    BC_REQUIRE(!ec);
+
+    ec = websocket.write(R"([{"jsonrpc":"2.0","id":1,"method":"echo","params":[]}])");
+    BC_REQUIRE(!ec);
+
+    http::flat_buffer buffer{};
+    ec = websocket.read(buffer);
+    BC_REQUIRE(!ec);
+
+    const auto fault = system::json::parse(test::to_string(buffer.data())).as_object();
+    BC_REQUIRE_EQUAL(fault.at("id").to_number<int64_t>(), 1);
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_batch_unsupported);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__downgraded_malformed_json__parse_error_message_and_stopped, rpc_body_channel_fixture)
+{
+    start(http_ok);
+    send(R"({"jsonrpc":"2.0","id":1,"method":x})" "\n");
+
+    const auto fault = system::json::parse(receive_all()).as_object();
+    BC_REQUIRE(fault.at("id").is_null());
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::parse_error);
+    BC_REQUIRE(error::is_parse_fault(http_await(stopped)));
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__downgraded_missing_method__invalid_request_message_and_stopped, rpc_body_channel_fixture)
+{
+    start(http_ok);
+    send(R"({"jsonrpc":"2.0","id":5,"params":[]})" "\n");
+
+    const auto fault = system::json::parse(receive_all()).as_object();
+    BC_REQUIRE_EQUAL(fault.at("id").to_number<int64_t>(), 5);
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_requires_method);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__downgraded_empty_batch__invalid_request_array_and_stopped, rpc_body_channel_fixture)
+{
+    start(http_ok);
+    send("[]");
+
+    const auto batch = system::json::parse(receive_all()).as_array();
+    BC_REQUIRE_EQUAL(batch.size(), 1u);
+    BC_REQUIRE(batch.at(0).at("id").is_null());
+    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_batch_empty);
 }
 
 BC_FIXTURE_TEST_CASE(channel_http__stop__reading__stopped_with_code, http_channel_fixture)

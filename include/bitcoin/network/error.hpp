@@ -416,6 +416,12 @@ BCT_API code rpc_to_error_code(const code& ec) NOEXCEPT;
 /// True if the code is a failure to bind request parameters to a method.
 BCT_API bool is_parameter_fault(const code& ec) NOEXCEPT;
 
+/// True if the code is a failure to parse a json-rpc request as json.
+BCT_API bool is_parse_fault(const code& ec) NOEXCEPT;
+
+/// True if the code is a json document that is not a valid json-rpc request.
+BCT_API bool is_request_fault(const code& ec) NOEXCEPT;
+
 } // namespace error
 } // namespace network
 } // namespace libbitcoin
