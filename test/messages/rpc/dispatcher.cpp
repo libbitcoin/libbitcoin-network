@@ -541,7 +541,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__with_nullify_positional_params__expected)
         .params = { array_t{ string_t{ "42" }, number_t{ 42.0 }, null_t{} } }
     });
 
-    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec1, error::unexpected_null);
     BC_REQUIRE(!ec2);
     BC_REQUIRE(!ec3);
     BC_REQUIRE(!ec4);
@@ -594,7 +594,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__with_nullify_named_params__expected)
         .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", null_t{} } } }
     });
 
-    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec1, error::unexpected_null);
     BC_REQUIRE(!ec2);
     BC_REQUIRE(!ec3);
     BC_REQUIRE(!ec4);
@@ -647,7 +647,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__with_combine_positional_params__expected)
         .params = { array_t{ string_t{ "42" }, boolean_type{ false }, number_t{ 42.0 } } }
     });
 
-    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec1, error::unexpected_null);
     BC_REQUIRE(!ec2);
     BC_REQUIRE(!ec3);
     BC_REQUIRE(!ec4);
@@ -700,7 +700,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__with_combine_named_params__expected)
         .params = { object_t{ { "a", string_t{ "42" } }, { "b", boolean_type{ false } }, { "c", number_t{ 42.0 } } } }
     });
 
-    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec1, error::unexpected_null);
     BC_REQUIRE(!ec2);
     BC_REQUIRE(!ec3);
     BC_REQUIRE(!ec4);
@@ -751,7 +751,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__not_required_positional_params__expected)
         .params = { array_t{ boolean_type{ false }, number_t{ 42.0 } } }
     });
 
-    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec1, error::unexpected_null);
     BC_REQUIRE(!ec2);
     BC_REQUIRE(!ec3);
     BC_REQUIRE(!ec4);
@@ -801,7 +801,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
         .params = { object_t{ { "a", boolean_type{ false } }, { "b", number_t{ 42.0 } } } }
     });
 
-    BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec1, error::unexpected_null);
     BC_REQUIRE(!ec2);
     BC_REQUIRE(!ec3);
     BC_REQUIRE(!ec4);
@@ -1166,7 +1166,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__missing_nullable_pointer__expected)
 
     BC_REQUIRE(!ec1);
     BC_REQUIRE(!ec2);
-    BC_REQUIRE_EQUAL(ec3, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec3, error::unexpected_null);
     BC_REQUIRE(!ec4);
     BC_REQUIRE(!ec5);
     BC_REQUIRE(!ec6);

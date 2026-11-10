@@ -306,6 +306,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { undefined_type, "undefined type" },
     { unexpected_method, "unexpected method" },
     { unexpected_type, "unexpected type" },
+    { unexpected_null, "unexpected null" },
     { extra_positional, "extra positional" },
     { extra_named, "extra named" },
     { missing_array, "missing array" },
@@ -515,6 +516,17 @@ code rpc_to_error_code(const code& ec) NOEXCEPT
         return ec;
 
     return http_to_error_code(ec);
+}
+
+bool is_parameter_fault(const code& ec) NOEXCEPT
+{
+    return ec == error::unexpected_type
+        || ec == error::unexpected_null
+        || ec == error::extra_positional
+        || ec == error::extra_named
+        || ec == error::missing_array
+        || ec == error::missing_object
+        || ec == error::missing_parameter;
 }
 
 BC_POP_WARNING()

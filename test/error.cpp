@@ -2194,6 +2194,15 @@ BC_AUTO_TEST_CASE(error_t__code__unexpected_type__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "unexpected type");
 }
 
+BC_AUTO_TEST_CASE(error_t__code__unexpected_null__true_expected_message)
+{
+    constexpr auto value = error::unexpected_null;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "unexpected null");
+}
+
 BC_AUTO_TEST_CASE(error_t__code__extra_positional__true_expected_message)
 {
     constexpr auto value = error::extra_positional;
@@ -2454,6 +2463,25 @@ BC_AUTO_TEST_CASE(rpc_to_error_code__network_code__same_code)
 BC_AUTO_TEST_CASE(rpc_to_error_code__http_code__http_mapping)
 {
     BC_REQUIRE_EQUAL(error::rpc_to_error_code(error::to_http_code(error::http_error_t::bad_method)), error::bad_method);
+}
+
+BC_AUTO_TEST_CASE(is_parameter_fault__binding_fault__true)
+{
+    BC_REQUIRE(error::is_parameter_fault(error::unexpected_type));
+    BC_REQUIRE(error::is_parameter_fault(error::unexpected_null));
+    BC_REQUIRE(error::is_parameter_fault(error::extra_positional));
+    BC_REQUIRE(error::is_parameter_fault(error::extra_named));
+    BC_REQUIRE(error::is_parameter_fault(error::missing_array));
+    BC_REQUIRE(error::is_parameter_fault(error::missing_object));
+    BC_REQUIRE(error::is_parameter_fault(error::missing_parameter));
+}
+
+BC_AUTO_TEST_CASE(is_parameter_fault__other_code__false)
+{
+    BC_REQUIRE(!error::is_parameter_fault(error::success));
+    BC_REQUIRE(!error::is_parameter_fault(error::undefined_type));
+    BC_REQUIRE(!error::is_parameter_fault(error::unexpected_method));
+    BC_REQUIRE(!error::is_parameter_fault(error::channel_timeout));
 }
 
 BC_AUTO_TEST_SUITE_END()
