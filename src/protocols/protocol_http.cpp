@@ -394,7 +394,21 @@ bool protocol_http::is_allowed_origin(const fields& fields,
     if (origin == "null")
         return options_.allow_opaque_origin;
 
-    return options_.origins.empty() || contains(options_.origin_names(),
+    if (options_.origins.empty())
+        return true;
+
+    const auto secure = channel_->secure();
+    const auto port = secure ? default_tls : default_http;
+    const std::string scheme{ secure ? "https://" : "http://" };
+    const std::string host{ fields[field::host] };
+    const auto self = config::to_normal_host(host, port);
+    const auto known = contains(options_.host_names(), self);
+    const auto same = origin.starts_with(scheme) &&
+        self == config::to_normal_origin(origin, port);
+    if (known && same)
+        return true;
+
+    return contains(options_.origin_names(),
         config::to_normal_origin(origin, default_port()));
 }
 
