@@ -63,6 +63,9 @@ struct message_type
     /// Electrum non-standard single value params (converted to array).
     bool lax_params{};
 
+    /// bitcoind non-standard v1 named params.
+    bool lax_named{};
+
     /// btcd non-standard v1 message within a (v2) batch.
     bool lax_batch{};
 

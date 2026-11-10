@@ -50,6 +50,7 @@ constexpr bool is_electrum_terminator(char character) NOEXCEPT
 static void to_request(rpc::request& value, code& ec) NOEXCEPT
 {
     value.lax_params = false;
+    value.lax_named = false;
     value.lax_batch = false;
 
     try
@@ -88,6 +89,9 @@ static void to_request(rpc::request& value, code& ec) NOEXCEPT
             ec = code{ error::jsonrpc_v1_requires_params };
         else if (!value.message.id.has_value())
             ec = code{ error::jsonrpc_v1_requires_id };
+        else if (std::holds_alternative<object_t>(
+            value.message.params.value()))
+            value.lax_named = true;
         else if (!std::holds_alternative<array_t>(
             value.message.params.value()))
             ec = code{ error::jsonrpc_v1_requires_array_params };

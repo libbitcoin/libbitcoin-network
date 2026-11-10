@@ -443,6 +443,13 @@ BC_FIXTURE_TEST_CASE(channel_rpc__receive__unknown_method__unexpected_method, rp
     BC_REQUIRE_EQUAL(rpc_await(stopped), error::unexpected_method);
 }
 
+BC_FIXTURE_TEST_CASE(channel_rpc__receive__v1_named_params__jsonrpc_v1_requires_array_params, rpc_channel_fixture)
+{
+    start(ignore_echo);
+    send(R"({"jsonrpc":"1.0","id":1,"method":"echo","params":{"value":1}})" "\n");
+    BC_REQUIRE_EQUAL(rpc_await(stopped), error::jsonrpc_v1_requires_array_params);
+}
+
 BC_FIXTURE_TEST_CASE(channel_rpc__receive__v1_batch_element__jsonrpc_batch_requires_v2, rpc_channel_fixture)
 {
     start(ignore_echo);
