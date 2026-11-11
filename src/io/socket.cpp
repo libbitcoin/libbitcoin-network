@@ -373,14 +373,16 @@ bool socket::half_closed() const NOEXCEPT
     DWORD size{};
     if (is_zero(::WSAIoctl(descriptor_->handle, SIO_TCP_INFO, &version,
         sizeof(version), &info, sizeof(info), &size, nullptr, nullptr)))
-        return info.State == TCPSTATE_CLOSE_WAIT;
+        return info.State == TCPSTATE_CLOSE_WAIT ||
+            info.State == TCPSTATE_CLOSED;
 
 #elif defined(HAVE_APPLE)
     struct tcp_connection_info info{};
     socklen_t size = sizeof(info);
     if (is_zero(::getsockopt(descriptor_->handle, IPPROTO_TCP,
         TCP_CONNECTION_INFO, &info, &size)))
-        return info.tcpi_state == TCPS_CLOSE_WAIT;
+        return info.tcpi_state == TCPS_CLOSE_WAIT ||
+            (info.tcpi_state == TCPS_CLOSED && !is_zero(info.tcpi_srtt));
 
 #elif defined(HAVE_LINUX)
     struct tcp_info info{};
