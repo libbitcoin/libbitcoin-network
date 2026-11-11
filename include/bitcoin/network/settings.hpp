@@ -483,12 +483,12 @@ struct BCT_API settings
     uint64_t invalid_services{ 0b0001'0000'0000'0000'0000'0000'1011'0000 };
     bool enable_address{ true };
     bool enable_address_v2{ true };
-    bool enable_witness_tx{ false };
+    bool enable_witness_tx{ true };
     bool enable_compact{ true };
     bool enable_alert{ false };
     bool enable_reject{ false };
     bool enable_not_found{ true };
-    bool enable_memory_pool{ false };
+    bool enable_memory_pool{ true };
     bool enable_relay{ true };
     bool validate_checksum{ false };
     bool gossip_ipv4{ true };

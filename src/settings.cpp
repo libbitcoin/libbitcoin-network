@@ -123,12 +123,23 @@ code settings::sam::initialize() NOEXCEPT
     try
     {
         ifstream file{ key_path, ifstream::in };
-        if (file.good() && !!std::getline(file, key) && !key.empty())
-            self = to_self(key);
+        if (!file.good() || !std::getline(file, key) || key.empty())
+        {
+            key.clear();
+            return error::success;
+        }
     }
     catch (const std::exception&)
     {
         key.clear();
+        return error::success;
+    }
+
+    self = to_self(key);
+    if (!self)
+    {
+        key.clear();
+        return error::sam_invalid_key;
     }
 
     return error::success;
