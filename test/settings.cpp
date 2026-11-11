@@ -41,12 +41,12 @@ BC_AUTO_TEST_CASE(settings__construct__default__expected)
     BC_REQUIRE_EQUAL(instance.invalid_services, 268'435'632u);
     BC_REQUIRE_EQUAL(instance.enable_address, true);
     BC_REQUIRE_EQUAL(instance.enable_address_v2, true);
-    BC_REQUIRE_EQUAL(instance.enable_witness_tx, false);
+    BC_REQUIRE_EQUAL(instance.enable_witness_tx, true);
     BC_REQUIRE_EQUAL(instance.enable_compact, true);
     BC_REQUIRE_EQUAL(instance.enable_alert, false);
     BC_REQUIRE_EQUAL(instance.enable_reject, false);
     BC_REQUIRE_EQUAL(instance.enable_not_found, true);
-    BC_REQUIRE_EQUAL(instance.enable_memory_pool, false);
+    BC_REQUIRE_EQUAL(instance.enable_memory_pool, true);
     BC_REQUIRE_EQUAL(instance.enable_relay, true);
     BC_REQUIRE_EQUAL(instance.validate_checksum, false);
     BC_REQUIRE_EQUAL(instance.identifier, 3652501241u);
