@@ -1132,6 +1132,29 @@ BC_AUTO_TEST_CASE(settings_sam__initialize__missing_file__success_empty_key)
     BC_REQUIRE(instance.key.empty());
 }
 
+BC_FIXTURE_TEST_CASE(settings_sam__initialize__invalid_key__sam_invalid_key, test::directory_setup_fixture)
+{
+    system::ofstream{ TEST_PATH } << "bogus" << std::endl;
+    settings::sam instance{};
+    instance.key_path = { TEST_PATH };
+    BC_REQUIRE_EQUAL(instance.initialize(), error::sam_invalid_key);
+    BC_REQUIRE(instance.key.empty());
+    BC_REQUIRE(!instance.self);
+}
+
+BC_FIXTURE_TEST_CASE(settings_sam__initialize__valid_key__success_expected_self, test::directory_setup_fixture)
+{
+    system::data_chunk key(387, 0x42);
+    key[385] = 0x00;
+    key[386] = 0x00;
+    system::ofstream{ TEST_PATH } << system::encode_base64(key) << std::endl;
+    settings::sam instance{};
+    instance.key_path = { TEST_PATH };
+    BC_REQUIRE_EQUAL(instance.initialize(), error::success);
+    BC_REQUIRE_EQUAL(instance.key, system::encode_base64(key));
+    BC_REQUIRE_EQUAL(instance.self.to_host(), "fhda2dy47lj3cckiek2od4f2jevgqthdtb4kuolbwmc32ppnuhaa.b32.i2p");
+}
+
 // secure_server
 // ----------------------------------------------------------------------------
 
