@@ -103,6 +103,9 @@ public:
                 this->erase(field::content_length);
                 return;
             }
+
+            if (this->version() < version_1_1)
+                this->keep_alive(false);
         }
 
         this->chunked(this->version() >= version_1_1);
