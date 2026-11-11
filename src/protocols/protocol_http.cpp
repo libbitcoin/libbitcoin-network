@@ -394,22 +394,24 @@ bool protocol_http::is_allowed_origin(const fields& fields,
     if (origin == "null")
         return options_.allow_opaque_origin;
 
-    if (options_.origins.empty())
+    if (options_.origins.empty() || is_same_origin(fields, origin))
         return true;
 
+    return contains(options_.origin_names(),
+        config::to_normal_origin(origin, default_port()));
+}
+
+bool protocol_http::is_same_origin(const fields& fields,
+    const std::string& origin) const NOEXCEPT
+{
     const auto secure = channel_->secure();
     const auto port = secure ? default_tls : default_http;
     const std::string scheme{ secure ? "https://" : "http://" };
     const std::string host{ fields[field::host] };
     const auto self = config::to_normal_host(host, port);
-    const auto known = contains(options_.host_names(), self);
-    const auto same = origin.starts_with(scheme) &&
+    return contains(options_.host_names(), self) &&
+        origin.starts_with(scheme) &&
         self == config::to_normal_origin(origin, port);
-    if (known && same)
-        return true;
-
-    return contains(options_.origin_names(),
-        config::to_normal_origin(origin, default_port()));
 }
 
 void protocol_http::add_common_headers(fields& fields,
