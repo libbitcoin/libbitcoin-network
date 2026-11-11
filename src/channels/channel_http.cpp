@@ -324,10 +324,12 @@ void channel_http::send(response&& response, result_handler&& handler) NOEXCEPT
     BC_ASSERT(stranded());
 
     std::string message{ LOG_ONLY(log_message(response)) };
+    const auto eof = !response.bodiless() && !response.chunked() &&
+        !response.content_length().has_value();
 
     write(std::move(response),
         std::bind(&channel_http::handle_send,
-            shared_from_base<channel_http>(), _1, _2, std::move(message),
+            shared_from_base<channel_http>(), _1, _2, eof, std::move(message),
                 std::move(handler)));
 }
 
@@ -343,12 +345,12 @@ void channel_http::notify(response&& notification,
 
     proxy::notify(std::move(notification),
         std::bind(&channel_http::handle_send,
-            shared_from_base<channel_http>(), _1, _2, std::move(message),
+            shared_from_base<channel_http>(), _1, _2, false, std::move(message),
                 std::move(handler)));
 }
 
 void channel_http::handle_send(const code& ec, size_t LOG_ONLY(bytes),
-    const std::string& LOG_ONLY(message),
+    bool eof, const std::string& LOG_ONLY(message),
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -359,6 +361,9 @@ void channel_http::handle_send(const code& ec, size_t LOG_ONLY(bytes),
     if (!websocket()) { LOGV(replace_copy(message, "%1%", serialize(bytes))); }
 
     handler(ec);
+
+    if (!ec && eof && !stopped())
+        stop(error::channel_dropped);
 }
 
 // unauthorized helpers
