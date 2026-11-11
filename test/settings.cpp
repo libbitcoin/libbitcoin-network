@@ -1330,7 +1330,7 @@ BC_AUTO_TEST_CASE(settings__file__configured_path__hosts_cache)
 {
     settings instance{ system::chain::selection::mainnet };
     instance.path = { TEST_DIRECTORY };
-    BC_REQUIRE_EQUAL(instance.file().filename(), "hosts.cache");
+    BC_REQUIRE_EQUAL(instance.file().filename(), "peers.cache");
 }
 
 BC_AUTO_TEST_SUITE_END()

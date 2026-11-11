@@ -123,6 +123,8 @@ protected:
         size_t version) const NOEXCEPT;
     virtual bool is_allowed_origin(const http::fields& fields,
         size_t version) const NOEXCEPT;
+    virtual bool is_same_origin(const http::fields& fields,
+        const std::string& origin) const NOEXCEPT;
 
     /// Properties.
     uint16_t default_port() const NOEXCEPT;
