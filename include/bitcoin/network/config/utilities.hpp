@@ -42,6 +42,14 @@ BCT_API std::string to_normal_host(const std::string& host,
 BCT_API std::string to_normal_origin(const std::string& origin,
     uint16_t default_port) NOEXCEPT;
 
+/// Names contain the lowered host:port (with default substitution) or host.
+BCT_API bool contains_host(const system::string_list& names,
+    const std::string& host, uint16_t default_port) NOEXCEPT;
+
+/// Names contain the lowered url host:port (with default substitution) or host.
+BCT_API bool contains_origin(const system::string_list& names,
+    const std::string& origin, uint16_t default_port) NOEXCEPT;
+
 } // namespace config
 } // namespace network
 } // namespace libbitcoin

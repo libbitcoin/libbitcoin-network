@@ -585,4 +585,88 @@ BC_AUTO_TEST_CASE(utilities__to_normal_origin__scheme_only__empty)
     BC_REQUIRE(to_normal_origin("http://", 42).empty());
 }
 
+// contains_host
+
+BC_AUTO_TEST_CASE(utilities__contains_host__empty_names__false)
+{
+    BC_REQUIRE(!contains_host({}, "localhost", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_host__empty_host__false)
+{
+    BC_REQUIRE(!contains_host({ "localhost" }, "", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_host__portless_name_default_port__true)
+{
+    BC_REQUIRE(contains_host({ "localhost" }, "LocalHost", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_host__portless_name_any_port__true)
+{
+    BC_REQUIRE(contains_host({ "localhost" }, "localhost:8780", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_host__portless_name_other_host__false)
+{
+    BC_REQUIRE(!contains_host({ "localhost" }, "example.com:8780", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_host__ported_name_default_port__true)
+{
+    BC_REQUIRE(contains_host({ "localhost:42" }, "localhost", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_host__ported_name_same_port__true)
+{
+    BC_REQUIRE(contains_host({ "localhost:8780" }, "localhost:8780", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_host__ported_name_other_port__false)
+{
+    BC_REQUIRE(!contains_host({ "localhost:8780" }, "localhost:8781", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_host__ported_name_other_default_port__false)
+{
+    BC_REQUIRE(!contains_host({ "localhost:8780" }, "localhost", 42));
+}
+
+// contains_origin
+
+BC_AUTO_TEST_CASE(utilities__contains_origin__empty_origin__false)
+{
+    BC_REQUIRE(!contains_origin({ "example.com" }, "", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_origin__invalid_origin__false)
+{
+    BC_REQUIRE(!contains_origin({ "example.com" }, "HTTPS://example.com", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_origin__portless_name_default_port__true)
+{
+    BC_REQUIRE(contains_origin({ "example.com" }, "https://Example.com", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_origin__portless_name_any_port__true)
+{
+    BC_REQUIRE(contains_origin({ "example.com" }, "http://example.com:8780", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_origin__ported_name_default_port__true)
+{
+    BC_REQUIRE(contains_origin({ "example.com:42" }, "https://example.com", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_origin__ported_name_other_port__false)
+{
+    BC_REQUIRE(!contains_origin({ "example.com:42" }, "https://example.com:8743", 42));
+}
+
+BC_AUTO_TEST_CASE(utilities__contains_origin__portless_ipv6_any_port__true)
+{
+    BC_REQUIRE(contains_origin({ "[::1]" }, "http://[::1]:8780", 42));
+}
+
 BC_AUTO_TEST_SUITE_END()

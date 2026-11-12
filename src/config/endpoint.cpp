@@ -82,14 +82,13 @@ bool endpoint::operator!=(const messages::peer::address_item& other) const NOEXC
 }
 
 // public utility
-system::string_list to_host_names(const endpoints& hosts,
-    uint16_t default_port) NOEXCEPT
+system::string_list to_host_names(const endpoints& hosts) NOEXCEPT
 {
     system::string_list out{};
     out.resize(hosts.size());
-    std::ranges::transform(hosts, out.begin(), [=](const auto& value) NOEXCEPT
+    std::ranges::transform(hosts, out.begin(), [](const auto& value) NOEXCEPT
     {
-        return value.to_lower(default_port);
+        return value.to_lower();
     });
 
     return out;

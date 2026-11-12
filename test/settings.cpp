@@ -76,6 +76,7 @@ BC_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 8333u);
+    BC_REQUIRE_EQUAL(instance.inbound.bind_port, 8333u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__testnet3__expected)
@@ -91,6 +92,7 @@ BC_AUTO_TEST_CASE(settings__construct__testnet3__expected)
     BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 18333u);
+    BC_REQUIRE_EQUAL(instance.inbound.bind_port, 18333u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__testnet4__expected)
@@ -106,6 +108,7 @@ BC_AUTO_TEST_CASE(settings__construct__testnet4__expected)
     BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 48333u);
+    BC_REQUIRE_EQUAL(instance.inbound.bind_port, 48333u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__regtest__expected)
@@ -120,6 +123,7 @@ BC_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 18444u);
+    BC_REQUIRE_EQUAL(instance.inbound.bind_port, 18444u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__signet__expected)
@@ -135,6 +139,7 @@ BC_AUTO_TEST_CASE(settings__construct__signet__expected)
     BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 38333u);
+    BC_REQUIRE_EQUAL(instance.inbound.bind_port, 38333u);
 }
 
 BC_AUTO_TEST_CASE(settings__construct__testnet5__expected)
@@ -149,6 +154,7 @@ BC_AUTO_TEST_CASE(settings__construct__testnet5__expected)
     BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 18353u);
+    BC_REQUIRE_EQUAL(instance.inbound.bind_port, 18353u);
 }
 
 // helpers
@@ -442,6 +448,36 @@ BC_AUTO_TEST_CASE(settings__secure_server_default_ports__zero_ports__bind_and_sa
 
     BC_REQUIRE_EQUAL(instance.binds.at(0).port(), 42u);
     BC_REQUIRE_EQUAL(instance.safes.at(0).port(), 43u);
+}
+
+BC_AUTO_TEST_CASE(settings__http_server_initialize_context__hosts_origins__lowered_port_if_specified)
+{
+    settings::http_server instance{ "test" };
+    instance.hosts = { config::endpoint{ "LocalHost" }, config::endpoint{ "localhost:8080" }, config::endpoint{ "[::1]" } };
+    instance.origins = { config::endpoint{ "Example.com" }, config::endpoint{ "example.com:443" } };
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BC_REQUIRE_EQUAL(instance.host_names().size(), 3u);
+    BC_REQUIRE_EQUAL(instance.host_names().at(0), "localhost");
+    BC_REQUIRE_EQUAL(instance.host_names().at(1), "localhost:8080");
+    BC_REQUIRE_EQUAL(instance.origin_names().size(), 2u);
+    BC_REQUIRE_EQUAL(instance.origin_names().at(0), "example.com");
+    BC_REQUIRE_EQUAL(instance.origin_names().at(1), "example.com:443");
+}
+
+BC_AUTO_TEST_CASE(settings__http_server_initialize_context__portless_hosts__any_port)
+{
+    settings::http_server instance{ "test" };
+    instance.hosts = { config::endpoint{ "localhost" }, config::endpoint{ "[::1]" } };
+    instance.origins = { config::endpoint{ "example.com" } };
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+    BC_REQUIRE(config::contains_host(instance.host_names(), "localhost", 80));
+    BC_REQUIRE(config::contains_host(instance.host_names(), "localhost:8780", 80));
+    BC_REQUIRE(config::contains_host(instance.host_names(), "localhost:18780", 80));
+    BC_REQUIRE(config::contains_host(instance.host_names(), "[::1]:8780", 80));
+    BC_REQUIRE(!config::contains_host(instance.host_names(), "example.com:8780", 80));
+    BC_REQUIRE(config::contains_origin(instance.origin_names(), "http://example.com:8780", 80));
+    BC_REQUIRE(config::contains_origin(instance.origin_names(), "https://example.com:18743", 443));
+    BC_REQUIRE(!config::contains_origin(instance.origin_names(), "http://localhost:8780", 80));
 }
 
 BC_AUTO_TEST_CASE(settings__tls_server__defaults__expected)
@@ -1341,6 +1377,55 @@ BC_AUTO_TEST_CASE(settings__initialize__default__success_peer_identifier)
     settings instance{ system::chain::selection::mainnet };
     BC_REQUIRE_EQUAL(instance.initialize(), error::success);
     BC_REQUIRE_EQUAL(instance.peer.identifier, instance.identifier);
+}
+
+BC_AUTO_TEST_CASE(settings__initialize__portless_endpoints__network_port)
+{
+    settings instance{ system::chain::selection::testnet4 };
+    instance.inbound.binds = { config::authority{ "0.0.0.0" } };
+    instance.inbound.selfs = { config::address{ "1.2.3.4" } };
+    instance.manual.peers = { config::endpoint{ "5.6.7.8" } };
+    instance.outbound.seeds = { config::endpoint{ "seed.example.com" } };
+    BC_REQUIRE_EQUAL(instance.initialize(), error::success);
+    BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 48333u);
+    BC_REQUIRE_EQUAL(instance.inbound.selfs.front().port(), 48333u);
+    BC_REQUIRE_EQUAL(instance.inbound.selfs.front().to_host(), "1.2.3.4");
+    BC_REQUIRE_EQUAL(instance.manual.peers.front().port(), 48333u);
+    BC_REQUIRE_EQUAL(instance.manual.peers.front().host(), "5.6.7.8");
+    BC_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 48333u);
+    BC_REQUIRE_EQUAL(instance.outbound.seeds.front().host(), "seed.example.com");
+}
+
+BC_AUTO_TEST_CASE(settings__initialize__ported_endpoints__unchanged)
+{
+    settings instance{ system::chain::selection::testnet4 };
+    instance.inbound.binds = { config::authority{ "0.0.0.0:42" } };
+    instance.inbound.selfs = { config::address{ "1.2.3.4:42" } };
+    instance.manual.peers = { config::endpoint{ "5.6.7.8:42" } };
+    instance.outbound.seeds = { config::endpoint{ "seed.example.com:42" } };
+    BC_REQUIRE_EQUAL(instance.initialize(), error::success);
+    BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 42u);
+    BC_REQUIRE_EQUAL(instance.inbound.selfs.front().port(), 42u);
+    BC_REQUIRE_EQUAL(instance.manual.peers.front().port(), 42u);
+    BC_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 42u);
+}
+
+BC_AUTO_TEST_CASE(settings__initialize__portless_peer__peered_any_port)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.manual.peers = { config::endpoint{ "5.6.7.8" } };
+    BC_REQUIRE_EQUAL(instance.initialize(), error::success);
+    BC_REQUIRE(instance.manual.peered(config::address{ "5.6.7.8:8333" }));
+    BC_REQUIRE(instance.manual.peered(config::address{ "5.6.7.8:42" }));
+}
+
+BC_AUTO_TEST_CASE(settings__initialize__ported_peer__peered_port_only)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.manual.peers = { config::endpoint{ "5.6.7.8:8333" } };
+    BC_REQUIRE_EQUAL(instance.initialize(), error::success);
+    BC_REQUIRE(instance.manual.peered(config::address{ "5.6.7.8:8333" }));
+    BC_REQUIRE(!instance.manual.peered(config::address{ "5.6.7.8:42" }));
 }
 
 BC_AUTO_TEST_CASE(settings__peer_context__always__peer)

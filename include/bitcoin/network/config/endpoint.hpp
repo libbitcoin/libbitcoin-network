@@ -64,8 +64,8 @@ protected:
 
 typedef std::vector<endpoint> endpoints;
 
-system::string_list to_host_names(const endpoints& hosts,
-    uint16_t default_port) NOEXCEPT;
+/// Lowered host:port, or host if the port is unspecified.
+system::string_list to_host_names(const endpoints& hosts) NOEXCEPT;
 
 } // namespace config
 } // namespace network
