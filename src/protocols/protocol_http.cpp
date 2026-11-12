@@ -377,8 +377,8 @@ bool protocol_http::is_allowed_host(const fields& fields,
     if (host.empty() && version >= version_1_1)
         return false;
 
-    return options_.hosts.empty() || contains(options_.host_names(),
-        config::to_normal_host(host, default_port()));
+    return options_.hosts.empty() ||
+        config::contains_host(options_.host_names(), host, default_port());
 }
 
 bool protocol_http::is_allowed_origin(const fields& fields,
@@ -397,8 +397,8 @@ bool protocol_http::is_allowed_origin(const fields& fields,
     if (options_.origins.empty() || is_same_origin(fields, origin))
         return true;
 
-    return contains(options_.origin_names(),
-        config::to_normal_origin(origin, default_port()));
+    return config::contains_origin(options_.origin_names(), origin,
+        default_port());
 }
 
 bool protocol_http::is_same_origin(const fields& fields,
@@ -409,7 +409,7 @@ bool protocol_http::is_same_origin(const fields& fields,
     const std::string scheme{ secure ? "https://" : "http://" };
     const std::string host{ fields[field::host] };
     const auto self = config::to_normal_host(host, port);
-    return contains(options_.host_names(), self) &&
+    return config::contains_host(options_.host_names(), host, port) &&
         origin.starts_with(scheme) &&
         self == config::to_normal_origin(origin, port);
 }

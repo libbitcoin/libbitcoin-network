@@ -51,6 +51,29 @@ static void set_default_port(config::authorities& authorities,
             authority = { authority.ip(), port, authority.cidr() };
 }
 
+static void set_default_port(config::endpoints& endpoints,
+    uint16_t port) NOEXCEPT
+{
+    for (auto& endpoint: endpoints)
+        if (is_zero(endpoint.port()))
+            endpoint = { endpoint.host(), port };
+}
+
+static void set_default_port(config::addresses& addresses,
+    uint16_t port) NOEXCEPT
+{
+    for (auto& address: addresses)
+    {
+        if (is_zero(address.port()))
+        {
+            auto item = address.to_address_item(address.timestamp(),
+                address.services());
+            item.port = port;
+            address = { std::move(item) };
+        }
+    }
+}
+
 // socks5
 // ----------------------------------------------------------------------------
 
@@ -361,10 +384,8 @@ code settings::http_server::initialize_context() NOEXCEPT
     if (const auto ec = tls_server::initialize_context())
         return ec;
 
-    // secure changes default port from 80 to 443.
-    const auto port = secure() ? http::default_tls : http::default_http;
-    host_names_ = config::to_host_names(hosts, port);
-    origin_names_ = config::to_host_names(origins, port);
+    host_names_ = config::to_host_names(hosts);
+    origin_names_ = config::to_host_names(origins);
     return error::success;
 }
 
@@ -508,7 +529,16 @@ settings::settings(chain::selection context) NOEXCEPT
 code settings::initialize() NOEXCEPT
 {
     peer.identifier = identifier;
+
+    // Friends are mapped before peer ports are defaulted, so that a peer
+    // configured without a port matches its address on any port.
     manual.initialize();
+
+    const auto port = inbound.bind_port;
+    inbound.default_ports();
+    set_default_port(inbound.selfs, port);
+    set_default_port(manual.peers, port);
+    set_default_port(outbound.seeds, port);
     return inbound.initialize();
 }
 

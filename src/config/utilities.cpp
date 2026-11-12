@@ -68,6 +68,41 @@ std::string to_normal_origin(const std::string& origin,
     }
 }
 
+static bool contains_endpoint(const system::string_list& names,
+    const endpoint& value, uint16_t default_port) NOEXCEPT
+{
+    return system::contains(names, value.to_lower(default_port))
+        || system::contains(names, system::ascii_to_lower(value.host()));
+}
+
+bool contains_host(const system::string_list& names, const std::string& host,
+    uint16_t default_port) NOEXCEPT
+{
+    try
+    {
+        return contains_endpoint(names, endpoint{ host }, default_port);
+    }
+    catch (const std::exception&)
+    {
+        return false;
+    }
+}
+
+bool contains_origin(const system::string_list& names,
+    const std::string& origin, uint16_t default_port) NOEXCEPT
+{
+    try
+    {
+        const url url{ origin };
+        const endpoint value{ url.host(), url.port() };
+        return contains_endpoint(names, value, default_port);
+    }
+    catch (const std::exception&)
+    {
+        return false;
+    }
+}
+
 } // namespace config
 } // namespace network
 } // namespace libbitcoin

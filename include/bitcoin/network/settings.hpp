@@ -393,42 +393,45 @@ struct BCT_API settings
         {
             connections = 100;
 
-            // Use emplace_back due to initializer_list bug:
-            // stackoverflow.com/a/20168627/1172329
             switch (context)
             {
                 case system::chain::selection::mainnet:
                 {
-                    binds.emplace_back(system::ip::address{}, 8333_u16);
+                    bind_port = 8333_u16;
                     break;
                 }
                 case system::chain::selection::testnet3:
                 {
-                    binds.emplace_back(system::ip::address{}, 18333_u16);
+                    bind_port = 18333_u16;
                     break;
                 }
                 case system::chain::selection::testnet4:
                 {
-                    binds.emplace_back(system::ip::address{}, 48333_u16);
+                    bind_port = 48333_u16;
                     break;
                 }
                 case system::chain::selection::testnet5:
                 {
-                    binds.emplace_back(system::ip::address{}, 18353_u16);
+                    bind_port = 18353_u16;
                     break;
                 }
                 case system::chain::selection::regtest:
                 {
-                    binds.emplace_back(system::ip::address{}, 18444_u16);
+                    bind_port = 18444_u16;
                     break;
                 }
                 case system::chain::selection::signet:
                 {
-                    binds.emplace_back(system::ip::address{}, 38333_u16);
+                    bind_port = 38333_u16;
                     break;
                 }
                 default: break;
             }
+
+            // Use emplace_back due to initializer_list bug:
+            // stackoverflow.com/a/20168627/1172329
+            if (is_nonzero(bind_port))
+                binds.emplace_back(system::ip::address{}, bind_port);
         }
 
         bool enable_loopback{ false };
