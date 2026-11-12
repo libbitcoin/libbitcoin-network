@@ -20,6 +20,9 @@
 
 #if defined(HAVE_WINDOWS)
     #include <winsock2.h>
+    #if defined(HAVE_WINDOWS_LIBS)
+        #pragma comment(lib, "ws2_32.lib")
+    #endif
 #else
     #include <sys/socket.h>
 #endif
