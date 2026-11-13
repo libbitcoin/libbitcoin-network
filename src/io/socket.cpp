@@ -385,12 +385,19 @@ bool socket::half_closed() const NOEXCEPT
             (info.tcpi_state == TCPS_CLOSED && !is_zero(info.tcpi_srtt));
 
 #elif defined(HAVE_LINUX)
+    constexpr auto minimum = possible_narrow_cast<socklen_t>(
+        offsetof(tcp_info, tcpi_rcv_mss) + sizeof(tcp_info::tcpi_rcv_mss));
+
     struct tcp_info info{};
     socklen_t size = sizeof(info);
     if (is_zero(::getsockopt(descriptor_->handle, IPPROTO_TCP, TCP_INFO,
-        &info, &size)))
+        &info, &size)) && size >= minimum)
         return info.tcpi_state == TCP_CLOSE_WAIT ||
             (info.tcpi_state == TCP_CLOSE && !is_zero(info.tcpi_rcv_mss));
+
+    pollfd peer{ descriptor_->handle, POLLRDHUP, 0 };
+    if (is_one(::poll(&peer, 1, 0)))
+        return is_nonzero(peer.revents & (POLLRDHUP | POLLHUP | POLLERR));
 
 #elif defined(HAVE_BSD)
     struct tcp_info info{};
