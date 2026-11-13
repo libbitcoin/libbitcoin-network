@@ -41,62 +41,16 @@
     // #define THREAD_PRIORITY_NORMAL           0
     // #define THREAD_PRIORITY_ABOVE_NORMAL     1
     // #define THREAD_PRIORITY_HIGHEST          2
-
-    // The extreme "lowest" value is not mapped.
-    // #define MEMORY_PRIORITY_VERY_LOW         1
-    // #define MEMORY_PRIORITY_LOW              2
-    // #define MEMORY_PRIORITY_MEDIUM           3
-    // #define MEMORY_PRIORITY_BELOW_NORMAL     4
-    // #define MEMORY_PRIORITY_NORMAL           5
 #else
     #define THREAD_PRIORITY_HIGHEST             -20
     #define THREAD_PRIORITY_ABOVE_NORMAL        -2
     #define THREAD_PRIORITY_NORMAL               0
     #define THREAD_PRIORITY_BELOW_NORMAL         2
     #define THREAD_PRIORITY_LOWEST               20
-
-    // no equivalent
-    #define MEMORY_PRIORITY_NORMAL               0
-    #define MEMORY_PRIORITY_BELOW_NORMAL         0
-    #define MEMORY_PRIORITY_MEDIUM               0
-    #define MEMORY_PRIORITY_LOW                  0
-    #define MEMORY_PRIORITY_VERY_LOW             0
 #endif
 
 namespace libbitcoin {
 namespace network {
-
-#if defined (HAVE_MEMORY_PRIORITY)
-// Privately map the class enum memory priority value to an integer.
-static unsigned long get_memory_priority(memory_priority priority) NOEXCEPT
-{
-    switch (priority)
-    {
-        case memory_priority::lowest:
-            return MEMORY_PRIORITY_VERY_LOW;
-        case memory_priority::low:
-            return MEMORY_PRIORITY_LOW;
-        case memory_priority::medium:
-            return MEMORY_PRIORITY_MEDIUM;
-        case memory_priority::high:
-            return MEMORY_PRIORITY_BELOW_NORMAL;
-        default:
-        case memory_priority::highest:
-            return MEMORY_PRIORITY_NORMAL;
-    }
-}
-void set_memory_priority(memory_priority priority) NOEXCEPT
-{
-    const auto prioritization = get_memory_priority(priority);
-
-    // TODO: handle error conditions.
-    MEMORY_PRIORITY_INFORMATION information{ prioritization };
-    SetProcessInformation(GetCurrentProcess(), ProcessMemoryPriority,
-        &information, sizeof(information));
-}
-#else
-void set_memory_priority(memory_priority) NOEXCEPT {}
-#endif
 
 #if defined(HAVE_APPLE)
 // Privately map the class enum processing priority value to a qos class.

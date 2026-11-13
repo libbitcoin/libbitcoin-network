@@ -23,16 +23,6 @@
 
 namespace libbitcoin {
 namespace network {
-    
-/// defaults to highest ("normal")
-enum class memory_priority
-{
-    highest,
-    high,
-    medium,
-    low,
-    lowest
-};
 
 /// defaults to medium ("normal")
 enum class processing_priority
@@ -46,9 +36,6 @@ enum class processing_priority
 
 // Always at least 1 (guards against irrational API return).
 BCT_API size_t cores() NOEXCEPT;
-
-// Set memory priority for the current PROCESS.
-BCT_API void set_memory_priority(memory_priority priority) NOEXCEPT;
 
 // Set processing priority for the current THREAD.
 BCT_API void set_processing_priority(processing_priority priority) NOEXCEPT;
