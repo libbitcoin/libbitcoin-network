@@ -56,7 +56,8 @@ BC_AUTO_TEST_CASE(indirect__move__same_storage)
 
 BC_AUTO_TEST_CASE(indirect__body_value__largest_inline_kind)
 {
-    BC_REQUIRE_EQUAL(sizeof(http::body_value), sizeof(std::variant<http::peer_value>));
+    constexpr auto align = alignof(http::body_value);
+    BC_REQUIRE_EQUAL(sizeof(http::body_value), system::ceilinged_divide(sizeof(std::variant<http::peer_value>), align) * align);
 }
 
 BC_AUTO_TEST_CASE(indirect__body__stream_value__contained)
