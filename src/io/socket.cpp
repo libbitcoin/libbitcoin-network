@@ -397,7 +397,7 @@ bool socket::half_closed() const NOEXCEPT
 
     pollfd peer{ descriptor_->handle, POLLRDHUP, 0 };
     if (is_one(::poll(&peer, 1, 0)))
-        return is_nonzero(peer.revents & (POLLRDHUP | POLLHUP | POLLERR));
+        return is_nonzero(peer.revents & POLLRDHUP);
 
 #elif defined(HAVE_BSD)
     struct tcp_info info{};
