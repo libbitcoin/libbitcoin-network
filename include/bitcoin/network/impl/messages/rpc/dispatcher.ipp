@@ -65,7 +65,9 @@ inline external_t<Argument> CLASS::get_valued(const value_t& value) THROWS
     const auto& internal = value.value();
     using type = internal_t<Argument>;
 
-    if constexpr (is_same_type<Argument, value_t> ||
+    if constexpr (is_casted<Argument>)
+        return { cast_value<type>(value, cast_sources_t<Argument>{}) };
+    else if constexpr (is_same_type<Argument, value_t> ||
         is_same_type<type, value_t>)
         return value;
     else if constexpr (is_shared_ptr<type>)
@@ -101,8 +103,17 @@ template <typename Argument>
 inline external_t<Argument> CLASS::get_named(
     const std::string_view& name, const object_t& object) THROWS
 {
+    // The parameter is named by any of its aliases.
+    auto it = object.end();
+    for (auto aliases = name; it == object.end() && !aliases.empty();)
+    {
+        const auto bar = aliases.find('|');
+        it = object.find(std::string{ aliases.substr(zero, bar) });
+        aliases = (bar == std::string_view::npos) ? std::string_view{} :
+            aliases.substr(add1(bar));
+    }
+
     // Only optional can be missing.
-    const auto it = object.find(std::string{ name });
     if (it == object.end())
         return CLASS::get_missing<Argument>();
 

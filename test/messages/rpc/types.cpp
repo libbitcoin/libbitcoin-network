@@ -497,4 +497,152 @@ BC_AUTO_TEST_CASE(rpc_model__request_from__null_id_value_params__expected)
     BC_REQUIRE_EQUAL(system::json::serialize(model), R"({"jsonrpc":"2.0","id":null,"method":"m","params":"x"})");
 }
 
+// json_cast
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(rpc_model__json_cast__boolean__expected)
+{
+    number_t number{};
+    BC_REQUIRE(json_cast(number, false));
+    BC_REQUIRE_EQUAL(number, 0.0);
+    BC_REQUIRE(json_cast(number, true));
+    BC_REQUIRE_EQUAL(number, 1.0);
+
+    string_t text{};
+    BC_REQUIRE(json_cast(text, false));
+    BC_REQUIRE_EQUAL(text, "false");
+    BC_REQUIRE(json_cast(text, true));
+    BC_REQUIRE_EQUAL(text, "true");
+}
+
+BC_AUTO_TEST_CASE(rpc_model__json_cast__number__expected)
+{
+    boolean_type flag{ true };
+    BC_REQUIRE(json_cast(flag, 0.0));
+    BC_REQUIRE(!flag);
+    BC_REQUIRE(json_cast(flag, -0.0));
+    BC_REQUIRE(!flag);
+    BC_REQUIRE(json_cast(flag, 1.0));
+    BC_REQUIRE(flag);
+    BC_REQUIRE(json_cast(flag, 42.0));
+    BC_REQUIRE(flag);
+    BC_REQUIRE(json_cast(flag, 42.42));
+    BC_REQUIRE(flag);
+
+    string_t text{};
+    BC_REQUIRE(json_cast(text, 1.0));
+    BC_REQUIRE_EQUAL(text, "1");
+    BC_REQUIRE(json_cast(text, 42.42));
+    BC_REQUIRE_EQUAL(text, "42.42");
+    BC_REQUIRE(json_cast(text, 0.1));
+    BC_REQUIRE_EQUAL(text, "0.1");
+    BC_REQUIRE(json_cast(text, -1.5));
+    BC_REQUIRE_EQUAL(text, "-1.5");
+}
+
+BC_AUTO_TEST_CASE(rpc_model__json_cast__string_boolean__expected)
+{
+    boolean_type flag{};
+    BC_REQUIRE(json_cast(flag, string_t{ "true" }));
+    BC_REQUIRE(flag);
+    BC_REQUIRE(json_cast(flag, string_t{ "false" }));
+    BC_REQUIRE(!flag);
+    BC_REQUIRE(!json_cast(flag, string_t{ "" }));
+    BC_REQUIRE(!json_cast(flag, string_t{ "True" }));
+    BC_REQUIRE(!json_cast(flag, string_t{ "1" }));
+    BC_REQUIRE(!json_cast(flag, string_t{ "yes" }));
+}
+
+BC_AUTO_TEST_CASE(rpc_model__json_cast__string_number__expected)
+{
+    number_t number{};
+    BC_REQUIRE(json_cast(number, string_t{ "1" }));
+    BC_REQUIRE_EQUAL(number, 1.0);
+    BC_REQUIRE(json_cast(number, string_t{ "42.42" }));
+    BC_REQUIRE_EQUAL(number, 42.42);
+    BC_REQUIRE(json_cast(number, string_t{ "-1.5" }));
+    BC_REQUIRE_EQUAL(number, -1.5);
+    BC_REQUIRE(json_cast(number, string_t{ "1e-8" }));
+    BC_REQUIRE_EQUAL(number, 1e-8);
+    BC_REQUIRE(json_cast(number, string_t{ "1E+2" }));
+    BC_REQUIRE_EQUAL(number, 100.0);
+    BC_REQUIRE(json_cast(number, string_t{ "-0" }));
+    BC_REQUIRE_EQUAL(number, 0.0);
+}
+
+BC_AUTO_TEST_CASE(rpc_model__json_cast__string_not_number__false)
+{
+    number_t number{};
+    BC_REQUIRE(!json_cast(number, string_t{ "" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "." }));
+    BC_REQUIRE(!json_cast(number, string_t{ "+" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "+0.5" }));
+    BC_REQUIRE(!json_cast(number, string_t{ ".5" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "5." }));
+    BC_REQUIRE(!json_cast(number, string_t{ "005" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "1.2.3" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "1e" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "e5" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "1x" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "inf" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "true" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "null" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "[1]" }));
+    BC_REQUIRE(!json_cast(number, string_t{ "\"1\"" }));
+}
+
+// to_units
+// ----------------------------------------------------------------------------
+
+BC_AUTO_TEST_CASE(rpc_model__to_units__number__nearest_exact)
+{
+    uint64_t out{};
+    BC_REQUIRE(to_units(out, 0.1, 8u));
+    BC_REQUIRE_EQUAL(out, 10'000'000u);
+    BC_REQUIRE(to_units(out, 20999999.99999999, 8u));
+    BC_REQUIRE_EQUAL(out, 2'099'999'999'999'999u);
+    BC_REQUIRE(to_units(out, 1e-8, 8u));
+    BC_REQUIRE_EQUAL(out, 1u);
+    BC_REQUIRE(to_units(out, 0.0, 8u));
+    BC_REQUIRE_EQUAL(out, 0u);
+    BC_REQUIRE(to_units(out, 1.0e2, 0u));
+    BC_REQUIRE_EQUAL(out, 100u);
+    BC_REQUIRE(to_units(out, 9007199254740992.0, 0u));
+    BC_REQUIRE_EQUAL(out, 9'007'199'254'740'992u);
+}
+
+BC_AUTO_TEST_CASE(rpc_model__to_units__invalid_number__false)
+{
+    uint64_t out{};
+    BC_REQUIRE(!to_units(out, 0.123456789, 8u));
+    BC_REQUIRE(!to_units(out, 1.5, 0u));
+    BC_REQUIRE(!to_units(out, -1.0, 8u));
+    BC_REQUIRE(!to_units(out, 1e300, 8u));
+    BC_REQUIRE(!to_units(out, 18446744073709551615.0, 0u));
+    BC_REQUIRE(!to_units(out, std::numeric_limits<double>::infinity(), 8u));
+}
+
+BC_AUTO_TEST_CASE(rpc_model__to_units__value__number_or_cast_string)
+{
+    uint64_t out{};
+    BC_REQUIRE(to_units(out, value_t{ 0.1 }, 8u));
+    BC_REQUIRE_EQUAL(out, 10'000'000u);
+    BC_REQUIRE(to_units(out, value_t{ string_t{ "0.1" } }, 8u));
+    BC_REQUIRE_EQUAL(out, 10'000'000u);
+    BC_REQUIRE(to_units(out, value_t{ string_t{ "1e-8" } }, 8u));
+    BC_REQUIRE_EQUAL(out, 1u);
+    BC_REQUIRE(!to_units(out, value_t{ string_t{ "abc" } }, 8u));
+    BC_REQUIRE(!to_units(out, value_t{ string_t{ "1e-9" } }, 8u));
+    BC_REQUIRE(!to_units(out, value_t{ string_t{ "-0.1" } }, 8u));
+}
+
+BC_AUTO_TEST_CASE(rpc_model__to_units__other_types__false)
+{
+    uint64_t out{};
+    BC_REQUIRE(!to_units(out, value_t{}, 8u));
+    BC_REQUIRE(!to_units(out, value_t{ true }, 8u));
+    BC_REQUIRE(!to_units(out, value_t{ array_t{} }, 8u));
+    BC_REQUIRE(!to_units(out, value_t{ object_t{} }, 8u));
+}
+
 BC_AUTO_TEST_SUITE_END()

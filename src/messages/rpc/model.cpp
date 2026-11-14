@@ -18,12 +18,109 @@
  */
 #include <bitcoin/network/messages/rpc/model.hpp>
 
+#include <array>
+#include <charconv>
+#include <cmath>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace rpc {
+
+using namespace system;
+
+// json_cast
+// ----------------------------------------------------------------------------
+
+bool json_cast(number_t& out, boolean_t value) NOEXCEPT
+{
+    out = value ? 1.0 : 0.0;
+    return true;
+}
+
+bool json_cast(number_t& out, const string_t& value) NOEXCEPT
+{
+    code ec{};
+    const auto parsed = json::parse(value, ec);
+    if (ec || !parsed.is_number())
+        return false;
+
+    out = parsed.to_number<number_t>(ec);
+    return !ec;
+}
+
+bool json_cast(boolean_t& out, number_t value) NOEXCEPT
+{
+    out = !is_zero(value);
+    return true;
+}
+
+bool json_cast(boolean_t& out, const string_t& value) NOEXCEPT
+{
+    if (value != "true" && value != "false")
+        return false;
+
+    out = (value == "true");
+    return true;
+}
+
+bool json_cast(string_t& out, boolean_t value) NOEXCEPT
+{
+    out = value ? "true" : "false";
+    return true;
+}
+
+bool json_cast(string_t& out, number_t value) NOEXCEPT
+{
+    std::array<char, 32> buffer{};
+    const auto begin = buffer.data();
+    const auto end = std::to_address(buffer.end());
+    const auto result = std::to_chars(begin, end, value);
+    if (result.ec != std::errc{})
+        return false;
+
+    out.assign(begin, result.ptr);
+    return true;
+}
+
+// units
+// ----------------------------------------------------------------------------
+
+BC_PUSH_WARNING(NO_STATIC_CAST)
+BC_PUSH_WARNING(NO_CASTS_FOR_ARITHMETIC_CONVERSION)
+
+bool to_units(uint64_t& out, number_t value, uint8_t decimals) NOEXCEPT
+{
+    if (!std::isfinite(value) || value < 0.0)
+        return false;
+
+    auto factor = 1.0;
+    for (uint8_t place{}; place < decimals; ++place)
+        factor *= 10.0;
+
+    // Integers above 2^53 are not all representable, so none is exact.
+    constexpr auto exact = 9'007'199'254'740'992.0;
+    const auto scaled = std::round(value * factor);
+    if (scaled > exact || (scaled / factor) != value)
+        return false;
+
+    out = static_cast<uint64_t>(scaled);
+    return true;
+}
+
+BC_POP_WARNING()
+BC_POP_WARNING()
+
+bool to_units(uint64_t& out, const value_t& value, uint8_t decimals) NOEXCEPT
+{
+    number_t number{};
+    if (const auto text = std::get_if<string_t>(&value.value()))
+        return json_cast(number, *text) && to_units(out, number, decimals);
+
+    const auto pointer = std::get_if<number_t>(&value.value());
+    return !is_null(pointer) && to_units(out, *pointer, decimals);
+}
 
 // version
 // ----------------------------------------------------------------------------

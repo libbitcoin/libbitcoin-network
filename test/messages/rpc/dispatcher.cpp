@@ -1401,6 +1401,124 @@ BC_AUTO_TEST_CASE(dispatcher__notify__no_params_named_empty_method__success)
     instance.stop(error::service_stopped);
 }
 
+// cast and aliased parameters
+// ----------------------------------------------------------------------------
+
+struct cast_methods
+{
+    static constexpr std::tuple methods
+    {
+        method<"casted", cast<boolean_type, number_t>, nullopt<7.0, cast<string_t, number_t>>, nullable<cast<number_t, boolean_type, string_t>>>{ "a", "b|bee", "c" }
+    };
+
+    template <typename... Args>
+    using subscriber = network::unsubscriber<Args...>;
+
+    template <size_t Index>
+    using at = method_at<methods, Index>;
+
+    using casted = at<0>;
+};
+
+using cast_interface = publish<cast_methods>;
+
+static_assert(is_required<cast<boolean_type, number_t>>);
+static_assert(is_nullopt<nullopt<7.0, cast<string_t, number_t>>>);
+static_assert(is_nullable<nullable<cast<number_t, boolean_type, string_t>>>);
+static_assert(is_casted<cast<boolean_type, number_t>>);
+static_assert(is_casted<nullopt<7.0, cast<string_t, number_t>>>);
+static_assert(is_casted<nullable<cast<number_t, boolean_type, string_t>>>);
+static_assert(!is_casted<nullopt<7.0>>);
+static_assert(!is_casted<nullable<number_t>>);
+static_assert(!is_casted<number_t>);
+static_assert(is_same_type<external_t<cast<boolean_type, number_t>>, number_t>);
+static_assert(is_same_type<external_t<nullopt<7.0, cast<string_t, number_t>>>, number_t>);
+static_assert(is_same_type<external_t<nullable<cast<number_t, boolean_type, string_t>>>, std::optional<string_t>>);
+
+BC_AUTO_TEST_CASE(dispatcher__notify__cast_positional__cast_or_defaulted)
+{
+    dispatcher<cast_interface> instance{};
+    number_t result_a{};
+    number_t result_b{};
+    std::optional<string_t> result_c{};
+
+    instance.subscribe([&](const code&, cast_interface::casted, number_t a, number_t b, const std::optional<string_t>& c)
+    {
+        result_a = a;
+        result_b = b;
+        result_c = c;
+        return true;
+    });
+
+    BC_REQUIRE(!instance.notify({ .method = "casted", .params = { array_t{ boolean_type{ true } } } }));
+    BC_REQUIRE_EQUAL(result_a, 1.0);
+    BC_REQUIRE_EQUAL(result_b, 7.0);
+    BC_REQUIRE(!result_c.has_value());
+
+    BC_REQUIRE(!instance.notify({ .method = "casted", .params = { array_t{ number_t{ 2.5 }, string_t{ "1.5" }, boolean_type{ false } } } }));
+    BC_REQUIRE_EQUAL(result_a, 2.5);
+    BC_REQUIRE_EQUAL(result_b, 1.5);
+    BC_REQUIRE_EQUAL(result_c.value(), "false");
+
+    BC_REQUIRE(!instance.notify({ .method = "casted", .params = { array_t{ boolean_type{ false }, null_t{}, number_t{ 42.42 } } } }));
+    BC_REQUIRE_EQUAL(result_a, 0.0);
+    BC_REQUIRE_EQUAL(result_b, 7.0);
+    BC_REQUIRE_EQUAL(result_c.value(), "42.42");
+
+    BC_REQUIRE(!instance.notify({ .method = "casted", .params = { array_t{ number_t{ 1.0 }, number_t{ 2.0 }, string_t{ "x" } } } }));
+    BC_REQUIRE_EQUAL(result_b, 2.0);
+    BC_REQUIRE_EQUAL(result_c.value(), "x");
+
+    BC_REQUIRE(!instance.notify({ .method = "casted", .params = { array_t{ number_t{ 1.0 }, number_t{ 2.0 }, null_t{} } } }));
+    BC_REQUIRE(!result_c.has_value());
+    instance.stop(error::service_stopped);
+}
+
+BC_AUTO_TEST_CASE(dispatcher__notify__cast_failure__expected_code)
+{
+    dispatcher<cast_interface> instance{};
+    instance.subscribe([&](const code&, cast_interface::casted, number_t, number_t, const std::optional<string_t>&)
+    {
+        return true;
+    });
+
+    BC_REQUIRE_EQUAL(instance.notify({ .method = "casted", .params = { array_t{ string_t{ "1" } } } }), error::unexpected_type);
+    BC_REQUIRE_EQUAL(instance.notify({ .method = "casted", .params = { array_t{ number_t{ 1.0 }, boolean_type{ true } } } }), error::unexpected_type);
+    BC_REQUIRE_EQUAL(instance.notify({ .method = "casted", .params = { array_t{ number_t{ 1.0 }, string_t{ "abc" } } } }), error::unexpected_type);
+    BC_REQUIRE_EQUAL(instance.notify({ .method = "casted", .params = { array_t{ number_t{ 1.0 }, number_t{ 2.0 }, array_t{} } } }), error::unexpected_type);
+    BC_REQUIRE_EQUAL(instance.notify({ .method = "casted", .params = { array_t{ null_t{} } } }), error::unexpected_null);
+    BC_REQUIRE_EQUAL(instance.notify({ .method = "casted", .params = { array_t{} } }), error::missing_parameter);
+    instance.stop(error::service_stopped);
+}
+
+BC_AUTO_TEST_CASE(dispatcher__notify__named_alias__either_name)
+{
+    dispatcher<cast_interface> instance{};
+    number_t result_a{};
+    number_t result_b{};
+
+    instance.subscribe([&](const code&, cast_interface::casted, number_t a, number_t b, const std::optional<string_t>&)
+    {
+        result_a = a;
+        result_b = b;
+        return true;
+    });
+
+    BC_REQUIRE(!instance.notify({ .method = "casted", .params = { object_t{ { "a", number_t{ 1.0 } }, { "b", number_t{ 3.0 } } } } }));
+    BC_REQUIRE_EQUAL(result_a, 1.0);
+    BC_REQUIRE_EQUAL(result_b, 3.0);
+
+    BC_REQUIRE(!instance.notify({ .method = "casted", .params = { object_t{ { "a", boolean_type{ true } }, { "bee", string_t{ "5" } } } } }));
+    BC_REQUIRE_EQUAL(result_a, 1.0);
+    BC_REQUIRE_EQUAL(result_b, 5.0);
+
+    BC_REQUIRE(!instance.notify({ .method = "casted", .params = { object_t{ { "a", number_t{ 2.0 } } } } }));
+    BC_REQUIRE_EQUAL(result_b, 7.0);
+
+    BC_REQUIRE_EQUAL(instance.notify({ .method = "casted", .params = { object_t{ { "bee", number_t{ 5.0 } } } } }), error::missing_parameter);
+    instance.stop(error::service_stopped);
+}
+
 BC_AUTO_TEST_CASE(distributor__notify__ping_positional_wrong_pointer_type__unexpected_type)
 {
     distributor_mock instance{};

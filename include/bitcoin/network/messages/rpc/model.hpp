@@ -188,6 +188,25 @@ struct request_t
     params_option params{};
 };
 
+/// Cast a json value to another json type, false if not representable.
+BCT_API bool json_cast(number_t& out, boolean_t value) NOEXCEPT;
+BCT_API bool json_cast(number_t& out, const string_t& value) NOEXCEPT;
+BCT_API bool json_cast(boolean_t& out, number_t value) NOEXCEPT;
+BCT_API bool json_cast(boolean_t& out, const string_t& value) NOEXCEPT;
+BCT_API bool json_cast(string_t& out, boolean_t value) NOEXCEPT;
+BCT_API bool json_cast(string_t& out, number_t value) NOEXCEPT;
+
+/// A number as an exact count of its 10^-decimals units, false if inexact,
+/// negative or out of range. A number is exact if it is the nearest double to
+/// such a count.
+BCT_API bool to_units(uint64_t& out, number_t value,
+    uint8_t decimals) NOEXCEPT;
+
+/// A number, or a string cast to a number, as an exact count of its
+/// 10^-decimals units, false if another type or not exact.
+BCT_API bool to_units(uint64_t& out, const value_t& value,
+    uint8_t decimals) NOEXCEPT;
+
 DECLARE_JSON_TAG_INVOKE(version);
 DECLARE_JSON_TAG_INVOKE(value_t);
 DECLARE_JSON_TAG_INVOKE(identity_t);
