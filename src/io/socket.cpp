@@ -406,7 +406,6 @@ bool socket::half_closed() const NOEXCEPT
         &info, &size)))
         return info.tcpi_state == TCPS_CLOSE_WAIT;
 
-    // A reset connection is dropped, so the query fails.
     if (last_error() == ECONNRESET)
         return true;
 #endif

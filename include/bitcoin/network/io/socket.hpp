@@ -115,7 +115,7 @@ public:
     size_t available(code& ec) const NOEXCEPT;
 
     /// The peer has closed its side of the connection (FIN received),
-    /// or reset it (RST received, linux, macos, windows and bsd).
+    /// or reset it (RST received).
     bool half_closed() const NOEXCEPT;
 
     endpoint local_endpoint(code& ec) const NOEXCEPT;

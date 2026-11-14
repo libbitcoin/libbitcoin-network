@@ -459,7 +459,6 @@ BC_AUTO_TEST_CASE(io_socket__half_closed__peer_shutdown_with_unread_data__true)
     BC_REQUIRE(!ec);
 }
 
-#if defined(HAVE_LINUX) || defined(HAVE_APPLE) || defined(HAVE_WINDOWS) || defined(HAVE_BSD)
 BC_AUTO_TEST_CASE(io_socket__half_closed__peer_reset__true)
 {
     connected_pair connection{};
@@ -474,7 +473,6 @@ BC_AUTO_TEST_CASE(io_socket__half_closed__peer_reset__true)
 
     BC_REQUIRE(half_closed_within(connection.accepted, 1000));
 }
-#endif
 
 BC_AUTO_TEST_CASE(io_socket__half_closed__opened_unconnected__false)
 {
