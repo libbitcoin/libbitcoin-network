@@ -295,6 +295,27 @@ BC_AUTO_TEST_CASE(http_parser__put__content_encoding_empty_body__empty)
     BC_REQUIRE(instance.get().body().empty());
 }
 
+BC_AUTO_TEST_CASE(http_parser__put__content_encoding_paused_reader__resumed)
+{
+    const std::string head{ "POST / HTTP/1.1\r\nContent-Encoding: gzip\r\nContent-Length: 31\r\n\r\n" };
+    system::data_array<4> first{};
+    system::data_array<7> second{};
+    parser<true, buffer_body> instance{};
+    instance.get().body() = { first.data(), first.size() };
+
+    code ec{};
+    BC_REQUIRE_EQUAL(instance.put(io::const_buffer{ head.data(), head.size() }, ec), head.size());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(instance.put(io::const_buffer{ hello_gzip.data(), hello_gzip.size() }, ec), hello_gzip.size());
+    BC_REQUIRE(ec == http_error_t::need_buffer);
+
+    instance.get().body() = { second.data(), second.size() };
+    instance.put(io::const_buffer{}, ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE_EQUAL(system::to_string(system::splice(first, second)), "hello world");
+}
+
 BC_AUTO_TEST_CASE(http_parser__put__decoded_body_limit__exceeded)
 {
     string_parser<true> instance{};
