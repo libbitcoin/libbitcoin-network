@@ -141,6 +141,94 @@ struct optional<Default>
     }
 };
 
+/// cast<>
+/// ---------------------------------------------------------------------------
+
+struct cast_tag {};
+
+template <typename Type>
+concept is_castable =
+    is_same_type<Type, boolean_t> ||
+    is_same_type<Type, number_t> ||
+    is_same_type<Type, string_t>;
+
+/// Parameter is typed as the last of Types, accepting any of Types.
+template <typename ...Types>
+struct cast;
+
+/// number_t : cast<boolean_t, number_t>
+template <typename From, typename To> requires
+    is_castable<From> && is_castable<To> && (!is_same_type<From, To>)
+struct cast<From, To>
+{
+    using tag = cast_tag;
+    using type = To;
+    using sources = std::tuple<From>;
+};
+
+/// number_t : cast<boolean_t, string_t, number_t>
+template <typename First, typename Second, typename To> requires
+    is_castable<First> && is_castable<Second> && is_castable<To> &&
+    (!is_same_type<First, Second>) && (!is_same_type<First, To>) &&
+    (!is_same_type<Second, To>)
+struct cast<First, Second, To>
+{
+    using tag = cast_tag;
+    using type = To;
+    using sources = std::tuple<First, Second>;
+};
+
+template <typename Type>
+concept is_cast = requires { typename Type::tag; } &&
+    is_same_type<typename Type::tag, cast_tag>;
+
+/// cast_sources_t<> (types cast to the parameter type, empty if none).
+template <typename Type, typename = void>
+struct cast_traits
+{
+    using type = Type;
+    using sources = std::tuple<>;
+};
+
+template <typename Type>
+struct cast_traits<Type, std::void_t<typename Type::sources>>
+{
+    using type = typename Type::type;
+    using sources = typename Type::sources;
+};
+
+template <typename Argument>
+using cast_sources_t = typename cast_traits<Argument>::sources;
+
+template <typename Argument>
+constexpr bool is_casted = !is_empty_tuple<cast_sources_t<Argument>>;
+
+/// The value as Type, cast from one of Sources if not already Type.
+template <typename Type, typename ...Sources>
+Type cast_value(const value_t& value, std::tuple<Sources...>) THROWS
+{
+    if (const auto typed = std::get_if<Type>(&value.value()))
+        return *typed;
+
+    Type out{};
+    const auto from = [&]<typename Source>() THROWS
+    {
+        const auto source = std::get_if<Source>(&value.value());
+        if (is_null(source))
+            return false;
+
+        if (!json_cast(out, *source))
+            throw std::system_error{ error::unexpected_type };
+
+        return true;
+    };
+
+    if (!(from.template operator()<Sources>() || ...))
+        throw std::system_error{ error::unexpected_type };
+
+    return out;
+}
+
 /// nullable<>
 /// ---------------------------------------------------------------------------
 
@@ -151,11 +239,12 @@ template <typename Type> requires
     is_same_type<Type, object_t> || is_same_type<Type, array_t> ||
     is_same_type<Type, string_t> || is_same_type<Type, boolean_t> ||
     is_same_type<Type, number_t> || is_integral_integer<Type> ||
-    is_same_type<Type, value_t>  || is_shared_ptr<Type>
+    is_same_type<Type, value_t>  || is_shared_ptr<Type> || is_cast<Type>
 struct nullable
 {
     using tag = nullable_tag;
-    using type = Type;
+    using type = typename cast_traits<Type>::type;
+    using sources = typename cast_traits<Type>::sources;
 };
 
 /// nullopt<>
@@ -164,11 +253,14 @@ struct nullable
 struct nullopt_tag {};
 
 /// Parameter is typed as optional<Default>, defaulted when null_t or missing.
-template <auto Default>
+template <auto Default, typename Cast = void> requires
+    is_same_type<Cast, void> || (is_cast<Cast> &&
+        is_same_type<typename Cast::type, typename optional<Default>::type>)
 struct nullopt
   : optional<Default>
 {
     using tag = nullopt_tag;
+    using sources = typename cast_traits<Cast>::sources;
 };
 
 /// is_optional<>, is_nullable<>, is_nullopt<>, is_defaulted<>, is_required<>

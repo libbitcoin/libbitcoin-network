@@ -128,3 +128,11 @@ static_assert(is_same_type<names_t<method<"bar">>, std::array<std::string_view, 
 // tuple
 static_assert(is_same_type<names_t<std::tuple<bool, double>>, std::array<std::string_view, 2>>);
 static_assert(is_same_type<names_t<std::tuple<>>, std::array<std::string_view, 0>>);
+
+// primary_name
+// -----------------------------------------------------------------------------
+
+static_assert(primary_name("verbosity") == "verbosity");
+static_assert(primary_name("verbosity|verbose") == "verbosity");
+static_assert(primary_name("a|b|c") == "a");
+static_assert(primary_name("").empty());

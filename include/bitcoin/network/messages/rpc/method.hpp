@@ -56,6 +56,13 @@ constexpr unimplemented_t unimplemented{};
 /// as its last template argument, which is not a parameter of the method.
 struct command {};
 
+/// A parameter name may append aliases, each preceded by '|', any of which
+/// names the parameter in a request (as "verbosity|verbose").
+constexpr std::string_view primary_name(const std::string_view& name) NOEXCEPT
+{
+    return name.substr(zero, name.find('|'));
+}
+
 template <typename Type, typename Tuple>
 struct prepend_t;
 
