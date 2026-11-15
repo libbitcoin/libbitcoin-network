@@ -20,6 +20,8 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_HTTP_HPP
 
 #include <bitcoin/network/messages/http/bodies.hpp>
+#include <bitcoin/network/messages/http/codings.hpp>
+#include <bitcoin/network/messages/http/enums/coding.hpp>
 #include <bitcoin/network/messages/http/enums/field.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/http/enums/media_type.hpp>

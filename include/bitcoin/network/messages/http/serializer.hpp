@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/http/codings.hpp>
 #include <bitcoin/network/messages/http/header.hpp>
 #include <bitcoin/network/messages/http/message.hpp>
 
@@ -47,6 +48,8 @@ using const_buffers = std::vector<io::const_buffer>;
 /// Not thread safe, non-virtual.
 /// Incrementally serialize a message, driving the body writer of the message
 /// body. Each next() yields buffers valid until the following next() call.
+/// A body with content or transfer codings is encoded once written, an empty
+/// body remaining empty, and a content-length is set to the coded size.
 template <bool IsRequest, class Body>
 class serializer
 {
@@ -77,16 +80,23 @@ private:
     enum class state
     {
         header,
+        encode,
         body,
         done
     };
 
+    const_buffers encoded(code& ec) NOEXCEPT;
+    bool collect(code& ec) NOEXCEPT;
     void append_body(const_buffers& buffers, code& ec) NOEXCEPT;
+    void append(const_buffers& buffers, const io::const_buffer& data,
+        bool more) NOEXCEPT;
 
     message_type& message_;
     writer_type writer_;
     const bool chunked_;
     state state_{ state::header };
+    codings codings_{};
+    system::data_chunk body_{};
     std::string header_{};
     std::string prefix_{};
 };

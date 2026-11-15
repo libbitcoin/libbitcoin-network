@@ -30,6 +30,7 @@ enum class field : uint8_t
 {
     unknown,
     accept,
+    accept_encoding,
     access_control_allow_headers,
     access_control_allow_methods,
     access_control_allow_origin,
@@ -39,6 +40,7 @@ enum class field : uint8_t
     authorization,
     connection,
     content_disposition,
+    content_encoding,
     content_length,
     content_type,
     date,

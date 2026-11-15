@@ -53,6 +53,20 @@ static code feed(string_parser<IsRequest>& instance, std::string text,
     return ec;
 }
 
+static std::string from_base16(const std::string& text)
+{
+    system::data_chunk out{};
+    system::decode_base16(out, text);
+    return system::to_string(out);
+}
+
+// gzip (rfc1952) and zlib (rfc1950) vectors produced by zlib.
+const auto hello_gzip = from_base16("1f8b08000000000002ffcb48cdc9c95728cf2fca49010085114a0d0b000000");
+const auto hello_gzip_head = hello_gzip.substr(0, 16);
+const auto hello_gzip_tail = hello_gzip.substr(16);
+const auto hello_zlib = from_base16("789ccb48cdc9c95728cf2fca4901001a0b045d");
+const auto thousand_gzip = from_base16("1f8b08000000000002ff4b4c1c05a360140c77000003da389ae8030000");
+
 // requests
 
 BC_AUTO_TEST_CASE(http_parser__put__content_length__expected)
@@ -74,7 +88,7 @@ BC_AUTO_TEST_CASE(http_parser__put__bytewise_chunked__expected)
 {
     string_parser<true> instance{};
     std::string rest{};
-    const auto ec = feed(instance, "POST / HTTP/1.1\r\nTransfer-Encoding: gzip, chunked\r\n\r\n3;a=\"b\"\r\nabc\r\n2\r\nde\r\n0\r\nTrailer: t\r\n\r\n", rest, 1);
+    const auto ec = feed(instance, "POST / HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n3;a=\"b\"\r\nabc\r\n2\r\nde\r\n0\r\nTrailer: t\r\n\r\n", rest, 1);
     BC_REQUIRE(!ec);
     BC_REQUIRE(instance.is_done());
     BC_REQUIRE_EQUAL(instance.get().body(), "abcde");
@@ -132,6 +146,10 @@ BC_AUTO_TEST_CASE(http_parser__put__errors__expected)
         { "GET / HTTP/1.1\r\nTransfer-Encoding: chunked, gzip\r\n\r\n", http_error_t::bad_transfer_encoding },
         { "GET / HTTP/1.1\r\nTransfer-Encoding: gzip\r\nTransfer-Encoding: chunked\r\n\r\n", http_error_t::bad_transfer_encoding },
         { "GET / HTTP/1.1\r\nTransfer-Encoding: gzip\r\nContent-Length: 1\r\n\r\n", http_error_t::bad_content_length },
+        { "POST / HTTP/1.1\r\nTransfer-Encoding: br, chunked\r\n\r\n", http_error_t::bad_transfer_encoding },
+        { "POST / HTTP/1.1\r\nContent-Encoding: br\r\nContent-Length: 1\r\n\r\nx", http_error_t::bad_content_encoding },
+        { "POST / HTTP/1.1\r\nContent-Encoding: gzip\r\nContent-Length: 3\r\n\r\nabc", http_error_t::bad_content_encoding },
+        { "POST / HTTP/1.1\r\nTransfer-Encoding: gzip, chunked\r\n\r\n3\r\nabc\r\n0\r\n\r\n", http_error_t::bad_transfer_encoding },
         { "GET / HTTP/1.1\r\nConnection: a b\r\n\r\n", http_error_t::bad_value },
         { "GET / HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\nx\r\n", http_error_t::bad_chunk },
         { "GET / HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n1 \r\na\r\n0\r\n\r\n", http_error_t::bad_chunk_extension },
@@ -193,18 +211,90 @@ BC_AUTO_TEST_CASE(http_parser__put__response_to_eof__body_on_eof)
     BC_REQUIRE_EQUAL(instance.get().body(), "some body");
 }
 
-BC_AUTO_TEST_CASE(http_parser__put__response_encoded__body_on_eof)
+BC_AUTO_TEST_CASE(http_parser__put__response_encoded__decoded_body_on_eof)
 {
     string_parser<false> instance{};
     std::string rest{};
-    feed(instance, "HTTP/1.1 200 OK\r\nTransfer-Encoding: gzip\r\n\r\nsome body", rest);
+    feed(instance, "HTTP/1.1 200 OK\r\nTransfer-Encoding: gzip\r\n\r\n" + hello_gzip, rest);
     BC_REQUIRE(!instance.is_done());
 
     code ec{};
     instance.put_eof(ec);
     BC_REQUIRE(!ec);
     BC_REQUIRE(instance.is_done());
-    BC_REQUIRE_EQUAL(instance.get().body(), "some body");
+    BC_REQUIRE_EQUAL(instance.get().body(), "hello world");
+}
+
+BC_AUTO_TEST_CASE(http_parser__put__content_encoding_gzip__decoded_body)
+{
+    string_parser<true> instance{};
+    std::string rest{};
+    const auto ec = feed(instance, "POST / HTTP/1.1\r\nContent-Encoding: gzip\r\nContent-Length: 31\r\n\r\n" + hello_gzip + "GET", rest);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE_EQUAL(instance.get().body(), "hello world");
+    BC_REQUIRE_EQUAL(rest, "GET");
+}
+
+BC_AUTO_TEST_CASE(http_parser__put__content_encoding_deflate__decoded_body)
+{
+    string_parser<true> instance{};
+    std::string rest{};
+    const auto ec = feed(instance, "POST / HTTP/1.1\r\nContent-Encoding: deflate\r\nContent-Length: 19\r\n\r\n" + hello_zlib, rest);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE_EQUAL(instance.get().body(), "hello world");
+}
+
+BC_AUTO_TEST_CASE(http_parser__put__bytewise_transfer_gzip_chunked__decoded_body)
+{
+    string_parser<true> instance{};
+    std::string rest{};
+    const auto chunks = "10\r\n" + hello_gzip_head + "\r\nf\r\n" + hello_gzip_tail + "\r\n0\r\n\r\n";
+    const auto ec = feed(instance, "POST / HTTP/1.1\r\nTransfer-Encoding: gzip, chunked\r\n\r\n" + chunks, rest, 1);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE_EQUAL(instance.get().body(), "hello world");
+    BC_REQUIRE(rest.empty());
+}
+
+BC_AUTO_TEST_CASE(http_parser__put__content_encoding_identity__raw_body)
+{
+    string_parser<true> instance{};
+    std::string rest{};
+    const auto ec = feed(instance, "POST / HTTP/1.1\r\nContent-Encoding: identity\r\nContent-Length: 5\r\n\r\nhello", rest);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE_EQUAL(instance.get().body(), "hello");
+}
+
+BC_AUTO_TEST_CASE(http_parser__put__content_encoding_empty_body__empty)
+{
+    string_parser<true> instance{};
+    std::string rest{};
+    const auto ec = feed(instance, "POST / HTTP/1.1\r\nContent-Encoding: gzip\r\nContent-Length: 0\r\n\r\n", rest);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(instance.is_done());
+    BC_REQUIRE(instance.get().body().empty());
+}
+
+BC_AUTO_TEST_CASE(http_parser__put__decoded_body_limit__exceeded)
+{
+    string_parser<true> instance{};
+    instance.body_limit(100);
+    std::string rest{};
+    const auto ec = feed(instance, "POST / HTTP/1.1\r\nContent-Encoding: gzip\r\nContent-Length: 29\r\n\r\n" + thousand_gzip, rest);
+    BC_REQUIRE(ec == http_error_t::bad_content_encoding);
+}
+
+BC_AUTO_TEST_CASE(http_parser__put__decoded_body_limit__equal)
+{
+    string_parser<true> instance{};
+    instance.body_limit(1000);
+    std::string rest{};
+    const auto ec = feed(instance, "POST / HTTP/1.1\r\nContent-Encoding: gzip\r\nContent-Length: 29\r\n\r\n" + thousand_gzip, rest);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(instance.get().body(), std::string(1000, 'a'));
 }
 
 BC_AUTO_TEST_CASE(http_parser__put__bodiless_status__no_body)
@@ -324,6 +414,86 @@ BC_AUTO_TEST_CASE(http_parser__serializer__content_length__raw_body)
             wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
 
     BC_REQUIRE_EQUAL(wire, "PUT /a HTTP/1.1\r\nContent-Length: 3\r\n\r\nabc");
+}
+
+BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_chunked__round_trip)
+{
+    const std::string expected(1000, 'a');
+    message<false, string_body> out{ status::ok, version_1_1 };
+    out.set(field::content_encoding, "gzip");
+    out.body() = expected;
+    out.prepare_payload();
+
+    code ec{};
+    std::string wire{};
+    serializer<false, string_body> instance{ out };
+    while (!instance.is_done())
+        for (const auto& buffer: instance.next(ec))
+            wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
+
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_LT(wire.size(), 200u);
+
+    string_parser<false> parse{};
+    std::string rest{};
+    BC_REQUIRE(!feed(parse, wire, rest));
+    BC_REQUIRE_EQUAL(parse.get().body(), expected);
+}
+
+BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_length__coded_length)
+{
+    const std::string expected(1000, 'a');
+    message<true, string_body> out{ verb::put, "/a", version_1_1 };
+    out.set(field::content_encoding, "deflate");
+    out.body() = expected;
+    out.content_length(1000u);
+
+    code ec{};
+    std::string wire{};
+    serializer<true, string_body> instance{ out };
+    while (!instance.is_done())
+        for (const auto& buffer: instance.next(ec))
+            wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
+
+    BC_REQUIRE(!ec);
+    const auto coded = system::zlib_deflate(system::data_chunk(1000, 'a'));
+    BC_REQUIRE_EQUAL(out.content_length().value(), system::possible_wide_cast<uint64_t>(coded.size()));
+
+    string_parser<true> parse{};
+    std::string rest{};
+    BC_REQUIRE(!feed(parse, wire, rest));
+    BC_REQUIRE_EQUAL(parse.get().body(), expected);
+    BC_REQUIRE(rest.empty());
+}
+
+BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_empty_body__empty)
+{
+    message<false, string_body> out{ status::ok, version_1_1 };
+    out.set(field::content_encoding, "gzip");
+    out.content_length(0u);
+
+    code ec{};
+    std::string wire{};
+    serializer<false, string_body> instance{ out };
+    while (!instance.is_done())
+        for (const auto& buffer: instance.next(ec))
+            wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
+
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(wire, "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 0\r\n\r\n");
+}
+
+BC_AUTO_TEST_CASE(http_parser__serializer__unknown_content_encoding__error)
+{
+    message<false, string_body> out{ status::ok, version_1_1 };
+    out.set(field::content_encoding, "br");
+    out.body() = "payload";
+    out.prepare_payload();
+
+    code ec{};
+    serializer<false, string_body> instance{ out };
+    BC_REQUIRE(instance.next(ec).empty());
+    BC_REQUIRE(ec == http_error_t::bad_content_encoding);
 }
 
 // body_serializer
