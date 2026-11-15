@@ -146,6 +146,8 @@
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\memory.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\codings.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\coding.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\field.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\media_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\status.cpp" />
@@ -346,6 +348,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\tracker.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\bodies.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\codings.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\coding.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\field.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\magic_numbers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\media_type.hpp" />

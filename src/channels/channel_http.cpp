@@ -50,6 +50,9 @@ inline status to_status(const code& ec) NOEXCEPT
     if (ec == error::bad_method)
         return status::not_implemented;
 
+    if (ec == error::bad_content_encoding)
+        return status::unsupported_media_type;
+
     if (ec == error::bad_line_ending
         || ec == error::bad_target
         || ec == error::bad_version

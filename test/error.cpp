@@ -1549,6 +1549,15 @@ BC_AUTO_TEST_CASE(error_t__code__bad_transfer_encoding__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "bad transfer encoding");
 }
 
+BC_AUTO_TEST_CASE(error_t__code__bad_content_encoding__true_expected_message)
+{
+    constexpr auto value = error::bad_content_encoding;
+    const auto ec = code(value);
+    BC_REQUIRE(ec);
+    BC_REQUIRE(ec == value);
+    BC_REQUIRE_EQUAL(ec.message(), "bad content encoding");
+}
+
 BC_AUTO_TEST_CASE(error_t__code__bad_chunk__true_expected_message)
 {
     constexpr auto value = error::bad_chunk;
@@ -2363,6 +2372,7 @@ BC_AUTO_TEST_CASE(http_to_error_code__beast_codes__expected)
     BC_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_value)), error::bad_value);
     BC_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_content_length)), error::bad_content_length);
     BC_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_transfer_encoding)), error::bad_transfer_encoding);
+    BC_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_content_encoding)), error::bad_content_encoding);
     BC_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_chunk)), error::bad_chunk);
     BC_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_chunk_extension)), error::bad_chunk_extension);
     BC_REQUIRE_EQUAL(error::http_to_error_code(error::to_http_code(error::http_error_t::bad_obs_fold)), error::bad_obs_fold);

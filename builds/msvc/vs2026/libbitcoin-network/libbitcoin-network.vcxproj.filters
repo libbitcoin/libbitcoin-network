@@ -261,6 +261,12 @@
     <ClCompile Include="..\..\..\..\src\memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\http\codings.cpp">
+      <Filter>src\messages\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\coding.cpp">
+      <Filter>src\messages\http\enums</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\http\enums\field.cpp">
       <Filter>src\messages\http\enums</Filter>
     </ClCompile>
@@ -790,6 +796,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\bodies.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\codings.hpp">
+      <Filter>include\bitcoin\network\messages\http</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\coding.hpp">
+      <Filter>include\bitcoin\network\messages\http\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\field.hpp">
       <Filter>include\bitcoin\network\messages\http\enums</Filter>

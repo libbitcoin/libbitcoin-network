@@ -229,6 +229,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { bad_value, "bad value" },
     { bad_content_length, "bad content length" },
     { bad_transfer_encoding, "bad transfer encoding" },
+    { bad_content_encoding, "bad content encoding" },
     { bad_chunk, "bad chunk" },
     { bad_chunk_extension, "bad chunk extension" },
     { bad_obs_fold, "bad obs fold" },
@@ -373,6 +374,7 @@ public:
             case http_error_t::bad_value: return "bad value";
             case http_error_t::bad_content_length: return "bad Content-Length";
             case http_error_t::bad_transfer_encoding: return "bad Transfer-Encoding";
+            case http_error_t::bad_content_encoding: return "bad Content-Encoding";
             case http_error_t::bad_chunk: return "bad chunk";
             case http_error_t::bad_chunk_extension: return "bad chunk extension";
             case http_error_t::bad_obs_fold: return "bad obs-fold";
@@ -420,6 +422,7 @@ code http_to_error_code(const code& ec) NOEXCEPT
             case http_error_t::bad_value: return error::bad_value;
             case http_error_t::bad_content_length: return error::bad_content_length;
             case http_error_t::bad_transfer_encoding: return error::bad_transfer_encoding;
+            case http_error_t::bad_content_encoding: return error::bad_content_encoding;
             case http_error_t::bad_chunk: return error::bad_chunk;
             case http_error_t::bad_chunk_extension: return error::bad_chunk_extension;
             case http_error_t::bad_obs_fold: return error::bad_obs_fold;

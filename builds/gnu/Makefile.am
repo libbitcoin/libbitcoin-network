@@ -78,12 +78,14 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/log/logger.cpp \
     ${srcdir}/../../src/log/reporter.cpp \
     ${srcdir}/../../src/messages/http_body.cpp \
+    ${srcdir}/../../src/messages/http/codings.cpp \
     ${srcdir}/../../src/messages/http/fields.cpp \
     ${srcdir}/../../src/messages/http/file.cpp \
     ${srcdir}/../../src/messages/http/flat_buffer.cpp \
     ${srcdir}/../../src/messages/http/header.cpp \
     ${srcdir}/../../src/messages/http/parser.cpp \
     ${srcdir}/../../src/messages/http/serializer.cpp \
+    ${srcdir}/../../src/messages/http/enums/coding.cpp \
     ${srcdir}/../../src/messages/http/enums/field.cpp \
     ${srcdir}/../../src/messages/http/enums/media_type.cpp \
     ${srcdir}/../../src/messages/http/enums/status.cpp \
@@ -410,6 +412,7 @@ include_bitcoin_network_messages_httpdir = \
 
 include_bitcoin_network_messages_http_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/http/bodies.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/http/codings.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/fields.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/file.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/flat_buffer.hpp \
@@ -424,6 +427,7 @@ include_bitcoin_network_messages_http_enumsdir = \
     ${includedir}/bitcoin/network/messages/http/enums
 
 include_bitcoin_network_messages_http_enums_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/http/enums/coding.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/enums/field.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/enums/magic_numbers.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/http/enums/media_type.hpp \
@@ -679,6 +683,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/messages/indirect.cpp \
     ${srcdir}/../../test/messages/json_body_reader.cpp \
     ${srcdir}/../../test/messages/json_body_writer.cpp \
+    ${srcdir}/../../test/messages/http/codings.cpp \
     ${srcdir}/../../test/messages/http/fields.cpp \
     ${srcdir}/../../test/messages/http/header.cpp \
     ${srcdir}/../../test/messages/http/method.cpp \

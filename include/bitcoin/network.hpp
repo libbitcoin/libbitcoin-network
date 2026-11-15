@@ -80,6 +80,7 @@
 #include <bitcoin/network/messages/json_body.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/messages/http/bodies.hpp>
+#include <bitcoin/network/messages/http/codings.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
 #include <bitcoin/network/messages/http/file.hpp>
 #include <bitcoin/network/messages/http/flat_buffer.hpp>
@@ -89,6 +90,7 @@
 #include <bitcoin/network/messages/http/operations.hpp>
 #include <bitcoin/network/messages/http/parser.hpp>
 #include <bitcoin/network/messages/http/serializer.hpp>
+#include <bitcoin/network/messages/http/enums/coding.hpp>
 #include <bitcoin/network/messages/http/enums/field.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/http/enums/media_type.hpp>

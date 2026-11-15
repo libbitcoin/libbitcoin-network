@@ -96,6 +96,9 @@ size_t CLASS::put(const io::const_buffer& buffer, code& ec) NOEXCEPT
             case state::trailer:
                 step = put_trailer(rest, ec);
                 break;
+            case state::decoded:
+                step = put_decoded(ec);
+                break;
             case state::done:
                 break;
         }
@@ -240,6 +243,10 @@ void CLASS::finish_header(code& ec) NOEXCEPT
         return;
     }
 
+    codings_ = to_codings(message_.base(), ec);
+    if (ec)
+        return;
+
     if (frame_.length.has_value())
     {
         remaining_ = frame_.length.value();
@@ -256,14 +263,14 @@ void CLASS::finish_header(code& ec) NOEXCEPT
         }
 
         state_ = state::body;
-        reader_.init(frame_.length, ec);
+        init_reader(frame_.length, ec);
         return;
     }
 
     if (frame_.chunked)
     {
         state_ = state::chunk_header;
-        reader_.init({}, ec);
+        init_reader({}, ec);
         return;
     }
 
@@ -277,7 +284,7 @@ void CLASS::finish_header(code& ec) NOEXCEPT
         else
         {
             state_ = state::body_to_eof;
-            reader_.init({}, ec);
+            init_reader({}, ec);
         }
 
         return;
@@ -291,8 +298,18 @@ void CLASS::finish_header(code& ec) NOEXCEPT
     else
     {
         state_ = state::body_to_eof;
-        reader_.init({}, ec);
+        init_reader({}, ec);
     }
+}
+
+// A coded body initializes the reader once decoded.
+TEMPLATE
+void CLASS::init_reader(const length_type& length, code& ec) NOEXCEPT
+{
+    if (codings_.empty())
+        reader_.init(length, ec);
+    else
+        ec.clear();
 }
 
 TEMPLATE
@@ -322,7 +339,10 @@ size_t CLASS::put_body(const std::string_view& data, code& ec) NOEXCEPT
     if (is_zero(size))
         return {};
 
-    const auto used = reader_.put({ data.data(), size }, ec);
+    const auto used = codings_.empty() ?
+        reader_.put({ data.data(), size }, ec) :
+        put_coded(data.substr(0, size), ec);
+
     total_ += used;
     if (delimited)
         remaining_ -= used;
@@ -435,8 +455,67 @@ size_t CLASS::put_trailer(const std::string_view& data,
 }
 
 TEMPLATE
+size_t CLASS::put_coded(const std::string_view& data, code& ec) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    coded_.insert(coded_.end(), data.begin(), data.end());
+    BC_POP_WARNING()
+
+    ec.clear();
+    return data.size();
+}
+
+// An empty coded body is an empty body.
+TEMPLATE
+void CLASS::decode_body(code& ec) NOEXCEPT
+{
+    if (!coded_.empty())
+    {
+        decoded_ = decode(coded_, codings_, body_limit_, ec);
+        if (ec)
+            return;
+
+        coded_.clear();
+    }
+
+    reader_.init(system::possible_wide_cast<uint64_t>(decoded_.size()), ec);
+}
+
+// The decoded body is put to the reader, which may pause (need_buffer).
+TEMPLATE
+size_t CLASS::put_decoded(code& ec) NOEXCEPT
+{
+    if (delivered_ < decoded_.size())
+    {
+        const auto data = std::next(decoded_.data(), delivered_);
+        delivered_ += reader_.put({ data, decoded_.size() - delivered_ }, ec);
+        if (ec)
+            return {};
+    }
+
+    if (delivered_ == decoded_.size())
+    {
+        reader_.finish(ec);
+        state_ = state::done;
+    }
+
+    return {};
+}
+
+TEMPLATE
 void CLASS::finish(code& ec) NOEXCEPT
 {
+    if (!codings_.empty() && state_ != state::decoded)
+    {
+        decode_body(ec);
+        if (ec)
+            return;
+
+        state_ = state::decoded;
+        put_decoded(ec);
+        return;
+    }
+
     reader_.finish(ec);
     state_ = state::done;
 }

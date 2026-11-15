@@ -49,6 +49,20 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
     {
         case state::header:
         {
+            codings_ = to_codings(message_.base(), ec);
+            if (ec)
+                return {};
+
+            if (!codings_.empty())
+            {
+                writer_.init(ec);
+                if (ec)
+                    return {};
+
+                state_ = state::encode;
+                return encoded(ec);
+            }
+
             header_ = serialize_header(message_.base());
             writer_.init(ec);
             if (ec)
@@ -59,6 +73,10 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
             append_body(buffers, ec);
             return ec ? const_buffers{} : buffers;
         }
+        case state::encode:
+        {
+            return encoded(ec);
+        }
         case state::body:
         {
             append_body(buffers, ec);
@@ -67,6 +85,49 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
         case state::done:
         default:
             return {};
+    }
+}
+
+// The header is yielded with the coded body, once the body is written.
+TEMPLATE
+const_buffers CLASS::encoded(code& ec) NOEXCEPT
+{
+    using namespace system;
+    if (!collect(ec))
+        return {};
+
+    if (!body_.empty())
+        body_ = encode(body_, codings_);
+
+    if (!chunked_ && message_.content_length().has_value())
+        message_.content_length(possible_wide_cast<uint64_t>(body_.size()));
+
+    header_ = serialize_header(message_.base());
+    const_buffers buffers{};
+    buffers.emplace_back(header_.data(), header_.size());
+    append(buffers, { body_.data(), body_.size() }, false);
+    return buffers;
+}
+
+// The writer may pause (need_buffer), resuming collection on the next call.
+TEMPLATE
+bool CLASS::collect(code& ec) NOEXCEPT
+{
+    using namespace system;
+    while (true)
+    {
+        const auto out = writer_.get(ec);
+        if (ec)
+            return false;
+
+        if (!out.has_value())
+            return true;
+
+        const auto& data = out.value().first;
+        const auto begin = pointer_cast<const uint8_t>(data.data());
+        body_.insert(body_.end(), begin, std::next(begin, data.size()));
+        if (!out.value().second)
+            return true;
     }
 }
 
@@ -81,6 +142,13 @@ void CLASS::append_body(const_buffers& buffers, code& ec) NOEXCEPT
     const auto data = out.has_value() ? out.value().first :
         io::const_buffer{};
 
+    append(buffers, data, more);
+}
+
+TEMPLATE
+void CLASS::append(const_buffers& buffers, const io::const_buffer& data,
+    bool more) NOEXCEPT
+{
     if (!more)
         state_ = state::done;
 
@@ -107,7 +175,7 @@ void CLASS::append_body(const_buffers& buffers, code& ec) NOEXCEPT
 TEMPLATE
 bool CLASS::is_header_done() const NOEXCEPT
 {
-    return state_ != state::header;
+    return state_ != state::header && state_ != state::encode;
 }
 
 TEMPLATE

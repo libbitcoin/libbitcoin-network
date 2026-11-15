@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/http/codings.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
 #include <bitcoin/network/messages/http/header.hpp>
 #include <bitcoin/network/messages/http/message.hpp>
@@ -77,7 +78,9 @@ BCT_API size_t find_chunk_line(size_t& text, const std::string_view& in,
 /// reader of the message body. The start line, each field, each chunk line and
 /// each trailer field are consumed once complete, and body data as it arrives. The parse returns once the header is complete, and
 /// a body reader may pause the parse (need_buffer), which resumes on the next
-/// put. Trailer fields are validated but not retained.
+/// put. Trailer fields are validated but not retained. A body with content or
+/// transfer codings is decoded once complete, the body limit applying to both
+/// the coded and decoded body, and the decoded body then drives the reader.
 template <bool IsRequest, class Body>
 class parser
 {
@@ -127,6 +130,7 @@ private:
         chunk_header,
         chunk_body,
         trailer,
+        decoded,
         done
     };
 
@@ -137,6 +141,10 @@ private:
     size_t put_chunk_header(const std::string_view& data,
         code& ec) NOEXCEPT;
     size_t put_trailer(const std::string_view& data, code& ec) NOEXCEPT;
+    size_t put_decoded(code& ec) NOEXCEPT;
+    size_t put_coded(const std::string_view& data, code& ec) NOEXCEPT;
+    void init_reader(const length_type& length, code& ec) NOEXCEPT;
+    void decode_body(code& ec) NOEXCEPT;
     void finish_header(code& ec) NOEXCEPT;
     void complete_body(code& ec) NOEXCEPT;
     void finish(code& ec) NOEXCEPT;
@@ -146,6 +154,10 @@ private:
 
     message_type message_;
     reader_type reader_;
+    codings codings_{};
+    system::data_chunk coded_{};
+    system::data_chunk decoded_{};
+    size_t delivered_{};
     size_t header_limit_{};
     size_t body_limit_{};
     framing frame_{};
