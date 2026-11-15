@@ -32,7 +32,7 @@ struct field_name
     std::string_view text;
 };
 
-static constexpr std::array<field_name, 29> field_names
+static constexpr std::array<field_name, 32> field_names
 {
     field_name{ field::accept, "Accept" },
     field_name{ field::accept_encoding, "Accept-Encoding" },
@@ -43,13 +43,16 @@ static constexpr std::array<field_name, 29> field_names
     field_name{ field::access_control_request_headers, "Access-Control-Request-Headers" },
     field_name{ field::access_control_request_method, "Access-Control-Request-Method" },
     field_name{ field::authorization, "Authorization" },
+    field_name{ field::cache_control, "Cache-Control" },
     field_name{ field::connection, "Connection" },
     field_name{ field::content_disposition, "Content-Disposition" },
     field_name{ field::content_encoding, "Content-Encoding" },
     field_name{ field::content_length, "Content-Length" },
     field_name{ field::content_type, "Content-Type" },
     field_name{ field::date, "Date" },
+    field_name{ field::etag, "ETag" },
     field_name{ field::host, "Host" },
+    field_name{ field::if_none_match, "If-None-Match" },
     field_name{ field::keep_alive, "Keep-Alive" },
     field_name{ field::location, "Location" },
     field_name{ field::origin, "Origin" },
