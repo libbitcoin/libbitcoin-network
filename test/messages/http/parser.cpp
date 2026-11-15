@@ -503,7 +503,21 @@ BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_empty_body__empty)
     const auto wire = serialized(instance, ec);
 
     BC_REQUIRE(!ec);
-    BC_REQUIRE_EQUAL(wire, "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 0\r\n\r\n");
+    BC_REQUIRE_EQUAL(wire, "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
+}
+
+BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_bodiless_status__not_coded)
+{
+    message<false, string_body> out{ status::no_content, version_1_1 };
+    out.set(field::content_encoding, "gzip");
+    out.set(field::vary, "accept-encoding");
+
+    code ec{};
+    serializer<false, string_body> instance{ out };
+    const auto wire = serialized(instance, ec);
+
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(wire, "HTTP/1.1 204 No Content\r\nVary: accept-encoding\r\n\r\n");
 }
 
 BC_AUTO_TEST_CASE(http_parser__serializer__unknown_content_encoding__error)

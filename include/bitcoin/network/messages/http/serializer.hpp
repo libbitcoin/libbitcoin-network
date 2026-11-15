@@ -51,7 +51,8 @@ using const_buffers = std::vector<io::const_buffer>;
 /// body. Each next() yields buffers valid until the following next() call.
 /// A body with content or transfer codings is encoded as it is written, and
 /// chunked (http 1.1) or delimited by closing the connection in place of a
-/// content-length, other than a zero content-length (no body).
+/// content-length. A message without a body (zero content-length, or a
+/// bodiless status) is not coded and its content-encoding is removed.
 template <bool IsRequest, class Body>
 class serializer
 {

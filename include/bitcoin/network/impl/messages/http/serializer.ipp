@@ -53,7 +53,7 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
             if (ec)
                 return {};
 
-            if (!codings_.empty() && message_.content_length() != zero)
+            if (!codings_.empty())
                 frame_coded();
 
             header_ = serialize_header(message_.base());
@@ -77,11 +77,24 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
     }
 }
 
-// The size of a coded body is not known in advance, so a content-length is
-// replaced by chunking (http 1.1), or by closing the connection.
+// A message without a body is not coded. The size of a coded body is not
+// known in advance, so a content-length is replaced by chunking (http 1.1),
+// or by closing the connection.
 TEMPLATE
 void CLASS::frame_coded() NOEXCEPT
 {
+    const auto length = message_.content_length();
+    auto bodiless = length.has_value() && is_zero(length.value());
+    if constexpr (!IsRequest)
+        bodiless = bodiless || message_.bodiless();
+
+    if (bodiless)
+    {
+        message_.erase(field::content_encoding);
+        codings_ = {};
+        return;
+    }
+
     if (!chunked_ && message_.content_length().has_value())
     {
         if (message_.version() >= version_1_1)
