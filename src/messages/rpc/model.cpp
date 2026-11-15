@@ -102,7 +102,10 @@ bool to_units(uint64_t& out, number_t value, uint8_t decimals) NOEXCEPT
     // Integers above 2^53 are not all representable, so none is exact.
     constexpr auto exact = 9'007'199'254'740'992.0;
     const auto scaled = std::round(value * factor);
-    if (scaled > exact || (scaled / factor) != value)
+
+    // Assignment rounds to double where arithmetic is wider (x87).
+    const auto restored = scaled / factor;
+    if (scaled > exact || restored != value)
         return false;
 
     out = static_cast<uint64_t>(scaled);
