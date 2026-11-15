@@ -53,15 +53,8 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
             if (ec)
                 return {};
 
-            if (!codings_.empty())
-            {
-                writer_.init(ec);
-                if (ec)
-                    return {};
-
-                state_ = state::encode;
-                return encoded(ec);
-            }
+            if (!codings_.empty() && message_.content_length() != zero)
+                frame_coded();
 
             header_ = serialize_header(message_.base());
             writer_.init(ec);
@@ -72,10 +65,6 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
             buffers.emplace_back(header_.data(), header_.size());
             append_body(buffers, ec);
             return ec ? const_buffers{} : buffers;
-        }
-        case state::encode:
-        {
-            return encoded(ec);
         }
         case state::body:
         {
@@ -88,52 +77,67 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
     }
 }
 
-// The header is yielded with the coded body, once the body is written.
+// The size of a coded body is not known in advance, so a content-length is
+// replaced by chunking (http 1.1), or by closing the connection.
 TEMPLATE
-const_buffers CLASS::encoded(code& ec) NOEXCEPT
+void CLASS::frame_coded() NOEXCEPT
 {
-    using namespace system;
-    if (!collect(ec))
-        return {};
-
-    if (!body_.empty())
-        body_ = encode(body_, codings_);
-
     if (!chunked_ && message_.content_length().has_value())
-        message_.content_length(possible_wide_cast<uint64_t>(body_.size()));
+    {
+        if (message_.version() >= version_1_1)
+        {
+            message_.chunked(true);
+            chunked_ = true;
+        }
+        else
+        {
+            message_.content_length({});
+            message_.keep_alive(false);
+        }
+    }
 
-    header_ = serialize_header(message_.base());
-    const_buffers buffers{};
-    buffers.emplace_back(header_.data(), header_.size());
-    append(buffers, { body_.data(), body_.size() }, false);
-    return buffers;
+    encoder_.emplace(codings_);
 }
 
-// The writer may pause (need_buffer), resuming collection on the next call.
+// Each part written is encoded, the writer pausing (need_buffer) as it may.
 TEMPLATE
-bool CLASS::collect(code& ec) NOEXCEPT
+void CLASS::append_coded(const_buffers& buffers, code& ec) NOEXCEPT
 {
     using namespace system;
-    while (true)
+    coded_.clear();
+    while (coded_.empty() && !written_)
     {
         const auto out = writer_.get(ec);
         if (ec)
-            return false;
+            return;
 
-        if (!out.has_value())
-            return true;
+        if (out.has_value())
+        {
+            const auto& data = out.value().first;
+            const auto begin = pointer_cast<const uint8_t>(data.data());
+            encoder_->write(coded_, data_slice(begin, std::next(begin,
+                data.size())));
+        }
 
-        const auto& data = out.value().first;
-        const auto begin = pointer_cast<const uint8_t>(data.data());
-        body_.insert(body_.end(), begin, std::next(begin, data.size()));
-        if (!out.value().second)
-            return true;
+        if (!out.has_value() || !out.value().second)
+        {
+            encoder_->flush(coded_);
+            written_ = true;
+        }
     }
+
+    append(buffers, { coded_.data(), coded_.size() }, !written_);
 }
 
 TEMPLATE
 void CLASS::append_body(const_buffers& buffers, code& ec) NOEXCEPT
 {
+    if (encoder_.has_value())
+    {
+        append_coded(buffers, ec);
+        return;
+    }
+
     const auto out = writer_.get(ec);
     if (ec)
         return;
@@ -175,7 +179,7 @@ void CLASS::append(const_buffers& buffers, const io::const_buffer& data,
 TEMPLATE
 bool CLASS::is_header_done() const NOEXCEPT
 {
-    return state_ != state::header && state_ != state::encode;
+    return state_ != state::header;
 }
 
 TEMPLATE

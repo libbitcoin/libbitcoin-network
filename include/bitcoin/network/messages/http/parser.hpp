@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_PARSER_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_PARSER_HPP
 
+#include <optional>
 #include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/codings.hpp>
@@ -76,11 +77,12 @@ BCT_API size_t find_chunk_line(size_t& text, const std::string_view& in,
 /// Not thread safe, non-virtual.
 /// Incrementally parse a message (owned) from received bytes, driving the body
 /// reader of the message body. The start line, each field, each chunk line and
-/// each trailer field are consumed once complete, and body data as it arrives. The parse returns once the header is complete, and
-/// a body reader may pause the parse (need_buffer), which resumes on the next
-/// put. Trailer fields are validated but not retained. A body with content or
-/// transfer codings is decoded once complete, the body limit applying to both
-/// the coded and decoded body, and the decoded body then drives the reader.
+/// each trailer field are consumed once complete, and body data as it arrives.
+/// The parse returns once the header is complete, and a body reader may pause
+/// the parse (need_buffer), which resumes on the next put. Trailer fields are
+/// validated but not retained. A body with content or transfer codings is
+/// decoded as it arrives, in steps that bound the decoded data held for a paused
+/// reader, the body limit applying to both the coded and decoded body.
 template <bool IsRequest, class Body>
 class parser
 {
@@ -144,7 +146,8 @@ private:
     size_t put_decoded(code& ec) NOEXCEPT;
     size_t put_coded(const std::string_view& data, code& ec) NOEXCEPT;
     void init_reader(const length_type& length, code& ec) NOEXCEPT;
-    void decode_body(code& ec) NOEXCEPT;
+    bool deliver(code& ec) NOEXCEPT;
+    code coding_fault() const NOEXCEPT;
     void finish_header(code& ec) NOEXCEPT;
     void complete_body(code& ec) NOEXCEPT;
     void finish(code& ec) NOEXCEPT;
@@ -155,7 +158,7 @@ private:
     message_type message_;
     reader_type reader_;
     codings codings_{};
-    system::data_chunk coded_{};
+    std::optional<decoder> decoder_{};
     system::data_chunk decoded_{};
     size_t delivered_{};
     size_t header_limit_{};

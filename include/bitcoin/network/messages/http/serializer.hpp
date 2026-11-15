@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_SERIALIZER_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_SERIALIZER_HPP
 
+#include <optional>
 #include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/codings.hpp>
@@ -48,8 +49,9 @@ using const_buffers = std::vector<io::const_buffer>;
 /// Not thread safe, non-virtual.
 /// Incrementally serialize a message, driving the body writer of the message
 /// body. Each next() yields buffers valid until the following next() call.
-/// A body with content or transfer codings is encoded once written, an empty
-/// body remaining empty, and a content-length is set to the coded size.
+/// A body with content or transfer codings is encoded as it is written, and
+/// chunked (http 1.1) or delimited by closing the connection in place of a
+/// content-length, other than a zero content-length (no body).
 template <bool IsRequest, class Body>
 class serializer
 {
@@ -80,23 +82,24 @@ private:
     enum class state
     {
         header,
-        encode,
         body,
         done
     };
 
-    const_buffers encoded(code& ec) NOEXCEPT;
-    bool collect(code& ec) NOEXCEPT;
+    void frame_coded() NOEXCEPT;
+    void append_coded(const_buffers& buffers, code& ec) NOEXCEPT;
     void append_body(const_buffers& buffers, code& ec) NOEXCEPT;
     void append(const_buffers& buffers, const io::const_buffer& data,
         bool more) NOEXCEPT;
 
     message_type& message_;
     writer_type writer_;
-    const bool chunked_;
+    bool chunked_;
     state state_{ state::header };
     codings codings_{};
-    system::data_chunk body_{};
+    std::optional<encoder> encoder_{};
+    system::data_chunk coded_{};
+    bool written_{};
     std::string header_{};
     std::string prefix_{};
 };

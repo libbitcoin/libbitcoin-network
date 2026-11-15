@@ -53,6 +53,23 @@ static code feed(string_parser<IsRequest>& instance, std::string text,
     return ec;
 }
 
+// The wire of a message, from each next buffers until done.
+template <typename Serializer>
+static std::string serialized(Serializer& instance, code& ec)
+{
+    std::string wire{};
+    while (!instance.is_done())
+    {
+        for (const auto& buffer: instance.next(ec))
+        {
+            const auto data = system::pointer_cast<const char>(buffer.data());
+            wire.append(data, buffer.size());
+        }
+    }
+
+    return wire;
+}
+
 static std::string from_base16(const std::string& text)
 {
     system::data_chunk out{};
@@ -284,7 +301,7 @@ BC_AUTO_TEST_CASE(http_parser__put__decoded_body_limit__exceeded)
     instance.body_limit(100);
     std::string rest{};
     const auto ec = feed(instance, "POST / HTTP/1.1\r\nContent-Encoding: gzip\r\nContent-Length: 29\r\n\r\n" + thousand_gzip, rest);
-    BC_REQUIRE(ec == http_error_t::bad_content_encoding);
+    BC_REQUIRE(ec == http_error_t::body_limit);
 }
 
 BC_AUTO_TEST_CASE(http_parser__put__decoded_body_limit__equal)
@@ -385,11 +402,8 @@ BC_AUTO_TEST_CASE(http_parser__serializer__chunked__round_trip)
     out.prepare_payload();
 
     code ec{};
-    std::string wire{};
     serializer<false, string_body> instance{ out };
-    while (!instance.is_done())
-        for (const auto& buffer: instance.next(ec))
-            wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
+    const auto wire = serialized(instance, ec);
 
     BC_REQUIRE(!ec);
     BC_REQUIRE_EQUAL(wire, "HTTP/1.1 200 OK\r\nServer: test\r\nTransfer-Encoding: chunked\r\n\r\n7\r\npayload\r\n0\r\n\r\n");
@@ -407,11 +421,8 @@ BC_AUTO_TEST_CASE(http_parser__serializer__content_length__raw_body)
     out.content_length(3u);
 
     code ec{};
-    std::string wire{};
     serializer<true, string_body> instance{ out };
-    while (!instance.is_done())
-        for (const auto& buffer: instance.next(ec))
-            wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
+    const auto wire = serialized(instance, ec);
 
     BC_REQUIRE_EQUAL(wire, "PUT /a HTTP/1.1\r\nContent-Length: 3\r\n\r\nabc");
 }
@@ -425,11 +436,8 @@ BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_chunked__round_trip)
     out.prepare_payload();
 
     code ec{};
-    std::string wire{};
     serializer<false, string_body> instance{ out };
-    while (!instance.is_done())
-        for (const auto& buffer: instance.next(ec))
-            wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
+    const auto wire = serialized(instance, ec);
 
     BC_REQUIRE(!ec);
     BC_REQUIRE_LT(wire.size(), 200u);
@@ -440,7 +448,7 @@ BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_chunked__round_trip)
     BC_REQUIRE_EQUAL(parse.get().body(), expected);
 }
 
-BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_length__coded_length)
+BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_length__chunked)
 {
     const std::string expected(1000, 'a');
     message<true, string_body> out{ verb::put, "/a", version_1_1 };
@@ -449,15 +457,12 @@ BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_length__coded_length
     out.content_length(1000u);
 
     code ec{};
-    std::string wire{};
     serializer<true, string_body> instance{ out };
-    while (!instance.is_done())
-        for (const auto& buffer: instance.next(ec))
-            wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
+    const auto wire = serialized(instance, ec);
 
     BC_REQUIRE(!ec);
-    const auto coded = system::zlib_deflate(system::data_chunk(1000, 'a'));
-    BC_REQUIRE_EQUAL(out.content_length().value(), system::possible_wide_cast<uint64_t>(coded.size()));
+    BC_REQUIRE(out.chunked());
+    BC_REQUIRE(!out.content_length().has_value());
 
     string_parser<true> parse{};
     std::string rest{};
@@ -473,11 +478,8 @@ BC_AUTO_TEST_CASE(http_parser__serializer__content_encoding_empty_body__empty)
     out.content_length(0u);
 
     code ec{};
-    std::string wire{};
     serializer<false, string_body> instance{ out };
-    while (!instance.is_done())
-        for (const auto& buffer: instance.next(ec))
-            wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
+    const auto wire = serialized(instance, ec);
 
     BC_REQUIRE(!ec);
     BC_REQUIRE_EQUAL(wire, "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: 0\r\n\r\n");
@@ -505,11 +507,8 @@ BC_AUTO_TEST_CASE(http_parser__body_serializer__string__body_only)
     out.body() = "payload";
 
     code ec{};
-    std::string wire{};
     body_serializer<false, string_body> instance{ out };
-    while (!instance.is_done())
-        for (const auto& buffer: instance.next(ec))
-            wire.append(system::pointer_cast<const char>(buffer.data()), buffer.size());
+    const auto wire = serialized(instance, ec);
 
     BC_REQUIRE(!ec);
     BC_REQUIRE_EQUAL(wire, "payload");

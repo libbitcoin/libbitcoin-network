@@ -18,7 +18,9 @@
  */
 #include <bitcoin/network/messages/http/codings.hpp>
 
+#include <algorithm>
 #include <charconv>
+#include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/coding.hpp>
 #include <bitcoin/network/messages/http/enums/field.hpp>
@@ -90,78 +92,173 @@ codings to_codings(const fields& header, code& ec) NOEXCEPT
 // Encoding.
 // ----------------------------------------------------------------------------
 
-static data_chunk encode(const data_slice& body, coding value) NOEXCEPT
+encoder::encoder(const codings& value) NOEXCEPT
 {
-    switch (value)
+    const auto add = [&](coding item) NOEXCEPT
     {
-        case coding::gzip:
-            return gzip_deflate(body);
-        case coding::deflate:
-            return zlib_deflate(body);
-        case coding::identity:
-        case coding::unknown:
-        default:
-            return to_chunk(body);
-    }
+        if (item == coding::gzip)
+            stages_.emplace_back(std::in_place_type<gzip_deflater>);
+        else
+            stages_.emplace_back(std::in_place_type<zlib_deflater>);
+    };
+
+    std::for_each(value.content.begin(), value.content.end(), add);
+    std::for_each(value.transfer.begin(), value.transfer.end(), add);
 }
 
-static bool decode(data_chunk& out, const data_slice& body, coding value,
-    size_t limit) NOEXCEPT
+// The output of each stage is the input of the next.
+void encoder::write(data_chunk& out, const data_slice& data) NOEXCEPT
 {
-    switch (value)
+    data_chunk carry{ data.begin(), data.end() };
+    for (auto& stage: stages_)
     {
-        case coding::gzip:
-            return gzip_inflate(out, body, limit);
-        case coding::deflate:
-            return zlib_inflate(out, body, limit);
-        case coding::identity:
-        case coding::unknown:
-        default:
-            return false;
+        data_chunk next{};
+        std::visit([&](auto& coder) NOEXCEPT
+        {
+            coder.write(next, carry);
+        }, stage);
+
+        carry = std::move(next);
     }
+
+    out.insert(out.end(), carry.begin(), carry.end());
 }
+
+void encoder::flush(data_chunk& out) NOEXCEPT
+{
+    data_chunk carry{};
+    for (auto& stage: stages_)
+    {
+        data_chunk next{};
+        std::visit([&](auto& coder) NOEXCEPT
+        {
+            if (!carry.empty())
+                coder.write(next, carry);
+
+            coder.flush(next);
+        }, stage);
+
+        carry = std::move(next);
+    }
+
+    out.insert(out.end(), carry.begin(), carry.end());
+}
+
+// Decoding.
+// ----------------------------------------------------------------------------
+
+decoder::decoder(const codings& value, size_t limit) NOEXCEPT
+  : limit_(limit)
+{
+    const auto add = [&](coding item, http_error_t fault) NOEXCEPT
+    {
+        if (item == coding::gzip)
+            stages_.push_back({ coder{ std::in_place_type<gzip_inflater> },
+                fault });
+        else
+            stages_.push_back({ coder{ std::in_place_type<zlib_inflater> },
+                fault });
+    };
+
+    for (auto it = value.transfer.rbegin(); it != value.transfer.rend(); ++it)
+        add(*it, http_error_t::bad_transfer_encoding);
+
+    for (auto it = value.content.rbegin(); it != value.content.rend(); ++it)
+        add(*it, http_error_t::bad_content_encoding);
+}
+
+bool decoder::done() const NOEXCEPT
+{
+    return std::all_of(stages_.begin(), stages_.end(),
+        [](const stage& item) NOEXCEPT
+        {
+            const auto ended = std::visit([](const auto& coder) NOEXCEPT
+            {
+                return coder.done();
+            }, item.value);
+
+            return ended && item.input.empty();
+        });
+}
+
+// The first stage decodes in, each other the output of the preceding stage.
+// Each stage pauses past the limit, and the last also at step.
+void decoder::write(data_chunk& out, size_t& consumed, const data_slice& in,
+    size_t step, code& ec) NOEXCEPT
+{
+    consumed = zero;
+    const auto start = out.size();
+    const auto room = is_zero(limit_) ? zero :
+        add1(limit_ - std::min(limit_, total_));
+    for (size_t index{}; index < stages_.size(); ++index)
+    {
+        auto& item = stages_[index];
+        const auto first = is_zero(index);
+        const auto last = index == sub1(stages_.size());
+        auto& sink = last ? out : stages_[add1(index)].input;
+        const data_slice source = first ? in : data_slice(item.input);
+
+        size_t used{};
+        const auto valid = std::visit([&](auto& coder) NOEXCEPT
+        {
+            return coder.write(sink, used, source, last ? step : zero);
+        }, item.value);
+
+        if (!valid)
+        {
+            ec = to_http_code(item.fault);
+            return;
+        }
+
+        if (first)
+            consumed = used;
+        else
+            item.input.erase(item.input.begin(),
+                std::next(item.input.begin(), used));
+    }
+
+    total_ += out.size() - start;
+    if (!is_zero(limit_) && total_ > limit_)
+    {
+        ec = to_http_code(http_error_t::body_limit);
+        return;
+    }
+
+    ec.clear();
+}
+
+// One-shot.
+// ----------------------------------------------------------------------------
 
 data_chunk encode(const data_slice& body, const codings& value) NOEXCEPT
 {
-    auto out = to_chunk(body);
-    for (const auto item: value.content)
-        out = encode(out, item);
-
-    for (const auto item: value.transfer)
-        out = encode(out, item);
-
+    data_chunk out{};
+    encoder coder{ value };
+    coder.write(out, body);
+    coder.flush(out);
     return out;
 }
 
 data_chunk decode(const data_slice& body, const codings& value, size_t limit,
     code& ec) NOEXCEPT
 {
-    auto out = to_chunk(body);
-    for (auto it = value.transfer.rbegin(); it != value.transfer.rend(); ++it)
-    {
-        data_chunk decoded{};
-        if (!decode(decoded, out, *it, limit))
-        {
-            ec = to_http_code(http_error_t::bad_transfer_encoding);
-            return {};
-        }
+    data_chunk out{};
+    size_t consumed{};
+    decoder coder{ value, limit };
+    coder.write(out, consumed, body, zero, ec);
+    if (ec)
+        return {};
 
-        out = std::move(decoded);
+    if (consumed != body.size() || !coder.done())
+    {
+        const auto fault = value.content.empty() ?
+            http_error_t::bad_transfer_encoding :
+            http_error_t::bad_content_encoding;
+
+        ec = to_http_code(fault);
+        return {};
     }
 
-    for (auto it = value.content.rbegin(); it != value.content.rend(); ++it)
-    {
-        data_chunk decoded{};
-        if (!decode(decoded, out, *it, limit))
-        {
-            ec = to_http_code(http_error_t::bad_content_encoding);
-            return {};
-        }
-
-        out = std::move(decoded);
-    }
-
-    ec.clear();
     return out;
 }
 

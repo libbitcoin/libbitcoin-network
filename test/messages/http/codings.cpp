@@ -141,14 +141,59 @@ BC_AUTO_TEST_CASE(http_codings__decode__bad_transfer__bad_transfer_encoding)
     BC_REQUIRE(ec == http_error_t::bad_transfer_encoding);
 }
 
-BC_AUTO_TEST_CASE(http_codings__decode__limit_exceeded__bad_content_encoding)
+BC_AUTO_TEST_CASE(http_codings__decode__limit_exceeded__body_limit)
 {
     const system::data_chunk body(1000, 'a');
     const codings value{ { coding::gzip }, {} };
 
     code ec{};
     BC_REQUIRE(decode(encode(body, value), value, 999, ec).empty());
-    BC_REQUIRE(ec == http_error_t::bad_content_encoding);
+    BC_REQUIRE(ec == http_error_t::body_limit);
+}
+
+BC_AUTO_TEST_CASE(http_codings__decode__limit_equal__expected)
+{
+    const system::data_chunk body(1000, 'a');
+    const codings value{ { coding::gzip }, { coding::deflate } };
+
+    code ec{};
+    BC_REQUIRE_EQUAL(decode(encode(body, value), value, 1000, ec), body);
+    BC_REQUIRE(!ec);
+}
+
+BC_AUTO_TEST_CASE(http_codings__decoder__bytewise__expected)
+{
+    const auto body = system::to_chunk(std::string{ "hello hello hello hello world" });
+    const codings value{ { coding::deflate }, { coding::gzip } };
+    const auto coded = encode(body, value);
+
+    code ec{};
+    system::data_chunk out{};
+    decoder coder{ value, 0 };
+    std::for_each(coded.begin(), coded.end(), [&](uint8_t byte) NOEXCEPT
+    {
+        size_t consumed{};
+        coder.write(out, consumed, system::data_chunk{ byte }, 0, ec);
+    });
+
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(coder.done());
+    BC_REQUIRE_EQUAL(out, body);
+}
+
+BC_AUTO_TEST_CASE(http_codings__encoder__parts__encode)
+{
+    const system::data_chunk body(70000, 'e');
+    const codings value{ { coding::gzip }, {} };
+    const system::data_slice left(body.data(), std::next(body.data(), 30000));
+    const system::data_slice right(std::next(body.data(), 30000), std::next(body.data(), body.size()));
+
+    system::data_chunk out{};
+    encoder coder{ value };
+    coder.write(out, left);
+    coder.write(out, right);
+    coder.flush(out);
+    BC_REQUIRE_EQUAL(out, encode(body, value));
 }
 
 // accepted_coding

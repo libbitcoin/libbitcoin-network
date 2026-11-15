@@ -31,6 +31,9 @@ namespace http {
 constexpr std::string_view line_end{ "\r\n" };
 constexpr std::string_view section_end{ "\r\n\r\n" };
 
+// Decoded bytes per decode step, which bounds those held for a paused reader.
+constexpr size_t decoded_step = 65536;
+
 TEMPLATE
 CLASS::parser() NOEXCEPT
   : parser(message_type{})
@@ -247,6 +250,9 @@ void CLASS::finish_header(code& ec) NOEXCEPT
     if (ec)
         return;
 
+    if (!codings_.empty())
+        decoder_.emplace(codings_, body_limit_);
+
     if (frame_.length.has_value())
     {
         remaining_ = frame_.length.value();
@@ -302,14 +308,11 @@ void CLASS::finish_header(code& ec) NOEXCEPT
     }
 }
 
-// A coded body initializes the reader once decoded.
+// The length of a coded body is not that of the decoded body.
 TEMPLATE
 void CLASS::init_reader(const length_type& length, code& ec) NOEXCEPT
 {
-    if (codings_.empty())
-        reader_.init(length, ec);
-    else
-        ec.clear();
+    reader_.init(decoder_.has_value() ? length_type{} : length, ec);
 }
 
 TEMPLATE
@@ -339,9 +342,9 @@ size_t CLASS::put_body(const std::string_view& data, code& ec) NOEXCEPT
     if (is_zero(size))
         return {};
 
-    const auto used = codings_.empty() ?
-        reader_.put({ data.data(), size }, ec) :
-        put_coded(data.substr(0, size), ec);
+    const auto used = decoder_.has_value() ?
+        put_coded(data.substr(0, size), ec) :
+        reader_.put({ data.data(), size }, ec);
 
     total_ += used;
     if (delimited)
@@ -454,62 +457,93 @@ size_t CLASS::put_trailer(const std::string_view& data,
     return used;
 }
 
+// The fault of a coded body that is incomplete or followed by other data.
+TEMPLATE
+code CLASS::coding_fault() const NOEXCEPT
+{
+    using namespace network::error;
+    return to_http_code(codings_.content.empty() ?
+        http_error_t::bad_transfer_encoding :
+        http_error_t::bad_content_encoding);
+}
+
+// Decoded data is put to the reader, which may pause (need_buffer), holding
+// the remainder for the next put.
+TEMPLATE
+bool CLASS::deliver(code& ec) NOEXCEPT
+{
+    using namespace network::error;
+    while (delivered_ < decoded_.size())
+    {
+        const auto data = std::next(decoded_.data(), delivered_);
+        const auto used = reader_.put({ data, decoded_.size() - delivered_ },
+            ec);
+
+        delivered_ += used;
+        if (ec)
+            return false;
+
+        if (is_zero(used))
+        {
+            ec = to_http_code(http_error_t::need_buffer);
+            return false;
+        }
+    }
+
+    decoded_.clear();
+    delivered_ = zero;
+    ec.clear();
+    return true;
+}
+
+// Each part of the coded body is decoded in steps, each delivered.
 TEMPLATE
 size_t CLASS::put_coded(const std::string_view& data, code& ec) NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    coded_.insert(coded_.end(), data.begin(), data.end());
-    BC_POP_WARNING()
+    if (!deliver(ec))
+        return {};
 
-    ec.clear();
-    return data.size();
+    size_t used{};
+    const auto end = std::next(data.data(), data.size());
+    decoder_->write(decoded_, used, system::data_slice(data.data(), end),
+        decoded_step, ec);
+
+    if (ec)
+        return {};
+
+    if (used < data.size() && decoder_->done())
+    {
+        ec = coding_fault();
+        return {};
+    }
+
+    deliver(ec);
+    return used;
+}
+
+// The remaining decoded data is delivered.
+TEMPLATE
+size_t CLASS::put_decoded(code& ec) NOEXCEPT
+{
+    if (!deliver(ec))
+        return {};
+
+    reader_.finish(ec);
+    state_ = state::done;
+    return {};
 }
 
 // An empty coded body is an empty body.
 TEMPLATE
-void CLASS::decode_body(code& ec) NOEXCEPT
-{
-    if (!coded_.empty())
-    {
-        decoded_ = decode(coded_, codings_, body_limit_, ec);
-        if (ec)
-            return;
-
-        coded_.clear();
-    }
-
-    reader_.init(system::possible_wide_cast<uint64_t>(decoded_.size()), ec);
-}
-
-// The decoded body is put to the reader, which may pause (need_buffer).
-TEMPLATE
-size_t CLASS::put_decoded(code& ec) NOEXCEPT
-{
-    if (delivered_ < decoded_.size())
-    {
-        const auto data = std::next(decoded_.data(), delivered_);
-        delivered_ += reader_.put({ data, decoded_.size() - delivered_ }, ec);
-        if (ec)
-            return {};
-    }
-
-    if (delivered_ == decoded_.size())
-    {
-        reader_.finish(ec);
-        state_ = state::done;
-    }
-
-    return {};
-}
-
-TEMPLATE
 void CLASS::finish(code& ec) NOEXCEPT
 {
-    if (!codings_.empty() && state_ != state::decoded)
+    if (decoder_.has_value() && state_ != state::decoded)
     {
-        decode_body(ec);
-        if (ec)
+        if (!is_zero(total_) && !decoder_->done())
+        {
+            ec = coding_fault();
             return;
+        }
 
         state_ = state::decoded;
         put_decoded(ec);
