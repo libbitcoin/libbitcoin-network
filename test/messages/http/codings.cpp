@@ -151,6 +151,16 @@ BC_AUTO_TEST_CASE(http_codings__decode__limit_exceeded__body_limit)
     BC_REQUIRE(ec == http_error_t::body_limit);
 }
 
+BC_AUTO_TEST_CASE(http_codings__decode__nested_limit_exceeded__body_limit)
+{
+    const system::data_chunk body(1000000, 'a');
+    const codings value{ { coding::gzip }, { coding::gzip } };
+
+    code ec{};
+    BC_REQUIRE(decode(encode(body, value), value, 1000, ec).empty());
+    BC_REQUIRE(ec == http_error_t::body_limit);
+}
+
 BC_AUTO_TEST_CASE(http_codings__decode__limit_equal__expected)
 {
     const system::data_chunk body(1000, 'a');

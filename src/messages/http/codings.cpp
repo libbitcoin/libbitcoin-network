@@ -198,10 +198,14 @@ void decoder::write(data_chunk& out, size_t& consumed, const data_slice& in,
         auto& sink = last ? out : stages_[add1(index)].input;
         const data_slice source = first ? in : data_slice(item.input);
 
+        auto pause = room;
+        if (last && !is_zero(step))
+            pause = is_zero(room) ? step : std::min(step, room);
+
         size_t used{};
         const auto valid = std::visit([&](auto& coder) NOEXCEPT
         {
-            return coder.write(sink, used, source, last ? step : zero);
+            return coder.write(sink, used, source, pause);
         }, item.value);
 
         if (!valid)
@@ -243,13 +247,23 @@ data_chunk decode(const data_slice& body, const codings& value, size_t limit,
     code& ec) NOEXCEPT
 {
     data_chunk out{};
-    size_t consumed{};
+    size_t offset{};
     decoder coder{ value, limit };
-    coder.write(out, consumed, body, zero, ec);
-    if (ec)
-        return {};
+    while (!coder.done())
+    {
+        size_t used{};
+        const auto before = out.size();
+        const auto begin = std::next(body.begin(), offset);
+        coder.write(out, used, data_slice(begin, body.end()), zero, ec);
+        if (ec)
+            return {};
 
-    if (consumed != body.size() || !coder.done())
+        offset += used;
+        if (is_zero(used) && out.size() == before)
+            break;
+    }
+
+    if (offset != body.size() || !coder.done())
     {
         const auto fault = value.content.empty() ?
             http_error_t::bad_transfer_encoding :
