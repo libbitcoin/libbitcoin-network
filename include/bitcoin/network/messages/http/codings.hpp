@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_CODINGS_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_CODINGS_HPP
 
+#include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/coding.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
@@ -47,13 +48,66 @@ struct codings
 /// bad_transfer_encoding) if any is unknown.
 BCT_API codings to_codings(const fields& header, code& ec) NOEXCEPT;
 
+/// Not thread safe.
+/// Encoder of a body written in parts, by its codings, content then transfer.
+class BCT_API encoder
+{
+public:
+    encoder(const codings& value) NOEXCEPT;
+
+    /// Encode data, appending completed output to out.
+    void write(system::data_chunk& out,
+        const system::data_slice& data) NOEXCEPT;
+
+    /// Encode the remainder and end the body, appending to out.
+    void flush(system::data_chunk& out) NOEXCEPT;
+
+private:
+    using stage = std::variant<system::gzip_deflater, system::zlib_deflater>;
+
+    std::vector<stage> stages_{};
+};
+
+/// Not thread safe.
+/// Decoder of a body received in parts, by its codings, transfer then content,
+/// each in reverse.
+class BCT_API decoder
+{
+public:
+    /// The decoded body is limited to limit bytes (zero is unlimited).
+    decoder(const codings& value, size_t limit) NOEXCEPT;
+
+    /// Decode from in, appending to out, until in is consumed or out has
+    /// grown by at least step (zero is unlimited), setting the bytes of in
+    /// consumed. Sets ec to bad_transfer_encoding or bad_content_encoding if
+    /// a coding is invalid, or body_limit if the decoded body exceeds limit.
+    void write(system::data_chunk& out, size_t& consumed,
+        const system::data_slice& in, size_t step, code& ec) NOEXCEPT;
+
+    /// Every coding has ended, with no input remaining.
+    bool done() const NOEXCEPT;
+
+private:
+    using coder = std::variant<system::gzip_inflater, system::zlib_inflater>;
+    struct stage
+    {
+        coder value;
+        error::http_error_t fault;
+        system::data_chunk input{};
+    };
+
+    std::vector<stage> stages_{};
+    size_t limit_;
+    size_t total_{};
+};
+
 /// The body encoded by the codings, content then transfer.
 BCT_API system::data_chunk encode(const system::data_slice& body,
     const codings& value) NOEXCEPT;
 
 /// The body decoded by the codings, transfer then content, each in reverse.
-/// Sets ec (bad_transfer_encoding or bad_content_encoding) if a coding is
-/// invalid or the decoded body would exceed limit (zero is unlimited).
+/// Sets ec as decoder::write, or to the coding fault if the body is
+/// incomplete.
 BCT_API system::data_chunk decode(const system::data_slice& body,
     const codings& value, size_t limit, code& ec) NOEXCEPT;
 
