@@ -538,6 +538,7 @@ BC_AUTO_TEST_CASE(settings__http_server__defaults__expected)
     BC_REQUIRE(instance.host_names().empty());
     BC_REQUIRE(instance.origin_names().empty());
     BC_REQUIRE(!instance.allow_opaque_origin);
+    BC_REQUIRE(instance.compression);
     BC_REQUIRE(!instance.authorize());
     BC_REQUIRE(instance.credentials.empty());
 
@@ -607,6 +608,7 @@ BC_AUTO_TEST_CASE(settings__websocket_server__defaults__expected)
     BC_REQUIRE(instance.host_names().empty());
     BC_REQUIRE(instance.origin_names().empty());
     BC_REQUIRE(!instance.allow_opaque_origin);
+    BC_REQUIRE(instance.compression);
     BC_REQUIRE(!instance.authorize());
     BC_REQUIRE(instance.credentials.empty());
     // websocket_server (no unique settings yet)

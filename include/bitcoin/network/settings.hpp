@@ -249,6 +249,9 @@ struct BCT_API settings
         /// Opaque origins are always serialized as "null".
         bool allow_opaque_origin{ false };
 
+        /// Response bodies are coded as accepted by the request.
+        bool compression{ true };
+
         /// Basic authorization credentials stored and passed in cleartext.
         /// This is not security, just compat for bitcoind on secured LAN.
         config::credentials credentials{};

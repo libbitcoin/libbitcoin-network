@@ -113,6 +113,11 @@ protected:
     virtual void add_access_control_headers(http::fields& fields,
         const http::request& request) const NOEXCEPT;
 
+    /// Set content coding as accepted by the request, if compression is
+    /// configured, for a response body that may be coded.
+    virtual void add_coding_headers(http::fields& fields,
+        const http::request& request) const NOEXCEPT;
+
     /// Override to replace string status response message.
     virtual std::string string_status(const http::status status,
         const std::string& reason, const http::media_type& type,

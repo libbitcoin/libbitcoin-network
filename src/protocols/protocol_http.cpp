@@ -462,6 +462,21 @@ void protocol_http::add_access_control_headers(fields& fields,
     }
 }
 
+void protocol_http::add_coding_headers(fields& fields,
+    const request& request) const NOEXCEPT
+{
+    if (!options_.compression || request.method() == verb::head)
+        return;
+
+    const std::string vary{ fields[field::vary] };
+    fields.set(field::vary, vary.empty() ? "accept-encoding" :
+        vary + ", accept-encoding");
+
+    const auto value = accepted_coding(request);
+    if (value == coding::gzip || value == coding::deflate)
+        fields.set(field::content_encoding, to_string(value));
+}
+
 // Status message generation.
 // ----------------------------------------------------------------------------
 // status.reason text is only available on non-polymorphic response types, so
