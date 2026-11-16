@@ -340,12 +340,15 @@ bool proxy::absorb_keepalive(const rpc::request& value) NOEXCEPT
 void proxy::queue_close(count_handler&& complete) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    batched_ = false;
-    parted_ = false;
 
     rpc::response close{};
     close.batch = true;
     close.changed = true;
+    close.opened = opened_;
+
+    batched_ = false;
+    parted_ = false;
+    opened_ = false;
 
     // The close part is queued per framing (http chunk or stream).
     if (parser_)
@@ -423,7 +426,12 @@ void proxy::do_response_queue(const rpc::response_ptr& response,
     {
         response->batch = parted_;
         response->changed = !parted_;
+        response->opened = opened_;
         parted_ = true;
+
+        // A notification is not answered, so it does not open the array.
+        if (!rpc::answers_notification(*response))
+            opened_ = true;
     }
 
     pending entry
@@ -801,9 +809,9 @@ void proxy::do_http_queue(const http::response_ptr& response,
     BC_ASSERT(stranded());
 
     // Stamp an http batch part with current batch state (ws does not batch).
+    auto& body = response->body();
     if (batched_ && !socket_->websocket())
     {
-        auto& body = response->body();
         if (!body.contains<rpc::response>())
         {
             handler(error::bad_stream, zero);
@@ -813,7 +821,21 @@ void proxy::do_http_queue(const http::response_ptr& response,
         auto& part = body.get<rpc::response>();
         part.batch = parted_;
         part.changed = !parted_;
+        part.opened = opened_;
         parted_ = true;
+
+        // A notification is not answered, so it does not open the array.
+        if (!rpc::answers_notification(part))
+            opened_ = true;
+    }
+    else if (!socket_->websocket() && body.contains<rpc::response>() &&
+        rpc::answers_notification(body.get<rpc::response>()))
+    {
+        // A notification is not answered, so its http response has no content.
+        response->result(http::status::no_content);
+        response->erase(http::field::content_type);
+        body = http::empty_value{};
+        response->prepare_payload();
     }
 
     pending entry

@@ -123,10 +123,8 @@ BC_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__success_
     BC_REQUIRE(writer.done());
 }
 
-BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_notification_result__empty_object)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_notification_result__not_written)
 {
-    const std::string_view expected{ R"({"jsonrpc":"2.0"})" };
-    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
@@ -136,19 +134,15 @@ BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_notification_result__empty_object)
     code ec{};
     writer.init(ec);
     BC_REQUIRE(!ec);
+    BC_REQUIRE(writer.done());
 
     const auto buffer = writer.get(ec);
     BC_REQUIRE(!ec);
-    BC_REQUIRE(buffer.has_value());
-    BC_REQUIRE(buffer.value().first == out);
-    BC_REQUIRE(!buffer.value().second);
-    BC_REQUIRE(writer.done());
+    BC_REQUIRE(!buffer.has_value());
 }
 
-BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_notification_error__empty_object)
+BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_notification_error__not_written)
 {
-    const std::string_view expected{ R"({"jsonrpc":"2.0"})" };
-    const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::response_body::value_type body{};
     body.buffer = &scratch;
@@ -158,13 +152,11 @@ BC_AUTO_TEST_CASE(rpc_body_writer__get__v2_notification_error__empty_object)
     code ec{};
     writer.init(ec);
     BC_REQUIRE(!ec);
+    BC_REQUIRE(writer.done());
 
     const auto buffer = writer.get(ec);
     BC_REQUIRE(!ec);
-    BC_REQUIRE(buffer.has_value());
-    BC_REQUIRE(buffer.value().first == out);
-    BC_REQUIRE(!buffer.value().second);
-    BC_REQUIRE(writer.done());
+    BC_REQUIRE(!buffer.has_value());
 }
 
 BC_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_expected_with_newline_no_more)
@@ -295,6 +287,7 @@ BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_continuation_part_terminated__sepa
     body.buffer = &scratch;
     body.message = response_t{ version::v2, identity_t{ 2 }, {}, value_t{ true } };
     body.batch = true;
+    body.opened = true;
     body.terminate = true;
     rpc::response_body::writer writer(body);
     code ec{};
@@ -328,6 +321,7 @@ BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_terminated__close_termi
     body.buffer = &scratch;
     body.batch = true;
     body.changed = true;
+    body.opened = true;
     body.terminate = true;
     rpc::response_body::writer writer(body);
     code ec{};
@@ -360,6 +354,7 @@ BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_non_terminated__close_o
     body.buffer = &scratch;
     body.batch = true;
     body.changed = true;
+    body.opened = true;
     rpc::response_body::writer writer(header, body);
     code ec{};
     writer.init(ec);
@@ -403,6 +398,75 @@ BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_non_terminated__open_pre
     BC_REQUIRE(buffer2.value().first == out2);
     BC_REQUIRE(!buffer2.value().second);
     BC_REQUIRE(writer.done());
+}
+
+BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_open_part_notification__not_written)
+{
+    http::flat_buffer scratch{ 64 * 1024 };
+    rpc::response_body::value_type body{};
+    body.buffer = &scratch;
+    body.message = response_t{ version::v2, {}, {}, value_t{ true } };
+    body.changed = true;
+    body.terminate = true;
+    rpc::response_body::writer writer(body);
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(writer.done());
+
+    const auto buffer = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!buffer.has_value());
+}
+
+BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_continuation_part_unopened__open_prefix_message)
+{
+    const std::string_view prefix{ "[" };
+    const std::string_view expected{ R"({"jsonrpc":"2.0","id":2,"result":true})" };
+    const io::const_buffer out1{ prefix.data(), prefix.size() };
+    const io::const_buffer out2{ expected.data(), expected.size() };
+    http::flat_buffer scratch{ 64 * 1024 };
+    rpc::response_body::value_type body{};
+    body.buffer = &scratch;
+    body.message = response_t{ version::v2, identity_t{ 2 }, {}, value_t{ true } };
+    body.batch = true;
+    body.terminate = true;
+    rpc::response_body::writer writer(body);
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+
+    const auto buffer1 = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(buffer1.value().first == out1);
+    BC_REQUIRE(buffer1.value().second);
+
+    const auto buffer2 = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer2.has_value());
+    BC_REQUIRE(buffer2.value().first == out2);
+    BC_REQUIRE(!buffer2.value().second);
+    BC_REQUIRE(writer.done());
+}
+
+BC_AUTO_TEST_CASE(rpc_body_writer__get__batch_close_part_unopened_terminated__not_written)
+{
+    http::flat_buffer scratch{ 64 * 1024 };
+    rpc::response_body::value_type body{};
+    body.buffer = &scratch;
+    body.batch = true;
+    body.changed = true;
+    body.terminate = true;
+    rpc::response_body::writer writer(body);
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(writer.done());
+
+    const auto buffer = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!buffer.has_value());
 }
 
 // error
