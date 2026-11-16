@@ -136,7 +136,9 @@ protected:
 private:
     bool registered(const std::string_view& name) const NOEXCEPT;
     http::request_ptr create_request() const NOEXCEPT;
+    code to_fault(const rpc::request& body) const NOEXCEPT;
     void reject(const code& ec, const http::request& request) NOEXCEPT;
+    void refuse(const code& ec, const http::request& request) NOEXCEPT;
     void handle_rejected(const code& ec, const code& reason) NOEXCEPT;
     std::string log_message(const http::response& response) const NOEXCEPT;
     std::string log_message(const http::request& request,

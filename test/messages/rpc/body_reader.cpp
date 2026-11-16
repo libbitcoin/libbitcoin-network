@@ -292,6 +292,7 @@ BC_AUTO_TEST_CASE(rpc_body_reader__put__empty_batch__batch_empty)
 
     reader.put(buffer, ec);
     BC_REQUIRE(ec == error::jsonrpc_batch_empty);
+    BC_REQUIRE(!body.changed);
 }
 
 BC_AUTO_TEST_CASE(rpc_body_reader__put__nested_open__batch_malformed)
@@ -1175,7 +1176,7 @@ BC_AUTO_TEST_CASE(rpc_body_reader__finish__non_object__id_not_recovered)
     BC_REQUIRE(!body.message.id.has_value());
 }
 
-BC_AUTO_TEST_CASE(rpc_body_reader__put__batch_element_non_string_method__error_undelivered)
+BC_AUTO_TEST_CASE(rpc_body_reader__put__batch_element_non_string_method__delivered_with_fault)
 {
     const std::string_view text{ R"([{"jsonrpc":"2.0","id":1,"method":42},)" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -1186,8 +1187,41 @@ BC_AUTO_TEST_CASE(rpc_body_reader__put__batch_element_non_string_method__error_u
     BC_REQUIRE(!ec);
 
     reader.put(buffer, ec);
-    BC_REQUIRE(ec);
-    BC_REQUIRE(ec != error::http_error_t::need_buffer);
+    BC_REQUIRE(ec == error::http_error_t::need_buffer);
+    BC_REQUIRE(body.changed);
+    BC_REQUIRE(body.fault == error::to_json_code(error::json_error_t::json_not_string));
+}
+
+BC_AUTO_TEST_CASE(rpc_body_reader__put__batch_element_missing_method__delivered_with_fault)
+{
+    const std::string_view text{ R"([{"jsonrpc":"2.0","id":1,"params":[]},)" };
+    const io::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    rpc::request_body::reader reader(body);
+    code ec{};
+    reader.init(text.size(), ec);
+    BC_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BC_REQUIRE(ec == error::http_error_t::need_buffer);
+    BC_REQUIRE(body.changed);
+    BC_REQUIRE(body.fault == error::jsonrpc_requires_method);
+    BC_REQUIRE_EQUAL(std::get<code_t>(body.message.id.value()), 1);
+}
+
+BC_AUTO_TEST_CASE(rpc_body_reader__put__valid_batch_element__delivered_without_fault)
+{
+    const std::string_view text{ R"([{"jsonrpc":"2.0","id":1,"method":"a","params":[]},)" };
+    const io::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    rpc::request_body::reader reader(body);
+    code ec{};
+    reader.init(text.size(), ec);
+    BC_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BC_REQUIRE(ec == error::http_error_t::need_buffer);
+    BC_REQUIRE(!body.fault);
 }
 
 BC_AUTO_TEST_SUITE_END()

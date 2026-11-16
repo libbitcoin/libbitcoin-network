@@ -69,6 +69,9 @@ struct message_type
     /// bitcoind non-standard v1 message within a (v2) batch.
     bool lax_batch{};
 
+    /// Read: a batched element that is not valid json-rpc (channel answers).
+    code fault{};
+
     /// Socket wires message termination by transport framing (tcp stream
     /// messages are newline terminated, http/ws framed messages are not).
     bool terminate{};

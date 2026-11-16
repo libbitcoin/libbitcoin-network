@@ -110,7 +110,9 @@ protected:
         const rpc::request_cptr& request) NOEXCEPT;
 
 private:
+    inline code to_fault(const rpc::request& request) const NOEXCEPT;
     inline void reject(const code& ec, const rpc::request& request) NOEXCEPT;
+    inline void refuse(const code& ec, const rpc::request& request) NOEXCEPT;
     inline void refuse(rpc::code_t value, const code& ec) NOEXCEPT;
     inline void handle_rejected(const code& ec, const code& reason) NOEXCEPT;
 

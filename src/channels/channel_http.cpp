@@ -211,33 +211,27 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
         return;
     }
 
-    // Lax json-rpc is allowed only where the service tolerates it.
     const auto& value = request->body();
     if (value.contains<rpc::request>())
     {
         const auto& body = value.get<rpc::request>();
-        if (body.lax_params && !lax_params())
-        {
-            reject(error::jsonrpc_params_not_collection, *request);
-            return;
-        }
+        const auto batched = body.batch || body.changed;
 
-        if (body.lax_named && !lax_named())
+        // An invalid batched element is answered and the batch read on.
+        if (const auto fault = to_fault(body))
         {
-            reject(error::jsonrpc_v1_requires_array_params, *request);
-            return;
-        }
+            if (batched && !websocket())
+                refuse(fault, *request);
+            else
+                reject(fault, *request);
 
-        if (body.lax_batch && !lax_batch())
-        {
-            reject(error::jsonrpc_batch_requires_v2, *request);
             return;
         }
 
         // Batch is not supported over ws. Batching amortizes http request
         // overhead, which ws does not incur, so pipelining obtains the same
         // result without confining the set to a single frame.
-        if (websocket() && (body.batch || body.changed))
+        if (websocket() && batched)
         {
             reject(error::jsonrpc_batch_unsupported, *request);
             return;
@@ -305,6 +299,25 @@ bool channel_http::lax_batch() const NOEXCEPT
 status channel_http::to_rpc_status(const rpc::response_t&) const NOEXCEPT
 {
     return status::ok;
+}
+
+// private
+// Lax json-rpc is allowed only where the service tolerates it.
+code channel_http::to_fault(const rpc::request& body) const NOEXCEPT
+{
+    if (body.fault)
+        return body.fault;
+
+    if (body.lax_params && !lax_params())
+        return error::jsonrpc_params_not_collection;
+
+    if (body.lax_named && !lax_named())
+        return error::jsonrpc_v1_requires_array_params;
+
+    if (body.lax_batch && !lax_batch())
+        return error::jsonrpc_batch_requires_v2;
+
+    return {};
 }
 
 // private
@@ -505,9 +518,14 @@ void channel_http::reject(const code& ec, const request& request) NOEXCEPT
     const auto versioned = (message.jsonrpc == rpc::version::v1) ||
         (message.jsonrpc == rpc::version::v2);
 
+    // An empty batch is a json-rpc v2 request.
+    auto version = versioned ? message.jsonrpc : rpc::version::undefined;
+    if (ec == error::jsonrpc_batch_empty)
+        version = rpc::version::v2;
+
     rpc::response_t model
     {
-        .jsonrpc = versioned ? message.jsonrpc : rpc::version::undefined,
+        .jsonrpc = version,
         .id = message.id.value_or(rpc::null_t{}),
         .error = rpc::result_t
         {
@@ -523,14 +541,45 @@ void channel_http::reject(const code& ec, const request& request) NOEXCEPT
     response out{ statused ? to_rpc_status(model) : status::ok,
         request.version() };
 
-    out.set(field::content_type,
-        from_media_type(media_type::application_json));
+    out.set(field::content_type, from_media_type(media_type::application_json));
     out.keep_alive(false);
     out.body() = rpc::response{ {}, std::move(model) };
     out.prepare_payload();
     send(std::move(out),
         std::bind(&channel_http::handle_rejected,
             shared_from_base<channel_http>(), _1, ec));
+}
+
+// private
+// A batched element that fails to validate is answered as a batch part
+// (json-rpc v2 unless v1), with its id where that is obtained.
+void channel_http::refuse(const code& ec, const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    const auto& message = request.body().get<rpc::request>().message;
+    const auto v1 = (message.jsonrpc == rpc::version::v1);
+    rpc::response_t model
+    {
+        .jsonrpc = v1 ? rpc::version::v1 : rpc::version::v2,
+        .id = message.id.value_or(rpc::null_t{}),
+        .error = rpc::result_t
+        {
+            .code = rpc::reserved::invalid_request,
+            .message = ec.message()
+        }
+    };
+
+    response out{ status::ok, request.version() };
+    out.set(field::content_type, from_media_type(media_type::application_json));
+    out.keep_alive(request.keep_alive());
+    out.body() = rpc::response{ {}, std::move(model) };
+    out.prepare_payload();
+
+    // The gate re-arms the read upon release.
+    open_gate();
+    send(std::move(out), [](const code&) NOEXCEPT {});
+    close_gate();
 }
 
 // log helpers

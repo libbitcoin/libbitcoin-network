@@ -120,22 +120,14 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Lax json-rpc is allowed only where the service tolerates it.
-    if (request->lax_params && !lax_params())
+    // An invalid batched element is answered and the batch read on.
+    if (const auto fault = to_fault(*request))
     {
-        reject(error::jsonrpc_params_not_collection, *request);
-        return;
-    }
+        if (request->batch || request->changed)
+            refuse(fault, *request);
+        else
+            reject(fault, *request);
 
-    if (request->lax_named && !lax_named())
-    {
-        reject(error::jsonrpc_v1_requires_array_params, *request);
-        return;
-    }
-
-    if (request->lax_batch && !lax_batch())
-    {
-        reject(error::jsonrpc_batch_requires_v2, *request);
         return;
     }
 
@@ -149,6 +141,26 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
         refuse(rpc::reserved::invalid_params, code);
     else if (code)
         stop(code);
+}
+
+// private
+// Lax json-rpc is allowed only where the service tolerates it.
+TEMPLATE
+inline code CLASS::to_fault(const rpc::request& request) const NOEXCEPT
+{
+    if (request.fault)
+        return request.fault;
+
+    if (request.lax_params && !lax_params())
+        return error::jsonrpc_params_not_collection;
+
+    if (request.lax_named && !lax_named())
+        return error::jsonrpc_v1_requires_array_params;
+
+    if (request.lax_batch && !lax_batch())
+        return error::jsonrpc_batch_requires_v2;
+
+    return {};
 }
 
 // private
@@ -172,7 +184,10 @@ inline void CLASS::reject(const code& ec,
     const auto versioned = (message.jsonrpc == rpc::version::v1) ||
         (message.jsonrpc == rpc::version::v2);
 
+    // An empty batch is a json-rpc v2 request.
     version_ = versioned ? message.jsonrpc : rpc::version::undefined;
+    if (ec == error::jsonrpc_batch_empty)
+        version_ = rpc::version::v2;
     identity_ = message.id.value_or(rpc::null_t{});
     send_error(
     {
@@ -181,6 +196,29 @@ inline void CLASS::reject(const code& ec,
         .message = ec.message()
     }, std::bind(&CLASS::handle_rejected,
         shared_from_base<CLASS>(), _1, ec));
+}
+
+// private
+// A batched element that fails to validate is answered (json-rpc v2 unless
+// v1), with its id where that is obtained.
+TEMPLATE
+inline void CLASS::refuse(const code& ec, const rpc::request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    const auto& message = request.message;
+    const auto v1 = (message.jsonrpc == rpc::version::v1);
+    version_ = v1 ? rpc::version::v1 : rpc::version::v2;
+    identity_ = message.id.value_or(rpc::null_t{});
+
+    // The gate re-arms the read upon release.
+    open_gate();
+    send_error(
+    {
+        .code = rpc::reserved::invalid_request,
+        .message = ec.message()
+    }, [](const code&) NOEXCEPT {});
+    close_gate();
 }
 
 // private

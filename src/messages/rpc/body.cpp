@@ -63,7 +63,7 @@ static id_option to_identity(const system::json::value& model) NOEXCEPT
 
 // Convert the parsed model to a request message and validate. Tolerated
 // jrpc violations are reported as lax flags (the channel validates policy).
-static void to_request(rpc::request& value, code& ec) NOEXCEPT
+static code to_request(rpc::request& value) NOEXCEPT
 {
     value.lax_params = false;
     value.lax_named = false;
@@ -78,52 +78,52 @@ static void to_request(rpc::request& value, code& ec) NOEXCEPT
     {
         // Primary exception type for conversion operations.
         value.message.id = to_identity(value.model);
-        ec = e.code();
-        return;
+        return e.code();
     }
     catch (...)
     {
         value.message.id = to_identity(value.model);
-        ec = code{ error::jsonrpc_reader_exception };
-        return;
+        return error::jsonrpc_reader_exception;
     }
+
+    auto& message = value.message;
+    auto& params = message.params;
 
     // Set version default.
-    if (value.message.jsonrpc == version::undefined)
-        value.message.jsonrpc = version::v1;
+    if (message.jsonrpc == version::undefined)
+        message.jsonrpc = version::v1;
 
     // Post-parse semantic validation.
-    if (value.message.jsonrpc == version::invalid)
+    if (message.jsonrpc == version::invalid)
+        return error::jsonrpc_invalid_version;
+
+    if (message.method.empty())
+        return error::jsonrpc_requires_method;
+
+    if (message.jsonrpc == version::v1)
     {
-        ec = code{ error::jsonrpc_invalid_version };
-    }
-    else if (value.message.method.empty())
-    {
-        ec = code{ error::jsonrpc_requires_method };
-    }
-    else if (value.message.jsonrpc == version::v1)
-    {
-        if (!value.message.params.has_value())
-            ec = code{ error::jsonrpc_v1_requires_params };
-        else if (!value.message.id.has_value())
-            ec = code{ error::jsonrpc_v1_requires_id };
-        else if (std::holds_alternative<object_t>(
-            value.message.params.value()))
+        if (!params.has_value())
+            return error::jsonrpc_v1_requires_params;
+
+        if (!message.id.has_value())
+            return error::jsonrpc_v1_requires_id;
+
+        if (std::holds_alternative<object_t>(params.value()))
             value.lax_named = true;
-        else if (!std::holds_alternative<array_t>(
-            value.message.params.value()))
-            ec = code{ error::jsonrpc_v1_requires_array_params };
+        else if (!std::holds_alternative<array_t>(params.value()))
+            return error::jsonrpc_v1_requires_array_params;
+
+        return {};
     }
-    else if (value.message.params.has_value() &&
-        std::holds_alternative<value_t>(value.message.params.value()))
+
+    // Tolerated: Electrum non-standard single value params (converted).
+    if (params.has_value() && std::holds_alternative<value_t>(params.value()))
     {
-        // Tolerated: Electrum non-standard single value params (converted).
         value.lax_params = true;
-        value.message.params.emplace(array_t
-        {
-            std::get<value_t>(std::move(value.message.params.value()))
-        });
+        params.emplace(array_t{ std::get<value_t>(std::move(params.value())) });
     }
+
+    return {};
 }
 
 // rpc::body<>::reader
@@ -204,9 +204,11 @@ put(const buffer_type& buffer, code& ec) NOEXCEPT
 
                 if (character == ']')
                 {
-                    // Batch open immediately closed (no elements).
+                    // Batch open immediately closed (no elements), which is
+                    // answered as a single request (batch not opened).
                     if (opened_ && !delivered_)
                     {
+                        this->value_.changed = false;
                         ec = code{ error::jsonrpc_batch_empty };
                         return index;
                     }
@@ -344,8 +346,7 @@ put(const buffer_type& buffer, code& ec) NOEXCEPT
                 base::reader::finish(ec);
                 if (ec) return index;
 
-                to_request(this->value_, ec);
-                if (ec) return index;
+                this->value_.fault = to_request(this->value_);
 
                 // Tolerated: v1 has no batch (bitcoind), noted for the channel.
                 this->value_.lax_batch =
@@ -408,7 +409,7 @@ finish(code& ec) NOEXCEPT
         base::reader::finish(ec);
         if (ec) return;
 
-        to_request(this->value_, ec);
+        ec = to_request(this->value_);
     }
     else
     {

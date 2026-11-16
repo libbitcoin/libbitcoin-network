@@ -1161,32 +1161,47 @@ BC_FIXTURE_TEST_CASE(channel_http__resume__v1_missing_id__invalid_request_null_i
     BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_v1_requires_id);
 }
 
-BC_FIXTURE_TEST_CASE(channel_http__resume__empty_batch__invalid_request_array_and_stopped, http_channel_fixture)
+BC_FIXTURE_TEST_CASE(channel_http__resume__empty_batch__invalid_request_and_stopped, http_channel_fixture)
 {
     start(http_ok);
     send(http_post("[]"));
 
     const auto response = receive();
     BC_REQUIRE_EQUAL(response.result_int(), 200u);
-    BC_REQUIRE(response.chunked());
 
-    const auto batch = system::json::parse(response.body()).as_array();
-    BC_REQUIRE_EQUAL(batch.size(), 1u);
-    BC_REQUIRE(batch.at(0).at("id").is_null());
-    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    const auto fault = system::json::parse(response.body()).as_object();
+    BC_REQUIRE_EQUAL(fault.at("jsonrpc").as_string(), "2.0");
+    BC_REQUIRE(fault.at("id").is_null());
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
     BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_batch_empty);
 }
 
-BC_FIXTURE_TEST_CASE(channel_http__resume__v1_batch_element__invalid_request_array_and_stopped, http_channel_fixture)
+BC_FIXTURE_TEST_CASE(channel_http__resume__invalid_batch_elements__invalid_request_elements_and_continues, http_channel_fixture)
 {
     start(http_ok);
-    send(http_post(R"([{"id":1,"method":"echo","params":["hello"]}])"));
+    send(http_post(R"([{"id":1,"method":"echo","params":["hello"]},{"jsonrpc":"2.0","id":2,"params":[]},{"jsonrpc":"3.0","id":3,"method":"echo","params":[]}])"));
 
-    const auto batch = system::json::parse(receive().body()).as_array();
-    BC_REQUIRE_EQUAL(batch.size(), 1u);
+    const auto response = receive();
+    BC_REQUIRE_EQUAL(response.result_int(), 200u);
+    BC_REQUIRE(response.chunked());
+
+    const auto batch = system::json::parse(response.body()).as_array();
+    BC_REQUIRE_EQUAL(batch.size(), 3u);
+    BC_REQUIRE(!batch.at(0).as_object().contains("jsonrpc"));
     BC_REQUIRE_EQUAL(batch.at(0).at("id").to_number<int64_t>(), 1);
     BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
-    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_batch_requires_v2);
+    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("message").as_string(), code{ error::jsonrpc_batch_requires_v2 }.message());
+    BC_REQUIRE_EQUAL(batch.at(1).at("jsonrpc").as_string(), "2.0");
+    BC_REQUIRE_EQUAL(batch.at(1).at("id").to_number<int64_t>(), 2);
+    BC_REQUIRE_EQUAL(batch.at(1).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(batch.at(1).at("error").at("message").as_string(), code{ error::jsonrpc_requires_method }.message());
+    BC_REQUIRE_EQUAL(batch.at(2).at("jsonrpc").as_string(), "2.0");
+    BC_REQUIRE_EQUAL(batch.at(2).at("id").to_number<int64_t>(), 3);
+    BC_REQUIRE_EQUAL(batch.at(2).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(batch.at(2).at("error").at("message").as_string(), code{ error::jsonrpc_invalid_version }.message());
+
+    send(http_get_request);
+    BC_REQUIRE_EQUAL(receive().result_int(), 200u);
 }
 
 BC_FIXTURE_TEST_CASE(channel_http__resume__batch_first_element_malformed__parse_error_array_and_stopped, http_channel_fixture)
@@ -1223,11 +1238,21 @@ BC_FIXTURE_TEST_CASE(channel_http__resume__status_override__invalid_request_stat
 BC_FIXTURE_TEST_CASE(channel_http__resume__status_override_batch__unstatused, rpc_body_channel_fixture)
 {
     start(http_ok);
-    send(http_post("[]"));
+    send(http_post(R"([{"jsonrpc":"2.0","id":5,"params":[]}])"));
 
     const auto response = receive();
     BC_REQUIRE_EQUAL(response.result_int(), 200u);
     BC_REQUIRE_EQUAL(system::json::parse(response.body()).as_array().size(), 1u);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__status_override_empty_batch__statused, rpc_body_channel_fixture)
+{
+    start(http_ok);
+    send(http_post("[]"));
+
+    const auto response = receive();
+    BC_REQUIRE_EQUAL(response.result_int(), 400u);
+    BC_REQUIRE(system::json::parse(response.body()).is_object());
     BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_batch_empty);
 }
 
@@ -1319,15 +1344,15 @@ BC_FIXTURE_TEST_CASE(channel_http__resume__downgraded_missing_method__invalid_re
     BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_requires_method);
 }
 
-BC_FIXTURE_TEST_CASE(channel_http__resume__downgraded_empty_batch__invalid_request_array_and_stopped, rpc_body_channel_fixture)
+BC_FIXTURE_TEST_CASE(channel_http__resume__downgraded_empty_batch__invalid_request_and_stopped, rpc_body_channel_fixture)
 {
     start(http_ok);
     send("[]");
 
-    const auto batch = system::json::parse(receive_all()).as_array();
-    BC_REQUIRE_EQUAL(batch.size(), 1u);
-    BC_REQUIRE(batch.at(0).at("id").is_null());
-    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    const auto fault = system::json::parse(receive_all()).as_object();
+    BC_REQUIRE_EQUAL(fault.at("jsonrpc").as_string(), "2.0");
+    BC_REQUIRE(fault.at("id").is_null());
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
     BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_batch_empty);
 }
 

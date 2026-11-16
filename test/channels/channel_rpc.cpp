@@ -586,27 +586,61 @@ BC_FIXTURE_TEST_CASE(channel_rpc__receive__v1_named_params__invalid_request_and_
     BC_REQUIRE_EQUAL(rpc_await(stopped), error::jsonrpc_v1_requires_array_params);
 }
 
-BC_FIXTURE_TEST_CASE(channel_rpc__receive__v1_batch_element__invalid_request_array_and_stopped, rpc_channel_fixture)
+BC_FIXTURE_TEST_CASE(channel_rpc__receive__v1_batch_element__invalid_request_element_and_continues, rpc_channel_fixture)
 {
-    start(ignore_echo);
-    send(R"([{"id":1,"method":"echo","params":["hello"]}])");
+    start(echo_result);
+    send(R"([{"id":1,"method":"echo","params":["hello"]},{"jsonrpc":"2.0","id":2,"method":"echo","params":["world"]}])");
 
-    const auto batch = system::json::parse(receive_all()).as_array();
-    BC_REQUIRE_EQUAL(batch.size(), 1u);
+    const auto batch = system::json::parse(receive_line()).as_array();
+    BC_REQUIRE_EQUAL(batch.size(), 2u);
+    BC_REQUIRE(!batch.at(0).as_object().contains("jsonrpc"));
     BC_REQUIRE_EQUAL(batch.at(0).at("id").to_number<int64_t>(), 1);
     BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
-    BC_REQUIRE_EQUAL(rpc_await(stopped), error::jsonrpc_batch_requires_v2);
+    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("message").as_string(), code{ error::jsonrpc_batch_requires_v2 }.message());
+    BC_REQUIRE_EQUAL(batch.at(1).at("id").to_number<int64_t>(), 2);
+    BC_REQUIRE_EQUAL(batch.at(1).at("result").as_string(), "world");
 }
 
-BC_FIXTURE_TEST_CASE(channel_rpc__receive__empty_batch__invalid_request_array_and_stopped, rpc_channel_fixture)
+BC_FIXTURE_TEST_CASE(channel_rpc__receive__batch_missing_method__invalid_request_element_and_continues, rpc_channel_fixture)
+{
+    start(echo_result);
+    send(R"([{"jsonrpc":"2.0","id":1,"method":"echo","params":["a"]},{"jsonrpc":"2.0","id":2,"params":[]},{"jsonrpc":"2.0","id":3,"method":"echo","params":["c"]}])");
+
+    const auto batch = system::json::parse(receive_line()).as_array();
+    BC_REQUIRE_EQUAL(batch.size(), 3u);
+    BC_REQUIRE_EQUAL(batch.at(0).at("result").as_string(), "a");
+    BC_REQUIRE_EQUAL(batch.at(1).at("jsonrpc").as_string(), "2.0");
+    BC_REQUIRE_EQUAL(batch.at(1).at("id").to_number<int64_t>(), 2);
+    BC_REQUIRE_EQUAL(batch.at(1).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(batch.at(1).at("error").at("message").as_string(), code{ error::jsonrpc_requires_method }.message());
+    BC_REQUIRE_EQUAL(batch.at(2).at("result").as_string(), "c");
+
+    send(R"({"jsonrpc":"2.0","id":4,"method":"echo","params":["d"]})" "\n");
+    BC_REQUIRE_EQUAL(system::json::parse(receive_line()).at("result").as_string(), "d");
+}
+
+BC_FIXTURE_TEST_CASE(channel_rpc__receive__batch_non_object_element__invalid_request_null_id_element, rpc_channel_fixture)
+{
+    start(echo_result);
+    send(R"(["x",{"jsonrpc":"2.0","id":2,"method":"echo","params":["b"]}])");
+
+    const auto batch = system::json::parse(receive_line()).as_array();
+    BC_REQUIRE_EQUAL(batch.size(), 2u);
+    BC_REQUIRE_EQUAL(batch.at(0).at("jsonrpc").as_string(), "2.0");
+    BC_REQUIRE(batch.at(0).at("id").is_null());
+    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(batch.at(1).at("result").as_string(), "b");
+}
+
+BC_FIXTURE_TEST_CASE(channel_rpc__receive__empty_batch__invalid_request_and_stopped, rpc_channel_fixture)
 {
     start(ignore_echo);
     send("[]");
 
-    const auto batch = system::json::parse(receive_all()).as_array();
-    BC_REQUIRE_EQUAL(batch.size(), 1u);
-    BC_REQUIRE(batch.at(0).at("id").is_null());
-    BC_REQUIRE_EQUAL(batch.at(0).at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    const auto fault = system::json::parse(receive_all()).as_object();
+    BC_REQUIRE_EQUAL(fault.at("jsonrpc").as_string(), "2.0");
+    BC_REQUIRE(fault.at("id").is_null());
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
     BC_REQUIRE_EQUAL(rpc_await(stopped), error::jsonrpc_batch_empty);
 }
 
