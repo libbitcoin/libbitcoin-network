@@ -504,7 +504,7 @@ BC_AUTO_TEST_CASE(rpc_body_writer__request_get__notification_terminated__success
 
 BC_AUTO_TEST_CASE(rpc_body_writer__request_get__request_with_id__expected)
 {
-    const std::string_view expected{ R"({"jsonrpc":"1.0","id":"curltest","method":"getblockcount","params":[]})" };
+    const std::string_view expected{ R"({"id":"curltest","method":"getblockcount","params":[]})" };
     const io::const_buffer out{ expected.data(), expected.size() };
     http::flat_buffer scratch{ 64 * 1024 };
     rpc::request_body::value_type body{};
