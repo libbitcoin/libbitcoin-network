@@ -93,6 +93,15 @@ protected:
     /// Override to dispatch request to subscribers by requested method.
     virtual inline void dispatch(const rpc::request_cptr& request) NOEXCEPT;
 
+    /// Override to tolerate json-rpc single value params (electrum laxness).
+    virtual inline bool lax_params() const NOEXCEPT;
+
+    /// Override to tolerate json-rpc v1 named params (bitcoind laxness).
+    virtual inline bool lax_named() const NOEXCEPT;
+
+    /// Override to tolerate json-rpc v1 batch elements (bitcoind laxness).
+    virtual inline bool lax_batch() const NOEXCEPT;
+
     /// Must call after successful message handling if no stop.
     inline void receive() NOEXCEPT override;
 

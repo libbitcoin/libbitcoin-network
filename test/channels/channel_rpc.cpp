@@ -563,6 +563,18 @@ BC_FIXTURE_TEST_CASE(channel_rpc__receive__invalid_version__invalid_request_and_
     BC_REQUIRE_EQUAL(rpc_await(stopped), error::jsonrpc_invalid_version);
 }
 
+BC_FIXTURE_TEST_CASE(channel_rpc__receive__lax_params__invalid_request_and_stopped, rpc_channel_fixture)
+{
+    start(ignore_echo);
+    send(R"({"jsonrpc":"2.0","id":1,"method":"echo","params":"hello"})" "\n");
+
+    const auto fault = system::json::parse(receive_line()).as_object();
+    BC_REQUIRE_EQUAL(fault.at("id").to_number<int64_t>(), 1);
+    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
+    BC_REQUIRE_EQUAL(fault.at("error").at("message").as_string(), code{ error::jsonrpc_params_not_collection }.message());
+    BC_REQUIRE_EQUAL(rpc_await(stopped), error::jsonrpc_params_not_collection);
+}
+
 BC_FIXTURE_TEST_CASE(channel_rpc__receive__v1_named_params__invalid_request_and_stopped, rpc_channel_fixture)
 {
     start(ignore_echo);

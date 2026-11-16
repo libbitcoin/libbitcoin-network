@@ -211,8 +211,7 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
         return;
     }
 
-    // Electrum laxness (single value params) is allowed only where the
-    // service tolerates it, a v1 message within a batch (btcd) never is.
+    // Lax json-rpc is allowed only where the service tolerates it.
     const auto& value = request->body();
     if (value.contains<rpc::request>())
     {
@@ -229,7 +228,7 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
             return;
         }
 
-        if (body.lax_batch)
+        if (body.lax_batch && !lax_batch())
         {
             reject(error::jsonrpc_batch_requires_v2, *request);
             return;
@@ -294,6 +293,11 @@ bool channel_http::lax_params() const NOEXCEPT
 }
 
 bool channel_http::lax_named() const NOEXCEPT
+{
+    return false;
+}
+
+bool channel_http::lax_batch() const NOEXCEPT
 {
     return false;
 }

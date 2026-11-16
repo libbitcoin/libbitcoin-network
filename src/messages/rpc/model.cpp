@@ -316,7 +316,7 @@ DEFINE_JSON_FROM_TAG(request_t)
 {
     system::json::object object{};
 
-    if (instance.jsonrpc != version::undefined)
+    if (instance.jsonrpc == version::v2)
     {
         object["jsonrpc"] = value_from(instance.jsonrpc);
     }
@@ -402,7 +402,7 @@ DEFINE_JSON_FROM_TAG(response_t)
 {
     system::json::object object{};
 
-    if (instance.jsonrpc != version::undefined)
+    if (instance.jsonrpc == version::v2)
     {
         object["jsonrpc"] = value_from(instance.jsonrpc);
     }
