@@ -120,18 +120,22 @@ inline void CLASS::dispatch(const rpc::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Electrum laxness (single value params) is allowed, btcd laxness
-    // (batched v1) and bitcoind laxness (v1 named params) are not (the rpc
-    // channel is jrpc over tcp).
-    if (request->lax_batch)
+    // Lax json-rpc is allowed only where the service tolerates it.
+    if (request->lax_params && !lax_params())
     {
-        reject(error::jsonrpc_batch_requires_v2, *request);
+        reject(error::jsonrpc_params_not_collection, *request);
         return;
     }
 
-    if (request->lax_named)
+    if (request->lax_named && !lax_named())
     {
         reject(error::jsonrpc_v1_requires_array_params, *request);
+        return;
+    }
+
+    if (request->lax_batch && !lax_batch())
+    {
+        reject(error::jsonrpc_batch_requires_v2, *request);
         return;
     }
 
@@ -221,6 +225,24 @@ inline rpc::request_ptr CLASS::create_request() const NOEXCEPT
     // The parse is always lax, with tolerated jrpc violations and batch
     // state reflected on the value (validated by channel dispatch).
     return system::to_shared<rpc::request>();
+}
+
+TEMPLATE
+inline bool CLASS::lax_params() const NOEXCEPT
+{
+    return false;
+}
+
+TEMPLATE
+inline bool CLASS::lax_named() const NOEXCEPT
+{
+    return false;
+}
+
+TEMPLATE
+inline bool CLASS::lax_batch() const NOEXCEPT
+{
+    return false;
 }
 
 // Send.
