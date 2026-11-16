@@ -66,7 +66,7 @@ struct message_type
     /// bitcoind non-standard v1 named params.
     bool lax_named{};
 
-    /// btcd non-standard v1 message within a (v2) batch.
+    /// bitcoind non-standard v1 message within a (v2) batch.
     bool lax_batch{};
 
     /// Socket wires message termination by transport framing (tcp stream

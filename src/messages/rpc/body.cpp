@@ -347,7 +347,7 @@ put(const buffer_type& buffer, code& ec) NOEXCEPT
                 to_request(this->value_, ec);
                 if (ec) return index;
 
-                // Tolerated: v1 has no batch (btcd), noted for the channel.
+                // Tolerated: v1 has no batch (bitcoind), noted for the channel.
                 this->value_.lax_batch =
                     (this->value_.message.jsonrpc == version::v1);
 
