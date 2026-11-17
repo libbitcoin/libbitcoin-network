@@ -27,11 +27,10 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// The client side of one TLS 1.3 connection (rfc8446): the suites, groups
-/// and signature schemes of the context offer, server authentication by
-/// ECDSA P-256 or P-384 or RSA-PSS (to anchors, or unanchored), optional
-/// client authentication (P-256 or P-384), without pre-shared keys or early
-/// data. The client hello is output on construction. Not thread safe.
+/// TLS 1.3 client connection (rfc8446), offer of context, no psk or early data.
+/// Server authentication ECDSA P-256/P-384 or RSA-PSS (anchored or not),
+/// optional client authentication (P-256/P-384). Sends client hello on
+/// construction. Not thread safe.
 class BCT_API client final
   : public connection
 {
@@ -41,7 +40,7 @@ public:
     typedef system::x25519::key key;
     typedef system::data_array<32> random;
 
-    /// The context must outlive the client.
+    /// Context must outlive client.
     client(const context& context) NOEXCEPT;
 
     /// Fixed client random and x25519 ephemeral secret (test vectors).
@@ -49,10 +48,10 @@ public:
         const key& ephemeral) NOEXCEPT;
     ~client() NOEXCEPT override;
 
-    /// The server sent a HelloRetryRequest.
+    /// Server sent HelloRetryRequest.
     bool is_retried() const NOEXCEPT;
 
-    /// The server requested a client certificate.
+    /// Server requested client certificate.
     bool is_requested() const NOEXCEPT;
 
 protected:

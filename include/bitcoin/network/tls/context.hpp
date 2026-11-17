@@ -26,9 +26,8 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// Credentials and peer verification configuration, shared by the
-/// connections of a server or of a client. Not thread safe during
-/// configuration.
+/// Credentials and peer verification, shared by server or client connections.
+/// Not thread safe during configuration.
 class BCT_API context final
 {
 public:
@@ -37,8 +36,7 @@ public:
     typedef std::vector<system::data_chunk> chain;
     typedef std::vector<uint16_t> codes;
 
-    /// The client hello offer: cipher suites, groups, groups of key shares,
-    /// signature schemes and legacy session id size (compatibility mode).
+    /// Client hello suites, groups, key share groups, schemes, session id size.
     struct offer
     {
         codes suites
@@ -72,44 +70,42 @@ public:
     context() NOEXCEPT;
     ~context() NOEXCEPT;
 
-    /// Set the certificate chain (leaf first) from "CERTIFICATE" blocks, of a
-    /// P-256 or P-384 leaf, with later certificates passed through unparsed.
-    /// False if malformed or the key does not match.
+    /// Set chain (leaf first, P-256/P-384) from "CERTIFICATE" blocks, rest
+    /// unparsed, false if malformed or key mismatch.
     bool set_chain(const std::string& text) NOEXCEPT;
 
-    /// Set the P-256 or P-384 private key from a key block (encrypted if
-    /// password). False if malformed or the key does not match the chain.
+    /// Set P-256/P-384 key from block (encrypted if password), false if
+    /// malformed or chain mismatch.
     bool set_key(const std::string& text,
         const std::string& password) NOEXCEPT;
 
     /// Add verification anchors from "CERTIFICATE" blocks.
     bool add_anchors(const std::string& text) NOEXCEPT;
 
-    /// Peer verification (request a certificate, and require it).
+    /// Peer verification (request and require certificate).
     void set_verify(bool request, bool require) NOEXCEPT;
 
-    /// Fix the verification time (unix seconds), zero for the current time.
+    /// Fix verification time (unix seconds), zero for current time.
     void set_time(uint64_t seconds) NOEXCEPT;
 
-    /// The offer of a client.
+    /// Client offer.
     void set_offer(const offer& value) NOEXCEPT;
 
-    /// The server name sent by a client (sni), none if empty.
+    /// Server name sent by client (sni), none if empty.
     void set_name(const std::string& name) NOEXCEPT;
 
-    /// A client accepts any server certificate, to be bound to an identity by
-    /// the caller (as by the Tor CERTS cell), otherwise verifies to anchors.
+    /// Client accepts any server certificate, bound by caller (e.g. Tor CERTS).
     void set_unanchored(bool value) NOEXCEPT;
 
-    /// True if the chain and key are set (server).
+    /// True if chain and key set (server).
     bool is_ready() const NOEXCEPT;
 
-    /// True if anchors are set or unanchored, and any chain has its key.
+    /// True if anchored or unanchored, and any chain has its key.
     bool is_client_ready() const NOEXCEPT;
 
     const chain& certificates() const NOEXCEPT;
 
-    /// The curve of the private key, and the key of that curve.
+    /// Private key curve and key of that curve.
     system::x509::curve curve() const NOEXCEPT;
     const system::x509::secret& key() const NOEXCEPT;
     const system::x509::secret384& key384() const NOEXCEPT;

@@ -31,11 +31,10 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// The server or client side of a TLS 1.3 connection over a tcp socket. A
-/// read fills the first non-empty buffer of a sequence, a write protects the
-/// sequence as one record (up to maximum_plaintext). Records produced by reads
-/// (alerts and key updates) are sent in order with written records.
-/// All calls must be sequenced on the underlying socket's executor. Read and
+/// TLS 1.3 server or client connection over tcp socket.
+/// Read fills first non-empty buffer, write protects sequence as one record
+/// (up to maximum_plaintext). Read records (alerts, key updates) are sent in
+/// order with written records. Calls sequenced on socket executor; read and
 /// write chains may overlap each other but not themselves.
 class BCT_API stream
 {
@@ -46,12 +45,11 @@ public:
     typedef std::function<void(const code&, size_t)> io_handler;
     using executor_type = io::socket::executor_type;
 
-    /// Assume ownership of the connected tcp socket, as server or client.
-    /// The context must outlive the stream.
+    /// Own connected tcp socket as server or client, context outlives stream.
     stream(io::socket&& socket, const context& context,
         bool as_server) NOEXCEPT;
 
-    /// The executor and the socket of the stream.
+    /// Stream executor and socket.
     executor_type get_executor() NOEXCEPT;
     io::socket& next_layer() NOEXCEPT;
     const io::socket& next_layer() const NOEXCEPT;
@@ -59,7 +57,7 @@ public:
     /// Peer certificate chain (once the handshake completes).
     const system::x509::certificates& peer() const NOEXCEPT;
 
-    /// Perform the handshake (a client hello is sent first).
+    /// Perform handshake (client hello sent first).
     void async_handshake(result_handler&& handler) NOEXCEPT;
 
     /// Read received application bytes.
@@ -70,12 +68,11 @@ public:
     template <typename Buffers, typename Handler>
     void async_write_some(const Buffers& buffers, Handler&& handler) NOEXCEPT;
 
-    /// Write application bytes (blocking), with no asynchronous
-    /// write in progress.
+    /// Write application bytes (blocking), no asynchronous write in progress.
     template <typename Buffers>
     size_t write_some(const Buffers& buffers, code& ec) NOEXCEPT;
 
-    /// Send close_notify and await the peer's.
+    /// Send close_notify, await peer's.
     void async_shutdown(result_handler&& handler) NOEXCEPT;
 
 private:

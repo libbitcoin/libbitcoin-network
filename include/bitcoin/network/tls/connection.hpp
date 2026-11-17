@@ -28,20 +28,18 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// One TLS 1.3 connection (rfc8446): the record layer, alerts, handshake
-/// framing, application data and key updates, under the handshake of the
-/// client or server. Transport bytes are consumed by receive and produced into
-/// output. Not thread safe.
+/// TLS 1.3 connection (rfc8446) records, alerts, framing, data, key updates.
+/// Handshake by client or server, transport bytes consumed by receive and
+/// produced into output. Not thread safe.
 class BCT_API connection
 {
 public:
     DELETE_COPY_MOVE(connection);
 
-    /// Consume received transport bytes. False once failed, when output holds
-    /// any alert to be sent, or once the peer has sent close_notify.
+    /// Consume transport bytes, false once failed (alert in output) or closed.
     bool receive(const const_byte_span& data) NOEXCEPT;
 
-    /// Transport bytes to be sent (the caller consumes them).
+    /// Transport bytes to send (caller consumes them).
     system::data_chunk& output() NOEXCEPT;
 
     /// Protect application data into output (once established).
@@ -53,22 +51,22 @@ public:
     /// Received application bytes not yet read.
     size_t readable() const NOEXCEPT;
 
-    /// Queue a key update into output, optionally requesting the peer's.
+    /// Queue key update into output, optionally requesting peer's.
     bool update(bool request) NOEXCEPT;
 
     /// Queue close_notify into output (once).
     void close() NOEXCEPT;
 
-    /// The handshake is complete (peer finished verified).
+    /// Handshake complete (peer finished verified).
     bool is_established() const NOEXCEPT;
 
-    /// The peer sent close_notify.
+    /// Peer sent close_notify.
     bool is_closed() const NOEXCEPT;
 
     /// This side sent close_notify.
     bool is_close_sent() const NOEXCEPT;
 
-    /// The connection failed, with the alert sent or received.
+    /// Connection failed, alert sent or received.
     bool is_failed() const NOEXCEPT;
     uint8_t failure() const NOEXCEPT;
     bool is_failure_received() const NOEXCEPT;
@@ -83,7 +81,7 @@ public:
 protected:
     typedef const_byte_span span;
 
-    /// The context must outlive the connection.
+    /// Context must outlive connection.
     connection(const context& context, bool server) NOEXCEPT;
     virtual ~connection() NOEXCEPT;
 
@@ -98,18 +96,18 @@ protected:
         uint8_t& alert, const span& body) NOEXCEPT;
     static uint8_t to_alert(const code& ec) NOEXCEPT;
 
-    /// CertificateVerify by the context key, of the transcript (4.4.3).
+    /// CertificateVerify of transcript by context key (4.4.3).
     system::data_chunk make_verify(std::string_view label) const NOEXCEPT;
 
-    /// True if the leaf signed the transcript by the scheme (4.4.3).
+    /// True if leaf signed transcript by scheme (4.4.3).
     bool is_verified(const system::x509::certificate& leaf, uint16_t scheme,
         const span& signature, std::string_view label) const NOEXCEPT;
 
-    /// Handshake of the role, from the received handshake message.
+    /// Role handshake of received handshake message.
     virtual bool handle_message(uint8_t type, const span& message,
         const span& body) NOEXCEPT = 0;
 
-    /// True if a compatibility change_cipher_spec may be received (5).
+    /// True if compatibility change_cipher_spec may be received (5).
     virtual bool is_handshaking() const NOEXCEPT = 0;
 
     /// Records and keys.
@@ -125,7 +123,7 @@ protected:
     void add_transcript(const span& message) NOEXCEPT;
     schedule::secret transcript() const NOEXCEPT;
 
-    /// Application traffic secrets (7.1), from the handshake secret.
+    /// Application traffic secrets (7.1) from handshake secret.
     void derive_traffic() NOEXCEPT;
 
     // Configuration.

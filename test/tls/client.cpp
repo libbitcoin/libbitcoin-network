@@ -27,7 +27,7 @@ using namespace tls;
 const auto client_secret = base16_array("0101010101010101010101010101010101010101010101010101010101010101");
 const auto server_secret = base16_array("0202020202020202020202020202020202020202020202020202020202020202");
 
-// The legacy session id of a client hello record.
+// Legacy session id of client hello record.
 static data_chunk session_of(const data_chunk& record)
 {
     tls::reader source{ record };
@@ -115,8 +115,7 @@ static data_chunk x25519_share()
     return data_chunk(x25519::key_size, 0x09);
 }
 
-// A client with a fixed x25519 key past a server hello for its share, and a
-// sender under the server handshake traffic secret.
+// Client (fixed x25519) past server hello, sender under server handshake key.
 struct server_flight
 {
     server_flight()

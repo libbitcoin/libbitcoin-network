@@ -145,8 +145,7 @@ struct server_fixture
     std::future<code> accepted{};
 };
 
-// A client context verifying the server, optionally presenting a client
-// certificate.
+// Client context verifying server, optionally presenting client certificate.
 struct client_setup
 {
     client_setup(const server_fixture& server, bool present)
@@ -164,7 +163,7 @@ struct client_setup
     tls::context context{};
 };
 
-// The client over a blocking loopback socket.
+// Client over blocking loopback socket.
 struct tls_peer
 {
     tls_peer(const server_fixture& server, bool present)

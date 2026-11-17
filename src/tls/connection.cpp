@@ -69,7 +69,7 @@ static void write_signature(writer& out, uint16_t scheme,
     out.write_vector_16(Curve::encode(signature));
 }
 
-// The content signed by CertificateVerify (4.4.3).
+// Content signed by CertificateVerify (4.4.3).
 static data_chunk verify_content(std::string_view label,
     const schedule::secret& transcript) NOEXCEPT
 {
@@ -168,7 +168,7 @@ bool connection::write(const const_byte_span& data) NOEXCEPT
     if (!is_established() || close_sent_)
         return false;
 
-    // The send key is rotated within the AES-GCM record limit (5.5).
+    // Send key rotated within AES-GCM record limit (5.5).
     if (send_.sequence() >= maximum_records)
         send_update(false);
 
@@ -264,7 +264,7 @@ bool connection::receive(const const_byte_span& data) NOEXCEPT
 bool connection::handle_record(uint8_t type, const span& header,
     const span& fragment) NOEXCEPT
 {
-    // A compatibility change_cipher_spec is unprotected and ignored (5).
+    // Compatibility change_cipher_spec unprotected and ignored (5).
     if (type == content::change_cipher_spec)
     {
         if (!is_handshaking() || (!is_one(fragment.size())) ||
@@ -332,7 +332,7 @@ bool connection::handle_alert(const span& content) NOEXCEPT
     if (content.size() != two)
         return fail(alert::decode_error);
 
-    // Closure alerts are not errors (6.1).
+    // Closure alerts not errors (6.1).
     const auto description = content[one];
     if (description == alert::close_notify)
     {
@@ -376,7 +376,7 @@ bool connection::handle_handshake(const span& content) NOEXCEPT
         if (!handle_message(type, message, body))
             return false;
 
-        // Handshake messages must not span a change of receive keys (5.1).
+        // Handshake messages must not span receive key change (5.1).
         if ((epoch != receive_epoch_) && !handshake_.empty())
             return fail(alert::unexpected_message);
     }
@@ -420,7 +420,7 @@ bool connection::handle_key_update(const span& body) NOEXCEPT
     return true;
 }
 
-// KeyUpdate under the current send key, then the next send key (4.6.3).
+// KeyUpdate under current send key, then next send key (4.6.3).
 void connection::send_update(bool request) NOEXCEPT
 {
     writer update{};
@@ -502,7 +502,7 @@ data_chunk connection::make_certificate(const context::chain& chain) NOEXCEPT
     return make_message(handshake::certificate, certificate.data());
 }
 
-// Certificate (4.4.2) of an empty request context, the chain may be empty.
+// Certificate (4.4.2), empty request context, chain may be empty.
 bool connection::parse_certificate(x509::certificates& out, uint8_t& alert,
     const span& body) NOEXCEPT
 {

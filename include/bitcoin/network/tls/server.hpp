@@ -27,10 +27,10 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// The server side of one TLS 1.3 connection (rfc8446): x25519, P-256 or P-384
-/// key exchange, ECDSA P-256 or P-384 server authentication, optional client
-/// authentication (P-256 or P-384), AES-128-GCM, AES-256-GCM or
-/// ChaCha20-Poly1305, without pre-shared keys or early data. Not thread safe.
+/// TLS 1.3 server connection (rfc8446), no psk or early data.
+/// x25519/P-256/P-384 exchange, ECDSA P-256/P-384 server authentication,
+/// optional client authentication (P-256/P-384), AES-GCM or ChaCha20-Poly1305.
+/// Not thread safe.
 class BCT_API server final
   : public connection
 {

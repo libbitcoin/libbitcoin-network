@@ -19,19 +19,18 @@
 #ifndef LIBBITCOIN_NETWORK_TLS_TLS_HPP
 #define LIBBITCOIN_NETWORK_TLS_TLS_HPP
 
-// TLS 1.3 server and client (rfc8446), the only protocol version supported.
+// TLS 1.3 server and client (rfc8446), only protocol version supported.
 // ----------------------------------------------------------------------------
 // Cipher suites:   TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384,
 //                  TLS_CHACHA20_POLY1305_SHA256.
-// Key exchange:    X25519, P-256, P-384 (HelloRetryRequest for the preferred
-//                  mutual group when the client shares none).
-// Signing:         ECDSA P-256 with SHA-256 or P-384 with SHA-384, by the key
-//                  (constant time, rfc6979 nonce).
-// Verify:          ECDSA P-256 with SHA-256, P-384 with SHA-384, and by a
-//                  client also RSA-PSS with SHA-256, SHA-384 or SHA-512.
-// Trust:           configured anchors only (no system store); a self-signed
-//                  anchor is allowed. A client may be unanchored, leaving the
-//                  server certificate to be bound by the caller.
+// Key exchange:    X25519, P-256, P-384 (HelloRetryRequest for preferred
+//                  mutual group when client shares none).
+// Signing:         ECDSA P-256/SHA-256 or P-384/SHA-384 (constant time,
+//                  rfc6979 nonce).
+// Verify:          ECDSA P-256/SHA-256, P-384/SHA-384, client also RSA-PSS
+//                  with SHA-256/384/512.
+// Trust:           configured anchors only (no system store), self-signed
+//                  allowed. Client may be unanchored, caller binds server.
 // Not supported:   TLS 1.2 and earlier, RSA signing, Ed25519, resumption,
 //                  pre-shared keys, 0-RTT, OCSP and CRL.
 

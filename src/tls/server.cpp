@@ -489,7 +489,7 @@ bool server::handle_certificate_verify(const span& message,
     if (!verify.is_complete())
         return fail(alert::decode_error);
 
-    // The schemes of the CertificateRequest, by the curve of the leaf.
+    // CertificateRequest schemes by leaf curve.
     const auto& leaf = peer_.front();
     const auto ec = (leaf.key_type == x509::key_type::ec);
     const auto p256 = ec && (scheme == ecdsa_secp256r1_sha256) &&
