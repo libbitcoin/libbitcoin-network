@@ -192,6 +192,9 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/tls/schedule.cpp \
     ${srcdir}/../../src/tls/server.cpp \
     ${srcdir}/../../src/tls/stream.cpp \
+    ${srcdir}/../../src/tor/cell.cpp \
+    ${srcdir}/../../src/tor/certificate.cpp \
+    ${srcdir}/../../src/tor/link.cpp \
     ${srcdir}/../../src/ws/frame.cpp \
     ${srcdir}/../../src/ws/handshake.cpp \
     ${srcdir}/../../src/ws/reader.cpp \
@@ -601,6 +604,16 @@ include_bitcoin_network_tls_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/tls/stream.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/tls.hpp
 
+include_bitcoin_network_tordir = \
+    ${includedir}/bitcoin/network/tor
+
+include_bitcoin_network_tor_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/tor/cell.hpp \
+    ${srcdir}/../../include/bitcoin/network/tor/certificate.hpp \
+    ${srcdir}/../../include/bitcoin/network/tor/constants.hpp \
+    ${srcdir}/../../include/bitcoin/network/tor/link.hpp \
+    ${srcdir}/../../include/bitcoin/network/tor/tor.hpp
+
 include_bitcoin_network_wsdir = \
     ${includedir}/bitcoin/network/ws
 
@@ -795,6 +808,9 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/tls/server.cpp \
     ${srcdir}/../../test/tls/server_hello.cpp \
     ${srcdir}/../../test/tls/socket.cpp \
+    ${srcdir}/../../test/tor/cell.cpp \
+    ${srcdir}/../../test/tor/certificate.cpp \
+    ${srcdir}/../../test/tor/link.cpp \
     ${srcdir}/../../test/ws/frame.cpp \
     ${srcdir}/../../test/ws/handshake.cpp \
     ${srcdir}/../../test/ws/reader.cpp \

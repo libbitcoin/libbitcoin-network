@@ -149,7 +149,7 @@ bool client::handle_message(uint8_t type, const span& message,
         if (type == handshake::key_update)
             return handle_key_update(body);
 
-        // Tickets are ignored, as there is no resumption (4.6.1).
+        // Tickets ignored, no resumption (4.6.1).
         if (type == handshake::new_session_ticket)
             return true;
 
@@ -190,8 +190,7 @@ bool client::handle_message(uint8_t type, const span& message,
 // Client hello.
 // ----------------------------------------------------------------------------
 
-// ClientHello (4.1.2), the second after a HelloRetryRequest shares only its
-// group and echoes any cookie.
+// ClientHello (4.1.2), after HelloRetryRequest shares its group, echoes cookie.
 void client::send_hello() NOEXCEPT
 {
     const auto& offer = context_.offered();
@@ -261,8 +260,8 @@ void client::send_hello() NOEXCEPT
     seal(content::handshake, hello);
 }
 
-// Sent once in compatibility mode (a nonempty session id), unprotected, before
-// the second ClientHello or the first protected record (D.4).
+// Compatibility mode (session id) sends once, unprotected, before second
+// ClientHello or first protected record (D.4).
 void client::send_compatibility() NOEXCEPT
 {
     if (session_.empty() || compatibility_sent_)
@@ -299,7 +298,7 @@ bool client::handle_server_hello(const span& message, const span& body) NOEXCEPT
         !contains(offer.suites, suite) || (retried_ && (suite != suite_)))
         return fail(alert::illegal_parameter);
 
-    // Extensions are unique and requested (4.2), a retry may add a cookie.
+    // Extensions unique and requested (4.2), retry may add cookie.
     std::vector<uint16_t> seen{};
     uint16_t selected{}, group{};
     span cookie{}, exchange{};
@@ -385,7 +384,7 @@ bool client::handle_server_hello(const span& message, const span& body) NOEXCEPT
     server_handshake_ = keys.derive_secret(handshake_secret_,
         "s hs traffic", hash);
 
-    // All later client records, including alerts, are protected (5.1).
+    // Later client records, including alerts, are protected (5.1).
     send_compatibility();
     set_send(client_handshake_);
     set_receive(server_handshake_);
@@ -393,8 +392,7 @@ bool client::handle_server_hello(const span& message, const span& body) NOEXCEPT
     return true;
 }
 
-// HelloRetryRequest (4.1.4), at most once, for an offered group not shared
-// and/or a cookie, which must change the client hello.
+// HelloRetryRequest (4.1.4), once, unshared group or cookie, changing hello.
 bool client::handle_retry(const span& message, bool keyed, uint16_t group,
     const span& cookie) NOEXCEPT
 {
@@ -408,7 +406,7 @@ bool client::handle_retry(const span& message, bool keyed, uint16_t group,
     if (!keyed && cookie.empty())
         return fail(alert::illegal_parameter);
 
-    // The transcript restarts with a hash of the first client hello (4.4.1).
+    // Transcript restarts with hash of first client hello (4.4.1).
     transcript_.reset(suite_);
     const auto hash = schedule{ suite_ }.hash(hello_);
     writer synthetic{};
@@ -430,7 +428,7 @@ bool client::handle_retry(const span& message, bool keyed, uint16_t group,
 // Encrypted extensions.
 // ----------------------------------------------------------------------------
 
-// Only an acknowledgment of the server name, or the server groups (4.2).
+// Only server name acknowledgment or server groups (4.2).
 bool client::handle_encrypted_extensions(const span& message,
     const span& body) NOEXCEPT
 {
@@ -468,7 +466,7 @@ bool client::handle_encrypted_extensions(const span& message,
 // Server authentication.
 // ----------------------------------------------------------------------------
 
-// CertificateRequest (4.3.2), signature_algorithms is required.
+// CertificateRequest (4.3.2), signature_algorithms required.
 bool client::handle_certificate_request(const span& message,
     const span& body) NOEXCEPT
 {
@@ -508,7 +506,7 @@ bool client::handle_certificate_request(const span& message,
     if (algorithms.empty())
         return fail(alert::missing_extension);
 
-    // Without an acceptable key the client sends an empty Certificate.
+    // Without acceptable key client sends empty Certificate.
     const auto scheme = (context_.curve() == x509::curve::secp256r1) ?
         ecdsa_secp256r1_sha256 : ecdsa_secp384r1_sha384;
     authenticate_ = context_.is_ready() && contains(algorithms, scheme);
@@ -527,7 +525,7 @@ bool client::handle_certificate(const span& message, const span& body) NOEXCEPT
     if (chain.empty())
         return fail(alert::decode_error);
 
-    // Unanchored, the leaf is bound to an identity by the caller.
+    // Unanchored, caller binds leaf to identity.
     if (!context_.unanchored())
     {
         const auto ec = x509::verify(chain, context_.anchors(),
@@ -573,7 +571,7 @@ bool client::handle_finished(const span& message, const span& body) NOEXCEPT
         !constant_time_equal(expected, body))
         return fail(alert::decrypt_error);
 
-    // Application secrets follow the server finished (7.1).
+    // Application secrets follow server finished (7.1).
     add_transcript(message);
     derive_traffic();
     send_flight();
@@ -612,7 +610,7 @@ void client::send_flight() NOEXCEPT
 // Keys.
 // ----------------------------------------------------------------------------
 
-// The key share of the group, the ephemeral key generated on first use.
+// Group key share, ephemeral key generated on first use.
 data_chunk client::share(uint16_t group) NOEXCEPT
 {
     if (group == secp256r1_group)

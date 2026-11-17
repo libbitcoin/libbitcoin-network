@@ -211,6 +211,11 @@
 #include <bitcoin/network/tls/server.hpp>
 #include <bitcoin/network/tls/stream.hpp>
 #include <bitcoin/network/tls/tls.hpp>
+#include <bitcoin/network/tor/cell.hpp>
+#include <bitcoin/network/tor/certificate.hpp>
+#include <bitcoin/network/tor/constants.hpp>
+#include <bitcoin/network/tor/link.hpp>
+#include <bitcoin/network/tor/tor.hpp>
 #include <bitcoin/network/ws/client.hpp>
 #include <bitcoin/network/ws/frame.hpp>
 #include <bitcoin/network/ws/handshake.hpp>

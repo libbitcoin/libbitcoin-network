@@ -63,7 +63,7 @@ bool context::set_chain(const std::string& text) NOEXCEPT
             !is_framed(block.data))
             return false;
 
-        // The key of the leaf signs, by ECDSA only.
+        // Leaf key signs, ECDSA only.
         if (value.empty() && (leaf.key_type != x509::key_type::ec))
             return false;
 

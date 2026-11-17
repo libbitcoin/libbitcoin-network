@@ -274,6 +274,9 @@
     <ClCompile Include="..\..\..\..\test\tls\socket.cpp">
       <ObjectFileName>$(IntDir)test_tls_socket.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\tor\cell.cpp" />
+    <ClCompile Include="..\..\..\..\test\tor\certificate.cpp" />
+    <ClCompile Include="..\..\..\..\test\tor\link.cpp" />
     <ClCompile Include="..\..\..\..\test\ws\frame.cpp" />
     <ClCompile Include="..\..\..\..\test\ws\handshake.cpp" />
     <ClCompile Include="..\..\..\..\test\ws\reader.cpp" />

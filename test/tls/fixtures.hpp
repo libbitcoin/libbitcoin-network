@@ -58,7 +58,7 @@ inline const identity& server_identity()
     return value;
 }
 
-// A server context with the server identity, optionally requesting a client.
+// Server context with server identity, optionally requesting client.
 struct server_setup
 {
     server_setup(bool request=false, bool require=false)
@@ -72,7 +72,7 @@ struct server_setup
     tls::context context{};
 };
 
-// A client context verifying the server identity, or the given chain.
+// Client context verifying server identity, or given chain.
 struct client_setup
 {
     client_setup(const std::string& anchors=server_identity().chain)
@@ -84,7 +84,7 @@ struct client_setup
     tls::context context{};
 };
 
-// Move bytes between the peers until neither has output.
+// Move bytes between peers until neither has output.
 inline void exchange(tls::client& client, tls::server& server)
 {
     while (!client.output().empty() || !server.output().empty())

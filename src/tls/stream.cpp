@@ -39,7 +39,7 @@ stream::stream(io::socket&& socket, const context& context,
     context_(context),
     input_(record_header_size + maximum_ciphertext)
 {
-    // The connections are not movable, so are constructed in place.
+    // Connections not movable, constructed in place.
     if (as_server)
         connection_ = &role_.emplace<server>(context);
     else
@@ -84,7 +84,7 @@ void stream::async_handshake(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    // A client sends its hello, a server has no output.
+    // Client sends hello, server has no output.
     flush(std::bind(&stream::handle_hello,
         this, _1, std::move(handler)));
 }

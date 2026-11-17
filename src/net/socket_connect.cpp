@@ -324,7 +324,7 @@ void socket::do_upgrade(const result_handler& handler) NOEXCEPT
         // Extract to temporary to avoid dangling reference after destruction.
         auto socket = std::move(get_base());
 
-        // TLS context is applied to the socket, the inbound side serving.
+        // TLS context applied to socket, inbound side serving.
         auto& stream = socket_.emplace<tls::stream>(std::move(socket),
             std::get<cref<tls::context>>(context_).get(), inbound_);
 
