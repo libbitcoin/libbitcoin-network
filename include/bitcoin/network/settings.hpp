@@ -370,7 +370,9 @@ struct BCT_API settings
                 }
                 case system::chain::selection::signet:
                 {
-                    seeds.reserve(2);
+                    seeds.reserve(4);
+                    seeds.emplace_back("carmine.libbitcoin.net", 38333_u16);
+                    seeds.emplace_back("wormer.libbitcoin.net", 38333_u16);
                     seeds.emplace_back("seed.signet.bitcoin.sprovoost.nl",
                         38333_u16);
                     seeds.emplace_back("seed.signet.achownodes.xyz", 38333_u16);

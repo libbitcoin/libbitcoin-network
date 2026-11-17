@@ -131,7 +131,7 @@ BC_AUTO_TEST_CASE(settings__construct__signet__expected)
     settings instance{ selection::signet };
     BC_REQUIRE(instance.network == selection::signet);
     BC_REQUIRE_EQUAL(instance.identifier, 1087308554u);
-    BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 2u);
+    BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 4u);
     BC_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 38333u);
     BC_REQUIRE_EQUAL(instance.outbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 5u);
