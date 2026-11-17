@@ -462,6 +462,7 @@ init(code& ec) NOEXCEPT
         set_terminator_ = false;
         set_prefix_ = false;
         set_close_ = false;
+        silent_ = false;
 
         // Batch close part carries no message.
         if (closes_batch(this->value_))
@@ -470,10 +471,13 @@ init(code& ec) NOEXCEPT
             return;
         }
 
-        // A notification has no response, so its response object is empty.
-        auto& message = this->value_.message;
-        if ((message.jsonrpc == version::v2) && !message.id.has_value())
-            message = { .jsonrpc = version::v2 };
+        // A notification is not answered, so nothing is written (or framed).
+        if (answers_notification(this->value_))
+        {
+            silent_ = true;
+            ec.clear();
+            return;
+        }
 
         if (is_zero(this->value_.size_hint))
             this->value_.size_hint = to_size(this->value_.message);
@@ -531,21 +535,25 @@ get(code& ec) NOEXCEPT
             };
         };
 
+        if (silent_)
+            return out_buffer{};
+
         // Emit batch framing (open or separator) preceding the part.
         if (!set_prefix_)
         {
             set_prefix_ = true;
 
-            if (opens_batch(this->value_))
-                return single(open, true);
-
-            if (continues_batch(this->value_))
-                return single(comma, true);
+            if (opens_batch(this->value_) || continues_batch(this->value_))
+                return single(this->value_.opened ? comma : open, true);
         }
 
         // Batch close part is framing and termination only (no message).
         if (closes_batch(this->value_))
         {
+            // An unopened array (notifications only) is not written.
+            if (!this->value_.opened)
+                return out_buffer{};
+
             if (!set_close_)
             {
                 set_close_ = true;
@@ -571,9 +579,13 @@ done() const NOEXCEPT
     }
     else
     {
+        if (silent_)
+            return true;
+
         // Batch close part is done when framing and termination are written.
         if (closes_batch(this->value_))
-            return set_close_ && (!this->value_.terminate || set_terminator_);
+            return !this->value_.opened ||
+                (set_close_ && (!this->value_.terminate || set_terminator_));
 
         // Done is redundant with !out.second, but provides a cleaner interface.
         return base::writer::done();

@@ -420,6 +420,13 @@ static rpc::response to_response(rpc::code_t id)
     return out;
 }
 
+static rpc::response to_answered_notification()
+{
+    rpc::response out{};
+    out.message = rpc::response_t{ rpc::version::v2, {}, {}, rpc::value_t{ true } };
+    return out;
+}
+
 static rpc::request to_notification(const std::string& method)
 {
     rpc::request out{};
@@ -812,6 +819,69 @@ BC_FIXTURE_TEST_CASE(proxy__read_rpc__batch__parts_framed_close_absorbed_read_re
     BC_REQUIRE_EQUAL(rpc_request.message.method, "c");
 }
 
+BC_FIXTURE_TEST_CASE(proxy__write_rpc__notification_response__not_written, loopback_fixture)
+{
+    const awaiter<code> written1{};
+    const awaiter<code> written2{};
+    channel->write_rpc(to_answered_notification(), complete(written1));
+    BC_REQUIRE_EQUAL(written1.get(), error::success);
+
+    channel->write_rpc(to_response(1), complete(written2));
+    BC_REQUIRE_EQUAL(receive_line(), response1);
+    BC_REQUIRE_EQUAL(written2.get(), error::success);
+}
+
+BC_FIXTURE_TEST_CASE(proxy__read_rpc__batch_notification_first__opened_by_response, loopback_fixture)
+{
+    const awaiter<code> read1{};
+    const awaiter<code> read2{};
+    const awaiter<code> read3{};
+    const awaiter<code> written1{};
+    const awaiter<code> written2{};
+    send("[" + request1 + "," + request2 + "]\n");
+
+    read_rpc(read1);
+    BC_REQUIRE_EQUAL(read1.get(), error::success);
+    channel->write_rpc(to_answered_notification(), complete(written1));
+    BC_REQUIRE_EQUAL(written1.get(), error::success);
+
+    read_rpc(read2);
+    BC_REQUIRE_EQUAL(read2.get(), error::success);
+    channel->write_rpc(to_response(2), complete(written2));
+    BC_REQUIRE_EQUAL(written2.get(), error::success);
+
+    read_rpc(read3);
+    BC_REQUIRE_EQUAL(receive_line(), "[" + response2 + "]");
+}
+
+BC_FIXTURE_TEST_CASE(proxy__read_rpc__batch_notifications_only__not_written, loopback_fixture)
+{
+    const awaiter<code> read1{};
+    const awaiter<code> read2{};
+    const awaiter<code> read3{};
+    const awaiter<code> written1{};
+    const awaiter<code> written2{};
+    const awaiter<code> written3{};
+    send("[" + request1 + "," + request2 + "]\n");
+
+    read_rpc(read1);
+    BC_REQUIRE_EQUAL(read1.get(), error::success);
+    channel->write_rpc(to_answered_notification(), complete(written1));
+    BC_REQUIRE_EQUAL(written1.get(), error::success);
+
+    read_rpc(read2);
+    BC_REQUIRE_EQUAL(read2.get(), error::success);
+    channel->write_rpc(to_answered_notification(), complete(written2));
+    BC_REQUIRE_EQUAL(written2.get(), error::success);
+
+    read_rpc(read3);
+    send(request3 + "\n");
+    BC_REQUIRE_EQUAL(read3.get(), error::success);
+    channel->write_rpc(to_response(1), complete(written3));
+    BC_REQUIRE_EQUAL(receive_line(), response1);
+    BC_REQUIRE_EQUAL(written3.get(), error::success);
+}
+
 BC_FIXTURE_TEST_CASE(proxy__notify_rpc__batch_open__deferred_until_close, loopback_fixture)
 {
     const awaiter<code> read1{};
@@ -984,6 +1054,43 @@ BC_FIXTURE_TEST_CASE(proxy__read_http__batch_post__chunked_parts_close_absorbed_
     send(to_post(request3));
     BC_REQUIRE_EQUAL(read3.get(), error::success);
     BC_REQUIRE_EQUAL(http_request.body().get<rpc::request>().message.method, "c");
+}
+
+BC_FIXTURE_TEST_CASE(proxy__read_http__batch_post_notifications_only__empty_chunked_body, loopback_fixture)
+{
+    const awaiter<code> read1{};
+    const awaiter<code> read2{};
+    const awaiter<code> read3{};
+    const awaiter<code> written1{};
+    const awaiter<code> written2{};
+    http_request.body() = rpc::request{};
+    send(to_post("[" + request1 + "," + request2 + "]"));
+
+    read_http(read1);
+    BC_REQUIRE_EQUAL(read1.get(), error::success);
+    channel->write_http(to_http(to_answered_notification()), complete(written1));
+    BC_REQUIRE_EQUAL(written1.get(), error::success);
+
+    read_http(read2);
+    BC_REQUIRE_EQUAL(read2.get(), error::success);
+    channel->write_http(to_http(to_answered_notification()), complete(written2));
+    BC_REQUIRE_EQUAL(written2.get(), error::success);
+
+    read_http(read3);
+    const auto response = receive_http();
+    BC_REQUIRE_EQUAL(response.result_int(), 200u);
+    BC_REQUIRE(response.body().empty());
+}
+
+BC_FIXTURE_TEST_CASE(proxy__write_http__notification_response__no_content, loopback_fixture)
+{
+    const awaiter<code> written{};
+    channel->write_http(to_http(to_answered_notification()), complete(written));
+
+    const auto response = receive_http();
+    BC_REQUIRE_EQUAL(response.result_int(), 204u);
+    BC_REQUIRE(response.body().empty());
+    BC_REQUIRE_EQUAL(written.get(), error::success);
 }
 
 BC_FIXTURE_TEST_CASE(proxy__write_http__batch_open_string_body__bad_stream, loopback_fixture)

@@ -46,6 +46,14 @@ constexpr bool closes_batch(const Value& value) NOEXCEPT
     return value.batch && value.changed;
 }
 
+/// A notification (v2 without id) is not answered.
+template <typename Value>
+constexpr bool answers_notification(const Value& value) NOEXCEPT
+{
+    return (value.message.jsonrpc == version::v2) &&
+        !value.message.id.has_value();
+}
+
 template <typename Type>
 struct message_type
   : public json::json_value
@@ -58,6 +66,9 @@ struct message_type
     /// Read: reader indicates batch state change (open or close read).
     /// Write: caller indicates batch state change (open or close part).
     bool changed{};
+
+    /// Write: caller indicates a prior part opened the batch array.
+    bool opened{};
 
     /// Tolerated jrpc violations observed by the parse (channel validates).
     /// Electrum non-standard single value params (converted to array).
@@ -148,6 +159,7 @@ struct BCT_API body
         bool set_terminator_{};
         bool set_prefix_{};
         bool set_close_{};
+        bool silent_{};
     };
 };
 

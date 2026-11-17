@@ -359,6 +359,7 @@ private:
     bool writing_{};
     bool batched_{};
     bool parted_{};
+    bool opened_{};
 };
 
 } // namespace network
