@@ -642,7 +642,7 @@ BC_AUTO_TEST_CASE(settings__peer_outbound__mainnet__expected)
     BC_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BC_REQUIRE_EQUAL(instance.host_pool_capacity, 10000u);
     BC_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
-    BC_REQUIRE_EQUAL(instance.seeds.size(), 8u);
+    BC_REQUIRE_EQUAL(instance.seeds.size(), 10u);
     BC_REQUIRE_EQUAL(instance.minimum_address_count(), 500u);
     BC_REQUIRE(instance.seeding_timeout() == seconds(30));
 }
