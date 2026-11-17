@@ -318,7 +318,9 @@ struct BCT_API settings
                 // TODO: from bitcoind, replace with libbitcoin seeds when up.
                 case system::chain::selection::mainnet:
                 {
-                    seeds.reserve(8);
+                    seeds.reserve(10);
+                    seeds.emplace_back("carmine.libbitcoin.net", 8333_u16);
+                    seeds.emplace_back("wormer.libbitcoin.net", 8333_u16);
                     seeds.emplace_back("seed.bitcoin.sipa.be", 8333_u16);
                     seeds.emplace_back("dnsseed.bluematt.me", 8333_u16);
                     seeds.emplace_back("seed.bitcoin.jonasschnelli.ch",
@@ -335,7 +337,9 @@ struct BCT_API settings
                 {
                     connections = 50;
                     connect_batch_size = 10;
-                    seeds.reserve(3);
+                    seeds.reserve(5);
+                    seeds.emplace_back("carmine.libbitcoin.net", 18333_u16);
+                    seeds.emplace_back("wormer.libbitcoin.net", 18333_u16);
                     seeds.emplace_back("testnet-seed.bitcoin.jonasschnelli.ch",
                         18333_u16);
                     seeds.emplace_back("seed.tbtc.petertodd.net", 18333_u16);
@@ -347,7 +351,9 @@ struct BCT_API settings
                 {
                     connections = 50;
                     connect_batch_size = 10;
-                    seeds.reserve(2);
+                    seeds.reserve(4);
+                    seeds.emplace_back("carmine.libbitcoin.net", 48333_u16);
+                    seeds.emplace_back("wormer.libbitcoin.net", 48333_u16);
                     seeds.emplace_back("seed.testnet4.bitcoin.sprovoost.nl",
                         48333_u16);
                     seeds.emplace_back("seed.testnet4.wiz.biz", 48333_u16);
@@ -357,6 +363,9 @@ struct BCT_API settings
                 {
                     connections = 50;
                     connect_batch_size = 10;
+                    seeds.reserve(2);
+                    seeds.emplace_back("carmine.libbitcoin.net", 18353_u16);
+                    seeds.emplace_back("wormer.libbitcoin.net", 18353_u16);
                     break;
                 }
                 case system::chain::selection::signet:
