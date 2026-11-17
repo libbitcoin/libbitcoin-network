@@ -201,7 +201,9 @@
 #include <bitcoin/network/sessions/session_seed.hpp>
 #include <bitcoin/network/sessions/session_server.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
+#include <bitcoin/network/tls/client.hpp>
 #include <bitcoin/network/tls/codec.hpp>
+#include <bitcoin/network/tls/connection.hpp>
 #include <bitcoin/network/tls/constants.hpp>
 #include <bitcoin/network/tls/context.hpp>
 #include <bitcoin/network/tls/record.hpp>

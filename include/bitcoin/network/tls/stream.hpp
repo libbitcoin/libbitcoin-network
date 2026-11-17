@@ -22,6 +22,8 @@
 #include <vector>
 #include <bitcoin/network/io/io.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/tls/client.hpp>
+#include <bitcoin/network/tls/connection.hpp>
 #include <bitcoin/network/tls/context.hpp>
 #include <bitcoin/network/tls/server.hpp>
 
@@ -29,10 +31,10 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// The server side of a TLS 1.3 connection over a tcp socket. A read fills
-/// the first non-empty buffer of a sequence, a write protects the sequence as
-/// one record (up to maximum_plaintext). Records produced by reads (alerts and
-/// key updates) are sent in order with written records.
+/// The server or client side of a TLS 1.3 connection over a tcp socket. A
+/// read fills the first non-empty buffer of a sequence, a write protects the
+/// sequence as one record (up to maximum_plaintext). Records produced by reads
+/// (alerts and key updates) are sent in order with written records.
 /// All calls must be sequenced on the underlying socket's executor. Read and
 /// write chains may overlap each other but not themselves.
 class BCT_API stream
@@ -44,16 +46,20 @@ public:
     typedef std::function<void(const code&, size_t)> io_handler;
     using executor_type = io::socket::executor_type;
 
-    /// Assume ownership of the connected tcp socket.
+    /// Assume ownership of the connected tcp socket, as server or client.
     /// The context must outlive the stream.
-    stream(io::socket&& socket, const context& context) NOEXCEPT;
+    stream(io::socket&& socket, const context& context,
+        bool as_server) NOEXCEPT;
 
     /// The executor and the socket of the stream.
     executor_type get_executor() NOEXCEPT;
     io::socket& next_layer() NOEXCEPT;
     const io::socket& next_layer() const NOEXCEPT;
 
-    /// Perform the server handshake.
+    /// Peer certificate chain (once the handshake completes).
+    const system::x509::certificates& peer() const NOEXCEPT;
+
+    /// Perform the handshake (a client hello is sent first).
     void async_handshake(result_handler&& handler) NOEXCEPT;
 
     /// Read received application bytes.
@@ -84,6 +90,8 @@ private:
     code transport(const code& ec) const NOEXCEPT;
 
     // handshake
+    void handle_hello(const code& ec,
+        const result_handler& handler) NOEXCEPT;
     void handle_handshake(const code& ec,
         const result_handler& handler) NOEXCEPT;
 
@@ -118,7 +126,8 @@ private:
     // These are protected by stream (executor) sequencing.
     io::socket socket_;
     const context& context_;
-    server server_;
+    std::variant<std::monostate, server, client> role_{};
+    connection* connection_{};
     system::data_chunk input_;
     system::data_chunk plaintext_{};
     system::data_chunk sending_{};

@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include "client.hpp"
 
 #include <algorithm>
 #include <array>
@@ -146,14 +145,32 @@ struct server_fixture
     std::future<code> accepted{};
 };
 
-// The harness client over a blocking loopback socket.
+// A client context verifying the server, optionally presenting a client
+// certificate.
+struct client_setup
+{
+    client_setup(const server_fixture& server, bool present)
+    {
+        using namespace system::x509;
+        context.add_anchors(encode_certificate(server.certificate.encoding));
+        context.set_time(1767225600);
+        if (!present)
+            return;
+
+        context.set_chain(encode_certificate(server.client.encoding));
+        context.set_key(encode_private_key(client_secret), {});
+    }
+
+    tls::context context{};
+};
+
+// The client over a blocking loopback socket.
 struct tls_peer
 {
-    tls_peer(const test::tls_client::options& options, uint16_t port)
-      : socket(io), client(options)
+    tls_peer(const server_fixture& server, bool present)
+      : setup(server, present), socket(io), client(setup.context)
     {
-        REQUIRE_SUCCESS(socket, connect, test::loopback(port));
-        client.start();
+        REQUIRE_SUCCESS(socket, connect, test::loopback(server.port));
     }
 
     void flush()
@@ -201,7 +218,8 @@ struct tls_peer
             BC_REQUIRE(!ec);
             raw.insert(raw.cend(), buffer.cbegin(), std::next(buffer.cbegin(), count));
             client.receive({ buffer.data(), count });
-            const auto data = client.read();
+            system::data_chunk data(client.readable());
+            client.read(data);
             out.insert(out.end(), data.begin(), data.end());
         }
 
@@ -230,24 +248,12 @@ struct tls_peer
         return false;
     }
 
+    client_setup setup;
     io::context io{};
     io::socket socket;
-    test::tls_client client;
+    tls::client client;
     system::data_chunk raw{};
 };
-
-static test::tls_client::options client_options(const server_fixture& server,
-    bool present)
-{
-    test::tls_client::options value{};
-    value.anchors = { server.certificate };
-    value.time = 1767225600;
-    value.chain = present ?
-        std::vector<system::data_chunk>{ server.client.encoding } :
-        std::vector<system::data_chunk>{};
-    value.key = client_secret;
-    return value;
-}
 
 static code tcp_write(const socket::ptr& server, const system::data_chunk& data)
 {
@@ -407,7 +413,7 @@ BC_AUTO_TEST_CASE(tls_socket__initialize_context__missing_authority_directory__t
 BC_AUTO_TEST_CASE(tls_socket__accept__handshake_and_exchange__success)
 {
     server_fixture server{ false };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     BC_REQUIRE(peer.client.is_established());
     BC_REQUIRE_EQUAL(server.accept_result(), error::success);
@@ -425,7 +431,7 @@ BC_AUTO_TEST_CASE(tls_socket__accept__handshake_and_exchange__success)
 BC_AUTO_TEST_CASE(tls_socket__accept__response_of_many_records__exchanged)
 {
     server_fixture server{ false };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
@@ -461,7 +467,7 @@ static size_t count_records(const system::data_chunk& raw)
 BC_AUTO_TEST_CASE(tls_socket__accept__http_response__one_record)
 {
     server_fixture server{ false };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
@@ -486,7 +492,7 @@ BC_AUTO_TEST_CASE(tls_socket__accept__http_response__one_record)
 BC_AUTO_TEST_CASE(tls_socket__accept__trusted_client_certificate__success)
 {
     server_fixture server{ true };
-    tls_peer peer{ client_options(server, true), server.port };
+    tls_peer peer{ server, true };
     peer.handshake();
     BC_REQUIRE(peer.client.is_requested());
     BC_REQUIRE(peer.client.is_established());
@@ -496,7 +502,7 @@ BC_AUTO_TEST_CASE(tls_socket__accept__trusted_client_certificate__success)
 BC_AUTO_TEST_CASE(tls_socket__accept__absent_client_certificate__failure)
 {
     server_fixture server{ true };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     BC_REQUIRE(peer.client.is_requested());
     BC_REQUIRE_EQUAL(server.accept_result(), error::tls_alert_certificate_required);
@@ -505,7 +511,7 @@ BC_AUTO_TEST_CASE(tls_socket__accept__absent_client_certificate__failure)
 BC_AUTO_TEST_CASE(tls_socket__lazy_stop__zero_connect_timeout__closed_without_close_notify)
 {
     server_fixture server{ false };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     BC_REQUIRE(peer.client.is_established());
     BC_REQUIRE_EQUAL(server.accept_result(), error::success);
@@ -524,7 +530,7 @@ BC_AUTO_TEST_CASE(tls_socket__lazy_stop__zero_connect_timeout__closed_without_cl
 BC_AUTO_TEST_CASE(tls_socket__lazy_stop__unanswered_connect_timeout__closed)
 {
     server_fixture server{ false, 100ms };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     const auto ec = server.accept_result();
     BC_REQUIRE(ec == error::success || ec == error::operation_canceled);
@@ -540,7 +546,7 @@ BC_AUTO_TEST_CASE(tls_socket__lazy_stop__unanswered_connect_timeout__closed)
 BC_AUTO_TEST_CASE(tls_socket__read__peer_close_notify__peer_disconnect)
 {
     server_fixture server{ false };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
@@ -552,7 +558,7 @@ BC_AUTO_TEST_CASE(tls_socket__read__peer_close_notify__peer_disconnect)
 BC_AUTO_TEST_CASE(tls_socket__read__transport_closed__tls_stream_truncated)
 {
     server_fixture server{ false };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
@@ -563,7 +569,7 @@ BC_AUTO_TEST_CASE(tls_socket__read__transport_closed__tls_stream_truncated)
 BC_AUTO_TEST_CASE(tls_socket__read__tampered_record__tls_alert_bad_record_mac)
 {
     server_fixture server{ false };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 
@@ -576,7 +582,7 @@ BC_AUTO_TEST_CASE(tls_socket__read__tampered_record__tls_alert_bad_record_mac)
 BC_AUTO_TEST_CASE(tls_socket__read__requested_key_update__exchanged)
 {
     server_fixture server{ false };
-    tls_peer peer{ client_options(server, false), server.port };
+    tls_peer peer{ server, false };
     peer.handshake();
     BC_REQUIRE_EQUAL(server.accept_result(), error::success);
 

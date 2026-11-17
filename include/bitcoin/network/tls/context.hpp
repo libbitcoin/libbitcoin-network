@@ -20,19 +20,54 @@
 #define LIBBITCOIN_NETWORK_TLS_CONTEXT_HPP
 
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/tls/constants.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// Server credentials and peer verification configuration, shared by the
-/// connections of a server. Not thread safe during configuration.
+/// Credentials and peer verification configuration, shared by the
+/// connections of a server or of a client. Not thread safe during
+/// configuration.
 class BCT_API context final
 {
 public:
     DELETE_COPY_MOVE(context);
 
     typedef std::vector<system::data_chunk> chain;
+    typedef std::vector<uint16_t> codes;
+
+    /// The client hello offer: cipher suites, groups, groups of key shares,
+    /// signature schemes and legacy session id size (compatibility mode).
+    struct offer
+    {
+        codes suites
+        {
+            aes_128_gcm_sha256,
+            aes_256_gcm_sha384,
+            chacha20_poly1305_sha256
+        };
+
+        codes groups
+        {
+            x25519_group,
+            secp256r1_group,
+            secp384r1_group
+        };
+
+        codes shares{ x25519_group };
+
+        codes algorithms
+        {
+            ecdsa_secp256r1_sha256,
+            ecdsa_secp384r1_sha384,
+            rsa_pss_rsae_sha256,
+            rsa_pss_rsae_sha384,
+            rsa_pss_rsae_sha512
+        };
+
+        size_t session{ 32 };
+    };
 
     context() NOEXCEPT;
     ~context() NOEXCEPT;
@@ -56,8 +91,21 @@ public:
     /// Fix the verification time (unix seconds), zero for the current time.
     void set_time(uint64_t seconds) NOEXCEPT;
 
-    /// True if the chain and key are set.
+    /// The offer of a client.
+    void set_offer(const offer& value) NOEXCEPT;
+
+    /// The server name sent by a client (sni), none if empty.
+    void set_name(const std::string& name) NOEXCEPT;
+
+    /// A client accepts any server certificate, to be bound to an identity by
+    /// the caller (as by the Tor CERTS cell), otherwise verifies to anchors.
+    void set_unanchored(bool value) NOEXCEPT;
+
+    /// True if the chain and key are set (server).
     bool is_ready() const NOEXCEPT;
+
+    /// True if anchors are set or unanchored, and any chain has its key.
+    bool is_client_ready() const NOEXCEPT;
 
     const chain& certificates() const NOEXCEPT;
 
@@ -70,6 +118,9 @@ public:
     bool request() const NOEXCEPT;
     bool require() const NOEXCEPT;
     uint64_t time() const NOEXCEPT;
+    const offer& offered() const NOEXCEPT;
+    const std::string& name() const NOEXCEPT;
+    bool unanchored() const NOEXCEPT;
 
 private:
     bool matches() const NOEXCEPT;
@@ -80,10 +131,13 @@ private:
     system::x509::curve curve_{};
     system::data_chunk public_key_{};
     system::x509::certificates anchors_{};
+    offer offer_{};
+    std::string name_{};
     bool has_key_{};
     uint64_t time_{};
     bool request_{};
     bool require_{};
+    bool unanchored_{};
 };
 
 } // namespace tls

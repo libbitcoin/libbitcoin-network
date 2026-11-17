@@ -17,19 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include "client.hpp"
+#include "fixtures.hpp"
 #include "rfc8448.hpp"
 
 BC_AUTO_TEST_SUITE(tls_server_tests)
 
 using namespace bc::system;
 using namespace tls;
-using namespace test;
-
-constexpr uint64_t now = 1767225600;
-const auto server_key = base16_array("c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721");
-const auto client_key = base16_array("0000000000000000000000000000000000000000000000000000000000000002");
-const auto other_key = base16_array("0000000000000000000000000000000000000000000000000000000000000003");
+using writer = network::tls::writer;
 
 // A self-signed secp384r1 client identity (openssl).
 const auto client384_key = base16_array("6bfc6ce1ef1beb42ecb60360242e9efab64189b1277c562b58eedad3b3586ff590179425f623bd9532ebd3091eb3cbb5");
@@ -48,49 +43,6 @@ const std::string client384_chain
     "tWKiP+AIuqd+JpCnMgIwZ21W5QpX7QNqcFdoUbWW1BxaLDekhmmKPa6+SIte9H3V\n"
     "6kxQ4IMBYC3p0j3En1DQ\n"
     "-----END CERTIFICATE-----\n"
-};
-
-struct identity
-{
-    std::string chain;
-    std::string key;
-    x509::certificate certificate;
-};
-
-static identity make_identity(const x509::secret& key, const std::string& name)
-{
-    x509::subject subject{};
-    subject.common_name = name;
-    subject.dns_names = { "localhost" };
-    subject.not_before = 1735689600;
-    subject.not_after = 2524608000;
-
-    data_chunk der{};
-    x509::build_self_signed(der, key, subject);
-
-    x509::certificate certificate{};
-    x509::parse(certificate, der);
-    return { x509::encode_certificate(der), x509::encode_private_key(key), certificate };
-}
-
-static const identity& server_identity()
-{
-    static const auto value = make_identity(server_key, "server");
-    return value;
-}
-
-// A server context with the server identity, optionally requesting a client.
-struct server_setup
-{
-    server_setup(bool request=false, bool require=false)
-    {
-        context.set_chain(server_identity().chain);
-        context.set_key(server_identity().key, {});
-        context.set_verify(request, require);
-        context.set_time(now);
-    }
-
-    tls::context context{};
 };
 
 // The secp384r1 identity as a server.
@@ -120,44 +72,14 @@ struct server384_setup
     tls::context context{};
 };
 
-static tls_client::options client_options()
-{
-    tls_client::options value{};
-    value.anchors = { server_identity().certificate };
-    value.time = now;
-    return value;
-}
-
-// Move bytes between the peers until neither has output.
-static void exchange(tls_client& client, tls::server& server)
-{
-    while (!client.output().empty() || !server.output().empty())
-    {
-        const auto to_server = std::move(client.output());
-        client.output().clear();
-        server.receive(to_server);
-
-        const auto to_client = std::move(server.output());
-        server.output().clear();
-        client.receive(to_client);
-    }
-}
-
-static data_chunk read_all(tls::server& server)
-{
-    data_chunk out(server.readable());
-    server.read(out);
-    return out;
-}
-
 // handshake
 
 BC_AUTO_TEST_CASE(tls_server__handshake__default__established_aes)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    tls_client client{ client_options() };
-    client.start();
+    const client_setup config{};
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(client.is_established());
     BC_REQUIRE(server.is_established());
@@ -171,10 +93,11 @@ BC_AUTO_TEST_CASE(tls_server__handshake__chacha_only__established_chacha)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.suites = { chacha20_poly1305_sha256 };
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.suites = { chacha20_poly1305_sha256 };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(server.is_established());
     BC_REQUIRE_EQUAL(server.suite(), chacha20_poly1305_sha256);
@@ -184,10 +107,11 @@ BC_AUTO_TEST_CASE(tls_server__handshake__no_key_share__retried_established)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.shares = {};
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.shares = {};
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(client.is_retried());
     BC_REQUIRE(client.is_established());
@@ -198,11 +122,12 @@ BC_AUTO_TEST_CASE(tls_server__handshake__compatibility_session__established)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.session = 32;
-    options.shares = {};
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.session = 32;
+    offer.shares = {};
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(client.is_established());
     BC_REQUIRE(server.is_established());
@@ -212,10 +137,11 @@ BC_AUTO_TEST_CASE(tls_server__handshake__no_common_suite__handshake_failure)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.suites = { 0x1304 };
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.suites = { 0x1304 };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(server.is_failed());
     BC_REQUIRE_EQUAL(server.failure(), alert::handshake_failure);
@@ -230,10 +156,11 @@ BC_AUTO_TEST_CASE(tls_server__handshake__aes256_only__established_aes256)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.suites = { aes_256_gcm_sha384 };
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.suites = { aes_256_gcm_sha384 };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(server.is_established());
     BC_REQUIRE_EQUAL(server.suite(), aes_256_gcm_sha384);
@@ -246,18 +173,19 @@ BC_AUTO_TEST_CASE(tls_server__handshake__aes256_only__established_aes256)
     const data_chunk response(40000, 0x42);
     BC_REQUIRE(server.write(response));
     exchange(client, server);
-    BC_REQUIRE_EQUAL(client.read(), response);
+    BC_REQUIRE_EQUAL(read_all(client), response);
 }
 
 BC_AUTO_TEST_CASE(tls_server__handshake__aes256_retried__established_aes256)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.suites = { aes_256_gcm_sha384 };
-    options.shares = {};
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.suites = { aes_256_gcm_sha384 };
+    offer.shares = {};
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(client.is_retried());
     BC_REQUIRE(server.is_established());
@@ -268,11 +196,12 @@ BC_AUTO_TEST_CASE(tls_server__handshake__secp256r1_share__established_secp256r1)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.groups = { secp256r1_group };
-    options.shares = { secp256r1_group };
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.groups = { secp256r1_group };
+    offer.shares = { secp256r1_group };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(!client.is_retried());
     BC_REQUIRE(server.is_established());
@@ -283,11 +212,12 @@ BC_AUTO_TEST_CASE(tls_server__handshake__secp384r1_share__established_secp384r1)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.groups = { secp384r1_group };
-    options.shares = { secp384r1_group };
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.groups = { secp384r1_group };
+    offer.shares = { secp384r1_group };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(!client.is_retried());
     BC_REQUIRE(server.is_established());
@@ -298,11 +228,12 @@ BC_AUTO_TEST_CASE(tls_server__handshake__nist_groups_no_share__retried_secp256r1
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.groups = { secp384r1_group, secp256r1_group };
-    options.shares = {};
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.groups = { secp384r1_group, secp256r1_group };
+    offer.shares = {};
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(client.is_retried());
     BC_REQUIRE(server.is_established());
@@ -313,11 +244,12 @@ BC_AUTO_TEST_CASE(tls_server__handshake__share_of_less_preferred_group__not_retr
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.groups = { x25519_group, secp384r1_group };
-    options.shares = { secp384r1_group };
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.groups = { x25519_group, secp384r1_group };
+    offer.shares = { secp384r1_group };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(!client.is_retried());
     BC_REQUIRE(server.is_established());
@@ -328,10 +260,8 @@ BC_AUTO_TEST_CASE(tls_server__handshake__secp384r1_server__established)
 {
     const server384_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.anchors = { server384_identity().certificate };
-    tls_client client{ options };
-    client.start();
+    client_setup config{ server384_identity().chain };
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(client.is_established());
     BC_REQUIRE(server.is_established());
@@ -341,14 +271,14 @@ BC_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp384r1_server__establish
 {
     const server384_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.anchors = { server384_identity().certificate };
-    options.suites = { aes_256_gcm_sha384 };
-    options.groups = { secp384r1_group };
-    options.shares = { secp384r1_group };
-    options.algorithms = { ecdsa_secp384r1_sha384 };
-    tls_client client{ options };
-    client.start();
+    client_setup config{ server384_identity().chain };
+    auto offer = config.context.offered();
+    offer.suites = { aes_256_gcm_sha384 };
+    offer.groups = { secp384r1_group };
+    offer.shares = { secp384r1_group };
+    offer.algorithms = { ecdsa_secp384r1_sha384 };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(client.is_established());
     BC_REQUIRE(server.is_established());
@@ -365,10 +295,11 @@ BC_AUTO_TEST_CASE(tls_server__handshake__cnsa_client_secp256r1_server__handshake
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.algorithms = { ecdsa_secp384r1_sha384 };
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.algorithms = { ecdsa_secp384r1_sha384 };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(server.is_failed());
     BC_REQUIRE_EQUAL(server.failure(), alert::handshake_failure);
@@ -378,10 +309,11 @@ BC_AUTO_TEST_CASE(tls_server__key_update__aes256__both_keys_updated)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    auto options = client_options();
-    options.suites = { aes_256_gcm_sha384 };
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.suites = { aes_256_gcm_sha384 };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
     exchange(client, server);
 
     client.update(true);
@@ -394,7 +326,7 @@ BC_AUTO_TEST_CASE(tls_server__key_update__aes256__both_keys_updated)
 
     BC_REQUIRE(server.write(request));
     exchange(client, server);
-    BC_REQUIRE_EQUAL(client.read(), request);
+    BC_REQUIRE_EQUAL(read_all(client), request);
 }
 
 // application data, key update, close
@@ -403,8 +335,8 @@ BC_AUTO_TEST_CASE(tls_server__application_data__both_directions__expected)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    tls_client client{ client_options() };
-    client.start();
+    const client_setup config{};
+    tls::client client{ config.context };
     exchange(client, server);
 
     const auto request = to_chunk("GET / HTTP/1.1\r\n\r\n");
@@ -415,15 +347,15 @@ BC_AUTO_TEST_CASE(tls_server__application_data__both_directions__expected)
     const data_chunk response(40000, 0x42);
     BC_REQUIRE(server.write(response));
     exchange(client, server);
-    BC_REQUIRE_EQUAL(client.read(), response);
+    BC_REQUIRE_EQUAL(read_all(client), response);
 }
 
 BC_AUTO_TEST_CASE(tls_server__key_update__requested__both_keys_updated)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    tls_client client{ client_options() };
-    client.start();
+    const client_setup config{};
+    tls::client client{ config.context };
     exchange(client, server);
 
     client.update(true);
@@ -436,15 +368,15 @@ BC_AUTO_TEST_CASE(tls_server__key_update__requested__both_keys_updated)
 
     BC_REQUIRE(server.write(request));
     exchange(client, server);
-    BC_REQUIRE_EQUAL(client.read(), request);
+    BC_REQUIRE_EQUAL(read_all(client), request);
 }
 
 BC_AUTO_TEST_CASE(tls_server__close__both_sides__closed)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    tls_client client{ client_options() };
-    client.start();
+    const client_setup config{};
+    tls::client client{ config.context };
     exchange(client, server);
 
     client.close();
@@ -491,8 +423,8 @@ BC_AUTO_TEST_CASE(tls_server__receive__tampered_record__bad_record_mac)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    tls_client client{ client_options() };
-    client.start();
+    const client_setup config{};
+    tls::client client{ config.context };
     exchange(client, server);
 
     BC_REQUIRE(client.write(to_chunk("data")));
@@ -517,8 +449,8 @@ BC_AUTO_TEST_CASE(tls_server__receive__split_records__established)
 {
     const server_setup setup{};
     tls::server server{ setup.context };
-    tls_client client{ client_options() };
-    client.start();
+    const client_setup config{};
+    tls::client client{ config.context };
 
     const auto hello = std::move(client.output());
     client.output().clear();
@@ -562,11 +494,10 @@ BC_AUTO_TEST_CASE(tls_server__client_certificate__trusted__peer_verified)
     setup.context.add_anchors(client_identity.chain);
     tls::server server{ setup.context };
 
-    auto options = client_options();
-    options.chain = { client_identity.certificate.encoding };
-    options.key = client_key;
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    config.context.set_chain(client_identity.chain);
+    config.context.set_key(client_identity.key, {});
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(client.is_requested());
     BC_REQUIRE(server.is_established());
@@ -582,11 +513,10 @@ BC_AUTO_TEST_CASE(tls_server__client_certificate__secp384r1_trusted__peer_verifi
     BC_REQUIRE(setup.context.add_anchors(client384_chain));
     tls::server server{ setup.context };
 
-    auto options = client_options();
-    options.chain = { chain.front().encoding };
-    options.key384 = client384_key;
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    config.context.set_chain(client384_chain);
+    config.context.set_key(server384_identity().key, {});
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(client.is_requested());
     BC_REQUIRE(server.is_established());
@@ -598,8 +528,8 @@ BC_AUTO_TEST_CASE(tls_server__client_certificate__required_absent__certificate_r
 {
     server_setup setup{ true, true };
     tls::server server{ setup.context };
-    tls_client client{ client_options() };
-    client.start();
+    const client_setup config{};
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(server.is_failed());
     BC_REQUIRE_EQUAL(server.failure(), alert::certificate_required);
@@ -609,8 +539,8 @@ BC_AUTO_TEST_CASE(tls_server__client_certificate__optional_absent__established)
 {
     server_setup setup{ true, false };
     tls::server server{ setup.context };
-    tls_client client{ client_options() };
-    client.start();
+    const client_setup config{};
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(server.is_established());
     BC_REQUIRE(server.peer().empty());
@@ -624,11 +554,10 @@ BC_AUTO_TEST_CASE(tls_server__client_certificate__untrusted__unknown_ca)
     setup.context.add_anchors(other_identity.chain);
     tls::server server{ setup.context };
 
-    auto options = client_options();
-    options.chain = { client_identity.certificate.encoding };
-    options.key = client_key;
-    tls_client client{ options };
-    client.start();
+    client_setup config{};
+    config.context.set_chain(client_identity.chain);
+    config.context.set_key(client_identity.key, {});
+    tls::client client{ config.context };
     exchange(client, server);
     BC_REQUIRE(server.is_failed());
     BC_REQUIRE_EQUAL(server.failure(), alert::unknown_ca);
@@ -664,40 +593,6 @@ BC_AUTO_TEST_CASE(tls_server__receive__rfc8448_client_hello__rfc8448_server_hell
 }
 
 // protected client messages
-
-using writer = network::tls::writer;
-
-static data_chunk message_of(uint8_t type, const data_chunk& body)
-{
-    writer out{};
-    out.write_8(type);
-    out.write_vector_24(body);
-    return out.data();
-}
-
-static data_chunk entry_of(const data_chunk& der)
-{
-    writer out{};
-    out.write_vector_24(der);
-    out.write_vector_16(data_chunk{});
-    return out.data();
-}
-
-static data_chunk certificate_of(const data_chunk& request_context, const data_chunk& entries)
-{
-    writer out{};
-    out.write_vector_8(request_context);
-    out.write_vector_24(entries);
-    return out.data();
-}
-
-static data_chunk verify_of(uint16_t scheme, const data_chunk& signature)
-{
-    writer out{};
-    out.write_16(scheme);
-    out.write_vector_16(signature);
-    return out.data();
-}
 
 // A server keyed by the rfc8448 client hello, with a client sender under the
 // rfc8448 client handshake traffic secret.

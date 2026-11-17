@@ -220,6 +220,74 @@ BC_AUTO_TEST_CASE(tls_context__set_time__fixed__fixed)
     BC_REQUIRE_EQUAL(context.time(), 42u);
 }
 
+// client
+
+BC_AUTO_TEST_CASE(tls_context__construct__default__client_offer_not_ready)
+{
+    const tls::context context{};
+    const auto& offer = context.offered();
+    BC_REQUIRE_EQUAL(offer.suites.size(), 3u);
+    BC_REQUIRE_EQUAL(offer.groups.size(), 3u);
+    BC_REQUIRE_EQUAL(offer.shares.size(), 1u);
+    BC_REQUIRE_EQUAL(offer.shares.front(), x25519_group);
+    BC_REQUIRE_EQUAL(offer.algorithms.size(), 5u);
+    BC_REQUIRE_EQUAL(offer.session, 32u);
+    BC_REQUIRE(context.name().empty());
+    BC_REQUIRE(!context.unanchored());
+    BC_REQUIRE(!context.is_client_ready());
+}
+
+BC_AUTO_TEST_CASE(tls_context__set_offer__expected)
+{
+    tls::context context{};
+    tls::context::offer offer{};
+    offer.suites = { chacha20_poly1305_sha256 };
+    offer.session = 0;
+    context.set_offer(offer);
+    BC_REQUIRE_EQUAL(context.offered().suites.size(), 1u);
+    BC_REQUIRE_EQUAL(context.offered().suites.front(), chacha20_poly1305_sha256);
+    BC_REQUIRE_EQUAL(context.offered().session, 0u);
+}
+
+BC_AUTO_TEST_CASE(tls_context__set_name__expected)
+{
+    tls::context context{};
+    context.set_name("localhost");
+    BC_REQUIRE_EQUAL(context.name(), "localhost");
+}
+
+BC_AUTO_TEST_CASE(tls_context__set_unanchored__true__client_ready)
+{
+    tls::context context{};
+    context.set_unanchored(true);
+    BC_REQUIRE(context.unanchored());
+    BC_REQUIRE(context.is_client_ready());
+}
+
+BC_AUTO_TEST_CASE(tls_context__add_anchors__one__client_ready)
+{
+    tls::context context{};
+    BC_REQUIRE(context.add_anchors(certificate_of(key1)));
+    BC_REQUIRE(context.is_client_ready());
+}
+
+BC_AUTO_TEST_CASE(tls_context__set_chain__without_key__not_client_ready)
+{
+    tls::context context{};
+    BC_REQUIRE(context.add_anchors(certificate_of(key1)));
+    BC_REQUIRE(context.set_chain(certificate_of(key2)));
+    BC_REQUIRE(!context.is_client_ready());
+}
+
+BC_AUTO_TEST_CASE(tls_context__set_chain_and_key__anchored__client_ready)
+{
+    tls::context context{};
+    BC_REQUIRE(context.add_anchors(certificate_of(key1)));
+    BC_REQUIRE(context.set_chain(certificate_of(key2)));
+    BC_REQUIRE(context.set_key(x509::encode_private_key(key2), {}));
+    BC_REQUIRE(context.is_client_ready());
+}
+
 BC_AUTO_TEST_CASE(tls_library__always__internal_tls)
 {
     BC_REQUIRE_EQUAL(tls_library(), "internal tls 1.3");

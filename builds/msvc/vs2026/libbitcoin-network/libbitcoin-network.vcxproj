@@ -267,7 +267,9 @@
     <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_server.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
+    <ClCompile Include="..\..\..\..\src\tls\client.cpp" />
     <ClCompile Include="..\..\..\..\src\tls\codec.cpp" />
+    <ClCompile Include="..\..\..\..\src\tls\connection.cpp" />
     <ClCompile Include="..\..\..\..\src\tls\context.cpp">
       <ObjectFileName>$(IntDir)src_tls_context.obj</ObjectFileName>
     </ClCompile>
@@ -477,7 +479,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_server.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\sessions.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\client.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\codec.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\connection.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\constants.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\record.hpp" />
