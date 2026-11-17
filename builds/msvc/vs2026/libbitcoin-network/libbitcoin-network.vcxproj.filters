@@ -588,7 +588,13 @@
     <ClCompile Include="..\..\..\..\src\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\tls\client.cpp">
+      <Filter>src\tls</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\tls\codec.cpp">
+      <Filter>src\tls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\tls\connection.cpp">
       <Filter>src\tls</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\tls\context.cpp">
@@ -1184,7 +1190,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\client.hpp">
+      <Filter>include\bitcoin\network\tls</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\codec.hpp">
+      <Filter>include\bitcoin\network\tls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\connection.hpp">
       <Filter>include\bitcoin\network\tls</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\constants.hpp">

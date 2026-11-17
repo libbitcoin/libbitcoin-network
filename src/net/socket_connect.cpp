@@ -321,19 +321,12 @@ void socket::do_upgrade(const result_handler& handler) NOEXCEPT
 
     if (std::holds_alternative<cref<tls::context>>(context_))
     {
-        // The client role is not implemented.
-        if (!inbound_)
-        {
-            handler(error::tls_alert_handshake_failure);
-            return;
-        }
-
         // Extract to temporary to avoid dangling reference after destruction.
         auto socket = std::move(get_base());
 
-        // TLS context is applied to the socket.
+        // TLS context is applied to the socket, the inbound side serving.
         auto& stream = socket_.emplace<tls::stream>(std::move(socket),
-            std::get<cref<tls::context>>(context_).get());
+            std::get<cref<tls::context>>(context_).get(), inbound_);
 
         // Posts handler to socket strand.
         stream.async_handshake(

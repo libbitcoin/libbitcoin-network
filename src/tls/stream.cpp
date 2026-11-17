@@ -33,12 +33,17 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // Constructor.
 // ----------------------------------------------------------------------------
 
-stream::stream(io::socket&& socket, const context& context) NOEXCEPT
+stream::stream(io::socket&& socket, const context& context,
+    bool as_server) NOEXCEPT
   : socket_(std::move(socket)),
     context_(context),
-    server_(context),
     input_(record_header_size + maximum_ciphertext)
 {
+    // The connections are not movable, so are constructed in place.
+    if (as_server)
+        connection_ = &role_.emplace<server>(context);
+    else
+        connection_ = &role_.emplace<client>(context);
 }
 
 // Properties.
@@ -59,20 +64,42 @@ const io::socket& stream::next_layer() const NOEXCEPT
     return socket_;
 }
 
+const x509::certificates& stream::peer() const NOEXCEPT
+{
+    return connection_->peer();
+}
+
 // Handshake.
 // ----------------------------------------------------------------------------
 
 void stream::async_handshake(result_handler&& handler) NOEXCEPT
 {
-    if (!context_.is_ready())
+    const auto ready = std::holds_alternative<server>(role_) ?
+        context_.is_ready() : context_.is_client_ready();
+
+    if (!ready)
     {
         const code ec{ code{ error::tls_alert_internal_error } };
         io::post(get_executor(), std::bind(std::move(handler), ec));
         return;
     }
 
-    receive(std::bind(&stream::handle_handshake,
+    // A client sends its hello, a server has no output.
+    flush(std::bind(&stream::handle_hello,
         this, _1, std::move(handler)));
+}
+
+void stream::handle_hello(const code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    if (ec)
+    {
+        handler(ec);
+        return;
+    }
+
+    receive(std::bind(&stream::handle_handshake,
+        this, _1, handler));
 }
 
 void stream::handle_handshake(const code& ec,
@@ -84,19 +111,19 @@ void stream::handle_handshake(const code& ec,
         return;
     }
 
-    if (server_.is_failed())
+    if (connection_->is_failed())
     {
         handler(failure());
         return;
     }
 
-    if (server_.is_closed())
+    if (connection_->is_closed())
     {
         handler(error::peer_disconnect);
         return;
     }
 
-    if (server_.is_established())
+    if (connection_->is_established())
     {
         handler(error::success);
         return;
@@ -133,19 +160,19 @@ bool stream::try_read(code& ec, size_t& size,
     if (out.empty())
         return true;
 
-    if (is_nonzero(server_.readable()))
+    if (is_nonzero(connection_->readable()))
     {
-        size = server_.read(out);
+        size = connection_->read(out);
         return true;
     }
 
-    if (server_.is_closed())
+    if (connection_->is_closed())
     {
         ec = error::peer_disconnect;
         return true;
     }
 
-    if (server_.is_failed())
+    if (connection_->is_failed())
     {
         ec = failure();
         return true;
@@ -189,9 +216,9 @@ void stream::do_write_some(const const_byte_span& data,
     }
 
     const auto size = std::min(data.size(), maximum_plaintext);
-    if (!server_.write(data.first(size)))
+    if (!connection_->write(data.first(size)))
     {
-        const auto ec = server_.is_failed() ? failure() :
+        const auto ec = connection_->is_failed() ? failure() :
             code{ error::connect_failed };
 
         io::post(get_executor(), std::bind(handler, ec, zero));
@@ -217,13 +244,14 @@ size_t stream::do_write(const const_byte_span& data, code& ec) NOEXCEPT
         return zero;
 
     const auto size = std::min(data.size(), maximum_plaintext);
-    if (!server_.write(data.first(size)))
+    if (!connection_->write(data.first(size)))
     {
-        ec = server_.is_failed() ? failure() : code{ error::connect_failed };
+        ec = connection_->is_failed() ? failure() :
+            code{ error::connect_failed };
         return zero;
     }
 
-    auto& output = server_.output();
+    auto& output = connection_->output();
     io::write(socket_, io::buffer(output), ec);
     output.clear();
     return ec ? zero : size;
@@ -234,14 +262,14 @@ size_t stream::do_write(const const_byte_span& data, code& ec) NOEXCEPT
 
 void stream::async_shutdown(result_handler&& handler) NOEXCEPT
 {
-    if (server_.is_failed())
+    if (connection_->is_failed())
     {
         io::post(get_executor(),
             std::bind(std::move(handler), code{ error::success }));
         return;
     }
 
-    server_.close();
+    connection_->close();
     flush(std::bind(&stream::handle_close_sent,
         this, _1, std::move(handler)));
 }
@@ -267,13 +295,13 @@ void stream::handle_close_received(const code& ec,
         return;
     }
 
-    if (server_.is_failed())
+    if (connection_->is_failed())
     {
         handler(failure());
         return;
     }
 
-    if (server_.is_closed())
+    if (connection_->is_closed())
     {
         handler(error::success);
         return;
@@ -288,13 +316,13 @@ void stream::handle_close_received(const code& ec,
 
 code stream::failure() const NOEXCEPT
 {
-    return code{ error::tls_to_error_code(server_.failure()) };
+    return code{ error::tls_to_error_code(connection_->failure()) };
 }
 
 // Closure of the transport without close_notify truncates the stream.
 code stream::transport(const code& ec) const NOEXCEPT
 {
-    if (ec == error::peer_disconnect && !server_.is_closed())
+    if (ec == error::peer_disconnect && !connection_->is_closed())
         return code{ error::tls_stream_truncated };
 
     return ec;
@@ -329,8 +357,8 @@ void stream::handle_receive(const code& ec, size_t size) NOEXCEPT
         return;
     }
 
-    server_.receive({ input_.data(), size });
-    if (server_.output().empty())
+    connection_->receive({ input_.data(), size });
+    if (connection_->output().empty())
     {
         for (const auto& handler: handlers)
             handler(error::success);
@@ -355,7 +383,7 @@ void stream::write_next() NOEXCEPT
     std::vector<result_handler> handlers{};
     handlers.swap(waiting_);
 
-    auto& output = server_.output();
+    auto& output = connection_->output();
     if (output.empty())
     {
         for (auto& handler: handlers)

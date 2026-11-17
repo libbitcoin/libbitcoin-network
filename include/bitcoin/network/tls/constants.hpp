@@ -94,6 +94,7 @@ namespace alert
     constexpr uint8_t internal_error = 80;
     constexpr uint8_t user_canceled = 90;
     constexpr uint8_t missing_extension = 109;
+    constexpr uint8_t unsupported_extension = 110;
     constexpr uint8_t certificate_required = 116;
 }
 
@@ -114,6 +115,9 @@ constexpr uint16_t x25519_group = 0x001d;
 /// Signature schemes (4.2.3).
 constexpr uint16_t ecdsa_secp256r1_sha256 = 0x0403;
 constexpr uint16_t ecdsa_secp384r1_sha384 = 0x0503;
+constexpr uint16_t rsa_pss_rsae_sha256 = 0x0804;
+constexpr uint16_t rsa_pss_rsae_sha384 = 0x0805;
+constexpr uint16_t rsa_pss_rsae_sha512 = 0x0806;
 
 /// HelloRetryRequest random, SHA-256 of "HelloRetryRequest" (4.1.3).
 constexpr system::data_array<32> retry_random

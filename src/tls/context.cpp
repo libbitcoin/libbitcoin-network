@@ -63,6 +63,10 @@ bool context::set_chain(const std::string& text) NOEXCEPT
             !is_framed(block.data))
             return false;
 
+        // The key of the leaf signs, by ECDSA only.
+        if (value.empty() && (leaf.key_type != x509::key_type::ec))
+            return false;
+
         value.push_back(block.data);
     }
 
@@ -136,9 +140,30 @@ void context::set_time(uint64_t seconds) NOEXCEPT
     time_ = seconds;
 }
 
+void context::set_offer(const offer& value) NOEXCEPT
+{
+    offer_ = value;
+}
+
+void context::set_name(const std::string& name) NOEXCEPT
+{
+    name_ = name;
+}
+
+void context::set_unanchored(bool value) NOEXCEPT
+{
+    unanchored_ = value;
+}
+
 bool context::is_ready() const NOEXCEPT
 {
     return has_key_ && !chain_.empty();
+}
+
+bool context::is_client_ready() const NOEXCEPT
+{
+    const auto trusted = unanchored_ || !anchors_.empty();
+    return trusted && (has_key_ == !chain_.empty());
 }
 
 const context::chain& context::certificates() const NOEXCEPT
@@ -174,6 +199,21 @@ bool context::request() const NOEXCEPT
 bool context::require() const NOEXCEPT
 {
     return require_;
+}
+
+const context::offer& context::offered() const NOEXCEPT
+{
+    return offer_;
+}
+
+const std::string& context::name() const NOEXCEPT
+{
+    return name_;
+}
+
+bool context::unanchored() const NOEXCEPT
+{
+    return unanchored_;
 }
 
 uint64_t context::time() const NOEXCEPT

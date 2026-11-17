@@ -295,7 +295,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\functional\peer_setup_fixture.hpp" />
     <ClInclude Include="..\..\..\..\test\test.hpp" />
-    <ClInclude Include="..\..\..\..\test\tls\client.hpp" />
+    <ClInclude Include="..\..\..\..\test\tls\fixtures.hpp" />
     <ClInclude Include="..\..\..\..\test\tls\rfc8448.hpp" />
     <ClInclude Include="..\..\..\..\test\zmtp\zmtp_setup_fixture.hpp" />
   </ItemGroup>

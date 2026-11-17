@@ -184,7 +184,9 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/sessions/session_peer.cpp \
     ${srcdir}/../../src/sessions/session_seed.cpp \
     ${srcdir}/../../src/sessions/session_server.cpp \
+    ${srcdir}/../../src/tls/client.cpp \
     ${srcdir}/../../src/tls/codec.cpp \
+    ${srcdir}/../../src/tls/connection.cpp \
     ${srcdir}/../../src/tls/context.cpp \
     ${srcdir}/../../src/tls/record.cpp \
     ${srcdir}/../../src/tls/schedule.cpp \
@@ -588,7 +590,9 @@ include_bitcoin_network_tlsdir = \
     ${includedir}/bitcoin/network/tls
 
 include_bitcoin_network_tls_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/tls/client.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/codec.hpp \
+    ${srcdir}/../../include/bitcoin/network/tls/connection.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/constants.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/context.hpp \
     ${srcdir}/../../include/bitcoin/network/tls/record.hpp \

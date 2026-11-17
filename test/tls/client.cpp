@@ -16,575 +16,562 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "client.hpp"
+#include "../test.hpp"
+#include "fixtures.hpp"
 
-#include <algorithm>
-#include <iterator>
-
-namespace test {
+BC_AUTO_TEST_SUITE(tls_client_tests)
 
 using namespace bc::system;
-using namespace network::tls;
-using reader = network::tls::reader;
-using writer = network::tls::writer;
+using namespace tls;
 
-constexpr size_t verify_padding = 64;
+const auto client_secret = base16_array("0101010101010101010101010101010101010101010101010101010101010101");
+const auto server_secret = base16_array("0202020202020202020202020202020202020202020202020202020202020202");
 
-static data_chunk message_of(uint8_t type, const data_chunk& body)
+// The legacy session id of a client hello record.
+static data_chunk session_of(const data_chunk& record)
 {
-    writer out{};
+    tls::reader source{ record };
+    source.read_bytes(record_header_size);
+    source.read_8();
+    source.read_24();
+    source.read_16();
+    source.read_bytes(sizeof(client::random));
+    const auto session = source.read_vector_8();
+    return { session.begin(), session.end() };
+}
+
+static data_chunk record_of(uint8_t type, const data_chunk& content)
+{
+    tls::writer out{};
     out.write_8(type);
-    out.write_vector_24(body);
+    out.write_16(legacy_version);
+    out.write_vector_16(content);
     return out.data();
 }
 
-static data_chunk verify_content(const std::string& label,
-    const schedule::secret& hash)
+static data_chunk extension_of(uint16_t type, const data_chunk& data)
 {
-    const data_chunk padding(verify_padding, 0x20);
-    const data_array<one> separator{ 0x00 };
-    return build_chunk({ padding, label, separator, hash });
+    tls::writer out{};
+    out.write_16(type);
+    out.write_vector_16(data);
+    return out.data();
 }
 
-tls_client::tls_client(const options& value) NOEXCEPT
-  : options_(value)
+static data_chunk versions_extension()
 {
-    maybe_random::fill(secret_);
-    secret256_ = secp256r1::generate();
-    secret384_ = secp384r1::generate();
-    session_.resize(value.session);
-    maybe_random::fill(session_);
+    return extension_of(extension::supported_versions, base16_chunk("0304"));
 }
 
-data_chunk& tls_client::output() NOEXCEPT { return output_; }
-bool tls_client::is_established() const NOEXCEPT { return state_ == state::done; }
-bool tls_client::is_closed() const NOEXCEPT { return closed_; }
-bool tls_client::is_failed() const NOEXCEPT { return failed_; }
-uint8_t tls_client::failure() const NOEXCEPT { return failure_; }
-bool tls_client::is_retried() const NOEXCEPT { return retried_; }
-bool tls_client::is_requested() const NOEXCEPT { return requested_; }
-uint16_t tls_client::suite() const NOEXCEPT { return suite_; }
-
-void tls_client::start() NOEXCEPT
+static data_chunk share_extension(uint16_t group, const data_chunk& key)
 {
-    hello(false);
+    tls::writer share{};
+    share.write_16(group);
+    share.write_vector_16(key);
+    return extension_of(extension::key_share, share.data());
 }
 
-void tls_client::hello(bool retry) NOEXCEPT
+static data_chunk retry_extension(uint16_t group)
 {
-    writer suites{};
-    for (const auto suite: options_.suites)
-        suites.write_16(suite);
+    tls::writer share{};
+    share.write_16(group);
+    return extension_of(extension::key_share, share.data());
+}
 
-    writer versions{};
-    versions.write_16(version_13);
+static data_chunk cookie_extension(const data_chunk& cookie)
+{
+    tls::writer value{};
+    value.write_vector_16(cookie);
+    return extension_of(extension::cookie, value.data());
+}
 
-    writer groups{};
-    for (const auto group: options_.groups)
-        groups.write_16(group);
-
-    writer algorithms{};
-    for (const auto algorithm: options_.algorithms)
-        algorithms.write_16(algorithm);
-
-    writer shares{};
-    const auto shared = retry ? std::vector<uint16_t>{ retry_group_ } : options_.shares;
-    for (const auto group: shared)
-    {
-        shares.write_16(group);
-        shares.write_vector_16(share(group));
-    }
-
-    writer vector_versions{};
-    vector_versions.write_vector_8(versions.data());
-    writer vector_groups{};
-    vector_groups.write_vector_16(groups.data());
-    writer vector_algorithms{};
-    vector_algorithms.write_vector_16(algorithms.data());
-    writer vector_shares{};
-    vector_shares.write_vector_16(shares.data());
-
-    writer extensions{};
-    extensions.write_16(extension::supported_versions);
-    extensions.write_vector_16(vector_versions.data());
-    extensions.write_16(extension::supported_groups);
-    extensions.write_vector_16(vector_groups.data());
-    extensions.write_16(extension::signature_algorithms);
-    extensions.write_vector_16(vector_algorithms.data());
-    extensions.write_16(extension::key_share);
-    extensions.write_vector_16(vector_shares.data());
-
-    data_array<32> random{};
-    maybe_random::fill(random);
-
-    writer body{};
-    body.write_16(legacy_version);
+// ServerHello, or HelloRetryRequest by its random (4.1.3).
+static data_chunk hello_of(const data_chunk& session,
+    const data_chunk& extensions, const data_array<32>& random={},
+    uint16_t suite=aes_128_gcm_sha256, uint16_t version=legacy_version,
+    uint8_t compression=0)
+{
+    tls::writer body{};
+    body.write_16(version);
     body.write_bytes(random);
-    body.write_vector_8(session_);
-    body.write_vector_16(suites.data());
-    body.write_vector_8(data_array<1>{ 0x00 });
-    body.write_vector_16(extensions.data());
-
-    const auto message = message_of(handshake::client_hello, body.data());
-    add(message);
-    send_.seal(output_, content::handshake, message);
+    body.write_vector_8(session);
+    body.write_16(suite);
+    body.write_8(compression);
+    body.write_vector_16(extensions);
+    return message_of(handshake::server_hello, body.data());
 }
 
-bool tls_client::fail(uint8_t alert) NOEXCEPT
+static data_chunk hello_record(const data_chunk& session,
+    const data_chunk& extensions, const data_array<32>& random={},
+    uint16_t suite=aes_128_gcm_sha256, uint16_t version=legacy_version,
+    uint8_t compression=0)
 {
-    if (failed_)
-        return false;
-
-    failed_ = true;
-    failure_ = alert;
-    const data_array<2> content{ alert_fatal, alert };
-    send_.seal(output_, content::alert, content);
-    return false;
+    const auto hello = hello_of(session, extensions, random, suite, version,
+        compression);
+    return record_of(content::handshake, hello);
 }
 
-bool tls_client::receive(const const_byte_span& data) NOEXCEPT
+static data_chunk x25519_share()
 {
-    if (failed_)
-        return false;
-
-    input_.insert(input_.end(), data.begin(), data.end());
-    while (!failed_ && !closed_ && input_.size() >= record_header_size)
-    {
-        reader header{ const_byte_span{ input_ }.first(record_header_size) };
-        const auto type = header.read_8();
-        header.read_16();
-        const auto size = header.read_16();
-        if (input_.size() < record_header_size + size)
-            break;
-
-        const auto head = data_chunk(input_.begin(), std::next(input_.begin(), record_header_size));
-        const auto fragment = data_chunk(std::next(input_.begin(), record_header_size), std::next(input_.begin(), record_header_size + size));
-        input_.erase(input_.begin(), std::next(input_.begin(), record_header_size + size));
-
-        if (type == content::change_cipher_spec)
-            continue;
-
-        if (!receive_.is_protected())
-        {
-            if (!handle(type, fragment))
-                return false;
-
-            continue;
-        }
-
-        uint8_t inner{};
-        data_chunk content{};
-        if (!receive_.open(inner, content, head, fragment))
-            return fail(alert::bad_record_mac);
-
-        if (!handle(inner, content))
-            return false;
-    }
-
-    return !failed_;
+    return data_chunk(x25519::key_size, 0x09);
 }
 
-bool tls_client::handle(uint8_t type, const const_byte_span& content) NOEXCEPT
+// A client with a fixed x25519 key past a server hello for its share, and a
+// sender under the server handshake traffic secret.
+struct server_flight
 {
-    if (type == content::alert)
+    server_flight()
+      : client(setup.context, {}, client_secret)
     {
-        if ((content.size() == 2u) && (content[1] == alert::close_notify))
-        {
-            closed_ = true;
-            return true;
-        }
+        const auto hello = std::move(client.output());
+        client.output().clear();
+        const auto start = std::next(hello.begin(), record_header_size);
+        const data_chunk client_hello{ start, hello.end() };
 
-        failed_ = true;
-        failure_ = content.size() == 2u ? content[1] : alert::decode_error;
-        return false;
+        x25519::key server_public{}, client_public{}, shared{};
+        x25519::multiply(server_public, server_secret);
+        x25519::multiply(client_public, client_secret);
+        x25519::multiply(shared, server_secret, client_public);
+
+        const auto share = share_extension(x25519_group,
+            to_chunk(server_public));
+        const auto extensions = splice(versions_extension(), share);
+        const auto server_hello = hello_of(session_of(hello), extensions);
+        BC_REQUIRE(client.receive(record_of(content::handshake,
+            server_hello)));
+
+        transcript.reset(aes_128_gcm_sha256);
+        transcript.write(client_hello);
+        transcript.write(server_hello);
+
+        const schedule keys{ aes_128_gcm_sha256 };
+        const auto secret = keys.handshake_secret(keys.early_secret(),
+            shared);
+        const auto traffic = keys.derive_secret(secret, "s hs traffic",
+            transcript.hash());
+        sender.set_secret(aes_128_gcm_sha256, traffic);
     }
 
-    if (type == content::application_data)
+    bool send(uint8_t type, const data_chunk& body)
     {
-        application_.insert(application_.end(), content.begin(), content.end());
-        return true;
+        const auto message = message_of(type, body);
+        transcript.write(message);
+
+        data_chunk out{};
+        sender.seal(out, content::handshake, message);
+        return client.receive(out);
     }
 
-    if (type != content::handshake)
-        return fail(alert::unexpected_message);
-
-    handshake_.insert(handshake_.end(), content.begin(), content.end());
-    while (handshake_.size() >= 4u)
+    bool send_extensions(const data_chunk& extensions={})
     {
-        reader header{ const_byte_span{ handshake_ }.first(4) };
-        const auto kind = header.read_8();
-        const auto size = header.read_24();
-        if (handshake_.size() < 4u + size)
-            break;
-
-        const auto message = data_chunk(handshake_.begin(), std::next(handshake_.begin(), 4u + size));
-        handshake_.erase(handshake_.begin(), std::next(handshake_.begin(), 4u + size));
-        const auto body = const_byte_span{ message }.subspan(4);
-        if (!handle_message(kind, message, body))
-            return false;
+        tls::writer body{};
+        body.write_vector_16(extensions);
+        return send(handshake::encrypted_extensions, body.data());
     }
 
-    return true;
-}
+    bool send_certificate()
+    {
+        const auto& der = server_identity().certificate.encoding;
+        return send(handshake::certificate, certificate_of({}, entry_of(der)));
+    }
 
-bool tls_client::handle_message(uint8_t type, const const_byte_span& message,
-    const const_byte_span& body) NOEXCEPT
+    client_setup setup{};
+    tls::client client;
+    record sender{};
+    tls::transcript transcript{};
+};
+
+// handshake
+
+BC_AUTO_TEST_CASE(tls_client__handshake__default__established)
 {
-    switch (state_)
-    {
-        case state::hello:
-            if (type == handshake::server_hello)
-                return handle_hello(message, body);
-            break;
-        case state::encrypted:
-            if (type == handshake::encrypted_extensions)
-            {
-                add(message);
-                state_ = state::certificate;
-                return true;
-            }
-            break;
-        case state::certificate:
-            if (type == handshake::certificate_request)
-            {
-                add(message);
-                requested_ = true;
-                return true;
-            }
-            if (type == handshake::certificate)
-                return handle_certificate(message, body);
-            break;
-        case state::verify:
-            if (type == handshake::certificate_verify)
-                return handle_verify(message, body);
-            break;
-        case state::finished:
-            if (type == handshake::finished)
-                return handle_finished(message, body);
-            break;
-        case state::done:
-            if (type == handshake::key_update)
-            {
-                server_traffic_ = schedule{ suite_ }.update(server_traffic_);
-                receive_.set_secret(suite_, server_traffic_);
-                if (!body.empty() && (body.front() == 1u))
-                    update(false);
+    const server_setup setup{};
+    const client_setup config{};
+    tls::server server{ setup.context };
+    tls::client client{ config.context };
+    exchange(client, server);
 
-                return true;
-            }
-            break;
-    }
-
-    return fail(alert::unexpected_message);
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE(server.is_established());
+    BC_REQUIRE(!client.is_retried());
+    BC_REQUIRE(!client.is_requested());
+    BC_REQUIRE_EQUAL(client.suite(), aes_128_gcm_sha256);
+    BC_REQUIRE_EQUAL(client.group(), x25519_group);
+    BC_REQUIRE_EQUAL(client.peer().size(), 1u);
+    BC_REQUIRE_EQUAL(client.peer().front().encoding, server_identity().certificate.encoding);
 }
 
-bool tls_client::handle_hello(const const_byte_span& message,
-    const const_byte_span& body) NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__handshake__no_session__established)
 {
-    reader server_hello{ body };
-    server_hello.read_16();
-    const auto random = server_hello.read_bytes(32);
-    server_hello.read_vector_8();
-    suite_ = server_hello.read_16();
-    server_hello.read_8();
-    reader extensions{ server_hello.read_vector_16() };
-    if (!server_hello.is_complete())
-        return fail(alert::decode_error);
+    const server_setup setup{};
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.session = 0;
+    config.context.set_offer(offer);
+    tls::server server{ setup.context };
+    tls::client client{ config.context };
+    exchange(client, server);
 
-    if (std::equal(random.begin(), random.end(), retry_random.begin()))
-    {
-        if (retried_)
-            return fail(alert::unexpected_message);
-
-        while (extensions && !extensions.is_complete())
-        {
-            const auto type = extensions.read_16();
-            reader data{ extensions.read_vector_16() };
-            if (type == extension::key_share)
-                retry_group_ = data.read_16();
-        }
-
-        retried_ = true;
-        const auto first = hash();
-        writer synthetic{};
-        synthetic.write_8(handshake::message_hash);
-        synthetic.write_vector_24(first);
-        transcript_.clear();
-        add(synthetic.data());
-        add(message);
-        hello(true);
-        return true;
-    }
-
-    uint16_t group{};
-    const_byte_span peer{};
-    while (extensions && !extensions.is_complete())
-    {
-        const auto type = extensions.read_16();
-        reader data{ extensions.read_vector_16() };
-        if (type == extension::key_share)
-        {
-            group = data.read_16();
-            peer = data.read_vector_16();
-        }
-    }
-
-    data_chunk shared{};
-    if (!agree(shared, group, peer))
-        return fail(alert::illegal_parameter);
-
-    add(message);
-    const schedule keys{ suite_ };
-    handshake_secret_ = keys.handshake_secret(keys.early_secret(), shared);
-    const auto transcript = hash();
-    client_handshake_ = keys.derive_secret(handshake_secret_, "c hs traffic", transcript);
-    server_handshake_ = keys.derive_secret(handshake_secret_, "s hs traffic", transcript);
-    receive_.set_secret(suite_, server_handshake_);
-    state_ = state::encrypted;
-    return true;
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE(server.is_established());
 }
 
-bool tls_client::handle_certificate(const const_byte_span& message,
-    const const_byte_span& body) NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__handshake__server_name__sent_established)
 {
-    reader certificate{ body };
-    certificate.read_vector_8();
-    reader entries{ certificate.read_vector_24() };
-    x509::certificates chain{};
-    while (entries && !entries.is_complete())
-    {
-        const auto der = entries.read_vector_24();
-        entries.read_vector_16();
-        x509::certificate value{};
-        if (!x509::parse(value, der))
-            return fail(alert::bad_certificate);
+    const server_setup setup{};
+    client_setup config{};
+    config.context.set_name("localhost");
+    tls::server server{ setup.context };
+    tls::client client{ config.context };
+    const auto name = to_chunk("localhost");
+    const auto& hello = client.output();
+    const auto sent = std::search(hello.begin(), hello.end(), name.begin(), name.end()) != hello.end();
+    exchange(client, server);
 
-        chain.push_back(std::move(value));
-    }
-
-    if (chain.empty())
-        return fail(alert::decode_error);
-
-    if (!options_.anchors.empty())
-    {
-        const auto time = is_zero(options_.time) ? chain.front().not_before : options_.time;
-        if (x509::verify(chain, options_.anchors, time, x509::purpose::server))
-            return fail(alert::bad_certificate);
-    }
-
-    server_key_ = chain.front().public_key;
-    add(message);
-    state_ = state::verify;
-    return true;
+    BC_REQUIRE(sent);
+    BC_REQUIRE(client.is_established());
 }
 
-bool tls_client::handle_verify(const const_byte_span& message,
-    const const_byte_span& body) NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__handshake__unanchored__peer_exposed)
 {
-    reader verify{ body };
-    const auto scheme = verify.read_16();
-    const auto der = verify.read_vector_16();
-    const auto content = verify_content("TLS 1.3, server CertificateVerify", hash());
+    const server_setup setup{};
+    tls::context context{};
+    context.set_unanchored(true);
+    tls::server server{ setup.context };
+    tls::client client{ context };
+    exchange(client, server);
 
-    auto valid = false;
-    if (scheme == ecdsa_secp256r1_sha256)
-    {
-        secp256r1::point_t point{};
-        secp256r1::signature_t signature{};
-        if ((server_key_.size() != point.size()) || !secp256r1::decode(signature, der))
-            return fail(alert::illegal_parameter);
-
-        std::copy(server_key_.cbegin(), server_key_.cend(), point.begin());
-        valid = secp256r1::verify(signature, point, sha256_hash(content));
-    }
-    else if (scheme == ecdsa_secp384r1_sha384)
-    {
-        secp384r1::point_t point{};
-        secp384r1::signature_t signature{};
-        if ((server_key_.size() != point.size()) || !secp384r1::decode(signature, der))
-            return fail(alert::illegal_parameter);
-
-        std::copy(server_key_.cbegin(), server_key_.cend(), point.begin());
-        valid = secp384r1::verify(signature, point, accumulator<sha512_384>::hash(content));
-    }
-    else
-    {
-        return fail(alert::illegal_parameter);
-    }
-
-    if (!valid)
-        return fail(alert::decrypt_error);
-
-    add(message);
-    state_ = state::finished;
-    return true;
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE_EQUAL(client.peer().size(), 1u);
+    BC_REQUIRE_EQUAL(client.peer().front().encoding, server_identity().certificate.encoding);
 }
 
-bool tls_client::handle_finished(const const_byte_span& message,
-    const const_byte_span& body) NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__handshake__untrusted__unknown_ca)
 {
-    const schedule keys{ suite_ };
-    const auto expected = keys.finished(server_handshake_, hash());
-    if (!std::equal(body.begin(), body.end(), expected.begin(), expected.end()))
-        return fail(alert::decrypt_error);
+    const server_setup setup{};
+    const client_setup config{ make_identity(other_key, "other").chain };
+    tls::server server{ setup.context };
+    tls::client client{ config.context };
+    exchange(client, server);
 
-    add(message);
-    const auto master = keys.master_secret(handshake_secret_);
-    const auto transcript = hash();
-    client_traffic_ = keys.derive_secret(master, "c ap traffic", transcript);
-    server_traffic_ = keys.derive_secret(master, "s ap traffic", transcript);
-
-    send_.set_secret(suite_, client_handshake_);
-    data_chunk flight{};
-    if (requested_)
-    {
-        writer entries{};
-        for (const auto& certificate: options_.chain)
-        {
-            entries.write_vector_24(certificate);
-            entries.write_16(0);
-        }
-
-        writer certificate{};
-        certificate.write_vector_8({});
-        certificate.write_vector_24(entries.data());
-        const auto certificate_message = message_of(handshake::certificate, certificate.data());
-        add(certificate_message);
-        flight.insert(flight.end(), certificate_message.begin(), certificate_message.end());
-
-        if (!options_.chain.empty())
-        {
-            const auto content = verify_content("TLS 1.3, client CertificateVerify", hash());
-            writer verify{};
-            if (options_.key384)
-            {
-                secp384r1::signature_t signature{};
-                secp384r1::sign(signature, *options_.key384, accumulator<sha512_384>::hash(content));
-                verify.write_16(ecdsa_secp384r1_sha384);
-                verify.write_vector_16(secp384r1::encode(signature));
-            }
-            else
-            {
-                secp256r1::signature_t signature{};
-                secp256r1::sign(signature, options_.key, sha256_hash(content));
-                verify.write_16(ecdsa_secp256r1_sha256);
-                verify.write_vector_16(secp256r1::encode(signature));
-            }
-
-            const auto verify_message = message_of(handshake::certificate_verify, verify.data());
-            add(verify_message);
-            flight.insert(flight.end(), verify_message.begin(), verify_message.end());
-        }
-    }
-
-    const auto finished = message_of(handshake::finished, keys.finished(client_handshake_, hash()));
-    add(finished);
-    flight.insert(flight.end(), finished.begin(), finished.end());
-    send_.seal(output_, content::handshake, flight);
-
-    send_.set_secret(suite_, client_traffic_);
-    receive_.set_secret(suite_, server_traffic_);
-    state_ = state::done;
-    return true;
+    BC_REQUIRE(client.is_failed());
+    BC_REQUIRE(!client.is_failure_received());
+    BC_REQUIRE_EQUAL(client.failure(), alert::unknown_ca);
+    BC_REQUIRE(server.is_failure_received());
 }
 
-bool tls_client::write(const const_byte_span& data) NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__handshake__no_share__retried_established)
 {
-    if (!is_established())
-        return false;
+    const server_setup setup{};
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.shares = {};
+    config.context.set_offer(offer);
+    tls::server server{ setup.context };
+    tls::client client{ config.context };
+    exchange(client, server);
 
-    send_.seal(output_, content::application_data, data);
-    return true;
+    BC_REQUIRE(client.is_retried());
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE_EQUAL(client.group(), x25519_group);
 }
 
-data_chunk tls_client::read() NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__handshake__requested_without_certificate__established)
 {
-    auto out = std::move(application_);
-    application_.clear();
-    return out;
+    const server_setup setup{ true, false };
+    const client_setup config{};
+    tls::server server{ setup.context };
+    tls::client client{ config.context };
+    exchange(client, server);
+
+    BC_REQUIRE(client.is_requested());
+    BC_REQUIRE(client.is_established());
+    BC_REQUIRE(server.peer().empty());
 }
 
-void tls_client::update(bool request) NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__key_update__server_requested__both_keys_updated)
 {
-    const data_array<1> value{ request ? uint8_t{ 1 } : uint8_t{ 0 } };
-    send_.seal(output_, content::handshake, message_of(handshake::key_update, to_chunk(value)));
-    client_traffic_ = schedule{ suite_ }.update(client_traffic_);
-    send_.set_secret(suite_, client_traffic_);
+    const server_setup setup{};
+    const client_setup config{};
+    tls::server server{ setup.context };
+    tls::client client{ config.context };
+    exchange(client, server);
+
+    const auto updated = server.update(true);
+    exchange(client, server);
+
+    const auto request = to_chunk("after update");
+    const auto written = client.write(request) && server.write(request);
+    exchange(client, server);
+
+    BC_REQUIRE(updated);
+    BC_REQUIRE(written);
+    BC_REQUIRE_EQUAL(read_all(server), request);
+    BC_REQUIRE_EQUAL(read_all(client), request);
 }
 
-void tls_client::close() NOEXCEPT
+// server hello
+
+BC_AUTO_TEST_CASE(tls_client__server_hello__session_mismatch__illegal_parameter)
 {
-    const data_array<2> content{ alert_warning, alert::close_notify };
-    send_.seal(output_, content::alert, content);
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto extensions = splice(versions_extension(), share_extension(x25519_group, x25519_share()));
+    BC_REQUIRE(!client.receive(hello_record(base16_chunk("00"), extensions)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::illegal_parameter);
 }
 
-void tls_client::add(const const_byte_span& message) NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__server_hello__unoffered_suite__illegal_parameter)
 {
-    transcript_.insert(transcript_.cend(), message.begin(), message.end());
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = splice(versions_extension(), share_extension(x25519_group, x25519_share()));
+    BC_REQUIRE(!client.receive(hello_record(session, extensions, {}, 0x1304)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::illegal_parameter);
 }
 
-tls_client::secret tls_client::hash() NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__server_hello__compression__illegal_parameter)
 {
-    return schedule{ suite_ }.hash(transcript_);
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = splice(versions_extension(), share_extension(x25519_group, x25519_share()));
+    BC_REQUIRE(!client.receive(hello_record(session, extensions, {}, aes_128_gcm_sha256, legacy_version, 1)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::illegal_parameter);
 }
 
-data_chunk tls_client::share(uint16_t group) const NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__server_hello__legacy_version__protocol_version)
 {
-    if (group == secp256r1_group)
-    {
-        secp256r1::point_t point{};
-        secp256r1::public_key(point, secret256_);
-        return to_chunk(point);
-    }
-
-    if (group == secp384r1_group)
-    {
-        secp384r1::point_t point{};
-        secp384r1::public_key(point, secret384_);
-        return to_chunk(point);
-    }
-
-    x25519::key point{};
-    x25519::multiply(point, secret_);
-    return to_chunk(point);
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = splice(versions_extension(), share_extension(x25519_group, x25519_share()));
+    BC_REQUIRE(!client.receive(hello_record(session, extensions, {}, aes_128_gcm_sha256, 0x0302)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::protocol_version);
 }
 
-bool tls_client::agree(data_chunk& shared, uint16_t group, const const_byte_span& peer) const NOEXCEPT
+BC_AUTO_TEST_CASE(tls_client__server_hello__without_supported_versions__protocol_version)
 {
-    if (group == secp256r1_group)
-    {
-        secp256r1::point_t point{};
-        secp256r1::shared_t value{};
-        if (peer.size() != point.size())
-            return false;
-
-        std::copy(peer.begin(), peer.end(), point.begin());
-        const auto valid = secp256r1::agree(value, secret256_, point);
-        shared = to_chunk(value);
-        return valid;
-    }
-
-    if (group == secp384r1_group)
-    {
-        secp384r1::point_t point{};
-        secp384r1::shared_t value{};
-        if (peer.size() != point.size())
-            return false;
-
-        std::copy(peer.begin(), peer.end(), point.begin());
-        const auto valid = secp384r1::agree(value, secret384_, point);
-        shared = to_chunk(value);
-        return valid;
-    }
-
-    x25519::key point{}, value{};
-    if (peer.size() != point.size())
-        return false;
-
-    std::copy(peer.begin(), peer.end(), point.begin());
-    const auto valid = x25519::multiply(value, secret_, point);
-    shared = to_chunk(value);
-    return valid;
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = share_extension(x25519_group, x25519_share());
+    BC_REQUIRE(!client.receive(hello_record(session, extensions)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::protocol_version);
 }
 
-} // namespace test
+BC_AUTO_TEST_CASE(tls_client__server_hello__unsupported_extension__unsupported_extension)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = build_chunk({ versions_extension(), share_extension(x25519_group, x25519_share()), extension_of(extension::server_name, {}) });
+    BC_REQUIRE(!client.receive(hello_record(session, extensions)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::unsupported_extension);
+}
+
+BC_AUTO_TEST_CASE(tls_client__server_hello__duplicate_extension__illegal_parameter)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = build_chunk({ versions_extension(), versions_extension(), share_extension(x25519_group, x25519_share()) });
+    BC_REQUIRE(!client.receive(hello_record(session, extensions)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::illegal_parameter);
+}
+
+BC_AUTO_TEST_CASE(tls_client__server_hello__unshared_group__illegal_parameter)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = splice(versions_extension(), share_extension(secp256r1_group, x25519_share()));
+    BC_REQUIRE(!client.receive(hello_record(session, extensions)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::illegal_parameter);
+}
+
+BC_AUTO_TEST_CASE(tls_client__server_hello__without_key_share__missing_extension)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    BC_REQUIRE(!client.receive(hello_record(session, versions_extension())));
+    BC_REQUIRE_EQUAL(client.failure(), alert::missing_extension);
+}
+
+BC_AUTO_TEST_CASE(tls_client__server_hello__truncated__decode_error)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto record = record_of(content::handshake, message_of(handshake::server_hello, base16_chunk("0303")));
+    BC_REQUIRE(!client.receive(record));
+    BC_REQUIRE_EQUAL(client.failure(), alert::decode_error);
+}
+
+// hello retry request
+
+BC_AUTO_TEST_CASE(tls_client__retry__shared_group__illegal_parameter)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = splice(versions_extension(), retry_extension(x25519_group));
+    BC_REQUIRE(!client.receive(hello_record(session, extensions, retry_random)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::illegal_parameter);
+}
+
+BC_AUTO_TEST_CASE(tls_client__retry__unoffered_group__illegal_parameter)
+{
+    client_setup config{};
+    auto offer = config.context.offered();
+    offer.groups = { x25519_group };
+    config.context.set_offer(offer);
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = splice(versions_extension(), retry_extension(secp256r1_group));
+    BC_REQUIRE(!client.receive(hello_record(session, extensions, retry_random)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::illegal_parameter);
+}
+
+BC_AUTO_TEST_CASE(tls_client__retry__unchanged__illegal_parameter)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    BC_REQUIRE(!client.receive(hello_record(session, versions_extension(), retry_random)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::illegal_parameter);
+}
+
+BC_AUTO_TEST_CASE(tls_client__retry__twice__unexpected_message)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto first = splice(versions_extension(), retry_extension(secp256r1_group));
+    const auto second = splice(versions_extension(), retry_extension(secp384r1_group));
+    BC_REQUIRE(client.receive(hello_record(session, first, retry_random)));
+    BC_REQUIRE(!client.receive(hello_record(session, second, retry_random)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::unexpected_message);
+}
+
+BC_AUTO_TEST_CASE(tls_client__retry__cookie__echoed)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    client.output().clear();
+    const auto cookie = base16_chunk("c00c1e");
+    const auto extensions = build_chunk({ versions_extension(), retry_extension(secp256r1_group), cookie_extension(cookie) });
+    const auto received = client.receive(hello_record(session, extensions, retry_random));
+    const auto& hello = client.output();
+    const auto echoed = std::search(hello.begin(), hello.end(), cookie.begin(), cookie.end()) != hello.end();
+
+    BC_REQUIRE(received);
+    BC_REQUIRE(echoed);
+    BC_REQUIRE(client.is_retried());
+}
+
+BC_AUTO_TEST_CASE(tls_client__server_hello__cookie__unsupported_extension)
+{
+    const client_setup config{};
+    tls::client client{ config.context };
+    const auto session = session_of(client.output());
+    const auto extensions = build_chunk({ versions_extension(), share_extension(x25519_group, x25519_share()), cookie_extension(base16_chunk("c00c1e")) });
+    BC_REQUIRE(!client.receive(hello_record(session, extensions)));
+    BC_REQUIRE_EQUAL(client.failure(), alert::unsupported_extension);
+}
+
+// encrypted server flight
+
+BC_AUTO_TEST_CASE(tls_client__encrypted_extensions__server_groups__accepted)
+{
+    server_flight flight{};
+    tls::writer groups{};
+    groups.write_vector_16(base16_chunk("001d"));
+    BC_REQUIRE(flight.send_extensions(extension_of(extension::supported_groups, groups.data())));
+    BC_REQUIRE(!flight.client.is_failed());
+}
+
+BC_AUTO_TEST_CASE(tls_client__encrypted_extensions__unrequested__unsupported_extension)
+{
+    server_flight flight{};
+    BC_REQUIRE(!flight.send_extensions(extension_of(16, base16_chunk("0000"))));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::unsupported_extension);
+}
+
+BC_AUTO_TEST_CASE(tls_client__encrypted_extensions__unsent_server_name__unsupported_extension)
+{
+    server_flight flight{};
+    BC_REQUIRE(!flight.send_extensions(extension_of(extension::server_name, {})));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::unsupported_extension);
+}
+
+BC_AUTO_TEST_CASE(tls_client__certificate__empty__decode_error)
+{
+    server_flight flight{};
+    BC_REQUIRE(flight.send_extensions());
+    BC_REQUIRE(!flight.send(handshake::certificate, certificate_of({}, {})));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::decode_error);
+}
+
+BC_AUTO_TEST_CASE(tls_client__certificate__request_context__illegal_parameter)
+{
+    server_flight flight{};
+    BC_REQUIRE(flight.send_extensions());
+    BC_REQUIRE(!flight.send(handshake::certificate, certificate_of(base16_chunk("01"), {})));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::illegal_parameter);
+}
+
+BC_AUTO_TEST_CASE(tls_client__certificate_request__without_algorithms__missing_extension)
+{
+    server_flight flight{};
+    BC_REQUIRE(flight.send_extensions());
+    BC_REQUIRE(!flight.send(handshake::certificate_request, base16_chunk("000000")));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::missing_extension);
+}
+
+BC_AUTO_TEST_CASE(tls_client__certificate_request__after_certificate__unexpected_message)
+{
+    server_flight flight{};
+    BC_REQUIRE(flight.send_extensions());
+    BC_REQUIRE(flight.send_certificate());
+    BC_REQUIRE(!flight.send(handshake::certificate_request, base16_chunk("000000")));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::unexpected_message);
+}
+
+BC_AUTO_TEST_CASE(tls_client__certificate_verify__unoffered_scheme__illegal_parameter)
+{
+    server_flight flight{};
+    BC_REQUIRE(flight.send_extensions());
+    BC_REQUIRE(flight.send_certificate());
+    BC_REQUIRE(!flight.send(handshake::certificate_verify, verify_of(0x0807, data_chunk(64, 0x01))));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::illegal_parameter);
+}
+
+BC_AUTO_TEST_CASE(tls_client__certificate_verify__invalid_signature__decrypt_error)
+{
+    server_flight flight{};
+    BC_REQUIRE(flight.send_extensions());
+    BC_REQUIRE(flight.send_certificate());
+    BC_REQUIRE(!flight.send(handshake::certificate_verify, verify_of(ecdsa_secp256r1_sha256, data_chunk(8, 0x01))));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::decrypt_error);
+}
+
+BC_AUTO_TEST_CASE(tls_client__certificate_verify__rsa_scheme_ec_key__decrypt_error)
+{
+    server_flight flight{};
+    BC_REQUIRE(flight.send_extensions());
+    BC_REQUIRE(flight.send_certificate());
+    BC_REQUIRE(!flight.send(handshake::certificate_verify, verify_of(rsa_pss_rsae_sha256, data_chunk(256, 0x01))));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::decrypt_error);
+}
+
+BC_AUTO_TEST_CASE(tls_client__finished__before_certificate__unexpected_message)
+{
+    server_flight flight{};
+    BC_REQUIRE(flight.send_extensions());
+    BC_REQUIRE(!flight.send(handshake::finished, data_chunk(32, 0x00)));
+    BC_REQUIRE_EQUAL(flight.client.failure(), alert::unexpected_message);
+}
+
+BC_AUTO_TEST_SUITE_END()
