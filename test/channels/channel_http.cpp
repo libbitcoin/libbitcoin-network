@@ -429,6 +429,7 @@ BC_FIXTURE_TEST_CASE(socket__rpc_write_chunk__batch_parts__chunked_json_array, h
     rpc::response close{};
     close.batch = true;
     close.changed = true;
+    close.opened = true;
     const auto last = http_make_promise();
     server->rpc_write_chunk(std::move(close), http_complete(last));
     BC_REQUIRE_EQUAL(http_await(last), error::success);
