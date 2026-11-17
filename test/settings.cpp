@@ -68,7 +68,7 @@ BC_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     settings instance{ selection::mainnet };
     BC_REQUIRE(instance.network == selection::mainnet);
     BC_REQUIRE_EQUAL(instance.identifier, 3652501241u);
-    BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 8u);
+    BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 10u);
     BC_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 8333u);
     BC_REQUIRE_EQUAL(instance.outbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 5u);
@@ -84,7 +84,7 @@ BC_AUTO_TEST_CASE(settings__construct__testnet3__expected)
     settings instance{ selection::testnet3 };
     BC_REQUIRE(instance.network == selection::testnet3);
     BC_REQUIRE_EQUAL(instance.identifier, 118034699u);
-    BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 3u);
+    BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 5u);
     BC_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 18333u);
     BC_REQUIRE_EQUAL(instance.outbound.connections, 50u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 10u);
@@ -100,7 +100,7 @@ BC_AUTO_TEST_CASE(settings__construct__testnet4__expected)
     settings instance{ selection::testnet4 };
     BC_REQUIRE(instance.network == selection::testnet4);
     BC_REQUIRE_EQUAL(instance.identifier, 675223068u);
-    BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 2u);
+    BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 4u);
     BC_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 48333u);
     BC_REQUIRE_EQUAL(instance.outbound.connections, 50u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 10u);
@@ -147,7 +147,8 @@ BC_AUTO_TEST_CASE(settings__construct__testnet5__expected)
     settings instance{ selection::testnet5 };
     BC_REQUIRE(instance.network == selection::testnet5);
     BC_REQUIRE_EQUAL(instance.identifier, 1163282758u);
-    BC_REQUIRE(instance.outbound.seeds.empty());
+    BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 2u);
+    BC_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 18353u);
     BC_REQUIRE_EQUAL(instance.outbound.connections, 50u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 10u);
     BC_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
