@@ -279,6 +279,9 @@
     <ClCompile Include="..\..\..\..\src\tls\stream.cpp">
       <ObjectFileName>$(IntDir)src_tls_stream.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\tor\cell.cpp" />
+    <ClCompile Include="..\..\..\..\src\tor\certificate.cpp" />
+    <ClCompile Include="..\..\..\..\src\tor\link.cpp" />
     <ClCompile Include="..\..\..\..\src\ws\frame.cpp" />
     <ClCompile Include="..\..\..\..\src\ws\handshake.cpp" />
     <ClCompile Include="..\..\..\..\src\ws\reader.cpp" />
@@ -489,6 +492,11 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\server.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\stream.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\tls\tls.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tor\cell.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tor\certificate.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tor\constants.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tor\link.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\tor\tor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\client.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\frame.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\ws\handshake.hpp" />
