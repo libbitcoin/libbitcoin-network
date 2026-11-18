@@ -92,7 +92,7 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
     {
         .connect_timeout = settings.connect_timeout(settings.inbound),
         .maximum_request = settings.inbound.maximum_request,
-        .minimum_buffer = settings.inbound.minimum_write_buffer,
+        .minimum_buffer = settings.inbound.minimum_response,
         .maximum_buffer = settings.inbound.maximum_buffer,
         .context = accept
     };
@@ -111,7 +111,7 @@ acceptor_sam::ptr net::create_acceptor_sam() NOEXCEPT
     {
         .connect_timeout = settings.connect_timeout(settings.inbound),
         .maximum_request = settings.inbound.maximum_request,
-        .minimum_buffer = settings.inbound.minimum_write_buffer,
+        .minimum_buffer = settings.inbound.minimum_response,
         .maximum_buffer = settings.inbound.maximum_buffer,
         .context = privacy_ ? settings.peer_context() : socket::context{}
     };
@@ -128,7 +128,7 @@ connector::ptr net::to_connector(const settings::socks5& socks,
     {
         .connect_timeout = connect_timeout,
         .maximum_request = options.maximum_request,
-        .minimum_buffer = options.minimum_write_buffer,
+        .minimum_buffer = options.minimum_response,
         .maximum_buffer = options.maximum_buffer,
         .bind = options.binding(slot),
         .slot = slot

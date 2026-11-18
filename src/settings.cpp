@@ -217,7 +217,7 @@ void settings::tcp_server::default_ports() NOEXCEPT
 
 void settings::tcp_server::default_buffers() NOEXCEPT
 {
-    minimum_write_buffer = minimum_buffer;
+    minimum_response = minimum_buffer;
 }
 
 // secure_server
