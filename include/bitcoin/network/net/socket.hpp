@@ -205,12 +205,6 @@ public:
     virtual void body_notify(http::request&& notification,
         count_handler&& handler) NOEXCEPT;
 
-    /// Assign the retained json serialization buffer to the message body.
-    void assign_buffer(http::body::value_type& body) NOEXCEPT;
-
-    /// Reduce the retained json serialization buffer to the minimum.
-    void reclaim_buffer() NOEXCEPT;
-
     /// Hold writes that fit the minimum buffer for the next write (strand).
     /// A held write completes when held, before it is written.
     void hold(bool enable) NOEXCEPT;
@@ -688,6 +682,10 @@ private:
         const chunk_state::ptr& out, const count_handler& handler) NOEXCEPT;
     void handle_chunk_last(const code& ec, size_t size, size_t total,
         const count_handler& handler) NOEXCEPT;
+
+    // buffer
+    void assign_buffer(http::body::value_type& body) NOEXCEPT;
+    void reclaim_buffer() NOEXCEPT;
 
     // transport
     void handle_transmit(const code& ec, size_t size, size_t held,
