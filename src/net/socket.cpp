@@ -420,10 +420,106 @@ void socket::async_write(const io::const_buffer& buffer, bool binary,
     }
     else
     {
-        VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
-            buffer, std::bind(&socket::handle_async,
+        transmit({ &buffer, one }, finish,
+            std::bind(&socket::handle_async,
                 shared_from_this(), _1, _2, handler, "async_write"));
     }
+}
+
+// Transport (write).
+// ----------------------------------------------------------------------------
+// Writes are issued one at a time, a write issued over another deferred to
+// its completion. The retained buffer is not prepared while a write of its
+// bytes is in progress.
+
+void socket::hold(bool enable) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    hold_ = enable;
+}
+
+bool socket::holding() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return !is_zero(response_.size());
+}
+
+void socket::release(count_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    hold_ = false;
+    transmit({}, false, handler);
+}
+
+// protected
+// The write is preceded by the held writes, or is held (if hold) with them.
+void socket::transmit(const std::span<const io::const_buffer>& buffers,
+    bool hold, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (sending_)
+    {
+        deferred_ = std::bind(&socket::transmit, shared_from_this(),
+            io::to_buffers<io::const_buffer>(buffers), hold, handler);
+        return;
+    }
+
+    const auto held = response_.size();
+    const auto size = io::buffer_size(buffers);
+    const auto bound = std::min(minimum_buffer_, response_.max_size());
+    if (hold && hold_ && size <= floored_subtract(bound, held))
+    {
+        response_.append(buffers);
+        io::post(strand_, std::bind(handler, error::success, size));
+        return;
+    }
+
+    io::const_buffers gather{};
+    if (!is_zero(held))
+        gather.push_back(response_.cdata());
+
+    gather.insert(gather.end(), buffers.begin(), buffers.end());
+    response_.clear();
+    sending_ = true;
+    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
+        gather, std::bind(&socket::handle_transmit,
+            shared_from_this(), _1, _2, held, handler));
+}
+
+// protected
+// The write is independent of the held writes.
+void socket::interject(const std::span<const io::const_buffer>& buffers,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (sending_)
+    {
+        deferred_ = std::bind(&socket::interject, shared_from_this(),
+            io::to_buffers<io::const_buffer>(buffers), handler);
+        return;
+    }
+
+    sending_ = true;
+    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
+        buffers, std::bind(&socket::handle_transmit,
+            shared_from_this(), _1, _2, zero, handler));
+}
+
+// private
+// The size reported excludes that of the held writes (reported when held).
+void socket::handle_transmit(const code& ec, size_t size, size_t held,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    sending_ = false;
+    const auto next = std::exchange(deferred_, {});
+    handler(ec, floored_subtract(size, held));
+
+    if (next)
+        next();
 }
 
 // read arbitrary tcp bytes, iterate (up to buffer capacity).

@@ -248,6 +248,7 @@ void socket::ws_send_data(const io::const_buffer& data, bool binary,
         possible_wide_cast<uint64_t>(data.size()));
     frame->data = data;
     frame->handler = handler;
+    frame->finish = finish;
     ws_queue_.push_back(frame);
     ws_write_next();
 }
@@ -263,6 +264,7 @@ void socket::ws_send(ws::opcode code, const data_chunk& payload,
         possible_wide_cast<uint64_t>(payload.size()));
     frame->payload = payload;
     frame->handler = handler;
+    frame->control = true;
     ws_queue_.push_back(frame);
     ws_write_next();
 }
@@ -275,7 +277,10 @@ void socket::ws_pong(const data_chunk& payload) NOEXCEPT
 
     const auto queued = !is_null(ws_pong_);
     if (!queued)
+    {
         ws_pong_ = emplace_shared<ws_frame>();
+        ws_pong_->control = true;
+    }
 
     ws_pong_->header = ws::serialize_header(ws::opcode::pong, true,
         possible_wide_cast<uint64_t>(payload.size()));
@@ -309,9 +314,13 @@ void socket::ws_write_next() NOEXCEPT
         payload
     };
 
-    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
-        frame->buffers, std::bind(&socket::handle_ws_frame,
-            shared_from_this(), _1, _2, frame));
+    const count_handler complete = std::bind(&socket::handle_ws_frame,
+        shared_from_this(), _1, _2, frame);
+
+    if (frame->control)
+        interject(frame->buffers, complete);
+    else
+        transmit(frame->buffers, frame->finish, complete);
 }
 
 // private

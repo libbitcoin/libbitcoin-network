@@ -348,8 +348,8 @@ void socket::do_serialize(
         return;
     }
 
-    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
-        out->buffers, std::bind(&socket::handle_serialize<Serializer>,
+    transmit(out->buffers, out->serializer.is_done(),
+        std::bind(&socket::handle_serialize<Serializer>,
             shared_from_this(), _1, _2, out, total, handler));
 }
 
@@ -516,8 +516,8 @@ void socket::do_http_write_header(const header_state::ptr& out,
     const io::const_buffer data{ out->header.data(),
         out->header.size() };
 
-    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
-        data, std::bind(&socket::handle_http_write_header,
+    transmit({ &data, one }, true,
+        std::bind(&socket::handle_http_write_header,
             shared_from_this(), _1, _2, out, handler));
 }
 
@@ -594,8 +594,8 @@ void socket::do_chunk_write(code ec, size_t total,
         io::const_buffer{ http::chunk_end.data(), http::chunk_end.size() }
     };
 
-    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
-        out->buffers, std::bind(&socket::handle_chunk_write,
+    transmit(out->buffers, !out->more && !out->last(),
+        std::bind(&socket::handle_chunk_write,
             shared_from_this(), _1, _2, total, out, handler));
 }
 
@@ -640,8 +640,8 @@ void socket::handle_chunk_write(const code& ec, size_t size,
     const io::const_buffer last{ http::last_chunk.data(),
         http::last_chunk.size() };
 
-    VARIANT_DISPATCH_FUNCTION(io::async_write, get_tcp(),
-        last, std::bind(&socket::handle_chunk_last,
+    transmit({ &last, one }, true,
+        std::bind(&socket::handle_chunk_last,
             shared_from_this(), _1, _2, total, handler));
 }
 

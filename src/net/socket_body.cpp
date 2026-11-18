@@ -94,10 +94,10 @@ void socket::assign_buffer(http::body::value_type& body) NOEXCEPT
         body.get<http::peer_value>().buffer = &response_;
 }
 
-// The buffer is idle here, so its retention is reduced to the minimum.
+// The retention of the buffer is reduced to the minimum (unless in use).
 void socket::reclaim_buffer() NOEXCEPT
 {
-    if (response_.capacity() > minimum_buffer_)
+    if (!sending_ && response_.capacity() > minimum_buffer_)
     {
         response_.shrink_to_fit();
         response_.reserve(minimum_buffer_);

@@ -64,6 +64,11 @@ public:
     /// Move size writable bytes (prepared) to the readable bytes.
     void commit(size_t size) NOEXCEPT;
 
+    /// Append the buffers to the readable bytes, of which at most one may be
+    /// within the writable bytes, throws std::length_error if the readable
+    /// size would then exceed the limit.
+    void append(const std::span<const const_buffers_type>& buffers) THROWS;
+
     /// Remove size bytes from the front of the readable bytes.
     void consume(size_t size) NOEXCEPT;
 

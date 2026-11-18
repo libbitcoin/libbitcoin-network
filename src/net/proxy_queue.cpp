@@ -111,7 +111,9 @@ void proxy::write() NOEXCEPT
         return;
 
     // Invokes oldest writer on the queue, completion invokes handle_write.
+    // Its writes are held for the next writer while another is queued.
     writing_ = true;
+    socket_->hold(queue_.size() > one);
     queue_.front().call();
 }
 
@@ -120,6 +122,14 @@ void proxy::handle_write(const code& ec, size_t bytes) NOEXCEPT
     BC_ASSERT(stranded());
     if (queue_.empty())
         return;
+
+    // The last queued writer releases any writes that remain held.
+    if (!stopped() && is_one(queue_.size()) && socket_->holding())
+    {
+        socket_->release(std::bind(&proxy::handle_write,
+            shared_from_this(), ec, bytes));
+        return;
+    }
 
     // Handler precedes pop so that a handler send does not start a second
     // write loop (a non-empty queue defers the start to the pop below).

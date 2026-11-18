@@ -421,9 +421,9 @@ struct stream_body
                 uint8_t* data{};
                 const auto size = value_.size;
                 if (!is_null(value_.buffer) &&
-                    size <= value_.buffer->max_size())
+                    size <= floored_subtract(value_.buffer->max_size(),
+                        value_.buffer->size()))
                 {
-                    value_.buffer->clear();
                     data = pointer_cast<uint8_t>(
                         value_.buffer->prepare(size).data());
                 }

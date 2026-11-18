@@ -1056,4 +1056,153 @@ BC_FIXTURE_TEST_CASE(socket__lazy_stop__clear__stopped_client_end_of_file, accep
     BC_REQUIRE(ec == error::peer_disconnect);
 }
 
+// hold
+// ----------------------------------------------------------------------------
+
+BC_FIXTURE_TEST_CASE(socket__holding__default__false, acceptor_fixture)
+{
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service(), clear);
+    const awaiter<bool> holding{};
+    io::post(instance->strand(), [=]() NOEXCEPT
+    {
+        holding.set(instance->holding());
+    });
+
+    BC_REQUIRE(!holding.get());
+    instance->stop();
+}
+
+BC_FIXTURE_TEST_CASE(socket__hold__fits_minimum__completes_held_and_written_with_next, acceptor_fixture)
+{
+    static const system::data_array<2> first{ 'a', 'b' };
+    static const system::data_array<2> second{ 'c', 'd' };
+    auto params = clear;
+    params.minimum_buffer = 64;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const awaiter<bool> held{};
+    const awaiter<bool> written{};
+    io::post(instance->strand(), [=]() NOEXCEPT
+    {
+        instance->hold(true);
+        instance->tcp_write({ first.data(), first.size() }, [=](const code& ec, size_t size) NOEXCEPT
+        {
+            held.set(!ec && size == first.size() && instance->holding());
+            instance->hold(false);
+            instance->tcp_write({ second.data(), second.size() }, [=](const code& ec, size_t size) NOEXCEPT
+            {
+                written.set(!ec && size == second.size() && !instance->holding());
+            });
+        });
+    });
+
+    BC_REQUIRE(held.get());
+    BC_REQUIRE(written.get());
+
+    code ec{};
+    system::data_array<4> received{};
+    const system::data_array<4> expected{ 'a', 'b', 'c', 'd' };
+    io::read(client, io::buffer(received), ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(received == expected);
+    instance->stop();
+}
+
+BC_FIXTURE_TEST_CASE(socket__hold__exceeds_minimum__written, acceptor_fixture)
+{
+    static const system::data_array<2> data{ 'a', 'b' };
+    auto params = clear;
+    params.minimum_buffer = 1;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const awaiter<bool> written{};
+    io::post(instance->strand(), [=]() NOEXCEPT
+    {
+        instance->hold(true);
+        instance->tcp_write({ data.data(), data.size() }, [=](const code& ec, size_t size) NOEXCEPT
+        {
+            written.set(!ec && size == data.size() && !instance->holding());
+        });
+    });
+
+    BC_REQUIRE(written.get());
+
+    code ec{};
+    system::data_array<2> received{};
+    io::read(client, io::buffer(received), ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(received == data);
+    instance->stop();
+}
+
+BC_FIXTURE_TEST_CASE(socket__release__held__written, acceptor_fixture)
+{
+    static const system::data_array<2> data{ 'a', 'b' };
+    auto params = clear;
+    params.minimum_buffer = 64;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const awaiter<bool> held{};
+    const awaiter<bool> released{};
+    io::post(instance->strand(), [=]() NOEXCEPT
+    {
+        instance->hold(true);
+        instance->tcp_write({ data.data(), data.size() }, [=](const code& ec, size_t) NOEXCEPT
+        {
+            held.set(!ec && instance->holding());
+            instance->release([=](const code& ec, size_t size) NOEXCEPT
+            {
+                released.set(!ec && is_zero(size) && !instance->holding());
+            });
+        });
+    });
+
+    BC_REQUIRE(held.get());
+    BC_REQUIRE(released.get());
+
+    code ec{};
+    system::data_array<2> received{};
+    io::read(client, io::buffer(received), ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(received == data);
+    instance->stop();
+}
+
+BC_FIXTURE_TEST_CASE(socket__lazy_stop__held__written, acceptor_fixture)
+{
+    static const system::data_array<2> data{ 'a', 'b' };
+    auto params = clear;
+    params.minimum_buffer = 64;
+    params.connect_timeout = std::chrono::seconds(10);
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const awaiter<bool> held{};
+    io::post(instance->strand(), [=]() NOEXCEPT
+    {
+        instance->hold(true);
+        instance->tcp_write({ data.data(), data.size() }, [=](const code& ec, size_t) NOEXCEPT
+        {
+            held.set(!ec && instance->holding());
+            instance->lazy_stop();
+        });
+    });
+
+    BC_REQUIRE(held.get());
+
+    code ec{};
+    system::data_array<2> received{};
+    io::read(client, io::buffer(received), ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(received == data);
+    instance->stop();
+}
+
 BC_AUTO_TEST_SUITE_END()

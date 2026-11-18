@@ -222,4 +222,62 @@ BC_AUTO_TEST_CASE(header__flat_buffer__prepare_commit_consume__expected)
     BC_REQUIRE_EQUAL(instance.size(), 0u);
 }
 
+BC_AUTO_TEST_CASE(header__flat_buffer__append__external_buffers__appended_in_order)
+{
+    const std::string_view first{ "ab" };
+    const std::string_view second{ "cd" };
+    const std::array<io::const_buffer, 2> buffers{ io::const_buffer{ first.data(), first.size() }, io::const_buffer{ second.data(), second.size() } };
+    flat_buffer instance{ 8 };
+    instance.append(buffers);
+    instance.append(buffers);
+    BC_REQUIRE_EQUAL(std::string(static_cast<const char*>(instance.data().data()), instance.size()), "abcdabcd");
+}
+
+BC_AUTO_TEST_CASE(header__flat_buffer__append__writable_buffer_at_start__committed)
+{
+    flat_buffer instance{ 8 };
+    std::memcpy(instance.prepare(2).data(), "ab", 2);
+    instance.commit(2);
+    const auto scratch = instance.prepare(3);
+    std::memcpy(scratch.data(), "cde", 3);
+    const std::array<io::const_buffer, 1> buffers{ io::const_buffer{ scratch.data(), scratch.size() } };
+    instance.append(buffers);
+    BC_REQUIRE_EQUAL(std::string(static_cast<const char*>(instance.data().data()), instance.size()), "abcde");
+}
+
+BC_AUTO_TEST_CASE(header__flat_buffer__append__writable_buffer_between_external__moved_and_reallocated)
+{
+    const std::string_view head{ "cd" };
+    const std::string_view tail{ "h" };
+    flat_buffer instance{ 8 };
+    std::memcpy(instance.prepare(2).data(), "ab", 2);
+    instance.commit(2);
+    const auto scratch = instance.prepare(3);
+    std::memcpy(scratch.data(), "efg", 3);
+    BC_REQUIRE_EQUAL(instance.capacity(), 5u);
+
+    const std::array<io::const_buffer, 3> buffers{ io::const_buffer{ head.data(), head.size() }, io::const_buffer{ scratch.data(), scratch.size() }, io::const_buffer{ tail.data(), tail.size() } };
+    instance.append(buffers);
+    BC_REQUIRE_EQUAL(std::string(static_cast<const char*>(instance.data().data()), instance.size()), "abcdefgh");
+}
+
+BC_AUTO_TEST_CASE(header__flat_buffer__append__writable_buffer_beyond_start__moved_back)
+{
+    flat_buffer instance{ 8 };
+    const auto scratch = instance.prepare(5);
+    std::memcpy(scratch.data(), "..abc", 5);
+    const std::array<io::const_buffer, 1> buffers{ io::const_buffer{ std::next(static_cast<const char*>(scratch.data()), 2), 3 } };
+    instance.append(buffers);
+    BC_REQUIRE_EQUAL(std::string(static_cast<const char*>(instance.data().data()), instance.size()), "abc");
+}
+
+BC_AUTO_TEST_CASE(header__flat_buffer__append__exceeds_limit__throws_unchanged)
+{
+    const std::string_view data{ "abcd" };
+    const std::array<io::const_buffer, 1> buffers{ io::const_buffer{ data.data(), data.size() } };
+    flat_buffer instance{ 3 };
+    BC_REQUIRE_THROW(instance.append(buffers), std::length_error);
+    BC_REQUIRE_EQUAL(instance.size(), 0u);
+}
+
 BC_AUTO_TEST_SUITE_END()
