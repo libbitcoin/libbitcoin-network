@@ -117,6 +117,7 @@ struct BCT_API settings
         uint32_t inactivity_minutes{ 10 };
         uint32_t expiration_minutes{ 60 };
         uint32_t minimum_buffer{ 4 * kilobyte };
+        uint32_t minimum_write_buffer{ 4 * kilobyte };
         uint32_t maximum_buffer{ 64 * kilobyte };
         uint32_t maximum_request{ max_payload };
         uint32_t maximum_backlog{ megabyte };
@@ -133,6 +134,9 @@ struct BCT_API settings
 
         /// Set the default port of bindings that do not specify a port.
         virtual void default_ports() NOEXCEPT;
+
+        /// Set the write buffer minimum to the read buffer minimum.
+        virtual void default_buffers() NOEXCEPT;
     };
 
     struct BCT_API secure_server

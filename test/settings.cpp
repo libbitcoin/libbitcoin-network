@@ -384,6 +384,7 @@ BC_AUTO_TEST_CASE(settings__tcp_server__defaults__expected)
     BC_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
     BC_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
     BC_REQUIRE_EQUAL(instance.minimum_buffer, minimum_buffer);
+    BC_REQUIRE_EQUAL(instance.minimum_write_buffer, minimum_buffer);
     BC_REQUIRE_EQUAL(instance.maximum_buffer, 64 * kilobyte);
     BC_REQUIRE_EQUAL(instance.maximum_backlog, megabyte);
     BC_REQUIRE_EQUAL(instance.connect_timeout_seconds, 0u);
@@ -436,6 +437,26 @@ BC_AUTO_TEST_CASE(settings__tcp_server_default_ports__nonzero_port__unchanged)
     instance.default_ports();
 
     BC_REQUIRE_EQUAL(instance.binds.at(0).port(), 24u);
+}
+
+BC_AUTO_TEST_CASE(settings__tcp_server_default_buffers__minimum_buffer__minimum_write_buffer)
+{
+    settings::tcp_server instance{ "test" };
+    instance.minimum_buffer = 42;
+    instance.default_buffers();
+    BC_REQUIRE_EQUAL(instance.minimum_write_buffer, 42u);
+}
+
+BC_AUTO_TEST_CASE(settings__initialize__minimum_buffers__minimum_write_buffers)
+{
+    settings instance{ system::chain::selection::mainnet };
+    instance.inbound.minimum_buffer = 1;
+    instance.outbound.minimum_buffer = 2;
+    instance.manual.minimum_buffer = 3;
+    BC_REQUIRE_EQUAL(instance.initialize(), error::success);
+    BC_REQUIRE_EQUAL(instance.inbound.minimum_write_buffer, 1u);
+    BC_REQUIRE_EQUAL(instance.outbound.minimum_write_buffer, 2u);
+    BC_REQUIRE_EQUAL(instance.manual.minimum_write_buffer, 3u);
 }
 
 BC_AUTO_TEST_CASE(settings__secure_server_default_ports__zero_ports__bind_and_safe_ports)
