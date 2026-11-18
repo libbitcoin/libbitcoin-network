@@ -110,6 +110,8 @@ private:
     template <typename Argument>
     static inline external_t<Argument> get_named(const std::string_view& name,
         const object_t& object) THROWS;
+    static inline size_t count_named(const std::string_view& name,
+        const object_t& object) NOEXCEPT;
 
     static inline array_t get_array(const parameters_t& params) THROWS;
     static inline object_t get_object(const parameters_t& params) THROWS;

@@ -99,6 +99,29 @@ constexpr bool is_command(const std::string_view& name) NOEXCEPT
     }, Methods);
 }
 
+/// The parameter names of the named method, empty if not declared.
+template <auto& Methods>
+constexpr std::span<const std::string_view> parameter_names(
+    const std::string_view& name) NOEXCEPT
+{
+    std::span<const std::string_view> out{};
+    const auto find = [&](const auto& item) NOEXCEPT
+    {
+        if (item.name != name)
+            return false;
+
+        out = item.parameter_names();
+        return true;
+    };
+
+    std::apply([&](const auto&... items) NOEXCEPT
+    {
+        (find(items) || ...);
+    }, Methods);
+
+    return out;
+}
+
 } // namespace rpc
 } // namespace network
 } // namespace libbitcoin
