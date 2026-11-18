@@ -336,7 +336,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
 
     const auto ec2 = instance.notify(
     {
-        // missing_parameter (misnamed/absent)
+        // extra_named (misnamed)
         .method = "all_required",
         .params = { object_t{ { "fu", boolean_type{ true } }, { "ga", number_t{ 24.0 } }, { "zi", string_t{ "42" } } } }
     });
@@ -380,7 +380,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__all_required_named_params__expected)
     });
 
     BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
-    BC_REQUIRE_EQUAL(ec2, error::missing_parameter);
+    BC_REQUIRE_EQUAL(ec2, error::extra_named);
     BC_REQUIRE_EQUAL(ec3, error::unexpected_type);
     BC_REQUIRE_EQUAL(ec4, error::extra_named);
     BC_REQUIRE(!ec5);
@@ -488,10 +488,18 @@ BC_AUTO_TEST_CASE(dispatcher__notify__with_options_named_params__expected)
         .params = { object_t{ { "a", string_t{ "42" } }, { "b", number_t{ 42.0 } }, { "c", boolean_type{ false } } } }
     });
 
+    const auto ec5 = instance.notify(
+    {
+        // extra_named (misnamed optional, within parameter count)
+        .method = "with_options",
+        .params = { object_t{ { "a", string_t{ "42" } }, { "bb", number_t{ 42.0 } } } }
+    });
+
     BC_REQUIRE_EQUAL(ec1, error::missing_parameter);
     BC_REQUIRE(!ec2);
     BC_REQUIRE(!ec3);
     BC_REQUIRE(!ec4);
+    BC_REQUIRE_EQUAL(ec5, error::extra_named);
     BC_REQUIRE_EQUAL(result_a, "42");
     BC_REQUIRE_EQUAL(result_b, 4.2);
     BC_REQUIRE_EQUAL(result_c, true);
@@ -1516,6 +1524,7 @@ BC_AUTO_TEST_CASE(dispatcher__notify__named_alias__either_name)
     BC_REQUIRE_EQUAL(result_b, 7.0);
 
     BC_REQUIRE_EQUAL(instance.notify({ .method = "casted", .params = { object_t{ { "bee", number_t{ 5.0 } } } } }), error::missing_parameter);
+    BC_REQUIRE_EQUAL(instance.notify({ .method = "casted", .params = { object_t{ { "a", boolean_type{ true } }, { "b", string_t{ "5" } }, { "bee", string_t{ "5" } } } } }), error::extra_named);
     instance.stop(error::service_stopped);
 }
 

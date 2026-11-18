@@ -95,6 +95,15 @@ static_assert(!is_command<served_methods::methods>("alpha"));
 // Commands are implemented (published).
 static_assert(to_view(method_names<commanded_methods::methods>()) == "alpha beta");
 
+// parameter_names
+// -----------------------------------------------------------------------------
+
+static_assert(parameter_names<mixed_methods::methods>("alpha").empty());
+static_assert(parameter_names<mixed_methods::methods>("gamma").size() == 1u);
+static_assert(parameter_names<mixed_methods::methods>("gamma").front() == "flag");
+static_assert(parameter_names<mixed_methods::methods>("beta").front() == "flag");
+static_assert(parameter_names<mixed_methods::methods>("omega").empty());
+
 // publish
 // -----------------------------------------------------------------------------
 

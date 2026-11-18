@@ -128,6 +128,25 @@ inline external_t<Argument> CLASS::get_named(
     return CLASS::get_valued<Argument>(internal);
 }
 
+// The number of members that name the parameter, one for each alias present.
+TEMPLATE
+inline size_t CLASS::count_named(const std::string_view& name,
+    const object_t& object) NOEXCEPT
+{
+    size_t count{};
+    for (auto aliases = name; !aliases.empty();)
+    {
+        const auto bar = aliases.find('|');
+        if (object.contains(std::string{ aliases.substr(zero, bar) }))
+            ++count;
+
+        aliases = (bar == std::string_view::npos) ? std::string_view{} :
+            aliases.substr(add1(bar));
+    }
+
+    return count;
+}
+
 TEMPLATE
 inline array_t CLASS::get_array(const parameters_t& params) THROWS
 {
@@ -185,8 +204,23 @@ inline externals_t<Arguments> CLASS::extract_named(
     const auto object = get_object(params);
     constexpr auto count = std::tuple_size_v<Arguments>;
 
-    // This doesn't catch duplicate names (allowed by json-rpc).
-    if (object.size() > count)
+    // Each member names one parameter, by one of its aliases.
+    const auto counted = [&](const std::string_view& name) THROWS
+    {
+        const auto found = CLASS::count_named(name, object);
+        if (found > one)
+            throw std::system_error{ error::extra_named };
+
+        return found;
+    };
+
+    size_t named{};
+    [&]<size_t... Index>(std::index_sequence<Index...>) THROWS
+    {
+        ((named += counted(names.at(Index))), ...);
+    }(std::make_index_sequence<count>{});
+
+    if (named != object.size())
         throw std::system_error{ error::extra_named };
 
     return [&]<size_t... Index>(std::index_sequence<Index...>) THROWS
