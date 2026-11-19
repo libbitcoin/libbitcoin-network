@@ -94,6 +94,7 @@ protected:
     virtual void send_forbidden(const http::request& request={}) NOEXCEPT;
     virtual void send_not_implemented(const http::request& request={}) NOEXCEPT;
     virtual void send_method_not_allowed(const http::request& request={}) NOEXCEPT;
+    virtual void send_service_unavailable(const http::request& request={}) NOEXCEPT;
     virtual void send_internal_server_error(const code& reason,
         const http::request& request={}) NOEXCEPT;
     virtual void send_redirect(const system::wallet::uri& uri,
