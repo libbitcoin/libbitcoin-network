@@ -209,6 +209,9 @@ public:
     /// A held write completes when held, before it is written.
     void hold(bool enable) NOEXCEPT;
 
+    /// Complete a write held since hold, if any (strand).
+    void settle() NOEXCEPT;
+
     /// Writes are held (strand).
     bool holding() const NOEXCEPT;
 
@@ -733,7 +736,9 @@ protected:
     // readable bytes of which are the held writes.
     http::flat_buffer response_;
     std::function<void()> deferred_{};
+    std::function<void()> settled_{};
     bool hold_{};
+    bool settling_{};
     bool sending_{};
 
     // Websocket framing (once upgraded).
