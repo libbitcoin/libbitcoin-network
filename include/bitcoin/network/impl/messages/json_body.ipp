@@ -165,14 +165,8 @@ void CLASS::writer::init(code& ec) NOEXCEPT
         return;
     }
 
-    // Serialization is chunked by the estimate, within that bound less any
-    // terminator. An unestimated message is chunked by the bound.
-    const auto reserve = is_zero(terminator_) ? zero : one;
-    const auto maximum = floored_subtract(value_.buffer->max_size(), reserve);
-    chunk_ = is_zero(value_.size_hint) ? maximum :
-        std::min(value_.size_hint, maximum);
-
-    value_.buffer->consume(value_.buffer->size());
+    // Serialization is chunked by the estimate, within that bound.
+    chunk_ = is_zero(value_.size_hint) ? max_size_t : value_.size_hint;
     ec.clear();
     serializer_.reset(&value_.model);
 }
@@ -194,7 +188,13 @@ CLASS::writer::get(code& ec) NOEXCEPT
         return {};
     }
 
-    const auto size = chunk_;
+    // The chunk and any terminator, which follows the final serialized byte,
+    // are bound by the room that follows the buffer's readable bytes.
+    const auto reserve = is_zero(terminator_) ? zero : one;
+    const auto size = std::min(chunk_, system::floored_subtract(
+        value_.buffer->max_size(), system::ceilinged_add(
+            value_.buffer->size(), reserve)));
+
     if (is_zero(size))
     {
         ec = to_http_code(http_error_t::buffer_overflow);
@@ -203,9 +203,6 @@ CLASS::writer::get(code& ec) NOEXCEPT
 
     try
     {
-        // Prepares the chunk, which the estimate sized within the bound, and
-        // any terminator, which follows the final serialized byte.
-        const auto reserve = is_zero(terminator_) ? zero : one;
         const auto scratch = value_.buffer->prepare(size + reserve);
         const auto data = system::pointer_cast<char>(scratch.data());
         const auto view = serializer_.read(data, size);
@@ -218,7 +215,6 @@ CLASS::writer::get(code& ec) NOEXCEPT
         }
 
         ec.clear();
-        value_.buffer->consume(scratch.size());
         const auto more = !serializer_.done();
         if (more || is_zero(terminator_))
             return out_buffer{ std::make_pair(io::buffer(view), more) };

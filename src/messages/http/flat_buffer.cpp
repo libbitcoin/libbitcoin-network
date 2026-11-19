@@ -18,6 +18,10 @@
  */
 #include <bitcoin/network/messages/http/flat_buffer.hpp>
 
+#include <algorithm>
+#include <cstring>
+#include <functional>
+#include <iterator>
 #include <stdexcept>
 #include <bitcoin/network/define.hpp>
 
@@ -93,6 +97,49 @@ flat_buffer::mutable_buffers_type flat_buffer::prepare(size_t size) THROWS
 void flat_buffer::commit(size_t size) NOEXCEPT
 {
     end_ += std::min(size, buffer_.size() - end_);
+}
+
+void flat_buffer::append(
+    const std::span<const const_buffers_type>& buffers) THROWS
+{
+    // A buffer within the allocation is located by offset, as prepare may
+    // reallocate.
+    const const_buffers_type* inner{};
+    size_t from{};
+    size_t to{};
+    size_t size{};
+    const auto begin = buffer_.data();
+    const auto end = std::next(begin, buffer_.size());
+    for (const auto& buffer: buffers)
+    {
+        const auto data = pointer_cast<const uint8_t>(buffer.data());
+        if (!is_zero(buffer.size()) && !std::less{}(data, begin) &&
+            std::less{}(data, end))
+        {
+            inner = &buffer;
+            from = sign_cast<size_t>(std::distance<const uint8_t*>(begin,
+                data));
+            to = size;
+        }
+
+        size += buffer.size();
+    }
+
+    auto out = pointer_cast<uint8_t>(prepare(size).data());
+    if (!is_null(inner))
+        std::memmove(std::next(out, to), std::next(buffer_.data(), from),
+            inner->size());
+
+    for (const auto& buffer: buffers)
+    {
+        if (&buffer != inner)
+            std::copy_n(pointer_cast<const uint8_t>(buffer.data()),
+                buffer.size(), out);
+
+        std::advance(out, buffer.size());
+    }
+
+    end_ += size;
 }
 
 void flat_buffer::consume(size_t size) NOEXCEPT

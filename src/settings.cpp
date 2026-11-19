@@ -215,6 +215,11 @@ void settings::tcp_server::default_ports() NOEXCEPT
     set_default_port(binds, bind_port);
 }
 
+void settings::tcp_server::default_buffers() NOEXCEPT
+{
+    minimum_response = minimum_buffer;
+}
+
 // secure_server
 // ----------------------------------------------------------------------------
 
@@ -533,6 +538,10 @@ code settings::initialize() NOEXCEPT
     // Friends are mapped before peer ports are defaulted, so that a peer
     // configured without a port matches its address on any port.
     manual.initialize();
+
+    inbound.default_buffers();
+    outbound.default_buffers();
+    manual.default_buffers();
 
     const auto port = inbound.bind_port;
     inbound.default_ports();

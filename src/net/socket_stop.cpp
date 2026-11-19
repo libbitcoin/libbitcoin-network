@@ -94,6 +94,14 @@ void socket::do_lazy_stop() NOEXCEPT
     timer_->start(std::bind(&socket::handle_lazy_timer,
         shared_from_this(), _1));
 
+    // Held writes have completed, so they precede the close.
+    hold_ = false;
+    if (holding())
+    {
+        release(std::bind(&socket::do_ws_stop, shared_from_this()));
+        return;
+    }
+
     do_ws_stop();
 }
 

@@ -37,8 +37,10 @@ namespace network {
 /// Caller must retain ownership of read/write buffers until handler invoked.
 /// All writes are queued to prevent interleaving.
 /// Completion handler is invoked once write is complete, at which point the
-/// next queued write is invoked. When a channel stops with pending writes the
-/// write queue is purged without invoke of the purged handlers.
+/// next queued write is invoked. A write with another queued behind it may be
+/// held by the socket, completing before it is written with a later write.
+/// When a channel stops with pending writes the write queue is purged without
+/// invoke of the purged handlers.
 /// Each send is allocated (bytes/rate_limit) of time, and its completion is
 /// deferred by whatever portion of that allocation the write did not consume.
 /// Since nothing is produced until the completion handler is invoked, this

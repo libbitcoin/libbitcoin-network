@@ -197,11 +197,11 @@ void body::writer::init(code& ec) NOEXCEPT
 {
     done_ = false;
     const auto size = ceilinged_add(heading::size(), value_.size);
-    if (!is_null(value_.buffer) && size <= value_.buffer->max_size())
+    if (!is_null(value_.buffer) && size <= floored_subtract(
+        value_.buffer->max_size(), value_.buffer->size()))
     {
         try
         {
-            value_.buffer->clear();
             const auto data = pointer_cast<uint8_t>(
                 value_.buffer->prepare(size).data());
 

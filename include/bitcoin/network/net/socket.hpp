@@ -205,11 +205,15 @@ public:
     virtual void body_notify(http::request&& notification,
         count_handler&& handler) NOEXCEPT;
 
-    /// Assign the retained json serialization buffer to the message body.
-    void assign_buffer(http::body::value_type& body) NOEXCEPT;
+    /// Hold writes that fit the minimum buffer for the next write (strand).
+    /// A held write completes when held, before it is written.
+    void hold(bool enable) NOEXCEPT;
 
-    /// Reduce the retained json serialization buffer to the minimum.
-    void reclaim_buffer() NOEXCEPT;
+    /// Writes are held (strand).
+    bool holding() const NOEXCEPT;
+
+    /// End the hold and write the held writes (strand).
+    void release(count_handler&& handler) NOEXCEPT;
 
     /// HTTP/WS (generic/rpc).
     /// -----------------------------------------------------------------------
@@ -347,6 +351,10 @@ protected:
         const count_handler& handler) NOEXCEPT;
     void async_write(const io::const_buffer& buffer, bool binary,
         bool finish, const count_handler& handler) NOEXCEPT;
+    void transmit(const std::span<const io::const_buffer>& buffers,
+        bool hold, const count_handler& handler) NOEXCEPT;
+    void interject(const std::span<const io::const_buffer>& buffers,
+        const count_handler& handler) NOEXCEPT;
     void async_read_http(http::flat_buffer& buffer, http::request& request,
         const count_handler& handler) NOEXCEPT;
     void async_write_http(http::response&& response,
@@ -452,6 +460,8 @@ private:
         io::const_buffer data{};
         count_handler handler{};
         std::array<io::const_buffer, 2> buffers{};
+        bool control{};
+        bool finish{};
     };
 
     enum class parse_mode
@@ -673,6 +683,14 @@ private:
     void handle_chunk_last(const code& ec, size_t size, size_t total,
         const count_handler& handler) NOEXCEPT;
 
+    // buffer
+    void assign_buffer(http::body::value_type& body) NOEXCEPT;
+    void reclaim_buffer() NOEXCEPT;
+
+    // transport
+    void handle_transmit(const code& ec, size_t size, size_t held,
+        const count_handler& handler) NOEXCEPT;
+
     // utility
     // ------------------------------------------------------------------------
 
@@ -711,8 +729,12 @@ protected:
     // Retains the detection prefix for a v1 peer (see handle_detection).
     http::flat_buffer detection_{ p2ps::stream::detection_size };
 
-    // Retains the json serialization buffer (allocated on first write).
+    // Retains the serialization buffer (allocated on first write), the
+    // readable bytes of which are the held writes.
     http::flat_buffer response_;
+    std::function<void()> deferred_{};
+    bool hold_{};
+    bool sending_{};
 
     // Websocket framing (once upgraded).
     std::optional<ws::reader> ws_reader_{};

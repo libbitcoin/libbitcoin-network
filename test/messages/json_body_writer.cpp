@@ -166,6 +166,38 @@ BC_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four_ch
     BC_REQUIRE(writer.done());
 }
 
+BC_AUTO_TEST_CASE(json_body_writer__get__readable_bytes__retained_and_chunks_bound_by_room)
+{
+    const std::string_view expected1{ R"({"ke)" };
+    const std::string_view expected2{ R"(y":")" };
+    const io::const_buffer out1{ expected1.data(), expected1.size() };
+    const io::const_buffer out2{ expected2.data(), expected2.size() };
+
+    http::flat_buffer scratch{ 6 };
+    std::memcpy(scratch.prepare(2).data(), "ab", 2);
+    scratch.commit(2);
+    json::body<>::value_type body{};
+    body.buffer = &scratch;
+    body.model = object{ { "key", "value" } };
+    json::body<>::writer writer(body);
+    code ec{};
+    writer.init(ec);
+    BC_REQUIRE(!ec);
+
+    const auto buffer1 = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer1.has_value());
+    BC_REQUIRE(buffer1.value().first == out1);
+    BC_REQUIRE(buffer1.value().second);
+
+    const auto buffer2 = writer.get(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(buffer2.has_value());
+    BC_REQUIRE(buffer2.value().first == out2);
+    BC_REQUIRE(buffer2.value().second);
+    BC_REQUIRE_EQUAL(std::string(static_cast<const char*>(scratch.data().data()), scratch.size()), "ab");
+}
+
 BC_AUTO_TEST_CASE(json_body_writer__init__null_buffer__bad_alloc)
 {
     json::body<>::value_type body{};
