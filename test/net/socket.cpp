@@ -1096,6 +1096,7 @@ BC_FIXTURE_TEST_CASE(socket__hold__fits_minimum__completes_held_and_written_with
                 written.set(!ec && size == second.size() && !instance->holding());
             });
         });
+        instance->settle();
     });
 
     BC_REQUIRE(held.get());
@@ -1107,6 +1108,34 @@ BC_FIXTURE_TEST_CASE(socket__hold__fits_minimum__completes_held_and_written_with
     io::read(client, io::buffer(received), ec);
     BC_REQUIRE(!ec);
     BC_REQUIRE(received == expected);
+    instance->stop();
+}
+
+BC_FIXTURE_TEST_CASE(socket__settle__held__completes_on_settle, acceptor_fixture)
+{
+    static const system::data_array<2> data{ 'a', 'b' };
+    auto params = clear;
+    params.minimum_buffer = 64;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    const awaiter<bool> settled{};
+    io::post(instance->strand(), [=]() NOEXCEPT
+    {
+        const auto completed = std::make_shared<bool>(false);
+        instance->hold(true);
+        instance->tcp_write({ data.data(), data.size() }, [=](const code& ec, size_t size) NOEXCEPT
+        {
+            *completed = !ec && size == data.size();
+        });
+
+        const auto before = *completed;
+        instance->settle();
+        settled.set(!before && *completed && instance->holding());
+    });
+
+    BC_REQUIRE(settled.get());
     instance->stop();
 }
 
@@ -1127,6 +1156,7 @@ BC_FIXTURE_TEST_CASE(socket__hold__exceeds_minimum__written, acceptor_fixture)
         {
             written.set(!ec && size == data.size() && !instance->holding());
         });
+        instance->settle();
     });
 
     BC_REQUIRE(written.get());
@@ -1161,6 +1191,7 @@ BC_FIXTURE_TEST_CASE(socket__release__held__written, acceptor_fixture)
                 released.set(!ec && is_zero(size) && !instance->holding());
             });
         });
+        instance->settle();
     });
 
     BC_REQUIRE(held.get());
@@ -1193,6 +1224,7 @@ BC_FIXTURE_TEST_CASE(socket__lazy_stop__held__written, acceptor_fixture)
             held.set(!ec && instance->holding());
             instance->lazy_stop();
         });
+        instance->settle();
     });
 
     BC_REQUIRE(held.get());

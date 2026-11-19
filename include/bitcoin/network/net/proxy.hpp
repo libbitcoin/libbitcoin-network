@@ -359,6 +359,8 @@ private:
     queue deferred_{};
     size_t backlog_{};
     bool writing_{};
+    bool looping_{};
+    bool again_{};
     bool batched_{};
     bool parted_{};
     bool opened_{};

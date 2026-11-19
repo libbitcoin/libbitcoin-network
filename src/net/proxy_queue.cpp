@@ -104,17 +104,33 @@ void proxy::do_write(pending& write_, bool notification) NOEXCEPT
         write();
 }
 
+// A write invoked by a completion within the loop is invoked by the loop.
 void proxy::write() NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (queue_.empty())
+    if (looping_)
+    {
+        again_ = true;
         return;
+    }
 
     // Invokes oldest writer on the queue, completion invokes handle_write.
-    // Its writes are held for the next writer while another is queued.
-    writing_ = true;
-    socket_->hold(queue_.size() > one);
-    queue_.front().call();
+    // Its writes are held for the next writer while another is queued, and a
+    // held write completes on settle.
+    looping_ = true;
+    do
+    {
+        again_ = false;
+        if (queue_.empty())
+            break;
+
+        writing_ = true;
+        socket_->hold(queue_.size() > one);
+        queue_.front().call();
+        socket_->settle();
+    }
+    while (again_);
+    looping_ = false;
 }
 
 void proxy::handle_write(const code& ec, size_t bytes) NOEXCEPT

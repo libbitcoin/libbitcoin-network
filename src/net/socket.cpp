@@ -436,6 +436,15 @@ void socket::hold(bool enable) NOEXCEPT
 {
     BC_ASSERT(stranded());
     hold_ = enable;
+    settling_ = enable;
+}
+
+void socket::settle() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    settling_ = false;
+    if (settled_)
+        std::exchange(settled_, {})();
 }
 
 bool socket::holding() const NOEXCEPT
@@ -448,6 +457,7 @@ void socket::release(count_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     hold_ = false;
+    settling_ = false;
     transmit({}, false, handler);
 }
 
@@ -471,6 +481,13 @@ void socket::transmit(const std::span<const io::const_buffer>& buffers,
     if (hold && hold_ && size <= floored_subtract(bound, held))
     {
         response_.append(buffers);
+        if (settling_)
+        {
+            settling_ = false;
+            settled_ = std::bind(handler, error::success, size);
+            return;
+        }
+
         io::post(strand_, std::bind(handler, error::success, size));
         return;
     }
