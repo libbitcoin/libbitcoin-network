@@ -29,6 +29,12 @@ namespace network {
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 logger::logger() NOEXCEPT
+  : logger(processing_priority::low)
+{
+}
+
+logger::logger(processing_priority priority) NOEXCEPT
+  : pool_(one, priority)
 {
 }
 
