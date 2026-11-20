@@ -123,6 +123,9 @@ public:
     /// Construct a started (live) logger.
     logger() NOEXCEPT;
 
+    /// Construct a started (live) logger with the given thread priority.
+    logger(processing_priority priority) NOEXCEPT;
+
     /// Block on logger threadpool join.
     ~logger() NOEXCEPT;
 
@@ -182,7 +185,7 @@ private:
         uint8_t level) NOEXCEPT;
 
     // This is protected by strand.
-    threadpool pool_{ one, processing_priority::low };
+    threadpool pool_;
 
     // These are thread safe.
     std::atomic_bool stopped_{ false };

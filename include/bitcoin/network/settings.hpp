@@ -409,7 +409,7 @@ struct BCT_API settings
         peer_inbound(system::chain::selection context) NOEXCEPT
           : tcp_server("inbound"), sam()
         {
-            connections = 100;
+            connections = 200;
 
             switch (context)
             {

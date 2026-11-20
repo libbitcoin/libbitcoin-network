@@ -316,6 +316,17 @@ void socket::do_serialize(
 {
     BC_ASSERT(stranded());
 
+    // Held writes that fill the buffer are sent before serializing behind
+    // them, as a writer requires room beyond the byte it reserves.
+    const auto room = floored_subtract(response_.max_size(), response_.size());
+    if (room <= one && holding())
+    {
+        transmit({}, false,
+            std::bind(&socket::handle_serialize<Serializer>,
+                shared_from_this(), _1, _2, out, total, handler));
+        return;
+    }
+
     while (true)
     {
         code ec{};
