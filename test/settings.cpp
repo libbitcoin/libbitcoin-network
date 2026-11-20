@@ -73,7 +73,7 @@ BC_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BC_REQUIRE_EQUAL(instance.outbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 5u);
     BC_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
-    BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BC_REQUIRE_EQUAL(instance.inbound.connections, 200u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 8333u);
     BC_REQUIRE_EQUAL(instance.inbound.bind_port, 8333u);
@@ -89,7 +89,7 @@ BC_AUTO_TEST_CASE(settings__construct__testnet3__expected)
     BC_REQUIRE_EQUAL(instance.outbound.connections, 50u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 10u);
     BC_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
-    BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BC_REQUIRE_EQUAL(instance.inbound.connections, 200u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 18333u);
     BC_REQUIRE_EQUAL(instance.inbound.bind_port, 18333u);
@@ -105,7 +105,7 @@ BC_AUTO_TEST_CASE(settings__construct__testnet4__expected)
     BC_REQUIRE_EQUAL(instance.outbound.connections, 50u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 10u);
     BC_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
-    BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BC_REQUIRE_EQUAL(instance.inbound.connections, 200u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 48333u);
     BC_REQUIRE_EQUAL(instance.inbound.bind_port, 48333u);
@@ -120,7 +120,7 @@ BC_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BC_REQUIRE_EQUAL(instance.outbound.connections, 0u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 5u);
     BC_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 0u);
-    BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BC_REQUIRE_EQUAL(instance.inbound.connections, 200u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 18444u);
     BC_REQUIRE_EQUAL(instance.inbound.bind_port, 18444u);
@@ -136,7 +136,7 @@ BC_AUTO_TEST_CASE(settings__construct__signet__expected)
     BC_REQUIRE_EQUAL(instance.outbound.connections, 100u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 5u);
     BC_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
-    BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BC_REQUIRE_EQUAL(instance.inbound.connections, 200u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 38333u);
     BC_REQUIRE_EQUAL(instance.inbound.bind_port, 38333u);
@@ -152,7 +152,7 @@ BC_AUTO_TEST_CASE(settings__construct__testnet5__expected)
     BC_REQUIRE_EQUAL(instance.outbound.connections, 50u);
     BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 10u);
     BC_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
-    BC_REQUIRE_EQUAL(instance.inbound.connections, 100u);
+    BC_REQUIRE_EQUAL(instance.inbound.connections, 200u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.front().port(), 18353u);
     BC_REQUIRE_EQUAL(instance.inbound.bind_port, 18353u);
@@ -862,7 +862,7 @@ BC_AUTO_TEST_CASE(settings__peer_inbound__mainnet__expected)
     // tcp_server
     BC_REQUIRE_EQUAL(instance.name, "inbound");
     BC_REQUIRE_EQUAL(instance.binds.size(), 1u);
-    BC_REQUIRE_EQUAL(instance.connections, 100u);
+    BC_REQUIRE_EQUAL(instance.connections, 200u);
     BC_REQUIRE_EQUAL(instance.inactivity_minutes, 10u);
     BC_REQUIRE_EQUAL(instance.expiration_minutes, 60u);
     BC_REQUIRE_EQUAL(instance.maximum_request, maximum_request);
