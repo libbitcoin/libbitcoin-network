@@ -61,6 +61,12 @@ static id_option to_identity(const system::json::value& model) NOEXCEPT
     return {};
 }
 
+static bool is_null_params(const params_t& params) NOEXCEPT
+{
+    return std::holds_alternative<value_t>(params) &&
+        std::holds_alternative<null_t>(std::get<value_t>(params).value());
+}
+
 // Convert the parsed model to a request message and validate. Tolerated
 // jrpc violations are reported as lax flags (the channel validates policy).
 static code to_request(rpc::request& value) NOEXCEPT
@@ -102,11 +108,12 @@ static code to_request(rpc::request& value) NOEXCEPT
 
     if (message.jsonrpc == version::v1)
     {
-        if (!params.has_value())
-            return error::jsonrpc_v1_requires_params;
+        // Absent or null params are empty, and an absent id is null.
+        if (!params.has_value() || is_null_params(params.value()))
+            params.emplace(array_t{});
 
         if (!message.id.has_value())
-            return error::jsonrpc_v1_requires_id;
+            message.id.emplace(null_t{});
 
         if (std::holds_alternative<object_t>(params.value()))
             value.lax_named = true;

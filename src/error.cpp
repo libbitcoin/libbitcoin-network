@@ -317,9 +317,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // json-rpc error
     { jsonrpc_invalid_version, "jsonrpc invalid version" },
     { jsonrpc_requires_method, "jsonrpc requires method" },
-    { jsonrpc_v1_requires_params, "jsonrpc v1 requires params" },
     { jsonrpc_v1_requires_array_params, "jsonrpc v1 requires array params" },
-    { jsonrpc_v1_requires_id, "jsonrpc v1 requires id" },
     { jsonrpc_params_not_collection, "jsonrpc params not collection" },
     { jsonrpc_reader_stall, "jsonrpc reader stall" },
     { jsonrpc_reader_exception, "jsonrpc reader exception" },
@@ -572,9 +570,7 @@ bool is_request_fault(const code& ec) NOEXCEPT
         || ec == error::json_unknown
         || ec == error::jsonrpc_invalid_version
         || ec == error::jsonrpc_requires_method
-        || ec == error::jsonrpc_v1_requires_params
         || ec == error::jsonrpc_v1_requires_array_params
-        || ec == error::jsonrpc_v1_requires_id
         || ec == error::jsonrpc_params_not_collection
         || ec == error::jsonrpc_reader_exception
         || ec == error::jsonrpc_batch_empty

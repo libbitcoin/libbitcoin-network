@@ -1151,15 +1151,11 @@ BC_FIXTURE_TEST_CASE(channel_http__resume__non_string_method__invalid_request_wi
     BC_REQUIRE(error::is_request_fault(http_await(stopped)));
 }
 
-BC_FIXTURE_TEST_CASE(channel_http__resume__v1_missing_id__invalid_request_null_id_and_stopped, http_channel_fixture)
+BC_FIXTURE_TEST_CASE(channel_http__resume__v1_missing_id_and_params__dispatched, http_channel_fixture)
 {
     start(http_ok);
-    send(http_post(R"({"method":"echo","params":[]})"));
-
-    const auto fault = system::json::parse(receive().body()).as_object();
-    BC_REQUIRE(fault.at("id").is_null());
-    BC_REQUIRE_EQUAL(fault.at("error").at("code").to_number<int64_t>(), rpc::reserved::invalid_request);
-    BC_REQUIRE_EQUAL(http_await(stopped), error::jsonrpc_v1_requires_id);
+    send(http_post(R"({"method":"echo"})"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 200u);
 }
 
 BC_FIXTURE_TEST_CASE(channel_http__resume__empty_batch__invalid_request_and_stopped, http_channel_fixture)
