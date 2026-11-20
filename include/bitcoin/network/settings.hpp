@@ -301,6 +301,9 @@ struct BCT_API settings
         config::endpoints peers{};
         config::addresses friends{};
 
+        /// Request the memory pool of each manual peer once relaying (bip35).
+        bool request_mempool{ false };
+
         /// Helpers.
         bool enabled() const NOEXCEPT override;
         virtual bool peered(

@@ -1048,6 +1048,7 @@ BC_AUTO_TEST_CASE(settings__peer_manual__mainnet__expected)
     // manual
     BC_REQUIRE(instance.peers.empty());
     BC_REQUIRE(instance.friends.empty());
+    BC_REQUIRE(!instance.request_mempool);
 }
 
 BC_AUTO_TEST_CASE(settings__peer_manual_initialize__configured__expected_port_matching)
