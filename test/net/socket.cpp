@@ -1169,6 +1169,58 @@ BC_FIXTURE_TEST_CASE(socket__hold__exceeds_minimum__written, acceptor_fixture)
     instance->stop();
 }
 
+BC_FIXTURE_TEST_CASE(socket__hold__full_buffer__held_sent_before_serialized, acceptor_fixture)
+{
+    static const std::string data(64, 'a');
+    auto params = clear;
+    params.minimum_buffer = 64;
+    params.maximum_buffer = 64;
+    const awaiter<code> accepted{};
+    const auto instance = accept(params, accepted);
+    BC_REQUIRE_EQUAL(accepted.get(), error::success);
+
+    json::body<>::value_type content{};
+    content.model = system::json::object{ { "key", "value" } };
+    const auto expected = system::json::serialize(content.model);
+    const auto response = std::make_shared<http::response>();
+    response->result(http::status::ok);
+    response->body() = std::move(content);
+    response->prepare_payload();
+
+    const awaiter<bool> held{};
+    const awaiter<code> written{};
+    io::post(instance->strand(), [=]() NOEXCEPT
+    {
+        instance->hold(true);
+        instance->tcp_write({ data.data(), data.size() }, [=](const code& ec, size_t size) NOEXCEPT
+        {
+            held.set(!ec && size == data.size() && instance->holding());
+            instance->hold(false);
+            instance->http_write(std::move(*response), [=](const code& ec, size_t) NOEXCEPT
+            {
+                written.set(ec);
+            });
+        });
+        instance->settle();
+    });
+
+    BC_REQUIRE(held.get());
+    BC_REQUIRE_EQUAL(written.get(), error::success);
+
+    code ec{};
+    std::string prefix(data.size(), '\0');
+    io::read(client, io::buffer(prefix), ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(prefix, data);
+
+    http::flat_buffer read_buffer{};
+    http::message<false, http::string_body> received{};
+    http::read(client, read_buffer, received, ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE_EQUAL(received.body(), expected);
+    instance->stop();
+}
+
 BC_FIXTURE_TEST_CASE(socket__release__held__written, acceptor_fixture)
 {
     static const system::data_array<2> data{ 'a', 'b' };
