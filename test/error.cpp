@@ -2268,15 +2268,6 @@ BC_AUTO_TEST_CASE(error_t__code__jsonrpc_requires_method__true_expected_message)
     BC_REQUIRE_EQUAL(ec.message(), "jsonrpc requires method");
 }
 
-BC_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_params__true_expected_message)
-{
-    constexpr auto value = error::jsonrpc_v1_requires_params;
-    const auto ec = code(value);
-    BC_REQUIRE(ec);
-    BC_REQUIRE(ec == value);
-    BC_REQUIRE_EQUAL(ec.message(), "jsonrpc v1 requires params");
-}
-
 BC_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_array_params__true_expected_message)
 {
     constexpr auto value = error::jsonrpc_v1_requires_array_params;
@@ -2284,15 +2275,6 @@ BC_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_array_params__true_expected
     BC_REQUIRE(ec);
     BC_REQUIRE(ec == value);
     BC_REQUIRE_EQUAL(ec.message(), "jsonrpc v1 requires array params");
-}
-
-BC_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_id__true_expected_message)
-{
-    constexpr auto value = error::jsonrpc_v1_requires_id;
-    const auto ec = code(value);
-    BC_REQUIRE(ec);
-    BC_REQUIRE(ec == value);
-    BC_REQUIRE_EQUAL(ec.message(), "jsonrpc v1 requires id");
 }
 
 BC_AUTO_TEST_CASE(error_t__code__jsonrpc_params_not_collection__true_expected_message)
@@ -2544,9 +2526,7 @@ BC_AUTO_TEST_CASE(is_request_fault__invalid_request__true)
     BC_REQUIRE(error::is_request_fault(error::json_unknown));
     BC_REQUIRE(error::is_request_fault(error::jsonrpc_invalid_version));
     BC_REQUIRE(error::is_request_fault(error::jsonrpc_requires_method));
-    BC_REQUIRE(error::is_request_fault(error::jsonrpc_v1_requires_params));
     BC_REQUIRE(error::is_request_fault(error::jsonrpc_v1_requires_array_params));
-    BC_REQUIRE(error::is_request_fault(error::jsonrpc_v1_requires_id));
     BC_REQUIRE(error::is_request_fault(error::jsonrpc_params_not_collection));
     BC_REQUIRE(error::is_request_fault(error::jsonrpc_reader_exception));
     BC_REQUIRE(error::is_request_fault(error::jsonrpc_batch_empty));

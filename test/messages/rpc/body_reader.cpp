@@ -890,7 +890,7 @@ BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_boolean_id__jsonrpc_reader_excepti
     BC_REQUIRE(ec == error::jsonrpc_reader_exception);
 }
 
-BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_without_params__jsonrpc_v1_requires_params)
+BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_without_params__empty_params)
 {
     const std::string_view text{ R"({"id":1,"method":"getblockcount"})" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -905,11 +905,34 @@ BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_without_params__jsonrpc_v1_require
     BC_REQUIRE(!ec);
 
     reader.finish(ec);
-    BC_REQUIRE(ec == error::jsonrpc_v1_requires_params);
+    BC_REQUIRE(!ec);
     BC_REQUIRE(body.message.jsonrpc == version::v1);
+    BC_REQUIRE(body.message.params.has_value());
+    BC_REQUIRE(std::get<array_t>(body.message.params.value()).empty());
 }
 
-BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_without_id__jsonrpc_v1_requires_id)
+BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_null_params__empty_params)
+{
+    const std::string_view text{ R"({"id":1,"method":"getblockcount","params":null})" };
+    const io::const_buffer buffer{ text.data(), text.size() };
+    rpc::request_body::value_type body{};
+    request_header header{};
+    rpc::request_body::reader reader(header, body);
+    code ec{};
+    reader.init(text.size(), ec);
+    BC_REQUIRE(!ec);
+
+    reader.put(buffer, ec);
+    BC_REQUIRE(!ec);
+
+    reader.finish(ec);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!body.lax_params);
+    BC_REQUIRE(body.message.params.has_value());
+    BC_REQUIRE(std::get<array_t>(body.message.params.value()).empty());
+}
+
+BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_without_id__null_id)
 {
     const std::string_view text{ R"({"method":"getblockcount","params":[]})" };
     const io::const_buffer buffer{ text.data(), text.size() };
@@ -924,7 +947,9 @@ BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_without_id__jsonrpc_v1_requires_id
     BC_REQUIRE(!ec);
 
     reader.finish(ec);
-    BC_REQUIRE(ec == error::jsonrpc_v1_requires_id);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(body.message.id.has_value());
+    BC_REQUIRE(std::holds_alternative<null_t>(body.message.id.value()));
 }
 
 BC_AUTO_TEST_CASE(rpc_body_reader__finish__v1_object_params__lax_named)
