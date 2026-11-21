@@ -379,13 +379,14 @@ inline void CLASS::send_result(rpc::value_t&& result,
 }
 
 TEMPLATE
-inline void CLASS::send_notification(rpc::string_t&& method,
-    rpc::params_t&& notification, result_handler&& handler) NOEXCEPT
+inline void CLASS::send_notification(rpc::version version,
+    rpc::string_t&& method, rpc::params_t&& notification,
+    result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     send(rpc::request_t
     {
-        .jsonrpc = version_,
+        .jsonrpc = version,
         .method = std::move(method),
         .params = std::move(notification)
     }, std::move(handler));

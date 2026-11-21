@@ -437,12 +437,13 @@ BC_FIXTURE_TEST_CASE(channel_rpc__send_notification__request__notification_sent,
 {
     start([](const echo_channel::ptr& self, const std::string& text) NOEXCEPT
     {
-        self->send_notification("note", rpc::array_t{ rpc::value_t{ rpc::string_t{ text } } }, [](const code&) NOEXCEPT {});
+        self->send_notification(rpc::version::v2, "note", rpc::array_t{ rpc::value_t{ rpc::string_t{ text } } }, [](const code&) NOEXCEPT {});
     });
 
-    send(R"({"jsonrpc":"2.0","id":1,"method":"echo","params":["hello"]})" "\n");
+    send(R"({"id":1,"method":"echo","params":["hello"]})" "\n");
 
     const auto object = system::json::parse(receive_line()).as_object();
+    BC_REQUIRE_EQUAL(object.at("jsonrpc").as_string(), "2.0");
     BC_REQUIRE_EQUAL(object.at("method").as_string(), "note");
     BC_REQUIRE_EQUAL(object.at("params").as_array().at(0).as_string(), "hello");
     BC_REQUIRE(!object.contains("id"));
