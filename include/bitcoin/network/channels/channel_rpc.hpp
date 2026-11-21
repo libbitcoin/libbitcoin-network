@@ -64,8 +64,9 @@ public:
         result_handler&& handler) NOEXCEPT;
     inline void send_result(rpc::value_t&& result,
         result_handler&& handler) NOEXCEPT;
-    inline void send_notification(rpc::string_t&& method,
-        rpc::params_t&& notification, result_handler&& handler) NOEXCEPT;
+    inline void send_notification(rpc::version version,
+        rpc::string_t&& method, rpc::params_t&& notification,
+        result_handler&& handler) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     inline void resume() NOEXCEPT override;

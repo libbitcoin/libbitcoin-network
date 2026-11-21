@@ -54,12 +54,12 @@ inline void CLASS::send_result(rpc::value_t&& result) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::send_notification(rpc::string_t&& method,
-    rpc::params_t&& notification) NOEXCEPT
+inline void CLASS::send_notification(rpc::version version,
+    rpc::string_t&& method, rpc::params_t&& notification) NOEXCEPT
 {
     using namespace std::placeholders;
-    channel_->send_notification(std::move(method), std::move(notification),
-        std::bind(&CLASS::handle_send,
+    channel_->send_notification(version, std::move(method),
+        std::move(notification), std::bind(&CLASS::handle_send,
             shared_from_base<CLASS>(), _1));
 }
 
@@ -84,11 +84,12 @@ inline void CLASS::send_result(rpc::value_t&& result,
 }
 
 TEMPLATE
-inline void CLASS::send_notification(rpc::string_t&& method,
-    rpc::params_t&& notification, result_handler&& handler) NOEXCEPT
+inline void CLASS::send_notification(rpc::version version,
+    rpc::string_t&& method, rpc::params_t&& notification,
+    result_handler&& handler) NOEXCEPT
 {
-    channel_->send_notification(std::move(method), std::move(notification),
-        std::move(handler));
+    channel_->send_notification(version, std::move(method),
+        std::move(notification), std::move(handler));
 }
 
 } // namespace network
