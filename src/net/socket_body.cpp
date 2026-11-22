@@ -35,13 +35,12 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // BODY (read).
 // ----------------------------------------------------------------------------
-// The body_ methods accept any http body (reader/writer) to read/write a tcp
-// socket. For http read/write use the http_ methods. The rpc_ methods are just
-// a specialization of these methods, passing the rpc::body<> types. For simple
-// fixed-size tcp use the tcp_ methods, and for simple framed ws use the ws_
-// methods. The body methods require fixed size or framed read/write. The json
-// and json-rpc bodies are internally framed by json, so can read/write over a
-// raw tcp socket (electrum) or a framed websocket (btcd).
+// body_ methods accept any http body (reader/writer) to read/write tcp socket.
+// For http read/write use http_ methods. rpc_ methods specialize these methods,
+// passing rpc::body<> types. For simple fixed-size tcp use tcp_ methods, and
+// for simple framed ws use ws_ methods. Body methods require fixed size or
+// framed read/write. json and json-rpc bodies are internally framed by json, so
+// can read/write over raw tcp socket (electrum) or framed websocket (btcd).
 
 void socket::body_read(http::flat_buffer& buffer, http::request& request,
     count_handler&& handler) NOEXCEPT
@@ -59,8 +58,8 @@ void socket::body_read(http::flat_buffer& buffer, http::request& request,
 }
 
 // private
-// Batchable bodies deliver each message by pausing the parse, with residue
-// carried in the buffer to the next logical read.
+// Batchable bodies deliver each message by pausing parse, with residue carried
+// in buffer to next logical read.
 void socket::handle_body_read(const code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
@@ -71,10 +70,10 @@ void socket::handle_body_read(const code& ec, size_t size,
 // Body (write).
 // ----------------------------------------------------------------------------
 
-// A json body serializes through the retained buffer, which chunks the write
-// at its bound. Stream and peer bodies serialize into it whole, within its
-// bound. Other bodies write from caller memory.
-// The buffer is returned to the minimum once the write has completed.
+// Json body serializes through retained buffer, which chunks write at its
+// bound. Stream and peer bodies serialize into it whole, within its bound.
+// Other bodies write from caller memory.
+// Buffer returned to minimum once write has completed.
 void socket::assign_buffer(http::body::value_type& body) NOEXCEPT
 {
     const auto assign = [this](json::json_value& value) NOEXCEPT

@@ -28,8 +28,8 @@ namespace network {
 /// Not thread safe.
 /// Used in connector to race between timer (connection timeout) and connect.
 /// race_speed<Size> invokes complete(args) provided at start(complete), with
-/// args from first call to finish(args), upon the last expected invocation of
-/// finish(...) based on the templatized Size number of expected calls.
+/// args from first call to finish(args), upon last expected invocation of
+/// finish(...) based on templatized Size number of expected calls.
 template <size_t Size, typename... Args>
 class race_speed final
 {

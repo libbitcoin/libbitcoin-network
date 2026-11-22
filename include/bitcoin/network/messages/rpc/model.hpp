@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// This is a document object model for extended json-rpc.
+/// Document object model for extended json-rpc.
 /// Extensions consist of int#_t, uint#_t, and any_t types.
 /// any_t accepts shared_ptr<T> and exposes shared_ptr<T> via dispatcher<>.
 
@@ -71,7 +71,7 @@ struct value_t
         uint64_t,
         
         /// type-erased shared_ptr<Type>, not json deserializable.
-        /// Pass ptr via any_t and specify it directly in the handler.
+        /// Pass ptr via any_t and specify it directly in handler.
         any_t,
 
         /// Embeds json DOM.
@@ -196,14 +196,13 @@ BCT_API bool json_cast(boolean_t& out, const string_t& value) NOEXCEPT;
 BCT_API bool json_cast(string_t& out, boolean_t value) NOEXCEPT;
 BCT_API bool json_cast(string_t& out, number_t value) NOEXCEPT;
 
-/// A number as an exact count of its 10^-decimals units, false if inexact,
-/// negative or out of range. A number is exact if it is the nearest double to
-/// such a count.
+/// Number as exact count of its 10^-decimals units, false if inexact, negative
+/// or out of range. Number is exact if it is nearest double to such count.
 BCT_API bool to_units(uint64_t& out, number_t value,
     uint8_t decimals) NOEXCEPT;
 
-/// A number, or a string cast to a number, as an exact count of its
-/// 10^-decimals units, false if another type or not exact.
+/// Number, or string cast to number, as exact count of its 10^-decimals units,
+/// false if another type or not exact.
 BCT_API bool to_units(uint64_t& out, const value_t& value,
     uint8_t decimals) NOEXCEPT;
 

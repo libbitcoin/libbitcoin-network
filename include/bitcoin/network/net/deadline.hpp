@@ -28,8 +28,8 @@ namespace network {
 
 /// Not thread safe, non-virtual.
 /// Class wrapper for io::steady_timer (restartable).
-/// This simplifies invocation and makes timer firing and cancellation
-/// conditions safe for shared objects.
+/// Simplifies invocation and makes timer firing and cancellation conditions
+/// safe for shared objects.
 class BCT_API deadline final
   : public std::enable_shared_from_this<deadline>, protected tracker<deadline>
 {

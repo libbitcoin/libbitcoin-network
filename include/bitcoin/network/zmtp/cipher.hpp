@@ -27,11 +27,11 @@ namespace libbitcoin {
 namespace network {
 namespace zmtp {
 
-/// The CurveZMQ (rfc.zeromq.org/spec/26) mechanism state of one connection.
-/// Boxes are NaCl crypto_box (x25519, hsalsa20, xsalsa20-poly1305). The
-/// handshake commands (HELLO, WELCOME, INITIATE, READY) and MESSAGE are
-/// produced and consumed as ZMTP command bodies (name-length, name, fields),
-/// framing being left to the stream. Not thread safe.
+/// CurveZMQ (rfc.zeromq.org/spec/26) mechanism state of one connection.
+/// Boxes are NaCl crypto_box (x25519, hsalsa20, xsalsa20-poly1305). Handshake
+/// commands (HELLO, WELCOME, INITIATE, READY) and MESSAGE are produced and
+/// consumed as ZMTP command bodies (name-length, name, fields), framing being
+/// left to stream. Not thread safe.
 class BCT_API cipher final
 {
 public:
@@ -78,8 +78,8 @@ public:
     const key& peer_key() const NOEXCEPT;
 
     /// Handshake (client: hello, initiate, complete; server: welcome, ready).
-    /// Each returns false on any protocol violation, after which the
-    /// connection must be dropped. The out parameters are command bodies.
+    /// Each returns false on any protocol violation, after which connection
+    /// must be dropped. Out parameters are command bodies.
     bool hello(system::data_chunk& out) NOEXCEPT;
     bool welcome(system::data_chunk& out, const span& hello) NOEXCEPT;
     bool initiate(system::data_chunk& out, const span& welcome,
@@ -93,8 +93,8 @@ public:
     bool encode(system::data_chunk& out, uint8_t flags,
         const span& body) NOEXCEPT;
 
-    /// Unbox a MESSAGE command body into frame flags and body (after
-    /// handshake). False if the nonce is not increasing or the tag fails.
+    /// Unbox MESSAGE command body into frame flags and body (after handshake).
+    /// False if nonce is not increasing or tag fails.
     bool decode(uint8_t& flags, system::data_chunk& body,
         const span& message) NOEXCEPT;
 

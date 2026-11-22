@@ -31,9 +31,9 @@ namespace ws {
 /// A handshake response.
 using response = http::message<false, http::string_body>;
 
-/// Validate a websocket upgrade request (rfc6455, version 13) and set the
-/// response: switching protocols on success, otherwise an error status (with
-/// the reason as body, or the supported version).
+/// Validate websocket upgrade request (rfc6455, version 13)
+/// and set response: switching protocols on success, otherwise
+/// error status (with reason as body, or supported version).
 BCT_API code accept(response& out, const http::request_header& request) NOEXCEPT;
 
 } // namespace ws

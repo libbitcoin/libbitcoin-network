@@ -34,9 +34,9 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// The message is framed, so reads are exact (see socket_body.cpp for the
-// taxonomy), obtaining the heading and then the payload it indicates. Writes
-// pass the messages::peer::body type to the body_ methods.
+// Message is framed, so reads are exact (see socket_body.cpp for taxonomy),
+// obtaining heading and then payload it indicates. Writes pass
+// messages::peer::body type to body_ methods.
 
 void socket::peer_read(data_chunk& buffer, frame& message,
     count_handler&& handler) NOEXCEPT

@@ -30,8 +30,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 /// Used in model to support dispatch of complex objects.
 /// Similar to std::any, but preserves fixed stack size through shared_ptr.
-/// This allows it to participate in a std::variant type without inflation.
-/// Also differs in that a move will fully remove the original inner object.
+/// Allows it to participate in std::variant type without inflation.
+/// Also differs in that move fully removes original inner object.
 class any
 {
 public:

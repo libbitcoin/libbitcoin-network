@@ -31,9 +31,9 @@ namespace io {
 
 namespace detail { struct timer_state; }
 
-/// Not thread safe. A timer on the steady clock. A wait completes on the
-/// executor with success at expiry, or with operation_canceled if canceled or
-/// the expiry is changed first.
+/// Not thread safe. Timer on steady clock.
+/// Wait completes on executor with success at expiry, or with
+/// operation_canceled if canceled or expiry changed first.
 class BCT_API steady_timer
 {
 public:

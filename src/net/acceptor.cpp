@@ -34,7 +34,7 @@ using namespace std::placeholders;
 
 // Construct.
 // ----------------------------------------------------------------------------
-// Calls are stranded to protect the acceptor member.
+// Calls stranded to protect acceptor member.
 
 acceptor::acceptor(const logger& log, io::strand& strand,
     io::context& service, std::atomic_bool& suspended,
@@ -155,8 +155,8 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
     const auto socket = std::make_shared<network::socket>(log, service_,
         parameters_, proxied());
 
-    // Posts handle_accept to the acceptor's strand.
-    // Establishes a socket connection by waiting on the socket.
+    // Posts handle_accept to acceptor's strand.
+    // Establishes socket connection by waiting on socket.
     socket->accept(acceptor_,
         std::bind(&acceptor::handle_accept,
             shared_from_this(), _1, socket, std::move(handler)));

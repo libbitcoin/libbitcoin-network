@@ -55,7 +55,7 @@ const session_manual::options_t& session_manual::options() const NOEXCEPT
 
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
-// Manual connections are always enabled.
+// Manual connections always enabled.
 
 void session_manual::start(result_handler&& handler) NOEXCEPT
 {

@@ -38,7 +38,7 @@ using namespace network::http;
 using namespace std::placeholders;
 
 // local
-// The status answering a request that the parser rejects (rfc9112 5.1, 6.3).
+// Status answering request that parser rejects (rfc9112 5.1, 6.3).
 inline status to_status(const code& ec) NOEXCEPT
 {
     if (ec == error::header_limit)
@@ -144,8 +144,8 @@ void channel_http::handle_receive(const code& ec, size_t LOG_ONLY(bytes),
             return;
         }
 
-        // Accept sends the 101 and switches the socket to ws framing.
-        // Don't dispatch the upgrade request, just accept and restart.
+        // Accept sends 101 and switches socket to ws framing.
+        // Don't dispatch upgrade request, accept and restart.
         if (const auto code = accept_websocket(*request))
         {
             stop(code);
@@ -197,12 +197,12 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Subscribers are notified in attach order, a claiming subscriber informs
-    // subsequent subscribers (e.g. a terminal default responder).
+    // Subscribers notified in attach order, claiming subscriber informs
+    // subsequent subscribers (e.g. terminal default responder).
     claimed_ = false;
 
-    // Basic authorization is carried by http headers. ws frames and tcp
-    // messages carry none, so authorization is dispatched to the protocol.
+    // Basic authorization carried by http headers. ws frames and tcp messages
+    // carry none, so authorization is dispatched to protocol.
     if (!websocket() && !downgraded() && !authorized())
     {
         send({ status::unauthorized, request->version() },
@@ -228,9 +228,9 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
             return;
         }
 
-        // Batch is not supported over ws. Batching amortizes http request
-        // overhead, which ws does not incur, so pipelining obtains the same
-        // result without confining the set to a single frame.
+        // Batch not supported over ws. Batching amortizes http request
+        // overhead, which ws does not incur, so pipelining obtains same result
+        // without confining set to single frame.
         if (websocket() && batched)
         {
             reject(error::jsonrpc_batch_unsupported, *request);
@@ -302,7 +302,7 @@ status channel_http::to_rpc_status(const rpc::response_t&) const NOEXCEPT
 }
 
 // private
-// Lax json-rpc is allowed only where the service tolerates it.
+// Lax json-rpc allowed only where service tolerates it.
 code channel_http::to_fault(const rpc::request& body) const NOEXCEPT
 {
     if (body.fault)
@@ -325,8 +325,8 @@ request_ptr channel_http::create_request() const NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // The ws reader requires the body preselected, and a json-rpc body also
-    // implies detection. The http parse discards it (replaced by the parser).
+    // ws reader requires body preselected, and json-rpc body also implies
+    // detection. http parse discards it (replaced by parser).
     const auto out = to_shared<request>();
     out->body() = default_body();
 
@@ -432,8 +432,8 @@ void channel_http::set_claimed() NOEXCEPT
 }
 
 // private
-// A name may be defined by more than one attached interface (an override), so
-// names are accumulated by token, first registration winning.
+// Name may be defined by more than one attached interface (override), so names
+// accumulated by token, first registration winning.
 bool channel_http::registered(const std::string_view& name) const NOEXCEPT
 {
     for (auto at = methods_.find(name); at != std::string::npos;
@@ -486,8 +486,8 @@ void channel_http::handle_rejected(const code& ec,
 }
 
 // private
-// A json-rpc request that fails to parse or validate is answered before the
-// close, with its id where that is obtained.
+// Json-rpc request that fails to parse or validate is answered before close,
+// with its id where obtained.
 void channel_http::reject(const code& ec, const request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -551,8 +551,8 @@ void channel_http::reject(const code& ec, const request& request) NOEXCEPT
 }
 
 // private
-// A batched element that fails to validate is answered as a batch part
-// (json-rpc v2 unless v1), with its id where that is obtained.
+// Batched element that fails to validate is answered as batch part (json-rpc v2
+// unless v1), with its id where obtained.
 void channel_http::refuse(const code& ec, const request& request) NOEXCEPT
 {
     BC_ASSERT(stranded());

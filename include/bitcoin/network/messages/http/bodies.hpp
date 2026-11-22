@@ -187,8 +187,8 @@ using chunk_body = contiguous_body<system::data_chunk>;
 /// A body of characters.
 using string_body = contiguous_body<std::string>;
 
-/// A body of bytes in caller-owned memory (written in one buffer, or read up
-/// to its size).
+/// Body of bytes in caller-owned memory
+/// (written in one buffer, or read up to its size).
 struct span_body
 {
     using value_type = std::span<uint8_t>;
@@ -264,8 +264,8 @@ struct span_body
     };
 };
 
-/// A body of caller-provided buffers, each followed by a need_buffer while
-/// more remain to be provided.
+/// Body of caller-provided buffers, each followed by need_buffer while more
+/// remain to be provided.
 struct buffer_body
 {
     struct value_type
@@ -379,8 +379,8 @@ struct buffer_body
     };
 };
 
-/// A body serialized by the caller into the retained writer buffer (written
-/// in one buffer), or into owned memory when larger than the buffer limit.
+/// Body serialized by caller into retained writer buffer (written in one
+/// buffer), or into owned memory when larger than buffer limit.
 struct stream_body
 {
     struct value_type

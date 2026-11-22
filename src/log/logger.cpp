@@ -61,7 +61,7 @@ bool logger::stranded() const NOEXCEPT
 
 // stop
 // ----------------------------------------------------------------------------
-// Threadpool is started on construct, can only be stopped.
+// Threadpool started on construct, can only be stopped.
 
 void logger::stop(uint8_t level) NOEXCEPT
 {

@@ -26,9 +26,9 @@
 #include <bitcoin/network/protocols/protocol_version_70014.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
-// sendaddrv2 is a a broken protocol in that it is a formally unversioned
-// message, though Satoshi doesn't send until receiving version >= 70016.
-// It must be sent/received before verack (and sent after version receipt).
+// sendaddrv2 is a broken protocol in that it is formally unversioned message,
+// though Satoshi doesn't send until receiving version >= 70016.
+// Must be sent/received before verack (and sent after version receipt).
 
 namespace libbitcoin {
 namespace network {

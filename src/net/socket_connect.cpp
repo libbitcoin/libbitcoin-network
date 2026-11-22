@@ -31,14 +31,13 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Accept.
 // ----------------------------------------------------------------------------
-// Closure of the acceptor, not the socket, releases the async_accept handler.
-// The socket is not guarded during async_accept. This is required so the
-// acceptor may be guarded from its own strand while preserving hiding of
-// socket internals. This makes concurrent calls unsafe, however only the
-// acceptor (a socket factory) requires access to the socket at this time.
-// network::acceptor both invokes this call in the network strand and
-// initializes the io::acceptor with the network strand. So the call to
-// acceptor.async_accept invokes its handler on that strand as well.
+// Closure of acceptor, not socket, releases async_accept handler. Socket not
+// guarded during async_accept. Required so acceptor may be guarded from its own
+// strand while preserving hiding of socket internals. Makes concurrent calls
+// unsafe, however only acceptor (a socket factory) requires access to socket.
+// network::acceptor both invokes this call in network strand and initializes
+// io::acceptor with network strand. So call to acceptor.async_accept invokes
+// its handler on that strand as well.
 
 void socket::accept(io::acceptor& acceptor,
     result_handler&& handler) NOEXCEPT
@@ -53,8 +52,8 @@ void socket::accept(io::acceptor& acceptor,
 void socket::handle_accept(code ec,
     const result_handler& handler) NOEXCEPT
 {
-    // This is running in the acceptor (not socket) execution context.
-    // socket_ and endpoint_ are not guarded here, see comments on accept.
+    // Running in acceptor (not socket) execution context.
+    // socket_ and endpoint_ not guarded here, see comments on accept.
 
     if (ec == error::operation_canceled)
     {
@@ -123,8 +122,8 @@ void socket::do_connect(const io::endpoints& range,
             shared_from_this(), _1, _2, handler));
 }
 
-// The range connect closes the socket before each attempt, discarding the
-// binding, so bound endpoints (of the bound family) are attempted singly.
+// Range connect closes socket before each attempt, discarding binding, so bound
+// endpoints (of bound family) are attempted singly.
 void socket::do_connect_bound(const io::endpoints& range, size_t index,
     const result_handler& handler) NOEXCEPT
 {
@@ -192,9 +191,9 @@ void socket::handle_connect(const code& ec, const io::endpoint& peer,
 {
     BC_ASSERT(stranded());
 
-    // The endpoint is the intended target, the address is the resolved peer.
-    // An address dial retains its metadata, a proxied peer is the local
-    // binding of the proxy server, and is set by its handshake.
+    // Endpoint is intended target, address is resolved peer. Address dial
+    // retains its metadata, proxied peer is local binding of proxy server, and
+    // is set by its handshake.
     if (!proxied_ && !address_)
         address_ = { peer };
 
@@ -267,7 +266,7 @@ void socket::handle_handshaked(const code& ec,
 }
 
 // private
-// Socket stop cancels the pending handshake, which completes the handler.
+// Socket stop cancels pending handshake, which completes handler.
 void socket::handle_handshake_timer(const code& ec) NOEXCEPT
 {
     if (!ec && !handshaked_)

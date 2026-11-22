@@ -71,9 +71,9 @@ constexpr size_t maximum_header = 14;
 /// The largest control frame payload.
 constexpr size_t maximum_control = 125;
 
-/// Parse a frame header from the front of data, returning its size, or zero
-/// with need_more if incomplete. Frames received by a server must be masked,
-/// those received by a client must not be.
+/// Parse frame header from front of data, returning its size, or zero with
+/// need_more if incomplete. Frames received by server must be masked, those
+/// received by client must not be.
 BCT_API size_t parse_header(frame_header& out,
     const std::span<const uint8_t>& data, bool server, code& ec) NOEXCEPT;
 

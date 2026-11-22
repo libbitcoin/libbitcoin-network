@@ -365,8 +365,8 @@ void CLASS::complete_body(code& ec) NOEXCEPT
         finish(ec);
 }
 
-// The line end following chunk data is parsed with the next chunk header. A
-// chunk line is bounded by the header limit.
+// Line end following chunk data parsed with next chunk header. Chunk line
+// bounded by header limit.
 TEMPLATE
 size_t CLASS::put_chunk_header(const std::string_view& data,
     code& ec) NOEXCEPT
@@ -424,8 +424,8 @@ size_t CLASS::put_chunk_header(const std::string_view& data,
     expect_crlf_ = true;
     state_ = is_zero(size) ? state::trailer : state::chunk_body;
 
-    // The trailer (and its final empty line) is parsed within the header
-    // limit, plus the final line end.
+    // Trailer (and its final empty line) parsed within header limit,
+    // plus final line end.
     if (is_zero(size))
         header_ = system::floored_subtract(header_, line_end.size());
 
@@ -467,8 +467,8 @@ code CLASS::coding_fault() const NOEXCEPT
         http_error_t::bad_content_encoding);
 }
 
-// Decoded data is put to the reader, which may pause (need_buffer), holding
-// the remainder for the next put.
+// Decoded data put to reader, which may pause (need_buffer),
+// holding remainder for next put.
 TEMPLATE
 bool CLASS::deliver(code& ec) NOEXCEPT
 {

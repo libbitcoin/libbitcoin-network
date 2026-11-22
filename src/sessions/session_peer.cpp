@@ -54,7 +54,7 @@ void session_peer::start_channel(const channel::ptr& channel,
 {
     BC_ASSERT(stranded());
 
-    // In case of a loopback, inbound and outbound are on the same strand.
+    // On loopback, inbound and outbound are on same strand.
     // Inbound does not check nonce until handshake completes, so no race.
     if (!stopped())
     {

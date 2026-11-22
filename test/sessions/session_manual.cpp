@@ -105,9 +105,9 @@ public:
 
         io::post(strand_, [=]() NOEXCEPT
         {
-            // This error is eaten by handle_connect, due to retry logic.
-            // invalid_magic is a non-terminal code (timer retry).
-            // Connect result code is independent of the channel stop code.
+            // Error eaten by handle_connect, due to retry logic.
+            // invalid_magic is non-terminal code (timer retry).
+            // Connect result code independent of channel stop code.
             handler(error::invalid_magic, nullptr);
         });
     }
@@ -176,8 +176,8 @@ public:
             handshake_.set_value(true);
         }
 
-        // The handshake protocol pauses the channel upon completion, which is
-        // after the session resumes it to start the read loop, so this posts.
+        // Handshake protocol pauses channel upon completion, which is after
+        // session resumes it to start read loop, so this posts.
         io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
@@ -581,8 +581,8 @@ BC_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__servi
             return true;
         });
 
-        // connector.connect has been invoked, though its handler is pending.
-        // Stop the session after connect but before handle_connect is invoked.
+        // connector.connect invoked, though its handler is pending.
+        // Stop session after connect but before handle_connect is invoked.
         session->stop();
         stopped.set_value(true);
     });
@@ -730,8 +730,8 @@ BC_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__succ
     BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
     BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
-    // Connector is established and connect is called for all configured
-    // connections prior to completion of network run call.
+    // Connector established and connect called for all configured connections
+    // prior to completion of network run call.
     BC_REQUIRE(net.get_connector());
     BC_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
@@ -766,9 +766,9 @@ BC_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__suc
     BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
     BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
-    // Connector is established and connect is called for all configured
-    // connections prior to completion of network run call. The last connection
-    // is reflected by the mock connector as connections invoked in order.
+    // Connector established and connect called for all configured connections
+    // prior to completion of network run call. Last connection reflected by
+    // mock connector, as connections invoked in order.
     BC_REQUIRE(net.get_connector());
     BC_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }

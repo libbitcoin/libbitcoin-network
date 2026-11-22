@@ -82,8 +82,8 @@ public:
         const auto socket = std::make_shared<network::socket>(log, service_,
             std::move(params));
 
-        // Must be asynchronous or is an infinite recursion.
-        // This error code will set the re-listener timer and channel pointer is ignored.
+        // Must be asynchronous or is infinite recursion.
+        // This error code sets re-listener timer, channel pointer ignored.
         io::post(strand_, [=]() NOEXCEPT
         {
             accepted(error::success);
@@ -211,8 +211,8 @@ public:
             handshake_.set_value(true);
         }
 
-        // The handshake protocol pauses the channel upon completion, which is
-        // after the session resumes it to start the read loop, so this posts.
+        // Handshake protocol pauses channel upon completion, which is after
+        // session resumes it to start read loop, so this posts.
         io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {

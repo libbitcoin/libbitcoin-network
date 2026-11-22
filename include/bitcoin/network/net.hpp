@@ -156,18 +156,18 @@ public:
 
     /// Subscriptions.
     /// -----------------------------------------------------------------------
-    /// A channel pointer should only be retained when subscribed to its stop,
-    /// and must be unretained in stop handler invoke, otherwise it will leak.
+    /// Channel pointer should only be retained when subscribed to its stop, and
+    /// must be unretained in stop handler invoke, otherwise it will leak.
     /// To subscribe to disconnections, subscribe to each channel stop.
     /// Subscriptions and unsubscriptions are allowed before start.
 
     /// Subscribe to connection creation.
-    /// A call after close invokes handlers with error::subscriber_stopped.
+    /// Call after close invokes handlers with error::subscriber_stopped.
     virtual void subscribe_connect(channel_notifier&& handler,
         channel_completer&& complete) NOEXCEPT;
 
     /// Subscribe to service stop.
-    /// A call after close invokes handlers with error::subscriber_stopped.
+    /// Call after close invokes handlers with error::subscriber_stopped.
     virtual void subscribe_close(stop_handler&& handler,
         stop_completer&& complete) NOEXCEPT;
 

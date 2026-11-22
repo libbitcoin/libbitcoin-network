@@ -32,8 +32,8 @@ public:
     virtual arena* get_arena() NOEXCEPT = 0;
 };
 
-/// Default implementation of a thread safe arena container.
-/// This returns the default_arena, which passes through to new/delete.
+/// Default implementation of thread safe arena container.
+/// Returns default_arena, which passes through to new/delete.
 // clang++ warning on virtual method in final class (stoopid).
 class BCT_API default_memory /* final */
   : public memory

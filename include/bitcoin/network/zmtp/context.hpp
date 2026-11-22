@@ -27,20 +27,19 @@ namespace network {
 namespace zmtp {
 
 /// Shared configuration for native ZMTP (ZeroMQ 3.x) transport sockets.
-/// The owner must outlive all sockets created with a reference to it. The
-/// context selects the zmtp upgrade, as p2ps::context selects p2ps, and
-/// holds the server long-term keypair of the CURVE mechanism when one is
-/// configured (otherwise the NULL mechanism is used), and the public keys
-/// of the authorized clients (any client if none).
+/// Owner must outlive all sockets created with reference to it. Context selects
+/// zmtp upgrade, as p2ps::context selects p2ps, and holds server long-term
+/// keypair of CURVE mechanism when one is configured (otherwise NULL mechanism
+/// is used), and public keys of authorized clients (any client if none).
 class BCT_API context
 {
 public:
     /// The NULL mechanism.
     context() NOEXCEPT;
 
-    /// The CURVE mechanism with the given server long-term secret key and
-    /// authorized client public keys. The mechanism is NULL if the secret or
-    /// any client key is not of key_size or the secret is invalid.
+    /// CURVE mechanism with given server long-term secret key and authorized
+    /// client public keys. Mechanism is NULL if secret or any client key is not
+    /// of key_size or secret is invalid.
     context(const system::data_chunk& secret,
         const system::data_stack& clients={}) NOEXCEPT;
 

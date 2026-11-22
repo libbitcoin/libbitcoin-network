@@ -28,8 +28,8 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// Broadcasts notifications to subscriber(s) of the method signature implied
-/// by request. Adds a notify_one(key, ...) method for targeted desubscribe.
+/// Broadcasts notifications to subscriber(s) of method signature implied by
+/// request. Adds notify_one(key, ...) method for targeted desubscribe.
 template <typename Interface>
 class broadcaster
   : public dispatcher<Interface>

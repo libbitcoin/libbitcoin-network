@@ -212,8 +212,8 @@ socket_setup_fixture::socket_setup_fixture(zmtp_role value, const std::string& t
     accepted = promised.get_future().get();
 }
 
-// The peer is closed first, so the socket sees an ordered end of stream, and
-// the pool is joined before any member is destroyed.
+// Peer closed first, so socket sees ordered end of stream, and pool is joined
+// before any member is destroyed.
 socket_setup_fixture::~socket_setup_fixture()
 {
     peer.close();
@@ -301,8 +301,8 @@ publisher_setup_fixture::~publisher_setup_fixture()
     BC_REQUIRE(pool.join());
 }
 
-// The promise is a member, as the read is armed by one call and awaited by
-// another, and the pool is joined before it is destroyed.
+// Promise is member, as read is armed by one call and awaited by another, and
+// pool is joined before it is destroyed.
 void publisher_setup_fixture::arm_read(rpc::request& request)
 {
     armed = {};

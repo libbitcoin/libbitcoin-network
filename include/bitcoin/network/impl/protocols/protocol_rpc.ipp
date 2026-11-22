@@ -26,8 +26,8 @@ namespace libbitcoin {
 namespace network {
 
 // These invoke channel::send<>, which invokes handle_send<> for continuation.
-// The handler-free methods just don't provide for a dedicated caller handler.
-// Notify methods are an exception, they do not invoke continuation (invalid).
+// Handler-free methods provide no dedicated caller handler.
+// Notify methods excepted, do not invoke continuation (invalid).
 
 TEMPLATE
 inline void CLASS::send_code(const code& ec) NOEXCEPT

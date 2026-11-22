@@ -34,7 +34,7 @@ const uint32_t get_blocks::version_minimum = level::minimum_protocol;
 const uint32_t get_blocks::version_maximum = level::maximum_protocol;
 
 // static
-// Predict the size of heights output.
+// Predict size of heights output.
 size_t get_blocks::locator_size(size_t top) NOEXCEPT
 {
     auto size = zero, step = one;
@@ -47,7 +47,7 @@ size_t get_blocks::locator_size(size_t top) NOEXCEPT
 }
 
 // static
-// This algorithm is a net best practice, not a consensus or net rule.
+// Algorithm is net best practice, not consensus or net rule.
 get_blocks::indexes get_blocks::heights(size_t top) NOEXCEPT
 {
     auto step = one;

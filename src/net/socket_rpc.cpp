@@ -31,9 +31,8 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// The transport is selected on the strand: a zmtp socket reads and writes
-// the rpc message by its role (see socket_zmtp.cpp), otherwise the message
-// is a json-rpc body over tcp.
+// Transport selected on strand: zmtp socket reads and writes rpc message by its
+// role (see socket_zmtp.cpp), otherwise message is json-rpc body over tcp.
 
 void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT

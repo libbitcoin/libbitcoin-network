@@ -38,7 +38,7 @@ shared_from_sibling() NOEXCEPT
     BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
     BC_PUSH_WARNING(NO_DEREFERENCE_NULL_POINTER)
     // Allowing unsafe downcast (presumes sibling inheritance.
-    // Safe to cast this instance to its own base (CRTP), cannot be null.
+    // Safe to cast instance to own base (CRTP), cannot be null.
     const auto self = static_cast<Shared*>(this);
     BC_POP_WARNING()
     BC_POP_WARNING()

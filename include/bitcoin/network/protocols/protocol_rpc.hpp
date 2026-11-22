@@ -66,7 +66,7 @@ protected:
         result_handler&& handler) NOEXCEPT;
 
 private:
-    // This is mostly thread safe, and used in a thread safe manner.
+    // Mostly thread safe, and used in thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
     const channel_t::ptr channel_;
 };

@@ -42,8 +42,8 @@ BC_AUTO_TEST_CASE(merkle_block__size__default__expected)
     BC_REQUIRE_EQUAL(merkle_block{}.size(level::canonical), expected);
 }
 
-// With a header present, size() must include the tx count, hashes, and flags,
-// not just the header (the terms trail a ternary and require grouping).
+// With header present, size() must include tx count, hashes, and flags, not
+// just header (terms trail a ternary and require grouping).
 BC_AUTO_TEST_CASE(merkle_block__size__with_header__includes_all_fields)
 {
     const hashes branch{ one_hash, one_hash };

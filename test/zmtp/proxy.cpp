@@ -19,10 +19,10 @@
 #include "../test.hpp"
 #include "zmtp_setup_fixture.hpp"
 
-// The proxy absorbs control (ping/pong) on the rpc read path, so the channel
-// is keepalive-blind. Every other message is delivered as an rpc request.
-// Absorption requires an armed read, so each case arms the read, writes the
-// control and the message, and then awaits the one delivered request.
+// Proxy absorbs control (ping/pong) on rpc read path, so channel is
+// keepalive-blind. Every other message is delivered as rpc request.
+// Absorption requires armed read, so each case arms read, writes control and
+// message, then awaits the one delivered request.
 
 using system::data_chunk;
 using system::data_stack;
@@ -39,8 +39,8 @@ BC_AUTO_TEST_CASE(zmtp_proxy__read__ping__pong_queued_and_read_absorbed)
     rpc::request request{};
     arm_read(request);
 
-    // The PING is absorbed and the read re-armed, so the SUBSCRIBE that
-    // follows it is the one request delivered to the channel.
+    // PING is absorbed and read re-armed, so SUBSCRIBE that follows it is the
+    // one request delivered to channel.
     const auto context_bytes = system::base16_chunk("0011223344556677");
     data_chunk ping{ 0x00, 0x00 };
     ping.insert(ping.end(), context_bytes.begin(), context_bytes.end());

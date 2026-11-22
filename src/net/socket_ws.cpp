@@ -34,8 +34,8 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 // WS (read).
 // ----------------------------------------------------------------------------
-// The flat_buffer's max_size() must be large enough to hold the complete ws
-// framed message. The read will fail if the message exceeds this limit.
+// flat_buffer's max_size() must be large enough to hold complete ws framed
+// message. Read fails if message exceeds this limit.
 
 void socket::ws_read(http::flat_buffer& out,
     count_handler&& handler) NOEXCEPT
@@ -110,8 +110,8 @@ code socket::accept_websocket(const http::request& request) NOEXCEPT
 
 // WS (framing).
 // ----------------------------------------------------------------------------
-// A read assembles one data message, answering pings and the peer's close.
-// Frames are written in order, so control frames queue behind data frames.
+// Read assembles one data message, answering pings and peer's close.
+// Frames written in order, so control frames queue behind data frames.
 
 // private
 void socket::do_ws_read_message(const ref<http::flat_buffer>& out,
@@ -221,7 +221,7 @@ void socket::handle_ws_read_message(const code& ec, size_t size,
 }
 
 // private
-// The server closes the connection once the closing handshake is complete.
+// Server closes connection once closing handshake is complete.
 void socket::handle_ws_echo(const code&, size_t,
     const ref<http::flat_buffer>& out, const count_handler& handler) NOEXCEPT
 {
@@ -233,7 +233,7 @@ void socket::handle_ws_echo(const code&, size_t,
 }
 
 // private
-// A data frame continues the message of a preceding unfinished frame.
+// Data frame continues message of preceding unfinished frame.
 void socket::ws_send_data(const io::const_buffer& data, bool binary,
     bool finish, const count_handler& handler) NOEXCEPT
 {
@@ -270,7 +270,7 @@ void socket::ws_send(ws::opcode code, const data_chunk& payload,
 }
 
 // private
-// An unsent pong answers only the most recent ping (rfc6455 5.5.3).
+// Unsent pong answers only most recent ping (rfc6455 5.5.3).
 void socket::ws_pong(const data_chunk& payload) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -337,8 +337,8 @@ void socket::handle_ws_frame(const code& ec, size_t,
     if (code == error::unknown)
         logx("ws-write", ec);
 
-    // A failed write fails the frames that follow it. These are removed before
-    // any handler runs, as a handler may queue (and write) another frame.
+    // Failed write fails frames that follow it. These are removed before any
+    // handler runs, as handler may queue (and write) another frame.
     std::deque<ws_frame::ptr> failed{};
     if (code)
     {

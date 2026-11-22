@@ -594,8 +594,8 @@ BC_AUTO_TEST_CASE(tls_server__receive__rfc8448_client_hello__rfc8448_server_hell
 
 // protected client messages
 
-// A server keyed by the rfc8448 client hello, with a client sender under the
-// rfc8448 client handshake traffic secret.
+// Server keyed by rfc8448 client hello, with client sender under rfc8448
+// client handshake traffic secret.
 struct rfc8448_setup
 {
     rfc8448_setup(bool request=false)

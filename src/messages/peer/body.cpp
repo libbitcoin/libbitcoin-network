@@ -36,9 +36,9 @@ BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
 // peer::body::reader
 // ----------------------------------------------------------------------------
-// The reader parses at most one message per read, deferring (consuming
-// nothing) until the complete frame is buffered by the caller. The fault
-// member carries parse failure detail (the returned code is generic).
+// Reader parses at most one message per read, deferring (consuming nothing)
+// until complete frame buffered by caller. Fault member carries parse failure
+// detail (returned code is generic).
 
 static size_t set_fault(frame& value, const code& fault,
     code& ec) NOEXCEPT
@@ -190,8 +190,8 @@ bool body::reader::done() const NOEXCEPT
 
 // peer::body::writer
 // ----------------------------------------------------------------------------
-// The writer translates the typed message to its serialized v1 frame, in the
-// retained buffer when the frame fits within its bound.
+// Writer translates typed message to its serialized v1 frame, in retained
+// buffer when frame fits within its bound.
 
 void body::writer::init(code& ec) NOEXCEPT
 {

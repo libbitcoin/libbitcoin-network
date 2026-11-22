@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe, non-virtual.
-/// A collection of threads that share an io context (service).
+/// Collection of threads sharing io context (service).
 class BCT_API threadpool final
 {
 public:
@@ -40,12 +40,12 @@ public:
     /// Stop and join threads.
     ~threadpool() NOEXCEPT;
 
-    /// Destroy the work keep-alive. Safe to call from any thread.
-    /// Allows threads to join when all outstanding work is complete.
+    /// Destroy work keep-alive. Safe to call from any thread.
+    /// Allows threads to join when all outstanding work complete.
     void stop() NOEXCEPT;
 
-    /// Block until all threads in the pool terminate.
-    /// Safe to call from any thread not in the threadpool.
+    /// Block until all threads in pool terminate.
+    /// Safe to call from any thread not in threadpool.
     /// Returns false if called from within threadpool (would deadlock).
     bool join() NOEXCEPT;
 

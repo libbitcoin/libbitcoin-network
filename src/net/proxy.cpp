@@ -35,9 +35,8 @@ inline deadline::ptr make_throttle(const logger& log, io::strand& strand,
         system::emplace_shared<deadline>(log, strand) : nullptr;
 }
 
-// This is created in a started state and must be stopped, as the subscribers
-// assert if not stopped. Subscribers may hold protocols even if the service
-// is not started.
+// Created in started state and must be stopped, as subscribers assert if not
+// stopped. Subscribers may hold protocols even if service not started.
 proxy::proxy(const socket::ptr& socket, uint32_t rate_limit,
     size_t maximum_backlog) NOEXCEPT
   : reporter(socket->log),
@@ -56,7 +55,7 @@ proxy::~proxy() NOEXCEPT
 
 // Stop (socket/proxy started upon create).
 // ----------------------------------------------------------------------------
-// The proxy does not (must not) stop itself.
+// Proxy does not (must not) stop itself.
 
 void proxy::stop(const code& ec) NOEXCEPT
 {
@@ -67,9 +66,9 @@ void proxy::stop(const code& ec) NOEXCEPT
         return;
     }
 
-    // An open batch response is closed (written) before the socket stops.
-    // Batch state is protected by the strand, so only a stranded stop can
-    // close gracefully (an unstranded stop, e.g. shutdown, is immediate).
+    // Open batch response closed (written) before socket stops. Batch state
+    // protected by strand, so only stranded stop can close gracefully
+    // (unstranded stop, e.g. shutdown, is immediate).
     if (stranded() && batched_ && parted_)
     {
         do_stop(ec);
@@ -80,15 +79,15 @@ void proxy::stop(const code& ec) NOEXCEPT
 }
 
 // private
-// Close the open batch response, then stop (batch open rides on the first
-// part, so there is nothing to close unless parted).
+// Close open batch response, then stop (batch open rides on first part, so
+// nothing to close unless parted).
 void proxy::do_stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
     using namespace std::placeholders;
 
-    // The socket is not yet stopped, so a deferred send still holds the queue.
-    // Release it here so that the close part is not delayed by the throttle.
+    // Socket not yet stopped, so deferred send still holds queue. Release it
+    // here so close part is not delayed by throttle.
     if (throttle_) throttle_->stop();
 
     // This is the final message of the channel.
@@ -108,9 +107,9 @@ void proxy::handle_stop_write(const code&, size_t,
 // Thread safe (called directly from stop or from the strand).
 void proxy::finish_stop(const code& ec) NOEXCEPT
 {
-    // Stop the read loop, stop accepting new work, cancel pending work.
-    // A graceful close issues follow-on iocontext jobs, so it is not performed
-    // within socket::stop(), and a subsequent socket::stop() terminates it.
+    // Stop read loop, stop accepting new work, cancel pending work.
+    // Graceful close issues follow-on iocontext jobs, so it is not performed
+    // within socket::stop(), and subsequent socket::stop() terminates it.
     if (lazy(ec))
         socket_->lazy_stop();
     else
@@ -137,7 +136,7 @@ bool proxy::lazy(const code& ec) const NOEXCEPT
 }
 
 // protected
-// This should not be called internally (invoked by stop()).
+// Should not be called internally (invoked by stop()).
 void proxy::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -153,7 +152,7 @@ void proxy::stopping(const code& ec) NOEXCEPT
     deferred_.clear();
 
     // Post stop handlers to strand and clear/stop accepting subscriptions.
-    // The code provides information on the reason that the channel stopped.
+    // Code provides information on reason channel stopped.
     stop_subscriber_.stop(ec);
 }
 

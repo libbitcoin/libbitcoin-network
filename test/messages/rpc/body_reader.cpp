@@ -184,8 +184,8 @@ BC_AUTO_TEST_CASE(rpc_body_reader__put__batch_open_with_first_element__success_c
     reader.init(text.size(), ec);
     BC_REQUIRE(!ec);
 
-    // Trailing separator is not consumed (next read prologue). Delivery
-    // pauses the parse (need_buffer) with the converted message.
+    // Trailing separator not consumed (next read prologue). Delivery pauses
+    // parse (need_buffer) with converted message.
     BC_REQUIRE_EQUAL(reader.put(buffer, ec), sub1(text.size()));
     BC_REQUIRE(ec == error::http_error_t::need_buffer);
     BC_REQUIRE(body.changed);
@@ -458,8 +458,8 @@ BC_AUTO_TEST_CASE(rpc_body_reader__put__full_batch__three_reads_consume_buffer)
 
 BC_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_byte_at_a_time__three_reads_consume_buffer)
 {
-    // Same batch with every read split at every byte boundary (whitespace
-    // padded delimiters). Each segment is one logical read's exact bytes.
+    // Same batch, every read split at every byte boundary (whitespace padded
+    // delimiters). Each segment is one logical read's exact bytes.
     const std::string_view first{ R"( [ {"jsonrpc":"2.0","id":1,"method":"one"})" };
     const std::string_view second{ R"( , {"jsonrpc":"2.0","id":2,"method":"two"})" };
     const std::string_view third{ " ] \n" };
@@ -532,8 +532,8 @@ BC_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_byte_at_a_time__three_reads_c
 
 BC_AUTO_TEST_CASE(rpc_body_reader__put__full_batch_single_reader__delivers_each_element_and_close)
 {
-    // One reader instance spans the whole message (http parse), with
-    // in-batch context carried by the instance rather than caller state.
+    // One reader instance spans whole message (http parse), in-batch context
+    // carried by instance rather than caller state.
     const std::string_view first{ R"([{"jsonrpc":"2.0","id":1,"method":"one"})" };
     const std::string_view second{ R"(,{"jsonrpc":"2.0","id":2,"method":"two"})" };
     const std::string_view third{ "]" };
@@ -605,8 +605,7 @@ BC_AUTO_TEST_CASE(rpc_body_reader__finish__truncated_batch_single_reader__need_m
 
 BC_AUTO_TEST_CASE(rpc_body_reader__put__split_padded_terminator_after_singleton__success)
 {
-    // Terminator split from document across reads, with padding (electrum
-    // traffic shaping), previously unsupported.
+    // Terminator read apart from document, padded (electrum traffic shaping).
     const std::string_view document{ R"({"jsonrpc":"2.0","id":1,"method":"test"})" };
     const std::string_view padding{ "  \n" };
     const io::const_buffer buffer1{ document.data(), document.size() };

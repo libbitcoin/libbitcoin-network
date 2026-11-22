@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe, non-virtual.
-/// All methods must be invoked on strand, handlers are invoked on strand.
+/// All methods must be invoked on strand, handlers invoked on strand.
 template <typename... Args>
 class unsubscriber final
 {
@@ -40,12 +40,12 @@ public:
     unsubscriber() NOEXCEPT = default;
     ~unsubscriber() NOEXCEPT;
 
-    /// If stopped, handler is invoked with error::subscriber_stopped.
-    /// Otherwise handler retained. Subscription code is also returned here.
+    /// If stopped, handler invoked with error::subscriber_stopped.
+    /// Otherwise handler retained. Subscription code also returned here.
     code subscribe(handler&& handler) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
-    /// Handler return true for resubscription, otherwise it is desubscribed.
+    /// Handler returns true for resubscription, otherwise desubscribed.
     void notify(const code& ec, const Args&... args) NOEXCEPT;
 
     /// Invoke each handler in order, with arguments, then drop all.

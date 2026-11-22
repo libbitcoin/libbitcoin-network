@@ -44,9 +44,9 @@ struct framing
     length_type length{};
 };
 
-/// Each parse consumes an element from the front of its text (rfc9112),
-/// returning the size consumed, or zero with ec set: need_more if the text is
-/// an incomplete but so far valid element, otherwise the error.
+/// Each parse consumes element from front of its text (rfc9112), returning size
+/// consumed, or zero with ec set: need_more if text is incomplete but so far
+/// valid element, otherwise error.
 
 /// Parse a request line (including its line end).
 BCT_API size_t parse_start_line(request_header& out,
@@ -56,9 +56,9 @@ BCT_API size_t parse_start_line(request_header& out,
 BCT_API size_t parse_start_line(response_header& out,
     const std::string_view& in, code& ec) NOEXCEPT;
 
-/// Parse a field line (including its line end and any folded lines), adding
-/// it to out (if not null), or the empty line that ends the fields (end).
-/// Framing fields update the frame.
+/// Parse field line (including its line end and any folded
+/// lines), adding it to out (if not null), or empty line
+/// that ends fields (end). Framing fields update frame.
 BCT_API size_t parse_field(fields* out, framing& frame, bool& end,
     const std::string_view& in, code& ec) NOEXCEPT;
 
@@ -75,14 +75,14 @@ BCT_API size_t find_chunk_line(size_t& text, const std::string_view& in,
     code& ec) NOEXCEPT;
 
 /// Not thread safe, non-virtual.
-/// Incrementally parse a message (owned) from received bytes, driving the body
-/// reader of the message body. The start line, each field, each chunk line and
-/// each trailer field are consumed once complete, and body data as it arrives.
-/// The parse returns once the header is complete, and a body reader may pause
-/// the parse (need_buffer), which resumes on the next put. Trailer fields are
-/// validated but not retained. A body with content or transfer codings is
-/// decoded as it arrives, in steps that bound the decoded data held for a paused
-/// reader, the body limit applying to both the coded and decoded body.
+/// Incrementally parse message (owned) from received bytes, driving body
+/// reader of message body. Start line, each field, each chunk line and
+/// each trailer field are consumed once complete, and body data as it
+/// arrives. Parse returns once header is complete, and body reader may
+/// pause parse (need_buffer), which resumes on next put. Trailer fields
+/// validated but not retained. Body with content or transfer codings is
+/// decoded as it arrives, in steps that bound decoded data held for
+/// paused reader, body limit applying to both coded and decoded body.
 template <bool IsRequest, class Body>
 class parser
 {
@@ -100,8 +100,8 @@ public:
     void header_limit(size_t value) NOEXCEPT;
     void body_limit(size_t value) NOEXCEPT;
 
-    /// Consume received bytes, returning the number consumed. Sets need_more
-    /// if not done and the remaining bytes are insufficient to proceed.
+    /// Consume received bytes, returning number consumed. Sets need_more if not
+    /// done and remaining bytes insufficient to proceed.
     size_t put(const io::const_buffer& buffer, code& ec) NOEXCEPT;
 
     /// The stream ended, which completes a body delimited by it.
@@ -174,9 +174,9 @@ private:
 };
 
 /// Not thread safe, non-virtual.
-/// Incrementally parse a headerless message body (referenced) from received
-/// bytes, driving the body reader of the message body. A streamed body is done
-/// once its reader finishes, otherwise the received bytes are the whole body.
+/// Incrementally parse headerless message body (referenced) from received
+/// bytes, driving body reader of message body. Streamed body is done once its
+/// reader finishes, otherwise received bytes are whole body.
 template <bool IsRequest, class Body>
 class body_parser
 {
@@ -192,8 +192,8 @@ public:
     /// A limit of zero is unlimited (the default).
     void body_limit(size_t value) NOEXCEPT;
 
-    /// Consume received bytes, returning the number consumed. Sets need_more
-    /// if not done and the remaining bytes are insufficient to proceed.
+    /// Consume received bytes, returning number consumed. Sets need_more if not
+    /// done and remaining bytes insufficient to proceed.
     size_t put(const io::const_buffer& buffer, code& ec) NOEXCEPT;
 
     /// The stream ended, which does not complete a headerless body.

@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 
 /// Channel diagnostics, broadcast to peer channels (never serialized).
-/// The round completes when the last message reference is released.
+/// Round completes when last message reference released.
 class BCT_API diagnostics
 {
 public:

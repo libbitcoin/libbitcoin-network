@@ -106,12 +106,12 @@ enum level: uint32_t
 
     /// -----------------------------------------------------------------------
 
-    /// This is the first public release protocol version.
+    /// First public release protocol version.
     /// Added verack, version.address_sender, version.nonce, version.user_agent.
     version_message = 106,
 
     /// Added getaddr message, also version.start_height and heading.checksum.
-    /// Checksum was added to version after a delay, breaking earlier clients.
+    /// Checksum added to version after delay, breaking earlier clients.
     get_address_message = 209,
 
     /// Added alert message.

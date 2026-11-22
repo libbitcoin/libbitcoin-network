@@ -127,8 +127,8 @@ BC_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     // Stopping the socket does not cancel the acceptor but precludes assertion.
     instance->stop();
 
-    // Acceptor must be canceled to release/invoke the accept handler.
-    // This has the same effect as network::acceptor::stop.
+    // Acceptor must be canceled to release/invoke accept handler.
+    // Same effect as network::acceptor::stop.
     io::post(strand, [&]() NOEXCEPT
     {
         code ignore;
@@ -401,15 +401,11 @@ BC_AUTO_TEST_CASE(socket__connect__bound_unavailable__net_unreachable)
     BC_REQUIRE(pool.join());
 }
 
-// Regression test for a fix to socket::async_write: it used to write every
-// body_write() chunk as its own whole websocket message (finish always
-// true), splitting one logical response into N independent messages. The
-// fix passes finish = !out->more, so only the final chunk closes the
-// message. A blocking websocket client is used as ground truth: its
-// read() returns only once a full message (finish) is
-// received, so a single read() call assembling the entire multi-chunk body
-// proves the chunks were sent as one multi-frame message rather than as
-// several.
+// socket::async_write passes finish = !out->more, so only final body_write()
+// chunk closes websocket message. Blocking websocket client is ground truth:
+// its read() returns only once full message (finish) is received, so single
+// read() assembling entire multi-chunk body proves chunks were sent as one
+// multi-frame message rather than as several.
 BC_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_message)
 {
     using namespace std::chrono_literals;
@@ -442,8 +438,8 @@ BC_AUTO_TEST_CASE(socket__body_write__websocket_multiple_chunks__single_message)
     const auto buffer = std::make_shared<http::flat_buffer>();
     const auto request = std::make_shared<http::request>();
 
-    // Small size_hint relative to the payload forces writer.get() across
-    // many passes, i.e. many socket::async_write calls for one logical body.
+    // Small size_hint relative to payload forces writer.get() across many
+    // passes, i.e. many socket::async_write calls for one logical body.
     json::body<>::value_type content{};
     content.model = system::json::object{ { "key", std::string(4000, 'x') } };
     content.size_hint = 32;
@@ -785,8 +781,8 @@ BC_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, accept
     instance->stop();
 }
 
-// The field exceeds a single socket read, so the parser completes it in the
-// asynchronous read handler, not within the initiating call.
+// Field exceeds single socket read, so parser completes it in asynchronous
+// read handler, not within initiating call.
 static std::string request_with_field(size_t size)
 {
     return "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Big: " +
@@ -856,8 +852,7 @@ BC_FIXTURE_TEST_CASE(socket__http_read__field_above_field_limit__header_limit, a
         read.set(ec);
     });
 
-    // The unread remainder may exceed socket buffering, so the write may block
-    // until the stop closes the socket.
+    // Unread remainder may exceed socket buffer, so write may block until stop.
     auto writer = std::async(std::launch::async, [&]() NOEXCEPT
     {
         code ignore{};

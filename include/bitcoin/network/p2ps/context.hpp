@@ -26,11 +26,11 @@ namespace network {
 namespace p2ps {
 
 /// Shared configuration for bip324 (v2) transport sockets.
-/// The owner must outlive all sockets created with a reference to it.
+/// Owner must outlive all sockets created with reference to it.
 struct BCT_API context
 {
-    /// The network magic (heading identifier), keys the v2 key derivation
-    /// salt, the v1 detection prefix, and synthesized v1 headings.
+    /// Network magic (heading identifier), keys v2 key derivation salt, v1
+    /// detection prefix, and synthesized v1 headings.
     uint32_t identifier{};
 };
 

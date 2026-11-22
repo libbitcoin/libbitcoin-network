@@ -25,9 +25,8 @@
 namespace libbitcoin {
 namespace network {
 
-/// A value held in allocated storage, with value semantics (copies copy the
-/// value). A moved-from instance holds no value and may only be assigned or
-/// destroyed.
+/// Value held in allocated storage, with value semantics (copies copy value).
+/// Moved-from instance holds no value and may only be assigned or destroyed.
 template <typename Type>
 class indirect
 {

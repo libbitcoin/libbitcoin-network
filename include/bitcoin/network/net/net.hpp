@@ -30,11 +30,11 @@
 
 // The network classes are entirely lock free.
 
-// Each acceptor, connector, and channel::socket(proxy) operates on an
-// independent strand within a shared threadpool owned by the caller.
-// Public handlers are invoked by asynchronous methods of these classes within
-// the execution context of the respective strand. All public methods excluding
-// start are thread safe. All stop methods are idempotent and asynchronous.
+// Each acceptor, connector, and channel::socket(proxy) operates on independent
+// strand within shared threadpool owned by caller. Public handlers are invoked
+// by asynchronous methods of these classes within execution context of
+// respective strand. All public methods excluding start are thread safe. All
+// stop methods are idempotent and asynchronous.
 
 // Once stopped and all external pointers released, objects are freed. Stop
 // should be called on each acceptor, connector, and channel before calling

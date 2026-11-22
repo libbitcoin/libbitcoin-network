@@ -178,9 +178,9 @@ void fields::add(field id, const std::string_view& name,
 // utilities
 // ----------------------------------------------------------------------------
 
-// Simple test for leading "filename" assumes not other token starts with
-// "filename" unless it is also an attachment (such as "filename*"). Otherwise
-// the request is not valid anyway, so we can assume it has an attachment.
+// Simple test for leading "filename" assumes no other token starts with
+// "filename" unless also an attachment (such as "filename*"). Otherwise request
+// is invalid anyway, so assume it has attachment.
 bool has_attachment(const fields& header) NOEXCEPT
 {
     const auto disposition = header[field::content_disposition];

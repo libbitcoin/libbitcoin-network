@@ -25,9 +25,9 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// Container for an http basic authorization credential and its methods.
-/// The value is of the form: username:password[:method[,method]...] where an
-/// empty method list implies all methods (password may not contain ':').
+/// Container for http basic authorization credential and its methods.
+/// Value of form: username:password[:method[,method]...] where empty method
+/// list implies all methods (password may not contain ':').
 class BCT_API credential
 {
 public:

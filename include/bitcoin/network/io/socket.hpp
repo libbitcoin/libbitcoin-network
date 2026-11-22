@@ -65,9 +65,9 @@ using native_handle = uintptr_t;
 using native_handle = int;
 #endif
 
-/// Not thread safe. A tcp stream socket. Asynchronous operations complete on
-/// the executor, with operation_canceled if canceled or closed first. One
-/// read and one write may be pending at a time.
+/// Not thread safe. Tcp stream socket. Asynchronous operations complete on
+/// executor, with operation_canceled if canceled or closed first. One read and
+/// one write may be pending at a time.
 class BCT_API socket
 {
 public:
@@ -114,7 +114,7 @@ public:
     /// The number of received bytes that can be read without blocking.
     size_t available(code& ec) const NOEXCEPT;
 
-    /// The peer has closed its side of the connection (FIN received),
+    /// Peer closed its side of connection (FIN received),
     /// or reset it (RST received).
     bool half_closed() const NOEXCEPT;
 
@@ -194,8 +194,7 @@ public:
     endpoint local_endpoint(code& ec) const NOEXCEPT;
     endpoint local_endpoint() const NOEXCEPT;
 
-    /// Accept a connection into the closed socket (which must outlive the
-    /// operation).
+    /// Accept connection into closed socket (which must outlive operation).
     void async_accept(socket& peer, result_handler&& handler) NOEXCEPT;
     void accept(socket& peer, code& ec) NOEXCEPT;
 
@@ -235,8 +234,8 @@ private:
     std::shared_ptr<state> state_;
 };
 
-/// Connect to the first endpoint that accepts, in sequence (the socket is
-/// closed before each attempt), returning the connected endpoint.
+/// Connect to first endpoint that accepts, in sequence (socket closed before
+/// each attempt), returning connected endpoint.
 using connect_handler = std::function<void(const code&, const endpoint&)>;
 BCT_API void async_connect(socket& socket, const endpoints& range,
     connect_handler&& handler) NOEXCEPT;

@@ -89,9 +89,9 @@ BC_AUTO_TEST_CASE(deadline__stop__race__success)
     const auto timer = std::make_shared<deadline>(log, strand, seconds(10));
     timer->start([timer](code ec)
     {
-        // In the case of a race won by the slow timer, this catches success.
-        // In the case of a race won by the stop timer, this catches canceled.
-        // A 10s delay indicates the slow timer has won the race (unexpected).
+        // Race won by slow timer, this catches success.
+        // Race won by stop timer, this catches canceled.
+        // 10s delay indicates slow timer has won race (unexpected).
         BC_REQUIRE(timer && ec == error::operation_canceled);
     });
 

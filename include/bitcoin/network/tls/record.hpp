@@ -26,8 +26,8 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// Record protection of one direction of a connection (rfc8446 5), either
-/// cleartext (before keys) or AEAD with a traffic secret. Not thread safe.
+/// Record protection of one direction of connection (rfc8446 5), either
+/// cleartext (before keys) or AEAD with traffic secret. Not thread safe.
 class BCT_API record final
 {
 public:
@@ -39,8 +39,8 @@ public:
     record() NOEXCEPT;
     ~record() NOEXCEPT;
 
-    /// Protect subsequent records with the traffic secret of the suite. The
-    /// sequence number is reset.
+    /// Protect subsequent records with traffic secret of suite.
+    /// Sequence number is reset.
     void set_secret(uint16_t suite, const schedule::secret& traffic) NOEXCEPT;
 
     /// True if records are protected.
@@ -49,13 +49,13 @@ public:
     /// Records sealed or opened with the traffic secret.
     uint64_t sequence() const NOEXCEPT;
 
-    /// Append one record of the content type to out. Content must not exceed
-    /// the maximum plaintext size.
+    /// Append one record of content type to out.
+    /// Content must not exceed maximum plaintext size.
     void seal(system::data_chunk& out, uint8_t type,
         const const_byte_span& content) NOEXCEPT;
 
-    /// Open the fragment of one protected record given its header. False if
-    /// not authenticated, type zero if no inner type is present.
+    /// Open fragment of one protected record given its header. False if not
+    /// authenticated, type zero if no inner type is present.
     bool open(uint8_t& type, system::data_chunk& content,
         const const_byte_span& header,
         const const_byte_span& fragment) NOEXCEPT;

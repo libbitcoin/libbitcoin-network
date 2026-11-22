@@ -68,7 +68,7 @@ void channel_peer::resume() NOEXCEPT
 
 // Properties.
 // ----------------------------------------------------------------------------
-// Version members are protected by the presumption of no reads during writes.
+// Version members protected by presumption of no reads during writes.
 // Versions should only be set in handshake process, and only read thereafter.
 
 bool channel_peer::quiet() const NOEXCEPT
@@ -273,11 +273,11 @@ void channel_peer::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // All prevent read loop start, reading indicates it is already started
-    // (making resume idempotent), paused can be resumed, stopped cannot.
-    // Pause only prevents start of the read loop, it does not prevent messages
-    // from being issued for sockets already past that point (e.g. waiting).
-    // This is mainly for startup coordination, preventing missed messages.
+    // All prevent read loop start, reading indicates already started (making
+    // resume idempotent), paused can be resumed, stopped cannot.
+    // Pause only prevents read loop start, not messages issued for sockets
+    // already past that point (e.g. waiting).
+    // Mainly for startup coordination, preventing missed messages.
     if (stopped() || reading_)
         return;
 
@@ -293,8 +293,8 @@ void channel_peer::receive() NOEXCEPT
 }
 
 // Handle errors and post message to subscribers.
-// The frame object is allocated on another thread and destroyed on this one.
-// This introduces cross-thread allocation/deallocation, though size is small.
+// Frame object allocated on another thread and destroyed on this one.
+// Introduces cross-thread allocation/deallocation, though size is small.
 void channel_peer::handle_receive(const code& ec, size_t size,
     const frame_ptr& in) NOEXCEPT
 {
@@ -371,8 +371,8 @@ void channel_peer::handle_send(const code& ec, size_t size, size_t index,
     handler(ec);
 }
 
-// On parse fault the frame bytes remain in the read buffer (not consumed),
-// so payload diagnostics are drawn from the buffer via the parsed heading.
+// On parse fault frame bytes remain in read buffer (not consumed), so payload
+// diagnostics drawn from buffer via parsed heading.
 void channel_peer::log_fault(const code& LOG_ONLY(fault),
     const frame& LOG_ONLY(in)) const NOEXCEPT
 {

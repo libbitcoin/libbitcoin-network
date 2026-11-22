@@ -30,9 +30,9 @@ public:
     using acceptor_sam::proxied;
 };
 
-// The acceptor runs on the fixture pool and the bridge is a plain socket
-// driven synchronously from the test thread, so each line exchange is ordered
-// by the bridge's own reads and writes.
+// Acceptor runs on fixture pool, bridge is plain socket
+// driven synchronously from test thread, so each line
+// exchange is ordered by bridge's own reads and writes.
 struct sam_setup_fixture
 {
     DELETE_COPY_MOVE(sam_setup_fixture);

@@ -272,8 +272,8 @@ BC_AUTO_TEST_CASE(peer_body__put__checksum_disabled__message)
     BC_REQUIRE(reader.done());
 }
 
-// The framed reader parses the caller buffer supplied at construct, which is
-// how socket::peer_read drives it (the buffer is not consumed by the parse).
+// Framed reader parses caller buffer supplied at construct, which is how
+// socket::peer_read drives it (buffer not consumed by parse).
 
 static data_chunk block_frame()
 {

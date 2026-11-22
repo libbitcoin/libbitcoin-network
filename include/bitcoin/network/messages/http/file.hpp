@@ -29,7 +29,7 @@ namespace network {
 namespace http {
 
 /// Not thread safe, non-virtual.
-/// A binary file, opened for reading or (truncated) writing.
+/// Binary file, opened for reading or (truncated) writing.
 class BCT_API file
 {
 public:
@@ -51,8 +51,7 @@ public:
     /// The size of a file opened for reading.
     uint64_t size() const NOEXCEPT;
 
-    /// Read up to size bytes into data, returning the number read, false if
-    /// the read fails.
+    /// Read up to size bytes into data, returning count, false if read fails.
     bool read(size_t& out, uint8_t* data, size_t size) NOEXCEPT;
 
     /// Write size bytes, false if the write fails.

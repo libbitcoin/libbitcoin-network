@@ -19,9 +19,9 @@
 #include "../test.hpp"
 #include "zmtp_setup_fixture.hpp"
 
-// The socket reads and writes rpc messages by its role, so these cases
-// exercise the mapping of each role directly on the socket (the proxy adds
-// control absorption, see the proxy tests).
+// Socket reads and writes rpc messages by its role, so
+// these cases exercise mapping of each role directly on
+// socket (proxy adds control absorption, see proxy tests).
 
 using system::data_chunk;
 using system::data_stack;

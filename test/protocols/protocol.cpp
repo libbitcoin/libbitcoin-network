@@ -97,8 +97,8 @@ public:
         const auto socket = std::make_shared<network::socket>(log, service_,
             parameters_);
 
-        // Must be asynchronous or is an infinite recursion.
-        // This error code will set the re-listener timer and channel pointer is ignored.
+        // Must be asynchronous or is infinite recursion.
+        // This error code sets re-listener timer, channel pointer ignored.
         io::post(strand_, [=]() NOEXCEPT
         {
             accepted(error::success);

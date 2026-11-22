@@ -125,7 +125,7 @@ inventory_items headers::to_inventory(inventory::type_id type) const NOEXCEPT
         out.push_back({ type, header->hash() });
 
     // emplace_back aggregate initialization requires clang 16.
-    // This also fails following change to pmr vector.
+    // Also fails with pmr vector.
     ////out.emplace_back(type, header->hash());
 
     return out;

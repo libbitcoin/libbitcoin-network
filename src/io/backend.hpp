@@ -52,8 +52,8 @@ struct descriptor
     bool bound{};
     bool non_blocking{};
 
-    // Incremented by cancel and close, so that the failure of an operation
-    // started before is reported as operation_canceled.
+    // Incremented by cancel and close, so failure of operation started before
+    // is reported as operation_canceled.
     std::atomic<size_t> cancels{};
 
 #if !defined(HAVE_WINDOWS)
@@ -118,9 +118,9 @@ public:
     explicit backend(detail::scheduler& scheduler) NOEXCEPT;
     ~backend() NOEXCEPT;
 
-    /// Wait up to the timeout (none is unbounded) for completions, appending
-    /// them to out. Interrupt returns a waiting call early (true if returned
-    /// by an interrupt or the timeout).
+    /// Wait up to timeout (none is unbounded) for completions,
+    /// appending them to out. Interrupt returns waiting call
+    /// early (true if returned by interrupt or timeout).
     bool wait(const timeout& duration, std::vector<handler>& out) NOEXCEPT;
     void interrupt() NOEXCEPT;
 
@@ -128,8 +128,7 @@ public:
     /// Queue the handler on the backend (returned by a wait).
     void post(handler&& work) NOEXCEPT;
 
-    /// Destroy the handlers queued on the backend without running them (true
-    /// if any).
+    /// Destroy handlers queued on backend without running them (true if any).
     bool drain() NOEXCEPT;
 #endif
 
@@ -183,8 +182,7 @@ private:
 #else
     int interrupter_{ -1 };
 
-    // The posted handlers (one interrupter unit each), protected by
-    // posted_mutex_.
+    // Posted handlers (one interrupter unit each), protected by posted_mutex_.
     std::mutex posted_mutex_{};
     std::deque<handler> posted_{};
 #endif

@@ -162,8 +162,8 @@ bool backend::wait(const timeout& duration,
             while (::read(interrupter_[0], sink, sizeof(sink)) > 0);
             interrupted = true;
 #else
-            // Each unit is a posted handler, or an interrupt if none is
-            // queued. A failed read is a unit taken by another thread.
+            // Each unit is posted handler, or interrupt if none queued.
+            // Failed read is unit taken by another thread.
             uint64_t unit{};
             if (::read(interrupter_, &unit, sizeof(unit)) == sizeof(unit))
             {
@@ -394,9 +394,9 @@ void backend::start(operation* op) NOEXCEPT
     const auto read = op->type == operation::kind::read ||
         op->type == operation::kind::accept;
 
-    // An operation that can complete now (with no queued predecessor) does.
-    // Under the descriptor lock, an edge reported before the operation is
-    // queued is observed here, and one reported after finds it queued.
+    // Operation that can complete now (with no queued predecessor) does.
+    // Under descriptor lock, edge reported before operation is queued is
+    // observed here, and one reported after finds it queued.
     std::unique_lock lock{ owner.mutex };
     auto& queue = read ? owner.reads : owner.writes;
     if (queue.empty() && perform(op))
@@ -410,7 +410,7 @@ void backend::start(operation* op) NOEXCEPT
 }
 
 // private
-// True if the operation is complete (its result set), false if it would block.
+// True if operation complete (result set), false if it would block.
 bool backend::perform(operation* op) NOEXCEPT
 {
     auto& owner = *op->owner;

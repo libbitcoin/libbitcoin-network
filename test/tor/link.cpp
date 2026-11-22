@@ -23,8 +23,8 @@ BC_AUTO_TEST_SUITE(tor_link_tests)
 using namespace bc::system;
 using namespace tor;
 
-// A chutney CERTS cell (as in arti tor-cell testvec_chanmsg.rs), valid at the
-// time, for the TLS certificate digest.
+// Chutney CERTS cell (as in arti tor-cell testvec_chanmsg.rs), valid at the
+// time, for TLS certificate digest.
 constexpr uint64_t now = 1601000000;
 const auto link_digest = base16_array("b4fd606b64e4cbd466b8d76cb131069bae6f3aa1878857c9f624e31d77a799b8");
 const auto identity_key = base16_array("dcb604db2034b00fd16986d4adb9d16b21cb4e4457a33dec0f538903683e96e9");

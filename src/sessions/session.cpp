@@ -77,15 +77,15 @@ void session::stop() NOEXCEPT
     stopped_.store(true);
 
     // Post stop handlers to strand and clear/stop accepting subscriptions.
-    // The code provides information on the reason that the channel stopped.
+    // Code provides information on reason channel stopped.
     stop_subscriber_.stop(error::service_stopped);
 }
 
 // Channel sequence.
 // ----------------------------------------------------------------------------
-// Channel and network strands share same pool, and as long as a job is
-// running in the pool, it will continue to accept work. Therefore handlers
-// will not be orphaned during a stop as long as they remain in the pool.
+// Channel and network strands share same pool, and as long as job is running in
+// pool, it continues to accept work. Therefore handlers are not orphaned during
+// stop as long as they remain in pool.
 
 void session::start_channel(const channel::ptr& channel,
     result_handler&& starter, result_handler&& stopper) NOEXCEPT

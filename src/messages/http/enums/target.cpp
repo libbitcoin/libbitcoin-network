@@ -156,8 +156,8 @@ std::filesystem::path to_canonical(const std::filesystem::path& root,
         // Win32 fs::path assumes std::string is ANSI, so cast to u8string.
         const auto norm = cast_to_u8string(target);
 
-        // The / path concat operator fails with a leading slash on target.
-        // But target always has a leading slash, so just string concatenate.
+        // Path concat operator (/) fails with leading slash on target.
+        // Target always has leading slash, so string concatenate.
         const auto full = root.generic_u8string() + norm;
 
         // Ensure that if canonicalized path exists it is a regular file.

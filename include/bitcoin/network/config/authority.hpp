@@ -28,7 +28,7 @@ namespace network {
 namespace config {
 
 /// Add message address types to base authority configuration class.
-/// Message addresses are 16 byte ipv6 encoding with ipv4 addresses mapped.
+/// Message addresses, 16 byte ipv6 encoding with ipv4 addresses mapped.
 class BCT_API authority
   : public system::config::authority
 {

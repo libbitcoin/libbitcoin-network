@@ -89,8 +89,8 @@ public:
         // Must be asynchronous or is an infinite recursion.
         io::post(strand_, [=]() NOEXCEPT
         {
-            // Connect result code is independent of the channel stop code.
-            // As error code would set the re-listener timer, channel pointer is ignored.
+            // Connect result code independent of channel stop code.
+            // Error code would set re-listener timer, channel pointer ignored.
             handler(error::success, socket);
         });
     }
@@ -210,8 +210,8 @@ public:
         if (!handshaked_.exchange(true))
             handshake_.set_value(true);
 
-        // The handshake protocol pauses the channel upon completion, which is
-        // after the session resumes it to start the read loop, so this posts.
+        // Handshake protocol pauses channel upon completion, which is after
+        // session resumes it to start read loop, so this posts.
         io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
@@ -553,8 +553,8 @@ BC_AUTO_TEST_CASE(session_seed__stop__started_sufficient__expected)
         session->stop();
     });
 
-    // This is a race between success and seeding_unsuccessful.
-    // This tends toward success with HAVE_LOGGING and otherwise without.
+    // Race between success and seeding_unsuccessful.
+    // Tends toward success with HAVE_LOGGING and otherwise without.
     const auto ec = started.get_future().get();
     BC_REQUIRE(ec == error::success || ec == error::seeding_unsuccessful);
     BC_REQUIRE_EQUAL(net.get_connector()->connects(), 1u);

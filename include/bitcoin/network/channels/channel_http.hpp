@@ -40,7 +40,7 @@ public:
     using dispatcher = rpc::dispatcher<interface>;
 
     /// Subscribe to message from client (requires strand).
-    /// Event handler is always invoked on the channel strand.
+    /// Event handler always invoked on channel strand.
     template <class Request>
     inline void subscribe(auto&& handler) NOEXCEPT
     {
@@ -49,8 +49,8 @@ public:
         dispatcher_.subscribe(std::forward<signature>(handler));
     }
 
-    /// Construct http channel to encapsulate and communicate on the socket.
-    /// An in-band service authorizes after upgrade, so its upgrade is open.
+    /// Construct http channel to encapsulate and communicate on socket.
+    /// In-band service authorizes after upgrade, so its upgrade is open.
     inline channel_http(const logger& log, const socket::ptr& socket,
         uint64_t identifier, const settings_t& settings,
         const options_t& options, bool in_band=false) NOEXCEPT
@@ -63,7 +63,7 @@ public:
     }
 
     /// Serialize and write http message to client (requires strand).
-    /// Completion handler is always invoked on the channel strand.
+    /// Completion handler always invoked on channel strand.
     void send(http::response&& response,
         result_handler&& handler) NOEXCEPT;
 

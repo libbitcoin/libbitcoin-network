@@ -56,34 +56,34 @@ version version::deserialize(uint32_t version, reader& source) NOEXCEPT
 
     // ************************************************************************
     // PROTOCOL:
-    // The relay field is optional >= bip37.
+    // Relay field optional >= bip37.
     // But both peers cannot know each other's version when sending theirs.
-    // This is a bug in the BIP37 design as it forces older peers to adapt to
-    // the expansion of the version message, which is a clear compat break.
+    // Bug in BIP37 design, as it forces older peers to adapt to expansion of
+    // version message, a clear compat break.
     // ************************************************************************
     const auto read_relay = [=](reader& source) NOEXCEPT
     {
         // ********************************************************************
         // PROTOCOL:
-        // The exhaustion check allows peers that set 'value >= bip37' to
-        // succeed without providing the relay byte. This is broadly observed
-        // on the network, including by the satoshi client (see test cases).
-        // BIP37 defines the relay as a bool byte. Presumably this must be
-        // interpreted as any non-zero value and not simply bit zero.
+        // Exhaustion check allows peers that set 'value >= bip37'
+        // to succeed without providing relay byte. Broadly observed
+        // on network, including by satoshi client (see test cases).
+        // BIP37 defines relay as bool byte. Presumably this must be
+        // interpreted as any non-zero value and not only bit zero.
         // ********************************************************************
 
-        // Read relay if bip37 and source is not exhausted, otherwise set true.
-        // This ignores the specified version, instead respecting the peer's
-        // version, since the specified version is not yet negotiated. A true
-        // relay value may then be ignored when negotiated version is < bip37.
+        // Read relay if bip37 and source not exhausted, otherwise set true.
+        // Ignores specified version, respecting peer's version instead, since
+        // specified version not yet negotiated. True relay value may then be
+        // ignored when negotiated version is < bip37.
         return (value < level::bip37) || source.is_exhausted() ||
             to_bool(source.read_byte());
     };
 
     // ************************************************************************
     // PROTOCOL:
-    // The protocol requires 'services' matches 'address_sender.services', but
-    // this validation is disabled due to the broad inconsistency of nodes.
+    // Protocol requires 'services' matches 'address_sender.services', but this
+    // validation is disabled due to broad inconsistency of nodes.
     // ************************************************************************
     return
     {
@@ -115,24 +115,24 @@ void version::serialize(uint32_t version, writer& sink) const NOEXCEPT
 
     // ************************************************************************
     // PROTOCOL:
-    // The relay field is optional >= bip37.
+    // Relay field optional >= bip37.
     // But both peers cannot know each other's version when sending theirs.
-    // This is a bug in the BIP37 design as it forces older peers to adapt to
-    // the expansion of the version message, which is a clear compat break.
+    // Bug in BIP37 design, as it forces older peers to adapt to expansion of
+    // version message, a clear compat break.
     // ************************************************************************
     const auto write_relay = [this](writer& sink) NOEXCEPT
     {
-        // Write 'relay' if and only if the 'value' field supports bip37.
-        // This ignores the specified version, as it is not yet negotiated.
-        // The peer may ignore relay if negotiated version < bip37.
+        // Write 'relay' if and only if 'value' field supports bip37.
+        // Ignores specified version, as it is not yet negotiated.
+        // Peer may ignore relay if negotiated version < bip37.
         if (value >= level::bip37)
             sink.write_byte(to_int<uint8_t>(relay));
     };
 
     // ************************************************************************
     // PROTOCOL:
-    // The protocol requires 'services' matches 'address_sender.services', but
-    // this is not enforced here due to the broad inconsistency of nodes.
+    // Protocol requires 'services' matches 'address_sender.services', but this
+    // is not enforced here due to broad inconsistency of nodes.
     // ************************************************************************
     sink.write_4_bytes_little_endian(value);
     sink.write_8_bytes_little_endian(services);
@@ -147,8 +147,8 @@ void version::serialize(uint32_t version, writer& sink) const NOEXCEPT
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
-// The 'version' parameter is presumed to be set to expected sender 'value'.
-// This is required as the 'value' is not available on this static sizing.
+// 'version' parameter presumed set to expected sender 'value'.
+// Required as 'value' not available on this static sizing.
 size_t version::size(uint32_t version) const NOEXCEPT
 {
     return sizeof(uint32_t)

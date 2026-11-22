@@ -100,9 +100,9 @@ private:
 
 class context;
 
-/// An executor of a context, or of a strand of a context. Copies are
-/// equivalent executors. Handlers posted to a strand run in post order and
-/// never concurrently with each other.
+/// Executor of context, or of strand of context. Copies are equivalent
+/// executors. Handlers posted to strand run in post order and never
+/// concurrently with each other.
 class BCT_API executor
 {
 public:
@@ -118,12 +118,12 @@ public:
     /// Queue the handler for execution (never invoked by this call).
     void post(handler&& handler) const NOEXCEPT;
 
-    /// Invoke the handler now if this thread is running on the executor (or
-    /// on its context while the strand is idle), otherwise post it.
+    /// Invoke handler now if this thread is running on executor (or on its
+    /// context while strand is idle), otherwise post it.
     void dispatch(handler&& handler) const NOEXCEPT;
 
-    /// This thread is running a handler of the executor (of the strand, or of
-    /// the context if not a strand).
+    /// This thread is running handler of executor
+    /// (of strand, or of context if not strand).
     bool running_in_this_thread() const NOEXCEPT;
 
     bool operator==(const executor& other) const NOEXCEPT;
@@ -134,7 +134,7 @@ private:
 };
 
 /// Not thread safe for destruction, otherwise thread safe.
-/// Runs handlers and completes operations on the threads that call run().
+/// Runs handlers and completes operations on threads that call run().
 class BCT_API context
 {
 public:
@@ -145,8 +145,8 @@ public:
     context() NOEXCEPT;
     ~context() NOEXCEPT;
 
-    /// Run handlers until stopped or there is no work (queued handlers,
-    /// pending operations or work guards), returning the number run.
+    /// Run handlers until stopped or no work (queued handlers, pending
+    /// operations or work guards), returning number run.
     size_t run() NOEXCEPT;
 
     /// Make run() return as soon as possible (pending work is retained).
@@ -163,8 +163,7 @@ public:
     /// Queue the handler for execution (never invoked by this call).
     void post(handler&& handler) NOEXCEPT;
 
-    /// Invoke the handler now if this thread is running the context,
-    /// otherwise post it.
+    /// Invoke handler now if this thread is running context, otherwise post it.
     void dispatch(handler&& handler) NOEXCEPT;
 
     /// This thread is running the context.

@@ -41,7 +41,7 @@ constexpr size_t maximum_http_header = 16 * 1024;
 
 /// Virtual, thread safe (see comments on accept).
 /// Stop is thread safe and idempotent, may be called multiple times.
-/// All handlers (except accept) are posted to the internal strand.
+/// All handlers (except accept) posted to internal strand.
 class BCT_API socket
   : public std::enable_shared_from_this<socket>, public reporter,
     protected tracker<socket>
@@ -52,8 +52,8 @@ public:
     using context = settings::transport;
     using parts_t = std::vector<zmtp::stream::frame>;
 
-    /// A framed zmtp message: the packet holds the frame heads and unshared
-    /// parts, the buffers sequence it with the shared parts it retains.
+    /// Framed zmtp message: packet holds frame heads and unshared parts,
+    /// buffers sequence it with shared parts it retains.
     struct zmtp_write_state
     {
         typedef std::shared_ptr<zmtp_write_state> ptr;
@@ -87,9 +87,9 @@ public:
         const parameters& params, bool proxied=false) NOEXCEPT;
 
     /// Outbound connections.
-    /// Endpoint represents the peer or client (non-proxy) that the connector
-    /// attempted to reach. Address holds a copy of the tcp address associated
-    /// with the connection (or empty).
+    /// Endpoint represents peer or client (non-proxy) that
+    /// connector attempted to reach. Address holds copy of
+    /// tcp address associated with connection (or empty).
     socket(const logger& log, io::context& service, const parameters& params,
         const config::address& address, const config::endpoint& endpoint,
         bool proxied) NOEXCEPT;
@@ -100,9 +100,9 @@ public:
     /// Stop.
     /// -----------------------------------------------------------------------
 
-    /// Cancel work and close the socket, ending any lazy stop (thread safe).
-    /// This action is deferred to the strand, not immediately affected.
-    /// Block on threadpool.join() to ensure termination of the connection.
+    /// Cancel work and close socket, ending any lazy stop (thread safe).
+    /// Action deferred to strand, not immediately affected.
+    /// Block on threadpool.join() to ensure termination of connection.
     virtual void stop() NOEXCEPT;
 
     /// Same as stop but closes gracefully, bounded by the connect timeout.
@@ -111,38 +111,38 @@ public:
     /// Wait (all).
     /// -----------------------------------------------------------------------
 
-    /// Monitor the peer for close, handler posted to socket strand.
-    /// Shares the poll timer, so a socket is watched or polled, not both.
+    /// Monitor peer for close, handler posted to socket strand.
+    /// Shares poll timer, so socket is watched or polled, not both.
     virtual void watch(result_handler&& handler) NOEXCEPT;
 
-    /// Check the peer for close once after an interval (success if open).
-    /// Shares the watch timer, so a socket is watched or polled, not both.
+    /// Check peer for close once after interval (success if open).
+    /// Shares watch timer, so socket is watched or polled, not both.
     virtual void poll(result_handler&& handler) NOEXCEPT;
 
     /// Connect (all).
     /// -----------------------------------------------------------------------
 
-    /// Accept an incoming connection, handler posted to *acceptor* strand.
-    /// Concurrent calls are NOT thread safe until this handler is invoked.
+    /// Accept incoming connection, handler posted to *acceptor* strand.
+    /// Concurrent calls are NOT thread safe until handler is invoked.
     virtual void accept(io::acceptor& acceptor,
         result_handler&& handler) NOEXCEPT;
 
-    /// Create an outbound connection, handler posted to socket strand.
-    /// Authority will be set to the connected endpoint unless proxied is set.
+    /// Create outbound connection, handler posted to socket strand.
+    /// Authority set to connected endpoint unless proxied is set.
     virtual void connect(const io::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
-    /// Upgrade the socket to its configured transport, handler posted to
-    /// socket strand. Applied automatically upon accept and non-proxied
-    /// connect. A proxied connector must invoke this once its negotiation
-    /// has established the connection to the peer.
+    /// Upgrade socket to its configured transport, handler posted
+    /// to socket strand. Applied automatically upon accept and
+    /// non-proxied connect. Proxied connector must invoke this
+    /// once its negotiation has established connection to peer.
     virtual void handshake(result_handler&& handler) NOEXCEPT;
 
     /// WS (generic, framed).
     /// -----------------------------------------------------------------------
 
-    /// Accept a read upgrade request, switching the socket to websocket
-    /// framing (requires strand). Refusal is an http response (no state).
+    /// Accept read upgrade request, switching socket to websocket framing
+    /// (requires strand). Refusal is http response (no state).
     virtual code accept_websocket(const http::request& request) NOEXCEPT;
 
     /// Read framed message from websocket, handler posted to socket strand.
@@ -205,8 +205,8 @@ public:
     virtual void body_notify(http::request&& notification,
         count_handler&& handler) NOEXCEPT;
 
-    /// Hold writes that fit the minimum buffer for the next write (strand).
-    /// A held write completes when held, before it is written.
+    /// Hold writes that fit minimum buffer for next write (strand).
+    /// Held write completes when held, before it is written.
     void hold(bool enable) NOEXCEPT;
 
     /// Complete a write held since hold, if any (strand).
@@ -257,8 +257,8 @@ public:
     virtual void http_write_header(http::response&& response,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write rpc response part to the socket as http chunk data, terminating
-    /// the chunked body when the part closes its batch.
+    /// Write rpc response part to socket as http chunk data, terminating
+    /// chunked body when part closes its batch.
     virtual void rpc_write_chunk(rpc::response&& response,
         count_handler&& handler) NOEXCEPT;
 
@@ -298,25 +298,25 @@ public:
     /// The transport has been detected (downgraded is otherwise undefined).
     virtual bool detected() const NOEXCEPT;
 
-    /// Get the resolved address of the remote host. Established by connection
-    /// for incoming and non-proxied outgoing, and by the proxied connector or
-    /// acceptor for a proxied connection (see set_address).
+    /// Get resolved address of remote host. Established by connection for
+    /// incoming and non-proxied outgoing, and by proxied connector or acceptor
+    /// for proxied connection (see set_address).
     virtual const config::address& address() const NOEXCEPT;
 
-    /// Get the endpoint of the intended target, as passed via construct. For
-    /// an incoming connection this is the resolved endpoint of the remote.
+    /// Get endpoint of intended target, as passed via construct. For incoming
+    /// connection this is resolved endpoint of remote.
     virtual const config::endpoint& endpoint() const NOEXCEPT;
 
-    /// Get the endpoint of the local socket, established by connection. For a
-    /// proxied connection this is the local endpoint of the proxy connection.
+    /// Get endpoint of local socket, established by connection. For proxied
+    /// connection this is local endpoint of proxy connection.
     virtual const config::endpoint& binding() const NOEXCEPT;
 
     /// Get the outbound slot, as passed via construct (max_size_t if none).
     virtual size_t slot() const NOEXCEPT;
 
-    /// Set the remote host address and endpoint (requires strand).
-    /// A proxied acceptor must invoke this once its negotiation has
-    /// established the connection to the peer (see handshake).
+    /// Set remote host address and endpoint (requires strand).
+    /// Proxied acceptor must invoke this once its negotiation has established
+    /// connection to peer (see handshake).
     virtual void set_address(const config::address& address) NOEXCEPT;
 
 protected:
@@ -732,8 +732,8 @@ protected:
     // Retains the detection prefix for a v1 peer (see handle_detection).
     http::flat_buffer detection_{ p2ps::stream::detection_size };
 
-    // Retains the serialization buffer (allocated on first write), the
-    // readable bytes of which are the held writes.
+    // Retains serialization buffer (allocated on first write), readable bytes
+    // of which are held writes.
     http::flat_buffer response_;
     std::function<void()> deferred_{};
     std::function<void()> settled_{};

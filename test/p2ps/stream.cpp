@@ -173,8 +173,8 @@ BC_AUTO_TEST_CASE(p2ps_stream__handshake__v2_both_sides__frames_round_trip)
     data_chunk prefix(v2_stream::detection_size);
     bool v1{ true };
 
-    // The socket reads the detection prefix and upgrades on a v2 peer,
-    // passing the detected bytes to the stream (a partial peer key).
+    // Socket reads detection prefix and upgrades on v2 peer, passing detected
+    // bytes to stream (partial peer key).
     const auto shook = [&](const code& ec) { responded = ec; };
     const auto detect = [&](const code& ec, size_t)
     {

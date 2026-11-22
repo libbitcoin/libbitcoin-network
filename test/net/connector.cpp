@@ -233,7 +233,7 @@ BC_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_cancel
     BC_REQUIRE(instance->get_stopped());
 
     // BUGBUG: macOS:
-    // Error codes have changed and the resulting race failure test is not matching expected code.
+    // Error codes changed, race failure test does not match expected code.
     if (!result)
     {
         BC_CHECK_EQUAL(ec1, error::resolve_failed);
@@ -284,7 +284,7 @@ BC_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
     BC_REQUIRE(instance->get_stopped());
 
     // BUGBUG: macOS:
-    // Error codes have changed and the resulting race failure test is not matching expected code.
+    // Error codes changed, race failure test does not match expected code.
     if (!result)
     {
         BC_CHECK_EQUAL(ec1, error::resolve_failed);

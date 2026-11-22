@@ -25,11 +25,10 @@ namespace libbitcoin {
 namespace network {
 namespace zmtp {
 
-/// The ZeroMQ socket type of a server socket. The role fixes the wire grammar
-/// of the connection: which peer socket types may connect, which frames the
-/// peer may send and how they are read into rpc, and which rpc messages may
-/// be written and how they are framed. It is a property of the channel type
-/// that owns the socket, not of configuration.
+/// ZeroMQ socket type of server socket. Role fixes wire grammar of connection:
+/// which peer socket types may connect, which frames peer may send and how they
+/// are read into rpc, and which rpc messages may be written and how they are
+/// framed. Property of channel type owning socket, not of configuration.
 enum class role : uint8_t
 {
     /// Not a zmtp socket.
@@ -67,8 +66,8 @@ constexpr std::string_view socket_type(role value) NOEXCEPT
     }
 }
 
-/// The peer Socket-Type property value may connect to the role (libzmq
-/// socket type compatibility).
+/// Peer Socket-Type property value may connect to role
+/// (libzmq socket type compatibility).
 constexpr bool compatible(role value, std::string_view peer) NOEXCEPT
 {
     switch (value)

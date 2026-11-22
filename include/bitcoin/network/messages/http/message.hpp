@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
-/// A body is a type with value_type, and reader and writer classes:
+/// Body is type with value_type, and reader and writer classes:
 ///   reader(header<IsRequest>&, value_type&)
 ///     void init(const length_type& length, code& ec)
 ///     size_t put(const io::const_buffer& buffer, code& ec)
@@ -37,14 +37,14 @@ namespace http {
 ///   writer(header<IsRequest>&, value_type&)
 ///     void init(code& ec)
 ///     get_buffer<io::const_buffer> get(code& ec)
-/// A reader may consume less than given (need_buffer, retains the rest).
-/// A writer returns no buffer when done, or a buffer and whether more follow.
+/// Reader may consume less than given (need_buffer, retains rest).
+/// Writer returns no buffer when done, or buffer and whether more follow.
 using length_type = std::optional<uint64_t>;
 template <class Buffer>
 using get_buffer = std::optional<std::pair<Buffer, bool>>;
 
 /// Not thread safe, non-virtual.
-/// A request or response header with a body value.
+/// Request or response header with body value.
 template <bool IsRequest, class Body>
 class message
   : public header<IsRequest>
@@ -91,8 +91,8 @@ public:
         return body_;
     }
 
-    /// Frame the body: chunked for http 1.1, closing the connection for 1.0,
-    /// and neither for a response status that precludes a body.
+    /// Frame body: chunked for http 1.1, closing connection for 1.0, and
+    /// neither for response status that precludes body.
     void prepare_payload() NOEXCEPT
     {
         if constexpr (!IsRequest)

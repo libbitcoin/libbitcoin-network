@@ -29,8 +29,8 @@ namespace libbitcoin {
 namespace network {
 namespace io {
 
-/// Composed operations over a stream (socket or upgraded stream).
-/// A stream provides get_executor(), async_read_some(buffers, handler) and
+/// Composed operations over stream (socket or upgraded stream).
+/// Stream provides get_executor(), async_read_some(buffers, handler) and
 /// async_write_some(buffers, handler), or read_some(buffers, ec) and
 /// write_some(buffers, ec), with handlers of (const code&, size_t).
 
@@ -54,8 +54,8 @@ size_t write(Stream& stream, const Buffers& buffers, code& ec) NOEXCEPT;
 template <typename Stream, typename Buffers>
 size_t read(Stream& stream, const Buffers& buffers, code& ec) NOEXCEPT;
 
-/// Read into the text until it contains the delimiter, returning the size of
-/// the text through the delimiter (bytes beyond it are retained in the text).
+/// Read into text until it contains delimiter, returning size of text through
+/// delimiter (bytes beyond it retained in text).
 template <typename Stream>
 size_t read_until(Stream& stream, std::string& text,
     const std::string_view& delimiter, code& ec) NOEXCEPT;

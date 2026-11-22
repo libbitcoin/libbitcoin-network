@@ -84,7 +84,7 @@ struct message_type
     code fault{};
 
     /// Socket wires message termination by transport framing (tcp stream
-    /// messages are newline terminated, http/ws framed messages are not).
+    /// messages newline terminated, http/ws framed messages not).
     bool terminate{};
 };
 

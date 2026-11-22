@@ -241,8 +241,8 @@ void protocol_seed_209::handle_send_address(const code& ec) NOEXCEPT
     if (stopped(ec))
         return;
 
-    // Multiple get_address messages are allowed, but do not delay stop.
-    // Dedicated seed nodes may never request addresses, so don't want on them
+    // Multiple get_address messages allowed, but do not delay stop.
+    // Dedicated seed nodes may never request addresses, so don't wait on them
     // to stop. If peer sends get_address before address, it will process.
     ////sent_address_ = true;
 

@@ -25,8 +25,8 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// Big-endian reader of TLS presentation language (rfc8446 3). A failed read
-/// invalidates the reader, and all later reads return empty.
+/// Big-endian reader of TLS presentation language (rfc8446 3). Failed read
+/// invalidates reader, and all later reads return empty.
 class BCT_API reader
 {
 public:

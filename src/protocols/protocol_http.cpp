@@ -491,8 +491,8 @@ void protocol_http::add_coding_headers(fields& fields,
 
 // Status message generation.
 // ----------------------------------------------------------------------------
-// status.reason text is only available on non-polymorphic response types, so
-// so it's dereferenced before calling and passed along with status enum value.
+// status.reason text only available on non-polymorphic response types, so it's
+// dereferenced before calling and passed along with status enum value.
 
 std::string protocol_http::string_status(const http::status /*status*/,
     const std::string& reason, const http::media_type& /*type*/,

@@ -67,8 +67,8 @@ static bool is_null_params(const params_t& params) NOEXCEPT
         std::holds_alternative<null_t>(std::get<value_t>(params).value());
 }
 
-// Convert the parsed model to a request message and validate. Tolerated
-// jrpc violations are reported as lax flags (the channel validates policy).
+// Convert parsed model to request message and validate. Tolerated jrpc
+// violations reported as lax flags (channel validates policy).
 static code to_request(rpc::request& value) NOEXCEPT
 {
     value.lax_params = false;
@@ -135,22 +135,20 @@ static code to_request(rpc::request& value) NOEXCEPT
 
 // rpc::body<>::reader
 // ----------------------------------------------------------------------------
-// A batch is never materialized. Each read yields one element (message), with
-// batch open riding along on the first element read (value_.changed), and
-// batch close completing a read without a message (value_.changed with
-// value_.batch). The caller provides current state (value_.batch), and the
-// parse is always lax: batch framing is always recognized, with tolerated
-// jrpc violations reported (lax flags) for channel policy. Delimiters are
-// consumed here and never surface to the parser, so each element parses as
-// its own document.
+// Batch never materialized. Each read yields one element (message), with batch
+// open riding along on first element read (value_.changed), and batch close
+// completing read without message (value_.changed with value_.batch). Caller
+// provides current state (value_.batch), and parse is always lax: batch framing
+// always recognized, with tolerated jrpc violations reported (lax flags) for
+// channel policy. Delimiters consumed here and never surface to parser, so each
+// element parses as its own document.
 //
-// Delivery is self-selecting on observed framing. A batched read delivers
-// each message from put by pausing the parse (need_buffer) at the element
-// boundary and re-arming for the next element, uniformly across framings: a
-// http parse pauses natively, a stream read completes on the pause
-// with buffer residue carried to the next read; for batched reads finish
-// only validates message-end state. A singleton delivers classically from
-// finish, compatible with one-shot body reads.
+// Delivery self-selecting on observed framing. Batched read delivers each
+// message from put by pausing parse (need_buffer) at element boundary and
+// re-arming for next element, uniformly across framings: http parse pauses
+// natively, stream read completes on pause with buffer residue carried to next
+// read; for batched reads finish only validates message-end state. Singleton
+// delivers classically from finish, compatible with one-shot body reads.
 
 template <typename Message>
 size_t body<Message>::reader::
@@ -211,8 +209,8 @@ put(const buffer_type& buffer, code& ec) NOEXCEPT
 
                 if (character == ']')
                 {
-                    // Batch open immediately closed (no elements), which is
-                    // answered as a single request (batch not opened).
+                    // Batch open immediately closed (no elements), answered as
+                    // single request (batch not opened).
                     if (opened_ && !delivered_)
                     {
                         this->value_.changed = false;
@@ -277,9 +275,8 @@ put(const buffer_type& buffer, code& ec) NOEXCEPT
             if (ec || !base::reader::done())
                 return index;
 
-            // The parser consumes whitespace, and leaves any subsequent chars
-            // unparsed, so a terminator it consumed must be in the parsed
-            // segment.
+            // Parser consumes whitespace and leaves any subsequent chars
+            // unparsed, so terminator it consumed must be in parsed segment.
             if (requires_terminator())
                 for (auto scan = index; scan > start; --scan)
                 {
@@ -295,9 +292,8 @@ put(const buffer_type& buffer, code& ec) NOEXCEPT
                 }
         }
 
-        // Trailer: consume whitespace trailing a non-terminated singleton
-        // (http), other characters start the next message (stream) unless
-        // re-fed.
+        // Trailer: consume whitespace trailing non-terminated singleton (http),
+        // other characters start next message (stream) unless re-fed.
         if (!terminated_ && !opened_ && !this->value_.batch && started_ &&
             base::reader::done())
         {
@@ -314,8 +310,8 @@ put(const buffer_type& buffer, code& ec) NOEXCEPT
             }
         }
 
-        // Terminator: consume whitespace through the terminator, allowing
-        // padded termination (electrum traffic shaping) and split reads.
+        // Terminator: consume whitespace through terminator, allowing padded
+        // termination (electrum traffic shaping) and split reads.
         if (requires_terminator() && !has_terminator_)
         {
             for (; index < size; ++index)
@@ -336,8 +332,8 @@ put(const buffer_type& buffer, code& ec) NOEXCEPT
             }
         }
 
-        // Delivery: batched messages are delivered from put by pausing (a
-        // singleton delivers classically, from finish following completion).
+        // Delivery: batched messages delivered from put by pausing (singleton
+        // delivers classically, from finish following completion).
         if ((closed_ || opened_ || this->value_.batch) &&
             (!requires_terminator() || has_terminator_))
         {
@@ -403,7 +399,7 @@ finish(code& ec) NOEXCEPT
 {
     if constexpr (is_same_type<Message, request_t>)
     {
-        // Batched messages are delivered from put, so finish only validates
+        // Batched messages delivered from put, so finish only validates
         // message-end state (delivered close, otherwise incomplete).
         if ((closed_ || opened_ || this->value_.batch) && !started_)
         {
@@ -426,11 +422,11 @@ finish(code& ec) NOEXCEPT
 
 // rpc::body<>::writer
 // ----------------------------------------------------------------------------
-// A batch is never materialized. Each write emits one part, with framing
-// derived from caller-assigned batch state (value_.batch is the state before
-// the part, value_.changed indicates transition). The open part is prefixed
-// with '[', continuation parts with ',', and the close part is framing and
-// termination only (no message), mirroring the reader's message-less close.
+// Batch never materialized. Each write emits one part, with framing derived
+// from caller-assigned batch state (value_.batch is state before part,
+// value_.changed indicates transition). Open part prefixed with '[',
+// continuation parts with ',', and close part is framing and termination only
+// (no message), mirroring reader's message-less close.
 // Termination applies to singleton and batch close parts only.
 
 template <typename Message>

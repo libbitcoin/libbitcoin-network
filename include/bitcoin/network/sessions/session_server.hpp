@@ -31,11 +31,8 @@ namespace network {
 
 class net;
 
-/// This is nearly identical to session_inbound (peer).
-/// The difference is handshake and protocol attachment. Otherwise that class
-/// could be replaced by this one. However that also derives from session_peer
-/// which we don't want in downstream client-server sessions. So for now they
-/// are just very redundant.
+/// Nearly identical to session_inbound (peer),
+/// differing in handshake and protocol attachment.
 class BCT_API session_server
   : public session
 {

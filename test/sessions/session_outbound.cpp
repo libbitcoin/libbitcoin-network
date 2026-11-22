@@ -96,8 +96,8 @@ public:
         // Must be asynchronous or is an infinite recursion.
         io::post(strand_, [=]() NOEXCEPT
         {
-            // Connect result code is independent of the channel stop code.
-            // As error code would set the re-listener timer, channel pointer is ignored.
+            // Connect result code independent of channel stop code.
+            // Error code would set re-listener timer, channel pointer ignored.
             handler(error::success, socket);
         });
     }
@@ -173,8 +173,8 @@ public:
         if (!handshaked_.exchange(true))
             handshake_.set_value(true);
 
-        // The handshake protocol pauses the channel upon completion, which is
-        // after the session resumes it to start the read loop, so this posts.
+        // Handshake protocol pauses channel upon completion, which is after
+        // session resumes it to start read loop, so this posts.
         io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
@@ -722,8 +722,8 @@ BC_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
         });
     });
 
-    // This indicates successful start, not connection(s) status.
-    // Because net is not started, connections will fail until stop.
+    // Indicates successful start, not connection(s) status.
+    // Net not started, so connections fail until stop.
     BC_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BC_REQUIRE(!session->stopped());
 
@@ -987,8 +987,8 @@ BC_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_channel
     // Prevent default address from being rejected by gossip_ipv6 false.
     set.gossip_ipv6 = true;
 
-    // This invokes session.stop from within start_connect and then continues.
-    // First channel is stopped for service_stopped and others for channel_dropped.
+    // Invokes session.stop from within start_connect and then continues.
+    // First channel stopped for service_stopped, others for channel_dropped.
     mock_net_stop_connect net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net, 1);
     net.set_session(session);

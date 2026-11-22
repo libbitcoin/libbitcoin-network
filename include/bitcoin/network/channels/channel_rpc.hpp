@@ -41,7 +41,7 @@ public:
     using dispatcher = rpc::dispatcher<Interface>;
 
     /// Subscribe to request from client (requires strand).
-    /// Event handler is always invoked on the channel strand.
+    /// Event handler always invoked on channel strand.
     template <class Unused, class Handler>
     inline void subscribe(Handler&& handler) NOEXCEPT
     {
@@ -73,7 +73,7 @@ public:
 
 protected:
     /// Serialize and write response to client (requires strand).
-    /// Completion handler is always invoked on the channel strand.
+    /// Completion handler always invoked on channel strand.
     template <typename Message>
     inline void send(Message&& message, result_handler&& handler) NOEXCEPT;
 

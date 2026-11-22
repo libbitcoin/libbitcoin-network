@@ -140,7 +140,7 @@ private:
     void handle_save(const code& ec, size_t accepted,
         const count_handler& handler) NOEXCEPT;
 
-    // This is mostly thread safe, and used in a thread safe manner.
+    // Mostly thread safe, and used in thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
     const channel_peer::ptr channel_;
 

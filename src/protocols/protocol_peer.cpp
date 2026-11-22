@@ -46,9 +46,9 @@ protocol_peer::protocol_peer(const session::ptr& session,
 
 // Properties.
 // ----------------------------------------------------------------------------
-// The public properties may be accessed outside the strand, except during
-// handshake protocol operation. Thread safety requires that setters are never
-// invoked outside of the handshake protocol (start handler).
+// Public properties may be accessed outside strand, except during handshake
+// protocol operation. Thread safety requires setters are never invoked outside
+// of handshake protocol (start handler).
 
 bool protocol_peer::encrypted() const NOEXCEPT
 {
@@ -195,9 +195,9 @@ void protocol_peer::set_minimum_fee(uint64_t value) NOEXCEPT
 
 // Addresses.
 // ----------------------------------------------------------------------------
-// Channel and network strands share same pool, and as long as a job is
-// running in the pool, it will continue to accept work. Therefore handlers
-// will not be orphaned during a stop as long as they remain in the pool.
+// Channel and network strands share same pool, and as long as job is running in
+// pool, it continues to accept work. Therefore handlers are not orphaned during
+// stop as long as they remain in pool.
 
 size_t protocol_peer::address_count() const NOEXCEPT
 {

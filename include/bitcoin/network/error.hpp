@@ -31,9 +31,8 @@ typedef std::error_code code;
 
 namespace error {
 
-/// Platform (socket) errors are translated to the codes below.
-/// Stop by explicit call is mapped to channel_stopped or service_stopped
-/// depending on the context.
+/// Platform (socket) errors translated to codes below. Stop by explicit call
+/// mapped to channel_stopped or service_stopped depending on context.
 enum error_t : uint8_t
 {
     success,

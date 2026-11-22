@@ -164,8 +164,8 @@ inline code CLASS::to_fault(const rpc::request& request) const NOEXCEPT
 }
 
 // private
-// A request that fails to parse or validate is answered before the close,
-// with its id where that is obtained.
+// Request that fails to parse or validate is answered before close,
+// with its id where obtained.
 TEMPLATE
 inline void CLASS::reject(const code& ec,
     const rpc::request& request) NOEXCEPT
@@ -199,8 +199,8 @@ inline void CLASS::reject(const code& ec,
 }
 
 // private
-// A batched element that fails to validate is answered (json-rpc v2 unless
-// v1), with its id where that is obtained.
+// Batched element that fails to validate is answered (json-rpc v2 unless v1),
+// with its id where obtained.
 TEMPLATE
 inline void CLASS::refuse(const code& ec, const rpc::request& request) NOEXCEPT
 {
@@ -222,7 +222,7 @@ inline void CLASS::refuse(const code& ec, const rpc::request& request) NOEXCEPT
 }
 
 // private
-// A request that fails to dispatch is answered, unless a notification.
+// Request that fails to dispatch is answered, unless notification.
 TEMPLATE
 inline void CLASS::refuse(rpc::code_t value, const code& ec) NOEXCEPT
 {
@@ -260,8 +260,8 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 TEMPLATE
 inline rpc::request_ptr CLASS::create_request() const NOEXCEPT
 {
-    // The parse is always lax, with tolerated jrpc violations and batch
-    // state reflected on the value (validated by channel dispatch).
+    // Parse always lax, with tolerated jrpc violations and batch state
+    // reflected on value (validated by channel dispatch).
     return system::to_shared<rpc::request>();
 }
 

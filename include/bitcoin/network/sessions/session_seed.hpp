@@ -44,7 +44,7 @@ public:
     session_seed(net& network, uint64_t identifier) NOEXCEPT;
 
     /// Perform seeding as configured (call from network strand).
-    /// Seeding is complete invocation of the handler.
+    /// Seeding is complete invocation of handler.
     void start(result_handler&& handler) NOEXCEPT override;
 
     /// Seed connections are running (call from network strand).

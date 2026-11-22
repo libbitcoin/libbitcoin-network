@@ -25,9 +25,9 @@
 namespace libbitcoin {
 namespace network {
 
-// ZMTP messages are read into and written from rpc messages by socket role.
-// A message is [method][param]... (inbound params are chunks), a command is
-// the request of its lower case name, and the peer identity is the rpc id.
+// ZMTP messages read into and written from rpc messages by socket role. Message
+// is [method][param]... (inbound params are chunks), command is request of its
+// lower case name, and peer identity is rpc id.
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
@@ -154,8 +154,8 @@ static code decode_message(rpc::request_t& out, role role,
     {
         case role::publisher:
         {
-            // The 3.0 dialect: a single frame message prefixed 0x01
-            // (subscribe) or 0x00 (cancel), accepted from any peer (libzmq).
+            // 3.0 dialect: single frame message prefixed 0x01 (subscribe) or
+            // 0x00 (cancel), accepted from any peer (libzmq).
             const auto& body = parts.front().body;
             if (!is_one(parts.size()) || body.empty() || body.front() > 0x01)
                 return error::zmtp_unexpected_message;
@@ -170,9 +170,9 @@ static code decode_message(rpc::request_t& out, role role,
         }
         case role::replier:
         {
-            // REQ prefixes the request with an empty delimiter part. The
-            // request expects a response, correlated by strict alternation,
-            // so it carries a (null) id.
+            // REQ prefixes request with empty delimiter
+            // part. Request expects response, correlated by
+            // strict alternation, so it carries (null) id.
             if (!parts.front().body.empty())
                 return error::zmtp_unexpected_message;
 
@@ -181,9 +181,9 @@ static code decode_message(rpc::request_t& out, role role,
         }
         case role::router:
         {
-            // A REQ peer (or a DEALER using its envelope) prefixes an empty
-            // delimiter part. The identity is the handshake Identity property
-            // (the socket is the connection, so the id names the peer only).
+            // REQ peer (or DEALER using its envelope) prefixes empty delimiter
+            // part. Identity is handshake Identity property (socket is
+            // connection, so id names peer only).
             const auto delimited = parts.front().body.empty();
             if (identity.empty())
                 out.id = rpc::identity_t{ rpc::null_t{} };
@@ -363,9 +363,9 @@ static code frame_packet(socket::zmtp_write_state& out,
     return error::success;
 }
 
-// The frame heads and unshared parts are written into one allocation and
-// shared parts are referenced from their owners, so the message is a buffer
-// sequence that alternates between the packet and the shared parts.
+// Frame heads and unshared parts written into one allocation and shared parts
+// referenced from their owners, so message is buffer sequence alternating
+// between packet and shared parts.
 static code frame_parts(socket::zmtp_write_state& out,
     const parts_t& message) NOEXCEPT
 {
@@ -634,7 +634,7 @@ void socket::do_zmtp_response(const rpc::response_ptr& out,
 }
 
 // private
-// The packet is bound to preserve its buffers for the write.
+// Packet bound to preserve its buffers for write.
 void socket::do_zmtp_write(const zmtp_write_state::ptr& packet,
     const count_handler& handler) NOEXCEPT
 {

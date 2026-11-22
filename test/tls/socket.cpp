@@ -225,7 +225,7 @@ struct tls_peer
         return out;
     }
 
-    // Feed received records to the client until end of file or timeout.
+    // Feed received records to client until end of file or timeout.
     // True if end of file.
     bool receive(const std::chrono::milliseconds& timeout)
     {
@@ -525,7 +525,7 @@ BC_AUTO_TEST_CASE(tls_socket__lazy_stop__zero_connect_timeout__closed_without_cl
 }
 
 // A peer is not required to answer close_notify (rfc8446 6.1).
-// The connect timeout also bounds the handshake, which it may cancel.
+// Connect timeout also bounds handshake, which it may cancel.
 BC_AUTO_TEST_CASE(tls_socket__lazy_stop__unanswered_connect_timeout__closed)
 {
     server_fixture server{ false, 100ms };

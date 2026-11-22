@@ -44,7 +44,7 @@ struct codings
     }
 };
 
-/// The codings named by the header, ec set (bad_content_encoding or
+/// Codings named by header, ec set (bad_content_encoding or
 /// bad_transfer_encoding) if any is unknown.
 BCT_API codings to_codings(const fields& header, code& ec) NOEXCEPT;
 
@@ -69,7 +69,7 @@ private:
 };
 
 /// Not thread safe.
-/// Decoder of a body received in parts, by its codings, transfer then content,
+/// Decoder of body received in parts, by its codings, transfer then content,
 /// each in reverse.
 class BCT_API decoder
 {
@@ -77,10 +77,10 @@ public:
     /// The decoded body is limited to limit bytes (zero is unlimited).
     decoder(const codings& value, size_t limit) NOEXCEPT;
 
-    /// Decode from in, appending to out, until in is consumed or out has
-    /// grown by at least step (zero is unlimited), setting the bytes of in
-    /// consumed. Sets ec to bad_transfer_encoding or bad_content_encoding if
-    /// a coding is invalid, or body_limit if the decoded body exceeds limit.
+    /// Decode from in, appending to out, until in is consumed or out has grown
+    /// by at least step (zero is unlimited), setting bytes of in consumed. Sets
+    /// ec to bad_transfer_encoding or bad_content_encoding if coding is
+    /// invalid, or body_limit if decoded body exceeds limit.
     void write(system::data_chunk& out, size_t& consumed,
         const system::data_slice& in, size_t step, code& ec) NOEXCEPT;
 
@@ -105,14 +105,13 @@ private:
 BCT_API system::data_chunk encode(const system::data_slice& body,
     const codings& value) NOEXCEPT;
 
-/// The body decoded by the codings, transfer then content, each in reverse.
-/// Sets ec as decoder::write, or to the coding fault if the body is
-/// incomplete.
+/// Body decoded by codings, transfer then content, each in reverse. Sets ec as
+/// decoder::write, or to coding fault if body is incomplete.
 BCT_API system::data_chunk decode(const system::data_slice& body,
     const codings& value, size_t limit, code& ec) NOEXCEPT;
 
-/// The response coding preferred by the request (rfc9110 12.5.3), by quality
-/// then gzip, deflate and identity, or unknown if none is acceptable.
+/// Response coding preferred by request (rfc9110 12.5.3), by quality then gzip,
+/// deflate and identity, or unknown if none acceptable.
 BCT_API coding accepted_coding(const fields& request) NOEXCEPT;
 
 } // namespace http

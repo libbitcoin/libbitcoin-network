@@ -60,12 +60,12 @@ struct timer_state
     bool queued{};
 };
 
-/// The run queue, timer queue, platform backend and resolver thread of a
-/// context. Work is counted from queued handlers, pending operations and work
-/// guards; when it reaches zero the scheduler stops. Where the backend queues
-/// posted handlers (windows, linux) it is the run queue and timers expire on a
-/// timer thread; otherwise (apple) handlers are queued here and one thread at
-/// a time waits on the backend.
+/// Run queue, timer queue, platform backend and resolver thread of
+/// context. Work counted from queued handlers, pending operations
+/// and work guards; when it reaches zero scheduler stops. Where
+/// backend queues posted handlers (windows, linux) it is run queue
+/// and timers expire on timer thread; otherwise (apple) handlers
+/// queued here and one thread at a time waits on backend.
 class scheduler
 {
 public:
@@ -74,7 +74,7 @@ public:
     scheduler() NOEXCEPT;
     ~scheduler() NOEXCEPT;
 
-    /// Stop the resolver and destroy queued handlers and timer waiters, whose
+    /// Stop resolver and destroy queued handlers and timer waiters, whose
     /// destruction may use this scheduler (so it precedes member destruction).
     void shutdown() NOEXCEPT;
 
@@ -169,8 +169,7 @@ public:
 
     void post(handler&& handler) NOEXCEPT;
 
-    /// Run the handler now if on a thread of the context and the strand is
-    /// idle, otherwise post it.
+    /// Run handler now if on context thread and strand idle, otherwise post it.
     void dispatch(handler&& handler) NOEXCEPT;
 
     bool running_in_this_thread() const NOEXCEPT;

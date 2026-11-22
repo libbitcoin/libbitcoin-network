@@ -384,8 +384,8 @@ TEMPLATE
 template <typename Handler, typename ...Args>
 inline code CLASS::subscribe(Handler&& handler, Args&&... args) NOEXCEPT
 {
-    // Iterate methods_t in order to find the matching function signature.
-    // The index of each method correlates to its defined subscriber index.
+    // Iterate methods_t in order to find matching function signature.
+    // Index of each method correlates to its defined subscriber index.
     constexpr auto index = CLASS::find_subscriber_for_handler<Handler>();
     auto& subscriber = std::get<index>(this->subscribers_);
     return subscriber.subscribe(std::forward<Handler>(handler),

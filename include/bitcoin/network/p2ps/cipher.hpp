@@ -27,11 +27,11 @@ namespace libbitcoin {
 namespace network {
 namespace p2ps {
 
-/// The bip324 (v2) transport (p2ps) session cipher.
-/// This is to be used only for ephemeral network session keys.
-/// Construction generates an ephemeral keypair. Once the peer key is known,
-/// initialize() derives the directional packet ciphers, garbage terminators
-/// and session identifier. Not thread safe.
+/// bip324 (v2) transport (p2ps) session cipher.
+/// To be used only for ephemeral network session keys.
+/// Construction generates ephemeral keypair. Once peer key is known,
+/// initialize() derives directional packet ciphers, garbage terminators and
+/// session identifier. Not thread safe.
 class BCT_API cipher final
 {
 public:
@@ -63,8 +63,8 @@ public:
     /// Own public key (ElligatorSwift encoded), sent in the clear.
     const key& public_key() const NOEXCEPT;
 
-    /// Derive session state from the peer public key (false on ecdh failure).
-    /// Set initiating if this side opened the connection.
+    /// Derive session state from peer public key (false on ecdh failure).
+    /// Set initiating if this side opened connection.
     bool initialize(const key& theirs, uint32_t identifier,
         bool initiating) NOEXCEPT;
 
@@ -84,7 +84,7 @@ public:
     /// Decrypt packet remainder into plain, setting the decoy indicator.
     /// in = header + contents + tag, plain = header + contents.
     /// plain may alias in exactly (same offset), for in-place decryption.
-    /// False if the tag does not authenticate (plain is wiped).
+    /// False if tag does not authenticate (plain is wiped).
     bool decrypt(const std::span<uint8_t>& plain,
         const std::span<const uint8_t>& aad, bool& ignore,
         const std::span<const uint8_t>& in) NOEXCEPT;

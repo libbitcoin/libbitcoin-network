@@ -110,29 +110,27 @@ size_t CLASS::reader::put(const buffer_type& buffer, code& ec) NOEXCEPT
     return {};
 }
 
-// Finishing can be very confusing. The derived rpc body calls this base
-// method, and then the virtual done() is tested to determine whether the
-// logical object is fully read (including optionally required terminator).
-// Any error code here signals the http parser (and any reader that terminates
-// based on the end of the framed data, such as websockets) that the parse has
-// failed (terminal error). However for custom stream readers that may not be
-// aware of byte termination, the `need_more` implies that the parse has not
-// failed and that more bytes may be parsed. In either case, when this is
-// called and the parse is complete, then the parsed json object is moved to
-// the model and the parser is released. In the case of the derived json-rpc
-// reader, the json is also then converted to the rpc model if valid, otherwise
-// returning a failure code. In no case is the underlying parser_.finish(ec)
-// ever called, as that would preclude use in the unbounded scenario.
+// Finishing can be confusing. Derived rpc body calls this base method,
+// then virtual done() is tested to determine whether logical object is
+// fully read (including optionally required terminator). Any error code
+// here signals http parser (and any reader that terminates on end of
+// framed data, such as websockets) that parse has failed (terminal
+// error). However for custom stream readers that may not be aware of byte
+// termination, `need_more` implies parse has not failed and more bytes
+// may be parsed. In either case, when called and parse is complete,
+// parsed json object is moved to model and parser is released. In derived
+// json-rpc reader, json is then also converted to rpc model if valid,
+// otherwise returning failure code. Underlying parser_.finish(ec) is
+// never called, as that would preclude use in unbounded scenario.
 TEMPLATE
 void CLASS::reader::finish(code& ec) NOEXCEPT
 {
     using namespace network::error;
 
-    // The parser will always return !done() when parsing a top-level number
-    // as a whole document, because it has no way to know if more digits are
-    // coming. So this will return need_more even when a fixed-size buffer is
-    // being read. For this reason this body does not support *reading* for
-    // top-level numbers.
+    // Parser always returns !done() when parsing top-level number as whole
+    // document, since it cannot know if more digits are coming. So this returns
+    // need_more even when fixed-size buffer is being read. For this reason this
+    // body does not support *reading* top-level numbers.
     if (!done())
     {
         ec = to_http_code(http_error_t::need_more);
@@ -188,8 +186,8 @@ CLASS::writer::get(code& ec) NOEXCEPT
         return {};
     }
 
-    // The chunk and any terminator, which follows the final serialized byte,
-    // are bound by the room that follows the buffer's readable bytes.
+    // Chunk and any terminator, which follows final serialized byte, are bound
+    // by room following buffer's readable bytes.
     const auto reserve = is_zero(terminator_) ? zero : one;
     const auto size = std::min(chunk_, system::floored_subtract(
         value_.buffer->max_size(), system::ceilinged_add(

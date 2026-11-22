@@ -181,8 +181,8 @@ bool decoder::done() const NOEXCEPT
         });
 }
 
-// The first stage decodes in, each other the output of the preceding stage.
-// Each stage pauses past the limit, and the last also at step.
+// First stage decodes in, each other the output of preceding stage.
+// Each stage pauses past limit, and last also at step.
 void decoder::write(data_chunk& out, size_t& consumed, const data_slice& in,
     size_t step, code& ec) NOEXCEPT
 {

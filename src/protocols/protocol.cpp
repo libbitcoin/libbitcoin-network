@@ -36,7 +36,7 @@ using namespace messages::peer;
 using namespace std::placeholders;
 
 // Protocols invoke channel stop for application layer protocol violations.
-// Channels invoke channel stop for channel timouts and communcation failures.
+// Channels invoke channel stop for channel timeouts and communication failures.
 protocol::protocol(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : reporter(session->log),
@@ -67,9 +67,9 @@ bool protocol::started() const NOEXCEPT
 }
 
 // Utility to test for failure code or stopped.
-// Any failure code from a send or receive handler implies channel::proxy stop.
-// So this should be used to test entry into those handlers. Other handlers,
-// such as timers, should use stopped() and independently evaluate the code.
+// Any failure code from send or receive handler implies channel::proxy stop. So
+// use this to test entry into those handlers. Other handlers, such as timers,
+// should use stopped() and independently evaluate code.
 bool protocol::stopped(const code& ec) const NOEXCEPT
 {
     return channel_->stopped() || ec;
@@ -81,8 +81,8 @@ void protocol::stopping(const code&) NOEXCEPT
     BC_ASSERT(stranded());
 }
 
-// Stop the channel::proxy, which results protocol stop handler invocation.
-// The stop handler invokes stopping(ec), for protocol cleanup operations.
+// Stop channel::proxy, which results in protocol stop handler invocation.
+// Stop handler invokes stopping(ec), for protocol cleanup operations.
 void protocol::stop(const code& ec) NOEXCEPT
 {
     channel_->stop(ec);
@@ -110,9 +110,9 @@ size_t protocol::remaining() const NOEXCEPT
 
 // Properties.
 // ----------------------------------------------------------------------------
-// The public properties may be accessed outside the strand, except during
-// handshake protocol operation. Thread safety requires that setters are never
-// invoked outside of the handshake protocol (start handler).
+// Public properties may be accessed outside strand, except during handshake
+// protocol operation. Thread safety requires setters are never invoked outside
+// of handshake protocol (start handler).
 
 bool protocol::stranded() const NOEXCEPT
 {
@@ -196,11 +196,11 @@ uint64_t protocol::identifier() const NOEXCEPT
 
 // Send.
 // ----------------------------------------------------------------------------
-// Send (and receive) completion handlers are invoked on the channel strand.
+// Send (and receive) completion handlers invoked on channel strand.
 
-// Send and receive failures are logged by the proxy, so there is no need to
-// log here. This can be used as a no-op handler for sends. Some protocols may
-// create custom handlers to perform operations upon send completion.
+// Send and receive failures logged by proxy, so no need to log here. Can be
+// used as no-op handler for sends. Some protocols may create custom handlers to
+// perform operations upon send completion.
 void protocol::handle_send(const code&) NOEXCEPT
 {
     BC_ASSERT(stranded());

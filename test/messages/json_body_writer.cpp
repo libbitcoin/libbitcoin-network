@@ -107,14 +107,13 @@ BC_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_more
     BC_REQUIRE(!buffer.value().second);
 }
 
-// A size_hint smaller than the serialized payload forces writer.get() to be
-// called multiple times (more == true on all but the last pass). This is the
-// chunking that drives socket::async_write's finish flag (finish = !more)
-// for websocket body writes: the fix relies on every non-final chunk
-// reporting more == true and only the final chunk reporting more == false.
-// serializer::read() fills the given buffer to capacity on
-// every pass but the last, so for this size_hint and payload the split is
-// deterministic: four 8-byte-or-fewer chunks.
+// size_hint smaller than serialized payload forces writer.get() to be called
+// multiple times (more == true on all but last pass). This chunking drives
+// socket::async_write's finish flag (finish = !more) for websocket body
+// writes, which requires every non-final chunk to report more == true and
+// only final chunk more == false. serializer::read() fills given buffer to
+// capacity on every pass but last, so for this size_hint and payload split
+// is deterministic: four 8-byte-or-fewer chunks.
 BC_AUTO_TEST_CASE(json_body_writer__get__size_hint_smaller_than_payload__four_chunks_reassemble_with_terminal_no_more)
 {
     const std::string_view expected1{ R"({"key":")" };

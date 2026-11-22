@@ -123,8 +123,7 @@ void scheduler::shutdown() NOEXCEPT
 
 #if !defined(HAVE_KQUEUE)
 
-// Threads wait on the backend together, each running the completions or
-// posted handler that return it.
+// Threads share backend wait, each running completions or handlers it returns.
 size_t scheduler::run() NOEXCEPT
 {
     const running_scope scope{ running_scheduler, this };
@@ -176,9 +175,9 @@ size_t scheduler::run() NOEXCEPT
 
     while (!stopped_)
     {
-        // Each pass over the queue yields once to the backend unless a thread
-        // waits on it (and on the first timer, if any), so that posted work
-        // cannot starve completions and timers.
+        // Each pass over queue yields once to backend unless
+        // thread waits on it (and on first timer, if any), so
+        // posted work cannot starve completions and timers.
         const auto poll = !queue_.empty() && is_zero(pass_) &&
             (is_zero(waiting_backend_) || (!timed_ && !timers_.empty()));
 
@@ -192,8 +191,8 @@ size_t scheduler::run() NOEXCEPT
             if (!queue_.empty())
                 wake();
 
-            // The handler (and its captures) is released before relocking,
-            // as its destruction may reenter the scheduler.
+            // Handler (and its captures) released before relocking, as its
+            // destruction may reenter scheduler.
             lock.unlock();
             next();
             next = nullptr;
@@ -610,8 +609,7 @@ bool strand_state::running_in_this_thread() const NOEXCEPT
 }
 
 // private
-// Only the handlers queued when the run starts are run, so that other work
-// interleaves.
+// Only handlers queued when run starts are run, so other work interleaves.
 void strand_state::run() NOEXCEPT
 {
     {
@@ -632,7 +630,7 @@ void strand_state::run() NOEXCEPT
 }
 
 // private
-// The strand is rescheduled if handlers were posted during the run.
+// Strand rescheduled if handlers posted during run.
 void strand_state::release() NOEXCEPT
 {
     {

@@ -27,8 +27,8 @@ namespace network {
 namespace http {
 
 /// Not thread safe, non-virtual.
-/// A contiguous dynamic buffer: readable bytes (data) followed by writable
-/// bytes (prepare), with a limit on the readable size.
+/// Contiguous dynamic buffer: readable bytes (data) followed by writable bytes
+/// (prepare), with limit on readable size.
 class BCT_API flat_buffer
 {
 public:
@@ -57,16 +57,16 @@ public:
     /// The allocated size.
     size_t capacity() const NOEXCEPT;
 
-    /// Writable bytes of the size, throws std::length_error if the readable
-    /// size would then exceed the limit.
+    /// Writable bytes of size, throws std::length_error
+    /// if readable size would then exceed limit.
     mutable_buffers_type prepare(size_t size) THROWS;
 
     /// Move size writable bytes (prepared) to the readable bytes.
     void commit(size_t size) NOEXCEPT;
 
-    /// Append the buffers to the readable bytes, of which at most one may be
-    /// within the writable bytes, throws std::length_error if the readable
-    /// size would then exceed the limit.
+    /// Append buffers to readable bytes, of which at most one
+    /// may be within writable bytes, throws std::length_error
+    /// if readable size would then exceed limit.
     void append(const std::span<const const_buffers_type>& buffers) THROWS;
 
     /// Remove size bytes from the front of the readable bytes.

@@ -241,8 +241,8 @@ void stream::handle_scan(const code& ec, size_t size, size_t start,
 
 void stream::read_versioning(bool first, const handshake_handler& handler) NOEXCEPT
 {
-    // Read packets until the version packet (skipping decoys). 
-    // The aad of first received packet is peer garbage (excluding terminator).
+    // Read packets until version packet (skipping decoys).
+    // Aad of first received packet is peer garbage (excluding terminator).
     packet_.resize(cipher::length_size);
     read_exactly(packet_,
         std::bind(&stream::handle_version_length,
@@ -339,9 +339,9 @@ void stream::handle_read(const code& ec, size_t,
     handler(ec);
 }
 
-// Read the encrypted length prefix and then the packet into the caller
-// buffer, decrypting it in place (skipping decoys). The payload is a span
-// over the buffer following the packet header and message type prefix.
+// Read encrypted length prefix and then packet into caller buffer, decrypting
+// it in place (skipping decoys). Payload is span over buffer following packet
+// header and message type prefix.
 void stream::async_read_message(data_chunk& buffer, size_t maximum,
     message_handler&& handler) NOEXCEPT
 {

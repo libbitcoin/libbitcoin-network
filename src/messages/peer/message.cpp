@@ -40,10 +40,9 @@ bool serialize<transaction>(const transaction& message, uint32_t magic,
         return message.serialize(version, body) && heading::factory(magic,
             transaction::command, body).serialize(data);
 
-    // The message heading hash must be full message hash (wtxid if witness
-    // even if not using wtxid in relay). Since wtxid is not cached, this
-    // is counterproductive (buffer hash is faster) except for non-witness
-    // writes.
+    // Message heading hash must be full message hash (wtxid if witness even if
+    // not using wtxid in relay). Since wtxid not cached, this is
+    // counterproductive (buffer hash is faster) except for non-witness writes.
     const auto& hash = message.transaction_ptr->get_hash(false);
 
     return message.serialize(version, body) && heading::factory(magic,

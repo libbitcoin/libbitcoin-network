@@ -26,8 +26,7 @@ using namespace network::error;
 template <bool IsRequest>
 using string_parser = parser<IsRequest, string_body>;
 
-// Feed the text in one put per size step, returning the code and setting the
-// unconsumed remainder.
+// Feed text one put per size step, return code and set unconsumed remainder.
 template <bool IsRequest>
 static code feed(string_parser<IsRequest>& instance, std::string text,
     std::string& rest, size_t step=max_size_t)

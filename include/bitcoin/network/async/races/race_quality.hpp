@@ -26,11 +26,11 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe.
-/// Used in outbound session to invoke for first succeesful handshake.
-/// race_quality invokes complete(args) provided at start(complete), with
-/// args from first successful call to finish(args), with success determined
-/// by first argument in 'args', or upon the last expected invocation of
-/// finish(...), based on the constructor 'size' parameter.
+/// Used in outbound session to invoke for first successful handshake.
+/// race_quality invokes complete(args) provided at start(complete), with args
+/// from first successful call to finish(args), success determined by first
+/// argument in 'args', or upon last expected invocation of finish(...), based
+/// on constructor 'size' parameter.
 template <typename... Args>
 class race_quality final
 {
@@ -49,9 +49,9 @@ public:
     /// False implies invalid usage.
     bool start(handler&& complete) NOEXCEPT;
 
-    /// True implies winning finisher (first that is not failed).
-    /// First arg is an 'error code', cast to bool (failed if true).
-    /// There may be no winner, in which case last finish is invoked.
+    /// True implies winning finisher (first not failed).
+    /// First arg 'error code', cast to bool (failed if true).
+    /// May be no winner, in which case last finish invoked.
     bool finish(const Args&... args) NOEXCEPT;
 
 private:
