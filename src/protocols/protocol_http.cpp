@@ -383,8 +383,11 @@ void protocol_http::handle_complete(const code& ec,
 bool protocol_http::is_allowed_host(const fields& fields,
     size_t version) const NOEXCEPT
 {
-    // Disallow unspecified host.
+    // Disallow unspecified or repeated host.
     // Host header field is mandatory at http 1.1.
+    if (fields.count(field::host) > one)
+        return false;
+
     const std::string host{ fields[field::host] };
     if (host.empty() && version >= version_1_1)
         return false;

@@ -50,8 +50,12 @@ code accept(response& out, const request_header& request) NOEXCEPT
     if (request.method() != verb::get)
         return reject(out, request, error::websocket_bad_method);
 
-    if (is_zero(request.count(field::host)))
+    const auto hosts = request.count(field::host);
+    if (is_zero(hosts))
         return reject(out, request, error::no_host);
+
+    if (hosts > one)
+        return reject(out, request, error::bad_request);
 
     const auto connection = request.find(field::connection);
     if (connection == request.end())
