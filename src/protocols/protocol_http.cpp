@@ -285,6 +285,7 @@ void protocol_http::send_unauthorized(const request& request) NOEXCEPT
     const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request, true);
+    out.set(field::www_authenticate, channel_http::challenge);
     out.body() = string_status(code, out.reason(), media);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::unauthorized);

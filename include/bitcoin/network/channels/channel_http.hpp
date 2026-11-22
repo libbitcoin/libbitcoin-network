@@ -39,6 +39,9 @@ public:
     using interface = rpc::interface::http;
     using dispatcher = rpc::dispatcher<interface>;
 
+    /// The authentication challenge of an unauthorized response.
+    static constexpr std::string_view challenge{ "Basic realm=\"libbitcoin\"" };
+
     /// Subscribe to message from client (requires strand).
     /// Event handler always invoked on channel strand.
     template <class Request>
@@ -139,6 +142,7 @@ private:
     code to_fault(const rpc::request& body) const NOEXCEPT;
     void reject(const code& ec, const http::request& request) NOEXCEPT;
     void refuse(const code& ec, const http::request& request) NOEXCEPT;
+    void unauthorized(const http::request& request) NOEXCEPT;
     void handle_rejected(const code& ec, const code& reason) NOEXCEPT;
     std::string log_message(const http::response& response) const NOEXCEPT;
     std::string log_message(const http::request& request,
