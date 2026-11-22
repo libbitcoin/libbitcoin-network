@@ -170,10 +170,12 @@ constexpr bool is_unspecified(const address_t& address) NOEXCEPT
     return std::visit([](const auto& value) NOEXCEPT
     {
         using type = std::decay_t<decltype(value)>;
+        // MSVC 14.52 compiles == type{} to an aligned load (unaligned here).
         if constexpr (is_same_type<type, std::monostate>)
             return true;
         else
-            return value == type{};
+            return std::all_of(value.value.begin(), value.value.end(),
+                [](uint8_t byte) NOEXCEPT { return is_zero(byte); });
     }, address);
 }
 
