@@ -209,6 +209,9 @@ BC_AUTO_TEST_CASE(frame__is_valid_close_code__codes__expected)
     BC_REQUIRE(is_valid_close_code(1003));
     BC_REQUIRE(is_valid_close_code(1007));
     BC_REQUIRE(is_valid_close_code(1013));
+    BC_REQUIRE(is_valid_close_code(1014));
+    BC_REQUIRE(is_valid_close_code(1016));
+    BC_REQUIRE(is_valid_close_code(2999));
     BC_REQUIRE(is_valid_close_code(3000));
     BC_REQUIRE(is_valid_close_code(4999));
     BC_REQUIRE(!is_valid_close_code(0));
@@ -216,10 +219,7 @@ BC_AUTO_TEST_CASE(frame__is_valid_close_code__codes__expected)
     BC_REQUIRE(!is_valid_close_code(1004));
     BC_REQUIRE(!is_valid_close_code(1005));
     BC_REQUIRE(!is_valid_close_code(1006));
-    BC_REQUIRE(!is_valid_close_code(1014));
     BC_REQUIRE(!is_valid_close_code(1015));
-    BC_REQUIRE(!is_valid_close_code(1016));
-    BC_REQUIRE(!is_valid_close_code(2999));
 }
 
 BC_AUTO_TEST_CASE(frame__parse_close__empty__no_code)
