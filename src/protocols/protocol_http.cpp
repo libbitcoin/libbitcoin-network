@@ -344,6 +344,7 @@ void protocol_http::send_method_not_allowed(const request& request) NOEXCEPT
     const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request, true);
+    out.set(field::allow, allowed(request));
     out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::method_not_allowed);
@@ -547,6 +548,16 @@ void protocol_http::register_methods(const std::string_view& names) NOEXCEPT
 const std::string& protocol_http::methods() const NOEXCEPT
 {
     return channel_->methods();
+}
+
+void protocol_http::allow(const std::string_view& verb) NOEXCEPT
+{
+    channel_->allow(verb);
+}
+
+std::string protocol_http::allowed(const request&) const NOEXCEPT
+{
+    return channel_->allowed();
 }
 
 bool protocol_http::authorized() const NOEXCEPT

@@ -151,6 +151,12 @@ protected:
     /// The method names served by attached protocols (requires strand).
     const std::string& methods() const NOEXCEPT;
 
+    /// Append http verb allowed by this protocol (requires strand).
+    void allow(const std::string_view& verb) NOEXCEPT;
+
+    /// The http verbs allowed for the target of the request (requires strand).
+    virtual std::string allowed(const http::request& request) const NOEXCEPT;
+
     /// True if basic authorization is not required or has been satisfied.
     bool authorized() const NOEXCEPT;
 

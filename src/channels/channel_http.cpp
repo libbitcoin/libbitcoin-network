@@ -476,6 +476,25 @@ const std::string& channel_http::methods() const NOEXCEPT
     return methods_;
 }
 
+void channel_http::allow(const std::string_view& verb) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (verb.empty() || allowed_.find(verb) != std::string::npos)
+        return;
+
+    if (!allowed_.empty())
+        allowed_.append(", ");
+
+    allowed_.append(verb);
+}
+
+const std::string& channel_http::allowed() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return allowed_;
+}
+
 void channel_http::handle_rejected(const code& ec,
     const code& reason) NOEXCEPT
 {

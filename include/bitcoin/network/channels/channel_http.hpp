@@ -95,6 +95,12 @@ public:
     /// The method names served by attached protocols (requires strand).
     virtual const std::string& methods() const NOEXCEPT;
 
+    /// Append http verb allowed by an attached protocol (requires strand).
+    virtual void allow(const std::string_view& verb) NOEXCEPT;
+
+    /// The http verbs allowed by attached protocols (requires strand).
+    virtual const std::string& allowed() const NOEXCEPT;
+
     /// True if basic authorization is not required or has been satisfied.
     virtual bool authorized() const NOEXCEPT;
 
@@ -157,6 +163,7 @@ private:
     system::hash_digest digest_{};
     dispatcher dispatcher_{};
     std::string methods_{};
+    std::string allowed_{};
     bool reading_{};
     bool claimed_{};
     bool authorized_;
