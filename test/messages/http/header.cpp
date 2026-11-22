@@ -178,6 +178,22 @@ BC_AUTO_TEST_CASE(header__is_upgrade__websocket__expected)
     BC_REQUIRE(!is_upgrade(instance));
 }
 
+BC_AUTO_TEST_CASE(header__expects_continue__100_continue__expected)
+{
+    request_header instance{ verb::post, "/", version_1_1 };
+    BC_REQUIRE(!expects_continue(instance));
+
+    instance.set(field::expect, "100-Continue");
+    BC_REQUIRE(expects_continue(instance));
+
+    instance.version(version_1_0);
+    BC_REQUIRE(!expects_continue(instance));
+
+    instance.version(version_1_1);
+    instance.set(field::expect, "200-ok");
+    BC_REQUIRE(!expects_continue(instance));
+}
+
 // message
 
 BC_AUTO_TEST_CASE(header__prepare_payload__versions__expected)

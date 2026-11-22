@@ -626,6 +626,63 @@ void proxy::handle_http_header(const code& ec, size_t bytes,
         return;
     }
 
+    if (!parser_->is_done() && http::expects_continue(parser_->get()))
+    {
+        do_http_continue(request, buffer, handler);
+        return;
+    }
+
+    socket_->http_read_body(buffer.get(), parser_,
+        std::bind(&proxy::handle_http_body,
+            shared_from_this(), _1, _2, request, buffer, handler));
+}
+
+// private
+// The interim response is queued, the body read follows its write.
+void proxy::do_http_continue(const ref<http::request>& request,
+    const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    static constexpr std::string_view interim
+    {
+        "HTTP/1.1 100 Continue\r\n\r\n"
+    };
+
+    pending entry
+    {
+        zero,
+        std::bind(&proxy::do_tcp_write, shared_from_this(),
+            io::const_buffer{ interim.data(), interim.size() }),
+        std::bind(&proxy::handle_http_continue,
+            shared_from_this(), _1, _2, request, buffer, handler)
+    };
+
+    do_write(entry, false);
+}
+
+// private
+void proxy::handle_http_continue(const code& ec, size_t bytes,
+    const ref<http::request>& request, const ref<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    // Stopping released the parse while this write was in flight.
+    if (!parser_)
+    {
+        handler(error::channel_stopped, bytes);
+        return;
+    }
+
+    if (ec)
+    {
+        parser_.reset();
+        handler(ec, bytes);
+        return;
+    }
+
     socket_->http_read_body(buffer.get(), parser_,
         std::bind(&proxy::handle_http_body,
             shared_from_this(), _1, _2, request, buffer, handler));

@@ -32,7 +32,7 @@ struct field_name
     std::string_view text;
 };
 
-static constexpr std::array<field_name, 32> field_names
+static constexpr std::array<field_name, 35> field_names
 {
     field_name{ field::accept, "Accept" },
     field_name{ field::accept_encoding, "Accept-Encoding" },
@@ -42,6 +42,7 @@ static constexpr std::array<field_name, 32> field_names
     field_name{ field::access_control_max_age, "Access-Control-Max-Age" },
     field_name{ field::access_control_request_headers, "Access-Control-Request-Headers" },
     field_name{ field::access_control_request_method, "Access-Control-Request-Method" },
+    field_name{ field::allow, "Allow" },
     field_name{ field::authorization, "Authorization" },
     field_name{ field::cache_control, "Cache-Control" },
     field_name{ field::connection, "Connection" },
@@ -51,6 +52,7 @@ static constexpr std::array<field_name, 32> field_names
     field_name{ field::content_type, "Content-Type" },
     field_name{ field::date, "Date" },
     field_name{ field::etag, "ETag" },
+    field_name{ field::expect, "Expect" },
     field_name{ field::host, "Host" },
     field_name{ field::if_none_match, "If-None-Match" },
     field_name{ field::keep_alive, "Keep-Alive" },
@@ -65,7 +67,8 @@ static constexpr std::array<field_name, 32> field_names
     field_name{ field::transfer_encoding, "Transfer-Encoding" },
     field_name{ field::upgrade, "Upgrade" },
     field_name{ field::user_agent, "User-Agent" },
-    field_name{ field::vary, "Vary" }
+    field_name{ field::vary, "Vary" },
+    field_name{ field::www_authenticate, "WWW-Authenticate" }
 };
 
 field to_field(const std::string_view& name) NOEXCEPT

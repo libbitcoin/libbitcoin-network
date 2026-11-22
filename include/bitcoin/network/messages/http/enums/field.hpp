@@ -37,6 +37,7 @@ enum class field : uint8_t
     access_control_max_age,
     access_control_request_headers,
     access_control_request_method,
+    allow,
     authorization,
     cache_control,
     connection,
@@ -46,6 +47,7 @@ enum class field : uint8_t
     content_type,
     date,
     etag,
+    expect,
     host,
     if_none_match,
     keep_alive,
@@ -60,7 +62,8 @@ enum class field : uint8_t
     transfer_encoding,
     upgrade,
     user_agent,
-    vary
+    vary,
+    www_authenticate
 };
 
 /// The field of the name (case insensitive), or unknown.
