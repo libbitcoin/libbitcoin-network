@@ -32,8 +32,8 @@ namespace http {
 /// The most bytes read from the stream by one call.
 constexpr size_t transfer_size = system::power2<size_t>(16u);
 
-/// Read one message from the stream (blocking read_some), using the buffer
-/// for received bytes. Bytes beyond the message are retained in the buffer.
+/// Read one message from stream (blocking read_some), using buffer for received
+/// bytes. Bytes beyond message retained in buffer.
 template <typename Stream, bool IsRequest, class Body>
 void read(Stream& stream, flat_buffer& buffer,
     message<IsRequest, Body>& out, code& ec) NOEXCEPT;

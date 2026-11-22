@@ -30,13 +30,13 @@
 namespace libbitcoin {
 namespace network {
 
-/// This class is thread safe, except for:
+/// Thread safe, except for:
 /// * start/started must be called on strand.
 /// * setters should only be invoked during handshake.
 /// Abstract base class for protocols.
-/// handle_ methods are always invoked on the strand.
+/// handle_ methods always invoked on strand.
 /// Protocol start has no failure condition.
-/// A protocol can only stop its channel, not the session/network.
+/// Protocol can only stop its channel, not session/network.
 class BCT_API protocol
   : public enable_shared_from_base<protocol>, public reporter
 {
@@ -47,9 +47,9 @@ public:
 
     DELETE_COPY_MOVE(protocol);
 
-    /// The channel is stopping (called on strand by stop subscription).
-    /// The stopped flag is set before this is invoked by subscriber stop.
-    /// This must be called only from the channel strand (requires strand).
+    /// Channel is stopping (called on strand by stop subscription).
+    /// Stopped flag is set before this is invoked by subscriber stop.
+    /// Must be called only from channel strand (requires strand).
     virtual void stopping(const code& ec) NOEXCEPT;
 
 private:
@@ -103,7 +103,7 @@ protected:
     }
 
     /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST).
-    /// Method is invoked with error::subscriber_stopped if already stopped.
+    /// Method invoked with error::subscriber_stopped if already stopped.
     template <class Derived, class Message, typename Method, typename... Args>
     inline void subscribe_broadcast(Method&& method, Args&&... args) NOEXCEPT
     {
@@ -120,7 +120,7 @@ protected:
     }
 
     /// Unsubscribe to messages broadcasts by type (use UNSUBSCRIBE_BROADCAST).
-    /// Unsubscribes ALL subscribers using subscribe_broadcast for the channel.
+    /// Unsubscribes ALL subscribers using subscribe_broadcast for channel.
     template <class Derived>
     inline void unsubscribe_broadcast() NOEXCEPT
     {
@@ -128,7 +128,7 @@ protected:
         session_->unsubscribe(channel_->identifier());
     }
 
-    /// Broadcast a message instance to channels (use BROADCAST).
+    /// Broadcast message instance to channels (use BROADCAST).
     /// Channel identifier allows recipient-sender to self-identify.
     template <class Message>
     inline void broadcast(const typename Message::cptr& message) NOEXCEPT
@@ -216,7 +216,7 @@ protected:
     virtual void handle_send(const code& ec) NOEXCEPT;
 
 private:
-    // This is mostly thread safe, and used in a thread safe manner.
+    // Mostly thread safe, and used in thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
     const channel::ptr channel_;
 

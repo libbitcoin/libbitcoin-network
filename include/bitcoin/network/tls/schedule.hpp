@@ -25,8 +25,8 @@ namespace libbitcoin {
 namespace network {
 namespace tls {
 
-/// The TLS 1.3 key schedule (rfc8446 7) over the hash of a cipher suite,
-/// SHA-384 for TLS_AES_256_GCM_SHA384 and otherwise SHA-256.
+/// TLS 1.3 key schedule (rfc8446 7) over hash of cipher suite, SHA-384 for
+/// TLS_AES_256_GCM_SHA384 and otherwise SHA-256.
 class BCT_API schedule final
 {
 public:
@@ -76,8 +76,8 @@ private:
     uint16_t suite_;
 };
 
-/// Running hash of the handshake messages (4.4.1), over the hash of a
-/// cipher suite. Not thread safe.
+/// Running hash of handshake messages (4.4.1), over hash of cipher suite.
+/// Not thread safe.
 class BCT_API transcript final
 {
 public:

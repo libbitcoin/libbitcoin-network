@@ -31,21 +31,21 @@ namespace libbitcoin {
 namespace network {
 namespace ws {
 
-/// Not thread safe. The client side of a websocket over a stream, by
-/// blocking read_some and write_some. Frames are masked, pings are answered
-/// with pongs, and a peer's close is answered with its close code.
+/// Not thread safe. Client side of websocket over stream, by blocking read_some
+/// and write_some. Frames are masked, pings are answered with pongs, and peer's
+/// close is answered with its close code.
 template <typename Stream>
 class client
 {
 public:
     DELETE_COPY_MOVE(client);
 
-    /// The stream must outlive the client. A message larger than maximum is
-    /// rejected (message_too_big).
+    /// Stream must outlive client.
+    /// Message larger than maximum is rejected (message_too_big).
     client(Stream& stream, size_t maximum=max_size_t) NOEXCEPT;
 
-    /// Upgrade the connection (rfc6455), keeping the server's response, with
-    /// any additional request fields (such as authorization).
+    /// Upgrade connection (rfc6455), keeping server's response, with any
+    /// additional request fields (such as authorization).
     code handshake(response& out, const std::string& host,
         const std::string& target, const http::fields& extra={}) NOEXCEPT;
     code handshake(const std::string& host,
@@ -61,8 +61,8 @@ public:
     /// Send close and read until the peer's close (data is discarded).
     code close(close_code value) NOEXCEPT;
 
-    /// Read the next data message into out (appended), websocket_closed once
-    /// the peer has closed.
+    /// Read next data message into out (appended),
+    /// websocket_closed once peer has closed.
     code read(http::flat_buffer& out) NOEXCEPT;
 
     /// The last message read was binary.

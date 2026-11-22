@@ -32,15 +32,14 @@ namespace network {
 namespace zmtp {
 
 /// Native ZMTP (ZeroMQ 3.x) framing over a tcp socket.
-/// The stream performs the greeting and mechanism handshake (NULL, or CURVE
-/// as server when the context holds a keypair) and then frames the wire: one
-/// frame is read at a time into a caller-owned frame, and a caller-framed
-/// buffer is written at a time. Under CURVE each frame is boxed into a
-/// MESSAGE command on write and unboxed on read, so the tiers above see the
-/// same frames either way. It is a transport, not a framework. The role is
-/// the socket type advertised in the handshake (admits compatible peers).
-/// All calls must be sequenced on the underlying socket's executor. Read and
-/// write chains may overlap each other but not themselves.
+/// Stream performs greeting and mechanism handshake (NULL, or CURVE as server
+/// when context holds keypair) and then frames wire: one frame is read at a
+/// time into caller-owned frame, and caller-framed buffer is written at a time.
+/// Under CURVE each frame is boxed into MESSAGE command on write and unboxed on
+/// read, so tiers above see same frames either way. Transport, not framework.
+/// Role is socket type advertised in handshake (admits compatible peers). All
+/// calls must be sequenced on underlying socket's executor. Read and write
+/// chains may overlap each other but not themselves.
 class BCT_API stream
 {
 public:
@@ -80,8 +79,8 @@ public:
     /// Signature (first ten bytes of the greeting) gates peer validity.
     static constexpr size_t signature_size = 10;
 
-    /// The greeting is read in two stages: signature plus version-major, then
-    /// the balance (version-minor, mechanism, as-server, filler).
+    /// Greeting is read in two stages: signature plus version-major, then
+    /// balance (version-minor, mechanism, as-server, filler).
     static constexpr size_t greeting_stage1 = signature_size + 1u;
     static constexpr size_t greeting_stage2 = greeting_size - greeting_stage1;
 
@@ -107,18 +106,18 @@ public:
     io::socket& next_layer() NOEXCEPT;
     const io::socket& next_layer() const NOEXCEPT;
 
-    /// Perform the ZMTP greeting and mechanism handshake.
+    /// Perform ZMTP greeting and mechanism handshake.
     /// as_server is set for accepted (bound) connections, clear for connected.
-    /// The CURVE mechanism is implemented for the server role only.
+    /// CURVE mechanism is implemented for server role only.
     void async_handshake(bool as_server, handshake_handler&& handler) NOEXCEPT;
 
-    /// Read the next frame into the caller-owned frame (flags and body), one
-    /// frame per read. A frame exceeding maximum fails with message_size.
+    /// Read next frame into caller-owned frame (flags and body), one frame per
+    /// read. Frame exceeding maximum fails with message_size.
     void async_read_frame(frame& out, size_t maximum,
         io_handler&& handler) NOEXCEPT;
 
-    /// Write a caller-framed buffer (see frame_message). The caller retains
-    /// the buffer until the handler fires, when the peer has accepted it.
+    /// Write caller-framed buffer (see frame_message). Caller retains buffer
+    /// until handler fires, when peer has accepted it.
     void async_write(const io::const_buffer& in,
         io_handler&& handler) NOEXCEPT;
 
@@ -129,19 +128,19 @@ public:
     // Codec (static, stateless). Exposed for the tier above and for test.
     // ------------------------------------------------------------------------
 
-    /// Frame one whole multipart message (v3.1 rules, MORE on all but the
-    /// last part) into a single contiguous buffer. Frame once, write to all.
+    /// Frame whole multipart message (v3.1 rules, MORE on all but last part)
+    /// into single contiguous buffer. Frame once, write to all.
     static system::data_chunk frame_message(
         const system::data_stack& parts) NOEXCEPT;
 
-    /// Build our complete 64-byte greeting (sent eagerly on handshake start).
-    /// The as-server byte is set only for the CURVE mechanism server role.
+    /// Build complete 64-byte greeting (sent eagerly on handshake start).
+    /// As-server byte set only for CURVE mechanism server role.
     static system::data_chunk make_greeting(bool as_server,
         bool curve) NOEXCEPT;
 
-    /// Validate a peer greeting and extract its minor version, mechanism
-    /// (NULL or CURVE) and as-server byte. Requires the full greeting_size
-    /// bytes. Returns false on signature/mechanism refusal.
+    /// Validate peer greeting, extract minor version, mechanism
+    /// (NULL or CURVE) and as-server byte. Requires full
+    /// greeting_size bytes. False on signature/mechanism refusal.
     static bool parse_greeting(const std::span<const uint8_t>& greeting,
         uint8_t& minor, bool& curve, bool& as_server) NOEXCEPT;
 
@@ -149,8 +148,7 @@ public:
     static system::data_chunk make_property(const std::string& name,
         const std::string& value) NOEXCEPT;
 
-    /// Build the NULL-mechanism READY command advertising the role's
-    /// Socket-Type.
+    /// Build NULL-mechanism READY command advertising role's Socket-Type.
     static system::data_chunk make_ready(zmtp::role role) NOEXCEPT;
 
     /// Build an ERROR command with the given reason.
@@ -171,18 +169,18 @@ public:
     static void write_frame_head(system::writer& sink, size_t body,
         bool command, bool more) NOEXCEPT;
 
-    /// Decode the frame at the front of a buffer into flags and body, setting
-    /// the buffer to the remainder. False if the buffer is malformed.
+    /// Decode frame at front of buffer into flags and body, setting buffer to
+    /// remainder. False if buffer malformed.
     static bool frame_decode(uint8_t& flags, std::span<const uint8_t>& body,
         std::span<const uint8_t>& buffer) NOEXCEPT;
 
-    /// Extract the command name from a command frame body, or empty if the
-    /// self-describing length prefix is malformed. Sets body to the remainder.
+    /// Extract command name from command frame body, or empty if
+    /// self-describing length prefix malformed. Sets body to remainder.
     static bool command_name(std::string& name, std::span<const uint8_t>& body,
         const std::span<const uint8_t>& frame) NOEXCEPT;
 
-    /// Parse the named property from metadata. Returns false if the property
-    /// is absent or the metadata malformed; value is the property value.
+    /// Parse named property from metadata. False if property absent or metadata
+    /// malformed; value is property value.
     static bool ready_property(const std::string& name, std::string& value,
         const std::span<const uint8_t>& body) NOEXCEPT;
 

@@ -106,16 +106,16 @@ using body_value = std::variant
 >;
 
 /// body template for all known message types.
-/// This encapsulates a variant of supported body types, selects a type upon
-/// reader or writer construction, and then passes all calls through to it.
+/// Encapsulates variant of supported body types, selects type upon reader or
+/// writer construction, then passes all calls through to it.
 struct BCT_API body
 {
     /// No size(), forces chunked encoding for all types.
-    /// The pass-thru body(), reader populates in construct.
+    /// Pass-thru body(), reader populates in construct.
     struct value_type
     {
         /// Set to change reader to plain json (vs. json-rpc).
-        /// Writer is determined by assigned body type.
+        /// Writer determined by assigned body type.
         bool plain_json{};
 
         /// Set to read a post body as json-rpc regardless of content type.
@@ -394,7 +394,7 @@ struct BCT_API body
                 },
                 [&](json_value& value) NOEXCEPT
                 {
-                    // json_writer is not movable (by contained serializer).
+                    // json_writer not movable (by contained serializer).
                     // So requires in-place construction for variant populate.
                     return body_writer
                     {
@@ -407,7 +407,7 @@ struct BCT_API body
                 },
                 [&](rpc_response& value) NOEXCEPT
                 {
-                    // rpc::writer is not movable (by contained serializer).
+                    // rpc::writer not movable (by contained serializer).
                     // So requires in-place construction for variant populate.
                     return body_writer
                     {
@@ -416,7 +416,7 @@ struct BCT_API body
                 },
                 [&](rpc_request& value) NOEXCEPT
                 {
-                    // rpc::writer is not movable (by contained serializer).
+                    // rpc::writer not movable (by contained serializer).
                     // So requires in-place construction for variant populate.
                     return body_writer
                     {

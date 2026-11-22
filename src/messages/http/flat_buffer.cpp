@@ -102,8 +102,7 @@ void flat_buffer::commit(size_t size) NOEXCEPT
 void flat_buffer::append(
     const std::span<const const_buffers_type>& buffers) THROWS
 {
-    // A buffer within the allocation is located by offset, as prepare may
-    // reallocate.
+    // Buffer within allocation located by offset, as prepare may reallocate.
     const const_buffers_type* inner{};
     size_t from{};
     size_t to{};

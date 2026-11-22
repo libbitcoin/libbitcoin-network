@@ -507,8 +507,8 @@ bool client::handle_certificate_request(const span& message,
         return fail(alert::missing_extension);
 
     // Without acceptable key client sends empty Certificate.
-    const auto scheme = (context_.curve() == x509::curve::secp256r1) ?
-        ecdsa_secp256r1_sha256 : ecdsa_secp384r1_sha384;
+    const auto p256 = (context_.curve() == x509::curve::secp256r1);
+    const auto scheme = p256 ? ecdsa_secp256r1_sha256 : ecdsa_secp384r1_sha384;
     authenticate_ = context_.is_ready() && contains(algorithms, scheme);
     requested_ = true;
     add_transcript(message);

@@ -25,8 +25,8 @@
 namespace libbitcoin {
 namespace network {
 
-// The run() function blocks until all work has finished and there are no
-// more handlers to be dispatched, or until the io_context has been stopped.
+// run() blocks until all work finishes and no handlers remain to dispatch,
+// or until io_context stops.
 threadpool::threadpool(size_t number_threads,
     processing_priority priority) NOEXCEPT
   : work_(service_)
@@ -48,11 +48,11 @@ threadpool::~threadpool() NOEXCEPT
     join();
 }
 
-// Stopping the context would abandon unfinished operations without
-// permitting ready handlers to be dispatched.
+// Stopping context would abandon unfinished operations without permitting ready
+// handlers to be dispatched.
 void threadpool::stop() NOEXCEPT
 {
-    // Clear the work keep-alive.
+    // Clear work keep-alive.
     // Allows all operations and handlers to finish normally.
     work_.reset();
 }

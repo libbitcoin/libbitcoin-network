@@ -18,9 +18,9 @@
  */
 #include <bitcoin/network/define.hpp>
 
-// define.hpp is the common include for /network.
+// define.hpp is common include for /network.
 // All non-network headers include define.hpp.
-// Network inclusions are chained as follows.
+// Network inclusions chained as follows.
 
 // version        : <generated>
 // have           : version
@@ -49,5 +49,5 @@
 // /protocols     : /sessions
 // /tls           : define
 
-// When a symbol is unexplainably undefined, its defining include is probably
-// creating the circularity.
+// When symbol is unexplainably undefined,
+// its defining include is probably creating circularity.

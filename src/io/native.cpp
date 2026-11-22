@@ -309,13 +309,13 @@ bool set_blocking(native_socket socket, bool blocking, int& native) NOEXCEPT
 bool wait_ready(native_socket socket, bool write, int& native) NOEXCEPT
 {
 #if defined(HAVE_WINDOWS)
-    WSAPOLLFD descriptor{ socket, static_cast<SHORT>(write ? POLLOUT :
-        POLLIN), 0 };
+    const auto events = static_cast<SHORT>(write ? POLLOUT : POLLIN);
+    WSAPOLLFD descriptor{ socket, events, 0 };
 
     if (::WSAPoll(&descriptor, 1, -1) == SOCKET_ERROR)
 #else
-    pollfd descriptor{ socket, static_cast<short>(write ? POLLOUT : POLLIN),
-        0 };
+    const auto events = static_cast<short>(write ? POLLOUT : POLLIN);
+    pollfd descriptor{ socket, events, 0 };
 
     if (::poll(&descriptor, 1, -1) < 0)
 #endif

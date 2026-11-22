@@ -84,9 +84,8 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
     const auto& settings = network_settings();
 
     // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
-    const auto accept = privacy_ &&
-        std::holds_alternative<std::monostate>(context) ?
-            settings.peer_context() : context;
+    const auto unset = std::holds_alternative<std::monostate>(context);
+    const auto accept = privacy_ && unset ? settings.peer_context() : context;
 
     socket::parameters params
     {
@@ -415,11 +414,11 @@ bool net::stranded() const NOEXCEPT
 
 // Subscriptions.
 // ----------------------------------------------------------------------------
-// Channel and network strands share same pool, and as long as a job is
-// running in the pool, it will continue to accept work. Therefore handlers
-// will not be orphaned during a stop as long as they remain in the pool.
-// But when entering from outside the pool (such as subscribe) handler must be
-// invoked when stopped as the handler will go uninvoked if the pool empties.
+// Channel and network strands share same pool, and as long as job is running in
+// pool, it continues to accept work. Therefore handlers are not orphaned during
+// stop as long as they remain in pool. But when entering from outside pool
+// (such as subscribe) handler must be invoked when stopped, as handler goes
+// uninvoked if pool empties.
 
 // public
 void net::subscribe_connect(channel_notifier&& handler,

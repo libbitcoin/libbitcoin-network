@@ -37,8 +37,8 @@ constexpr bool is_json_whitespace(char character) NOEXCEPT
 }
 
 /// Content passed to/from reader/writer via request/response.
-/// The body has no size, so the response is chunked. Predetermining size
-/// would have the effect of eliminating the benefit of streaming serialize.
+/// Body has no size, so response is chunked. Predetermining size would
+/// eliminate benefit of streaming serialize.
 struct json_value
 {
     /// JSON document object model to parse/serialize.
@@ -52,8 +52,8 @@ struct json_value
 };
 
 /// http body for JSON messages.
-/// Because of the parser and serializer members, neither the reader nor writer
-/// is movable and as such must be in-place contructed (e.g. variant contruct).
+/// Because of parser and serializer members, neither reader nor writer is
+/// movable, so must be in-place constructed (e.g. variant construct).
 template <typename Value = json_value>
 struct body
 {

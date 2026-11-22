@@ -26,9 +26,9 @@ namespace libbitcoin {
 namespace network {
 
 /// Thread safe.
-/// race_any invokes complete(args) provided at construct, with args from the
-/// first call to finish(args), otherwise with error::operation_failed upon
-/// release of the last reference.
+/// race_any invokes complete(args) provided at construct,
+/// with args from first call to finish(args), otherwise with
+/// error::operation_failed upon release of last reference.
 template <typename... Args>
 class race_any final
 {

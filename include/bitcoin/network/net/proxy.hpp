@@ -36,16 +36,15 @@ namespace network {
 /// Handles all channel communication, error handling, and logging.
 /// Caller must retain ownership of read/write buffers until handler invoked.
 /// All writes are queued to prevent interleaving.
-/// Completion handler is invoked once write is complete, at which point the
-/// next queued write is invoked. A write with another queued behind it may be
-/// held by the socket, completing before it is written with a later write.
-/// When a channel stops with pending writes the write queue is purged without
-/// invoke of the purged handlers.
-/// Each send is allocated (bytes/rate_limit) of time, and its completion is
-/// deferred by whatever portion of that allocation the write did not consume.
-/// Since nothing is produced until the completion handler is invoked, this
-/// throttles the channel without queueing. Reads are not metered, as they are
-/// bounded by protocol correctness. Zero rate_limit disables the throttle.
+/// Completion handler is invoked once write is complete, at which point next
+/// queued write is invoked. Write with another queued behind it may be held by
+/// socket, completing before it is written with later write. When channel stops
+/// with pending writes, write queue is purged without invoke of purged
+/// handlers. Each send is allocated (bytes/rate_limit) of time, and its
+/// completion is deferred by whatever portion of that allocation write did not
+/// consume. Since nothing is produced until completion handler is invoked, this
+/// throttles channel without queueing. Reads are not metered, as they are
+/// bounded by protocol correctness. Zero rate_limit disables throttle.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, public reporter
 {
@@ -63,11 +62,11 @@ public:
 
     /// Idempotent, may be called multiple times.
     /// Stop socket, no delay, called by stop notify when iocontext is closing.
-    /// An open batch response is closed (written) before the socket stops.
+    /// Open batch response is closed (written) before socket stops.
     virtual void stop(const code& ec) NOEXCEPT;
 
     /// Subscribe to stop notification with completion handler.
-    /// Completion and event handlers are always invoked on the channel strand.
+    /// Completion and event handlers always invoked on channel strand.
     void subscribe_stop(result_handler&& handler,
         result_handler&& complete) NOEXCEPT;
 
@@ -161,12 +160,12 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Read complete logical message for websockets (not for tcp).
-    /// Read available buffer from the socket, handler posted to socket strand.
+    /// Read available buffer from socket, handler posted to socket strand.
     void read(http::flat_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
     /// Binary or text mode applies to websockets (no-op for tcp).
-    /// Write the provided buffer to socket, handler posted to socket strand.
+    /// Write provided buffer to socket, handler posted to socket strand.
     void write(const io::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
@@ -183,20 +182,20 @@ protected:
 
     /// RPC (TCP: electrum/stratum_v1, WS: btcd).
     /// -----------------------------------------------------------------------
-    /// The channel is batch-blind: the proxy stamps batch state on reads and
-    /// response parts, absorbs the batch close (writing the close part and
-    /// re-arming the read), and defers notifications while a batch is open.
+    /// Channel is batch-blind: proxy stamps batch state on reads and response
+    /// parts, absorbs batch close (writing close part and re-arming read), and
+    /// defers notifications while batch is open.
 
-    /// Read rpc request from the socket, using provided buffer.
-    /// The proxy stamps batch state (the parse is always lax).
+    /// Read rpc request from socket, using provided buffer.
+    /// Proxy stamps batch state (parse is always lax).
     void read(http::flat_buffer& buffer, rpc::request& request,
         count_handler&& handler) NOEXCEPT;
 
     /// PEER (TCP: bitcoin p2p).
     /// -----------------------------------------------------------------------
 
-    /// Read peer message from the socket, using provided buffer.
-    /// The caller stamps parse context (magic/version/witness) on the frame.
+    /// Read peer message from socket, using provided buffer.
+    /// Caller stamps parse context (magic/version/witness) on frame.
     void read(system::data_chunk& buffer,
         messages::peer::frame& message, count_handler&& handler) NOEXCEPT;
 
@@ -212,20 +211,20 @@ protected:
     void write(rpc::response&& response,
         count_handler&& handler) NOEXCEPT;
 
-    /// Notify rpc notification (request) to the socket (json buffer in body).
-    /// Deferred while a batch is open, drained following the close part.
+    /// Notify rpc notification (request) to socket (json buffer in body).
+    /// Deferred while batch is open, drained following close part.
     void notify(rpc::request&& notification,
         count_handler&& handler) NOEXCEPT;
 
     /// HTTP/WS (generic/rpc).
     /// -----------------------------------------------------------------------
 
-    /// Read http request from the socket, using provided buffer.
+    /// Read http request from socket, using provided buffer.
     /// If socket is websocket request body type must have been set by caller.
     void read(http::flat_buffer& buffer, http::request& request,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write http response to the socket (json buffer in body).
+    /// Write http response to socket (json buffer in body).
     /// If socket is websocket body is written (headers ignored).
     void write(http::response&& response,
         count_handler&& handler) NOEXCEPT;
@@ -237,8 +236,8 @@ protected:
 private:
     typedef std::function<void()> writer;
 
-    // A queued write retains memory, charged as the backlog of the channel.
-    // The entry owns the handler, invoked on completion or a refused write.
+    // Queued write retains memory, charged as backlog of channel.
+    // Entry owns handler, invoked on completion or refused write.
     struct pending
     {
         size_t cost;

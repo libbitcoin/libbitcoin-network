@@ -79,8 +79,9 @@ void peer_setup_fixture::send(const std::string& command,
 {
     const auto head = heading::factory(settings_.identifier, command, payload);
     data_chunk frame(heading::size() + payload.size());
-    BC_REQUIRE(head.serialize({ frame.data(),
-        std::next(frame.data(), heading::size()) }));
+    const auto begin = frame.data();
+    const auto end = std::next(begin, heading::size());
+    BC_REQUIRE(head.serialize({ begin, end }));
 
     std::copy(payload.begin(), payload.end(),
         std::next(frame.begin(), heading::size()));
@@ -204,8 +205,9 @@ void remote_peer::send(const std::string& command, const data_chunk& payload)
 {
     const auto head = heading::factory(identifier_, command, payload);
     data_chunk frame(heading::size() + payload.size());
-    BC_REQUIRE(head.serialize({ frame.data(),
-        std::next(frame.data(), heading::size()) }));
+    const auto begin = frame.data();
+    const auto end = std::next(begin, heading::size());
+    BC_REQUIRE(head.serialize({ begin, end }));
 
     std::copy(payload.begin(), payload.end(),
         std::next(frame.begin(), heading::size()));

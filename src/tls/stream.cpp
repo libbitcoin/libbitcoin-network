@@ -74,8 +74,9 @@ const x509::certificates& stream::peer() const NOEXCEPT
 
 void stream::async_handshake(result_handler&& handler) NOEXCEPT
 {
-    const auto ready = std::holds_alternative<server>(role_) ?
-        context_.is_ready() : context_.is_client_ready();
+    const auto is_server = std::holds_alternative<server>(role_);
+    const auto client_ready = context_.is_client_ready();
+    const auto ready = is_server ? context_.is_ready() : client_ready;
 
     if (!ready)
     {

@@ -106,7 +106,7 @@ void socket::do_lazy_stop() NOEXCEPT
 }
 
 // private
-// Socket stop cancels the pending close, which completes its handler.
+// Socket stop cancels pending close, which completes its handler.
 void socket::handle_lazy_timer(const code& ec) NOEXCEPT
 {
     if (!ec)
@@ -173,8 +173,8 @@ void socket::handle_tls_close(const code& ec) NOEXCEPT
 }
 
 // private
-// Lingering close (rfc9112 9.6): send is closed and receive is drained to the
-// peer's close, so unread bytes do not reset the connection under a response.
+// Lingering close (rfc9112 9.6): send closed and receive drained to peer's
+// close, so unread bytes do not reset connection under response.
 void socket::do_linger() NOEXCEPT
 {
     BC_ASSERT(stranded());

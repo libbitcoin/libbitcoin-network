@@ -208,8 +208,8 @@ struct BCT_API settings
         DELETE_COPY(zmtp_server);
         zmtp_server(const std::string_view& logging_name) NOEXCEPT;
 
-        /// Initialize the CURVE context (invalid_configuration if the key or
-        /// a client certificate is malformed, as the downgrade would be silent).
+        /// Initialize CURVE context (invalid_configuration if key or client
+        /// certificate is malformed, as downgrade would be silent).
         code initialize_context() NOEXCEPT override;
 
         /// The CurveZMQ server secret key (Z85) of the secured bindings.
@@ -257,7 +257,7 @@ struct BCT_API settings
         bool compression{ true };
 
         /// Basic authorization credentials stored and passed in cleartext.
-        /// This is not security, just compat for bitcoind on secured LAN.
+        /// Not security, just compat for bitcoind on secured LAN.
         config::credentials credentials{};
 
         /// Requires basic authorization.
@@ -368,8 +368,8 @@ struct BCT_API settings
                 }
                 case system::chain::selection::testnet5:
                 {
-                    connections = 50;
-                    connect_batch_size = 10;
+                    connections = 5;
+                    connect_batch_size = 1;
                     seeds.reserve(2);
                     seeds.emplace_back("carmine.libbitcoin.net", 18353_u16);
                     seeds.emplace_back("wormer.libbitcoin.net", 18353_u16);
@@ -489,8 +489,8 @@ struct BCT_API settings
     uint32_t connect_timeout_seconds{ 5 };
 
     /// Bytes/second allocated to each channel for sending, zero is unlimited.
-    /// A send is deferred by the unconsumed portion of its byte allocation,
-    /// which the next send of the channel cannot start until it expires.
+    /// Send is deferred by unconsumed portion of its byte allocation, which
+    /// next send of channel cannot start until it expires.
     /// Overlaps tcp_server::rate_limit (see settings::rate_limited).
     uint32_t rate_limit{ 0 };
     config::authorities blacklists{};

@@ -233,8 +233,8 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
     }
     else
     {
-        // A timeout attributes nothing, any other outcome attributes
-        // unreachable members to their address.
+        // Timeout attributes nothing, any other outcome attributes unreachable
+        // members to their address.
         if (ec != error::operation_timeout)
             members->attributable = true;
 
@@ -388,8 +388,8 @@ inline bool session_outbound::maybe_reclaim(const code& ec) const NOEXCEPT
     if (address_count() >= network_settings().outbound.host_pool_capacity)
         return false;
 
-    // Failures that might work later, not attributable to the address. An
-    // address that connected is not the cause of an unreachable failure.
+    // Failures that might work later, not attributable to address. Address that
+    // connected is not cause of unreachable failure.
     return ec == error::operation_timeout
         || ec == error::channel_timeout
         || ec == error::peer_disconnect

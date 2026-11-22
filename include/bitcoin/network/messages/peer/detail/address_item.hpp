@@ -110,8 +110,8 @@ struct address_of
     bool operator==(const address_of& other) const NOEXCEPT = default;
 };
 
-/// BIP155 addresses, ipv4 is stored v6-mapped (as encoded by the v1 protocol)
-/// and is the only network whose wire size differs from its storage size.
+/// BIP155 addresses, ipv4 stored v6-mapped (as encoded by v1 protocol) and is
+/// only network whose wire size differs from its storage size.
 using ipv4_t = address_of<1, 16, 4>;
 using ipv6_t = address_of<2, 16>;
 

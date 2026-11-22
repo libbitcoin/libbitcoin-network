@@ -26,8 +26,7 @@ namespace network {
 namespace http {
 
 /// Request methods (rfc9110 and registered extensions), and websocket and
-/// stream, which tag a message received over an upgraded or downgraded
-/// connection.
+/// stream, which tag message received over upgraded or downgraded connection.
 enum class verb : uint8_t
 {
     unknown,

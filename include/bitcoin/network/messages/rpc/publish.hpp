@@ -29,10 +29,10 @@ namespace network {
 namespace rpc {
 
 /// Methods are a std::tuple of rpc::method<name, args>.
-/// Defines a published interface for use with rpc::dispatcher<>.
-/// A subset (e.g. a handshake) is published by its own methods type, not by
-/// selecting a tuple here, as a reference template argument becomes part of
-/// the mangled name of every dependent template.
+/// Defines published interface for use with rpc::dispatcher<>.
+/// Subset (e.g. handshake) is published by its own methods type, not by
+/// selecting tuple here, as reference template argument becomes part of mangled
+/// name of every dependent template.
 template <typename Methods, grouping Mode = grouping::either>
 struct publish
   : public Methods
@@ -48,7 +48,7 @@ using method_at = std::tuple_element_t<Index,
 
 BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 
-/// The implemented method names, space delimited, in interface order.
+/// Implemented method names, space delimited, in interface order.
 /// Unimplemented methods are dispatchable but not published.
 template <auto& Methods>
 constexpr auto method_names() NOEXCEPT

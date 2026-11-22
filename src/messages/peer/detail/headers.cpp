@@ -101,8 +101,9 @@ void headers::serialize(uint32_t, writer& sink) const NOEXCEPT
 
 size_t headers::size(uint32_t) const NOEXCEPT
 {
+    const auto element_size = chain::header::serialized_size() + sizeof(trail);
     return variable_size(header_ptrs.size()) +
-        (header_ptrs.size() * (chain::header::serialized_size() + sizeof(trail)));
+        (header_ptrs.size() * element_size);
 }
 
 hashes headers::to_hashes() const NOEXCEPT
@@ -125,7 +126,7 @@ inventory_items headers::to_inventory(inventory::type_id type) const NOEXCEPT
         out.push_back({ type, header->hash() });
 
     // emplace_back aggregate initialization requires clang 16.
-    // This also fails following change to pmr vector.
+    // Also fails with pmr vector.
     ////out.emplace_back(type, header->hash());
 
     return out;

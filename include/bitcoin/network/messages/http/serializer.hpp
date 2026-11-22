@@ -47,11 +47,11 @@ constexpr std::string_view last_chunk{ "0\r\n\r\n" };
 using const_buffers = std::vector<io::const_buffer>;
 
 /// Not thread safe, non-virtual.
-/// Incrementally serialize a message, driving the body writer of the message
-/// body. Each next() yields buffers valid until the following next() call.
-/// A body with content or transfer codings is encoded as it is written, and
-/// chunked (http 1.1) or delimited by closing the connection in place of a
-/// content-length. A message without a body (zero content-length, or a
+/// Incrementally serialize message, driving body writer of message
+/// body. Each next() yields buffers valid until following next()
+/// call. Body with content or transfer codings is encoded as written,
+/// and chunked (http 1.1) or delimited by closing connection in place
+/// of content-length. Message without body (zero content-length, or
 /// bodiless status) is not coded and its content-encoding is removed.
 template <bool IsRequest, class Body>
 class serializer
@@ -106,9 +106,8 @@ private:
 };
 
 /// Not thread safe, non-virtual.
-/// Incrementally serialize a headerless message body, driving the body writer
-/// of the message body. Each next() yields a buffer valid until the following
-/// next() call.
+/// Incrementally serialize headerless message body, driving body writer of
+/// message body. Each next() yields buffer valid until following next() call.
 template <bool IsRequest, class Body>
 class body_serializer
 {

@@ -38,10 +38,10 @@ using namespace std::placeholders;
 // ----------------------------------------------------------------------------
 // private
 
-// The memory of a queue entry apart from its payload: the writer closure with
-// its bound pointers, the queue slot, control blocks and the message object.
-// This bounds queue depth implicitly, as a flood of small messages is charged
-// its estimated cost, not its smaller wire size.
+// Memory of queue entry apart from its payload: writer closure with
+// its bound pointers, queue slot, control blocks and message
+// object. Bounds queue depth implicitly, as flood of small messages
+// is charged its estimated cost, not its smaller wire size.
 constexpr size_t entry_size = 256;
 
 // Charges the entry against the backlog, false if refused.
@@ -55,7 +55,7 @@ bool proxy::charge(pending& write_) NOEXCEPT
     if (!idle && system::ceilinged_add(backlog_, write_.cost) >
         maximum_backlog_)
     {
-        // zeromq messages are seuqenced, so drops are acceptable.
+        // zeromq messages are sequenced, so drops are acceptable.
         if (socket_->zeromq())
         {
             LOGS("Dropped message on congested channel [" << endpoint() << "]");
@@ -84,8 +84,8 @@ void proxy::do_write(pending& write_, bool notification) NOEXCEPT
         return;
     }
 
-    // A solicited write (response) is paced by the request that provoked it.
-    // A notification must be charged as recipient can force accumulation.
+    // Solicited write (response) is paced by request that provoked it.
+    // Notification must be charged as recipient can force accumulation.
     if (notification)
     {
         if (!charge(write_))
@@ -114,9 +114,9 @@ void proxy::write() NOEXCEPT
         return;
     }
 
-    // Invokes oldest writer on the queue, completion invokes handle_write.
-    // Its writes are held for the next writer while another is queued, and a
-    // held write completes on settle.
+    // Invokes oldest writer on queue, completion invokes
+    // handle_write. Its writes are held for next writer while
+    // another is queued, and held write completes on settle.
     looping_ = true;
     do
     {
@@ -147,8 +147,8 @@ void proxy::handle_write(const code& ec, size_t bytes) NOEXCEPT
         return;
     }
 
-    // Handler precedes pop so that a handler send does not start a second
-    // write loop (a non-empty queue defers the start to the pop below).
+    // Handler precedes pop so handler send does not start second write loop
+    // (non-empty queue defers start to pop below).
     const auto handler = std::move(queue_.front().handler);
     handler(ec, bytes);
     backlog_ = system::floored_subtract(backlog_, queue_.front().cost);
@@ -162,7 +162,7 @@ void proxy::handle_write(const code& ec, size_t bytes) NOEXCEPT
 // Throttle (sent bytes are allocated time at the configured rate).
 // ----------------------------------------------------------------------------
 // private
-// Applied to every send, so the deferral delays the next queued write.
+// Applied to every send, so deferral delays next queued write.
 
 // Nanoseconds allocated to the transmission of bytes at the given rate.
 inline steady_clock::duration to_allocation(size_t bytes,
@@ -196,8 +196,8 @@ void proxy::handle_counted(const code& ec, size_t bytes,
 
 count_handler proxy::metered(count_handler&& handler) NOEXCEPT
 {
-    // Stamped at issue, so that only transmission time is credited against
-    // the allocation. Time spent idle between sends earns nothing.
+    // Stamped at issue, so only transmission time is credited against
+    // allocation. Time spent idle between sends earns nothing.
     return std::bind(&proxy::handle_metered,
         shared_from_this(), _1, _2, steady_clock::now(), std::move(handler));
 }

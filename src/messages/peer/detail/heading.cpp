@@ -32,19 +32,19 @@ using namespace system;
 // maximum_payload:
 //
 // Pre-Witness:
-// A maximal inventory is 50,000 entries, the largest valid message.
+// Maximal inventory is 50,000 entries, largest valid message.
 // Inventory with 50,000 entries is 3 + 36 * 50,000 bytes (1,800,003).
-// The variable integer portion is maximum 3 bytes (with a count of 50,000).
-// According to protocol documentation get_blocks is limited only by the
-// general maximum payload size of 0x02000000 (33,554,432). But this is an
-// absurd limit for message that is properly [10 + log2(height) + 1]. Since
-// protocol limits height to 2^32 this is 43. Even with expansion to 2^64
-// this is limited to 75. So limit payloads to max inventory payload size.
+// Variable integer portion is maximum 3 bytes (with count of 50,000).
+// Per protocol documentation get_blocks is limited only by general maximum
+// payload size of 0x02000000 (33,554,432). But this is absurd limit for message
+// that is properly [10 + log2(height) + 1]. Since protocol limits height to
+// 2^32 this is 43. Even with expansion to 2^64 this is limited to 75. So limit
+// payloads to max inventory payload size.
 //
 // Post-Witness:
-// The maximum block size inclusive of witness is greater than 1,800,003, so
-// with witness-enabled block size (4,000,000).
-// This calculation should be revisited given any protocol change.
+// Maximum block size inclusive of witness is greater than 1,800,003, so with
+// witness-enabled block size (4,000,000).
+// Calculation should be revisited given any protocol change.
 
 // static
 // Logging utility only.

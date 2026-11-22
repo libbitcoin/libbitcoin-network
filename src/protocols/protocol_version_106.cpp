@@ -57,7 +57,7 @@ protocol_version_106::protocol_version_106(const session::ptr& session,
 // Utilities.
 // ----------------------------------------------------------------------------
 
-// Allow derived classes to modify the version message.
+// Allow derived classes to modify version message.
 // Relay always exposed on version, despite lack of definition < BIP37.
 // See comments in version::deserialize regarding BIP37 protocol bug.
 messages::peer::version protocol_version_106::version_factory(
@@ -92,9 +92,9 @@ messages::peer::version protocol_version_106::version_factory(
         // ********************************************************************
         // PROTOCOL:
         // Self address_item (timestamp/services are redundant).
-        // The protocol expects duplication of the sender's services, but this
-        // is broadly observed to be inconsistently implemented by other nodes.
-        // Peers may provide a null address for self, commonly observed.
+        // Protocol expects duplication of sender's services, but this is
+        // broadly observed to be inconsistently implemented by other nodes.
+        // Peers may provide null address for self, commonly observed.
         // ********************************************************************
         address_item
         {
@@ -124,8 +124,8 @@ void protocol_version_106::signal() NOEXCEPT
 // Start/Stop.
 // ----------------------------------------------------------------------------
 
-// Session resumes the channel following return from start().
-// Sends are not precluded, but no messages can be received while paused.
+// Session resumes channel following return from start().
+// Sends not precluded, but no messages can be received while paused.
 void protocol_version_106::shake(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_106");
@@ -188,15 +188,15 @@ void protocol_version_106::callback(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_106");
 
-    // This will asynchronously invoke handle_timer and if the channel is not
-    // stopped, will then invoke callback(error::operation_canceled).
+    // Asynchronously invokes handle_timer and if channel not stopped,
+    // then invokes callback(error::operation_canceled).
     timer_->stop();
 
     if (!handler_)
         return;
 
-    // A post-handshake message may already be waiting on the socket, so the
-    // gate is held (pause) until the session attaches protocols and resumes.
+    // Post-handshake message may already be waiting on socket, so gate is held
+    // (pause) until session attaches protocols and resumes.
     (*handler_)(ec);
     handler_.reset();
 }
@@ -208,9 +208,9 @@ void protocol_version_106::handle_timer(const code& ec) NOEXCEPT
     if (stopped())
         return;
 
-    // error::operation_canceled is set when stopped (caught above), but will
-    // also be set upon successful completion, as this also cancels the timer.
-    // However in this case the code will be ignored in the completion handler.
+    // error::operation_canceled is set when stopped (caught above), but is also
+    // set upon successful completion, as this also cancels timer. However in
+    // this case code is ignored in completion handler.
     if (ec)
     {
         callback(ec);
@@ -270,7 +270,7 @@ bool protocol_version_106::handle_receive_acknowledge(const code& ec,
 // ----------------------------------------------------------------------------
 
 // static/private
-// Negative if the peer timestamp is behind our clock.positive otherwise.
+// Negative if peer timestamp is behind our clock, positive otherwise.
 minutes protocol_version_106::to_deviation(uint64_t timestamp) NOEXCEPT
 {
     const auto now = wall_clock::now();

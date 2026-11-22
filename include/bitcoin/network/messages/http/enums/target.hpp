@@ -45,7 +45,7 @@ BCT_API bool is_origin_form(const std::string& target) NOEXCEPT;
 BCT_API bool is_absolute_form(const std::string& target) NOEXCEPT;
 
 /// Used for CONNECT method.
-/// Requires leading "//", which is not allowed by parse_authority.
+/// Requires leading "//", not allowed by parse_authority.
 BCT_API bool is_authority_form(const std::string& target) NOEXCEPT;
 
 /// Asterisk only.

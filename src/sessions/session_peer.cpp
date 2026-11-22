@@ -54,7 +54,7 @@ void session_peer::start_channel(const channel::ptr& channel,
 {
     BC_ASSERT(stranded());
 
-    // In case of a loopback, inbound and outbound are on the same strand.
+    // On loopback, inbound and outbound are on same strand.
     // Inbound does not check nonce until handshake completes, so no race.
     if (!stopped())
     {
@@ -71,8 +71,8 @@ void session_peer::start_channel(const channel::ptr& channel,
     session::start_channel(channel, std::move(starter), std::move(stopper));
 }
 
-void session_peer::do_handle_handshake(const code& ec, const channel::ptr& channel,
-    const result_handler& start) NOEXCEPT
+void session_peer::do_handle_handshake(const code& ec,
+    const channel::ptr& channel, const result_handler& start) NOEXCEPT
 {
     BC_ASSERT(stranded());
 

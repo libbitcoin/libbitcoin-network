@@ -31,16 +31,16 @@
 namespace libbitcoin {
 namespace network {
 
-/// Config wrappers are used for serialization/deserialization.
+/// Config wrappers used for serialization/deserialization.
 /// Hosts passes message and message item pointers, not config items.
 typedef std::function<void(const code&, const address_cptr&)> address_handler;
 typedef std::function<void(const code&, const address_item_cptr&)>
     address_item_handler;
 
 /// Virtual, thread safe (except start/stop).
-/// Duplicate and invalid addresses are disacarded.
-/// The file is loaded and saved from/to the settings-specified path.
-/// The file is a line-oriented textual serialization (config::authority+).
+/// Duplicate and invalid addresses discarded.
+/// File loaded and saved from/to settings-specified path.
+/// File is line-oriented textual serialization (config::authority+).
 class BCT_API hosts
   : public reporter
 {

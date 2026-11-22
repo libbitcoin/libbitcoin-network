@@ -22,10 +22,9 @@
 #include <future>
 #include "../test.hpp"
 
-// The socket runs on the fixture pool, and the peer is a plain socket driven
-// synchronously from the test thread. Each step owns one completion, awaited
-// before the step returns, and the pool is joined before teardown, so no
-// completion outlives the case that armed it.
+// Socket runs on fixture pool, peer is plain socket driven synchronously from
+// test thread. Each step owns one completion, awaited before step returns, and
+// pool is joined before teardown, so no completion outlives case that armed it.
 
 using zmtp_stream = network::zmtp::stream;
 using zmtp_context = network::zmtp::context;
@@ -68,8 +67,8 @@ system::data_stack peer_read_message(peer_socket& peer);
 /// Synchronously read one command frame, returning its name and content.
 std::string peer_read_command(peer_socket& peer, system::data_chunk& content);
 
-/// Synchronously perform the peer side of the handshake as the given socket
-/// type, returning the name of the first command received (READY or ERROR).
+/// Synchronously perform peer side of handshake as given socket type,
+/// returning name of first command received (READY or ERROR).
 std::string peer_handshake(peer_socket& peer, const std::string& type,
     const std::string& identity={}, uint8_t minor=1);
 
@@ -185,9 +184,9 @@ public:
     }
 };
 
-/// A publisher socket with its proxy and a handshaken subscriber peer.
-/// The proxy absorbs control only while a read is armed, so a case arms the
-/// read, writes to the peer, and then awaits the armed read.
+/// Publisher socket with its proxy and handshaken subscriber peer.
+/// Proxy absorbs control only while read is armed, so case arms read, writes
+/// to peer, then awaits armed read.
 struct publisher_setup_fixture
 {
     DELETE_COPY_MOVE(publisher_setup_fixture);
@@ -220,8 +219,8 @@ struct publisher_setup_fixture
 // Role (servers for the pyzmq harness, see test/pyzmq/zmtp_roles.py).
 // ----------------------------------------------------------------------------
 
-/// A server socket in the given role, accepted from the harness peer. The
-/// fixture binds only under ZMTP_HARNESS, where the peer is guaranteed.
+/// Server socket in given role, accepted from harness peer. Fixture binds
+/// only under ZMTP_HARNESS, where peer is guaranteed.
 struct role_setup_fixture
 {
     DELETE_COPY_MOVE(role_setup_fixture);

@@ -123,9 +123,9 @@ void cipher::seal(data_chunk& out, box& sealer, const nonce& value,
     const span& plain) NOEXCEPT
 {
     const auto offset = out.size();
-    out.resize(offset + plain.size() + tag_size);
-    const std::span<uint8_t> cipher{ std::next(out.data(), offset),
-        plain.size() + tag_size };
+    const auto size = plain.size() + tag_size;
+    out.resize(offset + size);
+    const std::span<uint8_t> cipher{ std::next(out.data(), offset), size };
     sealer.encrypt(plain, value, cipher);
 }
 

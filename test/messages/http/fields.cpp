@@ -114,9 +114,9 @@ BC_AUTO_TEST_CASE(fields__has_attachment__no_equals__false)
     fields head{};
     head.set(field::content_disposition, "attachment; filename");
 
-    // It's a simple test for trimmed leading "filename" assumes not other token
-    // starts with "filename" unless also an attachment (such as "filename*").
-    // Otherwise the request is not valid anyway, so can assume it has attachment.
+    // Simple test for trimmed leading "filename" assumes no other token starts
+    // with "filename" unless also attachment (such as "filename*"). Otherwise
+    // request is invalid anyway, so can assume it has attachment.
     ////BC_REQUIRE(!has_attachment(head));
     BC_REQUIRE(has_attachment(head));
 }

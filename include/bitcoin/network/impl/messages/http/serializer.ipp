@@ -38,8 +38,8 @@ CLASS::serializer(message_type& message) NOEXCEPT
 {
 }
 
-// The header is yielded with the first body buffers, so that a message of one
-// body buffer is written in one operation.
+// Header yielded with first body buffers, so message of one body buffer is
+// written in one operation.
 TEMPLATE
 const_buffers CLASS::next(code& ec) NOEXCEPT
 {
@@ -77,9 +77,8 @@ const_buffers CLASS::next(code& ec) NOEXCEPT
     }
 }
 
-// A message without a body is not coded. The size of a coded body is not
-// known in advance, so a content-length is replaced by chunking (http 1.1),
-// or by closing the connection.
+// Message without body not coded. Size of coded body not known in advance, so
+// content-length replaced by chunking (http 1.1), or by closing connection.
 TEMPLATE
 void CLASS::frame_coded() NOEXCEPT
 {

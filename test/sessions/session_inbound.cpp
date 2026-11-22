@@ -74,13 +74,16 @@ public:
         socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
-        socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+        socket::parameters params
+        {
+            .maximum_request = 42,
+            .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+        };
         const auto socket = std::make_shared<network::socket>(log, service_,
             std::move(params));
 
-        // Must be asynchronous or is an infinite recursion.
-        // This error code will set the re-listener timer and channel pointer is ignored.
+        // Must be asynchronous or is infinite recursion.
+        // This error code sets re-listener timer, channel pointer ignored.
         io::post(strand_, [=]() NOEXCEPT
         {
             accepted(error::success);
@@ -208,8 +211,8 @@ public:
             handshake_.set_value(true);
         }
 
-        // The handshake protocol pauses the channel upon completion, which is
-        // after the session resumes it to start the read loop, so this posts.
+        // Handshake protocol pauses channel upon completion, which is after
+        // session resumes it to start read loop, so this posts.
         io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
@@ -1097,9 +1100,12 @@ struct inbound_peer
         using namespace messages::peer;
         system::data_chunk payload(message.size(version));
         BC_REQUIRE(message.serialize(version, payload));
+
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
-        BC_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        const auto end = std::next(frame.data(), heading::size());
+        BC_REQUIRE(head.serialize({ frame.data(), end }));
+
         test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
@@ -1138,7 +1144,8 @@ struct inbound_peer
         if (address_v2)
             send(send_address_v2{}, value);
 
-        const auto node = version::deserialize(value, receive(version::command));
+        const auto payload = receive(version::command);
+        const auto node = version::deserialize(value, payload);
         BC_REQUIRE(node);
         receive(version_acknowledge::command);
         send(version_acknowledge{}, value);
@@ -1156,10 +1163,13 @@ private:
 BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70016_address_v2__self_advertised_v2)
 {
     using namespace messages::peer;
-    inbound_peer peer{ [](settings& set)
+    inbound_peer peer
     {
-        set.enable_address = true;
-    } };
+        [](settings& set)
+        {
+            set.enable_address = true;
+        }
+    };
 
     const auto node = peer.handshake(level::bip155, true);
     BC_REQUIRE_EQUAL(node->value, level::maximum_protocol);
@@ -1173,12 +1183,15 @@ BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70016_address_v2__self_adve
 BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70002_alert_reject__self_advertised)
 {
     using namespace messages::peer;
-    inbound_peer peer{ [](settings& set)
+    inbound_peer peer
     {
-        set.enable_address = true;
-        set.enable_alert = true;
-        set.enable_reject = true;
-    } };
+        [](settings& set)
+        {
+            set.enable_address = true;
+            set.enable_alert = true;
+            set.enable_reject = true;
+        }
+    };
 
     const auto node = peer.handshake(level::bip61, false);
     BC_REQUIRE_EQUAL(node->value, level::maximum_protocol);
@@ -1192,10 +1205,13 @@ BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70002_alert_reject__self_ad
 BC_AUTO_TEST_CASE(session_inbound__attach_protocols__31800__self_advertised)
 {
     using namespace messages::peer;
-    inbound_peer peer{ [](settings& set)
+    inbound_peer peer
     {
-        set.enable_address = true;
-    } };
+        [](settings& set)
+        {
+            set.enable_address = true;
+        }
+    };
 
     const auto node = peer.handshake(level::headers_protocol, false);
     BC_REQUIRE_EQUAL(node->value, level::maximum_protocol);

@@ -27,11 +27,10 @@ namespace network {
 /// Not thread safe.
 /// Used in seed session to continue once sufficient seeding has occurred.
 /// race_volume<Success, Fail>(size, required) invokes sufficient(Success)
-/// provided at start(sufficient, complete) when the first call to finish(count)
-/// is made where count >= required. If no finish is sufficient then the final
-/// call to finish, based on the constructor 'size' parameter, invokes
-/// sufficient(Fail). The final call also invokes complete(Success), regardless
-/// of sufficiency.
+/// provided at start(sufficient, complete) when first call to finish(count) is
+/// made where count >= required. If no finish is sufficient then final call to
+/// finish, based on constructor 'size' parameter, invokes sufficient(Fail).
+/// Final call also invokes complete(Success), regardless of sufficiency.
 template <error::error_t Success, error::error_t Fail>
 class race_volume final
 {

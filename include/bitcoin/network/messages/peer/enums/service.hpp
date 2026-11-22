@@ -28,7 +28,7 @@ namespace peer {
 
 enum service: uint64_t
 {
-    /// The node exposes no defined services.
+    /// Node exposes no defined services.
     /// At least version, address, ping/pong, and reject protocols.
     node_none = 0,
 
@@ -36,27 +36,27 @@ enum service: uint64_t
     node_network = system::bit_right<uint64_t>(0),
 
     /// Requires version.value >= level::bip64 (BIP64 is obsolete).
-    /// The node is capable of responding to the getutxo protocol request.
+    /// Node capable of responding to getutxo protocol request.
     node_utxo = system::bit_right<uint64_t>(1),
 
     /// Requires version.value >= level::bip111
-    /// The node is capable and willing to handle bloom-filtered connections.
+    /// Node capable and willing to handle bloom-filtered connections.
     node_bloom = system::bit_right<uint64_t>(2),
 
     /// Independent of network protocol level.
-    /// The node is capable of responding to witness inventory requests.
+    /// Node capable of responding to witness inventory requests.
     node_witness = system::bit_right<uint64_t>(3),
 
     /// Independent of network protocol level.
-    /// The node is capable of responding to getcfilters, getcfheaders,
-    /// and getcfcheckpt protocol requests.
+    /// Node capable of responding to getcfilters,
+    /// getcfheaders, and getcfcheckpt protocol requests.
     node_client_filters = system::bit_right<uint64_t>(6),
 
     /// Serves only the last 288 (2 day) blocks.
     node_network_limited = system::bit_right<uint64_t>(10),
 
     /// Independent of network protocol level.
-    /// The node is capable of bip324 (v2) encrypted transport.
+    /// Node capable of bip324 (v2) encrypted transport.
     node_encrypted_transport = system::bit_right<uint64_t>(11),
 
     /// The services that the implementation is capable of providing.

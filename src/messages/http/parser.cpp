@@ -33,10 +33,10 @@ using namespace network::error;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// Each parse function consumes from the front of its text, returning the
-// number of characters consumed, or zero with need_more if the text ends
-// before the element does. Validation proceeds character by character, so an
-// invalid element is reported once its first invalid character is present.
+// Each parse function consumes from front of its text, returning number of
+// characters consumed, or zero with need_more if text ends before element does.
+// Validation proceeds character by character, so invalid element is reported
+// once its first invalid character is present.
 
 // Character classes (rfc9110).
 // ----------------------------------------------------------------------------
@@ -95,10 +95,9 @@ static void set_need_more(code& ec) NOEXCEPT
     ec = to_http_code(http_error_t::need_more);
 }
 
-// Find the line end (CRLF) of text without control characters, setting text
-// to the index of the CR and end to the index following the LF. False with ec
-// clear on a control character, false with ec set if the line is incomplete or
-// a CR does not precede an LF.
+// Find line end (CRLF) of text without control characters, setting text to
+// index of CR and end to index following LF. False with ec clear on control
+// character, false with ec set if line incomplete or CR does not precede LF.
 static bool find_line(size_t& text, size_t& end, const std::string_view& in,
     size_t start, code& ec) NOEXCEPT
 {
@@ -299,8 +298,7 @@ size_t parse_start_line(response_header& out, const std::string_view& in,
 // ----------------------------------------------------------------------------
 
 // #token = [ ( "," / token ) *( OWS "," [ OWS token ] ) ]
-// The leading tokens of the list, up to the first invalid element (valid is
-// false if there is one).
+// Leading tokens of list, up to first invalid element (valid false if any).
 static string_list token_list(const std::string_view& value,
     bool& valid) NOEXCEPT
 {
@@ -345,10 +343,10 @@ static string_list token_list(const std::string_view& value,
     }
 }
 
-// Connection must be a valid token list.
-// Content-Length may be a list of equal values, and conflicts with chunked.
+// Connection must be valid token list.
+// Content-Length may be list of equal values, and conflicts with chunked.
 // Transfer-Encoding conflicts with Content-Length and may not follow chunked.
-// Chunked framing requires that the first chunked coding be the last coding.
+// Chunked framing requires first chunked coding be last coding.
 static void frame_field(framing& frame, field name,
     const std::string_view& value, code& ec) NOEXCEPT
 {
@@ -659,8 +657,8 @@ bool valid_chunk_extensions(const std::string_view& line,
     }
 }
 
-// The line end (CRLF) of a chunk line, which may contain any characters but
-// a CR that does not precede an LF.
+// Line end (CRLF) of chunk line, which may contain any characters but CR that
+// does not precede LF.
 size_t find_chunk_line(size_t& text, const std::string_view& in,
     code& ec) NOEXCEPT
 {

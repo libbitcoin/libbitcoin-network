@@ -226,8 +226,7 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    // We have to drop without responding, otherwise count will overflow.
-    // Could instead stop listening when at limit, though this is simpler.
+    // Must drop without responding, otherwise count will overflow.
     if (channel_count_ >= options_.connections)
     {
         LOGS("Dropping " << (secure ? "private " : "clear ")
@@ -319,8 +318,8 @@ void session_server::handle_channel_stop(const code& LOG_ONLY(ec),
     LOGS("Inbound " << name_ << " channel stop [" << channel->endpoint()
         << "] " << ec.message());
 
-    // There is a start/stop race with handle_channel_start that can result
-    // in channel_count_ of zero here before the first increment.
+    // Start/stop race with handle_channel_start can leave channel_count_ zero
+    // here before first increment.
     ////BC_ASSERT(!is_zero(channel_count_));
     channel_count_ = floored_subtract(channel_count_, one);
 }

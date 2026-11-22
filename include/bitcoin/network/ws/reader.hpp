@@ -30,8 +30,8 @@ namespace ws {
 
 /// Not thread safe, non-virtual.
 /// Assemble data messages, and surface control frames, from received bytes.
-/// Data payload is unmasked into the message buffer as it arrives, a control
-/// frame is surfaced once its payload is complete.
+/// Data payload is unmasked into message buffer as it arrives, control frame is
+/// surfaced once its payload is complete.
 class BCT_API reader
 {
 public:
@@ -49,8 +49,8 @@ public:
     reader(size_t maximum, bool server) NOEXCEPT;
 
     /// Consume received bytes, appending data payload to message, returning
-    /// the number consumed. Consumption stops at an event. Sets need_more if
-    /// incomplete and the remaining bytes are insufficient to proceed.
+    /// number consumed. Consumption stops at event. Sets need_more if
+    /// incomplete and remaining bytes are insufficient to proceed.
     size_t put(const std::span<const uint8_t>& data, http::flat_buffer& message,
         event& out, code& ec) NOEXCEPT;
 

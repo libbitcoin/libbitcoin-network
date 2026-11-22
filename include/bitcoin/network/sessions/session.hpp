@@ -87,10 +87,10 @@ private:
 public:
     /// Broadcast.
     /// -----------------------------------------------------------------------
-    /// Broadcast offers no completion handling, and subscription exists in a
-    /// race with channel establishment. Broadcasts are designed for internal
+    /// Broadcast offers no completion handling, and subscription exists in race
+    /// with channel establishment. Broadcasts are designed for internal
     /// best-efforts propagation. Use individual channel.send calls otherwise.
-    /// Sender identifies the channel to its own handler, for option to bypass.
+    /// Sender identifies channel to its own handler, for option to bypass.
 
     template <class Message, typename Handler>
     void subscribe(Handler&& handler, channel_id id) NOEXCEPT

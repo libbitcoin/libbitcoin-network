@@ -28,8 +28,10 @@ using namespace network::messages::peer;
 static_assert(heading::maximum_payload(true) == 4'000'000_size);
 static_assert(heading::maximum_payload(false) == 1'800'003_size);
 
-constexpr auto empty_hash = system::sha256::double_hash(system::sha256::ablocks_t<zero>{});
-constexpr auto empty_checksum = system::from_little_endian<uint32_t>(empty_hash);
+constexpr auto empty_hash = system::sha256::double_hash(
+    system::sha256::ablocks_t<zero>{});
+constexpr auto empty_checksum =
+    system::from_little_endian<uint32_t>(empty_hash);
 
 BC_AUTO_TEST_CASE(rpc_heading__size__always__expected)
 {

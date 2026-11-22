@@ -31,11 +31,11 @@ namespace network {
 namespace p2ps {
 
 /// bip324 (v2) transport stream over a tcp socket.
-/// The stream is message oriented: whole messages are written as encrypted
-/// packets and received packets are surfaced as whole messages. The socket
-/// upgrades to the stream only once the peer is detected (or connected) v2.
-/// All calls must be sequenced on the underlying socket's executor. Read and
-/// write chains may overlap each other but not themselves.
+/// Stream is message oriented: whole messages are written as encrypted packets
+/// and received packets are surfaced as whole messages. Socket upgrades to
+/// stream only once peer is detected (or connected) v2. All calls must be
+/// sequenced on underlying socket's executor. Read and write chains may overlap
+/// each other but not themselves.
 class BCT_API stream
 {
 public:
@@ -67,23 +67,23 @@ public:
     /// Perform the v2 handshake as the connection initiator.
     void async_handshake(handshake_handler&& handler) NOEXCEPT;
 
-    /// Perform the v2 handshake as the responder, given the detection
-    /// prefix bytes consumed by the socket (partial peer key).
+    /// Perform v2 handshake as responder, given detection prefix bytes consumed
+    /// by socket (partial peer key).
     void async_handshake(system::data_chunk&& detected,
         handshake_handler&& handler) NOEXCEPT;
 
     /// The session identifier (valid after v2 handshake).
     const system::hash_digest& session_id() const NOEXCEPT;
 
-    /// Read the next message into the buffer, decrypted in place (v2).
-    /// A message with contents exceeding maximum is rejected unread.
-    /// Identity is the short identifier, or the command if it is zero.
-    /// The payload is a span over the buffer (excludes framing and tag).
+    /// Read next message into buffer, decrypted in place (v2).
+    /// Message with contents exceeding maximum is rejected unread.
+    /// Identity is short identifier, or command if it is zero.
+    /// Payload is span over buffer (excludes framing and tag).
     void async_read_message(system::data_chunk& buffer, size_t maximum,
         message_handler&& handler) NOEXCEPT;
 
-    /// Write a message as one encrypted packet (v2 only).
-    /// Identity is the short identifier, or the command if it is zero.
+    /// Write message as one encrypted packet (v2 only).
+    /// Identity is short identifier, or command if it is zero.
     void async_write_message(uint8_t identifier, const std::string& command,
         const system::chunk_cptr& payload, io_handler&& handler) NOEXCEPT;
 

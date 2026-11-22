@@ -172,8 +172,8 @@ struct contiguous_body
         out_buffer get(code& ec) NOEXCEPT
         {
             ec.clear();
-            return out_buffer{ std::make_pair(const_buffers_type{
-                value_.data(), value_.size() }, false) };
+            const const_buffers_type buffer{ value_.data(), value_.size() };
+            return out_buffer{ std::make_pair(buffer, false) };
         }
 
     private:
@@ -187,8 +187,8 @@ using chunk_body = contiguous_body<system::data_chunk>;
 /// A body of characters.
 using string_body = contiguous_body<std::string>;
 
-/// A body of bytes in caller-owned memory (written in one buffer, or read up
-/// to its size).
+/// Body of bytes in caller-owned memory
+/// (written in one buffer, or read up to its size).
 struct span_body
 {
     using value_type = std::span<uint8_t>;
@@ -255,8 +255,8 @@ struct span_body
         out_buffer get(code& ec) NOEXCEPT
         {
             ec.clear();
-            return out_buffer{ std::make_pair(const_buffers_type{
-                value_.data(), value_.size() }, false) };
+            const const_buffers_type buffer{ value_.data(), value_.size() };
+            return out_buffer{ std::make_pair(buffer, false) };
         }
 
     private:
@@ -264,8 +264,8 @@ struct span_body
     };
 };
 
-/// A body of caller-provided buffers, each followed by a need_buffer while
-/// more remain to be provided.
+/// Body of caller-provided buffers, each followed by need_buffer while more
+/// remain to be provided.
 struct buffer_body
 {
     struct value_type
@@ -361,8 +361,8 @@ struct buffer_body
             {
                 ec.clear();
                 toggle_ = true;
-                return out_buffer{ std::make_pair(const_buffers_type{
-                    value_.data, value_.size }, value_.more) };
+                const const_buffers_type buffer{ value_.data, value_.size };
+                return out_buffer{ std::make_pair(buffer, value_.more) };
             }
 
             if (value_.more)
@@ -379,8 +379,8 @@ struct buffer_body
     };
 };
 
-/// A body serialized by the caller into the retained writer buffer (written
-/// in one buffer), or into owned memory when larger than the buffer limit.
+/// Body serialized by caller into retained writer buffer (written in one
+/// buffer), or into owned memory when larger than buffer limit.
 struct stream_body
 {
     struct value_type
@@ -553,8 +553,8 @@ struct file_body
 
             remaining_ -= read;
             ec.clear();
-            return out_buffer{ std::make_pair(const_buffers_type{
-                buffer_.data(), read }, !is_zero(remaining_)) };
+            const const_buffers_type buffer{ buffer_.data(), read };
+            return out_buffer{ std::make_pair(buffer, !is_zero(remaining_)) };
         }
 
     private:

@@ -25,8 +25,8 @@ namespace network {
 
 // local utilities
 // ----------------------------------------------------------------------------
-// These are complicated by lack of std::localtime/std::gmtime thread safety,
-// and by the fact that msvc reverses the parameters and inverts the result.
+// Complicated by lack of std::localtime/std::gmtime thread safety, and by msvc
+// reversing parameters and inverting result.
 
 inline bool local_time(tm& out_local, time_t time) NOEXCEPT
 {
@@ -118,9 +118,9 @@ std::string format_http_time(time_t time) NOEXCEPT
     BC_POP_WARNING()
 }
 
-// C++20 support is not yet up to snuff.
+// C++20 support not yet up to snuff.
 // std::format of chrono types streams through std::locale (msvc), which
-// serializes all threads on a global lock.
+// serializes all threads on global lock.
 #if defined(DISABLED)
 
 #include <chrono>

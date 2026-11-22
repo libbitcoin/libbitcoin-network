@@ -21,7 +21,7 @@
 BC_AUTO_TEST_SUITE(tracker_tests)
 
 // Started log with tracker is unsafe unless blocked on write completion.
-// As the object is destroyed a job is created on an independent thread.
+// As object is destroyed, job is created on independent thread.
 
 class tracked
   : tracker<tracked>

@@ -35,7 +35,7 @@ inline uint32_t network_checksum(const system::hash_digest& hash) NOEXCEPT
     return from_little_endian(array_cast<uint8_t, sizeof(uint32_t)>(hash));
 }
 
-/// Deserialize message payload from the wire protocol encoding.
+/// Deserialize message payload from wire protocol encoding.
 /// Returns nullptr if serialization fails for any reason (expected).
 template <typename Message>
 inline typename Message::cptr deserialize(const std::span<const uint8_t>& body,
@@ -44,7 +44,7 @@ inline typename Message::cptr deserialize(const std::span<const uint8_t>& body,
     return Message::deserialize(version, body);
 }
 
-/// Serialize message payload to the wire protocol encoding (no heading).
+/// Serialize message payload to wire protocol encoding (no heading).
 /// Returns nullptr if serialization fails for any reason (unexpected).
 template <typename Message>
 inline system::chunk_ptr serialize(const Message& message,
@@ -56,8 +56,8 @@ inline system::chunk_ptr serialize(const Message& message,
     return message.serialize(version, body) ? data : chunk_ptr{};
 }
 
-/// Serialize message object to the wire protocol encoding, into data sized to
-/// the heading and payload.
+/// Serialize message object to wire protocol encoding,
+/// into data sized to heading and payload.
 /// Returns false if serialization fails for any reason (unexpected).
 template <typename Message>
 inline bool serialize(const Message& message, uint32_t magic,
@@ -71,12 +71,12 @@ inline bool serialize(const Message& message, uint32_t magic,
 }
 
 // Specialize for tx to eliminate hash computation on non-witness writes.
-// Transaction is the only message that can reuse identity hash for heading.
+// Transaction is only message that can reuse identity hash for heading.
 template <>
 BCT_API bool serialize<transaction>(const transaction& message,
     uint32_t magic, uint32_t version, const system::data_slab& data) NOEXCEPT;
 
-/// Serialize message object to the wire protocol encoding.
+/// Serialize message object to wire protocol encoding.
 /// Returns nullptr if serialization fails for any reason (unexpected).
 template <typename Message>
 inline system::chunk_ptr serialize(const Message& message, uint32_t magic,

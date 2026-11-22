@@ -301,7 +301,7 @@ constexpr bool is_required = !is_defaulted<Argument> && !is_nullable<Argument>;
 
 /// internal_t (strip nullable<> and optional<>, wrap shared_ptr<> in any_t).
 /// ---------------------------------------------------------------------------
-/// Specializations are const sensitive, strip the const from method declares.
+/// Specializations are const sensitive, strip const from method declares.
 
 template <typename Argument, typename = void>
 struct internal

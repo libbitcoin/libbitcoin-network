@@ -29,8 +29,8 @@ namespace libbitcoin {
 namespace network {
 
 /// Abstract base channel with timers and identity.
-/// See proxy base class for its thread safety constraints.
-/// A channel is a proxy with timers and connection state.
+/// See proxy base class for thread safety constraints.
+/// Channel, proxy with timers and connection state.
 class BCT_API channel
   : public proxy
 {
@@ -105,9 +105,9 @@ public:
     const options_t& options() const NOEXCEPT;
 
 protected:
-    /// The network and service rate limits overlap, so the more restrictive
-    /// applies. Zero is unlimited, and therefore the less restrictive, so the
-    /// maximum applies if either is zero (zero only if both are zero).
+    /// Network and service rate limits overlap, so more restrictive applies.
+    /// Zero is unlimited, and therefore less restrictive, so maximum applies if
+    /// either is zero (zero only if both are zero).
     static uint32_t rate_limited(const settings_t& settings,
         const options_t& options) NOEXCEPT;
 

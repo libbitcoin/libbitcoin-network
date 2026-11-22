@@ -27,7 +27,7 @@
 #include <bitcoin/network/sessions/sessions.hpp>
 
 // sendcmpct (bip152) is sent after verack, so it cannot inform protocol
-// attachment. The peer's signal is recorded on the channel for the protocols.
+// attachment. Peer's signal recorded on channel for protocols.
 
 namespace libbitcoin {
 namespace network {

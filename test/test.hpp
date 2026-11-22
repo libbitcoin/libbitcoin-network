@@ -173,12 +173,17 @@ inline system::ip::address address(const std::string_view& text) NOEXCEPT
 // Loopback endpoints (an ephemeral port by default).
 inline io::endpoint loopback(uint16_t port=0) NOEXCEPT
 {
-    return { system::ip::address{ system::ip::ipv4{ { 127, 0, 0, 1 } } }, port };
+    const system::ip::address host{ system::ip::ipv4{ { 127, 0, 0, 1 } } };
+    return { host, port };
 }
 
 inline io::endpoint loopback_v6(uint16_t port=0) NOEXCEPT
 {
-    return { system::ip::address{ system::ip::ipv6{ { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 } } }, port };
+    const system::ip::ipv6 host
+    {
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }
+    };
+    return { system::ip::address{ host }, port };
 }
 
 // A loopback endpoint on an ephemeral port with no socket bound to it.

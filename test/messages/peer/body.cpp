@@ -272,8 +272,8 @@ BC_AUTO_TEST_CASE(peer_body__put__checksum_disabled__message)
     BC_REQUIRE(reader.done());
 }
 
-// The framed reader parses the caller buffer supplied at construct, which is
-// how socket::peer_read drives it (the buffer is not consumed by the parse).
+// Framed reader parses caller buffer supplied at construct, which is how
+// socket::peer_read drives it (buffer not consumed by parse).
 
 static data_chunk block_frame()
 {
@@ -283,7 +283,8 @@ static data_chunk block_frame()
     data_chunk framed(heading::size() + payload.size());
     const auto start = framed.data();
     BC_REQUIRE(head.serialize({ start, std::next(start, heading::size()) }));
-    std::copy(payload.begin(), payload.end(), std::next(framed.begin(), heading::size()));
+    const auto target = std::next(framed.begin(), heading::size());
+    std::copy(payload.begin(), payload.end(), target);
     return framed;
 }
 

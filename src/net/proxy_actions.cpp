@@ -34,9 +34,9 @@ using namespace system;
 using namespace messages::peer;
 using namespace std::placeholders;
 
-// The cost of a queued message is the memory that it pins, so a streaming body
-// (file) is charged only for the queue entry that retains it.
-// The estimate is cached into the message, so the writer does not repeat it.
+// Cost of queued message is memory it pins, so streaming body (file) is charged
+// only for queue entry that retains it.
+// Estimate cached into message, so writer does not repeat it.
 template <typename Message>
 static size_t to_estimate(Message& message) NOEXCEPT
 {
@@ -203,12 +203,12 @@ void proxy::do_peer_write(const frame_ptr& message) NOEXCEPT
 
 // RPC (TCP: electrum/stratum_v1, WS: btcd).
 // ----------------------------------------------------------------------------
-// Batch normalization: the channel is batch-blind. The proxy stamps batch
-// state on reads and response parts, absorbs the batch close (writing the
-// close part and re-arming the read), and defers notifications while open.
+// Batch normalization: channel is batch-blind. Proxy stamps batch state on
+// reads and response parts, absorbs batch close (writing close part and
+// re-arming read), and defers notifications while open.
 
 // flat_buffer must have configured max_size, which will be allocated.
-// The PING context is the second param (the first is the TTL).
+// PING context is second param (first is TTL).
 static rpc::value_t to_context(const rpc::params_option& params) NOEXCEPT
 {
     if (params && std::holds_alternative<rpc::array_t>(*params))
@@ -303,8 +303,8 @@ void proxy::handle_rpc_read(const code& ec, size_t bytes,
 }
 
 // private
-// ZMTP control (the channel is keepalive-blind): a PING is answered with a
-// PONG through the write queue, a PONG is dropped (the read handler pends).
+// ZMTP control (channel is keepalive-blind): PING is answered with PONG through
+// write queue, PONG is dropped (read handler pends).
 bool proxy::absorb_keepalive(const rpc::request& value) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -320,8 +320,8 @@ bool proxy::absorb_keepalive(const rpc::request& value) NOEXCEPT
         pong->message.method = "pong";
         pong->message.params = rpc::array_t{ to_context(message.params) };
 
-        // The peer paces this answer and the read is re-armed without it,
-        // so it is subject to the backlog bound.
+        // Peer paces this answer and read is re-armed without it, so it is
+        // subject to backlog bound.
         pending entry
         {
             zero,
@@ -336,7 +336,7 @@ bool proxy::absorb_keepalive(const rpc::request& value) NOEXCEPT
 }
 
 // private
-// The close part is proxy-created after the batch resets (not stamped).
+// Close part is proxy-created after batch resets (not stamped).
 void proxy::queue_close(count_handler&& complete) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -420,8 +420,8 @@ void proxy::do_response_queue(const rpc::response_ptr& response,
 {
     BC_ASSERT(stranded());
 
-    // Stamp the response part with current batch state (open rides on the
-    // first part). The close part is proxy-created after the batch resets.
+    // Stamp response part with current batch state (open rides on first part).
+    // Close part is proxy-created after batch resets.
     if (batched_)
     {
         response->batch = parted_;
@@ -462,8 +462,8 @@ void proxy::do_defer_write(pending& write_) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Notifications are deferred while a batch is open (drained on close).
-    // Charged on defer, as the deferral retains the entry just as the queue.
+    // Notifications deferred while batch open (drained on close).
+    // Charged on defer, as deferral retains entry just as queue.
     if (batched_)
     {
         if (charge(write_)) deferred_.push_back(std::move(write_));
@@ -493,11 +493,11 @@ void proxy::do_notification_write(
 
 // HTTP/WS (generic/rpc).
 // ----------------------------------------------------------------------------
-// Batch normalization (http): the header is read once per message, then the
-// body delivers each message from the paused parse (a singleton completes in
-// one body read). The batch close is absorbed (writing the close part chunk
-// and completing the message), and the response header is written once with
-// each response part written as chunk data (http has no notifications).
+// Batch normalization (http): header read once per message, then body delivers
+// each message from paused parse (singleton completes in one body read). Batch
+// close absorbed (writing close part chunk and completing message), and
+// response header written once with each response part written as chunk data
+// (http has no notifications).
 
 // flat_buffer must have configured max_size, which will be allocated.
 void proxy::read(http::flat_buffer& buffer, http::request& request,
@@ -512,8 +512,8 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
         return;
     }
 
-    // A downgrade is the json-rpc transport, so it reads as one. The message
-    // lands in the body alternative of the caller's (channel's) request.
+    // Downgrade is json-rpc transport, so it reads as one. Message lands in
+    // body alternative of caller's (channel's) request.
     if (socket_->downgraded())
     {
         do_downgrade_read(std::ref(request), std::ref(buffer),
@@ -521,8 +521,8 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
         return;
     }
 
-    // The preselected body is the read/write control, so a json-rpc body
-    // implies detection, performed before the first message is read.
+    // Preselected body is read/write control, so json-rpc body implies
+    // detection, performed before first message is read.
     if (!socket_->detected() && request.body().contains<rpc::request>())
     {
         socket_->detect(buffer,
@@ -666,8 +666,8 @@ void proxy::handle_http_body(const code& ec, size_t bytes,
 
     if (ec)
     {
-        // The failed request is published, the parse is retained as framing
-        // for the close of a batch response.
+        // Failed request is published,
+        // parse retained as framing for close of batch response.
         request.get() = parser_->release();
         const auto& body = request.get().body();
 
@@ -713,8 +713,8 @@ void proxy::handle_http_element(size_t bytes,
     if (batch_open(value))
         batched_ = true;
 
-    // Batch close carries no message, absorbed here (close flags remain set
-    // on the parser value for message completion detection).
+    // Batch close carries no message, absorbed here (close flags remain set on
+    // parser value for message completion detection).
     if (batch_close(value))
     {
         queue_close(std::bind(&proxy::handle_http_close_write,
@@ -772,8 +772,8 @@ void proxy::notify(http::response&& notification,
 void proxy::write(http::response&& response, count_handler&& handler,
     bool bounded) NOEXCEPT
 {
-    // A downgrade is the json-rpc transport, so it writes as one (batch
-    // stamping for a response, deferral while open for a notification).
+    // Downgrade is json-rpc transport, so it writes as one (batch stamping for
+    // response, deferral while open for notification).
     if (socket_->downgraded())
     {
         auto& body = response.body();
@@ -902,10 +902,9 @@ void proxy::do_http_write(const http::response_ptr& response) NOEXCEPT
 
 // ZMTP (TCP: publisher).
 // ----------------------------------------------------------------------------
-// Keepalive absorption: the channel is keepalive-blind. PING is answered
-// with a PONG through the write queue and the read re-armed (as the rpc
-// batch close is absorbed above). Every other frame is delivered; the
-// subscription protocol is the channel's concern.
+// Keepalive absorption: channel is keepalive-blind. PING answered with PONG
+// through write queue and read re-armed (as rpc batch close is absorbed above).
+// Every other frame delivered; subscription protocol is channel's concern.
 
 BC_POP_WARNING()
 BC_POP_WARNING()

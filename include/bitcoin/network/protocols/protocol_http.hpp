@@ -30,13 +30,12 @@
 namespace libbitcoin {
 namespace network {
 
-/// This abstract base protocol subscribes to http request messages (by verb)
-/// and dispatches the message obect to virtual methods by verb. Standard
-/// responses are sent for disalloved verbs and other invalidated requests.
-/// Utilities are provided to simplify common header response validation and
-/// behavior based configured options. Derive from this class to implement an
-/// http service that does NOT process a document directory (see
-/// node::protocol_html for that).
+/// Abstract base protocol subscribes to http request messages (by verb) and
+/// dispatches message object to virtual methods by verb. Standard responses are
+/// sent for disallowed verbs and other invalidated requests. Utilities are
+/// provided to simplify common header response validation and behavior based
+/// configured options. Derive from this class to implement http service that
+/// does NOT process document directory (see node::protocol_html for that).
 class BCT_API protocol_http
   : public protocol
 {
@@ -114,8 +113,8 @@ protected:
     virtual void add_access_control_headers(http::fields& fields,
         const http::request& request) const NOEXCEPT;
 
-    /// Set content coding as accepted by the request, if compression is
-    /// configured, for a response body that may be coded.
+    /// Set content coding as accepted by request, if compression is configured,
+    /// for response body that may be coded.
     virtual void add_coding_headers(http::fields& fields,
         const http::request& request) const NOEXCEPT;
 
@@ -159,7 +158,7 @@ protected:
     void set_authorized(const system::hash_digest& digest) NOEXCEPT;
 
 private:
-    // This is mostly thread safe, and used in a thread safe manner.
+    // Mostly thread safe, and used in thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
     const channel_http::ptr channel_;
 

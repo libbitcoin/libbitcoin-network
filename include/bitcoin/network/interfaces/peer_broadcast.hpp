@@ -38,14 +38,14 @@ struct peer_broadcast
     using subscriber = network::desubscriber<key, Args...>;
 
     /// dispatcher.subscribe(std::forward<signature>(handler));
-    /// `key` parameter is passed by message issuer to self-identify.
+    /// `key` parameter passed by message issuer to self-identify.
     template <class Message>
     using signature = std::function<bool(const code&,
         const typename Message::cptr&, const key&)>;
 
-    /// Messages relayed from the receiving channel to all other channels,
-    /// and internal messages (never serialized).
-    /// The v2 encoding is applied by the sender, so v1 is the relayed type.
+    /// Messages relayed from receiving channel to all other channels, and
+    /// internal messages (never serialized).
+    /// v2 encoding applied by sender, so v1 is relayed type.
     static constexpr std::tuple methods
     {
         method<"addr", messages::peer::address::cptr, key>{},

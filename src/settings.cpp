@@ -99,7 +99,7 @@ settings::sam::sam() NOEXCEPT
 }
 
 // geti2p.net/en/docs/api/samv3
-// A destination is a fixed prefix and a length-prefixed certificate.
+// Destination, fixed prefix and length-prefixed certificate.
 constexpr auto destination_size = 387_size;
 constexpr auto certificate_position = 385_size;
 
@@ -482,9 +482,9 @@ void settings::peer_manual::initialize() NOEXCEPT
 {
     BC_ASSERT_MSG(friends.empty(), "friends not empty");
 
-    // Dynamic conversion of peers is O(N^2), so set on initialize.
-    // This converts endpoints to addresses so will produce the default
-    // address for any hosts that are DNS names (i.e. not IP addresses).
+    // Dynamic conversion of peers is O(N^2), so set on initialize. Converts
+    // endpoints to addresses, so produces default address for any hosts that
+    // are DNS names (i.e. not IP addresses).
     friends = system::projection<network::config::addresses>(peers);
 }
 
@@ -496,8 +496,8 @@ bool settings::peer_manual::peered(const address_item& item) const NOEXCEPT
 
 bool settings::peer_manual::enabled() const NOEXCEPT
 {
-    // connections field is not currently used, and this applies only to
-    // initial configuration of manual connections, as they can be added.
+    // connections field unused, this applies only to initial configuration of
+    // manual connections, as they can be added.
     return /* settings::tcp_server::enabled() && */ !peers.empty();
 }
 
@@ -535,8 +535,8 @@ code settings::initialize() NOEXCEPT
 {
     peer.identifier = identifier;
 
-    // Friends are mapped before peer ports are defaulted, so that a peer
-    // configured without a port matches its address on any port.
+    // Friends mapped before peer ports defaulted, so peer configured without
+    // port matches its address on any port.
     manual.initialize();
 
     inbound.default_buffers();
@@ -603,8 +603,9 @@ bool settings::gossip_v2() const NOEXCEPT
 steady_clock::duration settings::connect_timeout(
     const tcp_server& options) const NOEXCEPT
 {
-    const auto seconds_ = to_bool(options.connect_timeout_seconds) ?
-        options.connect_timeout_seconds : connect_timeout_seconds;
+    const auto specified = options.connect_timeout_seconds;
+    const auto fallback = connect_timeout_seconds;
+    const auto seconds_ = to_bool(specified) ? specified : fallback;
 
     const auto from = seconds_ * 500_u64;
     const auto to = seconds_ * 1'000_u64;
@@ -613,9 +614,10 @@ steady_clock::duration settings::connect_timeout(
 
 uint32_t settings::rate_limited(const tcp_server& options) const NOEXCEPT
 {
-    return to_bool(rate_limit) && to_bool(options.rate_limit) ?
-        std::min(rate_limit, options.rate_limit) :
-        std::max(rate_limit, options.rate_limit);
+    const auto both = to_bool(rate_limit) && to_bool(options.rate_limit);
+    const auto lesser = std::min(rate_limit, options.rate_limit);
+    const auto greater = std::max(rate_limit, options.rate_limit);
+    return both ? lesser : greater;
 }
 
 bool settings::connectable(const address_item& item) const NOEXCEPT

@@ -54,7 +54,8 @@ bool authority::operator==(const messages::peer::address_item& other) const NOEX
         return false;
 
     using namespace system::ip;
-    const auto host = denormalize(from_address(messages::peer::to_ip_address(other.address)));
+    const auto other_ip = messages::peer::to_ip_address(other.address);
+    const auto host = denormalize(from_address(other_ip));
 
     // if both zero cidr, match hosts, otherwise host membership in subnet.
     return is_zero(cidr()) ? host == ip() : is_member(host, ip(), cidr());

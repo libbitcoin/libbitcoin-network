@@ -49,8 +49,8 @@ constexpr auto command_message = "MESSAGE";
 // Constructor.
 // ----------------------------------------------------------------------------
 
-// The context selects the upgrade and configures the CURVE mechanism, the
-// role selects the socket type and thereby the compatible peer socket types.
+// Context selects upgrade and configures CURVE mechanism, role selects
+// socket type and thereby compatible peer socket types.
 stream::stream(io::socket&& socket, const context& context,
     zmtp::role role) NOEXCEPT
   : socket_(std::move(socket)), context_(context), role_(role)
@@ -114,8 +114,8 @@ data_chunk stream::make_greeting(bool as_server, bool curve) NOEXCEPT
     std::copy_n(mechanism, std::char_traits<char>::length(mechanism),
         position);
 
-    // As-server byte follows the mechanism (NULL has no role asymmetry),
-    // and the 31-byte filler remains zero.
+    // As-server byte follows mechanism (NULL has no role asymmetry),
+    // 31-byte filler remains zero.
     greeting.at(signature_size + 2u + mechanism_size) =
         (curve && as_server) ? 0x01 : 0x00;
 
@@ -132,8 +132,8 @@ bool stream::parse_greeting(const std::span<const uint8_t>& greeting,
     if (greeting[0] != 0xff || is_zero(greeting[signature_size - 1u] & 0x01))
         return false;
 
-    // Refuse revisions below 3.0 (no such peer exists in practice, as Core
-    // requires libzmq >= 4.0). Higher revisions are treated as 3.1.
+    // Refuse revisions below 3.0 (no such peer in practice, as Core requires
+    // libzmq >= 4.0). Higher revisions treated as 3.1.
     const auto major = greeting[signature_size];
     if (major < revision_major)
         return false;
@@ -447,8 +447,8 @@ void stream::handle_greeting_stage2(const code& ec, bool as_server,
     greeting_.clear();
     greeting_.shrink_to_fit();
 
-    // The peer mechanism must match ours, and under CURVE the peer must take
-    // the role opposite to ours (only the server role is implemented).
+    // Peer mechanism must match ours, and under CURVE peer must take role
+    // opposite ours (only server role implemented).
     if (curve != cipher_.has_value() || (curve && (peer_server || !as_server)))
     {
         fail_handshake("mechanism mismatch", handler);
@@ -765,9 +765,9 @@ void stream::handle_frame_body(const code& ec, size_t size,
         return;
     }
 
-    // Under CURVE every frame is a boxed MESSAGE (framed as a message, as
-    // libzmq, though the mechanism names it a command) or an ERROR command
-    // (delivered as is, the tier above treats it as any other command).
+    // Under CURVE every frame is boxed MESSAGE (framed as message, as libzmq,
+    // though mechanism names it command) or ERROR command (delivered as is,
+    // tier above treats it as any other command).
     auto& frame = out.get();
     std::string name{};
     std::span<const uint8_t> content{};
@@ -838,8 +838,8 @@ void stream::async_write(const io::const_buffer& in,
         return;
     }
 
-    // Under CURVE each frame is boxed into a MESSAGE command for this peer,
-    // into the stream's write scratch (one write in flight at a time).
+    // Under CURVE each frame boxed into MESSAGE command for this peer, into
+    // stream's write scratch (one write in flight at a time).
     boxed_.clear();
     uint8_t flags{};
     std::span<const uint8_t> body{};

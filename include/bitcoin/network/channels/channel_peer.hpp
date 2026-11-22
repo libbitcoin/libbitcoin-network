@@ -44,7 +44,7 @@ public:
     using dispatcher = rpc::dispatcher<interface>;
 
     /// Subscribe to messages from peer (requires strand).
-    /// Event handler is always invoked on the channel strand.
+    /// Event handler always invoked on channel strand.
     template <class Message>
     inline void subscribe(auto&& handler) NOEXCEPT
     {
@@ -54,8 +54,8 @@ public:
     }
 
     /// Write solicited message to peer (requires strand).
-    /// The message is translated to the wire by the body (transport framed).
-    /// Completion handler is always invoked on the channel strand.
+    /// Message translated to wire by body (transport framed).
+    /// Completion handler always invoked on channel strand.
     template <class Message>
     inline void send(const Message& message, result_handler&& handler) NOEXCEPT
     {
@@ -63,7 +63,7 @@ public:
     }
 
     /// Write unsolicited message to peer (requires strand).
-    /// Announcements accumulate, so these are charged to the channel backlog.
+    /// Announcements accumulate, so charged to channel backlog.
     template <class Message>
     inline void notify(const Message& message,
         result_handler&& handler) NOEXCEPT
@@ -81,7 +81,7 @@ public:
     }
 
     /// Quiet should be written only in handshake.
-    /// The channel does not "speak" to peers (e.g. seed connection).
+    /// Channel does not "speak" to peers (e.g. seed connection).
     bool quiet() const NOEXCEPT;
     void set_quiet() NOEXCEPT;
 

@@ -41,9 +41,9 @@ constexpr uint8_t socks_address_ipv4 = 0x01;
 constexpr uint8_t socks_address_fqdn = 0x03;
 constexpr uint8_t socks_address_ipv6 = 0x04;
 
-// The connector runs on the fixture pool and the proxy is a plain socket
-// driven synchronously from the test thread, so each exchange is ordered by
-// the proxy's own reads and writes.
+// Connector runs on fixture pool, proxy is plain socket
+// driven synchronously from test thread, so each
+// exchange is ordered by proxy's own reads and writes.
 struct socks_setup_fixture
 {
     DELETE_COPY_MOVE(socks_setup_fixture);

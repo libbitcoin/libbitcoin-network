@@ -53,7 +53,7 @@ public:
     operator authority() const NOEXCEPT;
 
     /// Equality considers all properties (scheme, host, port).
-    /// Non-numeric and invalid endpoints will match the default address_item.
+    /// Non-numeric and invalid endpoints match default address_item.
     bool operator==(const messages::peer::address_item& other) const NOEXCEPT;
     bool operator!=(const messages::peer::address_item& other) const NOEXCEPT;
 

@@ -27,7 +27,7 @@ namespace network {
 namespace config {
 
 /// Container for messages::peer::address_item (with timstamp and services).
-/// IPv4 addresses are converted to IPv6-mapped for message encoding.
+/// IPv4 addresses converted to IPv6-mapped for message encoding.
 /// Provided for connect/session, and serialization to/from hosts file.
 class BCT_API address
 {

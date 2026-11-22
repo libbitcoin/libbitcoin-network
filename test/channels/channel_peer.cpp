@@ -64,8 +64,11 @@ BC_AUTO_TEST_CASE(channel_peer__stopped__default__false)
     threadpool pool(1);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, expected, set, options);
     BC_REQUIRE(!channel_ptr->stopped());
@@ -101,8 +104,11 @@ BC_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     threadpool pool(1);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
@@ -180,8 +186,11 @@ BC_AUTO_TEST_CASE(channel_peer__set_wants_address_v2__always__latched)
     threadpool pool(1);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
@@ -198,8 +207,11 @@ BC_AUTO_TEST_CASE(channel_peer__set_minimum_fee__always__expected)
     threadpool pool(1);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
@@ -216,8 +228,11 @@ BC_AUTO_TEST_CASE(channel_peer__set_pong__unpinged__unchanged)
     threadpool pool(1);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
@@ -239,8 +254,11 @@ BC_AUTO_TEST_CASE(channel_peer__set_ping__unponged__pending_only)
     threadpool pool(1);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
@@ -257,8 +275,11 @@ BC_AUTO_TEST_CASE(channel_peer__set_pong__pinged__timed_not_pending)
     threadpool pool(1);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
@@ -281,8 +302,11 @@ BC_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
     threadpool pool(2);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
     constexpr auto expected_ec = error::invalid_magic;
@@ -317,8 +341,11 @@ BC_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
     threadpool pool(2);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<mock_channel_peer>(log, socket_ptr, 42, set, options);
     constexpr auto expected_ec = error::invalid_magic;
@@ -374,8 +401,11 @@ BC_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
     threadpool pool(2);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
@@ -409,8 +439,11 @@ BC_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
     threadpool pool(2);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<channel_peer>(log, socket_ptr, 42, set, options);
 
@@ -443,8 +476,11 @@ BC_AUTO_TEST_CASE(channel_peer__stopped__resume_after_read_fail__true)
     threadpool pool(2);
     io::strand strand(pool.service().get_executor());
     const settings set(test::network_settings());
-    network::socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+    network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
     auto channel_ptr = std::make_shared<mock_channel_peer>(log, socket_ptr, 42, set, options);
 
@@ -531,12 +567,14 @@ static code peer_await(const peer_promise& promise) NOEXCEPT
     return future.get();
 }
 
-static system::data_chunk peer_frame(const std::string& command, const system::data_chunk& payload) NOEXCEPT
+static system::data_chunk peer_frame(const std::string& command,
+    const system::data_chunk& payload) NOEXCEPT
 {
     auto frame = system::base16_chunk("f9beb4d9");
     auto name = system::to_chunk(command);
     name.resize(12);
-    const auto size = system::to_little_endian(system::possible_narrow_cast<uint32_t>(payload.size()));
+    const auto length = system::possible_narrow_cast<uint32_t>(payload.size());
+    const auto size = system::to_little_endian(length);
     const auto hash = system::bitcoin_hash(payload);
     frame.insert(frame.end(), name.begin(), name.end());
     frame.insert(frame.end(), size.begin(), size.end());
@@ -552,7 +590,8 @@ static const settings peer_checked_settings = []() NOEXCEPT
     return value;
 }();
 
-using peer_responder = std::function<bool(const channel_peer::ptr&, const messages::peer::ping::cptr&)>;
+using peer_responder = std::function<bool(const channel_peer::ptr&,
+    const messages::peer::ping::cptr&)>;
 
 class resumable_channel_peer
   : public channel_peer
@@ -586,7 +625,8 @@ struct peer_loopback_fixture
             .maximum_buffer = options.maximum_buffer
         };
 
-        const auto server = std::make_shared<network::socket>(log, pool_.service(), std::move(params));
+        const auto server = std::make_shared<network::socket>(log,
+            pool_.service(), std::move(params));
         const auto accepted = peer_make_promise();
         server->accept(acceptor_, [=](const code& accept_ec) NOEXCEPT
         {
@@ -597,7 +637,8 @@ struct peer_loopback_fixture
         BC_REQUIRE(!ec);
         BC_REQUIRE_EQUAL(peer_await(accepted), error::success);
 
-        channel = std::make_shared<resumable_channel_peer>(log, server, 42, peer_checked_settings, options);
+        channel = std::make_shared<resumable_channel_peer>(log, server, 42,
+            peer_checked_settings, options);
         const auto promise = stopped;
         channel->subscribe_stop([=](const code& stop_ec) NOEXCEPT
         {
@@ -621,7 +662,8 @@ struct peer_loopback_fixture
         io::post(channel->strand(), [=]() NOEXCEPT
         {
             using namespace messages::peer;
-            self->subscribe<ping>([=](const code& ec, const ping::cptr& message) NOEXCEPT
+            self->subscribe<ping>([=](const code& ec,
+                const ping::cptr& message) NOEXCEPT
             {
                 return !ec && respond(self, message);
             });
@@ -655,7 +697,8 @@ public:
     std::shared_ptr<resumable_channel_peer> channel{};
 };
 
-static bool peer_keep(const channel_peer::ptr&, const messages::peer::ping::cptr&) NOEXCEPT
+static bool peer_keep(const channel_peer::ptr&,
+    const messages::peer::ping::cptr&) NOEXCEPT
 {
     return true;
 }
@@ -771,7 +814,8 @@ struct p2ps_loopback_fixture
             .context = network::socket::context{ std::cref(p2ps_configuration) }
         };
 
-        server_ = std::make_shared<network::socket>(log, pool_.service(), std::move(params));
+        server_ = std::make_shared<network::socket>(log, pool_.service(),
+            std::move(params));
         const auto promise = accepted_;
         server_->accept(acceptor_, [=](const code& accept_ec) NOEXCEPT
         {
@@ -800,7 +844,8 @@ struct p2ps_loopback_fixture
     void accept() NOEXCEPT
     {
         BC_REQUIRE_EQUAL(peer_await(accepted_), error::success);
-        channel = std::make_shared<resumable_channel_peer>(log, server_, 42, peer_checked_settings, options);
+        channel = std::make_shared<resumable_channel_peer>(log, server_, 42,
+            peer_checked_settings, options);
         const auto promise = stopped;
         channel->subscribe_stop([=](const code& stop_ec) NOEXCEPT
         {
@@ -827,7 +872,8 @@ struct p2ps_loopback_fixture
         io::post(channel->strand(), [=]() NOEXCEPT
         {
             using namespace messages::peer;
-            self->subscribe<ping>([=](const code& ec, const ping::cptr& message) NOEXCEPT
+            self->subscribe<ping>([=](const code& ec,
+                const ping::cptr& message) NOEXCEPT
             {
                 return !ec && respond(self, message);
             });

@@ -30,7 +30,7 @@ namespace network {
 // Based on: github.com/picanumber/bureaucrat/blob/master/time_lapse.h
 
 /// Thread safe, non-virtual.
-/// Class to measure the execution time of a callable.
+/// Class to measure execution time of callable.
 template <typename Time = milliseconds, class Clock = steady_clock>
 struct timer final
 {

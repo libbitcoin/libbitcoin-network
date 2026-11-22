@@ -27,8 +27,8 @@ namespace libbitcoin {
 namespace network {
 namespace io {
 
-/// Thread safe. An executor whose handlers run in post order, one at a time.
-/// Copies are the same strand.
+/// Thread safe. Executor whose handlers run in post order, one at a time.
+/// Copies are same strand.
 class BCT_API strand
   : public executor
 {

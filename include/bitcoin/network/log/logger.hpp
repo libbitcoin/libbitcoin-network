@@ -130,8 +130,6 @@ public:
     ~logger() NOEXCEPT;
 
     /// Obtain streaming writer (must destruct before this).
-    /// The writer could capture refcounted logger reference, but this would
-    /// require shared logger instances, an unnecessary complication/cost.
     writer write(uint8_t level) const NOEXCEPT;
 
     /// True if any message interest holds the level.
@@ -152,9 +150,9 @@ public:
         fire(event_, std::chrono::duration_cast<Time>(now() - start).count());
     }
 
-    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
-    /// and dropped. Otherwise it is held until stop/drop. False if failed.
-    /// Messages are filtered by the interest, which is released on drop.
+    /// If stopped, handler invoked with error::subscriber_stopped/defaults and
+    /// dropped. Otherwise held until stop/drop. False if failed.
+    /// Messages filtered by interest, which is released on drop.
     void subscribe_messages(const interest::ptr& value,
         message_notifier&& handler) const NOEXCEPT;
     void subscribe_events(event_notifier&& handler) const NOEXCEPT;
@@ -194,7 +192,7 @@ private:
     mutable io::strand strand_{ pool_.service().get_executor() };
     BC_POP_WARNING()
 
-    // These are protected by strand.
+    // Protected by strand.
     // notify()/do_notify() can be const because of mutable subscriber.
     mutable message_subscriber message_subscriber_{};
     mutable event_subscriber event_subscriber_{};

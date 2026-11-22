@@ -34,7 +34,7 @@ constexpr uint32_t version_1_1 = 11;
 constexpr uint32_t version_1_0 = 10;
 
 /// Not thread safe, non-virtual.
-/// The version and fields common to request and response headers.
+/// Version and fields common to request and response headers.
 class BCT_API header_base
   : public fields
 {

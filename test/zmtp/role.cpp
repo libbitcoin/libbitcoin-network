@@ -19,9 +19,9 @@
 #include "../test.hpp"
 #include "zmtp_setup_fixture.hpp"
 
-// Servers for the pyzmq role harness (test/pyzmq/zmtp_roles.py), which runs
-// each suite by name against a real libzmq peer with ZMTP_HARNESS set. The
-// cases pass trivially otherwise, so a full run never waits on a peer.
+// Servers for pyzmq role harness (test/pyzmq/zmtp_roles.py), which runs each
+// suite by name against real libzmq peer with ZMTP_HARNESS set. Cases pass
+// trivially otherwise, so full run never waits on peer.
 
 // socket_type/compatible.
 // ----------------------------------------------------------------------------

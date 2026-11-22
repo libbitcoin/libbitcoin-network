@@ -24,8 +24,8 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 
-// Async operations are not thread safe for the same socket object.
-// Calls are stranded to protect the socket member.
+// Async operations not thread safe for same socket object.
+// Calls stranded to protect socket member.
 
 namespace libbitcoin {
 namespace network {
@@ -406,9 +406,9 @@ zmtp::stream& socket::get_zmtp() NOEXCEPT
 // ----------------------------------------------------------------------------
 // protected
 
-// write message frame (ws, finish closes the message) or unframed fixed
-// size bytes (tcp). The binary/text setting applies only at the start of a
-// message, so it is harmless to pass it on every frame of the message.
+// write message frame (ws, finish closes message) or unframed fixed size bytes
+// (tcp). Binary/text setting applies only at start of message, so it is
+// harmless to pass it on every frame of message.
 void socket::async_write(const io::const_buffer& buffer, bool binary,
     bool finish, const count_handler& handler) NOEXCEPT
 {
@@ -428,9 +428,9 @@ void socket::async_write(const io::const_buffer& buffer, bool binary,
 
 // Transport (write).
 // ----------------------------------------------------------------------------
-// Writes are issued one at a time, a write issued over another deferred to
-// its completion. The retained buffer is not prepared while a write of its
-// bytes is in progress.
+// Writes issued one at a time, write issued over
+// another deferred to its completion. Retained buffer
+// not prepared while write of its bytes is in progress.
 
 void socket::hold(bool enable) NOEXCEPT
 {
@@ -462,7 +462,7 @@ void socket::release(count_handler&& handler) NOEXCEPT
 }
 
 // protected
-// The write is preceded by the held writes, or is held (if hold) with them.
+// Write is preceded by held writes, or is held (if hold) with them.
 void socket::transmit(const std::span<const io::const_buffer>& buffers,
     bool hold, const count_handler& handler) NOEXCEPT
 {
@@ -505,7 +505,7 @@ void socket::transmit(const std::span<const io::const_buffer>& buffers,
 }
 
 // protected
-// The write is independent of the held writes.
+// Write is independent of held writes.
 void socket::interject(const std::span<const io::const_buffer>& buffers,
     const count_handler& handler) NOEXCEPT
 {
@@ -525,7 +525,7 @@ void socket::interject(const std::span<const io::const_buffer>& buffers,
 }
 
 // private
-// The size reported excludes that of the held writes (reported when held).
+// Size reported excludes that of held writes (reported when held).
 void socket::handle_transmit(const code& ec, size_t size, size_t held,
     const count_handler& handler) NOEXCEPT
 {
@@ -621,9 +621,9 @@ void socket::async_read_http(http::flat_buffer& buffer, http::request& request,
 
     if (websocket())
     {
-        // The body reader processes a websocket read just like an http
-        // read but without the headers. The expected body type (parser)
-        // must be preselected on the request object.
+        // Body reader processes websocket read just like
+        // http read but without headers. Expected body type
+        // (parser) must be preselected on request object.
         body_read(buffer, request, move_copy(handler));
     }
     else
@@ -646,8 +646,8 @@ void socket::async_write_http(http::response&& response,
 
     if (websocket())
     {
-        // The body writer processes a websocket write just like an http
-        // write but without the headers. The expected body type
+        // Body writer processes websocket write just like
+        // http write but without headers. Expected body type
         // (serializer) is determined by caller-assigned body.
         body_write(std::move(response), move_copy(handler));
     }

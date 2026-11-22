@@ -26,7 +26,7 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe, non-virtual.
-/// All methods must be invoked on strand, handlers are invoked on strand.
+/// All methods must be invoked on strand, handlers invoked on strand.
 template <typename Key, typename... Args>
 class desubscriber final
 {
@@ -41,17 +41,17 @@ public:
     desubscriber() NOEXCEPT = default;
     ~desubscriber() NOEXCEPT;
 
-    /// If stopped, handler is invoked with error::subscriber_stopped.
-    /// If key exists, handler is invoked with error::subscriber_exists.
-    /// Otherwise handler retained. Subscription code is also returned here.
+    /// If stopped, handler invoked with error::subscriber_stopped.
+    /// If key exists, handler invoked with error::subscriber_exists.
+    /// Otherwise handler retained. Subscription code also returned here.
     code subscribe(handler&& handler, const Key& key) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
-    /// Handler return true for resubscription, otherwise it is desubscribed.
+    /// Handler returns true for resubscription, otherwise desubscribed.
     void notify(const code& ec, const Args&... args) NOEXCEPT;
 
     /// Invoke specified handler in order with specified arguments.
-    /// Handler return controls resubscription, and is forwarded to the caller.
+    /// Handler return controls resubscription, forwarded to caller.
     /// True if subscription key found (subscribed).
     bool notify_one(const Key& key, const code& ec,
         const Args&... args) NOEXCEPT;

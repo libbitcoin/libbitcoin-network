@@ -31,8 +31,9 @@ struct protocol_address_in_70016_setup_fixture
     // Complete prior node work on the channel and the network strand.
     void flush()
     {
-        send(messages::peer::ping{ 42 }, messages::peer::level::bip155);
-        BC_REQUIRE_EQUAL(receive<messages::peer::pong>(messages::peer::level::bip155)->nonce, 42_u64);
+        const auto level = messages::peer::level::bip155;
+        send(messages::peer::ping{ 42 }, level);
+        BC_REQUIRE_EQUAL(receive<messages::peer::pong>(level)->nonce, 42_u64);
         synchronize();
     }
 };

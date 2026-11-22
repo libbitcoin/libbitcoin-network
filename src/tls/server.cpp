@@ -68,8 +68,8 @@ static bool to_list(std::vector<uint16_t>& out, const const_byte_span& body,
     return source.is_complete() && !out.empty();
 }
 
-// The shared secret and own key_share of an ephemeral key, false if the
-// peer share is not a valid uncompressed point.
+// Shared secret and own key_share of ephemeral key, false if peer share is
+// not valid uncompressed point.
 template <typename Curve>
 static bool nist_exchange(data_chunk& shared, data_chunk& own,
     const const_byte_span& share) NOEXCEPT
@@ -253,8 +253,8 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     if (algorithms.empty() || groups.empty() || !has_shares)
         return fail(alert::missing_extension);
 
-    const auto scheme = (context_.curve() == x509::curve::secp256r1) ?
-        ecdsa_secp256r1_sha256 : ecdsa_secp384r1_sha384;
+    const auto p256 = (context_.curve() == x509::curve::secp256r1);
+    const auto scheme = p256 ? ecdsa_secp256r1_sha256 : ecdsa_secp384r1_sha384;
     if (!contains(algorithms, scheme))
         return fail(alert::handshake_failure);
 
@@ -391,8 +391,8 @@ void server::send_hello(const random& value, const span& session,
     send_compatibility(session);
 }
 
-// Sent once, after the first server handshake message, in compatibility
-// mode (a nonempty client session id) (D.4).
+// Sent once, after first server handshake message, in compatibility mode
+// (nonempty client session id) (D.4).
 void server::send_compatibility(const span& session) NOEXCEPT
 {
     if (session.empty() || compatibility_sent_)

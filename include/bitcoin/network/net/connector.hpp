@@ -64,7 +64,7 @@ public:
     /// Methods.
     /// -----------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.
-    /// The socket parameter is nullptr unless success is returned.
+    /// Socket parameter is nullptr unless success returned.
 
     /// Try to connect to the address, starts timer.
     virtual void connect(const config::address& address,

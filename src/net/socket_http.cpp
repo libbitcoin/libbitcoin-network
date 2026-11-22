@@ -41,8 +41,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // local
 constexpr bool is_json_open(char byte) NOEXCEPT
 {
-    // A json value opens with an object or array, and neither is a valid
-    // http method token character (rfc9110 tchar).
+    // Json value opens with object or array, and neither is valid http method
+    // token character (rfc9110 tchar).
     return byte == '{' || byte == '[';
 }
 
@@ -54,12 +54,12 @@ constexpr bool is_line_break(char byte) NOEXCEPT
 }
 
 // local
-// False implies inconclusive (the buffer holds only empty lines).
+// False implies inconclusive (buffer holds only empty lines).
 inline bool detect_json(bool& json, const http::flat_buffer& buffer) NOEXCEPT
 {
     const auto data = buffer.data();
-    const std::string_view bytes{ static_cast<const char*>(data.data()),
-        data.size() };
+    const auto chars = static_cast<const char*>(data.data());
+    const std::string_view bytes{ chars, data.size() };
 
     for (const auto byte: bytes)
     {
@@ -198,11 +198,11 @@ void socket::handle_http_write(const code& ec, size_t size,
 
 // Codec (parse).
 // ----------------------------------------------------------------------------
-// The buffered bytes are parsed before reading more. The header parse returns
-// once the header is complete, the some parse once it progresses, and the
-// full parse once the message is complete. A body reader may pause any parse
-// (need_buffer), which is returned to the caller. A websocket reads each
-// message whole, and other transports read the bytes available.
+// Buffered bytes parsed before reading more. Header parse returns
+// once header is complete, some parse once it progresses, and full
+// parse once message is complete. Body reader may pause any parse
+// (need_buffer), which is returned to caller. Websocket reads each
+// message whole, and other transports read bytes available.
 
 // private
 template <class Parser>
@@ -305,8 +305,8 @@ void socket::handle_parse(const code& ec, size_t size,
 
 // Codec (serialize).
 // ----------------------------------------------------------------------------
-// Each set of buffers is written in turn. A websocket writes each buffer as a
-// frame of one message, which the last buffer closes.
+// Each set of buffers written in turn. Websocket writes each buffer as frame of
+// one message, which last buffer closes.
 
 // private
 template <class Serializer>
@@ -316,8 +316,8 @@ void socket::do_serialize(
 {
     BC_ASSERT(stranded());
 
-    // Held writes that fill the buffer are sent before serializing behind
-    // them, as a writer requires room beyond the byte it reserves.
+    // Held writes that fill buffer are sent before serializing behind them, as
+    // writer requires room beyond byte it reserves.
     const auto room = floored_subtract(response_.max_size(), response_.size());
     if (room <= one && holding())
     {
@@ -407,9 +407,9 @@ template void socket::do_serialize<socket::notify_serializer>(
 
 // HTTP (progressive read).
 // ----------------------------------------------------------------------------
-// The caller owns the parser, which owns http framing (content length and
-// chunk decoding) across the message. A batched json-rpc body delivers each
-// message from the paused parse (need_buffer), mapped to success here.
+// Caller owns parser, which owns http framing (content length and chunk
+// decoding) across message. Batched json-rpc body delivers each message from
+// paused parse (need_buffer), mapped to success here.
 
 void socket::http_read_header(http::flat_buffer& buffer,
     const http_parser_ptr& parser, count_handler&& handler) NOEXCEPT
@@ -496,9 +496,9 @@ void socket::do_http_read_body(ref<http::flat_buffer> buffer,
 
 // HTTP (progressive write).
 // ----------------------------------------------------------------------------
-// The header is written once (chunked, no content length), and each response
-// part is then written as chunk data, the batch close part terminating the
-// chunked body. This mirrors the progressive read (nothing is materialized).
+// Header written once (chunked, no content length), and each response part then
+// written as chunk data, batch close part terminating chunked body. Mirrors
+// progressive read (nothing materialized).
 
 void socket::http_write_header(http::response&& response,
     count_handler&& handler) NOEXCEPT
@@ -648,8 +648,10 @@ void socket::handle_chunk_write(const code& ec, size_t size,
         return;
     }
 
-    const io::const_buffer last{ http::last_chunk.data(),
-        http::last_chunk.size() };
+    const io::const_buffer last
+    {
+        http::last_chunk.data(), http::last_chunk.size()
+    };
 
     transmit({ &last, one }, true,
         std::bind(&socket::handle_chunk_last,

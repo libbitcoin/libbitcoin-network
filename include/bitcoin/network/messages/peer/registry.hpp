@@ -80,7 +80,12 @@ private:
         using message = message_t<Index>;
         typename message::cptr message_ptr{};
 
-        if constexpr (requires { message::deserialize(version, data, witness); })
+        constexpr auto takes_witness = requires
+        {
+            message::deserialize(version, data, witness);
+        };
+
+        if constexpr (takes_witness)
             message_ptr = message::deserialize(version, data, witness);
         else
             message_ptr = message::deserialize(version, data);
@@ -89,8 +94,8 @@ private:
     }
 
     template <size_t Index>
-    static system::chunk_ptr serialize(const rpc::any_t& message, uint32_t magic,
-        uint32_t version) NOEXCEPT
+    static system::chunk_ptr serialize(const rpc::any_t& message,
+        uint32_t magic, uint32_t version) NOEXCEPT
     {
         const auto ptr = message.get<const message_t<Index>>();
         return ptr ? peer::serialize(*ptr, magic, version) :

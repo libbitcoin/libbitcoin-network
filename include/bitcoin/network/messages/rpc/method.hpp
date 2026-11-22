@@ -30,34 +30,33 @@ namespace rpc {
 BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
 
 /// Defines methods assignable to an rpc interface.
-/// Each method must have a unique signature in the scope of the interface. The
-/// method name is not part of the signature and is used only for dispatch, not
-/// for subscription. Dispatch is weakly-typed to the name, where the notify
-/// call maps to a functor and thereby imposes the signature requirement on the
-/// request. Subscriptions are strongly-typed by argument signature alone.
-/// Therefore, all signatures must be unique, which imposes a convention-based
-/// restriction on method signatures. If a method signature contains a first
-/// argument of type std::shared_ptr<T> it is considered "native". The type `T`
-/// must be unique for each native method in the interface. Otherwise the
-/// dispatcher<> imposes a requirement that the first argument type is that of
-/// the method itself (ie. the method::tag). This argument is required in the
-/// handler signature, is defaulted upone notify, and is not part of a request,
-/// as the request is matched by method name. This allows two methods to have
-/// the same public signature while being bound by a unqiue argument list. The
-/// notifier always injects a code as the zeroth argument. This must also be
-/// provided by the method handler. So a minimal handler always has two args.
+/// Each method must have unique signature in scope of interface. Method name is
+/// not part of signature and is used only for dispatch, not for subscription.
+/// Dispatch is weakly-typed to name, where notify call maps to functor and
+/// thereby imposes signature requirement on request. Subscriptions are
+/// strongly-typed by argument signature alone. Therefore all signatures must be
+/// unique, which imposes convention-based restriction on method signatures. If
+/// method signature contains first argument of type std::shared_ptr<T> it is
+/// considered "native". Type `T` must be unique for each native method in
+/// interface. Otherwise dispatcher<> imposes requirement that first argument
+/// type is that of method itself (ie. method::tag). This argument is required
+/// in handler signature, is defaulted upon notify, and is not part of request,
+/// as request is matched by method name. This allows two methods to have same
+/// public signature while bound by unique argument list. Notifier always
+/// injects code as zeroth argument. This must also be provided by method
+/// handler. So minimal handler always has two args.
 
-/// A method may be declared unimplemented, which excludes it from the
-/// published names while leaving it dispatchable (recognized and refused).
+/// Method may be declared unimplemented, excluding it from published names
+/// while leaving it dispatchable (recognized and refused).
 struct unimplemented_t {};
 constexpr unimplemented_t unimplemented{};
 
-/// A method may be declared a command (changes service state), by this type
-/// as its last template argument, which is not a parameter of the method.
+/// Method may be declared command (changes service state), by this type as its
+/// last template argument, which is not parameter of method.
 struct command {};
 
-/// A parameter name may append aliases, each preceded by '|', any of which
-/// names the parameter in a request (as "verbosity|verbose").
+/// Parameter name may append aliases, each preceded by '|', any of which names
+/// parameter in request (as "verbosity|verbose").
 constexpr std::string_view primary_name(const std::string_view& name) NOEXCEPT
 {
     return name.substr(zero, name.find('|'));
@@ -191,8 +190,8 @@ struct names<Method, bool_if<is_tuple<Method>>>
 template <typename Method>
 using names_t = typename names<Method>::type;
 
-/// args_t/method::args is used for signature matching. If method::native then
-/// this is the same as args_native_t - no synthetic tag (first argument).
+/// args_t/method::args used for signature matching. If method::native then same
+/// as args_native_t - no synthetic tag (first argument).
 template <typename Method>
 using args_t = typename Method::args;
 

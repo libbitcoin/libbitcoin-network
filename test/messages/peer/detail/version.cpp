@@ -108,7 +108,7 @@ BC_AUTO_TEST_CASE(version__deserialize__bip37_relay_true__relay_true)
 
 // "/Satoshi:1.1.1/" (70006) no relay
 // anarchistprime: bitcointalk.org/index.php?topic=1001407
-// This node is identifiable by a different genesis block.
+// Node identifiable by different genesis block.
 static const auto no_relay_anarchist_prime_1 = base16_chunk("761101000100000000000000ae1b9c58000000000100000000000000260106009000d69ee9a999156d2e27fed77d01000000000000002a0104f80160144600000000000000022b2aaf9b8ea1eb14614b0f2f5361746f7368693a312e312e312f64450200");
 static const auto no_relay_anarchist_prime_2 = base16_chunk("7611010001000000000000005b429c5800000000010000000000000000000000000000000000ffff1813e52e939b010000000000000000000000000000000000ffffd59fd7db200ac7f00f6ee45f1ab30f2f5361746f7368693a312e312e312f66450200");
 

@@ -153,11 +153,15 @@ decoder::decoder(const codings& value, size_t limit) NOEXCEPT
     const auto add = [&](coding item, http_error_t fault) NOEXCEPT
     {
         if (item == coding::gzip)
-            stages_.push_back({ coder{ std::in_place_type<gzip_inflater> },
-                fault });
+            stages_.push_back(
+            {
+                coder{ std::in_place_type<gzip_inflater> }, fault
+            });
         else
-            stages_.push_back({ coder{ std::in_place_type<zlib_inflater> },
-                fault });
+            stages_.push_back(
+            {
+                coder{ std::in_place_type<zlib_inflater> }, fault
+            });
     };
 
     for (auto it = value.transfer.rbegin(); it != value.transfer.rend(); ++it)
@@ -181,8 +185,8 @@ bool decoder::done() const NOEXCEPT
         });
 }
 
-// The first stage decodes in, each other the output of the preceding stage.
-// Each stage pauses past the limit, and the last also at step.
+// First stage decodes in, each other the output of preceding stage.
+// Each stage pauses past limit, and last also at step.
 void decoder::write(data_chunk& out, size_t& consumed, const data_slice& in,
     size_t step, code& ec) NOEXCEPT
 {

@@ -107,8 +107,8 @@ code CLASS::close(close_code value) NOEXCEPT
 {
     const auto payload = close_payload(value);
     closing_ = true;
-    if (const auto ec = send(opcode::close, { system::pointer_cast<const char>(
-        payload.data()), payload.size() }))
+    const auto text = system::pointer_cast<const char>(payload.data());
+    if (const auto ec = send(opcode::close, { text, payload.size() }))
         return ec;
 
     http::flat_buffer discard{};
@@ -133,8 +133,8 @@ code CLASS::read(http::flat_buffer& out) NOEXCEPT
         reader::event event{};
         code ec{};
         const auto data = input_.data();
-        const auto used = reader_.put({ system::pointer_cast<const uint8_t>(
-            data.data()), data.size() }, out, event, ec);
+        const auto bytes = system::pointer_cast<const uint8_t>(data.data());
+        const auto used = reader_.put({ bytes, data.size() }, out, event, ec);
 
         input_.consume(used);
         if (ec == error::need_more)
@@ -149,8 +149,10 @@ code CLASS::read(http::flat_buffer& out) NOEXCEPT
             return ec;
 
         const auto& control = reader_.control();
-        const std::string_view payload{ system::pointer_cast<const char>(
-            control.data()), control.size() };
+        const std::string_view payload
+        {
+            system::pointer_cast<const char>(control.data()), control.size()
+        };
 
         switch (event)
         {

@@ -793,17 +793,31 @@ static const settings::tcp_server peer_options{ "test" };
 
 static channel_peer::ptr make_inbound(net& instance, const logger& log)
 {
-    const network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = peer_options.maximum_buffer };
-    const auto socket = std::make_shared<network::socket>(log, instance.service(), params);
-    return std::make_shared<channel_peer>(log, socket, 1, instance.network_settings(), peer_options);
+    const network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = peer_options.maximum_buffer
+    };
+
+    const auto socket = std::make_shared<network::socket>(log,
+        instance.service(), params);
+    return std::make_shared<channel_peer>(log, socket, 1,
+        instance.network_settings(), peer_options);
 }
 
 static channel_peer::ptr make_outbound(net& instance, const logger& log)
 {
-    const network::socket::parameters params{ .maximum_request = 42, .maximum_buffer = peer_options.maximum_buffer };
+    const network::socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = peer_options.maximum_buffer
+    };
+
     const config::endpoint endpoint{ "1.2.3.4", 42 };
-    const auto socket = std::make_shared<network::socket>(log, instance.service(), params, config::address{}, endpoint, false);
-    return std::make_shared<channel_peer>(log, socket, 2, instance.network_settings(), peer_options);
+    const auto socket = std::make_shared<network::socket>(log,
+        instance.service(), params, config::address{}, endpoint, false);
+    return std::make_shared<channel_peer>(log, socket, 2,
+        instance.network_settings(), peer_options);
 }
 
 BC_AUTO_TEST_CASE(net__suspend__resume__expected)

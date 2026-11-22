@@ -54,7 +54,7 @@ bool capture::stranded() const NOEXCEPT
 
 // start
 // ----------------------------------------------------------------------------
-// WARNING: depending on the std::istream configuration, getline() may throw.
+// WARNING: depending on std::istream configuration, getline() may throw.
 
 void capture::start() NOEXCEPT
 {
@@ -68,7 +68,7 @@ void capture::do_start() NOEXCEPT
 {
     std::string line{};
 
-    // If input is valid, getline blocks until receiving a "line" of input.
+    // If input valid, getline blocks until receiving "line" of input.
     // <ctrl-c> may cause getline invocation and input invalidation.
     // External input stream invalidation does not unblock getline.
     while (!stopped_.load() && std::getline(input_, line))
@@ -92,9 +92,9 @@ void capture::stop() NOEXCEPT
     stopped_.store(true);
 
     // Protect pool and subscriber (idempotent but not thread safe).
-    // This buffers the handler if getline is still blocking and there is only
-    // one thread in the pool. Providing a second thread allows stop to proceed
-    // and the buffer to clear immediately, despite shutdown remaining blocked.
+    // Buffers handler if getline still blocking and only one thread in pool.
+    // Second thread allows stop to proceed and buffer to clear immediately,
+    // despite shutdown remaining blocked.
     io::post(strand_,
         std::bind(&capture::do_stop, this));
 }

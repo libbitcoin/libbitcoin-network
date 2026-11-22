@@ -173,8 +173,8 @@ void connector_socks::do_socks_greeting_write(const code& ec,
     });
 
     // Start of socket strand sequence.
-    // All socket operations are dispatched to its own strand, so this write
-    // will be posted before invocation. This makes socket calls thread safe.
+    // All socket operations dispatched to own strand, so this write is posted
+    // before invocation. Makes socket calls thread safe.
     socket->tcp_write({ greeting->data(), greeting->size() },
         std::bind(&connector_socks::handle_socks_greeting_write,
             shared_from_base<connector_socks>(),
@@ -343,8 +343,8 @@ void connector_socks::do_socks_connect_write(
     const auto ip = address.is_v4() || address.is_v6();
     const auto name = ip ? std::string{} :
         (address ? address.to_host() : endpoint.host());
-    const auto host_length = ip ? (address.is_v4() ? 4u : 16u) :
-        add1(name.length());
+    const auto ip_length = address.is_v4() ? 4u : 16u;
+    const auto host_length = ip ? ip_length : add1(name.length());
 
     // Socks5 limits valid host lengths to one byte.
     if (is_limited<uint8_t>(host_length))
@@ -479,9 +479,9 @@ void connector_socks::handle_socks_response_read(const code& ec, size_t size,
         }
         case socks::address_fqdn:
         {
-            // The address field contains a fully-qualified domain name. The
-            // first octet of the address field contains the number of octets
-            // of name that follow (and excludes two byte length of the port).
+            // Address field contains fully-qualified domain name. First octet
+            // of address field contains number of octets of name that follow
+            // (and excludes two byte length of port).
             const auto length = emplace_shared<data_array<1>>();
 
             socket->tcp_read({ length->data(), sizeof(uint8_t) },
@@ -547,8 +547,8 @@ void connector_socks::handle_socks_address_read(const code& ec, size_t size,
         return;
     }
 
-    // The address:port is the local binding by the socks5 server (unused).
-    // The outbound address_/authority_ members are set by connect().
+    // Address:port is local binding by socks5 server (unused).
+    // Outbound address_/authority_ members set by connect().
     do_socks_finish(error::success, socket);
 }
 
@@ -563,8 +563,8 @@ void connector_socks::do_socks_finish(const code& ec,
         return;
     }
 
-    // The socket handshake applies to the peer and not the proxy server, so
-    // it is deferred by the socket and invoked here, upon peer connection.
+    // Socket handshake applies to peer and not proxy server, so it is deferred
+    // by socket and invoked here, upon peer connection.
     socket->handshake(
         std::bind(&connector_socks::handle_socks_handshake,
             shared_from_base<connector_socks>(), _1, socket));

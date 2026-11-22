@@ -64,7 +64,7 @@ send_compact send_compact::deserialize(uint32_t version,
         source.invalidate();
 
     // bip152: protocol version must "currently" be one (bad specification).
-    // Peers of negotiated protocol 70015 are setting this to two.
+    // Peers of negotiated protocol 70015 set this to two.
     ////if (!is_one(protocol))
     ////    source.invalidate();
 

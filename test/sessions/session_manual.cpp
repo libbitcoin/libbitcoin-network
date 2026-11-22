@@ -65,8 +65,11 @@ public:
         if (is_zero(connects_++))
             peer_ = peer;
 
-        socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
+        socket::parameters params
+        {
+            .maximum_request = 42,
+            .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+        };
         const auto socket = std::make_shared<network::socket>(log, service_,
             std::move(params));
 
@@ -102,9 +105,9 @@ public:
 
         io::post(strand_, [=]() NOEXCEPT
         {
-            // This error is eaten by handle_connect, due to retry logic.
-            // invalid_magic is a non-terminal code (timer retry).
-            // Connect result code is independent of the channel stop code.
+            // Error eaten by handle_connect, due to retry logic.
+            // invalid_magic is non-terminal code (timer retry).
+            // Connect result code independent of channel stop code.
             handler(error::invalid_magic, nullptr);
         });
     }
@@ -173,8 +176,8 @@ public:
             handshake_.set_value(true);
         }
 
-        // The handshake protocol pauses the channel upon completion, which is
-        // after the session resumes it to start the read loop, so this posts.
+        // Handshake protocol pauses channel upon completion, which is after
+        // session resumes it to start read loop, so this posts.
         io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
@@ -578,8 +581,8 @@ BC_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__servi
             return true;
         });
 
-        // connector.connect has been invoked, though its handler is pending.
-        // Stop the session after connect but before handle_connect is invoked.
+        // connector.connect invoked, though its handler is pending.
+        // Stop session after connect but before handle_connect is invoked.
         session->stop();
         stopped.set_value(true);
     });
@@ -727,8 +730,8 @@ BC_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__succ
     BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
     BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
-    // Connector is established and connect is called for all configured
-    // connections prior to completion of network run call.
+    // Connector established and connect called for all configured connections
+    // prior to completion of network run call.
     BC_REQUIRE(net.get_connector());
     BC_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
@@ -763,9 +766,9 @@ BC_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__suc
     BC_REQUIRE_EQUAL(start.get_future().get(), error::success);
     BC_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
-    // Connector is established and connect is called for all configured
-    // connections prior to completion of network run call. The last connection
-    // is reflected by the mock connector as connections invoked in order.
+    // Connector established and connect called for all configured connections
+    // prior to completion of network run call. Last connection reflected by
+    // mock connector, as connections invoked in order.
     BC_REQUIRE(net.get_connector());
     BC_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
@@ -978,9 +981,12 @@ struct manual_peer
         using namespace messages::peer;
         system::data_chunk payload(message.size(version));
         BC_REQUIRE(message.serialize(version, payload));
+
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
-        BC_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        const auto end = std::next(frame.data(), heading::size());
+        BC_REQUIRE(head.serialize({ frame.data(), end }));
+
         test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
@@ -1006,7 +1012,8 @@ struct manual_peer
     messages::peer::version::cptr handshake(uint32_t value, bool address_v2)
     {
         using namespace messages::peer;
-        const auto node = version::deserialize(value, receive(version::command));
+        const auto payload = receive(version::command);
+        const auto node = version::deserialize(value, payload);
         BC_REQUIRE(node);
 
         version out{};
@@ -1053,12 +1060,15 @@ private:
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__started_address_requested)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.enable_address = true;
-        set.enable_alert = true;
-        set.enable_reject = true;
-    } };
+        [](settings& set)
+        {
+            set.enable_address = true;
+            set.enable_alert = true;
+            set.enable_reject = true;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1071,12 +1081,15 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__started_a
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_70014_compact__started_address_requested)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.protocol_maximum = level::bip152;
-        set.enable_compact = true;
-        set.enable_address = true;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::bip152;
+            set.enable_compact = true;
+            set.enable_address = true;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1089,11 +1102,14 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70014_compact__started_addr
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_70002_reject__started)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.protocol_maximum = level::bip61;
-        set.enable_reject = true;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::bip61;
+            set.enable_reject = true;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1105,10 +1121,13 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70002_reject__started)
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_70001__started)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.protocol_maximum = level::bip37;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::bip37;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1120,11 +1139,14 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70001__started)
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_31800_address__started_address_requested)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.protocol_maximum = level::headers_protocol;
-        set.enable_address = true;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::headers_protocol;
+            set.enable_address = true;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1149,10 +1171,13 @@ BC_AUTO_TEST_CASE(session_manual__connect__notifier_drops_started__disconnected)
 
 BC_AUTO_TEST_CASE(session_manual__connect__notifier_drops_connect_failure__failure)
 {
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.connect_timeout_seconds = 1;
-    } };
+        [](settings& set)
+        {
+            set.connect_timeout_seconds = 1;
+        }
+    };
 
     auto connected = peer.connect(peer.closed_port(), false);
     BC_REQUIRE(connected.get());

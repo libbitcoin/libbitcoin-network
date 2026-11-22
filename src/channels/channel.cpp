@@ -49,7 +49,7 @@ uint32_t channel::rate_limited(const settings_t& settings,
 }
 
 // Protocols invoke channel stop for application layer protocol violations.
-// Channels invoke channel stop for channel timouts and communcation failures.
+// Channels invoke channel stop for channel timeouts and communication failures.
 channel::channel(const logger& log, const socket::ptr& socket,
     uint64_t identifier, const settings_t& settings,
     const options_t& options) NOEXCEPT
@@ -81,9 +81,9 @@ void channel::stopping(const code& ec) NOEXCEPT
     proxy::stopping(ec);
 }
 
-// Timers are set for handshake and reset upon protocol start.
+// Timers set for handshake and reset upon protocol start.
 // Version protocols may have more restrictive completion timeouts.
-// A restarted timer invokes completion handler with error::operation_canceled.
+// Restarted timer invokes completion handler with error::operation_canceled.
 
 void channel::pause() NOEXCEPT
 {
@@ -214,13 +214,13 @@ void channel::do_receive() NOEXCEPT
 
 // Timers.
 // ----------------------------------------------------------------------------
-// Send throttling (settings.rate_limit) is implemented by the proxy.
-// A restarted timer invokes completion handler with error::operation_canceled.
+// Send throttling (settings.rate_limit) implemented by proxy.
+// Restarted timer invokes completion handler with error::operation_canceled.
 // Called from start or strand.
 
 // protected
-// The inactivity timer arms once per window and rearms from the last read,
-// so activity costs a time stamp and not a timer reset.
+// Inactivity timer arms once per window and rearms from last read, so activity
+// costs time stamp, not timer reset.
 void channel::reading() NOEXCEPT
 {
     BC_ASSERT(stranded());

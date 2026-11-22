@@ -63,9 +63,10 @@ void protocol_reject_70002::start() NOEXCEPT
 
 std::string protocol_reject_70002::get_hash(const reject& message) const NOEXCEPT
 {
-    return message.message == block::command ||
-        message.message == transaction::command ?
-        system::encode_hash(message.hash) : std::string{ "n/a" };
+    const auto hashed = message.message == block::command
+        || message.message == transaction::command;
+
+    return hashed ? system::encode_hash(message.hash) : std::string{ "n/a" };
 }
 
 bool protocol_reject_70002::handle_receive_reject(const code& ec,
@@ -76,8 +77,8 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
     if (stopped(ec))
         return false;
 
-    // vesion message rejection is handled in protocol_version_70002, however
-    // if received here (outside of handshake), a protocol error is implied.
+    // version message rejection handled in protocol_version_70002, however if
+    // received here (outside of handshake), protocol error is implied.
     if (message->message == version::command)
     {
         LOGR("Version reject after handshake [" << opposite() << "]");

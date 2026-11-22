@@ -28,7 +28,9 @@ class mock_channel
   : public channel
 {
 public:
-    mock_channel(const logger& log, const socket::ptr& socket, uint64_t identifier, const settings_t& settings, const options_t& options) NOEXCEPT
+    mock_channel(const logger& log, const socket::ptr& socket,
+        uint64_t identifier, const settings_t& settings,
+        const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options)
     {
     }
@@ -92,7 +94,8 @@ class mock_session_handshake_fail
 public:
     using mock_session::mock_session;
 
-    void do_attach_handshake(const channel::ptr&, const result_handler& handshake) NOEXCEPT override
+    void do_attach_handshake(const channel::ptr&,
+        const result_handler& handshake) NOEXCEPT override
     {
         handshake(error::invalid_magic);
     }
@@ -128,9 +131,15 @@ static void stop(net& instance, const std::shared_ptr<Session>& session)
 
 static std::shared_ptr<mock_channel> make_channel(net& instance)
 {
-    socket::parameters params{ .maximum_request = 42, .maximum_buffer = server_options.maximum_buffer };
-    const auto socket = std::make_shared<network::socket>(instance.log, instance.service(), std::move(params));
-    return std::make_shared<mock_channel>(instance.log, socket, 42, instance.network_settings(), server_options);
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = server_options.maximum_buffer
+    };
+    const auto socket = std::make_shared<network::socket>(instance.log,
+        instance.service(), std::move(params));
+    return std::make_shared<mock_channel>(instance.log, socket, 42,
+        instance.network_settings(), server_options);
 }
 
 BC_AUTO_TEST_CASE(session_server__identifier__constructed__expected)
@@ -302,7 +311,8 @@ public:
 
     channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT override
     {
-        return std::make_shared<mock_channel>(log, socket, create_key(), network_settings(), options_);
+        return std::make_shared<mock_channel>(log, socket, create_key(),
+            network_settings(), options_);
     }
 
     acceptor::ptr create_service(socket::parameters&& params) NOEXCEPT override

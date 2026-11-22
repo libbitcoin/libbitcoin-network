@@ -26,9 +26,9 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// Estimated serialized size of a message, which sizes the serialization
-/// buffer of its writer. Text is measured, all other values are charged the
-/// element, as are the quotation and delimiters of each element.
+/// Estimated serialized size of message, which sizes serialization buffer of
+/// its writer. Text is measured, all other values are charged element, as are
+/// quotation and delimiters of each element.
 constexpr size_t element_size = 16;
 constexpr size_t envelope_size = 64;
 

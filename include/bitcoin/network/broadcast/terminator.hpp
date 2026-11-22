@@ -27,8 +27,7 @@ namespace libbitcoin {
 namespace network {
 
 /// Channel stop, broadcast to peer channels (never serialized).
-/// The round completes upon the first match, otherwise upon the last
-/// message reference release.
+/// Round completes on first match, otherwise on last message reference release.
 class BCT_API terminator
 {
 public:
@@ -48,8 +47,8 @@ public:
     /// Stop the channels of slots at or above the slot count (no round).
     terminator(const code& reason, size_t slots) NOEXCEPT;
 
-    /// The message targets the identified channel, its intended target, or
-    /// its resolved address (unresolved for a proxied connection).
+    /// Message targets identified channel, its intended target, or its resolved
+    /// address (unresolved for proxied connection).
     bool targets(uint64_t identifier, const config::address& address,
         const config::endpoint& endpoint) const NOEXCEPT;
 

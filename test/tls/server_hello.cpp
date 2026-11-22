@@ -81,12 +81,28 @@ static data_chunk record_of(uint8_t type, const data_chunk& content)
 static data_chunk encode(const hello& value)
 {
     writer extensions{};
-    if (value.versions) extension(extensions, extension::supported_versions, vector_8(value.version_list));
-    if (value.groups) extension(extensions, extension::supported_groups, vector_16(value.group_list));
-    if (value.algorithms) extension(extensions, extension::signature_algorithms, vector_16(value.algorithm_list));
-    if (value.shares) extension(extensions, extension::key_share, splice(vector_16(value.key_share), value.share_trailer));
-    if (value.early) extension(extensions, extension::early_data, {});
-    if (value.duplicate) extension(extensions, extension::supported_groups, vector_16(value.group_list));
+    if (value.versions)
+        extension(extensions, extension::supported_versions,
+            vector_8(value.version_list));
+
+    if (value.groups)
+        extension(extensions, extension::supported_groups,
+            vector_16(value.group_list));
+
+    if (value.algorithms)
+        extension(extensions, extension::signature_algorithms,
+            vector_16(value.algorithm_list));
+
+    if (value.shares)
+        extension(extensions, extension::key_share,
+            splice(vector_16(value.key_share), value.share_trailer));
+
+    if (value.early)
+        extension(extensions, extension::early_data, {});
+
+    if (value.duplicate)
+        extension(extensions, extension::supported_groups,
+            vector_16(value.group_list));
 
     writer body{};
     body.write_16(legacy_version);

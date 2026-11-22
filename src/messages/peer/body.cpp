@@ -36,9 +36,9 @@ BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
 // peer::body::reader
 // ----------------------------------------------------------------------------
-// The reader parses at most one message per read, deferring (consuming
-// nothing) until the complete frame is buffered by the caller. The fault
-// member carries parse failure detail (the returned code is generic).
+// Reader parses at most one message per read, deferring (consuming nothing)
+// until complete frame buffered by caller. Fault member carries parse failure
+// detail (returned code is generic).
 
 static size_t set_fault(frame& value, const code& fault,
     code& ec) NOEXCEPT
@@ -73,8 +73,8 @@ bool body::reader::accept(const std::span<const uint8_t>& payload,
         return false;
     }
 
-    value_.payload = messages::peer::registry::to_any(value_.head.index(), payload,
-        value_.version, value_.witness);
+    value_.payload = messages::peer::registry::to_any(value_.head.index(),
+        payload, value_.version, value_.witness);
 
     if (!value_.payload)
     {
@@ -100,9 +100,9 @@ size_t body::reader::put(const buffer_type& buffer, code& ec) NOEXCEPT
             return zero;
 
         // The payload is parsed in place (buffered by the caller either way).
-        const auto payload = is_null(payload_) ?
-            std::span<const uint8_t>{ data, need_ } :
-            std::span<const uint8_t>{ *payload_ };
+        using span = std::span<const uint8_t>;
+        const auto in_place = is_null(payload_);
+        const auto payload = in_place ? span{ data, need_ } : span{ *payload_ };
         return accept(payload, ec) ? value_.head.payload_size : zero;
     }
 
@@ -190,8 +190,8 @@ bool body::reader::done() const NOEXCEPT
 
 // peer::body::writer
 // ----------------------------------------------------------------------------
-// The writer translates the typed message to its serialized v1 frame, in the
-// retained buffer when the frame fits within its bound.
+// Writer translates typed message to its serialized v1 frame, in retained
+// buffer when frame fits within its bound.
 
 void body::writer::init(code& ec) NOEXCEPT
 {

@@ -34,8 +34,7 @@ constexpr uint32_t mainnet = 0xd9b4bef9;
 static void connect_pair(io::context& service,
     peer_socket& server, peer_socket& client)
 {
-    io::acceptor acceptor{ service,
-        test::loopback(0) };
+    io::acceptor acceptor{ service, test::loopback(0) };
 
     bool accepted{};
     bool connected{};
@@ -61,8 +60,9 @@ static data_chunk v1_frame(const std::string& command,
 {
     const auto head = heading::factory(mainnet, command, payload);
     data_chunk frame(heading::size() + payload.size());
-    BC_REQUIRE(head.serialize({ frame.data(),
-        std::next(frame.data(), heading::size()) }));
+    const auto begin = frame.data();
+    const auto end = std::next(begin, heading::size());
+    BC_REQUIRE(head.serialize({ begin, end }));
     std::copy(payload.begin(), payload.end(),
         std::next(frame.begin(), heading::size()));
     return frame;
@@ -75,7 +75,8 @@ typedef std::function<void(v2_cipher&)> responder;
 static void respond(peer_socket& raw, v2_cipher& peer, const responder& handler)
 {
     const auto key = std::make_shared<v2_cipher::key>();
-    io::async_read(raw, io::buffer(*key), [&peer, key, handler](const code& ec, size_t)
+    const auto buffer = io::buffer(*key);
+    io::async_read(raw, buffer, [&peer, key, handler](const code& ec, size_t)
     {
         BC_REQUIRE(!ec);
         BC_REQUIRE(peer.initialize(*key, mainnet, false));
@@ -88,7 +89,9 @@ static data_chunk greeting(v2_cipher& peer, const data_chunk& garbage)
 {
     data_chunk version(v2_cipher::expansion);
     peer.encrypt({}, garbage, false, version);
-    return system::build_chunk({ peer.public_key(), garbage, peer.send_terminator(), version });
+    const auto& key = peer.public_key();
+    const auto& terminator = peer.send_terminator();
+    return system::build_chunk({ key, garbage, terminator, version });
 }
 
 // An encrypted packet of the given contents.
@@ -109,7 +112,8 @@ static code initiate(io::context& service, v2_stream& stream)
 }
 
 // Complete the handshake of the initiator stream against the raw peer.
-static void shake(io::context& service, v2_stream& stream, peer_socket& raw, v2_cipher& peer)
+static void shake(io::context& service, v2_stream& stream, peer_socket& raw,
+    v2_cipher& peer)
 {
     respond(raw, peer, [&raw](v2_cipher& self)
     {
@@ -131,7 +135,9 @@ static received read_one(io::context& service, v2_stream& stream, size_t maximum
 {
     received out{};
     data_chunk buffer{};
-    stream.async_read_message(buffer, maximum, [&](const code& ec, uint8_t identifier, const std::string& command, const v2_stream::payload_t& payload)
+    stream.async_read_message(buffer, maximum, [&](const code& ec,
+        uint8_t identifier, const std::string& command,
+        const v2_stream::payload_t& payload)
     {
         out.ec = ec;
         out.identifier = identifier;
@@ -144,10 +150,13 @@ static received read_one(io::context& service, v2_stream& stream, size_t maximum
     return out;
 }
 
-static code write_one(io::context& service, v2_stream& stream, uint8_t identifier, const std::string& command, const system::chunk_cptr& payload)
+static code write_one(io::context& service, v2_stream& stream,
+    uint8_t identifier, const std::string& command,
+    const system::chunk_cptr& payload)
 {
     code result{ error::would_block };
-    stream.async_write_message(identifier, command, payload, [&](const code& ec, size_t) { result = ec; });
+    stream.async_write_message(identifier, command, payload,
+        [&](const code& ec, size_t) { result = ec; });
     service.run();
     service.restart();
     return result;
@@ -173,8 +182,8 @@ BC_AUTO_TEST_CASE(p2ps_stream__handshake__v2_both_sides__frames_round_trip)
     data_chunk prefix(v2_stream::detection_size);
     bool v1{ true };
 
-    // The socket reads the detection prefix and upgrades on a v2 peer,
-    // passing the detected bytes to the stream (a partial peer key).
+    // Socket reads detection prefix and upgrades on v2 peer, passing detected
+    // bytes to stream (partial peer key).
     const auto shook = [&](const code& ec) { responded = ec; };
     const auto detect = [&](const code& ec, size_t)
     {

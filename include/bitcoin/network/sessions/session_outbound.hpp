@@ -48,8 +48,8 @@ public:
     /// The number of connections maintained (call from network strand).
     virtual size_t connections() const NOEXCEPT;
 
-    /// Set the number of connections maintained (call from network strand).
-    /// An increase starts the added slots, a decrease drops the excess slots.
+    /// Set number of connections maintained (call from network strand).
+    /// Increase starts added slots, decrease drops excess slots.
     virtual void set_connections(size_t count) NOEXCEPT;
 
 protected:

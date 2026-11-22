@@ -79,15 +79,19 @@ public:
             port_ = port;
         }
 
-        socket::parameters params{ .maximum_request = 42,
-        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
-        const auto socket = std::make_shared<network::socket>(log, service_, std::move(params));
+        socket::parameters params
+        {
+            .maximum_request = 42,
+            .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+        };
+        const auto socket = std::make_shared<network::socket>(log, service_,
+            std::move(params));
 
         // Must be asynchronous or is an infinite recursion.
         io::post(strand_, [=]() NOEXCEPT
         {
-            // Connect result code is independent of the channel stop code.
-            // As error code would set the re-listener timer, channel pointer is ignored.
+            // Connect result code independent of channel stop code.
+            // Error code would set re-listener timer, channel pointer ignored.
             handler(error::success, socket);
         });
     }
@@ -207,8 +211,8 @@ public:
         if (!handshaked_.exchange(true))
             handshake_.set_value(true);
 
-        // The handshake protocol pauses the channel upon completion, which is
-        // after the session resumes it to start the read loop, so this posts.
+        // Handshake protocol pauses channel upon completion, which is after
+        // session resumes it to start read loop, so this posts.
         io::post(channel->strand(),
             [channel, complete = std::move(handshake)]() NOEXCEPT
             {
@@ -550,8 +554,8 @@ BC_AUTO_TEST_CASE(session_seed__stop__started_sufficient__expected)
         session->stop();
     });
 
-    // This is a race between success and seeding_unsuccessful.
-    // This tends toward success with HAVE_LOGGING and otherwise without.
+    // Race between success and seeding_unsuccessful.
+    // Tends toward success with HAVE_LOGGING and otherwise without.
     const auto ec = started.get_future().get();
     BC_REQUIRE(ec == error::success || ec == error::seeding_unsuccessful);
     BC_REQUIRE_EQUAL(net.get_connector()->connects(), 1u);
@@ -1241,9 +1245,12 @@ struct seed_peer
     {
         system::data_chunk payload(message.size(version));
         BC_REQUIRE(message.serialize(version, payload));
+
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
-        BC_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        const auto end = std::next(frame.data(), heading::size());
+        BC_REQUIRE(head.serialize({ frame.data(), end }));
+
         test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
@@ -1267,7 +1274,8 @@ struct seed_peer
     // Receive the node version, send ours, exchange verack.
     version::cptr handshake(uint32_t value)
     {
-        const auto node = version::deserialize(value, receive(version::command));
+        const auto payload = receive(version::command);
+        const auto node = version::deserialize(value, payload);
         BC_REQUIRE(node);
 
         version out{};
@@ -1297,11 +1305,14 @@ private:
 
 BC_AUTO_TEST_CASE(session_seed__attach_handshake__70016_alert_reject__address_requested)
 {
-    seed_peer peer{ [](settings& set)
+    seed_peer peer
     {
-        set.enable_alert = true;
-        set.enable_reject = true;
-    } };
+        [](settings& set)
+        {
+            set.enable_alert = true;
+            set.enable_reject = true;
+        }
+    };
 
     const auto node = peer.handshake(level::bip155);
     BC_REQUIRE_EQUAL(node->value, level::bip155);
@@ -1313,11 +1324,14 @@ BC_AUTO_TEST_CASE(session_seed__attach_handshake__70016_alert_reject__address_re
 
 BC_AUTO_TEST_CASE(session_seed__attach_handshake__70002_reject__address_requested)
 {
-    seed_peer peer{ [](settings& set)
+    seed_peer peer
     {
-        set.protocol_maximum = level::bip61;
-        set.enable_reject = true;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::bip61;
+            set.enable_reject = true;
+        }
+    };
 
     const auto node = peer.handshake(level::bip61);
     BC_REQUIRE_EQUAL(node->value, level::bip61);
@@ -1329,10 +1343,13 @@ BC_AUTO_TEST_CASE(session_seed__attach_handshake__70002_reject__address_requeste
 
 BC_AUTO_TEST_CASE(session_seed__attach_handshake__70001__address_requested)
 {
-    seed_peer peer{ [](settings& set)
+    seed_peer peer
     {
-        set.protocol_maximum = level::bip37;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::bip37;
+        }
+    };
 
     const auto node = peer.handshake(level::bip37);
     BC_REQUIRE_EQUAL(node->value, level::bip37);
@@ -1344,10 +1361,13 @@ BC_AUTO_TEST_CASE(session_seed__attach_handshake__70001__address_requested)
 
 BC_AUTO_TEST_CASE(session_seed__attach_handshake__31800__address_requested)
 {
-    seed_peer peer{ [](settings& set)
+    seed_peer peer
     {
-        set.protocol_maximum = level::headers_protocol;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::headers_protocol;
+        }
+    };
 
     const auto node = peer.handshake(level::headers_protocol);
     BC_REQUIRE_EQUAL(node->value, level::headers_protocol);

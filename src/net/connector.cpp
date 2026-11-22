@@ -185,8 +185,8 @@ void connector::handle_resolve(const code& ec,
         return;
     }
 
-    // Posts do_handle_connect to the socket's strand.
-    // Establishes a socket connection by trying each endpoint in sequence.
+    // Posts do_handle_connect to socket's strand.
+    // Establishes socket connection by trying each endpoint in sequence.
     socket->connect(range,
         std::bind(&connector::do_handle_connect,
             shared_from_this(), _1, finish, socket));

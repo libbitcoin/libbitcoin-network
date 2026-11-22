@@ -29,12 +29,12 @@ namespace libbitcoin {
 namespace network {
 namespace rpc {
 
-/// Dispatches notifications to subscriber(s) of the method signature implied
-/// by request. Subscribers and dispatch functors are fully defined at compile
-/// time by the Interface template argument. The request_t parameter is the
-/// request side of the rpc model. Requests are run-time generated (i.e. from
-/// deserialization) and the request implies a signature that must match that
-/// of one subscriber. Otherwise an error is returned from notify(request).
+/// Dispatches notifications to subscriber(s) of method signature implied by
+/// request. Subscribers and dispatch functors are fully defined at compile time
+/// by Interface template argument. request_t parameter is request side of rpc
+/// model. Requests are run-time generated (i.e. from deserialization) and
+/// request implies signature that must match that of one subscriber. Otherwise
+/// error is returned from notify(request).
 template <typename Interface>
 class dispatcher
 {
@@ -42,8 +42,8 @@ public:
     DELETE_COPY(dispatcher);
     DEFAULT_MOVE(dispatcher);
 
-    /// If stopped, handler is invoked with error::subscriber_stopped.
-    /// If key exists, handler is invoked with error::subscriber_exists.
+    /// If stopped, handler invoked with error::subscriber_stopped.
+    /// If key exists, handler invoked with error::subscriber_exists.
     /// Desubscribe key is forwarded via Args (unused by dispatch).
     template <typename Handler, typename ...Args>
     inline code subscribe(Handler&& handler, Args&&... args) NOEXCEPT;

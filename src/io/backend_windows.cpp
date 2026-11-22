@@ -280,7 +280,7 @@ void backend::start(operation* op) NOEXCEPT
 }
 
 // private
-// An operation that fails to start completes without a completion packet.
+// Operation that fails to start completes without completion packet.
 void backend::fail(operation* op, int native) NOEXCEPT
 {
     set_result(op, to_code(native), zero);
@@ -288,7 +288,7 @@ void backend::fail(operation* op, int native) NOEXCEPT
 }
 
 // private
-// A read of no bytes completes immediately.
+// Read of no bytes completes immediately.
 void backend::start_read(operation* op) NOEXCEPT
 {
     if (is_zero(op->requested))
@@ -378,7 +378,7 @@ void backend::finish_accept(operation* op) NOEXCEPT
 }
 
 // private
-// ConnectEx requires a bound socket, bound here to any address if unbound.
+// ConnectEx requires bound socket, bound here to any address if unbound.
 void backend::start_connect(operation* op) NOEXCEPT
 {
     auto& owner = *op->owner;

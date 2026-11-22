@@ -36,8 +36,7 @@ using system::base16_chunk;
 static void connect_pair(io::context& service,
     peer_socket& server, peer_socket& client)
 {
-    io::acceptor acceptor{ service,
-        test::loopback(0) };
+    io::acceptor acceptor{ service, test::loopback(0) };
 
     bool accepted{};
     bool connected{};
@@ -171,8 +170,7 @@ public:
     void read_exactly(size_t size, const ec_handler& handler)
     {
         scratch_.assign(size, 0x00);
-        const io::mutable_buffer in{ scratch_.data(),
-            scratch_.size() };
+        const io::mutable_buffer in{ scratch_.data(), size };
         io::async_read(socket_, in,
             [handler](const code& ec, size_t) { handler(ec); });
     }
@@ -180,8 +178,7 @@ public:
     void write(const data_chunk& data)
     {
         const auto buffer = system::to_shared(data);
-        const io::const_buffer out{ buffer->data(),
-            buffer->size() };
+        const io::const_buffer out{ buffer->data(), buffer->size() };
         io::async_write(socket_, out,
             [buffer](const code&, size_t) {});
     }

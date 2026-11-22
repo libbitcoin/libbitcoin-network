@@ -57,8 +57,8 @@ private:
     network::acceptor::ptr acceptor_{};
 };
 
-// Runs a real net instance accepting on loopback, with the test acting as
-// the remote peer over a raw blocking socket (framing via peer messages).
+// Runs real net instance accepting on loopback, with test as remote peer
+// over raw blocking socket (framing via peer messages).
 struct peer_setup_fixture
 {
     DELETE_COPY_MOVE(peer_setup_fixture);
@@ -104,8 +104,8 @@ private:
 
 #define PEER_LISTEN_ENDPOINT "127.0.0.1"
 
-// The test as a remote peer over a raw blocking socket, either connecting to
-// the node or accepting the node's connection (framing via peer messages).
+// Test as remote peer over raw blocking socket, either connecting to node
+// or accepting node's connection (framing via peer messages).
 class remote_peer
 {
 public:
@@ -180,8 +180,8 @@ private:
     io::socket socket_{ io_ };
 };
 
-// Runs a net instance (created upon start, so settings_ may be modified until
-// then), accepting on PEER_FUNCTIONAL_ENDPOINT, with the test as remote peer.
+// Runs net instance (created upon start, so settings_ may be modified until
+// then), accepting on PEER_FUNCTIONAL_ENDPOINT, with test as remote peer.
 template <class Net = network::net>
 struct peer_net_setup_fixture
   : remote_peer
