@@ -411,7 +411,10 @@ void channel_http::set_authorized(const request& request) NOEXCEPT
     BC_ASSERT(stranded());
 
     if (!authorized_)
-        set_authorized(sha256_hash(std::string{ request[field::authorization] }));
+    {
+        const std::string authorization{ request[field::authorization] };
+        set_authorized(sha256_hash(authorization));
+    }
 }
 
 bool channel_http::permitted(const std::string& method) const NOEXCEPT
@@ -538,8 +541,8 @@ void channel_http::reject(const code& ec, const request& request) NOEXCEPT
     // A batch part, ws frame or tcp message carries no status.
     const auto statused = enveloped && !body.batch && !body.changed;
 
-    response out{ statused ? to_rpc_status(model) : status::ok,
-        request.version() };
+    const auto result = statused ? to_rpc_status(model) : status::ok;
+    response out{ result, request.version() };
 
     out.set(field::content_type, from_media_type(media_type::application_json));
     out.keep_alive(false);

@@ -39,8 +39,8 @@ size_t witness_tx_id_relay::size(uint32_t) NOEXCEPT
 }
 
 // static
-typename witness_tx_id_relay::cptr witness_tx_id_relay::deserialize(uint32_t version,
-    const std::span<const uint8_t>& data) NOEXCEPT
+typename witness_tx_id_relay::cptr witness_tx_id_relay::deserialize(
+    uint32_t version, const std::span<const uint8_t>& data) NOEXCEPT
 {
     system::istream source{ { data.begin(), data.end() } };
     system::byte_reader reader{ source };

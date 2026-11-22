@@ -465,8 +465,8 @@ void stream::async_write_message(uint8_t identifier,
         payload->size() > cipher::maximum_content - prefix)
     {
         io::post(get_executor(),
-            std::bind(&stream::handle_message_sent,
-                this, protocol_error, size_t{}, chunk_ptr{}, std::move(handler)));
+            std::bind(&stream::handle_message_sent, this, protocol_error,
+                size_t{}, chunk_ptr{}, std::move(handler)));
         return;
     }
 

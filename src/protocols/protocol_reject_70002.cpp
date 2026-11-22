@@ -63,9 +63,10 @@ void protocol_reject_70002::start() NOEXCEPT
 
 std::string protocol_reject_70002::get_hash(const reject& message) const NOEXCEPT
 {
-    return message.message == block::command ||
-        message.message == transaction::command ?
-        system::encode_hash(message.hash) : std::string{ "n/a" };
+    const auto hashed = message.message == block::command
+        || message.message == transaction::command;
+
+    return hashed ? system::encode_hash(message.hash) : std::string{ "n/a" };
 }
 
 bool protocol_reject_70002::handle_receive_reject(const code& ec,

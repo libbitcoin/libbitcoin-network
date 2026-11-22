@@ -101,8 +101,9 @@ void headers::serialize(uint32_t, writer& sink) const NOEXCEPT
 
 size_t headers::size(uint32_t) const NOEXCEPT
 {
+    const auto element_size = chain::header::serialized_size() + sizeof(trail);
     return variable_size(header_ptrs.size()) +
-        (header_ptrs.size() * (chain::header::serialized_size() + sizeof(trail)));
+        (header_ptrs.size() * element_size);
 }
 
 hashes headers::to_hashes() const NOEXCEPT

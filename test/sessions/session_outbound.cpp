@@ -91,7 +91,8 @@ public:
             .maximum_request = 42,
             .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
         };
-        const auto socket = std::make_shared<network::socket>(log, service_, std::move(params));
+        const auto socket = std::make_shared<network::socket>(log, service_,
+            std::move(params));
 
         // Must be asynchronous or is an infinite recursion.
         io::post(strand_, [=]() NOEXCEPT
@@ -515,7 +516,8 @@ public:
             .maximum_request = 42,
             .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
         };
-        const auto socket = std::make_shared<network::socket>(log, service_, std::move(params));
+        const auto socket = std::make_shared<network::socket>(log, service_,
+            std::move(params));
         io::post(strand_, [=]() NOEXCEPT
         {
             handler(error::success, socket);
@@ -547,7 +549,8 @@ public:
         handler(error::success, system::to_shared(item));
     }
 
-    void restore(const address_item_cptr& host, result_handler&& handler) NOEXCEPT override
+    void restore(const address_item_cptr& host,
+        result_handler&& handler) NOEXCEPT override
     {
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -1551,11 +1554,12 @@ BC_AUTO_TEST_CASE(session_outbound__start__batch_unreachable_near_full_pool__roo
     // Each batch draws a port pair (2n, 2n+1), with room to restore only one.
     const auto restored = net.restored();
     BC_REQUIRE(!restored.empty());
-    BC_REQUIRE(std::none_of(restored.begin(), restored.end(), [&](uint16_t port) NOEXCEPT
+    const auto paired = [&](uint16_t port) NOEXCEPT
     {
         const auto pair = static_cast<uint16_t>(port ^ 1u);
         return std::find(restored.begin(), restored.end(), pair) != restored.end();
-    }));
+    };
+    BC_REQUIRE(std::none_of(restored.begin(), restored.end(), paired));
 }
 
 BC_AUTO_TEST_CASE(session_outbound__start__net_unreachable_full_host_pool__not_restored)
@@ -1866,7 +1870,8 @@ class outbound_net
   : public net
 {
 public:
-    outbound_net(const settings& set, const logger& log, const code& take_code, uint16_t port) NOEXCEPT
+    outbound_net(const settings& set, const logger& log, const code& take_code,
+        uint16_t port) NOEXCEPT
       : net(set, log), take_code_(take_code), port_(port)
     {
     }
@@ -1881,8 +1886,10 @@ public:
         if (is_one(takes_++))
             retaken_.set_value(true);
 
-        const auto timestamp = system::possible_narrow_cast<uint32_t>(unix_time());
-        const auto item = config::address{ "127.0.0.1:" + std::to_string(port_) }.to_address_item(timestamp, service::node_none);
+        const auto now = unix_time();
+        const auto timestamp = system::possible_narrow_cast<uint32_t>(now);
+        const config::address address{ "127.0.0.1:" + std::to_string(port_) };
+        const auto item = address.to_address_item(timestamp, service::node_none);
         handler(take_code_, system::to_shared(item));
     }
 
@@ -1972,9 +1979,12 @@ struct outbound_peer
     {
         system::data_chunk payload(message.size(version));
         BC_REQUIRE(message.serialize(version, payload));
+
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
-        BC_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        const auto end = std::next(frame.data(), heading::size());
+        BC_REQUIRE(head.serialize({ frame.data(), end }));
+
         test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
@@ -1998,7 +2008,8 @@ struct outbound_peer
     // Receive the node version, send ours, exchange verack.
     version::cptr handshake(uint32_t value)
     {
-        const auto node = version::deserialize(value, receive(version::command));
+        const auto payload = receive(version::command);
+        const auto node = version::deserialize(value, payload);
         BC_REQUIRE(node);
 
         version out{};
@@ -2042,10 +2053,14 @@ private:
 
 BC_AUTO_TEST_CASE(session_outbound__attach_protocols__loopback_peer__address_requested_then_reconnected)
 {
-    outbound_peer peer{ [](settings& set, uint16_t)
+    outbound_peer peer
     {
-        set.enable_address = true;
-    }, error::success };
+        [](settings& set, uint16_t)
+        {
+            set.enable_address = true;
+        },
+        error::success
+    };
 
     peer.run();
     peer.accept();
@@ -2060,10 +2075,14 @@ BC_AUTO_TEST_CASE(session_outbound__attach_protocols__loopback_peer__address_req
 
 BC_AUTO_TEST_CASE(session_outbound__handle_connect__address_not_found__retaken)
 {
-    outbound_peer peer{ [](settings& set, uint16_t)
+    outbound_peer peer
     {
-        set.outbound.connect_timeout_seconds = 1;
-    }, error::address_not_found };
+        [](settings& set, uint16_t)
+        {
+            set.outbound.connect_timeout_seconds = 1;
+        },
+        error::address_not_found
+    };
 
     peer.run();
     BC_REQUIRE(peer.retaken());
@@ -2071,10 +2090,15 @@ BC_AUTO_TEST_CASE(session_outbound__handle_connect__address_not_found__retaken)
 
 BC_AUTO_TEST_CASE(session_outbound__handle_connect__connect_refused__retaken)
 {
-    outbound_peer peer{ [](settings& set, uint16_t)
+    outbound_peer peer
     {
-        set.outbound.connect_timeout_seconds = 1;
-    }, error::success, true };
+        [](settings& set, uint16_t)
+        {
+            set.outbound.connect_timeout_seconds = 1;
+        },
+        error::success,
+        true
+    };
 
     peer.run();
     BC_REQUIRE(peer.retaken());
@@ -2082,10 +2106,14 @@ BC_AUTO_TEST_CASE(session_outbound__handle_connect__connect_refused__retaken)
 
 BC_AUTO_TEST_CASE(session_outbound__handle_channel_stop__full_host_pool__reconnected)
 {
-    outbound_peer peer{ [](settings& set, uint16_t)
+    outbound_peer peer
     {
-        set.outbound.host_pool_capacity = 1;
-    }, error::success };
+        [](settings& set, uint16_t)
+        {
+            set.outbound.host_pool_capacity = 1;
+        },
+        error::success
+    };
 
     peer.run();
     peer.accept();
@@ -2106,11 +2134,15 @@ BC_AUTO_TEST_CASE(session_outbound__handle_one__suspended__retaken)
 
 BC_AUTO_TEST_CASE(session_outbound__start_connect__proxied_unreachable__retaken)
 {
-    outbound_peer peer{ [](settings& set, uint16_t closed)
+    outbound_peer peer
     {
-        set.outbound.socks = { "127.0.0.1", closed };
-        set.outbound.connect_timeout_seconds = 1;
-    }, error::success };
+        [](settings& set, uint16_t closed)
+        {
+            set.outbound.socks = { "127.0.0.1", closed };
+            set.outbound.connect_timeout_seconds = 1;
+        },
+        error::success
+    };
 
     peer.run();
     BC_REQUIRE(peer.retaken());

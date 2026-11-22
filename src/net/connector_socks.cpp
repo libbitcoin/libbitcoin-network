@@ -343,8 +343,8 @@ void connector_socks::do_socks_connect_write(
     const auto ip = address.is_v4() || address.is_v6();
     const auto name = ip ? std::string{} :
         (address ? address.to_host() : endpoint.host());
-    const auto host_length = ip ? (address.is_v4() ? 4u : 16u) :
-        add1(name.length());
+    const auto ip_length = address.is_v4() ? 4u : 16u;
+    const auto host_length = ip ? ip_length : add1(name.length());
 
     // Socks5 limits valid host lengths to one byte.
     if (is_limited<uint8_t>(host_length))

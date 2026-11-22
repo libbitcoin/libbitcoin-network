@@ -981,9 +981,12 @@ struct manual_peer
         using namespace messages::peer;
         system::data_chunk payload(message.size(version));
         BC_REQUIRE(message.serialize(version, payload));
+
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
-        BC_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        const auto end = std::next(frame.data(), heading::size());
+        BC_REQUIRE(head.serialize({ frame.data(), end }));
+
         test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
@@ -1009,7 +1012,8 @@ struct manual_peer
     messages::peer::version::cptr handshake(uint32_t value, bool address_v2)
     {
         using namespace messages::peer;
-        const auto node = version::deserialize(value, receive(version::command));
+        const auto payload = receive(version::command);
+        const auto node = version::deserialize(value, payload);
         BC_REQUIRE(node);
 
         version out{};
@@ -1056,12 +1060,15 @@ private:
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__started_address_requested)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.enable_address = true;
-        set.enable_alert = true;
-        set.enable_reject = true;
-    } };
+        [](settings& set)
+        {
+            set.enable_address = true;
+            set.enable_alert = true;
+            set.enable_reject = true;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1074,12 +1081,15 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70016_address_v2__started_a
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_70014_compact__started_address_requested)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.protocol_maximum = level::bip152;
-        set.enable_compact = true;
-        set.enable_address = true;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::bip152;
+            set.enable_compact = true;
+            set.enable_address = true;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1092,11 +1102,14 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70014_compact__started_addr
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_70002_reject__started)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.protocol_maximum = level::bip61;
-        set.enable_reject = true;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::bip61;
+            set.enable_reject = true;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1108,10 +1121,13 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70002_reject__started)
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_70001__started)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.protocol_maximum = level::bip37;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::bip37;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1123,11 +1139,14 @@ BC_AUTO_TEST_CASE(session_manual__connect__handshake_70001__started)
 BC_AUTO_TEST_CASE(session_manual__connect__handshake_31800_address__started_address_requested)
 {
     using namespace messages::peer;
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.protocol_maximum = level::headers_protocol;
-        set.enable_address = true;
-    } };
+        [](settings& set)
+        {
+            set.protocol_maximum = level::headers_protocol;
+            set.enable_address = true;
+        }
+    };
 
     auto connected = peer.connect(peer.port(), true);
     peer.accept();
@@ -1152,10 +1171,13 @@ BC_AUTO_TEST_CASE(session_manual__connect__notifier_drops_started__disconnected)
 
 BC_AUTO_TEST_CASE(session_manual__connect__notifier_drops_connect_failure__failure)
 {
-    manual_peer peer{ [](settings& set)
+    manual_peer peer
     {
-        set.connect_timeout_seconds = 1;
-    } };
+        [](settings& set)
+        {
+            set.connect_timeout_seconds = 1;
+        }
+    };
 
     auto connected = peer.connect(peer.closed_port(), false);
     BC_REQUIRE(connected.get());

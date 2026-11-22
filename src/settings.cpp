@@ -603,8 +603,9 @@ bool settings::gossip_v2() const NOEXCEPT
 steady_clock::duration settings::connect_timeout(
     const tcp_server& options) const NOEXCEPT
 {
-    const auto seconds_ = to_bool(options.connect_timeout_seconds) ?
-        options.connect_timeout_seconds : connect_timeout_seconds;
+    const auto specified = options.connect_timeout_seconds;
+    const auto fallback = connect_timeout_seconds;
+    const auto seconds_ = to_bool(specified) ? specified : fallback;
 
     const auto from = seconds_ * 500_u64;
     const auto to = seconds_ * 1'000_u64;
@@ -613,9 +614,10 @@ steady_clock::duration settings::connect_timeout(
 
 uint32_t settings::rate_limited(const tcp_server& options) const NOEXCEPT
 {
-    return to_bool(rate_limit) && to_bool(options.rate_limit) ?
-        std::min(rate_limit, options.rate_limit) :
-        std::max(rate_limit, options.rate_limit);
+    const auto both = to_bool(rate_limit) && to_bool(options.rate_limit);
+    const auto lesser = std::min(rate_limit, options.rate_limit);
+    const auto greater = std::max(rate_limit, options.rate_limit);
+    return both ? lesser : greater;
 }
 
 bool settings::connectable(const address_item& item) const NOEXCEPT

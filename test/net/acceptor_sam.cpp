@@ -212,7 +212,9 @@ struct sam_setup_fixture
     }
 
     // An ed25519 destination with an empty certificate (387 bytes).
-    static inline const std::string destination = system::encode_base64(system::splice(system::data_chunk(385, 0x42), system::data_chunk(2, 0x00)));
+    static inline const std::string destination = system::encode_base64(
+        system::splice(system::data_chunk(385, 0x42),
+            system::data_chunk(2, 0x00)));
 
     logger log{};
     threadpool pool;

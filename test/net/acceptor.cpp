@@ -186,8 +186,13 @@ struct acceptor_setup_fixture
       : pool(2), strand(pool.service().get_executor()), client(context)
     {
         log.stop();
-        acceptor::parameters params{ .maximum_request = 42, .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer };
-        instance = std::make_shared<accessor>(log, strand, pool.service(), suspended, std::move(params));
+        acceptor::parameters params
+        {
+            .maximum_request = 42,
+            .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+        };
+        instance = std::make_shared<accessor>(log, strand, pool.service(),
+            suspended, std::move(params));
     }
 
     ~acceptor_setup_fixture()

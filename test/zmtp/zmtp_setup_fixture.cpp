@@ -124,7 +124,8 @@ std::string peer_read_command(peer_socket& peer, data_chunk& content)
     return name;
 }
 
-std::string peer_handshake(peer_socket& peer, const std::string& type, const std::string& identity, uint8_t minor)
+std::string peer_handshake(peer_socket& peer, const std::string& type,
+    const std::string& identity, uint8_t minor)
 {
     auto greeting = zmtp_stream::make_greeting(false, false);
     greeting.at(11) = minor;
@@ -177,7 +178,8 @@ data_chunk chunk(const std::string& text)
 // socket_setup_fixture
 // ----------------------------------------------------------------------------
 
-socket_setup_fixture::socket_setup_fixture(zmtp_role value, const std::string& type, size_t maximum, const std::string& identity)
+socket_setup_fixture::socket_setup_fixture(zmtp_role value,
+    const std::string& type, size_t maximum, const std::string& identity)
   : pool(1),
     params
     {

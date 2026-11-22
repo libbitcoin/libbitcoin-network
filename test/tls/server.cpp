@@ -599,13 +599,19 @@ BC_AUTO_TEST_CASE(tls_server__receive__rfc8448_client_hello__rfc8448_server_hell
 struct rfc8448_setup
 {
     rfc8448_setup(bool request=false)
-      : setup(request, request), server(setup.context, rfc8448::array<32>(data_chunk(std::next(rfc8448::server_hello.begin(), 6), std::next(rfc8448::server_hello.begin(), 38))), rfc8448::array<x25519::key_size>(rfc8448::server_private))
+      : setup(request, request),
+        server(setup.context,
+            rfc8448::array<32>(data_chunk(
+                std::next(rfc8448::server_hello.begin(), 6),
+                std::next(rfc8448::server_hello.begin(), 38))),
+            rfc8448::array<x25519::key_size>(rfc8448::server_private))
     {
         BC_REQUIRE(server.receive(rfc8448::client_hello_record));
         const auto& output = server.output();
         const auto start = rfc8448::server_hello_record.size();
-        const data_chunk head(std::next(output.begin(), start), std::next(output.begin(), start + record_header_size));
-        const data_chunk tail(std::next(output.begin(), start + record_header_size), output.end());
+        const auto body = std::next(output.begin(), start + record_header_size);
+        const data_chunk head(std::next(output.begin(), start), body);
+        const data_chunk tail(body, output.end());
 
         record receiver{};
         receiver.set_secret(aes_128_gcm_sha256, rfc8448::server_handshake_traffic);
@@ -614,8 +620,10 @@ struct rfc8448_setup
         BC_REQUIRE(receiver.open(type, flight, head, tail));
         server.output().clear();
 
-        transcript = to_chunk(sha256_hash(splice(splice(rfc8448::client_hello, rfc8448::server_hello), flight)));
-        sender.set_secret(aes_128_gcm_sha256, rfc8448::client_handshake_traffic);
+        const auto hellos = splice(rfc8448::client_hello, rfc8448::server_hello);
+        transcript = to_chunk(sha256_hash(splice(hellos, flight)));
+        sender.set_secret(aes_128_gcm_sha256,
+            rfc8448::client_handshake_traffic);
     }
 
     bool send(uint8_t type, const data_chunk& content)
@@ -633,7 +641,8 @@ struct rfc8448_setup
     bool finish()
     {
         const schedule keys{ aes_128_gcm_sha256 };
-        const auto verify = keys.finished(rfc8448::client_handshake_traffic, transcript);
+        const auto verify = keys.finished(rfc8448::client_handshake_traffic,
+            transcript);
         const auto sent = send_message(handshake::finished, verify);
         const auto master = keys.master_secret(rfc8448::handshake_secret);
         sender.set_secret(aes_128_gcm_sha256, keys.derive_secret(master, "c ap traffic", transcript));

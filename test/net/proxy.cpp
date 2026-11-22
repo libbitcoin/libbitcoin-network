@@ -31,7 +31,8 @@ public:
     using proxy::lazy;
     using proxy::accept_websocket;
 
-    void write_ws(const io::const_buffer& in, bool binary, count_handler&& handler) NOEXCEPT
+    void write_ws(const io::const_buffer& in, bool binary,
+        count_handler&& handler) NOEXCEPT
     {
         proxy::write(in, binary, std::move(handler));
     }
@@ -107,7 +108,8 @@ static milliseconds get_unconsumed(uint32_t rate_limit, size_t bytes,
         .maximum_request = 42,
         .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
     };
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(),
+        std::move(params));
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr, rate_limit);
 
     std::promise<milliseconds> deferral;
@@ -428,7 +430,10 @@ public:
     }
 
 private:
-    std::shared_ptr<std::promise<Type>> promise_{ std::make_shared<std::promise<Type>>() };
+    std::shared_ptr<std::promise<Type>> promise_
+    {
+        std::make_shared<std::promise<Type>>()
+    };
     std::shared_future<Type> future_{ promise_->get_future().share() };
 };
 
@@ -443,7 +448,10 @@ static count_handler complete(const awaiter<code>& done)
 static rpc::response to_response(rpc::code_t id)
 {
     rpc::response out{};
-    out.message = rpc::response_t{ rpc::version::v2, rpc::identity_t{ id }, {}, rpc::value_t{ true } };
+    out.message = rpc::response_t
+    {
+        rpc::version::v2, rpc::identity_t{ id }, {}, rpc::value_t{ true }
+    };
     return out;
 }
 
@@ -495,7 +503,8 @@ struct loopback_fixture
             .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
         };
 
-        const auto server = std::make_shared<network::socket>(log, pool.service(), params);
+        const auto server = std::make_shared<network::socket>(log,
+            pool.service(), params);
         channel = std::make_shared<mock_proxy>(server, rate_limit, 1'000'000);
 
         io::strand strand{ pool.service().get_executor() };

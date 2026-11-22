@@ -1100,9 +1100,12 @@ struct inbound_peer
         using namespace messages::peer;
         system::data_chunk payload(message.size(version));
         BC_REQUIRE(message.serialize(version, payload));
+
         const auto head = heading::factory(set_.identifier, Message::command, payload);
         system::data_chunk frame(heading::size());
-        BC_REQUIRE(head.serialize({ frame.data(), std::next(frame.data(), heading::size()) }));
+        const auto end = std::next(frame.data(), heading::size());
+        BC_REQUIRE(head.serialize({ frame.data(), end }));
+
         test::write(socket_, io::buffer(system::splice(frame, payload)));
     }
 
@@ -1141,7 +1144,8 @@ struct inbound_peer
         if (address_v2)
             send(send_address_v2{}, value);
 
-        const auto node = version::deserialize(value, receive(version::command));
+        const auto payload = receive(version::command);
+        const auto node = version::deserialize(value, payload);
         BC_REQUIRE(node);
         receive(version_acknowledge::command);
         send(version_acknowledge{}, value);
@@ -1159,10 +1163,13 @@ private:
 BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70016_address_v2__self_advertised_v2)
 {
     using namespace messages::peer;
-    inbound_peer peer{ [](settings& set)
+    inbound_peer peer
     {
-        set.enable_address = true;
-    } };
+        [](settings& set)
+        {
+            set.enable_address = true;
+        }
+    };
 
     const auto node = peer.handshake(level::bip155, true);
     BC_REQUIRE_EQUAL(node->value, level::maximum_protocol);
@@ -1176,12 +1183,15 @@ BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70016_address_v2__self_adve
 BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70002_alert_reject__self_advertised)
 {
     using namespace messages::peer;
-    inbound_peer peer{ [](settings& set)
+    inbound_peer peer
     {
-        set.enable_address = true;
-        set.enable_alert = true;
-        set.enable_reject = true;
-    } };
+        [](settings& set)
+        {
+            set.enable_address = true;
+            set.enable_alert = true;
+            set.enable_reject = true;
+        }
+    };
 
     const auto node = peer.handshake(level::bip61, false);
     BC_REQUIRE_EQUAL(node->value, level::maximum_protocol);
@@ -1195,10 +1205,13 @@ BC_AUTO_TEST_CASE(session_inbound__attach_protocols__70002_alert_reject__self_ad
 BC_AUTO_TEST_CASE(session_inbound__attach_protocols__31800__self_advertised)
 {
     using namespace messages::peer;
-    inbound_peer peer{ [](settings& set)
+    inbound_peer peer
     {
-        set.enable_address = true;
-    } };
+        [](settings& set)
+        {
+            set.enable_address = true;
+        }
+    };
 
     const auto node = peer.handshake(level::headers_protocol, false);
     BC_REQUIRE_EQUAL(node->value, level::maximum_protocol);

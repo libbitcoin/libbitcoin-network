@@ -41,8 +41,8 @@ struct BCT_API compact_block
     static const uint32_t version_maximum;
     static const std::string command;
 
-    static cptr deserialize(uint32_t version, const std::span<const uint8_t>& data,
-        bool witness=true) NOEXCEPT;
+    static cptr deserialize(uint32_t version,
+        const std::span<const uint8_t>& data, bool witness=true) NOEXCEPT;
     static compact_block deserialize(uint32_t version, system::reader& source,
         bool witness=true) NOEXCEPT;
 

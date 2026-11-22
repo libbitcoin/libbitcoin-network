@@ -32,8 +32,9 @@ template <typename Buffers, typename Handler>
 void stream::async_read_some(const Buffers& buffers, Handler&& handler) NOEXCEPT
 {
     const auto buffer = first<io::mutable_buffer>(buffers);
-    do_read_some({ system::pointer_cast<uint8_t>(buffer.data()),
-        buffer.size() }, erase(std::forward<Handler>(handler)));
+    const auto data = system::pointer_cast<uint8_t>(buffer.data());
+    do_read_some({ data, buffer.size() },
+        erase(std::forward<Handler>(handler)));
 }
 
 template <typename Buffers, typename Handler>

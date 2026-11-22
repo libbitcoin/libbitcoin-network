@@ -166,7 +166,8 @@ public:
             .context = context
         };
 
-        return std::make_shared<mock_acceptor>(log, strand(), service(), std::move(params));
+        return std::make_shared<mock_acceptor>(log, strand(), service(),
+            std::move(params));
     }
 
     // Create mock connector to inject mock channel.
@@ -182,7 +183,8 @@ public:
             .maximum_buffer = options.maximum_buffer
         };
 
-        return std::make_shared<mock_connector>(log, strand(), service(), std::move(params));
+        return std::make_shared<mock_connector>(log, strand(), service(),
+            std::move(params));
     }
 };
 
@@ -380,8 +382,12 @@ public:
         record_.nonce = nonce();
         record_.sent = sent();
         record_.received = received();
-        record_.sent_by_message = std::accumulate(sent_by_message().begin(), sent_by_message().end(), 0_u64);
-        record_.received_by_message = std::accumulate(received_by_message().begin(), received_by_message().end(), 0_u64);
+        const auto& sent_counts = sent_by_message();
+        const auto& received_counts = received_by_message();
+        record_.sent_by_message = std::accumulate(sent_counts.begin(),
+            sent_counts.end(), 0_u64);
+        record_.received_by_message = std::accumulate(received_counts.begin(),
+            received_counts.end(), 0_u64);
         record_.created = created();
         record_.last_read = last_read();
         record_.last_write = last_write();
@@ -448,7 +454,8 @@ protected:
     void attach_protocols(const channel::ptr& channel) NOEXCEPT override
     {
         session_inbound::attach_protocols(channel);
-        channel->attach<probe_protocol>(shared_from_this(), promise_, drop_)->start();
+        const auto self = shared_from_this();
+        channel->attach<probe_protocol>(self, promise_, drop_)->start();
     }
 
 private:

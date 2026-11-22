@@ -359,7 +359,8 @@ inline consteval bool CLASS::subscriber_matches_handler() NOEXCEPT
     // This guard limits compilation error noise when a handler is ill-defined.
     if constexpr (Index < std::tuple_size_v<methods_t>)
     {
-        using handler = typename subscriber_t<method_t<Index, methods_t>>::handler;
+        using subscriber = subscriber_t<method_t<Index, methods_t>>;
+        using handler = typename subscriber::handler;
         return std::is_convertible_v<Handler, handler>;
     }
 }

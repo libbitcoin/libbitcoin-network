@@ -283,7 +283,8 @@ static data_chunk block_frame()
     data_chunk framed(heading::size() + payload.size());
     const auto start = framed.data();
     BC_REQUIRE(head.serialize({ start, std::next(start, heading::size()) }));
-    std::copy(payload.begin(), payload.end(), std::next(framed.begin(), heading::size()));
+    const auto target = std::next(framed.begin(), heading::size());
+    std::copy(payload.begin(), payload.end(), target);
     return framed;
 }
 

@@ -64,8 +64,10 @@ size_t CLASS::put(const io::const_buffer& buffer, code& ec) NOEXCEPT
 {
     using namespace system;
     using namespace network::error;
-    const std::string_view data{ pointer_cast<const char>(buffer.data()),
-        buffer.size() };
+    const std::string_view data
+    {
+        pointer_cast<const char>(buffer.data()), buffer.size()
+    };
 
     size_t used{};
     received_ = received_ || !data.empty();

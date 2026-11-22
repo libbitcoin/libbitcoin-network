@@ -253,8 +253,8 @@ bool server::handle_client_hello(const span& message, const span& body) NOEXCEPT
     if (algorithms.empty() || groups.empty() || !has_shares)
         return fail(alert::missing_extension);
 
-    const auto scheme = (context_.curve() == x509::curve::secp256r1) ?
-        ecdsa_secp256r1_sha256 : ecdsa_secp384r1_sha384;
+    const auto p256 = (context_.curve() == x509::curve::secp256r1);
+    const auto scheme = p256 ? ecdsa_secp256r1_sha256 : ecdsa_secp384r1_sha384;
     if (!contains(algorithms, scheme))
         return fail(alert::handshake_failure);
 

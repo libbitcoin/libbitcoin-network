@@ -648,8 +648,10 @@ void socket::handle_chunk_write(const code& ec, size_t size,
         return;
     }
 
-    const io::const_buffer last{ http::last_chunk.data(),
-        http::last_chunk.size() };
+    const io::const_buffer last
+    {
+        http::last_chunk.data(), http::last_chunk.size()
+    };
 
     transmit({ &last, one }, true,
         std::bind(&socket::handle_chunk_last,

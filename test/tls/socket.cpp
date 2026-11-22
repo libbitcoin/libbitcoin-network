@@ -51,7 +51,8 @@ static const std::string encrypted_key
 static void write_text(const std::filesystem::path& path, const std::string& text)
 {
     std::ofstream file(path, std::ios::binary);
-    file.write(text.data(), system::possible_narrow_sign_cast<std::streamsize>(text.size()));
+    file.write(text.data(),
+        system::possible_narrow_sign_cast<std::streamsize>(text.size()));
 }
 
 static system::x509::certificate make_identity(
@@ -289,10 +290,11 @@ static code tcp_read_result(const socket::ptr& server)
     const auto buffer = std::make_shared<system::data_chunk>(8);
     const auto promise = std::make_shared<std::promise<code>>();
     auto future = promise->get_future();
-    server->tcp_read({ buffer->data(), buffer->size() }, [=](const code& ec, size_t) NOEXCEPT
-    {
-        promise->set_value(ec);
-    });
+    server->tcp_read({ buffer->data(), buffer->size() },
+        [=](const code& ec, size_t) NOEXCEPT
+        {
+            promise->set_value(ec);
+        });
 
     BC_REQUIRE(future.wait_for(5s) == std::future_status::ready);
     return future.get();
@@ -455,7 +457,8 @@ static size_t count_records(const system::data_chunk& raw)
     size_t offset{};
     while (raw.size() >= offset + tls::record_header_size)
     {
-        const auto length = (static_cast<size_t>(raw[offset + 3]) << 8) | raw[offset + 4];
+        const auto high = static_cast<size_t>(raw[offset + 3]) << 8;
+        const auto length = high | raw[offset + 4];
         offset += tls::record_header_size + length;
         ++count;
     }

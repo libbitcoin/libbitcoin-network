@@ -55,7 +55,8 @@ public:
     }
 
     // Call must be stranded.
-    void async_read_some1(const io::mutable_buffer& buffer, const count_handler& handler) NOEXCEPT
+    void async_read_some1(const io::mutable_buffer& buffer,
+        const count_handler& handler) NOEXCEPT
     {
         async_read_some(buffer, handler);
     }
@@ -631,7 +632,10 @@ public:
     }
 
 private:
-    std::shared_ptr<std::promise<Type>> promise_{ std::make_shared<std::promise<Type>>() };
+    std::shared_ptr<std::promise<Type>> promise_
+    {
+        std::make_shared<std::promise<Type>>()
+    };
     std::shared_future<Type> future_{ promise_->get_future().share() };
 };
 
@@ -657,9 +661,11 @@ struct acceptor_fixture
         BC_REQUIRE(pool.join());
     }
 
-    std::shared_ptr<socket_accessor> accept(const socket::parameters& params, const awaiter<code>& accepted, bool proxied=false)
+    std::shared_ptr<socket_accessor> accept(const socket::parameters& params,
+        const awaiter<code>& accepted, bool proxied=false)
     {
-        const auto instance = std::make_shared<socket_accessor>(log, pool.service(), params, proxied);
+        const auto instance = std::make_shared<socket_accessor>(log,
+            pool.service(), params, proxied);
         instance->accept(acceptor, [=](const code& ec) NOEXCEPT
         {
             accepted.set(ec);
@@ -671,9 +677,13 @@ struct acceptor_fixture
         return instance;
     }
 
-    std::shared_ptr<socket_accessor> connect(const socket::parameters& params, const std::vector<io::endpoint>& peers, const awaiter<code>& connected)
+    std::shared_ptr<socket_accessor> connect(const socket::parameters& params,
+        const std::vector<io::endpoint>& peers,
+        const awaiter<code>& connected)
     {
-        const auto instance = std::make_shared<socket_accessor>(log, pool.service(), params, config::address{}, config::endpoint{}, false);
+        const auto instance = std::make_shared<socket_accessor>(log,
+            pool.service(), params, config::address{}, config::endpoint{},
+            false);
         const io::endpoints range{ peers };
         instance->connect(range, [=](const code& ec) NOEXCEPT
         {
@@ -781,8 +791,6 @@ BC_FIXTURE_TEST_CASE(socket__async_read_some__client_sent__base_expected, accept
     instance->stop();
 }
 
-// Field exceeds single socket read, so parser completes it in asynchronous
-// read handler, not within initiating call.
 static std::string request_with_field(size_t size)
 {
     return "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nX-Big: " +

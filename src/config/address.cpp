@@ -176,7 +176,7 @@ address::address(const messages::peer::address_item& item) NOEXCEPT
 }
 
 address::address(const messages::peer::address_item::cptr& message) NOEXCEPT
-  : address_(message ? message : system::to_shared<messages::peer::address_item>())
+  : address_(message ? message : system::to_shared<address_item>())
 {
 }
 

@@ -153,11 +153,15 @@ decoder::decoder(const codings& value, size_t limit) NOEXCEPT
     const auto add = [&](coding item, http_error_t fault) NOEXCEPT
     {
         if (item == coding::gzip)
-            stages_.push_back({ coder{ std::in_place_type<gzip_inflater> },
-                fault });
+            stages_.push_back(
+            {
+                coder{ std::in_place_type<gzip_inflater> }, fault
+            });
         else
-            stages_.push_back({ coder{ std::in_place_type<zlib_inflater> },
-                fault });
+            stages_.push_back(
+            {
+                coder{ std::in_place_type<zlib_inflater> }, fault
+            });
     };
 
     for (auto it = value.transfer.rbegin(); it != value.transfer.rend(); ++it)

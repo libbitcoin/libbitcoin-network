@@ -69,7 +69,8 @@ struct rpc_loopback_fixture
             .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
         };
 
-        server = std::make_shared<network::socket>(log, pool_.service(), std::move(params));
+        server = std::make_shared<network::socket>(log, pool_.service(),
+            std::move(params));
         const auto accepted = rpc_make_promise();
         server->accept(acceptor_, [=](const code& accept_ec) NOEXCEPT
         {
@@ -349,7 +350,8 @@ struct echo_methods
 
 using echo_interface = rpc::publish<echo_methods>;
 using echo_channel = channel_rpc<echo_interface>;
-using echo_responder = std::function<void(const echo_channel::ptr&, const std::string&)>;
+using echo_responder = std::function<void(const echo_channel::ptr&,
+    const std::string&)>;
 
 static const network::settings echo_settings{ test::network_settings() };
 static const echo_channel::options_t echo_options{ "test" };
@@ -358,7 +360,8 @@ struct rpc_channel_fixture
   : rpc_loopback_fixture
 {
     rpc_channel_fixture() NOEXCEPT
-      : channel(std::make_shared<echo_channel>(log, server, 42, echo_settings, echo_options))
+      : channel(std::make_shared<echo_channel>(log, server, 42, echo_settings,
+            echo_options))
     {
         const auto promise = stopped;
         channel->subscribe_stop([=](const code& ec) NOEXCEPT
@@ -378,7 +381,8 @@ struct rpc_channel_fixture
         const auto started = rpc_make_promise();
         io::post(channel->strand(), [=]() NOEXCEPT
         {
-            self->subscribe<echo_interface::echo>([=](const code& ec, echo_interface::echo, std::string text) NOEXCEPT
+            self->subscribe<echo_interface::echo>([=](const code& ec,
+                echo_interface::echo, std::string text) NOEXCEPT
             {
                 if (ec)
                     return false;

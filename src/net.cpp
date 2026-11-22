@@ -84,9 +84,8 @@ acceptor::ptr net::create_acceptor(const socket::context& context) NOEXCEPT
     const auto& settings = network_settings();
 
     // bip324 (v2) inbound acceptance, v1 peers detected and passed through.
-    const auto accept = privacy_ &&
-        std::holds_alternative<std::monostate>(context) ?
-            settings.peer_context() : context;
+    const auto unset = std::holds_alternative<std::monostate>(context);
+    const auto accept = privacy_ && unset ? settings.peer_context() : context;
 
     socket::parameters params
     {

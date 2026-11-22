@@ -161,7 +161,8 @@ static code decode_message(rpc::request_t& out, role role,
                 return error::zmtp_unexpected_message;
 
             const std::span<const uint8_t> prefix{ body };
-            decode_subscription(out, prefix.subspan(one), is_zero(body.front()));
+            const auto cancel = is_zero(body.front());
+            decode_subscription(out, prefix.subspan(one), cancel);
             return error::success;
         }
         case role::puller:
@@ -453,7 +454,8 @@ static code encode_notification(socket::zmtp_write_state& out, role role,
 
         std::reverse(parts.front().begin(), parts.front().end());
         auto content = parts.front();
-        content.insert(content.end(), parts.back().cbegin(), parts.back().cend());
+        const auto& context = parts.back();
+        content.insert(content.end(), context.cbegin(), context.cend());
         return frame_packet(out, make_command(command_ping, content));
     }
 

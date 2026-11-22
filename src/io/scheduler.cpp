@@ -594,8 +594,10 @@ void strand_state::dispatch(handler&& handler) NOEXCEPT
     }
 
     {
-        const running_scope scope{ running_strand,
-            static_cast<const strand_state*>(this) };
+        const running_scope scope
+        {
+            running_strand, static_cast<const strand_state*>(this)
+        };
 
         handler();
     }
@@ -613,8 +615,10 @@ bool strand_state::running_in_this_thread() const NOEXCEPT
 void strand_state::run() NOEXCEPT
 {
     {
-        const running_scope scope{ running_strand,
-            static_cast<const strand_state*>(this) };
+        const running_scope scope
+        {
+            running_strand, static_cast<const strand_state*>(this)
+        };
 
         std::deque<handler> batch{};
         {

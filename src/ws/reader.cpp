@@ -175,8 +175,10 @@ size_t reader::put_payload(const std::span<const uint8_t>& data,
         try
         {
             const auto buffer = message.prepare(size);
-            const std::span<uint8_t> target{ pointer_cast<uint8_t>(
-                buffer.data()), size };
+            const std::span<uint8_t> target
+            {
+                pointer_cast<uint8_t>(buffer.data()), size
+            };
 
             std::copy_n(data.begin(), size, target.begin());
             if (frame_.masked)

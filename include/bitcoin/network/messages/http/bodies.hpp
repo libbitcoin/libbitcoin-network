@@ -172,8 +172,8 @@ struct contiguous_body
         out_buffer get(code& ec) NOEXCEPT
         {
             ec.clear();
-            return out_buffer{ std::make_pair(const_buffers_type{
-                value_.data(), value_.size() }, false) };
+            const const_buffers_type buffer{ value_.data(), value_.size() };
+            return out_buffer{ std::make_pair(buffer, false) };
         }
 
     private:
@@ -255,8 +255,8 @@ struct span_body
         out_buffer get(code& ec) NOEXCEPT
         {
             ec.clear();
-            return out_buffer{ std::make_pair(const_buffers_type{
-                value_.data(), value_.size() }, false) };
+            const const_buffers_type buffer{ value_.data(), value_.size() };
+            return out_buffer{ std::make_pair(buffer, false) };
         }
 
     private:
@@ -361,8 +361,8 @@ struct buffer_body
             {
                 ec.clear();
                 toggle_ = true;
-                return out_buffer{ std::make_pair(const_buffers_type{
-                    value_.data, value_.size }, value_.more) };
+                const const_buffers_type buffer{ value_.data, value_.size };
+                return out_buffer{ std::make_pair(buffer, value_.more) };
             }
 
             if (value_.more)
@@ -553,8 +553,8 @@ struct file_body
 
             remaining_ -= read;
             ec.clear();
-            return out_buffer{ std::make_pair(const_buffers_type{
-                buffer_.data(), read }, !is_zero(remaining_)) };
+            const const_buffers_type buffer{ buffer_.data(), read };
+            return out_buffer{ std::make_pair(buffer, !is_zero(remaining_)) };
         }
 
     private:

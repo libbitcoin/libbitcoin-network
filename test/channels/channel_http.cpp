@@ -136,7 +136,8 @@ struct http_loopback_fixture
             .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
         };
 
-        server = std::make_shared<network::socket>(log, pool_.service(), std::move(params));
+        server = std::make_shared<network::socket>(log, pool_.service(),
+            std::move(params));
         const auto accepted = http_make_promise();
         server->accept(acceptor_, [=](const code& accept_ec) NOEXCEPT
         {

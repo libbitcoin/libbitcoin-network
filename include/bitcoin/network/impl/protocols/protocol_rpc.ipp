@@ -33,7 +33,7 @@ TEMPLATE
 inline void CLASS::send_code(const code& ec) NOEXCEPT
 {
     using namespace std::placeholders;
-    send_code(ec,std::bind(&CLASS::handle_send,
+    send_code(ec, std::bind(&CLASS::handle_send,
         shared_from_base<CLASS>(), _1));
 }
 

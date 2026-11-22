@@ -124,8 +124,10 @@ void socket::do_ws_read_message(const ref<http::flat_buffer>& out,
         ws::reader::event event{};
         code ec{};
         const auto data = ws_input_.data();
-        const std::span<const uint8_t> bytes{ pointer_cast<const uint8_t>(
-            data.data()), data.size() };
+        const std::span<const uint8_t> bytes
+        {
+            pointer_cast<const uint8_t>(data.data()), data.size()
+        };
 
         const auto used = ws_reader_->put(bytes, out.get(), event, ec);
         ws_input_.consume(used);
@@ -163,9 +165,9 @@ void socket::do_ws_read_message(const ref<http::flat_buffer>& out,
 
                 // The close is answered with the peer's close code.
                 ws_closing_ = true;
-                const auto echo = payload.size() < two ? data_chunk{} :
-                    data_chunk{ payload.begin(), std::next(payload.begin(),
-                        two) };
+                const auto echo_size = payload.size() < two ? zero : two;
+                const auto echo_end = std::next(payload.begin(), echo_size);
+                const data_chunk echo{ payload.begin(), echo_end };
 
                 ws_send(ws::opcode::close, echo,
                     std::bind(&socket::handle_ws_echo,
@@ -331,8 +333,8 @@ void socket::handle_ws_frame(const code& ec, size_t,
 
     ws_writing_ = false;
     ws_queue_.pop_front();
-    const auto code = (ec == error::operation_canceled) ? error::channel_stopped :
-        ec;
+    const auto canceled = (ec == error::operation_canceled);
+    const auto code = canceled ? error::channel_stopped : ec;
 
     if (code == error::unknown)
         logx("ws-write", ec);

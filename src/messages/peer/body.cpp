@@ -73,8 +73,8 @@ bool body::reader::accept(const std::span<const uint8_t>& payload,
         return false;
     }
 
-    value_.payload = messages::peer::registry::to_any(value_.head.index(), payload,
-        value_.version, value_.witness);
+    value_.payload = messages::peer::registry::to_any(value_.head.index(),
+        payload, value_.version, value_.witness);
 
     if (!value_.payload)
     {
@@ -100,9 +100,9 @@ size_t body::reader::put(const buffer_type& buffer, code& ec) NOEXCEPT
             return zero;
 
         // The payload is parsed in place (buffered by the caller either way).
-        const auto payload = is_null(payload_) ?
-            std::span<const uint8_t>{ data, need_ } :
-            std::span<const uint8_t>{ *payload_ };
+        using span = std::span<const uint8_t>;
+        const auto in_place = is_null(payload_);
+        const auto payload = in_place ? span{ data, need_ } : span{ *payload_ };
         return accept(payload, ec) ? value_.head.payload_size : zero;
     }
 

@@ -75,7 +75,8 @@ typedef std::function<void(v2_cipher&)> responder;
 static void respond(peer_socket& raw, v2_cipher& peer, const responder& handler)
 {
     const auto key = std::make_shared<v2_cipher::key>();
-    io::async_read(raw, io::buffer(*key), [&peer, key, handler](const code& ec, size_t)
+    const auto buffer = io::buffer(*key);
+    io::async_read(raw, buffer, [&peer, key, handler](const code& ec, size_t)
     {
         BC_REQUIRE(!ec);
         BC_REQUIRE(peer.initialize(*key, mainnet, false));
@@ -88,7 +89,9 @@ static data_chunk greeting(v2_cipher& peer, const data_chunk& garbage)
 {
     data_chunk version(v2_cipher::expansion);
     peer.encrypt({}, garbage, false, version);
-    return system::build_chunk({ peer.public_key(), garbage, peer.send_terminator(), version });
+    const auto& key = peer.public_key();
+    const auto& terminator = peer.send_terminator();
+    return system::build_chunk({ key, garbage, terminator, version });
 }
 
 // An encrypted packet of the given contents.
@@ -109,7 +112,8 @@ static code initiate(io::context& service, v2_stream& stream)
 }
 
 // Complete the handshake of the initiator stream against the raw peer.
-static void shake(io::context& service, v2_stream& stream, peer_socket& raw, v2_cipher& peer)
+static void shake(io::context& service, v2_stream& stream, peer_socket& raw,
+    v2_cipher& peer)
 {
     respond(raw, peer, [&raw](v2_cipher& self)
     {
@@ -131,7 +135,9 @@ static received read_one(io::context& service, v2_stream& stream, size_t maximum
 {
     received out{};
     data_chunk buffer{};
-    stream.async_read_message(buffer, maximum, [&](const code& ec, uint8_t identifier, const std::string& command, const v2_stream::payload_t& payload)
+    stream.async_read_message(buffer, maximum, [&](const code& ec,
+        uint8_t identifier, const std::string& command,
+        const v2_stream::payload_t& payload)
     {
         out.ec = ec;
         out.identifier = identifier;
@@ -144,10 +150,13 @@ static received read_one(io::context& service, v2_stream& stream, size_t maximum
     return out;
 }
 
-static code write_one(io::context& service, v2_stream& stream, uint8_t identifier, const std::string& command, const system::chunk_cptr& payload)
+static code write_one(io::context& service, v2_stream& stream,
+    uint8_t identifier, const std::string& command,
+    const system::chunk_cptr& payload)
 {
     code result{ error::would_block };
-    stream.async_write_message(identifier, command, payload, [&](const code& ec, size_t) { result = ec; });
+    stream.async_write_message(identifier, command, payload,
+        [&](const code& ec, size_t) { result = ec; });
     service.run();
     service.restart();
     return result;

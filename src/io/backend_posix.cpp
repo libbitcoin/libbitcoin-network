@@ -447,8 +447,10 @@ bool backend::perform(operation* op) NOEXCEPT
             {
                 std::vector<iovec> buffers{};
                 for (const auto& buffer: op->out)
-                    buffers.push_back({ const_cast<void*>(buffer.data()),
-                        buffer.size() });
+                    buffers.push_back(
+                    {
+                        const_cast<void*>(buffer.data()), buffer.size()
+                    });
 
                 msghdr message{};
                 message.msg_iov = buffers.data();

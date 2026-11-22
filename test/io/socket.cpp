@@ -55,8 +55,16 @@ struct loopback_fixture
     {
         code accepted{ error::unknown };
         code connected{ error::unknown };
-        acceptor.async_accept(server, [&](const code& ec) NOEXCEPT { accepted = ec; });
-        client.async_connect(target(), [&](const code& ec) NOEXCEPT { connected = ec; });
+        acceptor.async_accept(server, [&](const code& ec) NOEXCEPT
+        {
+            accepted = ec;
+        });
+
+        client.async_connect(target(), [&](const code& ec) NOEXCEPT
+        {
+            connected = ec;
+        });
+
         context.run();
         context.restart();
         BC_REQUIRE_EQUAL(accepted, error::success);
