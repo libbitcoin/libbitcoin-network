@@ -273,7 +273,6 @@ data_chunk decode(const data_slice& body, const codings& value, size_t limit,
             http_error_t::bad_transfer_encoding :
             http_error_t::bad_content_encoding;
 
-        ec = to_http_code(fault);
         return {};
     }
 
