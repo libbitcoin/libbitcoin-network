@@ -149,8 +149,8 @@ BC_AUTO_TEST_CASE(settings__construct__testnet5__expected)
     BC_REQUIRE_EQUAL(instance.identifier, 1163282758u);
     BC_REQUIRE_EQUAL(instance.outbound.seeds.size(), 2u);
     BC_REQUIRE_EQUAL(instance.outbound.seeds.front().port(), 18353u);
-    BC_REQUIRE_EQUAL(instance.outbound.connections, 50u);
-    BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 10u);
+    BC_REQUIRE_EQUAL(instance.outbound.connections, 5u);
+    BC_REQUIRE_EQUAL(instance.outbound.connect_batch_size, 1u);
     BC_REQUIRE_EQUAL(instance.outbound.host_pool_capacity, 10000u);
     BC_REQUIRE_EQUAL(instance.inbound.connections, 200u);
     BC_REQUIRE_EQUAL(instance.inbound.binds.size(), 1u);

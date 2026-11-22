@@ -368,8 +368,8 @@ struct BCT_API settings
                 }
                 case system::chain::selection::testnet5:
                 {
-                    connections = 50;
-                    connect_batch_size = 10;
+                    connections = 5;
+                    connect_batch_size = 1;
                     seeds.reserve(2);
                     seeds.emplace_back("carmine.libbitcoin.net", 18353_u16);
                     seeds.emplace_back("wormer.libbitcoin.net", 18353_u16);
