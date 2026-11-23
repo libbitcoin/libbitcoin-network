@@ -1034,6 +1034,25 @@ BC_FIXTURE_TEST_CASE(proxy__read_http__json_rpc_post__not_downgraded_singleton, 
     BC_REQUIRE_EQUAL(http_request.body().get<rpc::request>().message.method, "a");
 }
 
+BC_FIXTURE_TEST_CASE(proxy__read_http__expect_continue__interim_response, loopback_fixture)
+{
+    const awaiter<code> read{};
+    http_request.body() = rpc::request{};
+    const auto post = to_post(request1);
+    const auto end = post.find("\r\n\r\n") + 2;
+    send(post.substr(0, end) + "Expect: 100-continue\r\n\r\n");
+    read_http(read);
+
+    const std::string interim{ "HTTP/1.1 100 Continue\r\n\r\n" };
+    BC_REQUIRE_EQUAL(receive(interim.size()), interim);
+
+    send(request1);
+    BC_REQUIRE_EQUAL(read.get(), error::success);
+    BC_REQUIRE(http_request.method() == http::verb::post);
+    BC_REQUIRE_EQUAL(http_request[http::field::expect], "100-continue");
+    BC_REQUIRE_EQUAL(http_request.body().get<rpc::request>().message.method, "a");
+}
+
 BC_FIXTURE_TEST_CASE(proxy__read_http__detect_client_shutdown__peer_disconnect, loopback_fixture)
 {
     const awaiter<code> read{};

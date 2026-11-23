@@ -285,6 +285,7 @@ void protocol_http::send_unauthorized(const request& request) NOEXCEPT
     const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request, true);
+    out.set(field::www_authenticate, channel_http::challenge);
     out.body() = string_status(code, out.reason(), media);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::unauthorized);
@@ -343,6 +344,7 @@ void protocol_http::send_method_not_allowed(const request& request) NOEXCEPT
     const auto media = to_media_type(request[field::accept]);
     response out{ code, request.version() };
     add_common_headers(out, request, true);
+    out.set(field::allow, allowed(request));
     out.body() = string_status(code, out.reason(), media, details);
     out.prepare_payload();
     SEND(std::move(out), handle_complete, _1, error::method_not_allowed);
@@ -383,8 +385,11 @@ void protocol_http::handle_complete(const code& ec,
 bool protocol_http::is_allowed_host(const fields& fields,
     size_t version) const NOEXCEPT
 {
-    // Disallow unspecified host.
+    // Disallow unspecified or repeated host.
     // Host header field is mandatory at http 1.1.
+    if (fields.count(field::host) > one)
+        return false;
+
     const std::string host{ fields[field::host] };
     if (host.empty() && version >= version_1_1)
         return false;
@@ -543,6 +548,16 @@ void protocol_http::register_methods(const std::string_view& names) NOEXCEPT
 const std::string& protocol_http::methods() const NOEXCEPT
 {
     return channel_->methods();
+}
+
+void protocol_http::allow(const std::string_view& verb) NOEXCEPT
+{
+    channel_->allow(verb);
+}
+
+std::string protocol_http::allowed(const request&) const NOEXCEPT
+{
+    return channel_->allowed();
 }
 
 bool protocol_http::authorized() const NOEXCEPT

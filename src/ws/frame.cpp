@@ -189,14 +189,13 @@ bool is_valid_close_code(uint16_t value) NOEXCEPT
 {
     switch (value)
     {
-        case 1000: case 1001: case 1002: case 1003:
-        case 1007: case 1008: case 1009: case 1010:
-        case 1011: case 1012: case 1013:
-            return true;
-        case 1004: case 1005: case 1006: case 1014: case 1015:
+        case 1004:
+        case 1005:
+        case 1006:
+        case 1015:
             return false;
         default:
-            return value > 999 && (value < 1016 || value > 2999);
+            return value > 999;
     }
 }
 

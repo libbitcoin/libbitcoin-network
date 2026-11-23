@@ -33,6 +33,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 constexpr auto close_token = "close";
 constexpr auto keep_alive_token = "keep-alive";
 constexpr auto chunked_token = "chunked";
+constexpr auto continue_token = "100-continue";
 
 // The comma separated list without the matching tokens.
 template <typename Predicate>
@@ -309,6 +310,12 @@ bool is_upgrade(const request_header& header) NOEXCEPT
     return header.version() >= version_1_1 && header.method() == verb::get &&
         has_token(header[field::connection], "upgrade") &&
         has_token(header[field::upgrade], "websocket");
+}
+
+bool expects_continue(const request_header& header) NOEXCEPT
+{
+    return header.version() >= version_1_1 &&
+        iequals(header[field::expect], continue_token);
 }
 
 BC_POP_WARNING()

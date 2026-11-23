@@ -147,6 +147,9 @@ using response_header = header<false>;
 /// The request is an http 1.1 GET with connection upgrade to websocket.
 BCT_API bool is_upgrade(const request_header& header) NOEXCEPT;
 
+/// The request is http 1.1 or later with expectation of 100-continue.
+BCT_API bool expects_continue(const request_header& header) NOEXCEPT;
+
 } // namespace http
 } // namespace network
 } // namespace libbitcoin

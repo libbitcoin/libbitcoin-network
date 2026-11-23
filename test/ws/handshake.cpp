@@ -72,6 +72,15 @@ BC_AUTO_TEST_CASE(handshake__accept__post__websocket_bad_method)
     BC_REQUIRE(response.result() == status::bad_request);
 }
 
+BC_AUTO_TEST_CASE(handshake__accept__repeated_host__bad_request)
+{
+    auto request = make_request();
+    request.insert(field::host, "example.org");
+    ws::response response{};
+    BC_REQUIRE_EQUAL(ws::accept(response, request), error::bad_request);
+    BC_REQUIRE(response.result() == status::bad_request);
+}
+
 BC_AUTO_TEST_CASE(handshake__accept__missing_fields__expected_errors)
 {
     ws::response response{};

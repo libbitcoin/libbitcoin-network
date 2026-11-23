@@ -137,10 +137,7 @@ void channel_http::handle_receive(const code& ec, size_t LOG_ONLY(bytes),
         // Refuse an unauthorized upgrade unless authorization is in-band.
         if (!authorized() && !in_band_)
         {
-            send({ status::unauthorized, request->version() },
-                std::bind(&channel_http::handle_rejected,
-                    shared_from_base<channel_http>(), _1,
-                    error::unauthorized));
+            unauthorized(*request);
             return;
         }
 
@@ -205,9 +202,7 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
     // carry none, so authorization is dispatched to protocol.
     if (!websocket() && !downgraded() && !authorized())
     {
-        send({ status::unauthorized, request->version() },
-            std::bind(&channel_http::handle_rejected,
-                shared_from_base<channel_http>(), _1, error::unauthorized));
+        unauthorized(*request);
         return;
     }
 
@@ -481,11 +476,41 @@ const std::string& channel_http::methods() const NOEXCEPT
     return methods_;
 }
 
+void channel_http::allow(const std::string_view& verb) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (verb.empty() || allowed_.find(verb) != std::string::npos)
+        return;
+
+    if (!allowed_.empty())
+        allowed_.append(", ");
+
+    allowed_.append(verb);
+}
+
+const std::string& channel_http::allowed() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return allowed_;
+}
+
 void channel_http::handle_rejected(const code& ec,
     const code& reason) NOEXCEPT
 {
     BC_ASSERT(stranded());
     stop(ec ? ec : reason);
+}
+
+// private
+void channel_http::unauthorized(const request& request) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    response out{ status::unauthorized, request.version() };
+    out.set(field::www_authenticate, challenge);
+    send(std::move(out),
+        std::bind(&channel_http::handle_rejected,
+            shared_from_base<channel_http>(), _1, error::unauthorized));
 }
 
 // private
@@ -510,9 +535,7 @@ void channel_http::reject(const code& ec, const request& request) NOEXCEPT
 
     if (enveloped && !authorized())
     {
-        send({ status::unauthorized, request.version() },
-            std::bind(&channel_http::handle_rejected,
-                shared_from_base<channel_http>(), _1, error::unauthorized));
+        unauthorized(request);
         return;
     }
 
