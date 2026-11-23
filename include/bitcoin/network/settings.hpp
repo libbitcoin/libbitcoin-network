@@ -523,6 +523,8 @@ struct BCT_API settings
     uint32_t handshake_timeout_seconds{ 15 };
     uint32_t channel_heartbeat_minutes{ 10 };
     uint32_t maximum_skew_minutes{ 120 };
+    uint32_t maximum_requests{ 500'000 };
+    uint32_t request_timeout_seconds{ 60 };
     std::string user_agent{ BC_USER_AGENT };
     system::config::path path{};
 
@@ -536,6 +538,7 @@ struct BCT_API settings
     virtual steady_clock::duration channel_handshake() const NOEXCEPT;
     virtual steady_clock::duration channel_heartbeat() const NOEXCEPT;
     virtual steady_clock::duration maximum_skew() const NOEXCEPT;
+    virtual steady_clock::duration request_timeout() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;
     virtual bool gossip_v2() const NOEXCEPT;
 

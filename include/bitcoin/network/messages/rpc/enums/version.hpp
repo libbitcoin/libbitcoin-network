@@ -31,10 +31,10 @@ enum class version
     /// Undefined version (not set).
     undefined,
 
-    /// JSON-RPC 1.0 (bitcoin core).
+    /// JSON-RPC 1.0 (bitcoin core, stratum v1).
     v1,
 
-    /// JSON-RPC 2.0 (electrum daemon, electrum protocol, stratum v1).
+    /// JSON-RPC 2.0 (electrum daemon, electrum protocol).
     v2,
 
     /// Determine the version from the jsonrpc element.
