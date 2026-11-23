@@ -586,6 +586,11 @@ steady_clock::duration settings::maximum_skew() const NOEXCEPT
     return minutes(maximum_skew_minutes);
 }
 
+steady_clock::duration settings::request_timeout() const NOEXCEPT
+{
+    return seconds(request_timeout_seconds);
+}
+
 std::filesystem::path settings::file() const NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)

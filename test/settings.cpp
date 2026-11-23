@@ -56,6 +56,8 @@ BC_AUTO_TEST_CASE(settings__construct__default__expected)
     BC_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 15u);
     BC_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 10u);
     BC_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
+    BC_REQUIRE_EQUAL(instance.maximum_requests, 500'000u);
+    BC_REQUIRE_EQUAL(instance.request_timeout_seconds, 60u);
     BC_REQUIRE_EQUAL(instance.rate_limit, 0u);
     BC_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BC_REQUIRE(instance.path.empty());
@@ -206,6 +208,14 @@ BC_AUTO_TEST_CASE(settings__maximum_skew__always__maximum_skew_minutes)
     constexpr auto expected = 42u;
     instance.maximum_skew_minutes = expected;
     BC_REQUIRE(instance.maximum_skew() == minutes(expected));
+}
+
+BC_AUTO_TEST_CASE(settings__request_timeout__always__request_timeout_seconds)
+{
+    settings instance{ system::chain::selection::mainnet };
+    constexpr auto expected = 42u;
+    instance.request_timeout_seconds = expected;
+    BC_REQUIRE(instance.request_timeout() == seconds(expected));
 }
 
 // filters
