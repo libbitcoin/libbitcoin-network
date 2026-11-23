@@ -325,6 +325,10 @@ DEFINE_JSON_FROM_TAG(request_t)
     {
         object["id"] = value_from(instance.id.value());
     }
+    else if (instance.jsonrpc == version::v1)
+    {
+        object["id"] = json_t{};
+    }
 
     if (!instance.method.empty())
     {
@@ -416,7 +420,19 @@ DEFINE_JSON_FROM_TAG(response_t)
     {
         const auto& error = instance.error.value();
 
-        if (error.data.has_value())
+        if (instance.form == error_form::array)
+        {
+            const auto data = error.data.has_value() ?
+                value_from(error.data.value()) : json_t{};
+
+            object["error"] = system::json::array
+            {
+                error.code,
+                error.message,
+                data
+            };
+        }
+        else if (error.data.has_value())
         {
             object["error"] =
             {
@@ -483,7 +499,30 @@ DEFINE_JSON_TO_TAG(response_t)
 
     // error
     if (const auto it = object.find("error");
-        it != object.end() && !it->value().is_null())
+        it != object.end() && it->value().is_array())
+    {
+        result_t result{};
+        const auto& error = it->value().as_array();
+
+        if (!error.empty())
+        {
+            result.code = error.at(zero).to_number<code_t>();
+        }
+
+        if (error.size() > one)
+        {
+            result.message = error.at(one).as_string();
+        }
+
+        if (error.size() > two && !error.at(two).is_null())
+        {
+            result.data = value_to<value_option>(error.at(two));
+        }
+
+        response.error = result;
+        response.form = error_form::array;
+    }
+    else if (it != object.end() && !it->value().is_null())
     {
         result_t result{};
         const auto& error = it->value().as_object();

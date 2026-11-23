@@ -153,6 +153,13 @@ struct result_t
 };
 using error_option = std::optional<result_t>;
 
+/// Form of a response error, positional as [code, message, data] or object.
+enum class error_form
+{
+    object,
+    array
+};
+
 /// Error codes reserved by json-rpc.
 namespace reserved {
 constexpr code_t parse_error{ -32700 };
@@ -178,6 +185,7 @@ struct response_t
     id_option id{};
     error_option error{};
     value_option result{};
+    error_form form{ error_form::object };
 };
 
 struct request_t

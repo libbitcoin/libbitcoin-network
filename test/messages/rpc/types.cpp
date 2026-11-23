@@ -484,6 +484,36 @@ BC_AUTO_TEST_CASE(rpc_model__response_from__v1_error__null_result)
     BC_REQUIRE_EQUAL(object.at("error").as_object().at("message").as_string(), "Method not found");
 }
 
+BC_AUTO_TEST_CASE(rpc_model__response_from__v1_array_error__positional)
+{
+    const auto model = system::json::value_from(response_t{ version::v1, identity_t{ 1 }, result_t{ 21, "Job not found", {} }, {}, error_form::array });
+    BC_REQUIRE_EQUAL(system::json::serialize(model), R"({"id":1,"error":[21,"Job not found",null],"result":null})");
+}
+
+BC_AUTO_TEST_CASE(rpc_model__response_from__array_error_with_data__positional)
+{
+    const auto model = system::json::value_from(response_t{ version::v1, identity_t{ 1 }, result_t{ 20, "Other", value_t{ true } }, {}, error_form::array });
+    BC_REQUIRE_EQUAL(system::json::serialize(model.as_object().at("error")), R"([20,"Other",true])");
+}
+
+BC_AUTO_TEST_CASE(rpc_model__response_to__array_error__expected)
+{
+    const auto model = system::json::parse(R"({"id":1,"result":null,"error":[23,"Low difficulty share",null]})");
+    const auto response = system::json::value_to<response_t>(model);
+    BC_REQUIRE(response.form == error_form::array);
+    BC_REQUIRE_EQUAL(response.error.value().code, 23);
+    BC_REQUIRE_EQUAL(response.error.value().message, "Low difficulty share");
+    BC_REQUIRE(!response.error.value().data.has_value());
+}
+
+BC_AUTO_TEST_CASE(rpc_model__response_to__object_error__object_form)
+{
+    const auto model = system::json::parse(R"({"id":1,"result":null,"error":{"code":-32601,"message":"Method not found"}})");
+    const auto response = system::json::value_to<response_t>(model);
+    BC_REQUIRE(response.form == error_form::object);
+    BC_REQUIRE_EQUAL(response.error.value().code, -32601);
+}
+
 BC_AUTO_TEST_CASE(rpc_model__response_from__v2_result__no_error)
 {
     const auto model = system::json::value_from(response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } });
@@ -497,6 +527,18 @@ BC_AUTO_TEST_CASE(rpc_model__request_from__null_id_value_params__expected)
 {
     const auto model = system::json::value_from(request_t{ version::v2, identity_t{ null_t{} }, "m", params_t{ value_t{ string_t{ "x" } } } });
     BC_REQUIRE_EQUAL(system::json::serialize(model), R"({"jsonrpc":"2.0","id":null,"method":"m","params":"x"})");
+}
+
+BC_AUTO_TEST_CASE(rpc_model__request_from__v1_no_id__null_id)
+{
+    const auto model = system::json::value_from(request_t{ version::v1, {}, "m", params_t{ array_t{} } });
+    BC_REQUIRE_EQUAL(system::json::serialize(model), R"({"id":null,"method":"m","params":[]})");
+}
+
+BC_AUTO_TEST_CASE(rpc_model__request_from__v2_no_id__no_id)
+{
+    const auto model = system::json::value_from(request_t{ version::v2, {}, "m", params_t{ array_t{} } });
+    BC_REQUIRE_EQUAL(system::json::serialize(model), R"({"jsonrpc":"2.0","method":"m","params":[]})");
 }
 
 // json_cast
