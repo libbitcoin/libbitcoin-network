@@ -83,7 +83,6 @@ code socket::accept_websocket(const http::request& request) NOEXCEPT
 
     ws::response response{};
     const auto ec = ws::accept(response, request.base());
-    response.set(http::field::server, BC_HTTP_SERVER_NAME);
 
     http::serializer<false, http::string_body> serializer{ response };
     data_chunk bytes{};
