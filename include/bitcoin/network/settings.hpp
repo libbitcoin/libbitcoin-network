@@ -29,6 +29,7 @@
 #include <bitcoin/network/zmtp/zmtp.hpp>
 
 #define BC_HTTP_SERVER_NAME "libbitcoin/4"
+#define BC_USER_AGENT "/libbitcoin:" LIBBITCOIN_NETWORK_VERSION "/"
 
 namespace libbitcoin {
 namespace network {
