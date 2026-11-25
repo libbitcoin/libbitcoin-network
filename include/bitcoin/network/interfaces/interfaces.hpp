@@ -22,6 +22,7 @@
 #include <bitcoin/network/interfaces/http.hpp>
 #include <bitcoin/network/interfaces/peer_broadcast.hpp>
 #include <bitcoin/network/interfaces/peer_dispatch.hpp>
+#include <bitcoin/network/interfaces/sv2_dispatch.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -36,6 +37,12 @@ using dispatch = publish<peer_dispatch, grouping::positional>;
 using broadcast = publish<peer_broadcast, grouping::positional>;
 
 } // namespace peer
+
+namespace sv2 {
+
+using dispatch = publish<sv2_dispatch, grouping::positional>;
+
+} // namespace sv2
 } // namespace interface
 } // namespace rpc
 } // namespace network

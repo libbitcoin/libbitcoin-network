@@ -190,7 +190,9 @@
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\get_data.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\get_headers.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\headers.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\peer\detail\heading.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\peer\detail\heading.cpp">
+      <ObjectFileName>$(IntDir)src_messages_peer_detail_heading.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\inventory.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\inventory_item.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\detail\memory_pool.cpp" />
@@ -213,6 +215,39 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\rpc\model.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\rpc\size.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\body.cpp">
+      <ObjectFileName>$(IntDir)src_messages_sv2_body.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\channel_endpoint_changed.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\close_channel.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\new_extended_mining_job.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\new_mining_job.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_extended_mining_channel.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_extended_mining_channel_success.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_mining_channel_error.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_standard_mining_channel.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_standard_mining_channel_success.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\reconnect.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_custom_mining_job.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_custom_mining_job_error.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_custom_mining_job_success.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_extranonce_prefix.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_group_channel.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_new_prev_hash.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_target.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\setup_connection.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\setup_connection_error.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\setup_connection_success.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\submit_shares_error.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\submit_shares_extended.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\submit_shares_standard.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\submit_shares_success.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\update_channel.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\update_channel_error.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\sv2\heading.cpp">
+      <ObjectFileName>$(IntDir)src_messages_sv2_heading.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\types.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor_sam.cpp" />
@@ -337,6 +372,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\interfaces.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_broadcast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\sv2_dispatch.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\io\buffer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\io\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\io\io.hpp" />
@@ -438,6 +474,39 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\size.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\streamable.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\types.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\body.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\channel_endpoint_changed.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\close_channel.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\new_extended_mining_job.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\new_mining_job.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_extended_mining_channel.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_extended_mining_channel_success.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_mining_channel_error.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_standard_mining_channel.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_standard_mining_channel_success.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\reconnect.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_custom_mining_job.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_custom_mining_job_error.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_custom_mining_job_success.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_extranonce_prefix.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_group_channel.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_new_prev_hash.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_target.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\setup_connection.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\setup_connection_error.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\setup_connection_success.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\submit_shares_error.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\submit_shares_extended.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\submit_shares_standard.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\submit_shares_success.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\update_channel.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\update_channel_error.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\enums\identifiers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\heading.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\message.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\registry.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\sv2.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor_sam.hpp" />

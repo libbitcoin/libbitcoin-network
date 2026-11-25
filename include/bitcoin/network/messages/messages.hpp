@@ -26,5 +26,6 @@
 #include <bitcoin/network/messages/json_body.hpp>
 #include <bitcoin/network/messages/peer/peer.hpp>
 #include <bitcoin/network/messages/rpc/rpc.hpp>
+#include <bitcoin/network/messages/sv2/sv2.hpp>
 
 #endif
