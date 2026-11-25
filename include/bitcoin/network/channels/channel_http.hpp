@@ -107,6 +107,14 @@ public:
     /// Latch authorization from credential digest (requires strand).
     virtual void set_authorized(const system::hash_digest& digest) NOEXCEPT;
 
+    /// True if host header allowed by configured hosts.
+    virtual bool is_allowed_host(const http::fields& fields,
+        size_t version) const NOEXCEPT;
+
+    /// True if origin header allowed by configured origins.
+    virtual bool is_allowed_origin(const http::fields& fields,
+        size_t version) const NOEXCEPT;
+
     /// The http status of an unbatched json-rpc response.
     virtual http::status to_rpc_status(
         const rpc::response_t& model) const NOEXCEPT;
@@ -149,7 +157,11 @@ private:
     void reject(const code& ec, const http::request& request) NOEXCEPT;
     void refuse(const code& ec, const http::request& request) NOEXCEPT;
     void unauthorized(const http::request& request) NOEXCEPT;
+    void send_status(http::status result, const code& reason) NOEXCEPT;
     void handle_rejected(const code& ec, const code& reason) NOEXCEPT;
+    uint16_t default_port() const NOEXCEPT;
+    bool is_same_origin(const http::fields& fields,
+        const std::string& origin) const NOEXCEPT;
     std::string log_message(const http::response& response) const NOEXCEPT;
     std::string log_message(const http::request& request,
         size_t bytes) const NOEXCEPT;
