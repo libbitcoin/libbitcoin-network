@@ -61,6 +61,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/channels/channel.cpp \
     ${srcdir}/../../src/channels/channel_http.cpp \
     ${srcdir}/../../src/channels/channel_peer.cpp \
+    ${srcdir}/../../src/channels/channel_sv2.cpp \
     ${srcdir}/../../src/config/address.cpp \
     ${srcdir}/../../src/config/authority.cpp \
     ${srcdir}/../../src/config/credential.cpp \
@@ -312,6 +313,7 @@ include_bitcoin_network_channels_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/channels/channel_http.hpp \
     ${srcdir}/../../include/bitcoin/network/channels/channel_peer.hpp \
     ${srcdir}/../../include/bitcoin/network/channels/channel_rpc.hpp \
+    ${srcdir}/../../include/bitcoin/network/channels/channel_sv2.hpp \
     ${srcdir}/../../include/bitcoin/network/channels/channels.hpp
 
 include_bitcoin_network_configdir = \
@@ -760,6 +762,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/channels/channel_http.cpp \
     ${srcdir}/../../test/channels/channel_peer.cpp \
     ${srcdir}/../../test/channels/channel_rpc.cpp \
+    ${srcdir}/../../test/channels/channel_sv2.cpp \
     ${srcdir}/../../test/config/address.cpp \
     ${srcdir}/../../test/config/address_type.cpp \
     ${srcdir}/../../test/config/authority.cpp \

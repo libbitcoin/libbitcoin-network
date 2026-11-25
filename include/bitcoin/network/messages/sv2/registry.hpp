@@ -37,6 +37,10 @@ struct registry
     /// Index of an unregistered message (one past the last valid index).
     static constexpr auto unknown = size;
 
+    /// Handshake messages are registered first, this is their count.
+    static constexpr auto handshakes = std::tuple_size_v<
+        decltype(rpc::sv2_dispatch::handshake)>;
+
     /// The message type registered at index.
     template <size_t Index>
     using arguments_t = rpc::args_native_t<rpc::method_t<Index, methods_t>>;

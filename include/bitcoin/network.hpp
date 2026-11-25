@@ -48,6 +48,7 @@
 #include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/channels/channel_peer.hpp>
 #include <bitcoin/network/channels/channel_rpc.hpp>
+#include <bitcoin/network/channels/channel_sv2.hpp>
 #include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/config/address_type.hpp>

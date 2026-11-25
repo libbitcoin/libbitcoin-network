@@ -35,16 +35,16 @@ BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
 // sv2::body::reader
 // ----------------------------------------------------------------------------
-// Reader parses at most one message per read, deferring (consuming nothing)
-// until complete frame buffered by caller. Fault member carries parse failure
-// detail (returned code is generic).
+// Reader parses at most one message per read, taking the heading and then the
+// payload once each is buffered whole by caller. Fault member carries parse
+// failure detail (returned code is generic).
 
 static size_t set_fault(frame& value, const code& fault,
     code& ec) NOEXCEPT
 {
     value.fault = fault;
     ec = error::to_http_code(error::http_error_t::bad_value);
-    return zero;
+    return {};
 }
 
 void body::reader::init(const http::length_type&, code& ec) NOEXCEPT
@@ -55,11 +55,6 @@ void body::reader::init(const http::length_type&, code& ec) NOEXCEPT
     value_.fault = error::success;
     value_.payload.reset();
     ec = {};
-}
-
-size_t body::reader::need() const NOEXCEPT
-{
-    return need_;
 }
 
 // private
@@ -85,51 +80,49 @@ bool body::reader::accept(const std::span<const uint8_t>& payload,
 
 size_t body::reader::put(const buffer_type& buffer, code& ec) NOEXCEPT
 {
-    const auto data = pointer_cast<const uint8_t>(buffer.data());
-    const auto size = buffer.size();
+    auto data = pointer_cast<const uint8_t>(buffer.data());
+    auto size = buffer.size();
+    size_t used{};
     ec = {};
 
-    // Payload.
-    if (headed_)
+    if (!headed_)
     {
-        if (size < need_)
-            return zero;
+        if (size < heading::size())
+            return value_.exact && !is_zero(size) ?
+                set_fault(value_, error::invalid_heading, ec) : zero;
 
-        // The payload is parsed in place (buffered by the caller either way).
-        using span = std::span<const uint8_t>;
-        const auto in_place = is_null(payload_);
-        const auto payload = in_place ? span{ data, need_ } : span{ *payload_ };
-        return accept(payload, ec) ? value_.head.message_length : zero;
+        const data_slice head{ data, std::next(data, heading::size()) };
+        system::stream::in::fast stream{ head };
+        system::read::bytes::fast source{ stream };
+        value_.head = heading::deserialize(source);
+
+        if (!source)
+            return set_fault(value_, error::invalid_heading, ec);
+
+        const auto index = value_.head.index();
+        if (index != registry::unknown &&
+            registry::channels().at(index) != value_.head.channel())
+            return set_fault(value_, error::invalid_heading, ec);
+
+        if (value_.head.message_length > value_.maximum)
+            return set_fault(value_, error::oversized_payload, ec);
+
+        used = heading::size();
+        data = std::next(data, used);
+        size -= used;
+        headed_ = true;
+        need_ = value_.head.message_length;
+
+        if (value_.exact && size != need_)
+            return set_fault(value_, error::invalid_heading, ec);
     }
 
-    // Heading.
-    if (size < heading::size())
-        return zero;
+    // The payload is parsed in place (buffered by the caller).
+    if (size < need_)
+        return used;
 
-    const data_slice head{ data, std::next(data, heading::size()) };
-    system::stream::in::fast stream{ head };
-    system::read::bytes::fast source{ stream };
-    value_.head = heading::deserialize(source);
-
-    if (!source)
-        return set_fault(value_, error::invalid_heading, ec);
-
-    const auto index = value_.head.index();
-    if (index != registry::unknown &&
-        registry::channels().at(index) != value_.head.channel())
-        return set_fault(value_, error::invalid_heading, ec);
-
-    if (value_.head.message_length > value_.maximum)
-        return set_fault(value_, error::oversized_payload, ec);
-
-    headed_ = true;
-    need_ = value_.head.message_length;
-
-    // An empty payload completes the message.
-    if (is_zero(need_) && !accept({}, ec))
-        return zero;
-
-    return heading::size();
+    const auto length = need_;
+    return accept({ data, length }, ec) ? used + length : zero;
 }
 
 void body::reader::finish(code& ec) NOEXCEPT

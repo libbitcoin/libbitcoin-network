@@ -225,6 +225,9 @@
     <ClCompile Include="..\..\..\..\src\channels\channel_peer.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\channels\channel_sv2.cpp">
+      <Filter>src\channels</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\config\address.cpp">
       <Filter>src\config</Filter>
     </ClCompile>
@@ -825,6 +828,9 @@
       <Filter>include\bitcoin\network\channels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_rpc.hpp">
+      <Filter>include\bitcoin\network\channels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_sv2.hpp">
       <Filter>include\bitcoin\network\channels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channels.hpp">

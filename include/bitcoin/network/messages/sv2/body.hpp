@@ -38,6 +38,9 @@ struct BCT_API body
         /// Parse context, stamped by the channel (read in).
         size_t maximum{};
 
+        /// Exact requires that each buffer read is one whole frame.
+        bool exact{};
+
         /// Parse fault detail (read out).
         code fault{};
 
@@ -70,11 +73,6 @@ struct BCT_API body
         {
         }
 
-        inline reader(value_type& value, system::data_chunk& payload) NOEXCEPT
-          : value_{ value }, payload_{ &payload }
-        {
-        }
-
         template <bool IsRequest>
         inline reader(http::header<IsRequest>&,
             value_type& value) NOEXCEPT
@@ -87,14 +85,8 @@ struct BCT_API body
         void finish(code& ec) NOEXCEPT;
         bool done() const NOEXCEPT;
 
-        /// Bytes required to advance the parse (zero when done).
-        size_t need() const NOEXCEPT;
-
     protected:
         value_type& value_;
-
-        // Parse source, null when constructed without a caller buffer (put).
-        const system::data_chunk* payload_{};
 
     private:
         bool accept(const std::span<const uint8_t>& payload,

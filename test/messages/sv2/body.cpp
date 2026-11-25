@@ -44,6 +44,11 @@ static frame test_frame() NOEXCEPT
     return frame{ .maximum = heading::maximum_payload };
 }
 
+static frame exact_frame() NOEXCEPT
+{
+    return frame{ .maximum = heading::maximum_payload, .exact = true };
+}
+
 static frame out_frame() NOEXCEPT
 {
     frame value{};
@@ -89,15 +94,107 @@ static bool put_done(frame& value, const data_chunk& framed) NOEXCEPT
     return !ec && reader.done();
 }
 
-BC_AUTO_TEST_CASE(sv2_body__need__initial__heading_size)
+BC_AUTO_TEST_CASE(sv2_body__init__always__not_done)
 {
     auto value = test_frame();
     code ec{};
     body::reader reader{ value };
     reader.init({}, ec);
     BC_REQUIRE(!ec);
-    BC_REQUIRE_EQUAL(reader.need(), heading::size());
     BC_REQUIRE(!reader.done());
+}
+
+BC_AUTO_TEST_CASE(sv2_body__put__whole_frame__message)
+{
+    const auto data = success_frame();
+    auto value = test_frame();
+    code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    BC_REQUIRE_EQUAL(reader.put({ data.data(), data.size() }, ec), data.size());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(reader.done());
+    BC_REQUIRE(value.payload.get<const setup_connection_success>());
+}
+
+BC_AUTO_TEST_CASE(sv2_body__put__two_frames__first_consumed)
+{
+    auto data = success_frame();
+    data.insert(data.end(), data.begin(), data.end());
+    auto value = test_frame();
+    code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    BC_REQUIRE_EQUAL(reader.put({ data.data(), data.size() }, ec), to_half(data.size()));
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(reader.done());
+}
+
+BC_AUTO_TEST_CASE(sv2_body__put__exact_whole_frame__message)
+{
+    const auto data = success_frame();
+    auto value = exact_frame();
+    code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    BC_REQUIRE_EQUAL(reader.put({ data.data(), data.size() }, ec), data.size());
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(reader.done());
+}
+
+BC_AUTO_TEST_CASE(sv2_body__put__exact_empty_buffer__defers)
+{
+    auto value = exact_frame();
+    code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    BC_REQUIRE_EQUAL(reader.put({ nullptr, 0 }, ec), 0u);
+    BC_REQUIRE(!ec);
+    BC_REQUIRE(!value.fault);
+}
+
+BC_AUTO_TEST_CASE(sv2_body__put__exact_below_heading__invalid_heading_fault)
+{
+    const auto data = base16_chunk("0000010600");
+    auto value = exact_frame();
+    code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put({ data.data(), data.size() }, ec);
+    BC_REQUIRE(ec);
+    BC_REQUIRE_EQUAL(value.fault, network::error::invalid_heading);
+}
+
+BC_AUTO_TEST_CASE(sv2_body__put__exact_short_payload__invalid_heading_fault)
+{
+    const auto data = base16_chunk("0000010600000200000000");
+    auto value = exact_frame();
+    code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put({ data.data(), data.size() }, ec);
+    BC_REQUIRE(ec);
+    BC_REQUIRE_EQUAL(value.fault, network::error::invalid_heading);
+}
+
+BC_AUTO_TEST_CASE(sv2_body__put__exact_two_frames__invalid_heading_fault)
+{
+    auto data = success_frame();
+    data.insert(data.end(), data.begin(), data.end());
+    auto value = exact_frame();
+    code ec{};
+    body::reader reader{ value };
+    reader.init({}, ec);
+
+    reader.put({ data.data(), data.size() }, ec);
+    BC_REQUIRE(ec);
+    BC_REQUIRE_EQUAL(value.fault, network::error::invalid_heading);
 }
 
 BC_AUTO_TEST_CASE(sv2_body__put__empty_buffer__defers)
@@ -129,14 +226,12 @@ BC_AUTO_TEST_CASE(sv2_body__put__framed_sequence__message)
     BC_REQUIRE_EQUAL(reader.put({ head.data(), head.size() }, ec), heading::size());
     BC_REQUIRE(!ec);
     BC_REQUIRE(!reader.done());
-    BC_REQUIRE_EQUAL(reader.need(), 6u);
     BC_REQUIRE_EQUAL(value.head.message_type, 0x01u);
     BC_REQUIRE_EQUAL(value.head.message_length, 6u);
 
     BC_REQUIRE_EQUAL(reader.put({ payload.data(), payload.size() }, ec), payload.size());
     BC_REQUIRE(!ec);
     BC_REQUIRE(reader.done());
-    BC_REQUIRE_EQUAL(reader.need(), 0u);
 
     reader.finish(ec);
     BC_REQUIRE(!ec);
@@ -161,7 +256,6 @@ BC_AUTO_TEST_CASE(sv2_body__put__short_reads__defer)
     // Partial heading defers.
     BC_REQUIRE_EQUAL(reader.put({ head.data(), 5 }, ec), 0u);
     BC_REQUIRE(!ec);
-    BC_REQUIRE_EQUAL(reader.need(), heading::size());
 
     BC_REQUIRE_EQUAL(reader.put({ head.data(), head.size() }, ec), heading::size());
     BC_REQUIRE(!ec);
@@ -174,25 +268,6 @@ BC_AUTO_TEST_CASE(sv2_body__put__short_reads__defer)
     BC_REQUIRE_EQUAL(reader.put({ payload.data(), payload.size() }, ec), payload.size());
     BC_REQUIRE(!ec);
     BC_REQUIRE(reader.done());
-}
-
-BC_AUTO_TEST_CASE(sv2_body__put__caller_buffer__message)
-{
-    const auto data = success_frame();
-    const auto head = frame_head(data);
-    auto buffer = frame_payload(data);
-
-    auto value = test_frame();
-    code ec{};
-    body::reader reader{ value, buffer };
-    reader.init({}, ec);
-
-    BC_REQUIRE_EQUAL(reader.put({ head.data(), head.size() }, ec), heading::size());
-    BC_REQUIRE(!ec);
-    BC_REQUIRE_EQUAL(reader.put({ buffer.data(), buffer.size() }, ec), buffer.size());
-    BC_REQUIRE(!ec);
-    BC_REQUIRE(reader.done());
-    BC_REQUIRE(value.payload.get<const setup_connection_success>());
 }
 
 BC_AUTO_TEST_CASE(sv2_body__put__unregistered_empty__completes_on_heading_without_payload)

@@ -25,6 +25,7 @@ using namespace network::messages::sv2;
 
 static_assert(registry::size == 26_size);
 static_assert(registry::unknown == registry::size);
+static_assert(registry::handshakes == 3_size);
 static_assert(registry::index_of<setup_connection>() == 0_size);
 static_assert(registry::index_of<heading>() == registry::unknown);
 static_assert(registry::index(0x00_u8) == registry::index_of<setup_connection>());
