@@ -97,92 +97,107 @@
     <Filter Include="include\bitcoin\network\messages\rpc\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\net">
+    <Filter Include="include\bitcoin\network\messages\sv2">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\p2ps">
+    <Filter Include="include\bitcoin\network\messages\sv2\detail">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\protocols">
+    <Filter Include="include\bitcoin\network\messages\sv2\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\sessions">
+    <Filter Include="include\bitcoin\network\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\p2ps">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\protocols">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\sessions">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\tls">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\tor">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\ws">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\zmtp">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000011}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\async">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\broadcast">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\channels">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000011}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\config">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000A2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\io">
+    <Filter Include="src\broadcast">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\log">
+    <Filter Include="src\channels">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages">
+    <Filter Include="src\config">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http">
+    <Filter Include="src\io">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http\enums">
+    <Filter Include="src\log">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer">
+    <Filter Include="src\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer\detail">
+    <Filter Include="src\messages\http">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\rpc">
+    <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\net">
+    <Filter Include="src\messages\peer">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\p2ps">
+    <Filter Include="src\messages\peer\detail">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\messages\rpc">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\messages\sv2">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tls">
+    <Filter Include="src\messages\sv2\detail">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tor">
+    <Filter Include="src\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000011}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ws">
+    <Filter Include="src\p2ps">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000012}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\zmtp">
+    <Filter Include="src\protocols">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000A3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sessions">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tls">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tor">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ws">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\zmtp">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -208,6 +223,9 @@
       <Filter>src\channels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\channels\channel_peer.cpp">
+      <Filter>src\channels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\channels\channel_sv2.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\config\address.cpp">
@@ -449,6 +467,93 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\rpc\size.cpp">
       <Filter>src\messages\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\body.cpp">
+      <Filter>src\messages\sv2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\channel_endpoint_changed.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\close_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\new_extended_mining_job.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\new_mining_job.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_extended_mining_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_extended_mining_channel_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_mining_channel_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_standard_mining_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\open_standard_mining_channel_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\reconnect.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_custom_mining_job.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_custom_mining_job_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_custom_mining_job_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_extranonce_prefix.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_group_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_new_prev_hash.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\set_target.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\setup_connection.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\setup_connection_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\setup_connection_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\submit_shares_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\submit_shares_extended.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\submit_shares_standard.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\submit_shares_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\update_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\detail\update_channel_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\heading.cpp">
+      <Filter>src\messages\sv2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\sv2\types.cpp">
+      <Filter>src\messages\sv2</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net.cpp">
       <Filter>src</Filter>
@@ -725,6 +830,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_rpc.hpp">
       <Filter>include\bitcoin\network\channels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_sv2.hpp">
+      <Filter>include\bitcoin\network\channels</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channels.hpp">
       <Filter>include\bitcoin\network\channels</Filter>
     </ClInclude>
@@ -768,6 +876,9 @@
       <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\peer_dispatch.hpp">
+      <Filter>include\bitcoin\network\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\interfaces\sv2_dispatch.hpp">
       <Filter>include\bitcoin\network\interfaces</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\io\buffer.hpp">
@@ -1072,6 +1183,105 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\types.hpp">
       <Filter>include\bitcoin\network\messages\rpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\body.hpp">
+      <Filter>include\bitcoin\network\messages\sv2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\channel_endpoint_changed.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\close_channel.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\new_extended_mining_job.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\new_mining_job.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_extended_mining_channel.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_extended_mining_channel_success.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_mining_channel_error.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_standard_mining_channel.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\open_standard_mining_channel_success.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\reconnect.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_custom_mining_job.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_custom_mining_job_error.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_custom_mining_job_success.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_extranonce_prefix.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_group_channel.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_new_prev_hash.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\set_target.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\setup_connection.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\setup_connection_error.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\setup_connection_success.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\submit_shares_error.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\submit_shares_extended.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\submit_shares_standard.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\submit_shares_success.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\update_channel.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\detail\update_channel_error.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\enums\identifiers.hpp">
+      <Filter>include\bitcoin\network\messages\sv2\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\heading.hpp">
+      <Filter>include\bitcoin\network\messages\sv2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\message.hpp">
+      <Filter>include\bitcoin\network\messages\sv2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\registry.hpp">
+      <Filter>include\bitcoin\network\messages\sv2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\sv2.hpp">
+      <Filter>include\bitcoin\network\messages\sv2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\sv2\types.hpp">
+      <Filter>include\bitcoin\network\messages\sv2</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp">
       <Filter>include\bitcoin\network</Filter>

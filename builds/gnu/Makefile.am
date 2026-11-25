@@ -61,6 +61,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/channels/channel.cpp \
     ${srcdir}/../../src/channels/channel_http.cpp \
     ${srcdir}/../../src/channels/channel_peer.cpp \
+    ${srcdir}/../../src/channels/channel_sv2.cpp \
     ${srcdir}/../../src/config/address.cpp \
     ${srcdir}/../../src/config/authority.cpp \
     ${srcdir}/../../src/config/credential.cpp \
@@ -138,6 +139,35 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/messages/rpc/body.cpp \
     ${srcdir}/../../src/messages/rpc/model.cpp \
     ${srcdir}/../../src/messages/rpc/size.cpp \
+    ${srcdir}/../../src/messages/sv2/body.cpp \
+    ${srcdir}/../../src/messages/sv2/heading.cpp \
+    ${srcdir}/../../src/messages/sv2/types.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/channel_endpoint_changed.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/close_channel.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/new_extended_mining_job.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/new_mining_job.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/open_extended_mining_channel.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/open_extended_mining_channel_success.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/open_mining_channel_error.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/open_standard_mining_channel.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/open_standard_mining_channel_success.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/reconnect.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/set_custom_mining_job.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/set_custom_mining_job_error.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/set_custom_mining_job_success.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/set_extranonce_prefix.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/set_group_channel.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/set_new_prev_hash.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/set_target.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/setup_connection.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/setup_connection_error.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/setup_connection_success.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/submit_shares_error.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/submit_shares_extended.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/submit_shares_standard.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/submit_shares_success.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/update_channel.cpp \
+    ${srcdir}/../../src/messages/sv2/detail/update_channel_error.cpp \
     ${srcdir}/../../src/net/acceptor.cpp \
     ${srcdir}/../../src/net/acceptor_sam.cpp \
     ${srcdir}/../../src/net/connector.cpp \
@@ -283,6 +313,7 @@ include_bitcoin_network_channels_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/channels/channel_http.hpp \
     ${srcdir}/../../include/bitcoin/network/channels/channel_peer.hpp \
     ${srcdir}/../../include/bitcoin/network/channels/channel_rpc.hpp \
+    ${srcdir}/../../include/bitcoin/network/channels/channel_sv2.hpp \
     ${srcdir}/../../include/bitcoin/network/channels/channels.hpp
 
 include_bitcoin_network_configdir = \
@@ -376,7 +407,8 @@ include_bitcoin_network_interfaces_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/interfaces/http.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/interfaces.hpp \
     ${srcdir}/../../include/bitcoin/network/interfaces/peer_broadcast.hpp \
-    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp
+    ${srcdir}/../../include/bitcoin/network/interfaces/peer_dispatch.hpp \
+    ${srcdir}/../../include/bitcoin/network/interfaces/sv2_dispatch.hpp
 
 include_bitcoin_network_iodir = \
     ${includedir}/bitcoin/network/io
@@ -527,6 +559,54 @@ include_bitcoin_network_messages_rpc_enumsdir = \
 include_bitcoin_network_messages_rpc_enums_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/enums/grouping.hpp \
     ${srcdir}/../../include/bitcoin/network/messages/rpc/enums/version.hpp
+
+include_bitcoin_network_messages_sv2dir = \
+    ${includedir}/bitcoin/network/messages/sv2
+
+include_bitcoin_network_messages_sv2_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/body.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/heading.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/message.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/registry.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/sv2.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/types.hpp
+
+include_bitcoin_network_messages_sv2_detaildir = \
+    ${includedir}/bitcoin/network/messages/sv2/detail
+
+include_bitcoin_network_messages_sv2_detail_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/channel_endpoint_changed.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/close_channel.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/new_extended_mining_job.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/new_mining_job.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/open_extended_mining_channel.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/open_extended_mining_channel_success.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/open_mining_channel_error.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/open_standard_mining_channel.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/open_standard_mining_channel_success.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/reconnect.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/set_custom_mining_job.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/set_custom_mining_job_error.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/set_custom_mining_job_success.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/set_extranonce_prefix.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/set_group_channel.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/set_new_prev_hash.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/set_target.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/setup_connection.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/setup_connection_error.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/setup_connection_success.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/submit_shares_error.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/submit_shares_extended.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/submit_shares_standard.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/submit_shares_success.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/update_channel.hpp \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/detail/update_channel_error.hpp
+
+include_bitcoin_network_messages_sv2_enumsdir = \
+    ${includedir}/bitcoin/network/messages/sv2/enums
+
+include_bitcoin_network_messages_sv2_enums_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/messages/sv2/enums/identifiers.hpp
 
 include_bitcoin_network_netdir = \
     ${includedir}/bitcoin/network/net
@@ -682,6 +762,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/channels/channel_http.cpp \
     ${srcdir}/../../test/channels/channel_peer.cpp \
     ${srcdir}/../../test/channels/channel_rpc.cpp \
+    ${srcdir}/../../test/channels/channel_sv2.cpp \
     ${srcdir}/../../test/config/address.cpp \
     ${srcdir}/../../test/config/address_type.cpp \
     ${srcdir}/../../test/config/authority.cpp \
@@ -765,6 +846,36 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/messages/rpc/publish.cpp \
     ${srcdir}/../../test/messages/rpc/size.cpp \
     ${srcdir}/../../test/messages/rpc/types.cpp \
+    ${srcdir}/../../test/messages/sv2/body.cpp \
+    ${srcdir}/../../test/messages/sv2/heading.cpp \
+    ${srcdir}/../../test/messages/sv2/registry.cpp \
+    ${srcdir}/../../test/messages/sv2/types.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/channel_endpoint_changed.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/close_channel.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/new_extended_mining_job.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/new_mining_job.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/open_extended_mining_channel.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/open_extended_mining_channel_success.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/open_mining_channel_error.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/open_standard_mining_channel.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/open_standard_mining_channel_success.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/reconnect.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/set_custom_mining_job.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/set_custom_mining_job_error.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/set_custom_mining_job_success.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/set_extranonce_prefix.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/set_group_channel.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/set_new_prev_hash.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/set_target.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/setup_connection.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/setup_connection_error.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/setup_connection_success.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/submit_shares_error.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/submit_shares_extended.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/submit_shares_standard.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/submit_shares_success.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/update_channel.cpp \
+    ${srcdir}/../../test/messages/sv2/detail/update_channel_error.cpp \
     ${srcdir}/../../test/net/acceptor.cpp \
     ${srcdir}/../../test/net/acceptor_sam.cpp \
     ${srcdir}/../../test/net/connector.cpp \

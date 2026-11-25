@@ -156,11 +156,30 @@ void proxy::stopping(const code& ec) NOEXCEPT
     stop_subscriber_.stop(ec);
 }
 
-// protected
-void proxy::subscribe_stop(result_handler&& handler) NOEXCEPT
+proxy::object_key proxy::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    stop_subscriber_.subscribe(std::move(handler));
+    using namespace std::placeholders;
+
+    const auto key = create_key();
+    stop_subscriber_.subscribe(
+        std::bind(&proxy::handle_stop, _1, std::move(handler)), key);
+
+    return key;
+}
+
+// private
+bool proxy::handle_stop(const code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    handler(ec);
+    return false;
+}
+
+bool proxy::unsubscribe_stop(object_key key) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return stop_subscriber_.notify_one(key, error::desubscribed);
 }
 
 void proxy::subscribe_stop(result_handler&& handler,
@@ -183,8 +202,22 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    stop_subscriber_.subscribe(move_copy(handler));
+    subscribe_stop(move_copy(handler));
     complete(error::success);
+}
+
+// private
+proxy::object_key proxy::create_key() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (is_zero(++keys_))
+    {
+        BC_ASSERT_MSG(false, "overflow");
+        LOGF("Stop subscriber key overflow.");
+    }
+
+    return keys_;
 }
 
 // Signal activity.

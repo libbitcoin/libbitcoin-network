@@ -287,6 +287,96 @@ BC_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
     BC_REQUIRE(proxy_ptr->stopped());
 }
 
+BC_AUTO_TEST_CASE(proxy__subscribe_stop__stranded__distinct_keys)
+{
+    const logger log{};
+    threadpool pool(2);
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
+
+    std::promise<std::pair<proxy::object_key, proxy::object_key>> keys;
+    io::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    {
+        const auto first = proxy_ptr->subscribe_stop([](code) NOEXCEPT {});
+        const auto second = proxy_ptr->subscribe_stop([](code) NOEXCEPT {});
+        keys.set_value({ first, second });
+    });
+
+    const auto result = keys.get_future().get();
+    BC_REQUIRE(!is_zero(result.first));
+    BC_REQUIRE_NE(result.first, result.second);
+
+    proxy_ptr->stop(error::invalid_magic);
+}
+
+BC_AUTO_TEST_CASE(proxy__unsubscribe_stop__subscribed__desubscribed_only)
+{
+    const logger log{};
+    threadpool pool(2);
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
+    constexpr auto expected_ec = error::invalid_magic;
+
+    size_t calls{};
+    code unsubscribed_ec{};
+    std::promise<code> kept;
+    std::promise<bool> found;
+    io::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    {
+        const auto key = proxy_ptr->subscribe_stop([&](code ec) NOEXCEPT
+        {
+            ++calls;
+            unsubscribed_ec = ec;
+        });
+
+        proxy_ptr->subscribe_stop([&](code ec) NOEXCEPT
+        {
+            kept.set_value(ec);
+        });
+
+        found.set_value(proxy_ptr->unsubscribe_stop(key));
+    });
+
+    BC_REQUIRE(found.get_future().get());
+
+    proxy_ptr->stop(expected_ec);
+    BC_REQUIRE_EQUAL(kept.get_future().get(), expected_ec);
+    BC_REQUIRE_EQUAL(calls, 1u);
+    BC_REQUIRE_EQUAL(unsubscribed_ec, error::desubscribed);
+}
+
+BC_AUTO_TEST_CASE(proxy__unsubscribe_stop__unknown__false)
+{
+    const logger log{};
+    threadpool pool(2);
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service(), std::move(params));
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
+
+    std::promise<bool> found;
+    io::post(proxy_ptr->strand(), [&]() NOEXCEPT
+    {
+        found.set_value(proxy_ptr->unsubscribe_stop(42));
+    });
+
+    BC_REQUIRE(!found.get_future().get());
+    proxy_ptr->stop(error::invalid_magic);
+}
+
 BC_AUTO_TEST_CASE(proxy__write__within_backlog__not_stopped)
 {
     const logger log{};

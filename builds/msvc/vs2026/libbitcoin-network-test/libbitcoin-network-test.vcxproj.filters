@@ -55,32 +55,38 @@
     <Filter Include="src\messages\rpc">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\net">
+    <Filter Include="src\messages\sv2">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\p2ps">
+    <Filter Include="src\messages\sv2\detail">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\net">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\pyzmq">
+    <Filter Include="src\p2ps">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\protocols">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tls">
+    <Filter Include="src\pyzmq">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tor">
+    <Filter Include="src\sessions">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ws">
+    <Filter Include="src\tls">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\zmtp">
+    <Filter Include="src\tor">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ws">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000010}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\zmtp">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000A1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +148,9 @@
       <Filter>src\channels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\channels\channel_rpc.cpp">
+      <Filter>src\channels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_sv2.cpp">
       <Filter>src\channels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
@@ -401,6 +410,96 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp">
       <Filter>src\messages\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\body.cpp">
+      <Filter>src\messages\sv2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\channel_endpoint_changed.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\close_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\new_extended_mining_job.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\new_mining_job.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_extended_mining_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_extended_mining_channel_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_mining_channel_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_standard_mining_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_standard_mining_channel_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\reconnect.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_custom_mining_job.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_custom_mining_job_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_custom_mining_job_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_extranonce_prefix.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_group_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_new_prev_hash.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_target.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\setup_connection.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\setup_connection_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\setup_connection_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\submit_shares_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\submit_shares_extended.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\submit_shares_standard.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\submit_shares_success.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\update_channel.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\update_channel_error.cpp">
+      <Filter>src\messages\sv2\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\heading.cpp">
+      <Filter>src\messages\sv2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\registry.cpp">
+      <Filter>src\messages\sv2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\types.cpp">
+      <Filter>src\messages\sv2</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp">
       <Filter>src</Filter>

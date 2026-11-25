@@ -91,6 +91,8 @@ void socket::assign_buffer(http::body::value_type& body) NOEXCEPT
         body.get<http::stream_value>().buffer = &response_;
     else if (body.contains<http::peer_value>())
         body.get<http::peer_value>().buffer = &response_;
+    else if (body.contains<http::sv2_value>())
+        body.get<http::sv2_value>().buffer = &response_;
 }
 
 // The retention of the buffer is reduced to the minimum (unless in use).

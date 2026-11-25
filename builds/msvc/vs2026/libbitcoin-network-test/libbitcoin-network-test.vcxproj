@@ -114,6 +114,7 @@
     <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\channels\channel_rpc.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel_sv2.cpp" />
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
     </ClCompile>
@@ -153,7 +154,9 @@
     <ClCompile Include="..\..\..\..\test\messages\indirect.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_reader.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json_body_writer.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\body.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\body.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_body.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\detail\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_detail_address.obj</ObjectFileName>
     </ClCompile>
@@ -203,7 +206,9 @@
       <ObjectFileName>$(IntDir)test_messages_peer_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\enums\service.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\peer\heading.cpp">
+      <ObjectFileName>$(IntDir)test_messages_peer_heading.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\message.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\rpc\any.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\rpc\body_reader.cpp" />
@@ -215,7 +220,45 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\publish.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\rpc\size.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\types.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_types.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\body.cpp">
+      <ObjectFileName>$(IntDir)test_messages_sv2_body.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\channel_endpoint_changed.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\close_channel.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\new_extended_mining_job.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\new_mining_job.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_extended_mining_channel.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_extended_mining_channel_success.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_mining_channel_error.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_standard_mining_channel.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\open_standard_mining_channel_success.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\reconnect.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_custom_mining_job.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_custom_mining_job_error.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_custom_mining_job_success.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_extranonce_prefix.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_group_channel.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_new_prev_hash.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\set_target.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\setup_connection.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\setup_connection_error.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\setup_connection_success.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\submit_shares_error.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\submit_shares_extended.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\submit_shares_standard.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\submit_shares_success.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\update_channel.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\detail\update_channel_error.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\heading.cpp">
+      <ObjectFileName>$(IntDir)test_messages_sv2_heading.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\sv2\registry.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\sv2\types.cpp">
+      <ObjectFileName>$(IntDir)test_messages_sv2_types.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor_sam.cpp" />

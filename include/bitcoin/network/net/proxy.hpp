@@ -50,7 +50,8 @@ class BCT_API proxy
 {
 public:
     typedef std::shared_ptr<proxy> ptr;
-    typedef subscriber<> stop_subscriber;
+    typedef uint64_t object_key;
+    typedef desubscriber<object_key> stop_subscriber;
 
     DELETE_COPY_MOVE(proxy);
 
@@ -69,6 +70,13 @@ public:
     /// Completion and event handlers always invoked on channel strand.
     void subscribe_stop(result_handler&& handler,
         result_handler&& complete) NOEXCEPT;
+
+    /// Subscribe to stop notification, key for unsubscribe (requires strand).
+    object_key subscribe_stop(result_handler&& handler) NOEXCEPT;
+
+    /// Unsubscribe from stop notification, handler invoked with desubscribed.
+    /// True if subscription key found (requires strand).
+    bool unsubscribe_stop(object_key key) NOEXCEPT;
 
     /// Pause.
     /// -----------------------------------------------------------------------
@@ -142,9 +150,6 @@ protected:
 
     /// True if the stop closes the connection gracefully.
     virtual bool lazy(const code& ec) const NOEXCEPT;
-
-    /// Subscribe to stop notification (requires strand).
-    void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
     /// Unconsumed portion of throttle byte allocation (requires strand).
     steady_clock::duration unconsumed(size_t bytes,
@@ -270,6 +275,9 @@ private:
         const rpc::request_ptr& notification) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;
+    object_key create_key() NOEXCEPT;
+    static bool handle_stop(const code& ec,
+        const result_handler& handler) NOEXCEPT;
 
     // For rpc batch normalization.
     void do_defer_write(pending& write) NOEXCEPT;
@@ -359,6 +367,7 @@ private:
     // These are protected by strand.
     deadline::ptr throttle_;
     stop_subscriber stop_subscriber_{};
+    object_key keys_{};
     socket::http_parser_ptr parser_{};
     queue queue_{};
     queue deferred_{};
