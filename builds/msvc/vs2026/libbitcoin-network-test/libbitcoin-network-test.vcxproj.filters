@@ -64,29 +64,32 @@
     <Filter Include="src\net">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\p2ps">
+    <Filter Include="src\noise">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\p2ps">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\pyzmq">
+    <Filter Include="src\protocols">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\pyzmq">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tls">
+    <Filter Include="src\sessions">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tor">
+    <Filter Include="src\tls">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ws">
+    <Filter Include="src\tor">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000010}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\zmtp">
+    <Filter Include="src\ws">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000A1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\zmtp">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-0000000000B1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -528,6 +531,9 @@
     <ClCompile Include="..\..\..\..\test\net\socket.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\noise\vectors.cpp">
+      <Filter>src\noise</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\p2ps\cipher.cpp">
       <Filter>src\p2ps</Filter>
     </ClCompile>
@@ -679,6 +685,9 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\functional\peer_setup_fixture.hpp">
       <Filter>src\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\test\noise\vectors.hpp">
+      <Filter>src\noise</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\test\test.hpp">
       <Filter>src</Filter>

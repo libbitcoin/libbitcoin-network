@@ -272,6 +272,7 @@
     <ClCompile Include="..\..\..\..\test\net\socket.cpp">
       <ObjectFileName>$(IntDir)test_net_socket.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\noise\vectors.cpp" />
     <ClCompile Include="..\..\..\..\test\p2ps\cipher.cpp">
       <ObjectFileName>$(IntDir)test_p2ps_cipher.obj</ObjectFileName>
     </ClCompile>
@@ -340,6 +341,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\functional\peer_setup_fixture.hpp" />
+    <ClInclude Include="..\..\..\..\test\noise\vectors.hpp" />
     <ClInclude Include="..\..\..\..\test\test.hpp" />
     <ClInclude Include="..\..\..\..\test\tls\fixtures.hpp" />
     <ClInclude Include="..\..\..\..\test\tls\rfc8448.hpp" />

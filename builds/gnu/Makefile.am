@@ -884,6 +884,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/net/hosts.cpp \
     ${srcdir}/../../test/net/proxy.cpp \
     ${srcdir}/../../test/net/socket.cpp \
+    ${srcdir}/../../test/noise/vectors.cpp \
     ${srcdir}/../../test/p2ps/cipher.cpp \
     ${srcdir}/../../test/p2ps/stream.cpp \
     ${srcdir}/../../test/protocols/protocol.cpp \
