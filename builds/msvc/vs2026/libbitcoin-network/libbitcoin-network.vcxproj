@@ -271,6 +271,9 @@
     <ClCompile Include="..\..\..\..\src\net\socket_tcp.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_zmtp.cpp" />
+    <ClCompile Include="..\..\..\..\src\noise\cipher.cpp">
+      <ObjectFileName>$(IntDir)src_noise_cipher.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\p2ps\cipher.cpp">
       <ObjectFileName>$(IntDir)src_p2ps_cipher.obj</ObjectFileName>
     </ClCompile>
@@ -519,6 +522,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\cipher.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\noise.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\cipher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\p2ps.hpp" />

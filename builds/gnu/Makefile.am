@@ -187,6 +187,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/net/socket_tcp.cpp \
     ${srcdir}/../../src/net/socket_ws.cpp \
     ${srcdir}/../../src/net/socket_zmtp.cpp \
+    ${srcdir}/../../src/noise/cipher.cpp \
     ${srcdir}/../../src/p2ps/cipher.cpp \
     ${srcdir}/../../src/p2ps/stream.cpp \
     ${srcdir}/../../src/protocols/protocol.cpp \
@@ -622,6 +623,13 @@ include_bitcoin_network_net_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/net/proxy.hpp \
     ${srcdir}/../../include/bitcoin/network/net/socket.hpp
 
+include_bitcoin_network_noisedir = \
+    ${includedir}/bitcoin/network/noise
+
+include_bitcoin_network_noise_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/noise/cipher.hpp \
+    ${srcdir}/../../include/bitcoin/network/noise/noise.hpp
+
 include_bitcoin_network_p2psdir = \
     ${includedir}/bitcoin/network/p2ps
 
@@ -884,6 +892,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/net/hosts.cpp \
     ${srcdir}/../../test/net/proxy.cpp \
     ${srcdir}/../../test/net/socket.cpp \
+    ${srcdir}/../../test/noise/cipher.cpp \
     ${srcdir}/../../test/noise/vectors.cpp \
     ${srcdir}/../../test/p2ps/cipher.cpp \
     ${srcdir}/../../test/p2ps/stream.cpp \

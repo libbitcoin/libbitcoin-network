@@ -272,6 +272,9 @@
     <ClCompile Include="..\..\..\..\test\net\socket.cpp">
       <ObjectFileName>$(IntDir)test_net_socket.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\noise\cipher.cpp">
+      <ObjectFileName>$(IntDir)test_noise_cipher.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\noise\vectors.cpp" />
     <ClCompile Include="..\..\..\..\test\p2ps\cipher.cpp">
       <ObjectFileName>$(IntDir)test_p2ps_cipher.obj</ObjectFileName>

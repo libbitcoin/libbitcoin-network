@@ -109,95 +109,101 @@
     <Filter Include="include\bitcoin\network\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\p2ps">
+    <Filter Include="include\bitcoin\network\noise">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\p2ps">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\protocols">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\sessions">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\tls">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\tor">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\ws">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\zmtp">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000011}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000011}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\async">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000A2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\broadcast">
+    <Filter Include="src\async">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\channels">
+    <Filter Include="src\broadcast">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\config">
+    <Filter Include="src\channels">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\io">
+    <Filter Include="src\config">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\log">
+    <Filter Include="src\io">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages">
+    <Filter Include="src\log">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http">
+    <Filter Include="src\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\http\enums">
+    <Filter Include="src\messages\http">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer">
+    <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer\detail">
+    <Filter Include="src\messages\peer">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\rpc">
+    <Filter Include="src\messages\peer\detail">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\sv2">
+    <Filter Include="src\messages\rpc">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\sv2\detail">
+    <Filter Include="src\messages\sv2">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\net">
+    <Filter Include="src\messages\sv2\detail">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000011}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\p2ps">
+    <Filter Include="src\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000012}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\noise">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000A3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\p2ps">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tls">
+    <Filter Include="src\protocols">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\tor">
+    <Filter Include="src\sessions">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ws">
+    <Filter Include="src\tls">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\zmtp">
+    <Filter Include="src\tor">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\ws">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\zmtp">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -614,6 +620,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_zmtp.cpp">
       <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\noise\cipher.cpp">
+      <Filter>src\noise</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\p2ps\cipher.cpp">
       <Filter>src\p2ps</Filter>
@@ -1312,6 +1321,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp">
       <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\cipher.hpp">
+      <Filter>include\bitcoin\network\noise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\noise.hpp">
+      <Filter>include\bitcoin\network\noise</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\cipher.hpp">
       <Filter>include\bitcoin\network\p2ps</Filter>
