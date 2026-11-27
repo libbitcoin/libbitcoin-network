@@ -244,8 +244,14 @@ struct BCT_API settings
         /// Initialize the tls::context and normalize hosts/origins.
         code initialize_context() NOEXCEPT override;
 
+        /// Set the default port of bindings and advertisements without one.
+        void default_ports() NOEXCEPT override;
+
         /// Sent via responses if configured.
         std::string server{ BC_HTTP_SERVER_NAME };
+
+        /// Public http/https urls of the service (ws/wss on the same port).
+        system::config::urls advertise{};
 
         /// Validated against hosts/origins if configured.
         config::endpoints hosts{};

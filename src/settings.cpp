@@ -384,10 +384,48 @@ settings::transport settings::zmtp_server::secure_context() const NOEXCEPT
 // http_server
 // ----------------------------------------------------------------------------
 
+// An advertisement without scheme or port is both http and https, and one
+// without port takes the default port of its scheme.
+void settings::http_server::default_ports() NOEXCEPT
+{
+    tls_server::default_ports();
+
+    system::config::urls urls{};
+    for (const auto& url: advertise)
+    {
+        const auto& scheme = url.scheme();
+        const auto& host = url.host();
+        if (!is_zero(url.port()))
+        {
+            urls.push_back(url);
+        }
+        else if (scheme.empty())
+        {
+            urls.emplace_back("http", host, bind_port);
+            urls.emplace_back("https", host, safe_port);
+        }
+        else
+        {
+            urls.emplace_back(scheme, host,
+                scheme == "https" ? safe_port : bind_port);
+        }
+    }
+
+    advertise = std::move(urls);
+}
+
 code settings::http_server::initialize_context() NOEXCEPT
 {
     if (const auto ec = tls_server::initialize_context())
         return ec;
+
+    const auto unserved = [](const system::config::url& url) NOEXCEPT
+    {
+        return url.scheme() != "http" && url.scheme() != "https";
+    };
+
+    if (std::ranges::any_of(advertise, unserved))
+        return error::invalid_configuration;
 
     host_names_ = config::to_host_names(hosts);
     origin_names_ = config::to_host_names(origins);

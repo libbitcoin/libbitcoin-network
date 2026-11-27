@@ -271,6 +271,15 @@
     <ClCompile Include="..\..\..\..\src\net\socket_tcp.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_ws.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket_zmtp.cpp" />
+    <ClCompile Include="..\..\..\..\src\noise\certificate.cpp">
+      <ObjectFileName>$(IntDir)src_noise_certificate.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\noise\cipher.cpp">
+      <ObjectFileName>$(IntDir)src_noise_cipher.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\noise\context.cpp">
+      <ObjectFileName>$(IntDir)src_noise_context.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\p2ps\cipher.cpp">
       <ObjectFileName>$(IntDir)src_p2ps_cipher.obj</ObjectFileName>
     </ClCompile>
@@ -316,7 +325,9 @@
       <ObjectFileName>$(IntDir)src_tls_stream.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\tor\cell.cpp" />
-    <ClCompile Include="..\..\..\..\src\tor\certificate.cpp" />
+    <ClCompile Include="..\..\..\..\src\tor\certificate.cpp">
+      <ObjectFileName>$(IntDir)src_tor_certificate.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\tor\link.cpp" />
     <ClCompile Include="..\..\..\..\src\ws\frame.cpp" />
     <ClCompile Include="..\..\..\..\src\ws\handshake.cpp" />
@@ -519,6 +530,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\certificate.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\cipher.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\context.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\noise.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\cipher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\p2ps.hpp" />

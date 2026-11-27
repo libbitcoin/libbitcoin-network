@@ -253,6 +253,9 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
     // Creates channel_xxxx cast as channel::ptr.
     const auto channel = create_channel(socket);
 
+    BC_ASSERT(!is_zero(add1(channel_count_)));
+    channel_count_ = ceilinged_add(channel_count_, one);
+
     LOGS("Accepted " << (secure ? "private " : "clear ")
         << name_ << " connection [" << channel->endpoint()
         << "] on binding [" << acceptor->local() << "].");
@@ -306,9 +309,6 @@ void session_server::handle_channel_start(const code& LOG_ONLY(ec),
     BC_ASSERT(stranded());
     LOGS("Inbound " << name_ << " channel start [" << channel->endpoint()
         << "] " << ec.message());
-
-    BC_ASSERT(!is_zero(add1(channel_count_)));
-    channel_count_ = ceilinged_add(channel_count_, one);
 }
 
 void session_server::handle_channel_stop(const code& LOG_ONLY(ec),
@@ -318,9 +318,7 @@ void session_server::handle_channel_stop(const code& LOG_ONLY(ec),
     LOGS("Inbound " << name_ << " channel stop [" << channel->endpoint()
         << "] " << ec.message());
 
-    // Start/stop race with handle_channel_start can leave channel_count_ zero
-    // here before first increment.
-    ////BC_ASSERT(!is_zero(channel_count_));
+    BC_ASSERT(!is_zero(channel_count_));
     channel_count_ = floored_subtract(channel_count_, one);
 }
 

@@ -299,7 +299,7 @@ public:
         if (protocoled_.exchange(true))
             return;
 
-        // Queued behind the channel start handler, which counts the channel.
+        // Queued behind the channel start handler.
         io::post(channel->strand(), [this]() NOEXCEPT
         {
             io::post(strand(), [this]() NOEXCEPT
@@ -353,6 +353,18 @@ public:
     bool enabled() const NOEXCEPT override
     {
         return false;
+    }
+};
+
+class mock_server_pending
+  : public mock_server
+{
+public:
+    using mock_server::mock_server;
+
+    void do_attach_handshake(const channel::ptr&,
+        const result_handler&) NOEXCEPT override
+    {
     }
 };
 
@@ -410,6 +422,26 @@ BC_AUTO_TEST_CASE(session_server__accept__oversubscribed__second_client_dropped)
     io::socket first{ io };
     REQUIRE_SUCCESS(first, connect, test::loopback(session->port()));
     BC_REQUIRE(session->require_attached());
+
+    io::socket second{ io };
+    REQUIRE_SUCCESS(second, connect, test::loopback(session->port()));
+    BC_REQUIRE(dropped(second));
+
+    stop(instance, session);
+    instance.close();
+}
+
+BC_AUTO_TEST_CASE(session_server__accept__pending_handshake__second_client_dropped)
+{
+    const logger log{};
+    settings set(test::network_settings());
+    net instance(set, log);
+    const auto session = std::make_shared<mock_server_pending>(instance, 1, one_connection);
+    BC_REQUIRE_EQUAL(start_server(instance, session), error::success);
+
+    io::context io{};
+    io::socket first{ io };
+    REQUIRE_SUCCESS(first, connect, test::loopback(session->port()));
 
     io::socket second{ io };
     REQUIRE_SUCCESS(second, connect, test::loopback(session->port()));
