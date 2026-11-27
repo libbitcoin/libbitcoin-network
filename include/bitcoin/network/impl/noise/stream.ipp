@@ -54,8 +54,7 @@ template <typename Buffer, typename Buffers>
 Buffer stream::first(const Buffers& buffers) NOEXCEPT
 {
     const auto end = io::buffer_sequence_end(buffers);
-    for (auto it = io::buffer_sequence_begin(buffers); it != end;
-        ++it)
+    for (auto it = io::buffer_sequence_begin(buffers); it != end; ++it)
     {
         const Buffer buffer{ *it };
         if (is_nonzero(buffer.size()))

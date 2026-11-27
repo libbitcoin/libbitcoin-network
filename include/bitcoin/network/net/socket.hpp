@@ -325,10 +325,20 @@ public:
     virtual void set_address(const config::address& address) NOEXCEPT;
 
 protected:
-    using tcp_t = std::variant<ref<io::socket>, ref<tls::stream>,
-        ref<noise::stream>>;
-    using socket_t = std::variant<io::socket, tls::stream,
-        p2ps::stream, zmtp::stream, noise::stream>;
+    using tcp_t = std::variant
+    <
+        ref<io::socket>,
+        ref<tls::stream>,
+        ref<noise::stream>
+    >;
+    using socket_t = std::variant
+    <
+        io::socket,
+        tls::stream,
+        p2ps::stream,
+        zmtp::stream,
+        noise::stream
+    >;
 
     /// Construct.
     /// -----------------------------------------------------------------------
@@ -468,7 +478,7 @@ private:
         system::data_chunk payload{};
         io::const_buffer data{};
         count_handler handler{};
-        std::array<io::const_buffer, 2> buffers{};
+        std::array<io::const_buffer, two> buffers{};
         bool control{};
         bool finish{};
     };
