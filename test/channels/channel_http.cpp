@@ -963,7 +963,9 @@ struct opaque_options
     opaque_options() NOEXCEPT
       : channel_http::options_t("test")
     {
+        origins.emplace_back("example.org");
         allow_opaque_origin = true;
+        initialize_context();
     }
 };
 
@@ -1601,7 +1603,14 @@ BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_disallowed_origin__forbidden,
     BC_REQUIRE_EQUAL(http_await(stopped), error::forbidden);
 }
 
-BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_opaque_origin__forbidden, http_channel_fixture)
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_opaque_origin_no_origins__switching_protocols, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host: example.com\r\nOrigin: null\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 101u);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_opaque_origin__forbidden, restricted_channel_fixture)
 {
     start(http_ok);
     send(http_upgrade("Host: example.com\r\nOrigin: null\r\n"));

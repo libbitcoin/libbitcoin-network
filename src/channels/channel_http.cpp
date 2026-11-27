@@ -657,11 +657,14 @@ bool channel_http::is_allowed_origin(const fields& fields,
     if (origin.empty() || version < version_1_1)
         return true;
 
+    if (options_.origins.empty())
+        return true;
+
     // Opaque origin is sent as "null", often representing a file: URL.
     if (origin == "null")
         return options_.allow_opaque_origin;
 
-    if (options_.origins.empty() || is_same_origin(fields, origin))
+    if (is_same_origin(fields, origin))
         return true;
 
     return config::contains_origin(options_.origin_names(), origin,
