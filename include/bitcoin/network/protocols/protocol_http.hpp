@@ -123,18 +123,17 @@ protected:
         const std::string& reason, const http::media_type& type,
         const std::string& details={}) const NOEXCEPT;
 
-    /// Utilities.
-    virtual bool is_allowed_host(const http::fields& fields,
-        size_t version) const NOEXCEPT;
-    virtual bool is_allowed_origin(const http::fields& fields,
-        size_t version) const NOEXCEPT;
-    virtual bool is_same_origin(const http::fields& fields,
-        const std::string& origin) const NOEXCEPT;
-
     /// Properties.
-    uint16_t default_port() const NOEXCEPT;
     bool websocket() const NOEXCEPT;
     bool downgraded() const NOEXCEPT;
+
+    /// True if host header allowed by configured hosts.
+    bool is_allowed_host(const http::fields& fields,
+        size_t version) const NOEXCEPT;
+
+    /// True if origin header allowed by configured origins.
+    bool is_allowed_origin(const http::fields& fields,
+        size_t version) const NOEXCEPT;
 
     /// True if the authorized credential permits the rpc method.
     bool permitted(const std::string& method) const NOEXCEPT;
@@ -170,7 +169,6 @@ private:
 
     // These are thread safe.
     const session_server::ptr session_;
-    const uint16_t default_port_;
     const options_t& options_;
 };
 

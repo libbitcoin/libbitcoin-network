@@ -57,15 +57,19 @@ static std::string http_post(const std::string& body) NOEXCEPT
     return "POST / HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
 }
 
+static std::string http_upgrade(const std::string& fields) NOEXCEPT
+{
+    return "GET /chat HTTP/1.1\r\n" + fields +
+        "Upgrade: websocket\r\n"
+        "Connection: Upgrade\r\n"
+        "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+        "Sec-WebSocket-Version: 13\r\n"
+        "\r\n";
+}
+
 static const std::string http_upgrade_request
 {
-    "GET /chat HTTP/1.1\r\n"
-    "Host: server.example.com\r\n"
-    "Upgrade: websocket\r\n"
-    "Connection: Upgrade\r\n"
-    "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
-    "Sec-WebSocket-Version: 13\r\n"
-    "\r\n"
+    http_upgrade("Host: server.example.com\r\n")
 };
 
 static const std::string http_keyless_upgrade_request
@@ -906,7 +910,43 @@ struct credentialed_options
     }
 };
 
+struct restricted_options
+  : channel_http::options_t
+{
+    restricted_options() NOEXCEPT
+      : channel_http::options_t("test")
+    {
+        hosts.emplace_back("example.com");
+        origins.emplace_back("example.org");
+        initialize_context();
+    }
+};
+
+struct originated_options
+  : channel_http::options_t
+{
+    originated_options() NOEXCEPT
+      : channel_http::options_t("test")
+    {
+        origins.emplace_back("example.org");
+        initialize_context();
+    }
+};
+
+struct opaque_options
+  : channel_http::options_t
+{
+    opaque_options() NOEXCEPT
+      : channel_http::options_t("test")
+    {
+        allow_opaque_origin = true;
+    }
+};
+
 static const credentialed_options credentialed{};
+static const restricted_options restricted{};
+static const originated_options originated{};
+static const opaque_options opaque{};
 static const network::settings http_settings{ test::network_settings() };
 static const std::string rfc7617_authorization{ "Basic dGVzdDoxMjPCow==" };
 
@@ -1029,6 +1069,33 @@ struct credentialed_channel_fixture
 {
     credentialed_channel_fixture() NOEXCEPT
       : http_channel_fixture(credentialed)
+    {
+    }
+};
+
+struct restricted_channel_fixture
+  : http_channel_fixture
+{
+    restricted_channel_fixture() NOEXCEPT
+      : http_channel_fixture(restricted)
+    {
+    }
+};
+
+struct originated_channel_fixture
+  : http_channel_fixture
+{
+    originated_channel_fixture() NOEXCEPT
+      : http_channel_fixture(originated)
+    {
+    }
+};
+
+struct opaque_channel_fixture
+  : http_channel_fixture
+{
+    opaque_channel_fixture() NOEXCEPT
+      : http_channel_fixture(opaque)
     {
     }
 };
@@ -1478,6 +1545,74 @@ BC_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_upgrade__unauthorized, c
     BC_REQUIRE(ec);
     BC_REQUIRE_EQUAL(response.result_int(), 401u);
     BC_REQUIRE_EQUAL(http_await(stopped), error::unauthorized);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_allowed_host_and_origin__switching_protocols, restricted_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host: example.com\r\nOrigin: http://example.org\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 101u);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_allowed_host_no_origin__switching_protocols, restricted_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host: example.com\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 101u);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_disallowed_host__bad_request, restricted_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host: example.net\r\nOrigin: http://example.org\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 400u);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::bad_request);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_disallowed_origin__forbidden, restricted_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host: example.com\r\nOrigin: http://example.net\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 403u);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::forbidden);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_opaque_origin__forbidden, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host: example.com\r\nOrigin: null\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 403u);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::forbidden);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_opaque_origin_allowed__switching_protocols, opaque_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host: example.com\r\nOrigin: null\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 101u);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_same_origin__switching_protocols, restricted_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host: example.com\r\nOrigin: http://example.com\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 101u);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_same_origin_no_hosts__forbidden, originated_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host: example.com\r\nOrigin: http://example.com\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 403u);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::forbidden);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__upgrade_empty_host__bad_request, http_channel_fixture)
+{
+    start(http_ok);
+    send(http_upgrade("Host:\r\n"));
+    BC_REQUIRE_EQUAL(receive().result_int(), 400u);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::bad_request);
 }
 
 BC_FIXTURE_TEST_CASE(channel_http__resume__keyless_upgrade__operation_failed, http_channel_fixture)

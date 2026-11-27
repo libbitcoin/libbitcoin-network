@@ -19,6 +19,7 @@
 #include <bitcoin/network/channels/channel_http.hpp>
 
 #include <bitcoin/network/channels/channel.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -141,6 +142,18 @@ void channel_http::handle_receive(const code& ec, size_t LOG_ONLY(bytes),
             return;
         }
 
+        if (!is_allowed_host(*request, request->version()))
+        {
+            send_status(status::bad_request, error::bad_request);
+            return;
+        }
+
+        if (!is_allowed_origin(*request, request->version()))
+        {
+            send_status(status::forbidden, error::forbidden);
+            return;
+        }
+
         // Accept sends 101 and switches socket to ws framing.
         // Don't dispatch upgrade request, accept and restart.
         if (const auto code = accept_websocket(*request))
@@ -166,12 +179,7 @@ void channel_http::handle_receive(const code& ec, size_t LOG_ONLY(bytes),
         const auto result = to_status(ec);
         if (result != status::unknown && !websocket() && !downgraded())
         {
-            response out{ result, 11 };
-            out.keep_alive(false);
-            out.prepare_payload();
-            send(std::move(out),
-                std::bind(&channel_http::handle_rejected,
-                    shared_from_base<channel_http>(), _1, ec));
+            send_status(result, ec);
             return;
         }
 
@@ -514,6 +522,19 @@ void channel_http::unauthorized(const request& request) NOEXCEPT
 }
 
 // private
+// Closes channel.
+void channel_http::send_status(status result, const code& reason) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    response out{ result, version_1_1 };
+    out.keep_alive(false);
+    out.prepare_payload();
+    send(std::move(out),
+        std::bind(&channel_http::handle_rejected,
+            shared_from_base<channel_http>(), _1, reason));
+}
+
+// private
 // Json-rpc request that fails to parse or validate is answered before close,
 // with its id where obtained.
 void channel_http::reject(const code& ec, const request& request) NOEXCEPT
@@ -606,6 +627,65 @@ void channel_http::refuse(const code& ec, const request& request) NOEXCEPT
     open_gate();
     send(std::move(out), [](const code&) NOEXCEPT {});
     close_gate();
+}
+
+// host/origin helpers
+// ----------------------------------------------------------------------------
+
+bool channel_http::is_allowed_host(const fields& fields,
+    size_t version) const NOEXCEPT
+{
+    // Disallow unspecified or repeated host.
+    // Host header field is mandatory at http 1.1.
+    if (fields.count(field::host) > one)
+        return false;
+
+    const std::string host{ fields[field::host] };
+    if (host.empty() && version >= version_1_1)
+        return false;
+
+    return options_.hosts.empty() ||
+        config::contains_host(options_.host_names(), host, default_port());
+}
+
+bool channel_http::is_allowed_origin(const fields& fields,
+    size_t version) const NOEXCEPT
+{
+    // Allow same-origin and no-origin requests.
+    // Origin header field is not available until http 1.1.
+    const std::string origin{ fields[field::origin] };
+    if (origin.empty() || version < version_1_1)
+        return true;
+
+    // Opaque origin is sent as "null", often representing a file: URL.
+    if (origin == "null")
+        return options_.allow_opaque_origin;
+
+    if (options_.origins.empty() || is_same_origin(fields, origin))
+        return true;
+
+    return config::contains_origin(options_.origin_names(), origin,
+        default_port());
+}
+
+// private
+uint16_t channel_http::default_port() const NOEXCEPT
+{
+    return options_.secure() ? default_tls : default_http;
+}
+
+// private
+bool channel_http::is_same_origin(const fields& fields,
+    const std::string& origin) const NOEXCEPT
+{
+    const auto secured = secure();
+    const auto port = secured ? default_tls : default_http;
+    const std::string scheme{ secured ? "https://" : "http://" };
+    const std::string host{ fields[field::host] };
+    const auto self = config::to_normal_host(host, port);
+    return config::contains_host(options_.host_names(), host, port) &&
+        origin.starts_with(scheme) &&
+        self == config::to_normal_origin(origin, port);
 }
 
 // log helpers

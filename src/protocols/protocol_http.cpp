@@ -19,7 +19,6 @@
 #include <bitcoin/network/protocols/protocol_http.hpp>
 
 #include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -47,7 +46,6 @@ protocol_http::protocol_http(const session::ptr& session,
   : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_http>(channel)),
     session_(std::dynamic_pointer_cast<session_server>(session)),
-    default_port_(options.secure() ? default_tls : default_http),
     options_(options)
 {
 }
@@ -382,55 +380,6 @@ void protocol_http::handle_complete(const code& ec,
 // Utilities.
 // ----------------------------------------------------------------------------
 
-bool protocol_http::is_allowed_host(const fields& fields,
-    size_t version) const NOEXCEPT
-{
-    // Disallow unspecified or repeated host.
-    // Host header field is mandatory at http 1.1.
-    if (fields.count(field::host) > one)
-        return false;
-
-    const std::string host{ fields[field::host] };
-    if (host.empty() && version >= version_1_1)
-        return false;
-
-    return options_.hosts.empty() ||
-        config::contains_host(options_.host_names(), host, default_port());
-}
-
-bool protocol_http::is_allowed_origin(const fields& fields,
-    size_t version) const NOEXCEPT
-{
-    // Allow same-origin and no-origin requests.
-    // Origin header field is not available until http 1.1.
-    const std::string origin{ fields[field::origin] };
-    if (origin.empty() || version < version_1_1)
-        return true;
-
-    // Opaque origin is sent as "null", often representing a file: URL.
-    if (origin == "null")
-        return options_.allow_opaque_origin;
-
-    if (options_.origins.empty() || is_same_origin(fields, origin))
-        return true;
-
-    return config::contains_origin(options_.origin_names(), origin,
-        default_port());
-}
-
-bool protocol_http::is_same_origin(const fields& fields,
-    const std::string& origin) const NOEXCEPT
-{
-    const auto secure = channel_->secure();
-    const auto port = secure ? default_tls : default_http;
-    const std::string scheme{ secure ? "https://" : "http://" };
-    const std::string host{ fields[field::host] };
-    const auto self = config::to_normal_host(host, port);
-    return config::contains_host(options_.host_names(), host, port) &&
-        origin.starts_with(scheme) &&
-        self == config::to_normal_origin(origin, port);
-}
-
 void protocol_http::add_common_headers(fields& fields,
     const request& request, bool closing) const NOEXCEPT
 {
@@ -510,9 +459,16 @@ std::string protocol_http::string_status(const http::status /*status*/,
 // Properties.
 // ----------------------------------------------------------------------------
 
-uint16_t protocol_http::default_port() const NOEXCEPT
+bool protocol_http::is_allowed_host(const fields& fields,
+    size_t version) const NOEXCEPT
 {
-    return default_port_;
+    return channel_->is_allowed_host(fields, version);
+}
+
+bool protocol_http::is_allowed_origin(const fields& fields,
+    size_t version) const NOEXCEPT
+{
+    return channel_->is_allowed_origin(fields, version);
 }
 
 bool protocol_http::websocket() const NOEXCEPT
