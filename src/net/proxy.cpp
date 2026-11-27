@@ -61,8 +61,10 @@ void proxy::stop(const code& ec) NOEXCEPT
 {
     if (stopped())
     {
-        // Ends an outstanding lazy stop, otherwise nothing.
-        socket_->stop();
+        // Hard stop ends outstanding lazy stop, otherwise nothing.
+        if (!lazy(ec))
+            socket_->stop();
+
         return;
     }
 

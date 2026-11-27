@@ -97,6 +97,41 @@ public:
     }
 };
 
+class mock_stop_socket
+  : public network::socket
+{
+public:
+    using socket::socket;
+
+    void stop() NOEXCEPT override
+    {
+        ++stops;
+        socket::stop();
+    }
+
+    size_t stops{};
+};
+
+// Obtain the count of hard socket stops for proxy stops with the codes.
+static size_t get_stops(const code& first, const code& second) NOEXCEPT
+{
+    const logger log{};
+    threadpool pool(1);
+    socket::parameters params
+    {
+        .maximum_request = 42,
+        .maximum_buffer = settings::tcp_server{ "test" }.maximum_buffer
+    };
+    auto socket_ptr = std::make_shared<mock_stop_socket>(log, pool.service(),
+        std::move(params));
+    auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
+
+    proxy_ptr->stop(first);
+    proxy_ptr->stop(second);
+    pool.stop();
+    return socket_ptr->stops;
+}
+
 // Obtain the deferral for a send of bytes that started at the given offset.
 static milliseconds get_unconsumed(uint32_t rate_limit, size_t bytes,
     const steady_clock::duration& elapsed) NOEXCEPT
@@ -1085,6 +1120,16 @@ BC_FIXTURE_TEST_CASE(proxy__stop__channel_expired__client_unread_bytes__client_e
     char byte{};
     client.read_some(io::buffer(&byte, 1), ec);
     BC_REQUIRE(ec == error::peer_disconnect);
+}
+
+BC_AUTO_TEST_CASE(proxy__stop__lazy_then_lazy__lazy_stop_retained)
+{
+    BC_REQUIRE_EQUAL(get_stops(error::channel_expired, error::channel_expired), 0u);
+}
+
+BC_AUTO_TEST_CASE(proxy__stop__lazy_then_hard__hard_stop)
+{
+    BC_REQUIRE_EQUAL(get_stops(error::channel_expired, error::service_stopped), 1u);
 }
 
 BC_FIXTURE_TEST_CASE(proxy__lazy__service_stopped__false, loopback_fixture)
