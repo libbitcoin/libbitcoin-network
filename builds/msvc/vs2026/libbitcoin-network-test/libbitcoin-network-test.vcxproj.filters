@@ -531,7 +531,13 @@
     <ClCompile Include="..\..\..\..\test\net\socket.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\noise\certificate.cpp">
+      <Filter>src\noise</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\noise\cipher.cpp">
+      <Filter>src\noise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\noise\context.cpp">
       <Filter>src\noise</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\noise\vectors.cpp">

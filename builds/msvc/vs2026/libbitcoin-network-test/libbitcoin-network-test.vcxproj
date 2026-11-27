@@ -272,8 +272,14 @@
     <ClCompile Include="..\..\..\..\test\net\socket.cpp">
       <ObjectFileName>$(IntDir)test_net_socket.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\noise\certificate.cpp">
+      <ObjectFileName>$(IntDir)test_noise_certificate.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\noise\cipher.cpp">
       <ObjectFileName>$(IntDir)test_noise_cipher.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\noise\context.cpp">
+      <ObjectFileName>$(IntDir)test_noise_context.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\noise\vectors.cpp" />
     <ClCompile Include="..\..\..\..\test\p2ps\cipher.cpp">
@@ -322,7 +328,9 @@
       <ObjectFileName>$(IntDir)test_tls_socket.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\tor\cell.cpp" />
-    <ClCompile Include="..\..\..\..\test\tor\certificate.cpp" />
+    <ClCompile Include="..\..\..\..\test\tor\certificate.cpp">
+      <ObjectFileName>$(IntDir)test_tor_certificate.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\tor\link.cpp" />
     <ClCompile Include="..\..\..\..\test\ws\frame.cpp" />
     <ClCompile Include="..\..\..\..\test\ws\handshake.cpp" />

@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_NOISE_NOISE_HPP
 #define LIBBITCOIN_NETWORK_NOISE_NOISE_HPP
 
+#include <bitcoin/network/noise/certificate.hpp>
 #include <bitcoin/network/noise/cipher.hpp>
+#include <bitcoin/network/noise/context.hpp>
 
 #endif

@@ -621,7 +621,13 @@
     <ClCompile Include="..\..\..\..\src\net\socket_zmtp.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\noise\certificate.cpp">
+      <Filter>src\noise</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\noise\cipher.cpp">
+      <Filter>src\noise</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\noise\context.cpp">
       <Filter>src\noise</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\p2ps\cipher.cpp">
@@ -1322,7 +1328,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\certificate.hpp">
+      <Filter>include\bitcoin\network\noise</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\cipher.hpp">
+      <Filter>include\bitcoin\network\noise</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\context.hpp">
       <Filter>include\bitcoin\network\noise</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\noise.hpp">
