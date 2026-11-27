@@ -907,6 +907,7 @@ test_libbitcoin_network_test_SOURCES = \
     ${srcdir}/../../test/noise/certificate.cpp \
     ${srcdir}/../../test/noise/cipher.cpp \
     ${srcdir}/../../test/noise/context.cpp \
+    ${srcdir}/../../test/noise/stream.cpp \
     ${srcdir}/../../test/noise/vectors.cpp \
     ${srcdir}/../../test/p2ps/cipher.cpp \
     ${srcdir}/../../test/p2ps/stream.cpp \
