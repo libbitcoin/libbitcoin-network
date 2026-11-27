@@ -512,6 +512,65 @@ BC_AUTO_TEST_CASE(settings__http_server_initialize_context__portless_hosts__any_
     BC_REQUIRE(!config::contains_origin(instance.origin_names(), "http://localhost:8780", 80));
 }
 
+BC_AUTO_TEST_CASE(settings__http_server_default_ports__schemeless_portless_advertise__http_and_https)
+{
+    settings::http_server instance{ "test" };
+    instance.bind_port = 8880;
+    instance.safe_port = 8843;
+    instance.advertise = { system::config::url{ "example.com" } };
+    instance.default_ports();
+    BC_REQUIRE_EQUAL(instance.advertise.size(), 2u);
+    BC_REQUIRE_EQUAL(instance.advertise.at(0).to_uri(), "http://example.com:8880");
+    BC_REQUIRE_EQUAL(instance.advertise.at(1).to_uri(), "https://example.com:8843");
+}
+
+BC_AUTO_TEST_CASE(settings__http_server_default_ports__portless_advertise__scheme_default_port)
+{
+    settings::http_server instance{ "test" };
+    instance.bind_port = 8880;
+    instance.safe_port = 8843;
+    instance.advertise = { system::config::url{ "http://1.2.3.4" }, system::config::url{ "https://example.com" } };
+    instance.default_ports();
+    BC_REQUIRE_EQUAL(instance.advertise.size(), 2u);
+    BC_REQUIRE_EQUAL(instance.advertise.at(0).to_uri(), "http://1.2.3.4:8880");
+    BC_REQUIRE_EQUAL(instance.advertise.at(1).to_uri(), "https://example.com:8843");
+}
+
+BC_AUTO_TEST_CASE(settings__http_server_default_ports__ported_advertise__unchanged)
+{
+    settings::http_server instance{ "test" };
+    instance.bind_port = 8880;
+    instance.safe_port = 8843;
+    instance.advertise = { system::config::url{ "https://example.com:443" } };
+    instance.default_ports();
+    BC_REQUIRE_EQUAL(instance.advertise.size(), 1u);
+    BC_REQUIRE_EQUAL(instance.advertise.at(0).to_uri(), "https://example.com:443");
+}
+
+BC_AUTO_TEST_CASE(settings__http_server_initialize_context__defaulted_advertise__success)
+{
+    settings::http_server instance{ "test" };
+    instance.advertise = { system::config::url{ "example.com" }, system::config::url{ "https://example.com:443" } };
+    instance.default_ports();
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::success);
+}
+
+BC_AUTO_TEST_CASE(settings__http_server_initialize_context__schemeless_ported_advertise__invalid_configuration)
+{
+    settings::http_server instance{ "test" };
+    instance.advertise = { system::config::url{ "example.com:8880" } };
+    instance.default_ports();
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::invalid_configuration);
+}
+
+BC_AUTO_TEST_CASE(settings__http_server_initialize_context__tcp_advertise__invalid_configuration)
+{
+    settings::http_server instance{ "test" };
+    instance.advertise = { system::config::url{ "tcp://example.com" } };
+    instance.default_ports();
+    BC_REQUIRE_EQUAL(instance.initialize_context(), error::invalid_configuration);
+}
+
 BC_AUTO_TEST_CASE(settings__tls_server__defaults__expected)
 {
     constexpr auto name = "test";
@@ -573,6 +632,7 @@ BC_AUTO_TEST_CASE(settings__http_server__defaults__expected)
     BC_REQUIRE(instance.compression);
     BC_REQUIRE(!instance.authorize());
     BC_REQUIRE(instance.credentials.empty());
+    BC_REQUIRE(instance.advertise.empty());
 
     constexpr auto digest = system::base16_array("d9fa291efa0c924851f3ea14e73b1847506ab451fb834b7101e5a1a88f94f500");
     BC_REQUIRE_EQUAL(config::credential{ ":" }.digest(), digest);
