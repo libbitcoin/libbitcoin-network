@@ -334,6 +334,40 @@ void socket::do_upgrade(const result_handler& handler) NOEXCEPT
         return;
     }
 
+    if (std::holds_alternative<settings::tls_noise>(context_))
+    {
+        // The accepted client is detected as tls or noise before upgrade.
+        if (!inbound_)
+        {
+            handler(error::operation_failed);
+            return;
+        }
+
+        io::async_read(get_base(),
+            detection_.prepare(tls::stream::detection_size),
+            std::bind(&socket::handle_secure_detection,
+                shared_from_this(), _1, handler));
+        return;
+    }
+
+    if (std::holds_alternative<cref<noise::context>>(context_))
+    {
+        // Extract to temporary to avoid dangling reference after destruction.
+        auto socket = std::move(get_base());
+
+        // Noise context applied to socket, inbound side responding.
+        auto& stream = inbound_ ?
+            socket_.emplace<noise::stream>(std::move(socket),
+                std::get<cref<noise::context>>(context_).get()) :
+            socket_.emplace<noise::stream>(std::move(socket));
+
+        // Posts handler to socket strand.
+        stream.async_handshake(
+            std::bind(&socket::handle_handshake,
+                shared_from_this(), _1, handler));
+        return;
+    }
+
     handler(error::success);
 }
 
@@ -378,6 +412,51 @@ void socket::handle_detection(const code& ec,
     // Posts handler to socket strand.
     get_p2ps().async_handshake(std::move(key),
         std::bind(&socket::handle_encrypted_handshake,
+            shared_from_this(), _1, handler));
+}
+
+// Invoked on the socket strand.
+void socket::handle_secure_detection(const code& ec,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        if (ec == error::unknown) logx("secure detection", ec);
+        handler(ec);
+        return;
+    }
+
+    using namespace system;
+    constexpr auto size = tls::stream::detection_size;
+
+    // The prefix is consumed by the upgrade (start of client hello or act1).
+    detection_.commit(size);
+    const auto data = pointer_cast<const uint8_t>(detection_.data().data());
+    const data_chunk prefix{ data, std::next(data, size) };
+    detection_.consume(size);
+
+    // Extract to temporary to avoid dangling reference after destruction.
+    const auto& contexts = std::get<settings::tls_noise>(context_);
+    auto socket = std::move(get_base());
+
+    if (tls::stream::detected_hello(prefix))
+    {
+        auto& stream = socket_.emplace<tls::stream>(std::move(socket),
+            contexts.tls_context.get(), true);
+
+        stream.async_handshake(prefix,
+            std::bind(&socket::handle_handshake,
+                shared_from_this(), _1, handler));
+        return;
+    }
+
+    auto& stream = socket_.emplace<noise::stream>(std::move(socket),
+        contexts.noise_context.get());
+
+    stream.async_handshake(prefix,
+        std::bind(&socket::handle_handshake,
             shared_from_this(), _1, handler));
 }
 

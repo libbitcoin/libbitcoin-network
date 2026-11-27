@@ -45,6 +45,12 @@ public:
     typedef std::function<void(const code&, size_t)> io_handler;
     using executor_type = io::socket::executor_type;
 
+    /// The size of the client hello detection prefix.
+    static constexpr size_t detection_size = 11;
+
+    /// The prefix opens a client hello (record and handshake headers).
+    static bool detected_hello(const std::span<const uint8_t>& prefix) NOEXCEPT;
+
     /// Own connected tcp socket as server or client, context outlives stream.
     stream(io::socket&& socket, const context& context,
         bool as_server) NOEXCEPT;
@@ -59,6 +65,11 @@ public:
 
     /// Perform handshake (client hello sent first).
     void async_handshake(result_handler&& handler) NOEXCEPT;
+
+    /// Perform handshake as server, given client hello prefix bytes consumed
+    /// by socket (detection).
+    void async_handshake(const const_byte_span& detected,
+        result_handler&& handler) NOEXCEPT;
 
     /// Read received application bytes.
     template <typename Buffers, typename Handler>

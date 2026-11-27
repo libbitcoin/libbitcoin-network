@@ -30,8 +30,8 @@
 namespace libbitcoin {
 namespace network {
 
-/// Full duplex stratum v2 channel, served over ws/s (by upgrade), one frame
-/// to each binary message.
+/// Full duplex stratum v2 channel, served over ws (by upgrade), one frame to
+/// each binary message, or over tcp (by detection), frames streamed.
 class BCT_API channel_sv2
   : public channel_http
 {

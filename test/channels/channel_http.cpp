@@ -220,7 +220,7 @@ BC_FIXTURE_TEST_CASE(socket__detect__json_object__downgraded, http_loopback_fixt
 {
     http::flat_buffer buffer{ 4096 };
     const auto result = http_make_promise();
-    server->detect(buffer, http_complete(result));
+    server->detect(buffer, false, http_complete(result));
 
     send(R"({"jsonrpc":"2.0","id":1,"method":"echo","params":[]})" "\n");
     BC_REQUIRE_EQUAL(http_await(result), error::success);
@@ -232,7 +232,7 @@ BC_FIXTURE_TEST_CASE(socket__detect__leading_line_breaks_json_array__downgraded,
 {
     http::flat_buffer buffer{ 4096 };
     const auto result = http_make_promise();
-    server->detect(buffer, http_complete(result));
+    server->detect(buffer, false, http_complete(result));
 
     send("\r\n\n[");
     BC_REQUIRE_EQUAL(http_await(result), error::success);
@@ -244,7 +244,31 @@ BC_FIXTURE_TEST_CASE(socket__detect__http_request__not_downgraded, http_loopback
 {
     http::flat_buffer buffer{ 4096 };
     const auto result = http_make_promise();
-    server->detect(buffer, http_complete(result));
+    server->detect(buffer, false, http_complete(result));
+
+    send(http_get_request);
+    BC_REQUIRE_EQUAL(http_await(result), error::success);
+    BC_REQUIRE(server->detected());
+    BC_REQUIRE(!server->downgraded());
+}
+
+BC_FIXTURE_TEST_CASE(socket__detect__binary_sv2_frame__downgraded, http_loopback_fixture)
+{
+    http::flat_buffer buffer{ 4096 };
+    const auto result = http_make_promise();
+    server->detect(buffer, true, http_complete(result));
+
+    send(std::string{ "\x00\x00\x00\x00\x00\x00", 6 });
+    BC_REQUIRE_EQUAL(http_await(result), error::success);
+    BC_REQUIRE(server->detected());
+    BC_REQUIRE(server->downgraded());
+}
+
+BC_FIXTURE_TEST_CASE(socket__detect__binary_http_request__not_downgraded, http_loopback_fixture)
+{
+    http::flat_buffer buffer{ 4096 };
+    const auto result = http_make_promise();
+    server->detect(buffer, true, http_complete(result));
 
     send(http_get_request);
     BC_REQUIRE_EQUAL(http_await(result), error::success);
@@ -256,7 +280,7 @@ BC_FIXTURE_TEST_CASE(socket__detect__peer_close__peer_disconnect, http_loopback_
 {
     http::flat_buffer buffer{ 4096 };
     const auto result = http_make_promise();
-    server->detect(buffer, http_complete(result));
+    server->detect(buffer, false, http_complete(result));
 
     code ignore{};
     client.shutdown(io::socket::shutdown_type::send, ignore);

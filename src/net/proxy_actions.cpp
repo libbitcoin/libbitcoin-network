@@ -524,11 +524,13 @@ void proxy::read(http::flat_buffer& buffer, http::request& request,
         return;
     }
 
-    // Preselected body is read/write control, so json-rpc body implies
+    // Preselected body is read/write control, so json-rpc or sv2 body implies
     // detection, performed before first message is read.
-    if (!socket_->detected() && request.body().contains<rpc::request>())
+    const auto& body = request.body();
+    const auto binary = body.contains<http::sv2_value>();
+    if (!socket_->detected() && (binary || body.contains<rpc::request>()))
     {
-        socket_->detect(buffer,
+        socket_->detect(buffer, binary,
             std::bind(&proxy::handle_detect,
                 shared_from_this(), _1, _2, std::ref(request),
                 std::ref(buffer), std::move(handler)));
@@ -579,6 +581,15 @@ void proxy::do_downgrade_read(const ref<http::request>& request,
     // A downgraded message carries no request line, so tag it for dispatch.
     auto& in = request.get();
     in.method(http::verb::stream);
+
+    // Sv2 frames are self-delimiting, so they stream into the sv2 body.
+    if (in.body().contains<http::sv2_value>())
+    {
+        in.body().get<http::sv2_value>().exact = false;
+        socket_->body_read(buffer.get(), in, counted(count_handler{ handler }));
+        return;
+    }
+
     if (!in.body().contains<rpc::request>())
         in.body() = rpc::request{};
 
@@ -833,8 +844,9 @@ void proxy::write(http::response&& response, count_handler&& handler,
     bool bounded) NOEXCEPT
 {
     // Downgrade is json-rpc transport, so it writes as one (batch stamping for
-    // response, deferral while open for notification).
-    if (socket_->downgraded())
+    // response, deferral while open for notification). Sv2 frames are queued
+    // as http, which writes them without headers.
+    if (socket_->downgraded() && !response.body().contains<http::sv2_value>())
     {
         auto& body = response.body();
         if (body.contains<rpc::response>())

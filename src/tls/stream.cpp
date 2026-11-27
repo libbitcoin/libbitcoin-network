@@ -90,6 +90,39 @@ void stream::async_handshake(result_handler&& handler) NOEXCEPT
         this, _1, std::move(handler)));
 }
 
+void stream::async_handshake(const const_byte_span& detected,
+    result_handler&& handler) NOEXCEPT
+{
+    if (!std::holds_alternative<server>(role_) || !context_.is_ready())
+    {
+        const code ec{ code{ error::tls_alert_internal_error } };
+        io::post(get_executor(), std::bind(std::move(handler), ec));
+        return;
+    }
+
+    // The detected prefix is the start of the client hello.
+    connection_->receive(detected);
+    flush(std::bind(&stream::handle_handshake,
+        this, _1, std::move(handler)));
+}
+
+// The record (handshake, version 3.x) and handshake (client hello, under 64KiB
+// and at least the record's remainder) headers, then legacy version 3.3.
+bool stream::detected_hello(const std::span<const uint8_t>& prefix) NOEXCEPT
+{
+    if (prefix.size() < detection_size)
+        return false;
+
+    const size_t record = (size_t{ prefix[3] } << 8) | prefix[4];
+    const size_t hello = (size_t{ prefix[7] } << 8) | prefix[8];
+
+    return prefix[0] == 0x16 && prefix[1] == 0x03 &&
+        prefix[2] >= 0x01 && prefix[2] <= 0x04 &&
+        record >= 4u && record <= 0x4000u &&
+        prefix[5] == 0x01 && prefix[6] == 0x00 && hello >= record - 4u &&
+        prefix[9] == 0x03 && prefix[10] == 0x03;
+}
+
 void stream::handle_hello(const code& ec,
     const result_handler& handler) NOEXCEPT
 {

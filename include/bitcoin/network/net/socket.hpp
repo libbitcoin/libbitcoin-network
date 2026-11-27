@@ -28,6 +28,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/deadline.hpp>
+#include <bitcoin/network/noise/noise.hpp>
 #include <bitcoin/network/p2ps/p2ps.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/ws/ws.hpp>
@@ -226,8 +227,9 @@ public:
     using http_parser_ptr = std::shared_ptr<http_parser>;
 
     /// Latch http vs. tcp from buffered bytes, reading only as required to
-    /// decide, handler posted to socket strand. No message is consumed.
-    virtual void detect(http::flat_buffer& buffer,
+    /// decide, handler posted to socket strand. No message is consumed. Tcp
+    /// opens with json, or with any byte that cannot open a request if binary.
+    virtual void detect(http::flat_buffer& buffer, bool binary,
         count_handler&& handler) NOEXCEPT;
 
     /// Read http request from the socket, handler posted to socket strand.
@@ -289,6 +291,9 @@ public:
     /// The socket was upgraded to native ZMTP (in its role).
     virtual bool zeromq() const NOEXCEPT;
 
+    /// The socket was upgraded to noise (sv2).
+    virtual bool noised() const NOEXCEPT;
+
     /// The socket was upgraded to a websocket.
     virtual bool websocket() const NOEXCEPT;
 
@@ -320,9 +325,20 @@ public:
     virtual void set_address(const config::address& address) NOEXCEPT;
 
 protected:
-    using tcp_t = std::variant<ref<io::socket>, ref<tls::stream>>;
-    using socket_t = std::variant<io::socket, tls::stream,
-        p2ps::stream, zmtp::stream>;
+    using tcp_t = std::variant
+    <
+        ref<io::socket>,
+        ref<tls::stream>,
+        ref<noise::stream>
+    >;
+    using socket_t = std::variant
+    <
+        io::socket,
+        tls::stream,
+        p2ps::stream,
+        zmtp::stream,
+        noise::stream
+    >;
 
     /// Construct.
     /// -----------------------------------------------------------------------
@@ -462,7 +478,7 @@ private:
         system::data_chunk payload{};
         io::const_buffer data{};
         count_handler handler{};
-        std::array<io::const_buffer, 2> buffers{};
+        std::array<io::const_buffer, two> buffers{};
         bool control{};
         bool finish{};
     };
@@ -550,7 +566,7 @@ private:
         count_handler&& handler) NOEXCEPT;
 
     // detect (first read)
-    void do_detect(const ref<http::flat_buffer>& buffer,
+    void do_detect(const ref<http::flat_buffer>& buffer, bool binary,
         const count_handler& handler) NOEXCEPT;
 
     // http
@@ -626,6 +642,8 @@ private:
         const result_handler& handler) NOEXCEPT;
     void handle_detection(const code& ec,
         const result_handler& handler) NOEXCEPT;
+    void handle_secure_detection(const code& ec,
+        const result_handler& handler) NOEXCEPT;
 
     // read/write (tcp/ws)
     void handle_async(const code& ec, size_t size,
@@ -655,7 +673,7 @@ private:
 
     // detect
     void handle_detect(const code& ec, size_t size,
-        const ref<http::flat_buffer>& buffer,
+        const ref<http::flat_buffer>& buffer, bool binary,
         const count_handler& handler) NOEXCEPT;
 
     // http/ws (native/rpc)

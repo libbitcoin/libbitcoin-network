@@ -540,6 +540,9 @@
     <ClCompile Include="..\..\..\..\test\noise\context.cpp">
       <Filter>src\noise</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\noise\stream.cpp">
+      <Filter>src\noise</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\noise\vectors.cpp">
       <Filter>src\noise</Filter>
     </ClCompile>

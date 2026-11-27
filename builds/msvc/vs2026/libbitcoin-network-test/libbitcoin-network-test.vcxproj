@@ -281,6 +281,9 @@
     <ClCompile Include="..\..\..\..\test\noise\context.cpp">
       <ObjectFileName>$(IntDir)test_noise_context.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\noise\stream.cpp">
+      <ObjectFileName>$(IntDir)test_noise_stream.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\noise\vectors.cpp" />
     <ClCompile Include="..\..\..\..\test\p2ps\cipher.cpp">
       <ObjectFileName>$(IntDir)test_p2ps_cipher.obj</ObjectFileName>

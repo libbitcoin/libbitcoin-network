@@ -85,7 +85,8 @@ void channel_sv2::handle_receive(const code& ec, size_t bytes,
 
     // The frame carries parse fault detail (the read code is generic).
     const auto& body = request->body();
-    if (ec && websocket() && !stopped() && body.contains<http::sv2_value>())
+    if (ec && (websocket() || downgraded()) && !stopped() &&
+        body.contains<http::sv2_value>())
     {
         const auto& fault = body.get<http::sv2_value>().fault;
         LOGF("Stratum read failure [" << endpoint() << "] "
@@ -102,8 +103,8 @@ void channel_sv2::dispatch(const http::request_ptr& request) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // The service is websocket only, a request without upgrade is refused.
-    if (!websocket())
+    // The service is websocket or tcp, a request without upgrade is refused.
+    if (!websocket() && !downgraded())
     {
         http::response out{ http::status::upgrade_required, request->version() };
         out.keep_alive(false);
@@ -111,6 +112,13 @@ void channel_sv2::dispatch(const http::request_ptr& request) NOEXCEPT
         channel_http::send(std::move(out),
             std::bind(&channel_sv2::handle_refused,
                 shared_from_base<channel_sv2>(), _1));
+        return;
+    }
+
+    // Tcp carries no credential, only the websocket upgrade authorizes.
+    if (downgraded() && !authorized())
+    {
+        stop(error::unauthorized);
         return;
     }
 

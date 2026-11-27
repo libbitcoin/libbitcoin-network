@@ -105,6 +105,9 @@ public:
     /// Connection was upgraded to encrypted transport (bip324).
     bool encrypted() const NOEXCEPT;
 
+    /// Connection was upgraded to noise transport (sv2).
+    bool noised() const NOEXCEPT;
+
     /// The socket was upgraded to a websocket.
     bool websocket() const NOEXCEPT;
 

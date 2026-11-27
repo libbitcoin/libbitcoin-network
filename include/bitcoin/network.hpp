@@ -208,6 +208,7 @@
 #include <bitcoin/network/noise/cipher.hpp>
 #include <bitcoin/network/noise/context.hpp>
 #include <bitcoin/network/noise/noise.hpp>
+#include <bitcoin/network/noise/stream.hpp>
 #include <bitcoin/network/p2ps/cipher.hpp>
 #include <bitcoin/network/p2ps/context.hpp>
 #include <bitcoin/network/p2ps/p2ps.hpp>

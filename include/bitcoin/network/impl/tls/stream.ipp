@@ -55,8 +55,7 @@ template <typename Buffer, typename Buffers>
 Buffer stream::first(const Buffers& buffers) NOEXCEPT
 {
     const auto end = io::buffer_sequence_end(buffers);
-    for (auto it = io::buffer_sequence_begin(buffers); it != end;
-        ++it)
+    for (auto it = io::buffer_sequence_begin(buffers); it != end; ++it)
     {
         const Buffer buffer{ *it };
         if (is_nonzero(buffer.size()))
@@ -88,8 +87,8 @@ const_byte_span stream::flatten(const Buffers& buffers) NOEXCEPT
     for (; it != end && plaintext_.size() < maximum_plaintext; ++it)
     {
         const io::const_buffer buffer{ *it };
-        const auto size = std::min(buffer.size(),
-            maximum_plaintext - plaintext_.size());
+        const auto span = maximum_plaintext - plaintext_.size();
+        const auto size = std::min(buffer.size(), span);
         const auto bytes = system::pointer_cast<const uint8_t>(buffer.data());
         plaintext_.insert(plaintext_.cend(), bytes, std::next(bytes, size));
     }

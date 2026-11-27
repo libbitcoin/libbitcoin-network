@@ -22,5 +22,6 @@
 #include <bitcoin/network/noise/certificate.hpp>
 #include <bitcoin/network/noise/cipher.hpp>
 #include <bitcoin/network/noise/context.hpp>
+#include <bitcoin/network/noise/stream.hpp>
 
 #endif

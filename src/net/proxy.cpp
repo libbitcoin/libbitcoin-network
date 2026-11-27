@@ -281,6 +281,11 @@ bool proxy::encrypted() const NOEXCEPT
     return socket_->encrypted();
 }
 
+bool proxy::noised() const NOEXCEPT
+{
+    return socket_->noised();
+}
+
 bool proxy::websocket() const NOEXCEPT
 {
     return socket_->websocket();

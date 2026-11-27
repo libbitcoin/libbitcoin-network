@@ -704,7 +704,8 @@ std::string channel_http::log_message(const request& request,
 
     if (downgraded())
     {
-        const std::string scheme = secure() ? "tls" : "tcp";
+        const std::string scheme = secure() ? "tls" :
+            (noised() ? "noise" : "tcp");
         const std::string size = serialize(bytes);
         return scheme + " (" + size + ") [" + endpoint().to_string() + "]";
     }

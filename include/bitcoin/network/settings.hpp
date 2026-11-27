@@ -24,6 +24,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/noise/noise.hpp>
 #include <bitcoin/network/p2ps/p2ps.hpp>
 #include <bitcoin/network/tls/tls.hpp>
 #include <bitcoin/network/zmtp/zmtp.hpp>
@@ -42,13 +43,22 @@ constexpr auto max_payload = system::possible_narrow_cast<uint32_t>(
 /// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
 {
+    /// Tls and noise contexts, either applied by detection of accepted socket.
+    struct tls_noise
+    {
+        ref<const tls::context> tls_context;
+        ref<const noise::context> noise_context;
+    };
+
     /// The transport of a socket is selected by its context (none is clear).
     using transport = std::variant
     <
         std::monostate,
         ref<const tls::context>,
         ref<const p2ps::context>,
-        ref<const zmtp::context>
+        ref<const zmtp::context>,
+        ref<const noise::context>,
+        tls_noise
     >;
 
     struct BCT_API socks5
@@ -192,6 +202,9 @@ struct BCT_API settings
 
         /// Thread safe socket tls context (const after initialize).
         std::unique_ptr<tls::context> context{};
+
+        /// The secured bindings are served by tls (default true).
+        virtual bool tls_secured() const NOEXCEPT;
 
         /// False if safes, certificate_path, or key_path is empty.
         bool secure() const NOEXCEPT override;

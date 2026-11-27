@@ -275,7 +275,7 @@ code settings::tls_server::initialize_context() NOEXCEPT
         return error::operation_failed;
 
     context = std::make_unique<tls::context>();
-    if (safes.empty())
+    if (safes.empty() || !tls_secured())
         return error::success;
 
     if (cert_path.empty())
@@ -316,6 +316,11 @@ code settings::tls_server::initialize_context() NOEXCEPT
     return error::success;
 }
 BC_POP_WARNING();
+
+bool settings::tls_server::tls_secured() const NOEXCEPT
+{
+    return true;
+}
 
 bool settings::tls_server::secure() const NOEXCEPT
 {
