@@ -195,6 +195,9 @@ struct BCT_API settings
         /// Thread safe socket tls context (const after initialize).
         std::unique_ptr<tls::context> context{};
 
+        /// The secured bindings are served by tls (default true).
+        virtual bool tls_secured() const NOEXCEPT;
+
         /// False if safes, certificate_path, or key_path is empty.
         bool secure() const NOEXCEPT override;
 
