@@ -142,6 +142,20 @@ bool certificate::decode_authority(ec_xonly& out,
     return true;
 }
 
+bool certificate::to_authority(ec_xonly& out,
+    const data_slice& payload) NOEXCEPT
+{
+    if (payload.size() != authority_size)
+        return false;
+
+    const auto key = payload.to_array<authority_size>();
+    if (slice<zero, sizeof(uint16_t)>(key) != authority_prefix)
+        return false;
+
+    out = slice<sizeof(uint16_t), authority_size>(key);
+    return true;
+}
+
 } // namespace noise
 } // namespace network
 } // namespace libbitcoin

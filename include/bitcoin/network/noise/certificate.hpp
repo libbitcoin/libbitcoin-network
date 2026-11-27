@@ -80,6 +80,10 @@ public:
     /// Decode a published authority key (false if malformed).
     static bool decode_authority(system::ec_xonly& out,
         const std::string& text) NOEXCEPT;
+
+    /// The key of a published authority key payload (false if malformed).
+    static bool to_authority(system::ec_xonly& out,
+        const system::data_slice& payload) NOEXCEPT;
 };
 
 } // namespace noise

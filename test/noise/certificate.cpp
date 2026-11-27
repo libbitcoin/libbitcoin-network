@@ -55,6 +55,14 @@ static std::string encode_prefixed(uint8_t first, uint8_t second)
     }));
 }
 
+static data_chunk authority_payload(uint8_t first, size_t size)
+{
+    auto payload = to_chunk(splice(data_array<2>{ first, 0x00 },
+        sv2_noise::authority_xonly));
+    payload.resize(size);
+    return payload;
+}
+
 BC_AUTO_TEST_CASE(noise_certificate__to_xonly__authority_secret__authority_xonly)
 {
     ec_xonly out{};
@@ -191,6 +199,26 @@ BC_AUTO_TEST_CASE(noise_certificate__decode_authority__malformed__false)
 {
     ec_xonly out{};
     BC_REQUIRE(!certificate::decode_authority(out, "0OIl"));
+}
+
+BC_AUTO_TEST_CASE(noise_certificate__to_authority__vector_payload__authority_xonly)
+{
+    ec_xonly out{};
+    const auto result = certificate::to_authority(out, authority_payload(0x01, certificate::authority_size));
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(out, sv2_noise::authority_xonly);
+}
+
+BC_AUTO_TEST_CASE(noise_certificate__to_authority__other_prefix__false)
+{
+    ec_xonly out{};
+    BC_REQUIRE(!certificate::to_authority(out, authority_payload(0x02, certificate::authority_size)));
+}
+
+BC_AUTO_TEST_CASE(noise_certificate__to_authority__short_payload__false)
+{
+    ec_xonly out{};
+    BC_REQUIRE(!certificate::to_authority(out, authority_payload(0x01, sub1(certificate::authority_size))));
 }
 
 BC_AUTO_TEST_SUITE_END()
