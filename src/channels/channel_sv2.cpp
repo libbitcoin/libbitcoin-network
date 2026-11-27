@@ -115,6 +115,13 @@ void channel_sv2::dispatch(const http::request_ptr& request) NOEXCEPT
         return;
     }
 
+    // Tcp carries no credential, only the websocket upgrade authorizes.
+    if (downgraded() && !authorized())
+    {
+        stop(error::unauthorized);
+        return;
+    }
+
     const auto& body = request->body();
     if (!body.contains<http::sv2_value>())
     {
