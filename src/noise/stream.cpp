@@ -95,10 +95,26 @@ void stream::async_handshake(result_handler&& handler) NOEXCEPT
     if (is_null(context_))
         do_initiate(std::move(handler));
     else
-        do_respond(std::move(handler));
+        do_respond(zero, std::move(handler));
 }
 
-void stream::do_respond(const result_handler& handler) NOEXCEPT
+void stream::async_handshake(const const_byte_span& detected,
+    result_handler&& handler) NOEXCEPT
+{
+    if (is_null(context_) || detected.size() > act1_.size())
+    {
+        io::post(get_executor(),
+            std::bind(std::move(handler), code{ error::operation_failed }));
+        return;
+    }
+
+    std::copy(detected.begin(), detected.end(), act1_.begin());
+    do_respond(detected.size(), std::move(handler));
+}
+
+// The act1 remainder follows any detected prefix.
+void stream::do_respond(size_t detected,
+    const result_handler& handler) NOEXCEPT
 {
     cipher::certificate proof{};
     if (!context_->valid() || !context_->issue(proof, unix_time()))
@@ -109,7 +125,8 @@ void stream::do_respond(const result_handler& handler) NOEXCEPT
     }
 
     cipher_.emplace(context_->static_secret(), context_->static_key(), proof);
-    io::async_read(socket_, io::buffer(act1_),
+    const auto remainder = std::span{ act1_ }.subspan(detected);
+    io::async_read(socket_, io::buffer(remainder.data(), remainder.size()),
         std::bind(&stream::handle_act1,
             this, _1, handler));
 }

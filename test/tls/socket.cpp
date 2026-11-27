@@ -599,4 +599,29 @@ BC_AUTO_TEST_CASE(tls_socket__read__requested_key_update__exchanged)
     BC_REQUIRE_EQUAL(peer.read(response.size()), response);
 }
 
+BC_AUTO_TEST_CASE(tls_stream__detected_hello__client_hello_prefix__true)
+{
+    BC_REQUIRE(tls::stream::detected_hello(system::base16_chunk("16030100c8010000c40303")));
+}
+
+BC_AUTO_TEST_CASE(tls_stream__detected_hello__hello_spanning_records__true)
+{
+    BC_REQUIRE(tls::stream::detected_hello(system::base16_chunk("1603034000010041000303")));
+}
+
+BC_AUTO_TEST_CASE(tls_stream__detected_hello__other_legacy_version__false)
+{
+    BC_REQUIRE(!tls::stream::detected_hello(system::base16_chunk("16030100c8010000c40301")));
+}
+
+BC_AUTO_TEST_CASE(tls_stream__detected_hello__zeros__false)
+{
+    BC_REQUIRE(!tls::stream::detected_hello(system::data_chunk(tls::stream::detection_size)));
+}
+
+BC_AUTO_TEST_CASE(tls_stream__detected_hello__short_prefix__false)
+{
+    BC_REQUIRE(!tls::stream::detected_hello(system::base16_chunk("16030100c8010000c403")));
+}
+
 BC_AUTO_TEST_SUITE_END()

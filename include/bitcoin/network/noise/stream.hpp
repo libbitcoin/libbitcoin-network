@@ -62,6 +62,11 @@ public:
     /// Perform handshake (initiator sends act1, responder answers act2).
     void async_handshake(result_handler&& handler) NOEXCEPT;
 
+    /// Perform handshake as responder, given act1 prefix bytes consumed by
+    /// socket (detection).
+    void async_handshake(const const_byte_span& detected,
+        result_handler&& handler) NOEXCEPT;
+
     /// Read received application bytes.
     template <typename Buffers, typename Handler>
     void async_read_some(const Buffers& buffers, Handler&& handler) NOEXCEPT;
@@ -86,7 +91,7 @@ private:
     static io_handler erase(Handler&& handler) NOEXCEPT;
 
     // handshake
-    void do_respond(const result_handler& handler) NOEXCEPT;
+    void do_respond(size_t detected, const result_handler& handler) NOEXCEPT;
     void handle_act1(const code& ec,
         const result_handler& handler) NOEXCEPT;
     void do_initiate(const result_handler& handler) NOEXCEPT;

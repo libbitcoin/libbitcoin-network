@@ -632,6 +632,8 @@ private:
         const result_handler& handler) NOEXCEPT;
     void handle_detection(const code& ec,
         const result_handler& handler) NOEXCEPT;
+    void handle_secure_detection(const code& ec,
+        const result_handler& handler) NOEXCEPT;
 
     // read/write (tcp/ws)
     void handle_async(const code& ec, size_t size,

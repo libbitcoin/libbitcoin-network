@@ -245,4 +245,26 @@ BC_FIXTURE_TEST_CASE(noise_stream__read__tampered_heading__protocol_violation, n
     BC_REQUIRE_EQUAL(read_ec, error::protocol_violation);
 }
 
+BC_FIXTURE_TEST_CASE(noise_stream__handshake__detected_prefix__initiator_completes, noise_stream_fixture)
+{
+    cipher client{};
+    cipher::act1 act1{};
+    cipher::act2 act2{};
+    cipher::key key{};
+    cipher::certificate proof{};
+    data_chunk prefix(tls::stream::detection_size);
+    code ignore{};
+    code responded{ error::would_block };
+    client.initiate(act1);
+    test::write(initiator->next_layer(), io::buffer(act1));
+    io::read(responder->next_layer(), io::buffer(prefix), ignore);
+    responder->async_handshake(prefix, [&](const code& ec) NOEXCEPT { responded = ec; });
+    run();
+    io::read(initiator->next_layer(), io::buffer(act2), ignore);
+    const auto completed = client.complete(key, proof, act2);
+    BC_REQUIRE(!responded);
+    BC_REQUIRE(completed);
+    BC_REQUIRE_EQUAL(key, instance.static_key());
+}
+
 BC_AUTO_TEST_SUITE_END()

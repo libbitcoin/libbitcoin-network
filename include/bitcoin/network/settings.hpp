@@ -43,6 +43,13 @@ constexpr auto max_payload = system::possible_narrow_cast<uint32_t>(
 /// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
 {
+    /// Tls and noise contexts, either applied by detection of accepted socket.
+    struct tls_noise
+    {
+        ref<const tls::context> tls_context;
+        ref<const noise::context> noise_context;
+    };
+
     /// The transport of a socket is selected by its context (none is clear).
     using transport = std::variant
     <
@@ -50,7 +57,8 @@ struct BCT_API settings
         ref<const tls::context>,
         ref<const p2ps::context>,
         ref<const zmtp::context>,
-        ref<const noise::context>
+        ref<const noise::context>,
+        tls_noise
     >;
 
     struct BCT_API socks5
