@@ -81,6 +81,9 @@ bool certificate::sign(data& out, const ec_secret& authority,
     const ec_xonly& server, uint32_t valid_from, uint32_t not_valid_after,
     const hash_digest& auxiliary) NOEXCEPT
 {
+    if (not_valid_after < valid_from)
+        return false;
+
     ec_signature signature{};
     const auto hash = signature_hash(server, valid_from, not_valid_after);
     if (!schnorr::sign(signature, authority, hash, auxiliary))

@@ -88,6 +88,21 @@ BC_AUTO_TEST_CASE(noise_certificate__sign__vector_inputs__signature_noise_messag
     BC_REQUIRE_EQUAL(out, sv2_noise::signature_noise_message);
 }
 
+BC_AUTO_TEST_CASE(noise_certificate__sign__zero_auxiliary__expected)
+{
+    const auto expected = base16_array("000000f1536500b33f7143d817e25999d8c2d63c7722304f611b02535ea53ec0fcf8f3bc14b426ebf5990f4d9200a5967b40ab859c7e6fe7e6203b432f0bd9df522125781f878e9bc45e");
+    certificate::data out{};
+    const auto result = certificate::sign(out, sv2_noise::authority_secret, server_xonly(), sv2_noise::valid_from, sv2_noise::not_valid_after, hash_digest{});
+    BC_REQUIRE(result);
+    BC_REQUIRE_EQUAL(out, expected);
+}
+
+BC_AUTO_TEST_CASE(noise_certificate__sign__reversed_window__false)
+{
+    certificate::data out{};
+    BC_REQUIRE(!certificate::sign(out, sv2_noise::authority_secret, server_xonly(), sv2_noise::not_valid_after, sv2_noise::valid_from, hash_digest{}));
+}
+
 BC_AUTO_TEST_CASE(noise_certificate__sign__random_auxiliary__verifies)
 {
     certificate::data out{};

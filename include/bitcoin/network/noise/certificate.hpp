@@ -54,11 +54,13 @@ public:
     static system::ec_xonly to_xonly(const system::ec_compressed& key) NOEXCEPT;
 
     /// Sign the server key over the window, with random auxiliary data.
+    /// False if the window is reversed or the authority secret is invalid.
     static bool sign(data& out, const system::ec_secret& authority,
         const system::ec_xonly& server, uint32_t valid_from,
         uint32_t not_valid_after) NOEXCEPT;
 
-    /// Sign the server key over the window (deterministic, for test vectors).
+    /// Sign the server key over the window with the auxiliary data.
+    /// False if the window is reversed or the authority secret is invalid.
     static bool sign(data& out, const system::ec_secret& authority,
         const system::ec_xonly& server, uint32_t valid_from,
         uint32_t not_valid_after, const system::hash_digest& auxiliary) NOEXCEPT;
