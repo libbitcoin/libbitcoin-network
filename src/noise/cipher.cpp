@@ -165,6 +165,7 @@ bool cipher::complete(key& static_key, certificate& proof,
 
 bool cipher::encrypt(const std::span<uint8_t>& out, const span& frame) NOEXCEPT
 {
+    BC_ASSERT(send_.has_value());
     BC_ASSERT(frame.size() >= heading_size);
     const auto payload = frame.subspan(heading_size);
     BC_ASSERT(out.size() == sealed_heading_size + sealed_size(payload.size()));
@@ -190,6 +191,7 @@ bool cipher::encrypt(const std::span<uint8_t>& out, const span& frame) NOEXCEPT
 bool cipher::decrypt_heading(const std::span<uint8_t>& plain,
     const span& in) NOEXCEPT
 {
+    BC_ASSERT(receive_.has_value());
     BC_ASSERT(plain.size() == heading_size);
     BC_ASSERT(in.size() == sealed_heading_size);
     return receive_->decrypt(plain, {}, in);
@@ -198,6 +200,7 @@ bool cipher::decrypt_heading(const std::span<uint8_t>& plain,
 bool cipher::decrypt_payload(const std::span<uint8_t>& plain,
     const span& in) NOEXCEPT
 {
+    BC_ASSERT(receive_.has_value());
     BC_ASSERT(in.size() == sealed_size(plain.size()));
 
     auto sealed = in;
