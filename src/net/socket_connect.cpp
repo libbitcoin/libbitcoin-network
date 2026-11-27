@@ -334,6 +334,24 @@ void socket::do_upgrade(const result_handler& handler) NOEXCEPT
         return;
     }
 
+    if (std::holds_alternative<cref<noise::context>>(context_))
+    {
+        // Extract to temporary to avoid dangling reference after destruction.
+        auto socket = std::move(get_base());
+
+        // Noise context applied to socket, inbound side responding.
+        auto& stream = inbound_ ?
+            socket_.emplace<noise::stream>(std::move(socket),
+                std::get<cref<noise::context>>(context_).get()) :
+            socket_.emplace<noise::stream>(std::move(socket));
+
+        // Posts handler to socket strand.
+        stream.async_handshake(
+            std::bind(&socket::handle_handshake,
+                shared_from_this(), _1, handler));
+        return;
+    }
+
     handler(error::success);
 }
 

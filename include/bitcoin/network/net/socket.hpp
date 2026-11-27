@@ -28,6 +28,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/deadline.hpp>
+#include <bitcoin/network/noise/noise.hpp>
 #include <bitcoin/network/p2ps/p2ps.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/ws/ws.hpp>
@@ -320,9 +321,10 @@ public:
     virtual void set_address(const config::address& address) NOEXCEPT;
 
 protected:
-    using tcp_t = std::variant<ref<io::socket>, ref<tls::stream>>;
+    using tcp_t = std::variant<ref<io::socket>, ref<tls::stream>,
+        ref<noise::stream>>;
     using socket_t = std::variant<io::socket, tls::stream,
-        p2ps::stream, zmtp::stream>;
+        p2ps::stream, zmtp::stream, noise::stream>;
 
     /// Construct.
     /// -----------------------------------------------------------------------

@@ -24,6 +24,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/noise/noise.hpp>
 #include <bitcoin/network/p2ps/p2ps.hpp>
 #include <bitcoin/network/tls/tls.hpp>
 #include <bitcoin/network/zmtp/zmtp.hpp>
@@ -48,7 +49,8 @@ struct BCT_API settings
         std::monostate,
         ref<const tls::context>,
         ref<const p2ps::context>,
-        ref<const zmtp::context>
+        ref<const zmtp::context>,
+        ref<const noise::context>
     >;
 
     struct BCT_API socks5

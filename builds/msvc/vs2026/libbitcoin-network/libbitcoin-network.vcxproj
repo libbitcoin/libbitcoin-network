@@ -280,6 +280,9 @@
     <ClCompile Include="..\..\..\..\src\noise\context.cpp">
       <ObjectFileName>$(IntDir)src_noise_context.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\noise\stream.cpp">
+      <ObjectFileName>$(IntDir)src_noise_stream.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\p2ps\cipher.cpp">
       <ObjectFileName>$(IntDir)src_p2ps_cipher.obj</ObjectFileName>
     </ClCompile>
@@ -534,6 +537,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\cipher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\noise.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\noise\stream.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\cipher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\context.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2ps\p2ps.hpp" />
@@ -617,6 +621,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json_body.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\broadcaster.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\rpc\dispatcher.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\noise\stream.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\protocols\protocol_rpc.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\tls\stream.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\ws\client.ipp" />

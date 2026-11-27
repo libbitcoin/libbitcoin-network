@@ -297,6 +297,10 @@ socket::tcp_t socket::get_tcp() NOEXCEPT
         [](zmtp::stream&) NOEXCEPT -> socket::tcp_t
         {
             std::terminate();
+        },
+        [](noise::stream& value) NOEXCEPT -> socket::tcp_t
+        {
+            return std::ref(value);
         }
     }, socket_);
 }
@@ -318,6 +322,10 @@ io::socket& socket::get_base() NOEXCEPT
             return value.next_layer();
         },
         [](zmtp::stream& value) NOEXCEPT -> io::socket&
+        {
+            return value.next_layer();
+        },
+        [](noise::stream& value) NOEXCEPT -> io::socket&
         {
             return value.next_layer();
         }
@@ -346,6 +354,10 @@ tls::stream& socket::get_tls() NOEXCEPT
         [](zmtp::stream&) NOEXCEPT -> tls::stream&
         {
             std::terminate();
+        },
+        [](noise::stream&) NOEXCEPT -> tls::stream&
+        {
+            std::terminate();
         }
     }, socket_);
 }
@@ -370,6 +382,10 @@ p2ps::stream& socket::get_p2ps() NOEXCEPT
             return value;
         },
         [](zmtp::stream&) NOEXCEPT -> p2ps::stream&
+        {
+            std::terminate();
+        },
+        [](noise::stream&) NOEXCEPT -> p2ps::stream&
         {
             std::terminate();
         }
@@ -398,6 +414,10 @@ zmtp::stream& socket::get_zmtp() NOEXCEPT
         [](zmtp::stream& value) NOEXCEPT -> zmtp::stream&
         {
             return value;
+        },
+        [](noise::stream&) NOEXCEPT -> zmtp::stream&
+        {
+            std::terminate();
         }
     }, socket_);
 }

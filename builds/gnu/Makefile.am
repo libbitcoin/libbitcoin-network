@@ -190,6 +190,7 @@ src_libbitcoin_network_la_SOURCES = \
     ${srcdir}/../../src/noise/certificate.cpp \
     ${srcdir}/../../src/noise/cipher.cpp \
     ${srcdir}/../../src/noise/context.cpp \
+    ${srcdir}/../../src/noise/stream.cpp \
     ${srcdir}/../../src/p2ps/cipher.cpp \
     ${srcdir}/../../src/p2ps/stream.cpp \
     ${srcdir}/../../src/protocols/protocol.cpp \
@@ -384,6 +385,12 @@ include_bitcoin_network_impl_messages_rpcdir = \
 include_bitcoin_network_impl_messages_rpc_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/impl/messages/rpc/broadcaster.ipp \
     ${srcdir}/../../include/bitcoin/network/impl/messages/rpc/dispatcher.ipp
+
+include_bitcoin_network_impl_noisedir = \
+    ${includedir}/bitcoin/network/impl/noise
+
+include_bitcoin_network_impl_noise_HEADERS = \
+    ${srcdir}/../../include/bitcoin/network/impl/noise/stream.ipp
 
 include_bitcoin_network_impl_protocolsdir = \
     ${includedir}/bitcoin/network/impl/protocols
@@ -632,7 +639,8 @@ include_bitcoin_network_noise_HEADERS = \
     ${srcdir}/../../include/bitcoin/network/noise/certificate.hpp \
     ${srcdir}/../../include/bitcoin/network/noise/cipher.hpp \
     ${srcdir}/../../include/bitcoin/network/noise/context.hpp \
-    ${srcdir}/../../include/bitcoin/network/noise/noise.hpp
+    ${srcdir}/../../include/bitcoin/network/noise/noise.hpp \
+    ${srcdir}/../../include/bitcoin/network/noise/stream.hpp
 
 include_bitcoin_network_p2psdir = \
     ${includedir}/bitcoin/network/p2ps
