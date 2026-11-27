@@ -265,6 +265,12 @@ bool socket::zeromq() const NOEXCEPT
     return std::holds_alternative<zmtp::stream>(socket_);
 }
 
+bool socket::noised() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return std::holds_alternative<noise::stream>(socket_);
+}
+
 // protected
 bool socket::is_base() const NOEXCEPT
 {
@@ -664,9 +670,9 @@ void socket::async_write_http(http::response&& response,
     BC_ASSERT(stranded());
     assign_buffer(response.body());
 
-    if (websocket())
+    if (websocket() || downgraded())
     {
-        // Body writer processes websocket write just like
+        // Body writer processes websocket or tcp write just like
         // http write but without headers. Expected body type
         // (serializer) is determined by caller-assigned body.
         body_write(std::move(response), move_copy(handler));

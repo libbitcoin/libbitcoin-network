@@ -54,8 +54,19 @@ constexpr bool is_line_break(char byte) NOEXCEPT
 }
 
 // local
+constexpr bool is_token_char(char byte) NOEXCEPT
+{
+    // A request line opens with its method token (rfc9110 tchar).
+    return (byte >= '0' && byte <= '9') || (byte >= 'A' && byte <= 'Z') ||
+        (byte >= 'a' && byte <= 'z') ||
+        std::string_view{ "!#$%&'*+-.^_`|~" }.find(byte) !=
+            std::string_view::npos;
+}
+
+// local
 // False implies inconclusive (buffer holds only empty lines).
-inline bool detect_json(bool& json, const http::flat_buffer& buffer) NOEXCEPT
+inline bool detect_tcp(bool& tcp, const http::flat_buffer& buffer,
+    bool binary) NOEXCEPT
 {
     const auto data = buffer.data();
     const auto chars = static_cast<const char*>(data.data());
@@ -66,32 +77,32 @@ inline bool detect_json(bool& json, const http::flat_buffer& buffer) NOEXCEPT
         if (is_line_break(byte))
             continue;
 
-        json = is_json_open(byte);
+        tcp = binary ? !is_token_char(byte) : is_json_open(byte);
         return true;
     }
 
     return false;
 }
 
-void socket::detect(http::flat_buffer& buffer,
+void socket::detect(http::flat_buffer& buffer, bool binary,
     count_handler&& handler) NOEXCEPT
 {
     io::dispatch(strand_,
         std::bind(&socket::do_detect, shared_from_this(),
-            std::ref(buffer), std::move(handler)));
+            std::ref(buffer), binary, std::move(handler)));
 }
 
 // private
-void socket::do_detect(const ref<http::flat_buffer>& buffer,
+void socket::do_detect(const ref<http::flat_buffer>& buffer, bool binary,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    bool json{};
-    if (detect_json(json, buffer.get()))
+    bool tcp{};
+    if (detect_tcp(tcp, buffer.get(), binary))
     {
         detected_.store(true);
-        downgraded_.store(json);
+        downgraded_.store(tcp);
         handler(error::success, zero);
         return;
     }
@@ -99,12 +110,12 @@ void socket::do_detect(const ref<http::flat_buffer>& buffer,
     // Tolerated empty lines only, so read more (bounded by the buffer).
     async_read(buffer.get(),
         std::bind(&socket::handle_detect,
-            shared_from_this(), _1, _2, buffer, handler));
+            shared_from_this(), _1, _2, buffer, binary, handler));
 }
 
 // private
 void socket::handle_detect(const code& ec, size_t size,
-    const ref<http::flat_buffer>& buffer,
+    const ref<http::flat_buffer>& buffer, bool binary,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -117,7 +128,7 @@ void socket::handle_detect(const code& ec, size_t size,
 
     // async_read prepares, the caller commits (as does handle_body_read).
     buffer.get().commit(size);
-    do_detect(buffer, handler);
+    do_detect(buffer, binary, handler);
 }
 
 // HTTP/WS (read).

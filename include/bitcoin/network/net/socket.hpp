@@ -227,8 +227,9 @@ public:
     using http_parser_ptr = std::shared_ptr<http_parser>;
 
     /// Latch http vs. tcp from buffered bytes, reading only as required to
-    /// decide, handler posted to socket strand. No message is consumed.
-    virtual void detect(http::flat_buffer& buffer,
+    /// decide, handler posted to socket strand. No message is consumed. Tcp
+    /// opens with json, or with any byte that cannot open a request if binary.
+    virtual void detect(http::flat_buffer& buffer, bool binary,
         count_handler&& handler) NOEXCEPT;
 
     /// Read http request from the socket, handler posted to socket strand.
@@ -289,6 +290,9 @@ public:
 
     /// The socket was upgraded to native ZMTP (in its role).
     virtual bool zeromq() const NOEXCEPT;
+
+    /// The socket was upgraded to noise (sv2).
+    virtual bool noised() const NOEXCEPT;
 
     /// The socket was upgraded to a websocket.
     virtual bool websocket() const NOEXCEPT;
@@ -552,7 +556,7 @@ private:
         count_handler&& handler) NOEXCEPT;
 
     // detect (first read)
-    void do_detect(const ref<http::flat_buffer>& buffer,
+    void do_detect(const ref<http::flat_buffer>& buffer, bool binary,
         const count_handler& handler) NOEXCEPT;
 
     // http
@@ -657,7 +661,7 @@ private:
 
     // detect
     void handle_detect(const code& ec, size_t size,
-        const ref<http::flat_buffer>& buffer,
+        const ref<http::flat_buffer>& buffer, bool binary,
         const count_handler& handler) NOEXCEPT;
 
     // http/ws (native/rpc)
