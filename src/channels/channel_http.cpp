@@ -207,8 +207,12 @@ void channel_http::dispatch(const request_ptr& request) NOEXCEPT
     claimed_ = false;
 
     // Basic authorization carried by http headers. ws frames and tcp messages
-    // carry none, so authorization is dispatched to protocol.
-    if (!websocket() && !downgraded() && !authorized())
+    // carry none, so authorization is dispatched to protocol. A cors preflight
+    // carries no credentials.
+    const auto preflight = request->method() == verb::options &&
+        to_bool(request->count(field::access_control_request_method));
+
+    if (!websocket() && !downgraded() && !authorized() && !preflight)
     {
         unauthorized(*request);
         return;
@@ -516,6 +520,15 @@ void channel_http::unauthorized(const request& request) NOEXCEPT
     BC_ASSERT(stranded());
     response out{ status::unauthorized, request.version() };
     out.set(field::www_authenticate, challenge);
+
+    // An allowed origin may read the status of its cross-origin request.
+    if (to_bool(request.count(field::origin)) &&
+        is_allowed_origin(request, request.version()))
+    {
+        out.set(field::access_control_allow_origin, request[field::origin]);
+        out.set(field::vary, "origin");
+    }
+
     send(std::move(out),
         std::bind(&channel_http::handle_rejected,
             shared_from_base<channel_http>(), _1, error::unauthorized));
