@@ -417,7 +417,8 @@ void protocol_http::add_access_control_headers(fields& fields,
     if (origin)
         fields.set(field::access_control_allow_origin, request[field::origin]);
     if (headers)
-        fields.set(field::access_control_allow_headers, "*");
+        fields.set(field::access_control_allow_headers,
+            request[field::access_control_request_headers]);
     if (method)
         fields.set(field::access_control_allow_methods, "*");
 

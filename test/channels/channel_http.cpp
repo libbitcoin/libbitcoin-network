@@ -106,6 +106,39 @@ static const std::string http_get_request
     "\r\n"
 };
 
+static const std::string http_preflight_request
+{
+    "OPTIONS / HTTP/1.1\r\n"
+    "Host: example.com\r\n"
+    "Origin: http://example.org\r\n"
+    "Access-Control-Request-Method: POST\r\n"
+    "Access-Control-Request-Headers: authorization, content-type\r\n"
+    "\r\n"
+};
+
+static const std::string http_options_request
+{
+    "OPTIONS / HTTP/1.1\r\n"
+    "Host: example.com\r\n"
+    "\r\n"
+};
+
+static const std::string http_originated_get_request
+{
+    "GET /index HTTP/1.1\r\n"
+    "Host: example.com\r\n"
+    "Origin: http://example.org\r\n"
+    "\r\n"
+};
+
+static const std::string http_foreign_get_request
+{
+    "GET /index HTTP/1.1\r\n"
+    "Host: example.com\r\n"
+    "Origin: http://example.net\r\n"
+    "\r\n"
+};
+
 static const std::string http_authorized_get_request
 {
     "GET /index HTTP/1.1\r\n"
@@ -957,6 +990,18 @@ struct originated_options
     }
 };
 
+struct credentialed_originated_options
+  : channel_http::options_t
+{
+    credentialed_originated_options() NOEXCEPT
+      : channel_http::options_t("test")
+    {
+        credentials.emplace_back("test:123\xC2\xA3:getinfo");
+        origins.emplace_back("example.org");
+        initialize_context();
+    }
+};
+
 struct opaque_options
   : channel_http::options_t
 {
@@ -973,6 +1018,7 @@ static const credentialed_options credentialed{};
 static const restricted_options restricted{};
 static const originated_options originated{};
 static const opaque_options opaque{};
+static const credentialed_originated_options credentialed_originated{};
 static const network::settings http_settings{ test::network_settings() };
 static const std::string rfc7617_authorization{ "Basic dGVzdDoxMjPCow==" };
 
@@ -1061,6 +1107,12 @@ struct http_channel_fixture
                 if (!ec) respond(self, *request);
             });
 
+            self->subscribe<method::options>([=](const code& ec,
+                const method::options::cptr& request) NOEXCEPT
+            {
+                if (!ec) respond(self, *request);
+            });
+
             self->subscribe<method::unknown>([=](const code& ec,
                 const method::unknown::cptr& request) NOEXCEPT
             {
@@ -1095,6 +1147,15 @@ struct credentialed_channel_fixture
 {
     credentialed_channel_fixture() NOEXCEPT
       : http_channel_fixture(credentialed)
+    {
+    }
+};
+
+struct credentialed_originated_channel_fixture
+  : http_channel_fixture
+{
+    credentialed_originated_channel_fixture() NOEXCEPT
+      : http_channel_fixture(credentialed_originated)
     {
     }
 };
@@ -1480,6 +1541,41 @@ BC_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_get__unauthorized, crede
     start(http_ok);
     send(http_get_request);
     BC_REQUIRE_EQUAL(receive().result_int(), 401u);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::unauthorized);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_preflight__dispatched, credentialed_channel_fixture)
+{
+    start(http_ok);
+    send(http_preflight_request);
+    BC_REQUIRE_EQUAL(receive().result_int(), 200u);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_options__unauthorized, credentialed_channel_fixture)
+{
+    start(http_ok);
+    send(http_options_request);
+    BC_REQUIRE_EQUAL(receive().result_int(), 401u);
+    BC_REQUIRE_EQUAL(http_await(stopped), error::unauthorized);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_allowed_origin__allow_origin, credentialed_originated_channel_fixture)
+{
+    start(http_ok);
+    send(http_originated_get_request);
+    const auto response = receive();
+    BC_REQUIRE_EQUAL(response.result_int(), 401u);
+    BC_REQUIRE_EQUAL(response[field::access_control_allow_origin], "http://example.org");
+    BC_REQUIRE_EQUAL(http_await(stopped), error::unauthorized);
+}
+
+BC_FIXTURE_TEST_CASE(channel_http__resume__unauthorized_foreign_origin__no_allow_origin, credentialed_originated_channel_fixture)
+{
+    start(http_ok);
+    send(http_foreign_get_request);
+    const auto response = receive();
+    BC_REQUIRE_EQUAL(response.result_int(), 401u);
+    BC_REQUIRE(!response.count(field::access_control_allow_origin));
     BC_REQUIRE_EQUAL(http_await(stopped), error::unauthorized);
 }
 
